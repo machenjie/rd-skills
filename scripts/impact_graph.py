@@ -177,6 +177,17 @@ def _professionalism_contract(graph: dict[str, Any]) -> dict[str, Any]:
     return value
 
 
+def _expert_panel_evidence_contract(graph: dict[str, Any]) -> dict[str, Any]:
+    affected = graph["stages"]["affected"]
+    value = affected.get("expert_panel_evidence_projection")
+    if not isinstance(value, dict):
+        raise ImpactGraphError(
+            "invalid-impact-graph",
+            "affected Expert Panel evidence projection is malformed",
+        )
+    return value
+
+
 def _build_profile_contract(graph: dict[str, Any]) -> dict[str, Any]:
     value = graph["stages"]["affected"].get("build_profile_projection")
     if (
@@ -422,6 +433,39 @@ def _professionalism_scope(
     }
 
 
+def _expert_panel_evidence_impact(
+    graph: dict[str, Any],
+    entries: Sequence[tuple[str, str]],
+) -> dict[str, object]:
+    contract = _expert_panel_evidence_contract(graph)
+    affected_axes: set[str] = set()
+    reasons: list[list[str]] = []
+    for _status, path in entries:
+        for source in contract["axis_sources"]:
+            axis = source["axis"]
+            if any(
+                _matches(path, pattern)
+                for pattern in source["path_patterns"]
+            ):
+                affected_axes.add(axis)
+                reasons.append(
+                    [f"path:{path}", f"expert-panel-axis:{axis}", "evidence:soft-stale"]
+                )
+    ordered_axes = [
+        axis for axis in contract["axis_order"] if axis in affected_axes
+    ]
+    return {
+        "schema_version": contract["schema_version"],
+        "status": (
+            contract["affected_status"]
+            if ordered_axes
+            else contract["unchanged_status"]
+        ),
+        "affected_axes": ordered_axes,
+        "reason_chains": sorted(reasons),
+    }
+
+
 def _producer_closure(
     producers: list[dict[str, Any]],
     direct_reasons: dict[str, list[list[str]]],
@@ -660,6 +704,7 @@ def resolve_entries(
         head_package_catalog=head_catalog,
         registry_envelopes_equal=registry_envelopes_equal,
     )
+    expert_panel_evidence = _expert_panel_evidence_impact(graph, entries)
     if professionalism["scope"] != "none":
         producer_id = _professionalism_contract(graph)["producer_id"]
         direct_reasons.setdefault(producer_id, []).extend(
@@ -718,6 +763,7 @@ def resolve_entries(
         "selected_test_modules": selected_tests,
         "producer_explanations": producer_explanations,
         "professionalism": professionalism,
+        "expert_panel_evidence": expert_panel_evidence,
     }
 
 

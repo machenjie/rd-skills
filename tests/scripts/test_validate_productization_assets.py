@@ -157,15 +157,6 @@ def _content_readiness_payload() -> dict:
         "message": "Formal release requires current professional completeness review.",
         "severity": "error",
     }
-    lifecycle_release_blocker = {
-        "category": "root-disposition-lifecycle-release-record-required",
-        "target": (
-            "config/skill-content-exceptions.yaml"
-            "#root_semantic_dispositions.lifecycle"
-        ),
-        "message": "Formal release requires a recorded Root lifecycle release.",
-        "severity": "error",
-    }
     reference_summary = {
         "readiness_scope": "reference-content",
         "source_fingerprint": "a" * 64,
@@ -182,38 +173,6 @@ def _content_readiness_payload() -> dict:
         "semantic_triage_complete": True,
         "strict_ready": True,
         "semantic_disposition_configured": 1,
-        "semantic_lifecycle_status": "bootstrap-current",
-        "semantic_lifecycle_detector_fingerprint": "e" * 64,
-        "semantic_lifecycle_snapshot_current": True,
-        "semantic_lifecycle_formal_release_ready": False,
-        "semantic_lifecycle_bootstrap_refresh_chain_valid": True,
-        "semantic_lifecycle_bootstrap_refresh_count": 0,
-        "semantic_lifecycle_bootstrap_refresh_latest_delta": None,
-        "semantic_lifecycle_comparison": {
-            "comparison_scope": "bootstrap-no-prior-release",
-            "added_count": None,
-            "removed_count": None,
-            "new_disposition_count": None,
-            "disposition_change_count": None,
-            "source_rewrite_count": None,
-            "source_replacement_count": None,
-            "detector_change_removal_count": None,
-            "detector_improvement_count": None,
-            "unclassified_count": None,
-            "added": [],
-            "removed": [],
-            "disposition_changes": [],
-            "disposition_change_details": [],
-            "source_rewrites": [],
-            "detector_change_removals": [],
-            "detector_improvements": [],
-            "unclassified": [],
-        },
-        "semantic_lifecycle_age": {
-            "known_age_count": 0,
-            "unknown_age_count": 1,
-            "max_age_days": None,
-        },
     }
     reference = {
         "scope": "reference-content",
@@ -251,16 +210,14 @@ def _content_readiness_payload() -> dict:
             "panel_artifact_schema_version": None,
             "attestation_config_fingerprint": "c" * 64,
             "source_fingerprints": {
-                "reference_content": None,
-                "root_content": None,
-                "ai_readability": None,
-                "skill_detector": None,
+                "readability_target_manifest": None,
+                "readability_detector_contract": None,
+                "actionability_detector_contract": None,
             },
             "current_source_fingerprints": {
-                "reference_content": "a" * 64,
-                "root_content": "b" * 64,
-                "ai_readability": "f" * 64,
-                "skill_detector": "7" * 64,
+                "readability_target_manifest": "a" * 64,
+                "readability_detector_contract": "b" * 64,
+                "actionability_detector_contract": "f" * 64,
             },
             "attested_by": None,
             "attested_on": None,
@@ -300,16 +257,8 @@ def _content_readiness_payload() -> dict:
             "attestation_schema_version": 5,
             "panel_artifact_schema_version": None,
             "attestation_config_fingerprint": "c" * 64,
-            "source_fingerprints": {
-                "professional_packages": None,
-                "professional_review_bindings": None,
-                "professional_review_contract": None,
-            },
-            "current_source_fingerprints": {
-                "professional_packages": "9" * 64,
-                "professional_review_bindings": "8" * 64,
-                "professional_review_contract": "7" * 64,
-            },
+            "source_fingerprints": {},
+            "current_source_fingerprints": {},
             "attested_by": None,
             "attested_on": None,
             "evidence": [],
@@ -384,7 +333,7 @@ def _content_readiness_payload() -> dict:
         "reference_content_summary": reference_summary,
         "root_content_summary": root_summary,
         "content_readiness": {
-            "schema_version": 9,
+            "schema_version": 10,
             "reference": reference,
             "root": root,
             "expert": expert,
@@ -419,9 +368,31 @@ def _content_readiness_payload() -> dict:
                 "carried_forward_target_count": 189,
                 "input_ratio_ppm": 0,
             },
-            "routing_neutral_isolated_material_binding_sensitivity": copy.deepcopy(
-                cost_authority["locked_current_catalog"]
-            ),
+            "routing_neutral_isolated_material_binding_sensitivity": {
+                "case_count": 189,
+                "full_rereview_deduplicated_capsule_input_bytes_proxy": 100_000_000,
+                "fresh_target_count": {
+                    "min": 3,
+                    "sum": 3240,
+                    "mean_milli": 17142,
+                    "p95": 35,
+                    "max": 56,
+                },
+                "input_ratio_ppm": {
+                    "min": 1000,
+                    "sum": 18_900_000,
+                    "mean": 100_000,
+                    "p95": 150_000,
+                    "max": 200_000,
+                },
+                "named_isolated_case": {
+                    "skill_id": "acceptance-criteria-builder",
+                    "fresh_target_count": 8,
+                    "carried_forward_target_count": 181,
+                    "canonical_capsule_input_bytes_proxy": 10_000_000,
+                    "input_ratio_ppm": 100_000,
+                },
+            },
             "representative_routing_adjacency_mutation": {
                 "skill_id": "acceptance-criteria-builder",
                 "fresh_target_ids": ["acceptance-criteria-builder"],
@@ -446,9 +417,56 @@ def _content_readiness_payload() -> dict:
         "release_blockers": [
             readability_release_blocker,
             completeness_release_blocker,
-            lifecycle_release_blocker,
         ],
         "advisories": [],
+    }
+
+
+def _formal_expert_panel_release_manifest() -> dict:
+    return {
+        "schema_version": 1,
+        "status": "current",
+        "head_commit": "a" * 40,
+        "artifacts": [
+            {
+                "axis": axis,
+                "path": path,
+                "external_sha256": digest * 64,
+                "size_bytes": index,
+                "review_id": f"{axis}-fixture",
+                "verdict": verdict,
+            }
+            for index, (axis, path, verdict, digest) in enumerate(
+                (
+                    (
+                        "readability",
+                        "evals/expert-panel/readability.json",
+                        "accepted-current-readability",
+                        "a",
+                    ),
+                    (
+                        "semantic-disposition",
+                        "evals/expert-panel/semantic-disposition.json",
+                        "accepted-current-semantic-disposition",
+                        "b",
+                    ),
+                    (
+                        "professional-completeness",
+                        "evals/expert-panel/professional-completeness.json",
+                        "accepted-current-professional-completeness",
+                        "c",
+                    ),
+                ),
+                start=1,
+            )
+        ],
+        "verification_toolchain": {
+            "head_commit_matches_current": True,
+            "artifact_count": 3,
+            "accepted_artifact_count": 3,
+            "head_byte_equal_count": 3,
+            "clean_artifact_count": 3,
+        },
     }
 
 
@@ -518,8 +536,8 @@ def _set_completeness_decision(
         dispositions.append(
             {
                 "skill_id": f"skill-{index:03d}",
-                "package_fingerprint": f"{index:064x}"[-64:],
-                "review_binding_fingerprint": f"{index + 200:064x}"[-64:],
+                "package_material_binding": f"{index:064x}"[-64:],
+                "review_unit_binding": f"{index + 200:064x}"[-64:],
                 "disposition": (
                     "requires-professional-correction"
                     if correction
@@ -586,28 +604,11 @@ def _set_completeness_decision(
                 },
                 "provenance": {
                     "mode": "fresh",
-                    "origin_depth": 0,
-                    "evidence": [
-                        {
-                            "voter_id": f"expert-{voter}",
-                            "ballot": {
-                                "path": f"evals/completeness-fixture/panel/expert-{voter}.json",
-                                "sha256": f"{voter:064x}",
-                                "kind": "changeforge.professional-completeness-panel-ballot",
-                                "axis": "professional-completeness",
-                                "review_id": "completeness-fixture",
-                            },
-                            "capsule": {
-                                "path": f"evals/completeness-fixture/capsules/expert-{voter}.json",
-                                "sha256": f"{voter + 10:064x}",
-                                "kind": "changeforge.professional-completeness-review-capsule",
-                                "axis": "professional-completeness",
-                                "review_id": "completeness-fixture",
-                            },
-                            "capsule_canonical_json_bytes_proxy": 100,
-                        }
-                        for voter in range(1, 4)
-                    ],
+                    "origin": {
+                        "origin_review_id": "completeness-fixture",
+                        "origin_commit": "a" * 40,
+                        "origin_verdict_digest": f"{index + 400:064x}"[-64:],
+                    },
                 },
                 "target_decision_fingerprint": f"{index + 400:064x}"[-64:],
             }
@@ -666,17 +667,17 @@ def _set_completeness_decision(
             "review_contract_fingerprint": "7" * 64,
             "current_review_contract_fingerprint": "7" * 64,
             "review_contract_current": True,
-            "review_plan_fingerprint": "6" * 64,
-            "current_review_plan_fingerprint": "6" * 64,
+            "review_plan_fingerprint": None,
+            "current_review_plan_fingerprint": None,
             "review_plan_current": True,
             "review_binding_current": True,
             "provenance_current": True,
             "round_lifecycle_current": True,
             "round_lifecycle": {
-                "status": "schema3-head-current",
+                "status": "fixed-attestation-current",
                 "round_count": 1,
-                "chain_depth": 1,
-                "head_decision": "evals/expert-panel/completeness-fixture/panel/decision.json",
+                "chain_depth": 0,
+                "head_decision": None,
                 "current_decision_is_head": True,
                 "errors": [],
                 "limitations": [
@@ -727,6 +728,74 @@ def _set_completeness_decision(
     report["content_readiness"]["aggregate"][
         "professional_completeness_review_current"
     ] = formal
+
+
+def _set_compact_completeness_decision(
+    report: dict, *, carried: bool = False
+) -> None:
+    _set_completeness_decision(report)
+    axis = report["content_readiness"]["expert"]["professional_completeness"]
+    for index, disposition in enumerate(axis["professional_dispositions"]):
+        disposition["provenance"] = {
+            "mode": "carried" if carried else "fresh",
+            "origin": {
+                "origin_review_id": (
+                    "professional-completeness-origin"
+                    if carried
+                    else axis["panel_review_id"]
+                ),
+                "origin_commit": "a" * 40,
+                "origin_verdict_digest": disposition[
+                    "target_decision_fingerprint"
+                ],
+            },
+        }
+    axis.update(
+        {
+            "review_plan_fingerprint": None,
+            "current_review_plan_fingerprint": None,
+            "round_lifecycle": {
+                "status": "fixed-attestation-current",
+                "round_count": 1,
+                "chain_depth": 1 if carried else 0,
+                "head_decision": None,
+                "current_decision_is_head": True,
+                "errors": [],
+                "limitations": [
+                    "Static round-tree validation cannot prove that historical schema-3 rounds were not deleted."
+                ],
+            },
+        }
+    )
+    if carried:
+        axis["reviewer_pool_size"] = 0
+        axis["qualification_summary"]["fresh_reviewer_pool_size"] = 0
+        axis["fresh_target_count"] = 0
+        axis["carried_forward_target_count"] = 189
+        axis["review_cost"].update(
+            {
+                "fresh_vote_count": 0,
+                "carried_forward_vote_count": 567,
+                "fresh_criterion_result_count": 0,
+                "carried_forward_criterion_result_count": 5670,
+                "canonical_capsule_input_bytes_proxy": 0,
+                "input_ratio_ppm": 0,
+                "required_only_capsule_input_bytes_proxy": 0,
+                "required_only_input_ratio_ppm": 0,
+                "required_only_source_material_input_bytes_proxy": 0,
+                "source_material_input_bytes_proxy": 0,
+                "source_material_coverage_ratio_ppm": 0,
+                "reviewer_added_source_material_input_bytes_proxy": 0,
+                "reviewer_added_relationship_evidence_metadata_overhead_bytes_proxy": 0,
+                "reviewer_added_relationship_evidence_metadata_overhead_ratio_ppm": 0,
+                "reviewer_added_request_count": 0,
+                "reviewer_added_unique_relationship_count": 0,
+                "maximum_reviewer_added_unique_union_to_required_ratio_ppm": 0,
+                "maximum_origin_depth": 1,
+                "plan_lineage_depth": 1,
+                "policy_status": "all-carry-zero-input",
+            }
+        )
 
 
 class StaticProductizationReportTests(unittest.TestCase):
@@ -780,7 +849,7 @@ class StaticProductizationReportTests(unittest.TestCase):
                     payload["strict"] = True
                     payload["summary"] = {
                         "blocker_count": 0,
-                        "release_blocker_count": 3,
+                        "release_blocker_count": 2,
                     }
                 else:
                     payload["release_claim"] = (
@@ -949,24 +1018,15 @@ class StaticProductizationReportTests(unittest.TestCase):
             self.assertEqual("release-not-ready", report["release_gate"])
             self.assertEqual([], report["blockers"])
             self.assertTrue(report["release_blockers"])
+            self.assertEqual(
+                [],
+                self.module._content_readiness_errors(
+                    "reports/professionalism-regression-report.json",
+                    report,
+                ),
+            )
             applied_target_count = completeness["applied_target_count"]
             required_target_count = completeness["required_target_count"]
-            qualification = completeness["qualification_summary"]
-            evidence = completeness["evidence_summary"]
-            panel_size = qualification["per_target_panel_size"]
-            criterion_count = len(
-                self.module.PROFESSIONAL_DOMAIN_CRITICAL_CRITERIA
-                | self.module.PROFESSIONAL_ORDINARY_CRITERIA
-            )
-            self.assertEqual(3, panel_size)
-            self.assertEqual(
-                2,
-                qualification["required_domain_experts_per_target"],
-            )
-            self.assertEqual(
-                1,
-                qualification["required_architecture_experts_per_target"],
-            )
             self.assertEqual(
                 self.module.PROFESSIONAL_PACKAGE_COUNT,
                 required_target_count,
@@ -977,45 +1037,39 @@ class StaticProductizationReportTests(unittest.TestCase):
                 + completeness["carried_forward_target_count"],
             )
             self.assertLessEqual(applied_target_count, required_target_count)
-            if completeness["source_current"]:
-                self.assertEqual(required_target_count, applied_target_count)
-                self.assertEqual(
-                    completeness["source_fingerprints"],
-                    completeness["current_source_fingerprints"],
-                )
-            else:
-                self.assertNotEqual(
-                    completeness["source_fingerprints"],
-                    completeness["current_source_fingerprints"],
-                )
-            self.assertEqual(
-                applied_target_count,
-                qualification["covered_target_count"],
-            )
-            self.assertEqual(
-                2 * applied_target_count,
-                qualification["effective_domain_vote_count"],
-            )
-            self.assertEqual(
-                applied_target_count,
-                qualification["effective_architecture_vote_count"],
-            )
-            self.assertEqual(
-                panel_size * applied_target_count,
-                evidence["target_vote_count"],
-            )
-            self.assertEqual(
-                criterion_count * panel_size * applied_target_count,
-                evidence["criterion_result_count"],
-            )
-            self.assertEqual(
-                56,
-                report["professional_review_cost_fixtures"][
-                    "routing_neutral_isolated_material_binding_sensitivity"
-                ]["fresh_target_count"]["max"],
+            self.assertIs(
+                report["content_readiness"]["aggregate"][
+                    "professional_completeness_review_current"
+                ],
+                self.module._professional_completeness_formal_ready(
+                    completeness
+                ),
             )
 
-        self.assertEqual([], self.module._static_report_errors(ROOT))
+            fixture = report["professional_review_cost_fixtures"]
+            sensitivity = fixture[
+                "routing_neutral_isolated_material_binding_sensitivity"
+            ]
+            thresholds = fixture["thresholds"]
+            case_count = sensitivity["case_count"]
+            fresh = sensitivity["fresh_target_count"]
+            ratio = sensitivity["input_ratio_ppm"]
+            self.assertEqual("pass", fixture["status"])
+            self.assertEqual(required_target_count, case_count)
+            self.assertLessEqual(
+                fresh["max"], thresholds["maximum_fresh_target_count"]
+            )
+            self.assertLessEqual(
+                fresh["sum"],
+                thresholds["maximum_mean_fresh_target_count"] * case_count,
+            )
+            self.assertLessEqual(
+                ratio["max"], thresholds["maximum_input_ratio_ppm"]
+            )
+            self.assertLessEqual(
+                ratio["sum"],
+                thresholds["maximum_mean_input_ratio_ppm"] * case_count,
+            )
 
     def test_professional_report_semantic_envelope_rejects_tampers(
         self,
@@ -1033,8 +1087,11 @@ class StaticProductizationReportTests(unittest.TestCase):
             "invalid-schema-version": lambda axis: axis.__setitem__(
                 "attestation_schema_version", "5"
             ),
-            "contradictory-formal-acceptance": lambda axis: axis.__setitem__(
-                "accepted_for_formal", True
+            "contradictory-formal-acceptance": lambda axis: axis.update(
+                {
+                    "accepted_for_formal": True,
+                    "source_current": False,
+                }
             ),
         }
         for label, mutate in mutations.items():
@@ -1054,7 +1111,10 @@ class StaticProductizationReportTests(unittest.TestCase):
                     after = (
                         json.dumps(report, indent=2, ensure_ascii=False) + "\n"
                     ).encode("utf-8")
-                    self.assertNotEqual(before, after)
+                    self.assertTrue(
+                        before != after,
+                        f"{label} must change the report bytes",
+                    )
                     path.write_bytes(after)
                 errors = self.module._static_report_errors(root)
                 self.assertTrue(errors)
@@ -1153,64 +1213,11 @@ class StaticProductizationReportTests(unittest.TestCase):
             self.assertTrue(
                 any(
                     "release_gate does not match authoring, readability review, "
-                    "professional-completeness review, and Root lifecycle"
+                    "Professional Completeness review, and "
+                    "current Semantic application readiness"
                     in error
                     for error in errors
                 ),
-                errors,
-            )
-
-    def test_bootstrap_lifecycle_rejects_forged_delta(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            self._write_reports(root)
-            path = root / "reports/professionalism-regression-report.json"
-            report = json.loads(path.read_text(encoding="utf-8"))
-            report["root_content_summary"]["semantic_lifecycle_comparison"][
-                "added_count"
-            ] = 0
-            path.write_text(json.dumps(report), encoding="utf-8")
-            errors = self.module._static_report_errors(root)
-            self.assertTrue(
-                any("bootstrap lifecycle must preserve null deltas" in item for item in errors),
-                errors,
-            )
-
-            path = root / "reports/professionalism-regression-report.json"
-            report = json.loads(path.read_text(encoding="utf-8"))
-            report["content_readiness"]["expert"].pop("readability")
-            path.write_text(json.dumps(report), encoding="utf-8")
-            errors = self.module._static_report_errors(root)
-            self.assertTrue(
-                any("content_readiness.expert fields" in error for error in errors),
-                errors,
-            )
-
-    def test_bootstrap_refresh_report_fields_fail_closed(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            self._write_reports(root)
-            path = root / "reports/professionalism-regression-report.json"
-            report = json.loads(path.read_text(encoding="utf-8"))
-            report["root_content_summary"].pop(
-                "semantic_lifecycle_bootstrap_refresh_chain_valid"
-            )
-            path.write_text(json.dumps(report), encoding="utf-8")
-            errors = self.module._static_report_errors(root)
-            self.assertTrue(
-                any("bootstrap_refresh_chain_valid must be a boolean" in item for item in errors),
-                errors,
-            )
-
-            self._write_reports(root)
-            report = json.loads(path.read_text(encoding="utf-8"))
-            report["root_content_summary"][
-                "semantic_lifecycle_bootstrap_refresh_count"
-            ] = 1
-            path.write_text(json.dumps(report), encoding="utf-8")
-            errors = self.module._static_report_errors(root)
-            self.assertTrue(
-                any("latest delta must match its closed schema" in item for item in errors),
                 errors,
             )
 
@@ -1229,7 +1236,8 @@ class StaticProductizationReportTests(unittest.TestCase):
             self.assertTrue(
                 any(
                     "release_gate does not match authoring, readability review, "
-                    "professional-completeness review, and Root lifecycle"
+                    "Professional Completeness review, and "
+                    "current Semantic application readiness"
                     in error
                     for error in errors
                 ),
@@ -1277,10 +1285,9 @@ class StaticProductizationReportTests(unittest.TestCase):
                         "panel_size": 3,
                         "attestation_status": "panel-majority-pending-checkin",
                         "source_fingerprints": {
-                            "reference_content": "a" * 64,
-                            "root_content": "b" * 64,
-                            "ai_readability": "f" * 64,
-                            "skill_detector": "7" * 64,
+                            "readability_target_manifest": "a" * 64,
+                            "readability_detector_contract": "b" * 64,
+                            "actionability_detector_contract": "f" * 64,
                         },
                         "attested_by": "expert-panel:fixture-panel",
                         "attested_on": "2026-07-16",
@@ -1301,6 +1308,72 @@ class StaticProductizationReportTests(unittest.TestCase):
             self.assertEqual(
                 [], self.module._static_report_errors(root)
             )
+
+    def test_fixed_storage_stale_and_pending_axes_are_fail_closed_nonformal(
+        self,
+    ) -> None:
+        statuses = (
+            "panel-majority-stale",
+            "panel-majority-pending-checkin",
+        )
+        for status in statuses:
+            with self.subTest(status=status):
+                report = _content_readiness_payload()
+                expert = report["content_readiness"]["expert"]
+                for axis_name in ("readability", "professional_completeness"):
+                    axis = expert[axis_name]
+                    axis["attestation_status"] = status
+                    self.assertFalse(axis["decision_complete"])
+                    self.assertFalse(axis["storage_current"])
+                    self.assertFalse(axis["source_current"])
+                    self.assertFalse(axis["accepted_for_formal"])
+                self.assertEqual(
+                    [],
+                    self.module._content_readiness_errors(
+                        "fixture.json", report
+                    ),
+                )
+                self.assertFalse(
+                    report["content_readiness"]["aggregate"][
+                        "readability_review_current"
+                    ]
+                )
+                self.assertFalse(
+                    report["content_readiness"]["aggregate"][
+                        "professional_completeness_review_current"
+                    ]
+                )
+                self.assertEqual("release-not-ready", report["release_gate"])
+
+                mutations = {
+                    "missing-axis-field": lambda axis: axis.pop("panel_size"),
+                    "forged-current": lambda axis: axis.__setitem__(
+                        "source_current", True
+                    ),
+                    "incomplete-current": lambda axis: axis.__setitem__(
+                        "storage_current", True
+                    ),
+                    "false-formal-ready": lambda axis: axis.__setitem__(
+                        "accepted_for_formal", True
+                    ),
+                }
+                for mutation_name, mutate in mutations.items():
+                    with self.subTest(
+                        status=status,
+                        mutation=mutation_name,
+                    ):
+                        changed = copy.deepcopy(report)
+                        mutate(
+                            changed["content_readiness"]["expert"][
+                                "readability"
+                            ]
+                        )
+                        self.assertTrue(
+                            self.module._content_readiness_errors(
+                                "fixture.json", changed
+                            ),
+                            mutation_name,
+                        )
 
     def test_schema_one_readability_remains_auditable_with_legacy_fingerprints(self) -> None:
         report = _content_readiness_payload()
@@ -1364,14 +1437,29 @@ class StaticProductizationReportTests(unittest.TestCase):
                 "review_cost": None,
                 "fresh_target_count": 0,
                 "carried_forward_target_count": 0,
+                "round_lifecycle": {
+                    "status": "no-schema3-current-decision",
+                    "round_count": 0,
+                    "chain_depth": 0,
+                    "head_decision": None,
+                    "current_decision_is_head": False,
+                    "errors": [],
+                    "limitations": [
+                        "Static round-tree validation cannot prove that historical schema-3 rounds were not deleted."
+                    ],
+                },
             }
         )
         for disposition in axis["professional_dispositions"]:
+            disposition["package_fingerprint"] = disposition.pop(
+                "package_material_binding"
+            )
+            disposition["review_binding_fingerprint"] = None
+            disposition.pop("review_unit_binding")
             disposition["ordinary_criterion_disposition"] = disposition[
                 "majority_disposition"
             ]
             disposition["ordinary_criterion_defects"] = []
-            disposition["review_binding_fingerprint"] = None
             disposition["review_dependencies"] = None
             disposition["evidence_metrics"] = None
             disposition["provenance"] = None
@@ -1386,15 +1474,91 @@ class StaticProductizationReportTests(unittest.TestCase):
         self.assertEqual(1, axis["correction_count"])
         self.assertFalse(self.module._professional_completeness_formal_ready(axis))
 
-    def test_schema_two_current_booleans_cannot_satisfy_formal(self) -> None:
+    def test_schema_two_remains_auditable_but_rejects_current_field_aliases(
+        self,
+    ) -> None:
         report = _content_readiness_payload()
         _set_completeness_decision(report)
         axis = report["content_readiness"]["expert"]["professional_completeness"]
-        axis["panel_artifact_schema_version"] = 2
-        axis["decision_method"] = (
-            "per-skill-qualified-reviewer-pool-domain-critical-fail-closed"
+        axis.update(
+            {
+                "accepted_for_formal": False,
+                "source_current": False,
+                "source_fingerprints": {"professional_packages": "9" * 64},
+                "current_source_fingerprints": {},
+                "attestation_status": "panel-legacy-nonformal",
+                "panel_artifact_schema_version": 2,
+                "decision_method": (
+                    "per-skill-qualified-reviewer-pool-domain-critical-fail-closed"
+                ),
+                "qualification_summary": {
+                    "covered_target_count": 189,
+                    "required_domain_experts_per_target": 2,
+                    "required_architecture_experts_per_target": 1,
+                    "per_target_panel_size": 3,
+                    "reviewer_pool_size": 3,
+                    "domain_reviewer_count": 2,
+                    "architecture_reviewer_count": 1,
+                },
+                "evidence_summary": {
+                    key: value
+                    for key, value in axis["evidence_summary"].items()
+                    if key != "target_vote_count"
+                },
+                "evidence_contract_satisfied": True,
+                "review_contract_fingerprint": None,
+                "review_contract_current": False,
+                "review_plan_fingerprint": None,
+                "current_review_plan_fingerprint": None,
+                "review_plan_current": False,
+                "review_binding_current": False,
+                "provenance_current": False,
+                "round_lifecycle_current": False,
+                "review_cost_current": False,
+                "review_cost": None,
+                "fresh_target_count": 0,
+                "carried_forward_target_count": 0,
+                "round_lifecycle": {
+                    "status": "no-schema3-current-decision",
+                    "round_count": 0,
+                    "chain_depth": 0,
+                    "head_decision": None,
+                    "current_decision_is_head": False,
+                    "errors": [],
+                    "limitations": [
+                        "Static round-tree validation cannot prove that historical schema-3 rounds were not deleted."
+                    ],
+                },
+            }
+        )
+        for disposition in axis["professional_dispositions"]:
+            disposition["package_fingerprint"] = disposition.pop(
+                "package_material_binding"
+            )
+            disposition["review_binding_fingerprint"] = None
+            disposition.pop("review_unit_binding")
+            disposition["review_dependencies"] = None
+            disposition["evidence_metrics"] = None
+            disposition["provenance"] = None
+            disposition["target_decision_fingerprint"] = None
+
+        self.assertEqual(
+            [],
+            self.module._professional_completeness_axis_errors(
+                "fixture.json", axis
+            ),
         )
         self.assertFalse(self.module._professional_completeness_formal_ready(axis))
+
+        for alias in ("package_material_binding", "review_unit_binding"):
+            with self.subTest(alias=alias):
+                injected = copy.deepcopy(axis)
+                injected["professional_dispositions"][0][alias] = "f" * 64
+                self.assertTrue(
+                    self.module._professional_completeness_axis_errors(
+                        "fixture.json", injected
+                    )
+                )
 
     def test_schema_three_exact_inventory_vote_and_criterion_counts_fail_closed(
         self,
@@ -1433,21 +1597,14 @@ class StaticProductizationReportTests(unittest.TestCase):
         axis = report["content_readiness"]["expert"]["professional_completeness"]
         for disposition in axis["professional_dispositions"]:
             disposition["provenance"] = {
-                "mode": "carried-forward",
-                "origin_depth": 1,
-                "origin_decision": {
-                    "path": "evals/expert-panel/origin/panel/decision.json",
-                    "sha256": "a" * 64,
-                    "kind": "changeforge.professional-completeness-panel-decision",
-                    "axis": "professional-completeness",
-                    "review_id": "origin",
+                "mode": "carried",
+                "origin": {
+                    "origin_review_id": "professional-completeness-origin",
+                    "origin_commit": "a" * 40,
+                    "origin_verdict_digest": disposition[
+                        "target_decision_fingerprint"
+                    ],
                 },
-                "origin_target_decision_fingerprint": "b" * 64,
-                "origin_package_fingerprint": "c" * 64,
-                "current_package_fingerprint": disposition[
-                    "package_fingerprint"
-                ],
-                "carry_basis": "review-visible-binding-unchanged",
             }
         axis.update(
             {
@@ -1488,6 +1645,7 @@ class StaticProductizationReportTests(unittest.TestCase):
                 },
             }
         )
+        axis["round_lifecycle"]["chain_depth"] = 1
         axis["qualification_summary"]["fresh_reviewer_pool_size"] = 0
         self.assertEqual(
             [],
@@ -1685,13 +1843,9 @@ class StaticProductizationReportTests(unittest.TestCase):
                     encoding="utf-8"
                 )
             )
-            locked = contracts["final_goal_contract"][
+            thresholds = contracts["final_goal_contract"][
                 "professional_review_cost_fixtures"
-            ]["locked_current_catalog"]
-            locked["cases_fingerprint"] = "f" * 64
-            fixture[
-                "routing_neutral_isolated_material_binding_sensitivity"
-            ]["cases_fingerprint"] = "f" * 64
+            ]["thresholds"]
             target.write_text(json.dumps(contracts), encoding="utf-8")
             self.assertEqual(
                 [],
@@ -1699,13 +1853,31 @@ class StaticProductizationReportTests(unittest.TestCase):
                     "fixture.json", fixture, root=root
                 ),
             )
+            thresholds["maximum_fresh_target_count"] = 55
+            target.write_text(json.dumps(contracts), encoding="utf-8")
+            errors = self.module._professional_review_cost_fixture_errors(
+                "fixture.json", fixture, root=root
+            )
+            self.assertTrue(
+                any("arithmetic, inventory, or thresholds" in error for error in errors),
+                errors,
+            )
 
-        source = SCRIPT.read_text(encoding="utf-8")
-        self.assertNotIn(
-            locked["professional_packages_fingerprint"],
-            source,
+        legacy = copy.deepcopy(fixture)
+        legacy_sensitivity = legacy[
+            "routing_neutral_isolated_material_binding_sensitivity"
+        ]
+        for index, field in enumerate(
+            sorted(self.module.LEGACY_PROFESSIONAL_REVIEW_COST_DIGEST_FIELDS),
+            start=1,
+        ):
+            legacy_sensitivity[field] = f"{index:x}" * 64
+        self.assertEqual(
+            [],
+            self.module._professional_review_cost_fixture_errors(
+                "fixture.json", legacy
+            ),
         )
-        self.assertNotIn("47475069", source)
 
         governance = (ROOT / "docs/SKILL_CONTENT_GOVERNANCE.md").read_text(
             encoding="utf-8"
@@ -1783,7 +1955,7 @@ case is `9` fresh
 
         self.assertTrue(
             any(
-                "content_readiness.schema_version must equal 9" in error
+                "content_readiness.schema_version must equal 10" in error
                 for error in errors
             ),
             errors,
@@ -1794,7 +1966,7 @@ case is `9` fresh
         readability = report["content_readiness"]["expert"]["readability"]
         readability["unknown_contract_field"] = True
         errors = self.module._content_readiness_errors("fixture.json", report)
-        self.assertTrue(any("fields do not match schema 9" in item for item in errors), errors)
+        self.assertTrue(any("fields do not match schema 10" in item for item in errors), errors)
 
         report = _content_readiness_payload()
         report["content_readiness"]["expert"]["professional_completeness"][
@@ -1903,6 +2075,272 @@ case is `9` fresh
         self.assertEqual([], errors)
         self.assertFalse(self.module._readability_formal_ready(axis))
 
+    def test_current_compact_professional_projection_passes_axis_and_static_entry(
+        self,
+    ) -> None:
+        current = json.loads(
+            (ROOT / "reports/professionalism-regression-report.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        axis = current["content_readiness"]["expert"][
+            "professional_completeness"
+        ]
+        self.assertEqual("release-not-ready", current["release_gate"])
+        self.assertEqual(
+            [],
+            self.module._release_gate_errors(
+                "reports/professionalism-regression-report.json", current
+            ),
+        )
+        self.assertEqual(
+            [],
+            self.module._professional_completeness_axis_errors(
+                "reports/professionalism-regression-report.json", axis
+            ),
+        )
+
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._write_reports(root)
+            path = root / "reports/professionalism-regression-report.json"
+            path.write_text(json.dumps(current), encoding="utf-8")
+            self.assertEqual([], self.module._static_report_errors(root))
+
+    def test_current_professional_report_rejects_runtime_or_hybrid_authority(
+        self,
+    ) -> None:
+        report = _content_readiness_payload()
+        _set_compact_completeness_decision(report)
+        valid = report["content_readiness"]["expert"][
+            "professional_completeness"
+        ]
+        self.assertEqual(
+            [],
+            self.module._professional_completeness_axis_errors(
+                "reports/professionalism-regression-report.json", valid
+            ),
+        )
+        self.assertTrue(self.module._professional_completeness_formal_ready(valid))
+
+        cases = {
+            "runtime-plan-and-lifecycle": ("6" * 64, "6" * 64),
+            "runtime-lifecycle-without-plan": (None, None),
+            "mixed-plan": (None, "6" * 64),
+        }
+        for label, (actual_plan, current_plan) in cases.items():
+            with self.subTest(label=label):
+                axis = copy.deepcopy(valid)
+                axis["review_plan_fingerprint"] = actual_plan
+                axis["current_review_plan_fingerprint"] = current_plan
+                axis["round_lifecycle"].update(
+                    {
+                        "status": "schema3-head-current",
+                        "round_count": 1,
+                        "chain_depth": 0,
+                        "head_decision": None,
+                        "current_decision_is_head": True,
+                        "errors": [],
+                    }
+                )
+                errors = self.module._professional_completeness_axis_errors(
+                    "reports/professionalism-regression-report.json", axis
+                )
+                self.assertTrue(errors)
+                self.assertFalse(
+                    self.module._professional_completeness_formal_ready(axis)
+                )
+
+    def test_current_professional_report_rejects_origin_semantic_forgery(
+        self,
+    ) -> None:
+        report = _content_readiness_payload()
+        _set_compact_completeness_decision(report)
+        valid = report["content_readiness"]["expert"][
+            "professional_completeness"
+        ]
+
+        def canonical_carried_with_stale_counts(axis: dict) -> None:
+            provenance = axis["professional_dispositions"][0]["provenance"]
+            provenance["mode"] = "carried"
+            provenance["origin"]["origin_review_id"] = "prior-valid-origin"
+
+        cases = {
+            "fresh-origin-review": lambda axis: axis[
+                "professional_dispositions"
+            ][0]["provenance"]["origin"].__setitem__(
+                "origin_review_id", "forged-valid-origin"
+            ),
+            "split-fresh-origin-commit": lambda axis: axis[
+                "professional_dispositions"
+            ][1]["provenance"]["origin"].__setitem__(
+                "origin_commit", "b" * 40
+            ),
+            "fresh-carried-mode": lambda axis: axis[
+                "professional_dispositions"
+            ][0]["provenance"].__setitem__("mode", "carried"),
+            "canonical-carried-stale-counts": canonical_carried_with_stale_counts,
+        }
+        for label, mutate in cases.items():
+            with self.subTest(label=label):
+                axis = copy.deepcopy(valid)
+                mutate(axis)
+                errors = self.module._professional_completeness_axis_errors(
+                    "reports/professionalism-regression-report.json", axis
+                )
+                self.assertTrue(errors)
+                self.assertFalse(
+                    self.module._professional_completeness_formal_ready(axis)
+                )
+
+    def test_compact_professional_authority_is_closed_and_origin_bound(self) -> None:
+        report = _content_readiness_payload()
+        _set_compact_completeness_decision(report)
+        valid = report["content_readiness"]["expert"][
+            "professional_completeness"
+        ]
+        self.assertEqual(
+            [],
+            self.module._professional_completeness_axis_errors(
+                "fixture.json", valid
+            ),
+        )
+
+        mutations = {
+            "extra-origin-field": lambda axis: axis[
+                "professional_dispositions"
+            ][0]["provenance"]["origin"].__setitem__("origin_depth", 0),
+            "invalid-mode": lambda axis: axis["professional_dispositions"][0][
+                "provenance"
+            ].__setitem__("mode", "carried-forward"),
+            "invalid-review-id": lambda axis: axis[
+                "professional_dispositions"
+            ][0]["provenance"]["origin"].__setitem__(
+                "origin_review_id", "Not Canonical"
+            ),
+            "invalid-commit": lambda axis: axis["professional_dispositions"][0][
+                "provenance"
+            ]["origin"].__setitem__("origin_commit", "a" * 39),
+            "invalid-digest": lambda axis: axis["professional_dispositions"][0][
+                "provenance"
+            ]["origin"].__setitem__("origin_verdict_digest", "z" * 64),
+            "legacy-origin-source-alias": lambda axis: axis[
+                "professional_dispositions"
+            ][0]["provenance"]["origin"].__setitem__(
+                "source_fingerprint", "f" * 64
+            ),
+            "legacy-package-alias": lambda axis: axis[
+                "professional_dispositions"
+            ][0].__setitem__("package_fingerprint", "f" * 64),
+            "legacy-review-alias": lambda axis: axis[
+                "professional_dispositions"
+            ][0].__setitem__("review_binding_fingerprint", "f" * 64),
+            "missing-package-material-binding": lambda axis: axis[
+                "professional_dispositions"
+            ][0].pop("package_material_binding"),
+            "missing-review-unit-binding": lambda axis: axis[
+                "professional_dispositions"
+            ][0].pop("review_unit_binding"),
+            "verdict-digest-mismatch": lambda axis: axis[
+                "professional_dispositions"
+            ][0].__setitem__("target_decision_fingerprint", "f" * 64),
+        }
+        for label, mutate in mutations.items():
+            with self.subTest(label=label):
+                axis = copy.deepcopy(valid)
+                mutate(axis)
+                errors = self.module._professional_completeness_axis_errors(
+                    "fixture.json", axis
+                )
+                self.assertTrue(
+                    any("professional_dispositions are malformed" in error for error in errors),
+                    errors,
+                )
+
+    def test_compact_professional_partitions_counts_and_cost_fail_closed(self) -> None:
+        report = _content_readiness_payload()
+        _set_compact_completeness_decision(report, carried=True)
+        valid = report["content_readiness"]["expert"][
+            "professional_completeness"
+        ]
+        self.assertEqual(
+            [],
+            self.module._professional_completeness_axis_errors(
+                "fixture.json", valid
+            ),
+        )
+
+        mutations = {
+            "partition": lambda axis: axis.__setitem__(
+                "carried_forward_target_count", 188
+            ),
+            "origin-current-review": lambda axis: axis[
+                "professional_dispositions"
+            ][0]["provenance"]["origin"].__setitem__(
+                "origin_review_id", axis["panel_review_id"]
+            ),
+            "reviewer-pool": lambda axis: axis.__setitem__(
+                "reviewer_pool_size", 3
+            ),
+            "cost": lambda axis: axis["review_cost"].__setitem__(
+                "carried_forward_vote_count", 566
+            ),
+            "cost-currentness": lambda axis: axis.__setitem__(
+                "review_cost_current", False
+            ),
+        }
+        for label, mutate in mutations.items():
+            with self.subTest(label=label):
+                axis = copy.deepcopy(valid)
+                mutate(axis)
+                self.assertTrue(
+                    self.module._professional_completeness_axis_errors(
+                        "fixture.json", axis
+                    )
+                )
+
+    def test_null_professional_plans_require_authenticated_fixed_lifecycle(
+        self,
+    ) -> None:
+        report = _content_readiness_payload()
+        _set_compact_completeness_decision(report)
+        valid = report["content_readiness"]["expert"][
+            "professional_completeness"
+        ]
+        self.assertEqual(
+            [],
+            self.module._professional_completeness_axis_errors(
+                "fixture.json", valid
+            ),
+        )
+
+        mutations = {
+            "partial-null": lambda axis: axis.__setitem__(
+                "current_review_plan_fingerprint", "6" * 64
+            ),
+            "runtime-lifecycle": lambda axis: axis["round_lifecycle"].update(
+                {
+                    "status": "schema3-head-current",
+                    "head_decision": "evals/expert-panel/runtime/panel/decision.json",
+                }
+            ),
+            "fixed-head": lambda axis: axis["round_lifecycle"].__setitem__(
+                "head_decision", "evals/expert-panel/runtime/panel/decision.json"
+            ),
+            "fixed-errors": lambda axis: axis["round_lifecycle"].__setitem__(
+                "errors", ["forged fixed lifecycle"]
+            ),
+        }
+        for label, mutate in mutations.items():
+            with self.subTest(label=label):
+                axis = copy.deepcopy(valid)
+                mutate(axis)
+                self.assertTrue(
+                    self.module._professional_completeness_axis_errors(
+                        "fixture.json", axis
+                    )
+                )
+
     def test_professional_correction_and_short_coverage_cannot_be_formal(self) -> None:
         report = _content_readiness_payload()
         _set_completeness_decision(report, corrections=1)
@@ -1957,14 +2395,16 @@ case is `9` fresh
             for item in report["release_blockers"]
             if item["category"] != "professional-completeness-review-release-gate"
         ]
-        self.assertEqual([], self.module._release_gate_errors("fixture.json", report))
-
-        report["root_content_summary"]["semantic_lifecycle_formal_release_ready"] = True
-        report["release_blockers"] = []
+        report["schema_version"] = 4
+        report["expert_panel_release_manifest"] = (
+            _formal_expert_panel_release_manifest()
+        )
         report["release_gate"] = "release-ready"
         self.assertEqual([], self.module._release_gate_errors("fixture.json", report))
 
-    def test_professional_report_internal_fingerprints_must_match(self) -> None:
+    def test_root_and_reference_summary_drift_does_not_rebind_readability(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             self._write_reports(root)
@@ -1976,10 +2416,191 @@ case is `9` fresh
 
             errors = self.module._static_report_errors(root)
 
-            self.assertTrue(
-                any("current readability fingerprints" in error for error in errors),
-                errors,
+            self.assertFalse(
+                any("readability fingerprint" in error for error in errors), errors
             )
+
+    def test_current_readability_fingerprints_are_closed_exact_three(self) -> None:
+        report = _content_readiness_payload()
+        _set_readability_decision(report)
+        axis = report["content_readiness"]["expert"]["readability"]
+        expected_keys = set(
+            self.module.panel_contracts.READABILITY_SOURCE_FINGERPRINT_KEYS
+        )
+        self.assertEqual(expected_keys, set(axis["source_fingerprints"]))
+        self.assertEqual(
+            [], self.module._readability_axis_errors("fixture.json", axis)
+        )
+
+        mutations = {
+            "missing": lambda value: value["current_source_fingerprints"].pop(
+                "readability_target_manifest"
+            ),
+            "extra": lambda value: value["current_source_fingerprints"].__setitem__(
+                "extra", "d" * 64
+            ),
+            "non-sha": lambda value: value["current_source_fingerprints"].__setitem__(
+                "readability_detector_contract", "not-a-sha"
+            ),
+            "mismatch": lambda value: value["source_fingerprints"].__setitem__(
+                "actionability_detector_contract", "e" * 64
+            ),
+        }
+        for name, mutate in mutations.items():
+            with self.subTest(name=name):
+                changed = copy.deepcopy(axis)
+                mutate(changed)
+                errors = self.module._readability_axis_errors(
+                    "fixture.json", changed
+                )
+                self.assertTrue(errors, name)
+
+    def test_aggregate_rejects_each_incomplete_current_axis_field(self) -> None:
+        report = _content_readiness_payload()
+        _set_readability_decision(report)
+        _set_completeness_decision(report)
+        self.assertEqual(
+            [], self.module._content_readiness_errors("fixture.json", report)
+        )
+
+        flips = {
+            "readability": {
+                "decision_complete": False,
+                "storage_current": False,
+                "source_current": False,
+                "accepted_for_formal": False,
+                "attestation_status": "panel-majority-stale",
+                "applied_density_disposition_count": 1,
+                "applied_readability_disposition_count": 1,
+                "applied_actionability_disposition_count": 1,
+            },
+            "professional_completeness": {
+                "decision_complete": False,
+                "storage_current": False,
+                "source_current": False,
+                "accepted_for_formal": False,
+                "attestation_status": "panel-majority-stale",
+                "required_target_count": 188,
+                "applied_target_count": 188,
+                "accepted_current_count": 188,
+            },
+        }
+        for axis_name, axis_flips in flips.items():
+            for field, changed_value in axis_flips.items():
+                with self.subTest(axis=axis_name, field=field):
+                    changed = copy.deepcopy(report)
+                    changed["content_readiness"]["expert"][axis_name][
+                        field
+                    ] = changed_value
+                    errors = self.module._content_readiness_errors(
+                        "fixture.json", changed
+                    )
+                    self.assertTrue(
+                        any("aggregate does not match" in error for error in errors),
+                        errors,
+                    )
+
+    def test_ordinary_noncurrent_readability_is_soft_and_not_aggregate_current(
+        self,
+    ) -> None:
+        report = _content_readiness_payload()
+        self.assertEqual(
+            [], self.module._content_readiness_errors("fixture.json", report)
+        )
+        self.assertFalse(
+            report["content_readiness"]["aggregate"][
+                "readability_review_current"
+            ]
+        )
+
+        _set_readability_decision(report)
+        axis = report["content_readiness"]["expert"]["readability"]
+        axis["source_fingerprints"]["readability_target_manifest"] = "d" * 64
+        axis["source_current"] = False
+        axis["accepted_for_formal"] = False
+        axis["attestation_status"] = "panel-majority-stale"
+        report["content_readiness"]["aggregate"][
+            "readability_review_current"
+        ] = False
+        self.assertEqual(
+            [], self.module._content_readiness_errors("fixture.json", report)
+        )
+
+    def test_content_readiness_entry_runs_complete_axis_validators(self) -> None:
+        report = _content_readiness_payload()
+        _set_readability_decision(report)
+        _set_completeness_decision(report)
+        self.assertEqual(
+            [], self.module._content_readiness_errors("fixture.json", report)
+        )
+
+        mutations = {
+            "readability-exact-fingerprint-keys": (
+                "readability",
+                lambda axis: axis["current_source_fingerprints"].__setitem__(
+                    "forged", "a" * 64
+                ),
+                "current_source_fingerprints",
+            ),
+            "readability-missing-evidence": (
+                "readability",
+                lambda axis: axis.__setitem__("evidence", []),
+                "evidence",
+            ),
+            "professional-exact-fingerprint-keys": (
+                "professional_completeness",
+                lambda axis: axis["current_source_fingerprints"].__setitem__(
+                    "forged", "b" * 64
+                ),
+                "current_source_fingerprints",
+            ),
+            "professional-missing-evidence": (
+                "professional_completeness",
+                lambda axis: axis.__setitem__("evidence", []),
+                "evidence",
+            ),
+            "professional-invalid-artifact-schema": (
+                "professional_completeness",
+                lambda axis: axis.__setitem__(
+                    "panel_artifact_schema_version", 4
+                ),
+                "supported decision schema",
+            ),
+            "professional-count-mismatch": (
+                "professional_completeness",
+                lambda axis: axis.__setitem__("accepted_current_count", 188),
+                "do not sum",
+            ),
+        }
+        for name, (axis_name, mutate, expected) in mutations.items():
+            with self.subTest(name=name):
+                changed = copy.deepcopy(report)
+                mutate(changed["content_readiness"]["expert"][axis_name])
+                errors = self.module._content_readiness_errors(
+                    "fixture.json", changed
+                )
+                self.assertTrue(
+                    any(expected in error for error in errors),
+                    errors,
+                )
+
+    def test_static_report_entry_rejects_deep_expert_axis_forgery(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._write_reports(root)
+            path = root / "reports/professionalism-regression-report.json"
+            report = json.loads(path.read_text(encoding="utf-8"))
+            report["content_readiness"]["expert"]["readability"][
+                "current_source_fingerprints"
+            ]["forged"] = "f" * 64
+            path.write_text(json.dumps(report), encoding="utf-8")
+
+            errors = self.module._static_report_errors(root)
+
+        self.assertTrue(
+            any("current_source_fingerprints" in error for error in errors),
+            errors,
+        )
 
     def test_status_and_blocker_contract_rejects_missing_or_contradictory_blockers(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

@@ -1,16 +1,45 @@
 # Implementation Preparation
 
-For `implementation-preparation`, remain read/search-only and return one
-Markdown `# Engineering Brief`; do not implement, dispatch, or review.
+For `implementation-preparation`, remain read/search-only and return one Markdown `# Engineering Brief`; do not implement, dispatch, or review.
 
 ## Engineering Brief Contract
 
-The current Engineering Brief is the only operational analysis authority for
-Analyzed Work. User requests, issues or PRDs, source and tests, external
-evidence, and Specialist analysis are inputs. Task DAGs, Task Contracts,
-Implementation Handoffs, and Review Handoffs are derived artifacts. They must
-not redefine Acceptance, Non-goals, Owner, Invariants, Placement, contract
-semantics, Rollback, or the First Executable Slice.
+The current Engineering Brief is the only operational analysis authority for Analyzed
+Work. User requests, issues or PRDs, source and tests, external evidence, and Specialist
+analysis are inputs. Task DAGs, Task Contracts, Implementation Handoffs, and Review
+Handoffs are derived artifacts. They must not redefine Acceptance, Non-goals, Owner,
+Invariants, Placement, contract semantics, Rollback, or the First Executable Slice.
+
+Perform one complete initial Analysis. Before exposing the Slice, close observable
+Acceptance, Owner/Placement/Invariant, Acceptance-proving Validation, executable
+dependencies, professional Skill boundaries, minimum sufficient Review Boundaries, and
+critical Evidence Gaps capable of blocking the Slice. Do not re-analyze for Task
+completion or switch, ordinary implementation discovery, or an unreached Review Boundary.
+
+New evidence permits Delta Analysis only when it invalidates Acceptance/Non-goals,
+Owner/Placement/Invariant, contract/data semantics, dependency/rollback, material risk,
+or scope. Reuse Core `delta_analysis` without changing its
+triggers or transitive scope. Afterward, the complete updated Engineering Brief remains the only operational analysis authority.
+Then emit only:
+
+```text
+Delta Impact:
+invalidated=[...];
+affected={
+  brief:[...],
+  tasks:[...],
+  dependencies:[...],
+  skills:[...],
+  reviews:[...]
+};
+unlisted=preserved
+```
+
+Project exact proved affected sets. `[]` means proved no impact; unknown cannot map to
+`[]`. Preserve Skill assignments unless professional domain, work type, or a material-risk
+trigger changes. If impact closure remains unknown, record a Proof Limit and return blocked.
+Main consumes Delta Impact without reinterpreting affected scope. The projection never
+replaces, summarizes, or weakens the updated Brief. Use full re-analysis only when foundational goals or system assumptions are invalidated.
 
 - `## Problem and Desired Behavior`: observed behavior, requested behavior,
   scope, constraints, assumptions, and unresolved user-owned choices.
@@ -35,18 +64,16 @@ semantics, Rollback, or the First Executable Slice.
 - Main must not regenerate or reinterpret it.
 - `## Task Dependencies`: evidenced task edges and remaining work.
 - `## Integration Boundary`: integration ownership and cross-task boundary.
-- `## Review Boundary`: current review strategy, owner, scope, and triggered
-  Specialist boundaries.
+- `## Review Boundary`: minimum sufficient boundaries, owner, scope, Covered
+  Task IDs, required Review Skills, professional-risk dimensions, and triggered
+  Specialist obligations. Related work is combined unless a concrete risk
+  requires an intermediate boundary.
 - `## Evidence Gaps and Proof Limits`: critical gaps, safe-slice limits, and
   explicit unknowns.
 
 ## Task DAG Handoff
 
-Record whether two or more tasks show a proven dependency, parallel
-benefit, cross-owner boundary, integration need, or ordered migration or
-release. Do not construct a Task DAG in this mode. Hand the current Brief to
-`task-dag-planner` only to project task splits, dependencies, parallel safety,
-critical path, integration/merge/conflict ownership, and remaining Task
-Contracts. The planner does not reselect the First Executable Slice or change a
-protected Brief decision. An insufficient Brief or downstream conflict returns
-`blocked` through Main to analysis for an updated Brief and redispatch.
+Record whether two or more tasks show a proven dependency, parallel benefit, cross-owner boundary, integration need, or ordered migration or release.
+Do not construct a Task DAG in this mode. Hand the current Brief to `task-dag-planner` only to project task splits, dependencies, parallel safety,
+critical path, integration/merge/conflict ownership, and remaining Task Contracts. The planner does not reselect the First Executable Slice or
+change a protected Brief decision. An insufficient Brief or downstream conflict returns `blocked` through Main to analysis for an updated Brief and redispatch.

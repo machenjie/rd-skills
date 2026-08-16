@@ -10,6 +10,14 @@ Owner, Invariants, Placement, contract semantics, Rollback, or the Slice. If
 the assignment conflicts with the current Brief or needs one of those decisions
 to change, mark it blocked and return to analysis through Main.
 
+This cross-Agent artifact is an Execution Delta, not a second Task Contract.
+Transmit only Task ID and Status; Changed Files; the actual diff or accessible
+diff reference; Commands; a structured Validation Result; Freshness; relevant
+current Evidence; Unverified Scope; and Residual Risk. Resolve Goal, Acceptance,
+Owner, Non-goals, and other existing Authority at its source instead of copying
+them here. Keep raw command logs as JIT-readable artifacts and include them only
+when a downstream consumer explicitly requires them.
+
 The public Execution Level lines use Core public `execution-level/v1`. The integrity
 fallback for missing, malformed, or duplicate public execution-level data is
 defined in [execution-level-contract.md](execution-level-contract.md).
@@ -35,11 +43,19 @@ L5 Evidence: when=effective L5 only; requires=independent pre-implementation rev
 
 ## Owner
 
+Authority reference only — do not copy its value into the Execution Delta.
+
 ## Result
+
+Use Status and structured Validation Results; do not repeat a narrative.
 
 ## Expected Output
 
+Authority reference only — do not copy its value into the Execution Delta.
+
 ## Evidence Requirements
+
+Authority reference only — project only consumer-required current Evidence below.
 
 ## Changed Files
 
@@ -51,7 +67,11 @@ material edit occurred.
 
 ## Commands Run
 
+List command identifiers only. Full logs remain JIT-readable artifacts.
+
 ## Validation Results
+
+Use structured command, result, scope, freshness, and proof-limit values.
 
 ## Last Material Edit and Validation Ordering
 
@@ -63,10 +83,16 @@ invalidates older validation and review evidence.
 | Claim | Owner | Artifact | Command | Result | Freshness | Scope | Proof Limit | State |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 
-State is `current`, `superseded`, or `invalid`. Repair supersedes
-evidence for the previous diff and requires fresh validation and re-review.
+State is `current`, `superseded`, or `invalid`. Repair invalidates only Evidence
+whose Scope intersects the repair, Claims that depend on modified behavior, and
+transitive impact; unaffected fresh Evidence remains current. Repair requires
+fresh validation targeted to affected scope and fresh independent re-review. A
+repair supersedes affected Evidence for the previous diff; it does not
+supersede unrelated current Evidence.
 Current task-agent evidence after the latest material edit uses
 `latest-material-edit` and `validation-passed` Claim values.
+The Execution Delta transfers only consumer-required `current` rows. Do not
+transfer unrelated, `superseded`, or `invalid` Evidence.
 Record one `test-approach-selected` Claim for each normal behavior batch with its
 Guard G approach, reason, oracle, evidence, and proof boundary. Record current
 `red-proof` and `green-proof` only when applicable, with current proof after the

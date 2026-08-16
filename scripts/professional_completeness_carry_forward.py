@@ -16,94 +16,44 @@ import re
 from pathlib import Path, PurePosixPath
 from typing import Any, Mapping, Sequence
 
+import expert_panel_contracts as panel_contracts
 
 ACCEPTED_PROFESSIONAL_DISPOSITION = (
-    "accepted-current-professional-completeness"
+    panel_contracts.PROFESSIONAL_ACCEPTED_DISPOSITION
 )
-PROFESSIONAL_CARRY_CONTRACT = {
-    "carry_unit": "whole-professional-package",
-    "baseline_requirement": "exact-prior-target-snapshot",
-    "review_contract_requirement": "exact-fingerprint-match",
-    "dependency_depth": "one-hop-factual-material",
-    "required_dependency_sources": [
-        "packet-required-candidate",
-        "reviewer-added-candidate-union-from-all-prior-target-ballots",
-    ],
-    "candidate_material_excludes": [
-        "package_fingerprint",
-        "routing_adjacency",
-    ],
-    "fresh_state_is_not_a_dependency": True,
-    "accepted_prior_disposition": ACCEPTED_PROFESSIONAL_DISPOSITION,
-}
-PROFESSIONAL_CAPSULE_CONTRACT = {
-    "projection": "final-assigned-fresh-target-review-capsule",
-    "target_material": "complete-own-material-registry-expertise",
-    "adjacency_metadata": "complete-full-ranking-and-required-selection",
-    "candidate_material": "complete-material-without-candidate-ranking",
-    "candidate_origins": ["packet-required", "reviewer-added"],
-    "reviewer_added_source": "validated-immutable-candidate-request",
-    "predecessor": "immutable-discovery-capsule",
-    "material_storage": "top-level-skill-deduplicated-catalog",
-    "closed_projection": True,
-}
-PROFESSIONAL_DISCOVERY_CAPSULE_CONTRACT = {
-    "projection": "assigned-fresh-target-discovery-capsule",
-    "target_material": "complete-own-material-registry-expertise",
-    "required_candidate_material": "complete-material-without-candidate-ranking",
-    "adjacency_metadata": "complete-full-ranking-and-required-selection",
-    "candidate_boundary_catalog": "complete-lightweight-catalog",
-    "candidate_request": "separate-immutable-artifact-required",
-    "material_storage": "top-level-skill-deduplicated-catalog",
-    "closed_projection": True,
-}
+PROFESSIONAL_CARRY_CONTRACT = copy.deepcopy(
+    panel_contracts.PROFESSIONAL_CARRY_CONTRACT
+)
+PROFESSIONAL_CAPSULE_CONTRACT = copy.deepcopy(
+    panel_contracts.PROFESSIONAL_REVIEW_CAPSULE_CONTRACT
+)
+PROFESSIONAL_DISCOVERY_CAPSULE_CONTRACT = copy.deepcopy(
+    panel_contracts.PROFESSIONAL_DISCOVERY_CAPSULE_CONTRACT
+)
 
-_MATERIAL_RECORD_FIELDS = {"path", "sha256", "line_count", "content"}
-_ADJACENCY_REVIEW_BINDING_FIELDS = {
+_MATERIAL_RECORD_FIELDS = set(
+    panel_contracts.PROFESSIONAL_MATERIAL_RECORD_FIELDS
+)
+_ADJACENCY_REVIEW_BINDING_FIELDS = set(
+    panel_contracts.PROFESSIONAL_ADJACENCY_REVIEW_BINDING_FIELDS
+)
+_FRESH_ADJACENCY_CONTEXT_FIELDS = {
     "algorithm",
     "declared_skills",
     "required_candidate_selection",
     "required_candidates",
-    "required_candidates_fingerprint",
     "full_catalog_count",
     "full_catalog_ranking",
-    "full_catalog_ranking_fingerprint",
 }
-_TARGET_BINDING_FIELDS = {
-    "skill_id",
-    "layer",
-    "own_material",
-    "own_material_fingerprint",
-    "registry",
-    "registry_fingerprint",
-    "required_expertise_tags",
-    "required_expertise_fingerprint",
-    "adjacency",
-    "adjacency_fingerprint",
-    "candidate_material_fingerprint",
-    "required_candidate_material_bindings",
-    "review_binding_fingerprint",
-}
-_SNAPSHOT_TARGET_FIELDS = {
-    "skill_id",
-    "layer",
-    "own_material_fingerprint",
-    "registry_fingerprint",
-    "required_expertise_fingerprint",
-    "adjacency_fingerprint",
-    "candidate_material_fingerprint",
-    "required_candidate_material_bindings",
-    "review_binding_fingerprint",
-}
-_DECISION_DEPENDENCY_FIELDS = {
-    "skill_id",
-    "final_disposition",
-    "evidence_complete",
-    "prior_target_vote_count",
-    "required_candidate_ids",
-    "reviewer_added_candidate_ids_union",
-    "dependency_candidate_ids",
-}
+_TARGET_BINDING_FIELDS = set(
+    panel_contracts.PROFESSIONAL_TARGET_BINDING_FIELDS
+)
+_SNAPSHOT_TARGET_FIELDS = set(
+    panel_contracts.PROFESSIONAL_SNAPSHOT_TARGET_FIELDS
+)
+_DECISION_DEPENDENCY_FIELDS = set(
+    panel_contracts.PROFESSIONAL_DECISION_DEPENDENCY_FIELDS
+)
 _CAPSULE_FIELDS = {
     "projection_contract",
     "assigned_fresh_target_ids",
@@ -112,7 +62,7 @@ _CAPSULE_FIELDS = {
 }
 _CAPSULE_TARGET_FIELDS = {
     "skill_id",
-    "source_review_binding_fingerprint",
+    "review_unit_binding",
     "adjacency",
     "candidate_material_manifest",
 }
@@ -131,7 +81,7 @@ _DISCOVERY_CAPSULE_FIELDS = {
 }
 _DISCOVERY_CAPSULE_TARGET_FIELDS = {
     "skill_id",
-    "source_review_binding_fingerprint",
+    "review_unit_binding",
     "adjacency",
     "required_candidate_material_manifest",
 }
@@ -147,6 +97,21 @@ _REVIEWER_ADDED_REQUEST_FIELDS = {
     "discovery_reason",
     "ranking_evidence",
     "material_fingerprint",
+}
+_PROFESSIONAL_EVIDENCE_METRIC_KEYS = {
+    "target_vote_count",
+    "required_adjacency_candidate_count",
+    "criterion_result_count",
+    "criterion_anchor_binding_count",
+    "criterion_assertion_count",
+    "evidence_anchor_count",
+    "examined_failure_mode_count",
+    "examined_omission_candidate_count",
+    "examined_adjacency_count",
+    "examined_required_adjacency_count",
+    "reviewer_added_adjacency_count",
+    "proof_limit_count",
+    "qualification_claim_count",
 }
 
 
@@ -321,14 +286,13 @@ def _canonical_own_material_binding(
 def professional_registry_responsibility_binding(
     target: Mapping[str, Any],
 ) -> dict[str, Any]:
-    """Project the Registry entry digest and embedded responsibility contract."""
+    """Project the Registry path and embedded responsibility contract."""
 
     registry = target.get("registry")
-    if not isinstance(registry, dict) or set(registry) != {
-        "path",
-        "entry_fingerprint",
-        "responsibility_contract",
-    }:
+    if not isinstance(registry, dict) or set(registry) not in (
+        {"path", "responsibility_contract"},
+        {"path", "entry_fingerprint", "responsibility_contract"},
+    ):
         raise ProfessionalCarryForwardError(
             "target.registry must contain the canonical Registry binding"
         )
@@ -336,15 +300,16 @@ def professional_registry_responsibility_binding(
         raise ProfessionalCarryForwardError(
             "target.registry.path must be non-empty"
         )
-    _require_sha256(
-        registry.get("entry_fingerprint"),
-        label="target.registry.entry_fingerprint",
-    )
     if not isinstance(registry.get("responsibility_contract"), dict):
         raise ProfessionalCarryForwardError(
             "target.registry.responsibility_contract must be an object"
         )
-    return copy.deepcopy(registry)
+    return {
+        "path": registry["path"],
+        "responsibility_contract": copy.deepcopy(
+            registry["responsibility_contract"]
+        ),
+    }
 
 
 def professional_required_expertise_binding(
@@ -361,14 +326,52 @@ def professional_required_expertise_binding(
 def professional_adjacency_review_binding(
     target: Mapping[str, Any],
 ) -> dict[str, Any]:
-    """Project target-visible ranking results and their stable selection contract.
+    """Project only target-local selection authority used by currentness."""
 
-    The packet's ``document_frequency_filter`` is a catalog-wide generation
-    intermediate.  Binding its shared fingerprint here would make one local
-    token change stale all 189 targets even when their own ranking and required
-    candidates are unchanged.  The generated ranking/result still binds every
-    review-visible consequence of that intermediate.
-    """
+    context = professional_fresh_adjacency_review_context(target)
+    selection = context["required_candidate_selection"]
+    version = selection.get("version")
+    if not isinstance(version, str) or not version.strip():
+        raise ProfessionalCarryForwardError(
+            "target adjacency selection contract version must be non-empty"
+        )
+    required_ids = [
+        candidate["skill_id"] for candidate in context["required_candidates"]
+    ]
+    return _canonical_adjacency_review_binding(
+        {
+            "required_candidate_ids": required_ids,
+            "selection_contract_version": version,
+        }
+    )
+
+
+def _canonical_adjacency_review_binding(value: object) -> dict[str, Any]:
+    if not isinstance(value, Mapping) or set(value) != (
+        _ADJACENCY_REVIEW_BINDING_FIELDS
+    ):
+        raise ProfessionalCarryForwardError(
+            "target adjacency carry fields are not canonical"
+        )
+    required_ids = _sorted_unique_strings(
+        value.get("required_candidate_ids"),
+        label="target adjacency required_candidate_ids",
+    )
+    version = value.get("selection_contract_version")
+    if not isinstance(version, str) or not version.strip():
+        raise ProfessionalCarryForwardError(
+            "target adjacency selection_contract_version must be non-empty"
+        )
+    return {
+        "required_candidate_ids": required_ids,
+        "selection_contract_version": version,
+    }
+
+
+def professional_fresh_adjacency_review_context(
+    target: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Project full ranking context for fresh review, never for currentness."""
 
     adjacency = target.get("routing_adjacency")
     if not isinstance(adjacency, dict):
@@ -414,26 +417,14 @@ def professional_adjacency_review_binding(
         raise ProfessionalCarryForwardError(
             "full catalog count must match embedded ranking"
         )
-    if adjacency.get("full_catalog_ranking_fingerprint") != canonical_json_sha256(
-        ranking
-    ):
-        raise ProfessionalCarryForwardError(
-            "full catalog ranking fingerprint is stale"
-        )
-    if adjacency.get("required_candidates_fingerprint") != canonical_json_sha256(
-        required
-    ):
-        raise ProfessionalCarryForwardError(
-            "required candidate fingerprint is stale"
-        )
-    missing = sorted(_ADJACENCY_REVIEW_BINDING_FIELDS - set(adjacency))
+    missing = sorted(_FRESH_ADJACENCY_CONTEXT_FIELDS - set(adjacency))
     if missing:
         raise ProfessionalCarryForwardError(
             "target adjacency lacks review-visible fields: " + ", ".join(missing)
         )
     return {
         field: copy.deepcopy(adjacency[field])
-        for field in sorted(_ADJACENCY_REVIEW_BINDING_FIELDS)
+        for field in sorted(_FRESH_ADJACENCY_CONTEXT_FIELDS)
     }
 
 
@@ -509,40 +500,28 @@ def professional_review_bindings(
         registry = candidate_materials[skill_id]["registry"]
         expertise = candidate_materials[skill_id]["required_expertise_tags"]
         adjacency = professional_adjacency_review_binding(target)
-        required_ids = [
-            candidate["skill_id"]
-            for candidate in adjacency["required_candidates"]
-        ]
+        required_ids = adjacency["required_candidate_ids"]
         unknown = sorted(set(required_ids) - set(target_index))
         if unknown:
             raise ProfessionalCarryForwardError(
                 f"{skill_id} requires unknown adjacency candidates: "
                 + ", ".join(unknown)
             )
-        required_material_bindings = [
-            {
-                "skill_id": candidate_id,
-                "material_fingerprint": candidate_fingerprints[candidate_id],
-            }
+        dependency_material_bindings = {
+            candidate_id: candidate_fingerprints[candidate_id]
             for candidate_id in required_ids
-        ]
+        }
         binding: dict[str, Any] = {
             "skill_id": skill_id,
             "layer": candidate_materials[skill_id]["layer"],
             "own_material": own_material,
-            "own_material_fingerprint": canonical_json_sha256(own_material),
             "registry": registry,
-            "registry_fingerprint": canonical_json_sha256(registry),
             "required_expertise_tags": expertise,
-            "required_expertise_fingerprint": canonical_json_sha256(expertise),
             "adjacency": adjacency,
-            "adjacency_fingerprint": canonical_json_sha256(adjacency),
-            "candidate_material_fingerprint": candidate_fingerprints[skill_id],
-            "required_candidate_material_bindings": (
-                required_material_bindings
-            ),
+            "package_material_binding": candidate_fingerprints[skill_id],
+            "dependency_material_bindings": dependency_material_bindings,
         }
-        binding["review_binding_fingerprint"] = canonical_json_sha256(binding)
+        binding["review_unit_binding"] = canonical_json_sha256(binding)
         bindings[skill_id] = binding
     _validate_binding_catalog(bindings)
     return bindings
@@ -574,20 +553,9 @@ def _validate_binding_catalog(
         )
         registry = professional_registry_responsibility_binding(binding)
         expertise = professional_required_expertise_binding(binding)
-        adjacency = professional_adjacency_review_binding(
-            {"routing_adjacency": binding.get("adjacency")}
+        adjacency = _canonical_adjacency_review_binding(
+            binding.get("adjacency")
         )
-        expected_parts = {
-            "own_material_fingerprint": canonical_json_sha256(own),
-            "registry_fingerprint": canonical_json_sha256(registry),
-            "required_expertise_fingerprint": canonical_json_sha256(expertise),
-            "adjacency_fingerprint": canonical_json_sha256(adjacency),
-        }
-        for field, expected in expected_parts.items():
-            if binding.get(field) != expected:
-                raise ProfessionalCarryForwardError(
-                    f"binding {key}.{field} is stale"
-                )
         candidate_projection = {
             "skill_id": key,
             "layer": binding["layer"],
@@ -596,54 +564,35 @@ def _validate_binding_catalog(
             "required_expertise_tags": expertise,
         }
         candidate_fingerprint = canonical_json_sha256(candidate_projection)
-        if binding.get("candidate_material_fingerprint") != candidate_fingerprint:
+        if binding.get("package_material_binding") != candidate_fingerprint:
             raise ProfessionalCarryForwardError(
-                f"binding {key}.candidate_material_fingerprint is stale"
+                f"binding {key}.package_material_binding is stale"
             )
         candidate_fingerprints[key] = candidate_fingerprint
         without_fingerprint = dict(binding)
-        review_fingerprint = without_fingerprint.pop("review_binding_fingerprint")
+        review_fingerprint = without_fingerprint.pop("review_unit_binding")
         if review_fingerprint != canonical_json_sha256(without_fingerprint):
             raise ProfessionalCarryForwardError(
-                f"binding {key}.review_binding_fingerprint is stale"
+                f"binding {key}.review_unit_binding is stale"
             )
     for key, binding in bindings.items():
-        required_ids = [
-            row["skill_id"] for row in binding["adjacency"]["required_candidates"]
-        ]
-        ranking_ids = [
-            row["skill_id"]
-            for row in binding["adjacency"]["full_catalog_ranking"]
-        ]
-        expected_ranking_ids = set(bindings) - {key}
-        if set(ranking_ids) != expected_ranking_ids:
-            missing = sorted(expected_ranking_ids - set(ranking_ids))
-            extra = sorted(set(ranking_ids) - expected_ranking_ids)
+        required_ids = binding["adjacency"]["required_candidate_ids"]
+        material_bindings = binding.get("dependency_material_bindings")
+        if not isinstance(material_bindings, dict):
             raise ProfessionalCarryForwardError(
-                f"binding {key} full ranking closed set is stale; "
-                f"missing={missing}; extra={extra}"
+                f"binding {key}.dependency_material_bindings is invalid"
             )
-        material_bindings = binding.get("required_candidate_material_bindings")
-        if not isinstance(material_bindings, list) or any(
-            not isinstance(row, dict)
-            or set(row) != {"skill_id", "material_fingerprint"}
-            for row in material_bindings
-        ):
-            raise ProfessionalCarryForwardError(
-                f"binding {key}.required_candidate_material_bindings is invalid"
-            )
-        material_ids = [row["skill_id"] for row in material_bindings]
+        material_ids = list(material_bindings)
         if material_ids != required_ids:
             raise ProfessionalCarryForwardError(
                 f"binding {key} required candidate material set is stale"
             )
-        for row in material_bindings:
-            candidate_id = row["skill_id"]
+        for candidate_id, material_fingerprint in material_bindings.items():
             if candidate_id not in candidate_fingerprints:
                 raise ProfessionalCarryForwardError(
                     f"binding {key} names unknown candidate {candidate_id}"
                 )
-            if row["material_fingerprint"] != candidate_fingerprints[candidate_id]:
+            if material_fingerprint != candidate_fingerprints[candidate_id]:
                 raise ProfessionalCarryForwardError(
                     f"binding {key} candidate material for {candidate_id} is stale"
                 )
@@ -672,6 +621,136 @@ def professional_carry_snapshot(
         "review_contract_fingerprint": contract,
         "targets": targets,
     }
+
+
+def professional_current_authority(
+    bindings: Mapping[str, dict[str, Any]],
+    *,
+    authenticated_claims: Mapping[str, dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    """Project the complete fail-closed authority map for compact evidence."""
+
+    _validate_binding_catalog(bindings)
+    if (
+        not isinstance(authenticated_claims, Mapping)
+        or set(authenticated_claims) != set(bindings)
+    ):
+        raise ProfessionalCarryForwardError(
+            "Professional current package authority coverage is stale"
+        )
+    candidate_materials = {
+        skill_id: binding["package_material_binding"]
+        for skill_id, binding in bindings.items()
+    }
+    authority: dict[str, dict[str, Any]] = {}
+    for skill_id, binding in bindings.items():
+        claims = authenticated_claims[skill_id]
+        if not isinstance(claims, dict) or set(claims) != {
+            "vote_authorities",
+            "reviewer_partition",
+            "evidence_metrics",
+            "origin",
+            "reviewer_added_candidate_ids_union",
+        }:
+            raise ProfessionalCarryForwardError(
+                f"{skill_id} authenticated Professional claims are incomplete"
+            )
+        votes = claims["vote_authorities"]
+        partition = claims["reviewer_partition"]
+        metrics = claims["evidence_metrics"]
+        origin = claims["origin"]
+        required_ids = binding["adjacency"]["required_candidate_ids"]
+        reviewer_added_ids = _sorted_unique_strings(
+            claims["reviewer_added_candidate_ids_union"],
+            label=f"{skill_id}.reviewer_added_candidate_ids_union",
+        )
+        if set(reviewer_added_ids) & set(required_ids):
+            raise ProfessionalCarryForwardError(
+                f"{skill_id} reviewer-added candidates overlap required candidates"
+            )
+        unknown_added = sorted(set(reviewer_added_ids) - set(bindings))
+        if unknown_added:
+            raise ProfessionalCarryForwardError(
+                f"{skill_id} reviewer-added candidates are unknown: "
+                + ", ".join(unknown_added)
+            )
+        if (
+            not isinstance(votes, dict)
+            or len(votes) != panel_contracts.PROFESSIONAL_PANEL_SIZE
+            or any(
+                not isinstance(voter_id, str)
+                or not voter_id
+                or not isinstance(vote, dict)
+                or vote.get("reviewer") != voter_id
+                or not _is_sha256(vote.get("review_evidence_fingerprint"))
+                for voter_id, vote in votes.items()
+            )
+            or not isinstance(partition, dict)
+            or set(partition) != {"domain_voters", "architecture_voter"}
+            or not isinstance(partition["domain_voters"], list)
+            or partition["domain_voters"]
+            != sorted(set(partition["domain_voters"]))
+            or len(partition["domain_voters"])
+            != panel_contracts.PROFESSIONAL_REQUIRED_DOMAIN_EXPERTS
+            or not all(
+                isinstance(voter_id, str) and voter_id
+                for voter_id in partition["domain_voters"]
+            )
+            or not isinstance(partition["architecture_voter"], str)
+            or not partition["architecture_voter"]
+            or partition["architecture_voter"] in partition["domain_voters"]
+            or set(votes)
+            != {
+                *partition["domain_voters"],
+                partition["architecture_voter"],
+            }
+            or not isinstance(metrics, dict)
+            or set(metrics) != _PROFESSIONAL_EVIDENCE_METRIC_KEYS
+            or any(type(value) is not int or value < 0 for value in metrics.values())
+            or not isinstance(origin, dict)
+            or set(origin) != {
+                "origin_review_id",
+                "origin_commit",
+                "origin_verdict_digest",
+            }
+            or not isinstance(origin["origin_review_id"], str)
+            or not origin["origin_review_id"]
+            or not isinstance(origin["origin_commit"], str)
+            or re.fullmatch(r"[0-9a-f]{40}", origin["origin_commit"]) is None
+            or not _is_sha256(origin["origin_verdict_digest"])
+        ):
+            raise ProfessionalCarryForwardError(
+                f"{skill_id} authenticated Professional claims are invalid"
+            )
+        authority[skill_id] = {
+            "package_material_binding": binding[
+                "package_material_binding"
+            ],
+            "review_unit_binding": binding[
+                "review_unit_binding"
+            ],
+            "required_expertise_tags": copy.deepcopy(
+                binding["required_expertise_tags"]
+            ),
+            "selection_contract_version": binding["adjacency"][
+                "selection_contract_version"
+            ],
+            "required_candidate_ids": copy.deepcopy(required_ids),
+            "required_candidate_material_bindings": {
+                candidate_id: candidate_materials[candidate_id]
+                for candidate_id in required_ids
+            },
+            "reviewer_added_candidate_ids_union": reviewer_added_ids,
+            "reviewer_added_candidate_material_bindings": {
+                candidate_id: candidate_materials[candidate_id]
+                for candidate_id in reviewer_added_ids
+            },
+            "vote_authorities": copy.deepcopy(votes),
+            "reviewer_partition": copy.deepcopy(partition),
+            "evidence_metrics": copy.deepcopy(metrics),
+            "origin": copy.deepcopy(origin),
+        }
+    return authority
 
 
 def _required_candidate_ids(target: Mapping[str, Any]) -> list[str]:
@@ -895,7 +974,7 @@ def professional_prior_decision_dependencies(
         reviewer_added_by_voter: dict[str, set[str]] = {}
         target_voter_ids = [voter_id for voter_id, _vote, _current in target_votes]
         votes_complete = bool(
-            len(target_votes) == 3
+            len(target_votes) == panel_contracts.PROFESSIONAL_PANEL_SIZE
             and len(target_voter_ids) == len(set(target_voter_ids))
             and all(current for _voter_id, _vote, current in target_votes)
         )
@@ -950,7 +1029,12 @@ def professional_prior_decision_dependencies(
                 votes_complete = False
             if added_for_voter:
                 reviewer_added_by_voter[voter_id] = added_for_voter
-        if len(domain_voters) != 2 or len(architecture_voters) != 1:
+        if (
+            len(domain_voters)
+            != panel_contracts.PROFESSIONAL_REQUIRED_DOMAIN_EXPERTS
+            or len(architecture_voters)
+            != panel_contracts.PROFESSIONAL_REQUIRED_ARCHITECTURE_EXPERTS
+        ):
             votes_complete = False
 
         reviewer_added = {
@@ -1177,45 +1261,29 @@ def plan_exact_professional_carry_forward(
                 reasons.add("prior-final-not-accepted")
             if prior is not None:
                 comparisons = (
-                    (
-                        "layer",
-                        "target-placement-changed",
-                    ),
-                    (
-                        "own_material_fingerprint",
-                        "own-material-changed",
-                    ),
-                    (
-                        "registry_fingerprint",
-                        "registry-responsibility-changed",
-                    ),
-                    (
-                        "required_expertise_fingerprint",
-                        "required-expertise-changed",
-                    ),
-                    (
-                        "adjacency_fingerprint",
-                        "adjacency-review-binding-changed",
-                    ),
+                    ("layer", "target-placement-changed"),
+                    ("package_material_binding", "target-material-changed"),
                 )
                 for field, reason in comparisons:
                     if prior.get(field) != binding.get(field):
                         reasons.add(reason)
 
-                prior_required = {
-                    row["skill_id"]: row["material_fingerprint"]
-                    for row in prior["required_candidate_material_bindings"]
-                }
-                current_required = {
-                    row["skill_id"]: row["material_fingerprint"]
-                    for row in binding["required_candidate_material_bindings"]
-                }
+                prior_required = prior["dependency_material_bindings"]
+                current_required = binding["dependency_material_bindings"]
+                if set(prior_required) != set(current_required):
+                    reasons.add("adjacency-review-binding-changed")
                 if set(prior_required) == set(current_required) and any(
                     prior_required[candidate_id]
                     != current_required[candidate_id]
                     for candidate_id in current_required
                 ):
                     reasons.add("required-candidate-material-changed")
+                if (
+                    prior.get("review_unit_binding")
+                    != binding.get("review_unit_binding")
+                    and not reasons
+                ):
+                    reasons.add("review-unit-binding-changed")
 
                 if dependency is not None:
                     for candidate_id in dependency[
@@ -1231,10 +1299,10 @@ def plan_exact_professional_carry_forward(
                             prior_candidate is None
                             or current_candidate is None
                             or prior_candidate.get(
-                                "candidate_material_fingerprint"
+                                "package_material_binding"
                             )
                             != current_candidate.get(
-                                "candidate_material_fingerprint"
+                                "package_material_binding"
                             )
                         ):
                             reasons.add(
@@ -1266,7 +1334,7 @@ def _candidate_projection_from_binding(
         "required_expertise_tags": copy.deepcopy(
             binding["required_expertise_tags"]
         ),
-        "material_fingerprint": binding["candidate_material_fingerprint"],
+        "material_fingerprint": binding["package_material_binding"],
     }
 
 
@@ -1282,7 +1350,7 @@ def _candidate_boundary_projection_from_binding(
         "required_expertise_tags": copy.deepcopy(
             binding["required_expertise_tags"]
         ),
-        "material_fingerprint": binding["candidate_material_fingerprint"],
+        "material_fingerprint": binding["package_material_binding"],
     }
 
 
@@ -1320,32 +1388,52 @@ def _normalize_assigned_targets(
     return assigned
 
 
+def _fresh_adjacency_contexts(
+    *,
+    bindings: Mapping[str, dict[str, Any]],
+    review_targets: Sequence[dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    """Authenticate full fresh-review context outside carry/currentness state."""
+
+    target_index = _canonical_target_index(review_targets)
+    if set(target_index) != set(bindings):
+        raise ProfessionalCarryForwardError(
+            "fresh review target coverage is stale"
+        )
+    if professional_review_bindings(list(target_index.values())) != bindings:
+        raise ProfessionalCarryForwardError(
+            "fresh review targets do not match target-local bindings"
+        )
+    return {
+        skill_id: professional_fresh_adjacency_review_context(target)
+        for skill_id, target in target_index.items()
+    }
+
+
 def _project_professional_discovery_capsule(
     *,
     bindings: Mapping[str, dict[str, Any]],
+    adjacency_contexts: Mapping[str, dict[str, Any]],
     assigned: Sequence[str],
 ) -> dict[str, Any]:
     targets: list[dict[str, Any]] = []
     material_ids: set[str] = set(assigned)
     for skill_id in assigned:
         binding = bindings[skill_id]
-        required_ids = [
-            row["skill_id"]
-            for row in binding["adjacency"]["required_candidates"]
-        ]
+        required_ids = binding["adjacency"]["required_candidate_ids"]
         material_ids.update(required_ids)
         targets.append(
             {
                 "skill_id": skill_id,
-                "source_review_binding_fingerprint": binding[
-                    "review_binding_fingerprint"
+                "review_unit_binding": binding[
+                    "review_unit_binding"
                 ],
-                "adjacency": copy.deepcopy(binding["adjacency"]),
+                "adjacency": copy.deepcopy(adjacency_contexts[skill_id]),
                 "required_candidate_material_manifest": [
                     {
                         "skill_id": candidate_id,
                         "material_fingerprint": bindings[candidate_id][
-                            "candidate_material_fingerprint"
+                            "package_material_binding"
                         ],
                     }
                     for candidate_id in required_ids
@@ -1372,6 +1460,7 @@ def _project_professional_discovery_capsule(
 def project_professional_discovery_capsule(
     *,
     bindings: Mapping[str, dict[str, Any]],
+    review_targets: Sequence[dict[str, Any]],
     assigned_fresh_target_ids: Sequence[str],
 ) -> dict[str, Any]:
     """Project the immutable first-stage discovery input for one reviewer."""
@@ -1380,13 +1469,19 @@ def project_professional_discovery_capsule(
         bindings=bindings,
         assigned_fresh_target_ids=assigned_fresh_target_ids,
     )
+    adjacency_contexts = _fresh_adjacency_contexts(
+        bindings=bindings,
+        review_targets=review_targets,
+    )
     capsule = _project_professional_discovery_capsule(
         bindings=bindings,
+        adjacency_contexts=adjacency_contexts,
         assigned=assigned,
     )
     validate_professional_discovery_capsule(
         capsule,
         bindings=bindings,
+        review_targets=review_targets,
         assigned_fresh_target_ids=assigned,
     )
     return capsule
@@ -1396,6 +1491,7 @@ def validate_professional_discovery_capsule(
     capsule: object,
     *,
     bindings: Mapping[str, dict[str, Any]],
+    review_targets: Sequence[dict[str, Any]],
     assigned_fresh_target_ids: Sequence[str],
 ) -> dict[str, Any]:
     """Reject incomplete, expanded, or stale discovery projections."""
@@ -1403,6 +1499,10 @@ def validate_professional_discovery_capsule(
     assigned = _normalize_assigned_targets(
         bindings=bindings,
         assigned_fresh_target_ids=assigned_fresh_target_ids,
+    )
+    adjacency_contexts = _fresh_adjacency_contexts(
+        bindings=bindings,
+        review_targets=review_targets,
     )
     if not isinstance(capsule, dict) or set(capsule) != _DISCOVERY_CAPSULE_FIELDS:
         raise ProfessionalCarryForwardError(
@@ -1417,6 +1517,7 @@ def validate_professional_discovery_capsule(
         )
     expected = _project_professional_discovery_capsule(
         bindings=bindings,
+        adjacency_contexts=adjacency_contexts,
         assigned=assigned,
     )
     if capsule.get("assigned_fresh_target_ids") != assigned:
@@ -1464,6 +1565,7 @@ def validate_professional_discovery_capsule(
 def _normalize_capsule_inputs(
     *,
     bindings: Mapping[str, dict[str, Any]],
+    adjacency_contexts: Mapping[str, dict[str, Any]],
     assigned_fresh_target_ids: Sequence[str],
     reviewer_added_requests_by_target: (
         Mapping[str, Sequence[Mapping[str, Any]]] | None
@@ -1513,14 +1615,14 @@ def _normalize_capsule_inputs(
                 f"reviewer-added requests for {skill_id} contain duplicates"
             )
         added.sort(key=lambda row: row["skill_id"])
-        binding = bindings[skill_id]
+        adjacency = adjacency_contexts[skill_id]
         ranking = {
             row["skill_id"]: row
-            for row in binding["adjacency"]["full_catalog_ranking"]
+            for row in adjacency["full_catalog_ranking"]
         }
         required_ids = {
             row["skill_id"]
-            for row in binding["adjacency"]["required_candidates"]
+            for row in adjacency["required_candidates"]
         }
         outside = sorted(set(added_ids) - set(ranking))
         if outside:
@@ -1541,7 +1643,7 @@ def _normalize_capsule_inputs(
                     f"reviewer-added request {skill_id}->{candidate_id} ranking evidence is stale"
                 )
             if request["material_fingerprint"] != bindings[candidate_id][
-                "candidate_material_fingerprint"
+                "package_material_binding"
             ]:
                 raise ProfessionalCarryForwardError(
                     f"reviewer-added request {skill_id}->{candidate_id} material fingerprint is stale"
@@ -1553,6 +1655,7 @@ def _normalize_capsule_inputs(
 def _project_professional_review_capsule(
     *,
     bindings: Mapping[str, dict[str, Any]],
+    adjacency_contexts: Mapping[str, dict[str, Any]],
     assigned: Sequence[str],
     reviewer_added: Mapping[str, Sequence[Mapping[str, Any]]],
 ) -> dict[str, Any]:
@@ -1560,10 +1663,7 @@ def _project_professional_review_capsule(
     material_ids: set[str] = set(assigned)
     for skill_id in assigned:
         binding = bindings[skill_id]
-        required_ids = [
-            row["skill_id"]
-            for row in binding["adjacency"]["required_candidates"]
-        ]
+        required_ids = binding["adjacency"]["required_candidate_ids"]
         added_by_id = {
             row["skill_id"]: row for row in reviewer_added[skill_id]
         }
@@ -1584,7 +1684,7 @@ def _project_professional_review_capsule(
                     else None
                 ),
                 "material_fingerprint": bindings[candidate_id][
-                    "candidate_material_fingerprint"
+                    "package_material_binding"
                 ],
             }
             for candidate_id in candidate_ids
@@ -1592,10 +1692,10 @@ def _project_professional_review_capsule(
         targets.append(
             {
                 "skill_id": skill_id,
-                "source_review_binding_fingerprint": binding[
-                    "review_binding_fingerprint"
+                "review_unit_binding": binding[
+                    "review_unit_binding"
                 ],
-                "adjacency": copy.deepcopy(binding["adjacency"]),
+                "adjacency": copy.deepcopy(adjacency_contexts[skill_id]),
                 "candidate_material_manifest": manifest,
             }
         )
@@ -1613,6 +1713,7 @@ def _project_professional_review_capsule(
 def project_professional_review_capsule(
     *,
     bindings: Mapping[str, dict[str, Any]],
+    review_targets: Sequence[dict[str, Any]],
     assigned_fresh_target_ids: Sequence[str],
     reviewer_added_requests_by_target: (
         Mapping[str, Sequence[Mapping[str, Any]]] | None
@@ -1620,19 +1721,26 @@ def project_professional_review_capsule(
 ) -> dict[str, Any]:
     """Project one exact final capsule from validated request rows."""
 
+    adjacency_contexts = _fresh_adjacency_contexts(
+        bindings=bindings,
+        review_targets=review_targets,
+    )
     assigned, reviewer_added = _normalize_capsule_inputs(
         bindings=bindings,
+        adjacency_contexts=adjacency_contexts,
         assigned_fresh_target_ids=assigned_fresh_target_ids,
         reviewer_added_requests_by_target=reviewer_added_requests_by_target,
     )
     capsule = _project_professional_review_capsule(
         bindings=bindings,
+        adjacency_contexts=adjacency_contexts,
         assigned=assigned,
         reviewer_added=reviewer_added,
     )
     validate_professional_review_capsule(
         capsule,
         bindings=bindings,
+        review_targets=review_targets,
         assigned_fresh_target_ids=assigned,
         reviewer_added_requests_by_target=reviewer_added,
     )
@@ -1678,6 +1786,7 @@ def validate_professional_review_capsule(
     capsule: object,
     *,
     bindings: Mapping[str, dict[str, Any]],
+    review_targets: Sequence[dict[str, Any]],
     assigned_fresh_target_ids: Sequence[str],
     reviewer_added_requests_by_target: (
         Mapping[str, Sequence[Mapping[str, Any]]] | None
@@ -1685,8 +1794,13 @@ def validate_professional_review_capsule(
 ) -> dict[str, Any]:
     """Reject extra, missing, duplicate, or stale capsule projections."""
 
+    adjacency_contexts = _fresh_adjacency_contexts(
+        bindings=bindings,
+        review_targets=review_targets,
+    )
     assigned, reviewer_added = _normalize_capsule_inputs(
         bindings=bindings,
+        adjacency_contexts=adjacency_contexts,
         assigned_fresh_target_ids=assigned_fresh_target_ids,
         reviewer_added_requests_by_target=reviewer_added_requests_by_target,
     )
@@ -1718,6 +1832,7 @@ def validate_professional_review_capsule(
     )
     expected_capsule = _project_professional_review_capsule(
         bindings=bindings,
+        adjacency_contexts=adjacency_contexts,
         assigned=assigned,
         reviewer_added=reviewer_added,
     )

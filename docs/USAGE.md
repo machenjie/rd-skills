@@ -1,6 +1,6 @@
 # Usage
 
-ChangeForge coordinates engineering work through one control prompt, four
+rd-skills coordinates engineering work through one control prompt, four
 bounded Agent Profiles, one primary Professional Skill per task, and only the
 Layer 3 guidance triggered by concrete risk or technology.
 
@@ -105,7 +105,7 @@ A changed or unavailable no-edit check invalidates that utility result.
 
 ## Decisions That Stay With You
 
-ChangeForge can dispatch bounded work without asking permission. It stops for a
+rd-skills can dispatch bounded work without asking permission. It stops for a
 concrete user-owned decision when work needs scope expansion, destructive or
 production action, privilege elevation, data migration, replacement of
 unmanaged content, or a choice not supported by evidence. It should ask one

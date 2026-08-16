@@ -927,6 +927,13 @@ _DYNAMIC_FOUNDATION_OWNER_BINDINGS = {
             "ai-code-review-refactor",
         ),
         (
+            "implementation-owner:backend-change-builder",
+            None,
+            "backend",
+            "backend-change-builder",
+            "security-privacy-gate",
+        ),
+        (
             "implementation-owner:repository-tooling-change-builder",
             None,
             "repository-tooling",
@@ -934,11 +941,25 @@ _DYNAMIC_FOUNDATION_OWNER_BINDINGS = {
             "ai-code-review-refactor",
         ),
         (
+            "implementation-owner:repository-tooling-change-builder",
+            None,
+            "repository-tooling",
+            "repository-tooling-change-builder",
+            "security-privacy-gate",
+        ),
+        (
             "implementation-owner:installed-client-change-builder",
             None,
             "installed-client",
             "installed-client-change-builder",
             "ai-code-review-refactor",
+        ),
+        (
+            "implementation-owner:installed-client-change-builder",
+            None,
+            "installed-client",
+            "installed-client-change-builder",
+            "security-privacy-gate",
         ),
     ),
     "dynamic-foundation:infrastructure-as-code-safety": (
@@ -2027,6 +2048,11 @@ def _foundation_route_binding_declared(
             "engineering-change-analysis",
             "architecture-impact-reviewer",
         ),
+        "ordinary-ambiguity": (
+            "ordinary-ambiguity-candidate",
+            "engineering-change-analysis",
+            "architecture-impact-reviewer",
+        ),
         "review-generic": (
             "review-generic-candidate",
             "ai-code-review-refactor",
@@ -2100,6 +2126,7 @@ def _foundation_route_identity_declared(
         return True
     if candidate_id in {
         "critical-unknown",
+        "ordinary-ambiguity",
         "implementation-preparation",
         "review-generic",
         *REVIEW_RISK_PRIMARY,
@@ -3769,6 +3796,30 @@ def _build_route_candidates(
                     "candidate_layer3_context": {
                         "kind": "fixed",
                         "foundation_requests": critical_foundations,
+                        "domain_requests": list(domain_requests),
+                    },
+                }
+            )
+        elif candidate_id == "ordinary-ambiguity":
+            ordinary_foundations = ["repository-context-map"]
+            candidate.update(
+                {
+                    "candidate_type": "converted-cohort",
+                    "precedence": ROUTE_COHORT_PRECEDENCE[candidate_id],
+                    "path": "analyzed",
+                    "profile": "analysis-agent",
+                    "primary_skill": "engineering-change-analysis",
+                    "layer3_skills": [
+                        *domain_requests,
+                        *ordinary_foundations,
+                    ],
+                    "review_skill": "architecture-impact-reviewer",
+                    "rule_id": "ordinary-ambiguity-candidate",
+                    "stage": "proof-limit",
+                    "precedence_class": "unresolved-boundary",
+                    "candidate_layer3_context": {
+                        "kind": "fixed",
+                        "foundation_requests": ordinary_foundations,
                         "domain_requests": list(domain_requests),
                     },
                 }
@@ -8192,6 +8243,7 @@ def _generated_authority_state(value: str) -> str:
 
 ROUTE_COHORT_PRECEDENCE = {
     "critical-unknown": 0,
+    "ordinary-ambiguity": 0,
     "implementation-preparation": 1,
     "review-logging-risk": 2,
     "review-release-risk": 2,
@@ -8284,6 +8336,7 @@ _TASK_ACTION_RE = re.compile(
     r"\b(?P<verb>add|analy[sz]e|build|change|create|fix|implement|migrate|"
     r"plan|prepare|refactor|repair|select|update|write)\b"
 )
+_TASK_CLAUSE_BOUNDARY_RE = re.compile(r";|[.!?](?=\s|$)")
 _TASK_ACTION_PREFIX_RE = re.compile(
     r"\b(?:can|could|do\s+not|must(?:\s+not)?|need\s+to|needs\s+to|"
     r"never|not\s+to|please|should(?:\s+not)?|to|will(?:\s+not)?)\s*$"
@@ -8364,6 +8417,24 @@ class _TaskActionParse:
 class _ParsedTaskRequest:
     value: str
     task_actions: _TaskActionParse
+
+
+@dataclass(frozen=True)
+class _RoutingBoundaryFacts:
+    """One action-local routing snapshot; it never supplies execution level."""
+
+    action_id: str
+    clause_id: str
+    repository_owner: bool
+    filesystem_behavior: str
+    path_mutation: str
+    writer_identity: str
+    writer_trust: str
+    sensitive_asset: str
+    privileged_consumption: str
+    authority_delta: str
+    reachable_path: str
+    evidence_ids: tuple[str, ...]
 
 
 _TASK_REFERENT_MARKER_RE = re.compile(r"\b(?P<marker>for|proving)\b")
@@ -8460,7 +8531,7 @@ def _parse_normalized_task_request(
         relation_start = verb_start
 
         statement_boundaries = tuple(
-            re.finditer(r"[.!?;]+", value[:verb_start])
+            _TASK_CLAUSE_BOUNDARY_RE.finditer(value[:verb_start])
         )
         statement_start = (
             statement_boundaries[-1].end()
@@ -8728,8 +8799,7 @@ def _parse_normalized_task_request(
             if index + 1 < len(action_records)
             else len(value)
         )
-        statement_boundary = re.search(
-            r"[.!?;]",
+        statement_boundary = _TASK_CLAUSE_BOUNDARY_RE.search(
             value[record["verb_end"]:next_relation],
         )
         clause_end = (
@@ -8888,6 +8958,795 @@ def _parse_normalized_task_request(
         blocking_terminal_spans=tuple(dict.fromkeys(blocking_spans)),
     )
     return _ParsedTaskRequest(value=value, task_actions=task_actions)
+
+
+def _routing_boundary_fact_snapshots(
+    value: str,
+    *,
+    parsed: _ParsedTaskRequest,
+) -> tuple[_RoutingBoundaryFacts, ...]:
+    """Build action-local path and security facts without cross-clause joins."""
+
+    text = " ".join(value.casefold().split())
+    local_scopes: list[tuple[str, str, str, str, str | None]] = []
+    action_scope_by_id: dict[str, str] = {}
+    for action in parsed.task_actions.actions:
+        if (
+            action.role not in {"direct", "coordinated"}
+            or action.object_span is None
+        ):
+            continue
+        start = action.verb_span.normalized[0]
+        end = action.object_span.normalized[1]
+        qualifier = re.match(r"\s*;\s*[^.!?]*", text[end:])
+        if qualifier is not None:
+            end += qualifier.end()
+        action_scope_by_id[action.action_id] = text[start:end]
+        local_scopes.append(
+            (
+                action.action_id,
+                action.clause_id,
+                action.verb,
+                text[start:end],
+                action.parent_action_id,
+            )
+        )
+    if not local_scopes and re.match(r"^review\b", text):
+        # A review action owns its whole actual-diff object. Connectors within
+        # that object separate propositions, not independent task actions.
+        local_scopes.append(("scope-0", "scope-0", "review", text, None))
+    elif not local_scopes:
+        for index, raw_scope in enumerate(
+            _EFFECT_STATEMENT_BOUNDARY_RE.split(text)
+        ):
+            scope = _normalize_effect_scope(raw_scope)
+            if re.match(r"^(?:assess|audit|inspect|review)\b", scope):
+                local_scopes.append(
+                    (
+                        f"scope-{index}",
+                        f"scope-{index}",
+                        "review",
+                        scope,
+                        None,
+                    )
+                )
+
+    snapshots: list[_RoutingBoundaryFacts] = []
+
+    def coordinated_negation_denies(
+        action_scope: str,
+        targets: tuple[str, ...],
+    ) -> bool:
+        for clause in re.split(r"[.!?;]", action_scope):
+            for negation in re.finditer(
+                r"\b(?:neither|no|without)\b",
+                clause,
+            ):
+                tail = clause[negation.end():]
+                boundary = re.search(
+                    r",|\b(?:but|however|yet|is|are|was|were|"
+                    r"remains?|stays?|exists?|occurs?|changes?|changed|"
+                    r"becomes?|became|will|would|can|could|may|might|"
+                    r"must|should)\b",
+                    tail,
+                )
+                noun_list = (
+                    tail[:boundary.start()]
+                    if boundary is not None
+                    else tail
+                )
+                if not re.search(r"\b(?:and|nor|or)\b", noun_list):
+                    continue
+                if any(
+                    _contains_signal(noun_list, target)
+                    for target in targets
+                ):
+                    return True
+        return False
+
+    for action_id, clause_id, action_verb, scope, parent_action_id in local_scopes:
+        evidence: list[str] = [
+            f"{action_id}:action",
+            f"{clause_id}:clause",
+        ]
+        repository_owner = any(
+            signal in scope
+            for signal in (
+                "repository cli",
+                "repository-owned",
+                "repository owned",
+                "repository tooling",
+                "repository tool",
+                "internal cli",
+                "maintenance utility",
+                "monorepo automation",
+                "test harness",
+                "benchmark harness",
+                "compiler plugin",
+                "linter plugin",
+                "formatter plugin",
+            )
+        )
+        if not repository_owner and parent_action_id is not None:
+            parent_scope = action_scope_by_id.get(parent_action_id, "")
+            repository_owner = any(
+                signal in parent_scope
+                for signal in (
+                    "repository cli",
+                    "repository-owned",
+                    "repository owned",
+                    "repository tooling",
+                    "repository tool",
+                    "internal cli",
+                    "maintenance utility",
+                    "monorepo automation",
+                )
+            )
+        if repository_owner:
+            evidence.append(f"{action_id}:repository-owner")
+
+        help_or_copy = any(
+            signal in scope
+            for signal in (
+                "help text",
+                "help copy",
+                "documentation",
+                "description",
+                "terminology",
+            )
+        )
+        filesystem_records = _filesystem_process_effect_records(scope)
+        explicit_two_axis_unchanged = {
+            family
+            for family, polarity, _scope_id in filesystem_records
+            if polarity == EFFECT_UNCHANGED
+        }.issuperset({"filesystem-path", "child-process"})
+        filesystem_unchanged = bool(
+            re.search(
+                r"\bno\b[^.;!?]{0,120}\b(?:path|file(?:system)?)\b"
+                r"[^.;!?]{0,120}\bbehaviou?r\b[^.;!?]{0,30}\bchanges?\b",
+                scope,
+            )
+            or re.search(
+                r"\b(?:path|file(?:system)?)\b[^.;!?]{0,80}"
+                r"\bbehaviou?r\b[^.;!?]{0,30}\b(?:unchanged|not changed)\b",
+                scope,
+            )
+            or explicit_two_axis_unchanged
+        )
+        path_mutation = "none"
+        if not (help_or_copy and filesystem_unchanged):
+            if any(
+                signal in scope
+                for signal in (
+                    "--add-dir",
+                    "--add dir",
+                    "path registration",
+                    "path-registration",
+                    "registers a",
+                    "register a",
+                    "register the",
+                    "add a bounded local",
+                    "add a user-owned",
+                    "add a local",
+                )
+            ) and any(
+                subject in scope
+                for subject in ("path", "directory", "folder", "--add-dir")
+            ):
+                path_mutation = "register"
+            elif any(
+                signal in scope
+                for signal in (
+                    "atomic replacement",
+                    "atomically replace",
+                    "atomically swap",
+                    "atomic swap",
+                    "replace a local",
+                    "replace local",
+                    "file replacement",
+                )
+            ):
+                path_mutation = "replace"
+            elif re.search(
+                r"\b(?:create|creation|write)\b[^.;!?]{0,80}"
+                r"\b(?:file|path|directory|folder)\b",
+                scope,
+            ):
+                path_mutation = "create"
+            elif any(
+                signal in scope
+                for signal in (
+                    "path resolution",
+                    "resolve path",
+                    "resolve the path",
+                )
+            ):
+                path_mutation = "resolve"
+            elif any(
+                signal in scope
+                for signal in (
+                    "path containment",
+                    "file containment",
+                    "contain the path",
+                )
+            ):
+                path_mutation = "contain"
+            elif any(
+                signal in scope
+                for signal in (
+                    "file protection",
+                    "permission behavior",
+                    "permission policy",
+                    "file ownership",
+                )
+            ):
+                path_mutation = "protect"
+            elif any(
+                signal in scope
+                for signal in ("file cleanup", "path cleanup", "cleanup file")
+            ):
+                path_mutation = "cleanup"
+            elif (
+                any(
+                    subject in scope
+                    for subject in ("path", "local file", "directory", "folder")
+                )
+                and any(
+                    state in scope
+                    for state in ("unknown", "unresolved", "undecided")
+                )
+            ):
+                path_mutation = "unknown"
+        evidence.append(f"{action_id}:path-mutation:{path_mutation}")
+
+        filesystem_state = _filesystem_process_effect_state(filesystem_records)
+        if path_mutation == "unknown" or filesystem_state == EFFECT_AMBIGUOUS:
+            filesystem_behavior = "ambiguous"
+        elif filesystem_unchanged:
+            filesystem_behavior = "unchanged"
+        elif path_mutation != "none":
+            filesystem_behavior = "changed"
+        elif filesystem_state == EFFECT_CHANGED:
+            filesystem_behavior = "changed"
+        elif filesystem_state == EFFECT_UNCHANGED:
+            filesystem_behavior = "unchanged"
+        else:
+            filesystem_behavior = "adjacent"
+        evidence.append(
+            f"{action_id}:filesystem-behavior:{filesystem_behavior}"
+        )
+
+        same_principal = any(
+            signal in scope
+            for signal in (
+                "same os user",
+                "same user",
+                "same principal",
+                "current os account",
+                "current account",
+                "user-owned",
+                "user owned",
+            )
+        )
+        explicit_writer_unknown = bool(
+            re.search(
+                r"\bwriter(?: identity| trust)?\b[^.;!?]{0,30}"
+                r"\b(?:unknown|unresolved|undecided)\b",
+                scope,
+            )
+        )
+        same_trust = any(
+            signal in scope
+            for signal in (
+                "no less-trusted writer",
+                "no less trusted writer",
+                "no lower-trust writer",
+                "no lower trust writer",
+                "same-trust",
+                "same trust",
+                "cannot be written by a less-trusted",
+                "cannot be written by a less trusted",
+            )
+        )
+        less_trusted = not same_trust and bool(
+            re.search(
+                r"\b(?:less|lower)[- ]trust(?:ed)?\b"
+                r"(?:\s+[a-z0-9-]+){0,2}\s+"
+                r"(?:writer|actor|principal)\b|"
+                r"\buntrusted(?:\s+[a-z0-9-]+){0,2}\s+"
+                r"(?:writer|actor|principal)\b",
+                scope,
+            )
+        )
+        writer_identity = (
+            "unknown"
+            if explicit_writer_unknown
+            else "same_principal"
+            if same_principal
+            else "distinct_principal"
+            if less_trusted
+            else "unknown"
+        )
+        writer_trust = (
+            "unknown"
+            if explicit_writer_unknown
+            else "same_trust"
+            if same_trust or (same_principal and not less_trusted)
+            else "less_trusted"
+            if less_trusted
+            else "unknown"
+        )
+        evidence.extend(
+            (
+                f"{action_id}:writer-identity:{writer_identity}",
+                f"{action_id}:writer-trust:{writer_trust}",
+            )
+        )
+        if explicit_writer_unknown:
+            evidence.append(f"{action_id}:writer-identity:unknown-explicit")
+
+        sensitive_absent = any(
+            signal in scope
+            for signal in (
+                "non-sensitive",
+                "non sensitive",
+                "no sensitive data",
+                "no personal data",
+                "no credentials",
+                "no credential",
+                "no secrets",
+                "no secret",
+            )
+        ) or coordinated_negation_denies(
+            scope,
+            (
+                "sensitive data",
+                "personal data",
+                "credential",
+                "secret",
+                "authentication token",
+                "session token",
+            ),
+        )
+        sensitive_unknown = bool(
+            re.search(
+                r"\b(?:sensitive asset|sensitive data|credential|secret)\b"
+                r"[^.;!?]{0,30}\b(?:unknown|unresolved|undecided)\b",
+                scope,
+            )
+        )
+        sensitive_present = not sensitive_absent and any(
+            signal in scope
+            for signal in (
+                "sensitive data",
+                "personal data",
+                "credential",
+                "secret",
+                "authentication token",
+                "session token",
+            )
+        )
+        if (
+            not sensitive_absent
+            and "telemetry" in scope
+            and any(
+                signal in scope
+                for signal in ("retention", "deletion", "recipient", "export")
+            )
+        ):
+            sensitive_present = True
+        sensitive_asset = (
+            "unknown"
+            if sensitive_unknown
+            else "absent"
+            if sensitive_absent
+            else "present"
+            if sensitive_present
+            else "unknown"
+        )
+        evidence.append(f"{action_id}:sensitive-asset:{sensitive_asset}")
+
+        privileged_absent = any(
+            signal in scope
+            for signal in (
+                "unprivileged",
+                "non-privileged",
+                "non privileged",
+                "no privilege elevation",
+                "no privileged consumption",
+                "no elevated consumer",
+            )
+        ) or coordinated_negation_denies(
+            scope,
+            (
+                "privilege elevation",
+                "privileged consumption",
+                "privileged service",
+                "privileged consumer",
+                "elevated consumer",
+                "elevated service",
+                "root service",
+            ),
+        )
+        privileged_unknown = bool(
+            re.search(
+                r"\b(?:privileged|elevated)\b[^.;!?]{0,40}"
+                r"\b(?:unknown|unresolved|undecided)\b",
+                scope,
+            )
+        )
+        privileged_present = not privileged_absent and any(
+            signal in scope
+            for signal in (
+                "privileged consumption",
+                "privileged service",
+                "privileged consumer",
+                "elevated consumer",
+                "elevated service",
+                "root service",
+            )
+        )
+        privileged_consumption = (
+            "unknown"
+            if privileged_unknown
+            else "absent"
+            if privileged_absent
+            else "present"
+            if privileged_present
+            else "unknown"
+        )
+        evidence.append(
+            f"{action_id}:privileged-consumption:{privileged_consumption}"
+        )
+
+        explicit_boundary_analysis = (
+            action_verb in {"analyze", "analyse", "prepare", "review"}
+            and (
+                (
+                    "tenant authorization" in scope
+                    and any(
+                        signal in scope
+                        for signal in (
+                            "implementation",
+                            "object permission",
+                            "permission bypass",
+                            "security boundaries",
+                            "trust boundary",
+                            "trust-boundary",
+                        )
+                    )
+                )
+                or (
+                    "permission bypass" in scope
+                    and any(
+                        signal in scope
+                        for signal in ("material", "risk", "actual diff")
+                    )
+                )
+                or (
+                    "authentication" in scope
+                    and "authorization" in scope
+                    and any(
+                        signal in scope
+                        for signal in ("boundary", "handoff", "decision")
+                    )
+                )
+            )
+        )
+        if explicit_boundary_analysis:
+            evidence.append(f"{action_id}:explicit-boundary-analysis")
+
+        authority_unknown = bool(
+            re.search(
+                r"\b(?:authority|authorization|permission)\b[^.;!?]{0,40}"
+                r"\b(?:unknown|unresolved|undecided)\b",
+                scope,
+            )
+        )
+        if authority_unknown:
+            authority_delta = "unknown"
+            evidence.append(f"{action_id}:authority:unknown-explicit")
+        elif any(
+            signal in scope
+            for signal in (
+                "authority remains unchanged",
+                "authority stays unchanged",
+                "authority is unchanged",
+                "authorization remains unchanged",
+                "permission behavior remains unchanged",
+                "no authority change",
+                "no authorization change",
+            )
+        ):
+            authority_delta = "unchanged"
+        elif any(
+            signal in scope
+            for signal in (
+                "authority is reduced",
+                "authority reduced",
+                "restricts an existing",
+                "restriction of an existing",
+                "revokes",
+                "closes the boundary",
+                "tightens the boundary",
+                "hardens the boundary",
+            )
+        ):
+            authority_delta = "reduced"
+        elif any(
+            signal in scope
+            for signal in (
+                "authority expands",
+                "authority is expanded",
+                "grants access",
+                "broadens access",
+                "permission bypass",
+                "privilege elevation",
+            )
+        ) and not privileged_absent:
+            authority_delta = "expanded"
+        elif (
+            action_verb in {"analyze", "analyse", "review"}
+            and "boundary" in scope
+            and any(signal in scope for signal in ("existing", "proved", "proven"))
+        ):
+            authority_delta = "existing_boundary_review"
+        else:
+            authority_delta = "unknown"
+        evidence.append(f"{action_id}:authority-delta:{authority_delta}")
+
+        reachable_denied = any(
+            signal in scope
+            for signal in (
+                "no reachable",
+                "not reachable",
+                "cannot reach",
+                "denied from reaching",
+                "no concrete privileged",
+                "no concrete sensitive",
+                "no security sink",
+                "reachable path is denied",
+            )
+        )
+        reachable_unknown = bool(
+            re.search(
+                r"\breachable(?: impact)? path\b[^.;!?]{0,40}"
+                r"\b(?:unknown|unresolved|undecided)\b",
+                scope,
+            )
+        )
+        reachable_proved = not reachable_denied and (
+            explicit_boundary_analysis
+            or
+            any(
+                signal in scope
+                for signal in (
+                    "proved reachable",
+                    "proven reachable",
+                    "existing reachable",
+                    "reachable authorization boundary",
+                    "reachable permission boundary",
+                    "reachable trust boundary",
+                    "reaching a privileged",
+                    "reaching the privileged",
+                    "writer controls content consumed",
+                    "can replace content that a privileged",
+                    "can replace a local path before privileged",
+                )
+            )
+            or (
+                "reachable" in scope
+                and any(
+                    sink in scope
+                    for sink in ("privileged", "sensitive", "credential", "secret")
+                )
+            )
+        )
+        reachable_path = (
+            "unknown"
+            if reachable_unknown
+            else "denied"
+            if reachable_denied
+            else "proved"
+            if reachable_proved
+            else "unknown"
+        )
+        evidence.append(f"{action_id}:reachable-path:{reachable_path}")
+
+        security_behavior_unchanged = bool(
+            re.search(
+                r"\b(?:credential|session|token|secret|security|privacy)"
+                r"(?:\s+[a-z0-9-]+){0,8}\s+behaviou?r(?:s)?\b"
+                r"[^.;!?]{0,30}\b(?:is|are|remains?|stays?)\b"
+                r"[^.;!?]{0,15}\b(?:all\s+)?unchanged\b",
+                scope,
+            )
+            or (
+                any(
+                    signal in scope
+                    for signal in (
+                        "credential",
+                        "session",
+                        "token",
+                        "secret",
+                        "security",
+                        "privacy",
+                    )
+                )
+                and re.search(
+                    r"\bbehaviou?r(?:s)?\s+"
+                    r"(?:is|are|remains?|stays?)\s+"
+                    r"(?:all\s+)?unchanged\b",
+                    scope,
+                )
+            )
+            or "security behavior remains unchanged" in scope
+            or "lifecycle behavior remains unchanged" in scope
+        )
+        sensitive_lifecycle_unchanged = bool(
+            re.search(
+                r"\bno\b[^.;!?]{0,80}"
+                r"\b(?:retention|sharing|recipient|disclosure|deletion)\b"
+                r"[^.;!?]{0,40}\bchanges?\b",
+                scope,
+            )
+        )
+        if (
+            not security_behavior_unchanged
+            and
+            not sensitive_lifecycle_unchanged
+            and
+            sensitive_asset == "present"
+            and any(
+                signal in scope
+                for signal in (
+                    "collection",
+                    "collects",
+                    "access",
+                    "disclosure",
+                    "discloses",
+                    "processing",
+                    "retention",
+                    "deletion",
+                    "recipient",
+                    "export",
+                )
+            )
+        ):
+            evidence.append(f"{action_id}:sensitive-lifecycle-change")
+        if (
+            not security_behavior_unchanged
+            and
+            not (
+                "secret rotation" in scope
+                and "no cryptographic construction change" in scope
+            )
+            and
+            sensitive_asset == "present"
+            and any(
+                signal in scope
+                for signal in (
+                    "credential lifecycle",
+                    "session lifecycle",
+                    "token validation",
+                    "secret rotation",
+                    "credential rotation",
+                    "session revocation",
+                )
+            )
+        ):
+            evidence.append(f"{action_id}:credential-lifecycle-change")
+        if explicit_boundary_analysis or any(
+            signal in scope
+            for signal in (
+                "trust boundary",
+                "authorization boundary",
+                "permission boundary",
+                "permission bypass",
+                "privacy boundary",
+                "credential boundary",
+                "secret boundary",
+                "security boundary",
+            )
+        ):
+            evidence.append(f"{action_id}:boundary-signal")
+        for signal, material_evidence in (
+            ("tenant authorization", "material-tenant-authorization"),
+            ("tenant isolation", "material-tenant-isolation"),
+            ("permission bypass", "material-permission-boundary"),
+            ("permission boundary", "material-permission-boundary"),
+            ("object permission", "material-permission-boundary"),
+            ("trust boundary", "material-trust-boundary"),
+            ("trust-boundary", "material-trust-boundary"),
+        ):
+            if signal in scope:
+                evidence.append(f"{action_id}:{material_evidence}")
+
+        snapshots.append(
+            _RoutingBoundaryFacts(
+                action_id=action_id,
+                clause_id=clause_id,
+                repository_owner=repository_owner,
+                filesystem_behavior=filesystem_behavior,
+                path_mutation=path_mutation,
+                writer_identity=writer_identity,
+                writer_trust=writer_trust,
+                sensitive_asset=sensitive_asset,
+                privileged_consumption=privileged_consumption,
+                authority_delta=authority_delta,
+                reachable_path=reachable_path,
+                evidence_ids=tuple(dict.fromkeys(evidence)),
+            )
+        )
+    return tuple(snapshots)
+
+
+def _security_boundary_is_proved(facts: _RoutingBoundaryFacts) -> bool:
+    """Return whether one snapshot proves a routable Security boundary."""
+
+    evidence = set(facts.evidence_ids)
+    less_trusted_reachable_sink = (
+        facts.writer_trust == "less_trusted"
+        and facts.reachable_path == "proved"
+        and (
+            facts.privileged_consumption == "present"
+            or facts.sensitive_asset == "present"
+        )
+    )
+    sensitive_lifecycle = any(
+        item.endswith(
+            ("sensitive-lifecycle-change", "credential-lifecycle-change")
+        )
+        for item in evidence
+    )
+    reachable_boundary_hardening = (
+        facts.reachable_path == "proved"
+        and facts.authority_delta in {
+            "reduced",
+            "existing_boundary_review",
+        }
+        and any(item.endswith("boundary-signal") for item in evidence)
+    )
+    explicit_boundary_analysis = (
+        facts.reachable_path == "proved"
+        and any(
+            item.endswith("explicit-boundary-analysis")
+            for item in evidence
+        )
+    )
+    same_principal_nonmaterial = (
+        facts.writer_identity == "same_principal"
+        and facts.writer_trust == "same_trust"
+        and facts.sensitive_asset == "absent"
+        and facts.privileged_consumption == "absent"
+        and facts.authority_delta in {"unchanged", "reduced"}
+    )
+    return bool(
+        sensitive_lifecycle
+        or reachable_boundary_hardening
+        or explicit_boundary_analysis
+        or (less_trusted_reachable_sink and not same_principal_nonmaterial)
+    )
+
+
+def _security_boundary_has_explicit_unknown(
+    facts: _RoutingBoundaryFacts,
+) -> bool:
+    """Return whether one boundary signal has an explicit ordinary unknown."""
+
+    return (
+        any(item.endswith("boundary-signal") for item in facts.evidence_ids)
+        or facts.repository_owner
+    ) and any(
+        item.endswith(
+            (
+                "writer-identity:unknown-explicit",
+                "authority:unknown-explicit",
+            )
+        )
+        for item in facts.evidence_ids
+    )
 
 
 def _parsed_task_objects_are_test_validation_only(
@@ -9470,6 +10329,7 @@ def _classify_professional_families(
                 "formatter",
                 "harness",
                 "internal cli",
+                "repository cli",
                 "automation",
                 "maintenance utility",
                 "tooling",
@@ -10294,10 +11154,6 @@ def _critical_unknown_evidence(
         shared_framework and not target_domains
     ):
         evidence.append("critical-placement-unknown")
-    if parsed.task_actions.blocking_terminal_spans:
-        evidence.append(
-            "critical-source:terminal-task-action-ambiguity"
-        )
     return list(dict.fromkeys(evidence))
 
 
@@ -10481,23 +11337,12 @@ def _risk_signal_is_nonmaterial_context(
 
 def _material_review_risk_candidates(
     value: str,
+    *,
+    boundary_facts: tuple[_RoutingBoundaryFacts, ...],
 ) -> list[dict[str, Any]]:
     """Collect closed material risk predicates for review or preparation."""
 
     definitions = (
-        (
-            "review-security-risk",
-            (
-                ("tenant authorization", "material-tenant-authorization"),
-                ("tenant isolation", "material-tenant-isolation"),
-                ("permission bypass", "material-permission-boundary"),
-                ("permission boundary", "material-permission-boundary"),
-                ("permission boundaries", "material-permission-boundary"),
-                ("object permission", "material-permission-boundary"),
-                ("trust boundary", "material-trust-boundary"),
-                ("trust-boundary", "material-trust-boundary"),
-            ),
-        ),
         (
             "review-release-risk",
             (
@@ -10528,7 +11373,40 @@ def _material_review_risk_candidates(
         ),
     )
     candidates: list[dict[str, Any]] = []
+    proved_security_facts = tuple(
+        facts
+        for facts in boundary_facts
+        if _security_boundary_is_proved(facts)
+    )
+    security_evidence = list(
+        dict.fromkeys(
+            evidence_id.rsplit(":", 1)[-1]
+            for facts in proved_security_facts
+            for evidence_id in facts.evidence_ids
+            if ":material-" in evidence_id
+        )
+    )
+    if proved_security_facts and not security_evidence:
+        security_evidence.append("material-trust-boundary")
+    if security_evidence:
+        candidates.append(
+            {
+                "candidate_id": "review-security-risk",
+                "evidence": security_evidence,
+            }
+        )
     for candidate_id, signals in definitions:
+        if (
+            candidate_id == "review-reliability-risk"
+            and any(
+                any(
+                    item.endswith("credential-lifecycle-change")
+                    for item in facts.evidence_ids
+                )
+                for facts in proved_security_facts
+            )
+        ):
+            continue
         evidence: list[str] = []
         nonmaterial_ranges = _review_risk_nonmaterial_ranges(
             candidate_id,
@@ -11968,8 +12846,7 @@ def _validated_main_execution_copy(
 
 
 _TERMINAL_ACTION_AMBIGUITY_MAIN_ERROR = (
-    "terminal task-action ambiguity requires Main-provided blocked "
-    "critical-unknown provenance"
+    "terminal task-action ambiguity requires Main-provided L3 Proof Limit provenance"
 )
 
 
@@ -11979,46 +12856,51 @@ def _validate_terminal_action_ambiguity_main(
     """Validate selected terminal ambiguity provenance without recomputing it."""
 
     contract = CORE_CONTRACTS["execution_level_contract"]
-    target = "unknown-critical-boundary"
+    target = "no-unresolved-owner-placement-verification-or-rollback-gap"
     task_id = main_execution["task_id"]
     expected_triggers = [
         {
             "id": row["id"],
-            "status": (
-                "unknown"
-                if row["id"] == target
-                else "not_matched"
-            ),
+            "status": "not_matched",
             "evidence_kind": "analysis_handoff",
-            "source_anchor": (
-                f"task:{task_id}:terminal-task-action-ambiguity"
-                if row["id"] == target
-                else f"task:{task_id}:trigger:{row['id']}"
-            ),
-            "plausible_critical": row["id"] == target,
+            "source_anchor": f"task:{task_id}:trigger:{row['id']}",
+            "plausible_critical": False,
         }
         for row in contract["trigger_registry"]
     ]
     expected_l2 = [
         {
             "id": row["id"],
-            "status": "false",
+            "status": "unknown" if row["id"] == target else "false",
             "evidence_kind": "analysis_handoff",
-            "source_anchor": f"task:{task_id}:l2:{row['id']}",
+            "source_anchor": (
+                f"task:{task_id}:terminal-task-action-ambiguity-proof-limit"
+                if row["id"] == target
+                else f"task:{task_id}:l2:{row['id']}"
+            ),
         }
         for row in contract["l2_eligibility"]
     ]
+    expected_obligations = list(
+        dict.fromkeys(
+            [
+                obligation
+                for level in contract["levels"]
+                if level["rank"] <= 3
+                for obligation in level["obligations"]
+            ]
+            + list(contract["non_bypassable"])
+        )
+    )
     basis = main_execution["level_basis"]
     valid = (
         isinstance(basis, dict)
-        and main_execution["execution_level"] in {"L4", "L5"}
+        and main_execution["execution_level"] == "L3"
         and basis.get("trigger_evaluations") == expected_triggers
         and basis.get("l2_eligibility") == expected_l2
         and basis.get("unresolved") == [target]
-        and basis.get("edit_status") == "blocked"
-        and isinstance(basis.get("obligations"), list)
-        and "high-risk pre-implementation evidence"
-        in basis["obligations"]
+        and basis.get("edit_status") == "allowed"
+        and basis.get("obligations") == expected_obligations
     )
     if not valid:
         raise RoutingIntegrityError(
@@ -14466,9 +15348,27 @@ def _route_impl(
     }
     text = _normalize_route_prompt(prompt)
     parsed = _parse_normalized_task_request(text)
+    routing_boundary_facts = _routing_boundary_fact_snapshots(
+        text,
+        parsed=parsed,
+    )
     filesystem_effect_state = _filesystem_process_effect_state(
         _filesystem_process_effect_records(text)
     )
+    repository_filesystem_states = {
+        facts.filesystem_behavior
+        for facts in routing_boundary_facts
+        if facts.repository_owner
+    }
+    if "ambiguous" in repository_filesystem_states:
+        filesystem_effect_state = EFFECT_AMBIGUOUS
+    elif "changed" in repository_filesystem_states:
+        filesystem_effect_state = EFFECT_CHANGED
+    elif (
+        filesystem_effect_state == EFFECT_ADJACENT_ONLY
+        and "unchanged" in repository_filesystem_states
+    ):
+        filesystem_effect_state = EFFECT_UNCHANGED
     node_effect_state = (
         _overall_effect_state(_node_runtime_effect_records(text))
         if "node.js" in text
@@ -14565,6 +15465,13 @@ def _route_impl(
                 "evidence": critical_evidence,
             }
         )
+    if parsed.task_actions.blocking_terminal_spans:
+        raw_cohort_candidates.append(
+            {
+                "candidate_id": "ordinary-ambiguity",
+                "evidence": ["proof-limit:terminal-task-action-ambiguity"],
+            }
+        )
     preparation_evidence = _generic_preparation_evidence(text)
     if preparation_evidence:
         raw_cohort_candidates.append(
@@ -14573,7 +15480,30 @@ def _route_impl(
                 "evidence": preparation_evidence,
             }
         )
-    material_review_risks = _material_review_risk_candidates(text)
+    material_review_risks = _material_review_risk_candidates(
+        text,
+        boundary_facts=routing_boundary_facts,
+    )
+    if (
+        not any(
+            _security_boundary_is_proved(facts)
+            for facts in routing_boundary_facts
+        )
+        and any(
+            _security_boundary_has_explicit_unknown(facts)
+            for facts in routing_boundary_facts
+        )
+        and not any(
+            candidate.get("candidate_id") == "ordinary-ambiguity"
+            for candidate in raw_cohort_candidates
+        )
+    ):
+        raw_cohort_candidates.append(
+            {
+                "candidate_id": "ordinary-ambiguity",
+                "evidence": ["proof-limit:security-boundary-unknown"],
+            }
+        )
     review_risk_origins: dict[str, _FoundationRouteOrigin] = {}
     for risk in material_review_risks:
         risk_id = risk.get("candidate_id")
@@ -14640,6 +15570,70 @@ def _route_impl(
     classified_families = _coalesce_professional_family_matches(
         classify_professional_families(parsed)
     )
+    repository_implementation_facts = tuple(
+        facts
+        for facts in routing_boundary_facts
+        if facts.repository_owner
+    )
+    repository_action_family_names: set[str] = set()
+    repository_action_ids = {
+        facts.action_id for facts in repository_implementation_facts
+    }
+    changed_implementation_action_ids = {
+        action.action_id
+        for action in parsed.task_actions.actions
+        if action.role in {"direct", "coordinated"}
+        and action.polarity == EFFECT_CHANGED
+    }
+    all_changed_actions_repository_owned = bool(
+        changed_implementation_action_ids
+        and changed_implementation_action_ids.issubset(
+            repository_action_ids
+        )
+    )
+    for action in parsed.task_actions.actions:
+        if (
+            action.action_id not in repository_action_ids
+            or action.object_span is None
+        ):
+            continue
+        action_scope = text[
+            action.verb_span.normalized[0] : action.object_span.normalized[1]
+        ]
+        repository_action_family_names.update(
+            match["routing_family"]
+            for match in _coalesce_professional_family_matches(
+                classify_professional_families(
+                    _parse_normalized_task_request(action_scope)
+                )
+            )
+        )
+    if (
+        action_intent["implementation"]
+        and repository_implementation_facts
+        and not classified_families
+    ):
+        classified_families = [
+            {
+                "routing_family": "repository-tooling",
+                "match_evidence": [
+                    "effect-changed",
+                    "explicit-implementation-action",
+                    "repository-developer-tool",
+                ],
+            }
+        ]
+    elif (
+        action_intent["implementation"]
+        and repository_implementation_facts
+        and all_changed_actions_repository_owned
+        and repository_action_family_names == {"repository-tooling"}
+    ):
+        classified_families = [
+            match
+            for match in classified_families
+            if match["routing_family"] == "repository-tooling"
+        ]
     if (
         "node.js backend" in text
         and action_intent["implementation"]
@@ -16117,6 +17111,7 @@ def _route_impl(
             "test harness source",
             "benchmark harness source",
             "internal cli source",
+            "repository cli",
             "monorepo automation source",
             "maintenance utility source",
         )
@@ -16464,15 +17459,29 @@ def _route_impl(
             precedence_class="data-boundary",
         )
 
-    privacy_decision = (
-        "telemetry" in text
-        and any(
-            signal in text
-            for signal in ("retention", "deletion", "regional storage", "export")
-        )
-        and "no data-retention" not in text
+    dedicated_credential_lifecycle = (
+        "credential or session lifecycle behavior change" in text
     )
-    if privacy_decision or "authentication token validation" in text:
+    privacy_decision = not dedicated_credential_lifecycle and any(
+        _security_boundary_is_proved(facts)
+        and any(
+            item.endswith("sensitive-lifecycle-change")
+            for item in facts.evidence_ids
+        )
+        for facts in routing_boundary_facts
+    )
+    credential_lifecycle_decision = not dedicated_credential_lifecycle and any(
+        _security_boundary_is_proved(facts)
+        and any(
+            item.endswith("credential-lifecycle-change")
+            for item in facts.evidence_ids
+        )
+        for facts in routing_boundary_facts
+    )
+    if (
+        (privacy_decision or credential_lifecycle_decision)
+        and not action_intent["implementation"]
+    ):
         add_candidate(
             "analyzed",
             "analysis-agent",
@@ -16640,18 +17649,20 @@ def _route_impl(
                 stage="risk",
                 precedence_class="security-boundary",
             )
+    dedicated_auth_handoff = (
+        "explicit authentication and authorization handoff decision" in text
+    )
+    proved_security_boundary = any(
+        _security_boundary_is_proved(facts)
+        for facts in routing_boundary_facts
+    )
     if (
-        any(
-            word in text
-            for word in (
-                "tenant authorization",
-                "object permission",
-                " privacy",
-                " security",
-            )
-        )
-        and "no security sink" not in text
-        and "without a security verdict" not in text
+        proved_security_boundary
+        and not action_intent["implementation"]
+        and not privacy_decision
+        and not credential_lifecycle_decision
+        and not dedicated_credential_lifecycle
+        and not dedicated_auth_handoff
     ):
         add_candidate(
             "analyzed",
@@ -17139,8 +18150,8 @@ def _route_impl(
     selected_candidate = cohort_selection["selected_candidate"]
     if (
         isinstance(selected_candidate, dict)
-        and selected_candidate.get("candidate_id") == "critical-unknown"
-        and "critical-source:terminal-task-action-ambiguity"
+        and selected_candidate.get("candidate_id") == "ordinary-ambiguity"
+        and "proof-limit:terminal-task-action-ambiguity"
         in selected_candidate.get("evidence", [])
     ):
         _validate_terminal_action_ambiguity_main(validated_main)

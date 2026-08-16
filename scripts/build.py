@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build deterministic hookless ChangeForge Skill and Agent Profile layouts."""
+"""Build deterministic hookless rd-skills Skill and Agent Profile layouts."""
 
 from __future__ import annotations
 
@@ -193,7 +193,7 @@ class BuildError(Exception):
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Build hookless ChangeForge Skills and Agent Profiles."
+        description="Build hookless rd-skills Skills and Agent Profiles."
     )
     parser.add_argument("--profile", choices=PROFILES, default="recommended")
     args = parser.parse_args()
@@ -470,6 +470,11 @@ def _preflight_build_plan(
         ):
             rendered = renderer(profile_entry, enforcement)
             _validate_rendered_prompt_embedding(
+                platform,
+                profile_entry["name"],
+                rendered,
+            )
+            _canonical_agent_profile_bytes(
                 platform,
                 profile_entry["name"],
                 rendered,
@@ -1304,9 +1309,24 @@ def _build_agent_profiles(
             }[platform]
             rendered = renderer(profile, enforcement)
             _validate_rendered_prompt_embedding(platform, profile["name"], rendered)
-            (target / f"{profile['name']}{suffix}").write_text(
-                rendered, encoding="utf-8"
+            (target / f"{profile['name']}{suffix}").write_bytes(
+                _canonical_agent_profile_bytes(
+                    platform,
+                    profile["name"],
+                    rendered,
+                )
             )
+
+
+def _canonical_agent_profile_bytes(
+    platform: str,
+    role: str,
+    rendered: str,
+) -> bytes:
+    payload = rendered.encode("utf-8")
+    if b"\r" in payload:
+        raise BuildError(f"{platform}:{role}: rendered Profile must use canonical LF bytes")
+    return payload
 
 
 def _agent_profile_digests(
@@ -1320,7 +1340,11 @@ def _agent_profile_digests(
     return {
         host: {
             profile["name"]: hashlib.sha256(
-                renderer(profile, enforcement).encode("utf-8")
+                _canonical_agent_profile_bytes(
+                    host,
+                    profile["name"],
+                    renderer(profile, enforcement),
+                )
             ).hexdigest()
             for profile in profiles
         }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run executable ChangeForge code generation benchmark checks."""
+"""Run executable rd-skills code generation benchmark checks."""
 
 from __future__ import annotations
 

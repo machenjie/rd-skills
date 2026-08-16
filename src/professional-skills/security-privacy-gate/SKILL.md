@@ -13,7 +13,7 @@ description: "Use `analysis-agent` to analyze permissions, secrets, sensitive da
 
 ## When To Use
 
-- security permission or privacy boundary; secret exposure risk
+- proved trust, privilege, permission, privacy, credential, or secret boundary change with a reachable abuse or disclosure path
 - credential or session lifecycle behavior change
 
 ## Do Not Use
@@ -24,6 +24,8 @@ description: "Use `analysis-agent` to analyze permissions, secrets, sensitive da
 - reliability-only failure with no abuse or privacy risk
 - input shape change with no security sink
 - scanner report organization without a security verdict
+- security terminology, a permission API, path mutability, or future replacement possibility without a proved trust, privilege, secret, or privacy boundary change
+- bounded same-principal non-sensitive local access with no privilege elevation or less-trusted writer
 
 ## Required Inputs
 
@@ -36,6 +38,8 @@ description: "Use `analysis-agent` to analyze permissions, secrets, sensitive da
 ## Professional Decision Rules
 
 - Model affected assets, actors, trust boundaries, abuse paths, and data lifecycle before selecting controls.
+- Mutability or future replacement alone does not prove a reachable abuse path.
+- Bounded same-principal non-sensitive local access without privilege elevation or a less-trusted writer is not a material trust-boundary change by itself.
 - Enforce changed actor, object, or tenant authorization from authenticated server context; UI hiding is not authorization.
 - Select controls from the actual sink, deployment, data classification, effective policy, and reachable abuse path.
 - Validate triggered negative paths with explicit residual exposure when dynamic proof is unavailable.

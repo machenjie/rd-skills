@@ -1519,6 +1519,93 @@ class CapabilityCoverageRedTests(unittest.TestCase):
                 self.assertEqual(owner, actual["primary_skill"])
                 self.assertNotIn(foundation, actual["layer3_skills"])
 
+        ambiguous_prompt = (
+            "Implement an accepted repository-owned generator source change "
+            "for an unknown local path whose filesystem behavior remains "
+            "unchanged."
+        )
+        normalized = " ".join(ambiguous_prompt.casefold().split())
+        ambiguous_facts = ROUTE_ORACLE._routing_boundary_fact_snapshots(
+            normalized,
+            parsed=ROUTE_ORACLE._parse_normalized_task_request(normalized),
+        )
+        self.assertEqual(1, len(ambiguous_facts))
+        self.assertEqual("unknown", ambiguous_facts[0].path_mutation)
+        self.assertEqual("ambiguous", ambiguous_facts[0].filesystem_behavior)
+        ambiguous_route = _route(
+            ambiguous_prompt,
+            task_id=f"{self._testMethodName}:unknown-path",
+        )
+        self.assertEqual("analyzed", ambiguous_route["path"])
+        self.assertEqual(
+            "engineering-change-analysis",
+            ambiguous_route["primary_skill"],
+        )
+        ambiguous_trace = _trace(
+            ambiguous_prompt,
+            task_id=f"{self._testMethodName}:unknown-path-trace",
+        )
+        self.assertEqual(
+            "critical-unknown",
+            ambiguous_trace["winner_trace"]["selected_candidate"][
+                "candidate_id"
+            ],
+        )
+        self.assertIn(
+            "critical-verification-unknown",
+            ambiguous_trace["winner_trace"]["selected_candidate"][
+                "evidence"
+            ],
+        )
+
+        registration_prompts = (
+            "Implement the accepted repository CLI so --add-dir registers a "
+            "user-owned skills directory for the same OS user while "
+            "child-process behavior remains unchanged.",
+            "Implement the accepted repository CLI with child-process behavior "
+            "unchanged while --add-dir registers a user-owned skills directory "
+            "for the same OS user.",
+        )
+        registration_routes = []
+        for order, prompt in enumerate(registration_prompts):
+            with self.subTest(registration_order=order):
+                actual = _route(
+                    prompt,
+                    task_id=f"{self._testMethodName}:registration:{order}",
+                )
+                registration_routes.append(actual)
+                self.assertEqual(
+                    "repository-tooling-change-builder",
+                    actual["primary_skill"],
+                )
+                self.assertIn(
+                    "filesystem-process-safety",
+                    actual["layer3_skills"],
+                )
+                self.assertNotEqual(
+                    "security-privacy-gate",
+                    actual["primary_skill"],
+                )
+                self.assertNotEqual(
+                    "security-privacy-gate",
+                    actual["review_skill"],
+                )
+        self.assertEqual(registration_routes[0], registration_routes[1])
+
+        aggregate_only = _route(
+            "Implement an accepted repository-owned generator source change "
+            "while child-process behavior remains unchanged.",
+            task_id=f"{self._testMethodName}:aggregate-only",
+        )
+        self.assertEqual(
+            "repository-tooling-change-builder",
+            aggregate_only["primary_skill"],
+        )
+        self.assertNotIn(
+            "filesystem-process-safety",
+            aggregate_only["layer3_skills"],
+        )
+
         selected = {
             "node-package-metadata-with-runtime": (
                 "Implement a Node.js backend ESM runtime flag change plus "
@@ -2185,18 +2272,6 @@ class CapabilityCoverageRedTests(unittest.TestCase):
                         "path": "direct",
                         "profile": "review-agent",
                         "primary_skill": "security-privacy-gate",
-                        "layer3_skills": [
-                            "permission-boundary-modeling",
-                            "threat-modeling",
-                            "tenant-isolation",
-                        ],
-                        "review_skill": "security-privacy-gate",
-                    }
-                    if case_id == "tenant"
-                    else {
-                        "path": "direct",
-                        "profile": "review-agent",
-                        "primary_skill": "security-privacy-gate",
                         "layer3_skills": ["audit-evidence-integrity"],
                         "review_skill": "security-privacy-gate",
                     }
@@ -2204,6 +2279,27 @@ class CapabilityCoverageRedTests(unittest.TestCase):
                     else generic_expected
                 )
                 self.assertEqual(expected, _route(prompt, task_id=self._testMethodName))
+
+        tenant_boundary = _route(
+            "Review the actual diff for an existing reachable tenant "
+            "authorization boundary with object permission enforcement and "
+            "tenant isolation changes.",
+            task_id=self._testMethodName,
+        )
+        self.assertEqual(
+            {
+                "path": "direct",
+                "profile": "review-agent",
+                "primary_skill": "security-privacy-gate",
+                "layer3_skills": [
+                    "permission-boundary-modeling",
+                    "threat-modeling",
+                    "tenant-isolation",
+                ],
+                "review_skill": "security-privacy-gate",
+            },
+            tenant_boundary,
+        )
 
     def test_capability_matrix_is_required_and_covers_the_declared_space(self) -> None:
         case_id = "capcov-matrix-required"

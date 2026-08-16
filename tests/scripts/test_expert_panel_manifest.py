@@ -2,9 +2,7 @@ from __future__ import annotations
 
 import base64
 import copy
-import glob
 import hashlib
-import importlib.util
 import io
 import json
 import os
@@ -15,6 +13,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+from . import expert_panel_source_test_support as source_support
+from . import professional_completeness_test_support as professional_support
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = str(ROOT / "scripts")
@@ -22,38 +22,12 @@ if SCRIPTS not in sys.path:
     sys.path.insert(0, SCRIPTS)
 
 
-def _load(name: str, relative: str):
-    spec = importlib.util.spec_from_file_location(name, ROOT / relative)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
+import expert_panel_manifest as MANIFEST
 
-
-MANIFEST = _load("expert_panel_manifest_fixture", "scripts/expert_panel_manifest.py")
-PANEL = _load("expert_panel_manifest_panel_fixture", "scripts/expert_panel_review.py")
-
-READABILITY_ROOT = (
-    ROOT / "evals/expert-panel/readability-panel-2026-07-18-r9"
-)
-PROFESSIONAL_ROOT = (
-    ROOT / "evals/expert-panel/professional-completeness-panel-2026-07-18-r9"
-)
-HISTORICAL_REVIEW_CONTRACT_FINGERPRINT = (
-    "88a60c74fa8c47f9b9e5eed6a9caaf9381073057ee806b2dc2d0836709dccdde"
-)
-LIVE_REVIEW_CONTRACT_FINGERPRINT = (
-    "f80ffe96349a5cf35fc5c02ea698ede77e01c892a24fa35b1baecc1d9ec48fa1"
-)
-
+PANEL = source_support.PANEL
 
 def _json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
-
-
-def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _template_sha256(template: dict) -> str:
@@ -65,6 +39,20 @@ def _blank_template(ballot: dict) -> dict:
     """Return the current builder's unfilled shape without corpus I/O."""
 
     template = copy.deepcopy(ballot)
+    if ballot["kind"] == PANEL.SEMANTIC_DISPOSITION_BALLOT_KIND:
+        for vote in template["semantic_votes"]:
+            vote.update(
+                disposition=None,
+                rationale="",
+                authority_or_condition="",
+                decision_owner="",
+                mitigation="",
+                review_after=None,
+            )
+        template["limitations"] = [
+            "Unfilled template: every decision and rationale must be completed independently before validation."
+        ]
+        return template
     if ballot["schema_version"] == 2:
         for vote in template["content_votes"]:
             vote.update(decision=None, reason_code=None, rationale="")
@@ -118,6 +106,211 @@ def _blank_template(ballot: dict) -> dict:
     return template
 
 
+def _semantic_ballot_fixture() -> dict:
+    votes = [
+        {
+            "target_id": f"reference:{'a' * 64}",
+            "axis": "reference",
+            "candidate_id": "a" * 64,
+            "disposition": "false-positive",
+            "rationale": (
+                "The complete candidate evidence shows a detector-only grouping."
+            ),
+            "authority_or_condition": (
+                "The bounded Reference grouping and exception contract apply."
+            ),
+            "decision_owner": "semantic-reference-owner",
+            "mitigation": "Re-review when detector or source evidence changes.",
+            "review_after": None,
+        },
+        {
+            "target_id": f"root:{'b' * 64}",
+            "axis": "root",
+            "candidate_id": "b" * 64,
+            "disposition": "valid-contextual-rule",
+            "rationale": (
+                "The complete candidate evidence supports a bounded Root rule."
+            ),
+            "authority_or_condition": (
+                "The current Root governance boundary remains authoritative."
+            ),
+            "decision_owner": "semantic-root-owner",
+            "mitigation": "Re-review when detector or source evidence changes.",
+            "review_after": None,
+        },
+    ]
+    return {
+        "schema_version": 2,
+        "kind": PANEL.SEMANTIC_DISPOSITION_BALLOT_KIND,
+        "review_id": "semantic-manifest-review",
+        "created_on": "2026-08-10",
+        "packet_sha256": "c" * 64,
+        "source_fingerprints": {"semantic": "d" * 64},
+        "voter": {
+            "voter_id": "semantic-manifest-voter",
+            "agent_id": "semantic-manifest-agent",
+            "role": "senior-semantic-reviewer",
+            "expertise": ["Semantic boundary governance."],
+            "independent_review": True,
+        },
+        "semantic_votes": votes,
+        "limitations": ["Static reviewer evidence does not prove runtime behavior."],
+    }
+
+
+def _readability_packet_fixture() -> dict:
+    return {
+        "schema_version": 2,
+        "kind": PANEL.PACKET_KIND,
+        "review_id": "readability-manifest-review",
+        "created_on": "2026-08-10",
+        "source_fingerprints": {
+            "reference_content": "a" * 64,
+            "root_content": "b" * 64,
+            "ai_readability": "c" * 64,
+            "skill_detector": "d" * 64,
+        },
+        "panel_contract": {},
+        "rubric": {},
+        "content_targets": [
+            {
+                "path": "src/foundation/capabilities/fixture-a/SKILL.md",
+                "classification": "REVIEW_DENSITY",
+            },
+            {
+                "path": "src/foundation/capabilities/fixture-b/SKILL.md",
+                "classification": "REVIEW_DENSITY",
+            }
+        ],
+        "readability_targets": [
+            {
+                "document_id": "src/foundation/capabilities/fixture/SKILL.md#body",
+                "highest_band": "review-as-complex",
+                "findings": [
+                    {
+                        "finding_id": "e" * 64,
+                        "sentence_fingerprint": "f" * 64,
+                    }
+                ],
+            }
+        ],
+        "actionability_targets": [
+            {
+                "target_id": "fixture-actionability-target",
+                "front_window": {
+                    "start_line": 1,
+                    "end_line": 1,
+                    "line_count": 1,
+                    "lines": [
+                        {
+                            "line": 1,
+                            "text": (
+                                "Run the bounded fixture with explicit verification steps."
+                            ),
+                        }
+                    ],
+                    "sha256": hashlib.sha256(
+                        b"Run the bounded fixture with explicit verification steps."
+                    ).hexdigest(),
+                },
+            }
+        ],
+        "limitations": ["Synthetic manifest fixture."],
+    }
+
+
+def _readability_ballot_fixture(packet: dict, *, voter: int) -> dict:
+    return {
+        "schema_version": 2,
+        "kind": PANEL.BALLOT_KIND,
+        "review_id": packet["review_id"],
+        "created_on": packet["created_on"],
+        "packet_sha256": hashlib.sha256(
+            json.dumps(packet, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest(),
+        "source_fingerprints": copy.deepcopy(packet["source_fingerprints"]),
+        "voter": {
+            "voter_id": f"readability-manifest-voter-{voter}",
+            "agent_id": f"readability-manifest-agent-{voter}",
+            "role": f"senior-readability-reviewer-{voter}",
+            "expertise": ["AI instruction readability and actionability."],
+            "independent_review": True,
+        },
+        "content_votes": [
+            {
+                "path": target["path"],
+                "classification": "REVIEW_DENSITY",
+                "decision": "accepted-current-density",
+                "reason_code": "bounded-density-preserves-professional-coverage",
+                "rationale": "The bounded fixture remains one coherent decision.",
+            }
+            for target in packet["content_targets"]
+        ],
+        "readability_votes": [
+            {
+                "document_id": packet["readability_targets"][0]["document_id"],
+                "highest_band": "review-as-complex",
+                "finding_reviews": [
+                    {
+                        **packet["readability_targets"][0]["findings"][0],
+                        "decision": "accepted-current-readability",
+                        "reason_code": "single-indivisible-decision",
+                        "rationale": "The sentence expresses one indivisible decision.",
+                    }
+                ],
+            }
+        ],
+        "actionability_votes": [
+            {
+                "target_id": packet["actionability_targets"][0]["target_id"],
+                "decision": "accepted-current-actionability",
+                "reason_code": "explicit-domain-actions-are-front-loaded",
+                "evidence": [
+                    {
+                        "line": 1,
+                        "source_line": (
+                            "Run the bounded fixture with explicit verification steps."
+                        ),
+                        "claim": "Run explicit verification steps for the fixture.",
+                    }
+                ],
+                "rationale": "The first line names the executable action.",
+            }
+        ],
+        "limitations": ["Synthetic manifest fixture vote."],
+    }
+
+
+def _professional_ballot_fixture(*, voter: int) -> dict:
+    packet = professional_support._professional_packet()
+    skill_id = packet["professional_targets"][0]["skill_id"]
+    ballot = professional_support._professional_ballot(
+        packet,
+        "9" * 64,
+        voter=voter,
+        reviewer_kind="domain",
+        skill_ids=[skill_id],
+    )
+    ballot["schema_version"] = 3
+    ballot.pop("source_fingerprints")
+    ballot["review_contract_fingerprint"] = (
+        PANEL._professional_evidence_review_contract_fingerprint()
+    )
+    ballot["capsule"] = {
+        "path": (
+            ".rd-skills/expert-panel/professional-manifest-review/capsules/"
+            f"professional-expert-{voter}.json"
+        ),
+        "sha256": hashlib.sha256(
+            f"professional-manifest-capsule-{voter}".encode()
+        ).hexdigest(),
+        "kind": PANEL.PROFESSIONAL_COMPLETENESS_CAPSULE_KIND,
+        "axis": PANEL.PROFESSIONAL_COMPLETENESS_ARTIFACT_AXIS,
+        "review_id": ballot["review_id"],
+    }
+    return ballot
+
+
 def _build_readability_template(packet: dict, packet_sha256: str, ballot: dict) -> dict:
     voter = ballot["voter"]
     # The checked-in r9 packet is intentionally historical relative to the
@@ -133,23 +326,6 @@ def _build_readability_template(packet: dict, packet_sha256: str, ballot: dict) 
             expertise=voter["expertise"],
             created_on=ballot["created_on"],
         )
-
-
-def _build_professional_template(packet: dict, packet_sha256: str, ballot: dict) -> dict:
-    voter = ballot["voter"]
-    return PANEL.prepare_professional_completeness_ballot_template_v3(
-        packet=packet,
-        packet_sha256=packet_sha256,
-        capsule_path=ROOT / ballot["capsule"]["path"],
-        voter_id=voter["voter_id"],
-        agent_id=voter["agent_id"],
-        role=voter["role"],
-        expertise=voter["expertise"],
-        expertise_tags=voter["expertise_tags"],
-        skill_ids=[vote["skill_id"] for vote in ballot["professional_votes"]],
-        created_on=ballot["created_on"],
-        validation_root=ROOT,
-    )
 
 
 def _roundtrip(ballot: dict, template: dict) -> tuple[list[dict], bytes, dict]:
@@ -205,38 +381,831 @@ class _FragmentedStream(io.BytesIO):
         return super().read(3 if size < 0 else min(size, 3))
 
 
+class ExpertPanelSemanticManifestTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.ballot = _semantic_ballot_fixture()
+        cls.template = _blank_template(cls.ballot)
+        cls.template_sha256 = _template_sha256(cls.template)
+
+    def _records(self) -> list[dict]:
+        return MANIFEST.project_ballot_to_manifest(
+            copy.deepcopy(self.ballot),
+            template_sha256=self.template_sha256,
+        )
+
+    def test_semantic_schema2_roundtrips_exactly(self) -> None:
+        records, encoded, candidate = _roundtrip(self.ballot, self.template)
+        self.assertEqual(self.ballot, candidate)
+        self.assertEqual(
+            ["header", "limitation", "semantic_vote", "semantic_vote"],
+            [row["record_type"] for row in records],
+        )
+        self.assertIsNone(records[0]["capsule_sha256"])
+        self.assertEqual(encoded, MANIFEST.encode_manifest_records(records))
+
+    def test_semantic_schema1_ballot_template_and_header_are_rejected(self) -> None:
+        legacy_ballot = copy.deepcopy(self.ballot)
+        legacy_ballot["schema_version"] = 1
+        with self.assertRaises(MANIFEST.ManifestError):
+            MANIFEST.project_ballot_to_manifest(
+                legacy_ballot,
+                template_sha256=self.template_sha256,
+            )
+
+        records = self._records()
+        legacy_template = copy.deepcopy(self.template)
+        legacy_template["schema_version"] = 1
+        with self.assertRaises(MANIFEST.ManifestError):
+            MANIFEST.materialize_manifest(legacy_template, records)
+
+        legacy_header = copy.deepcopy(records)
+        legacy_header[0]["ballot_schema_version"] = 1
+        with self.assertRaises(MANIFEST.ManifestError):
+            MANIFEST.encode_manifest_records(legacy_header)
+
+    def test_zero_target_semantic_manifest_roundtrips_and_validates_current(self) -> None:
+        audit = _json(ROOT / "reports" / "skill-content-audit.json")
+        packet = PANEL.prepare_semantic_disposition_packet(
+            audit=audit,
+            review_id="semantic-zero-manifest-review",
+            created_on="2026-08-10",
+        )
+        self.assertEqual([], packet["semantic_targets"])
+        self.assertIs(
+            packet,
+            PANEL.validate_semantic_packet_current(packet, audit),
+        )
+        packet_raw = (
+            json.dumps(packet, indent=2, ensure_ascii=False).encode("utf-8")
+            + b"\n"
+        )
+        packet_sha256 = hashlib.sha256(packet_raw).hexdigest()
+        template = PANEL.prepare_semantic_ballot_template(
+            packet=packet,
+            packet_sha256=packet_sha256,
+            voter_id="semantic-zero-manifest-voter",
+            agent_id="semantic-zero-manifest-agent",
+            role="senior-semantic-reviewer",
+            expertise=["Semantic boundary governance."],
+            created_on="2026-08-10",
+        )
+
+        records, encoded, candidate = _roundtrip(template, template)
+
+        self.assertEqual(["header", "limitation"], [
+            row["record_type"] for row in records
+        ])
+        self.assertEqual(2, records[0]["record_count"])
+        self.assertEqual(records, MANIFEST.parse_manifest_bytes(encoded))
+        self.assertEqual([], candidate["semantic_votes"])
+        self.assertIs(
+            candidate,
+            PANEL.validate_ballot(
+                packet,
+                candidate,
+                packet_sha256=packet_sha256,
+            ),
+        )
+
+        invalid_records = []
+        wrong_count = copy.deepcopy(records)
+        wrong_count[0]["record_count"] = 3
+        invalid_records.append(wrong_count)
+        missing_limitation = [copy.deepcopy(records[0])]
+        missing_limitation[0]["record_count"] = 1
+        invalid_records.append(missing_limitation)
+        extra_field = copy.deepcopy(records)
+        extra_field[1]["unexpected"] = True
+        invalid_records.append(extra_field)
+        for mutation in invalid_records:
+            with self.assertRaises(MANIFEST.ManifestError):
+                MANIFEST.encode_manifest_records(mutation)
+
+    def test_semantic_identity_coverage_and_order_are_template_bound(self) -> None:
+        records = self._records()
+        vote_indexes = [
+            index
+            for index, row in enumerate(records)
+            if row["record_type"] == "semantic_vote"
+        ]
+        mutations: list[tuple[str, list[dict], bool]] = []
+
+        missing = copy.deepcopy(records)
+        missing.pop(vote_indexes[-1])
+        missing[0]["record_count"] = len(missing)
+        mutations.append(("missing", missing, False))
+
+        duplicate = copy.deepcopy(records)
+        duplicate.insert(vote_indexes[-1], copy.deepcopy(duplicate[vote_indexes[0]]))
+        duplicate[0]["record_count"] = len(duplicate)
+        mutations.append(("duplicate", duplicate, True))
+
+        extra = copy.deepcopy(records)
+        extra_vote = copy.deepcopy(extra[vote_indexes[-1]])
+        extra_vote.update(
+            target_id=f"root:{'e' * 64}",
+            candidate_id="e" * 64,
+        )
+        extra.append(extra_vote)
+        extra[0]["record_count"] = len(extra)
+        mutations.append(("extra", extra, False))
+
+        reordered = copy.deepcopy(records)
+        reordered[vote_indexes[0]], reordered[vote_indexes[-1]] = (
+            reordered[vote_indexes[-1]],
+            reordered[vote_indexes[0]],
+        )
+        mutations.append(("reordered", reordered, True))
+
+        substituted = copy.deepcopy(records)
+        substituted[vote_indexes[0]]["axis"] = "root"
+        mutations.append(("identity-substitution", substituted, False))
+
+        for label, mutation, encoding_rejects in mutations:
+            with self.subTest(label=label):
+                if encoding_rejects:
+                    with self.assertRaises(MANIFEST.ManifestError):
+                        MANIFEST.encode_manifest_records(mutation)
+                else:
+                    with self.assertRaises(MANIFEST.ManifestError):
+                        MANIFEST.materialize_manifest(self.template, mutation)
+
+    def test_semantic_header_and_template_bindings_are_closed(self) -> None:
+        for key, value in (
+            ("panel_kind", MANIFEST.READABILITY_PANEL_KIND),
+            ("ballot_kind", MANIFEST.READABILITY_BALLOT_KIND),
+            ("ballot_schema_version", 1),
+            ("packet_sha256", "0" * 64),
+            ("voter_id", "different-voter"),
+            ("review_id", "different-review"),
+            ("template_sha256", "0" * 64),
+        ):
+            with self.subTest(key=key):
+                records = self._records()
+                records[0][key] = value
+                with self.assertRaises(MANIFEST.ManifestError):
+                    MANIFEST.materialize_manifest(self.template, records)
+
+    def test_semantic_raw_and_framed_transports_are_byte_identical(self) -> None:
+        raw = MANIFEST.encode_manifest_records(self._records())
+        digest = hashlib.sha256(raw).hexdigest()
+        stream_id = (
+            f"{self.ballot['review_id']}:{self.ballot['voter']['voter_id']}"
+        )
+        framed = _chunk_stream(raw, stream_id=stream_id, chunk_size=31)
+        self.assertEqual(
+            raw,
+            MANIFEST.read_raw_manifest_stream(
+                _FragmentedStream(raw),
+                expected_size=len(raw),
+                expected_sha256=digest,
+            ),
+        )
+
+    def test_semantic_transport_bindings_reject_every_envelope_axis(self) -> None:
+        raw = MANIFEST.encode_manifest_records(self._records())
+        digest = hashlib.sha256(raw).hexdigest()
+        stream_id = (
+            f"{self.ballot['review_id']}:{self.ballot['voter']['voter_id']}"
+        )
+        with self.assertRaises(MANIFEST.ManifestError):
+            MANIFEST.read_raw_manifest_stream(
+                io.BytesIO(raw),
+                expected_size=len(raw) + 1,
+                expected_sha256=digest,
+            )
+        with self.assertRaises(MANIFEST.ManifestError):
+            MANIFEST.read_raw_manifest_stream(
+                io.BytesIO(raw),
+                expected_size=len(raw),
+                expected_sha256="0" * 64,
+            )
+
+        framed = _chunk_stream(raw, stream_id=stream_id, chunk_size=31)
+        values = [json.loads(line) for line in framed.rstrip(b"\n").split(b"\n")]
+        mutations = []
+        for key, value in (
+            ("stream_id", "different-review:different-voter"),
+            ("sequence", 1),
+            ("chunk_count", len(values) + 1),
+            ("total_raw_bytes", len(raw) + 1),
+            ("manifest_sha256", "0" * 64),
+            ("chunk_raw_sha256", "0" * 64),
+        ):
+            mutation = copy.deepcopy(values)
+            mutation[0][key] = value
+            mutations.append(mutation)
+        for index, mutation in enumerate(mutations):
+            encoded = b"".join(
+                json.dumps(
+                    row,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode("utf-8")
+                + b"\n"
+                for row in mutation
+            )
+            with self.subTest(index=index), self.assertRaises(
+                MANIFEST.ManifestError
+            ):
+                MANIFEST.read_framed_manifest_stream(
+                    io.BytesIO(encoded),
+                    expected_size=len(raw),
+                    expected_sha256=digest,
+                )
+        self.assertEqual(
+            raw,
+            MANIFEST.read_framed_manifest_stream(
+                _FragmentedStream(framed),
+                expected_size=len(raw),
+                expected_sha256=digest,
+            ),
+        )
+
+
+class ExpertPanelSemanticMaterializationTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.audit = source_support.semantic_audit_with_synthetic_delta()
+        cls.packet = PANEL.prepare_semantic_disposition_packet(
+            audit=cls.audit,
+            review_id="semantic-manifest-review",
+            created_on="2026-08-10",
+        )
+        cls.packet_raw = (
+            json.dumps(cls.packet, indent=2, ensure_ascii=False).encode("utf-8")
+            + b"\n"
+        )
+        cls.packet_sha256 = hashlib.sha256(cls.packet_raw).hexdigest()
+        cls.template = PANEL.prepare_semantic_ballot_template(
+            packet=cls.packet,
+            packet_sha256=cls.packet_sha256,
+            voter_id="semantic-manifest-voter",
+            agent_id="semantic-manifest-agent",
+            role="senior-semantic-reviewer",
+            expertise=["Semantic boundary governance."],
+            created_on="2026-08-10",
+        )
+        cls.ballot = copy.deepcopy(cls.template)
+        for index, vote in enumerate(cls.ballot["semantic_votes"]):
+            vote.update(
+                disposition="valid-contextual-rule",
+                rationale=(
+                    "The reviewer independently evaluated complete current "
+                    f"semantic evidence for target {index}."
+                ),
+                authority_or_condition=(
+                    "The current bounded candidate context and authority apply."
+                ),
+                decision_owner="semantic-manifest-owner",
+                mitigation=(
+                    "Re-review when bound source or detector evidence changes."
+                ),
+                review_after=None,
+            )
+        cls.template_raw = MANIFEST.canonical_ballot_bytes(
+            cls.template, compact=False
+        )
+        cls.template_sha256 = hashlib.sha256(cls.template_raw).hexdigest()
+        cls.records = MANIFEST.project_ballot_to_manifest(
+            cls.ballot,
+            template_sha256=cls.template_sha256,
+        )
+        cls.manifest_raw = MANIFEST.encode_manifest_records(cls.records)
+        cls.manifest_sha256 = hashlib.sha256(cls.manifest_raw).hexdigest()
+
+    def _workspace(self, root: Path, *, audit: dict | None = None) -> dict[str, Path]:
+        run = (
+            root
+            / ".rd-skills"
+            / "expert-panel"
+            / self.packet["review_id"]
+        )
+        ballots = run / "ballots"
+        inputs = run / "inputs"
+        ballots.mkdir(parents=True)
+        inputs.mkdir()
+        packet_path = run / "packet.json"
+        audit_path = inputs / "skill-content-audit.json"
+        template_path = ballots / "semantic-manifest-voter.template.json"
+        packet_path.write_bytes(self.packet_raw)
+        audit_path.write_text(
+            json.dumps(self.audit if audit is None else audit, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        template_path.write_bytes(self.template_raw)
+        return {
+            "run": run,
+            "packet": packet_path,
+            "audit": audit_path,
+            "template": template_path,
+            "output": ballots / "semantic-manifest-voter.json",
+        }
+
+    def _arguments(self, paths: dict[str, Path]) -> list[str]:
+        relative = {
+            key: path.relative_to(paths["run"].parents[2]).as_posix()
+            for key, path in paths.items()
+            if key not in {"run"}
+        }
+        return [
+            "materialize-ballot",
+            "--packet",
+            relative["packet"],
+            "--template",
+            relative["template"],
+            "--template-sha256",
+            self.template_sha256,
+            "--manifest",
+            "-",
+            "--manifest-size",
+            str(len(self.manifest_raw)),
+            "--manifest-sha256",
+            self.manifest_sha256,
+            "--stdin-framing",
+            "raw",
+            "--audit",
+            relative["audit"],
+            "--out",
+            relative["output"],
+        ]
+
+    def test_semantic_raw_and_framed_cli_outputs_are_byte_identical(self) -> None:
+        outputs = []
+        for framing in ("raw", "changeforge-base64-chunks-v1"):
+            with self.subTest(framing=framing), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                paths = self._workspace(root)
+                arguments = self._arguments(paths)
+                arguments[arguments.index("--stdin-framing") + 1] = framing
+                payload = (
+                    self.manifest_raw
+                    if framing == "raw"
+                    else _chunk_stream(
+                        self.manifest_raw,
+                        stream_id=(
+                            f"{self.packet['review_id']}:semantic-manifest-voter"
+                        ),
+                    )
+                )
+                stdin = mock.Mock(buffer=io.BytesIO(payload))
+                with mock.patch.object(PANEL, "ROOT", root), mock.patch.object(
+                    sys, "stdin", stdin
+                ):
+                    self.assertEqual(0, PANEL.main(arguments))
+                outputs.append(paths["output"].read_bytes())
+                self.assertEqual(self.template_raw, paths["template"].read_bytes())
+                self.assertEqual([], list(paths["output"].parent.glob(".*.materialize*")))
+        self.assertEqual(outputs[0], outputs[1])
+        self.assertEqual(self.ballot, json.loads(outputs[0]))
+
+    def test_empty_manifest_cannot_authorize_nonzero_semantic_template(self) -> None:
+        empty_ballot = copy.deepcopy(self.template)
+        empty_ballot["semantic_votes"] = []
+        empty_records = MANIFEST.project_ballot_to_manifest(
+            empty_ballot,
+            template_sha256=self.template_sha256,
+        )
+        empty_raw = MANIFEST.encode_manifest_records(empty_records)
+
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            paths = self._workspace(root)
+            arguments = self._arguments(paths)
+            arguments[arguments.index("--manifest-size") + 1] = str(len(empty_raw))
+            arguments[arguments.index("--manifest-sha256") + 1] = hashlib.sha256(
+                empty_raw
+            ).hexdigest()
+            stdin = mock.Mock(buffer=io.BytesIO(empty_raw))
+            stdout = io.StringIO()
+            with mock.patch.object(PANEL, "ROOT", root), mock.patch.object(
+                sys, "stdin", stdin
+            ), mock.patch.object(
+                sys, "stdout", stdout
+            ):
+                self.assertEqual(1, PANEL.main(arguments))
+
+            self.assertIn(
+                "semantic manifest identity coverage does not match template",
+                stdout.getvalue(),
+            )
+            self.assertFalse(paths["output"].exists())
+            self.assertEqual(self.template_raw, paths["template"].read_bytes())
+            self.assertEqual([], list(paths["output"].parent.glob(".*.materialize*")))
+
+    def test_semantic_missing_or_stale_audit_fails_before_manifest_read(self) -> None:
+        stale = copy.deepcopy(self.audit)
+        detector_contract = stale["root_content"]["semantic_advisories"][
+            "detector_contract"
+        ]
+        current_fingerprint = detector_contract["value"]
+        detector_contract["value"] = current_fingerprint[:-1] + (
+            "0" if current_fingerprint[-1] != "0" else "1"
+        )
+        for mode in ("missing", "stale"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                paths = self._workspace(root, audit=stale)
+                arguments = self._arguments(paths)
+                if mode == "missing":
+                    audit_index = arguments.index("--audit")
+                    del arguments[audit_index : audit_index + 2]
+                with mock.patch.object(PANEL, "ROOT", root), mock.patch.object(
+                    PANEL.reviewer_manifest,
+                    "read_raw_manifest_stream",
+                ) as manifest_read:
+                    self.assertEqual(1, PANEL.main(arguments))
+                manifest_read.assert_not_called()
+                self.assertFalse(paths["output"].exists())
+                self.assertEqual(self.template_raw, paths["template"].read_bytes())
+                self.assertEqual([], list(paths["output"].parent.glob(".*.materialize*")))
+
+    def test_semantic_canonical_paths_and_create_once_fail_closed(self) -> None:
+        for mode in (
+            "cross-run-audit",
+            "packet-traversal",
+            "wrong-template-name",
+            "wrong-output-name",
+            "template-symlink",
+            "existing-output",
+            "output-symlink",
+        ):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                paths = self._workspace(root)
+                arguments = self._arguments(paths)
+                template_target = paths["template"]
+                output_sentinel: Path | None = None
+                output_before: bytes | None = None
+                if mode == "cross-run-audit":
+                    arguments[arguments.index("--audit") + 1] = (
+                        ".rd-skills/expert-panel/other-review/inputs/"
+                        "skill-content-audit.json"
+                    )
+                elif mode == "packet-traversal":
+                    arguments[arguments.index("--packet") + 1] = (
+                        ".rd-skills/expert-panel/semantic-manifest-review/../"
+                        "semantic-manifest-review/packet.json"
+                    )
+                elif mode == "wrong-template-name":
+                    arguments[arguments.index("--template") + 1] = (
+                        paths["template"].with_name("wrong.template.json")
+                        .relative_to(root)
+                        .as_posix()
+                    )
+                elif mode == "wrong-output-name":
+                    arguments[arguments.index("--out") + 1] = (
+                        paths["output"].with_name("wrong.json")
+                        .relative_to(root)
+                        .as_posix()
+                    )
+                elif mode == "template-symlink":
+                    template_target = paths["run"] / "template-target.json"
+                    template_target.write_bytes(self.template_raw)
+                    paths["template"].unlink()
+                    paths["template"].symlink_to(template_target)
+                elif mode == "existing-output":
+                    paths["output"].write_bytes(b'{"existing":true}\n')
+                    output_before = paths["output"].read_bytes()
+                else:
+                    output_sentinel = paths["run"] / "unrelated.json"
+                    output_sentinel.write_bytes(b'{"unrelated":true}\n')
+                    paths["output"].symlink_to(output_sentinel)
+                    output_before = output_sentinel.read_bytes()
+
+                stdin = mock.Mock(buffer=io.BytesIO(self.manifest_raw))
+                with mock.patch.object(PANEL, "ROOT", root), mock.patch.object(
+                    sys, "stdin", stdin
+                ):
+                    self.assertEqual(1, PANEL.main(arguments))
+                self.assertEqual(self.template_raw, template_target.read_bytes())
+                if mode == "existing-output":
+                    self.assertEqual(output_before, paths["output"].read_bytes())
+                elif mode == "output-symlink":
+                    self.assertEqual(output_before, output_sentinel.read_bytes())
+                    self.assertTrue(paths["output"].is_symlink())
+                else:
+                    self.assertFalse(paths["output"].exists())
+                self.assertEqual([], list(paths["output"].parent.glob(".*.materialize*")))
+
+
+class ExpertPanelSemanticPrepareTests(unittest.TestCase):
+    REVIEW_ID = "semantic-canonical-prepare"
+    REVIEWERS = (
+        (
+            "semantic-prepare-root",
+            "semantic_prepare_root_agent",
+            "senior-root-semantic-reviewer",
+            "Root semantic authority and contextual rule evaluation.",
+        ),
+        (
+            "semantic-prepare-reference",
+            "semantic_prepare_reference_agent",
+            "senior-reference-semantic-reviewer",
+            "Reference contract and semantic evidence evaluation.",
+        ),
+        (
+            "semantic-prepare-governance",
+            "semantic_prepare_governance_agent",
+            "senior-semantic-governance-reviewer",
+            "Semantic governance, ownership, and bounded exceptions.",
+        ),
+    )
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.audit_raw = (
+            ROOT / "reports" / "skill-content-audit.json"
+        ).read_bytes()
+        cls.audit = json.loads(cls.audit_raw)
+
+    def _git_output(
+        self,
+        *,
+        status: bytes = b"",
+        head_audit: bytes | None = None,
+    ):
+        def run(*arguments: str, check: bool = True):
+            if arguments and arguments[0] == "status":
+                return mock.Mock(stdout=status, stderr=b"", returncode=0)
+            if arguments[:2] == ("ls-files", "--error-unmatch"):
+                return mock.Mock(
+                    stdout=b"reports/skill-content-audit.json\n",
+                    stderr=b"",
+                    returncode=0,
+                )
+            if arguments and arguments[0] == "show":
+                return mock.Mock(
+                    stdout=self.audit_raw if head_audit is None else head_audit,
+                    stderr=b"",
+                    returncode=0,
+                )
+            if arguments[:2] == ("rev-parse", "HEAD"):
+                return mock.Mock(stdout=b"ed0a028\n", stderr=b"", returncode=0)
+            raise AssertionError(f"unexpected Git authority query: {arguments}")
+
+        return run
+
+    def _arguments(self, *, out: str | None = None) -> list[str]:
+        arguments = [
+            "prepare",
+            "--panel-kind",
+            "semantic-disposition",
+            "--audit",
+            "reports/skill-content-audit.json",
+            "--review-id",
+            self.REVIEW_ID,
+            "--created-on",
+            "2026-08-10",
+            "--semantic-re-review-axis",
+            "root",
+            "--semantic-re-review-axis",
+            "reference",
+            "--out",
+            out
+            or f".rd-skills/expert-panel/{self.REVIEW_ID}/packet.json",
+        ]
+        for reviewer in self.REVIEWERS:
+            arguments.extend(["--reviewer", *reviewer])
+        return arguments
+
+    def _prepare(
+        self,
+        root: Path,
+        *,
+        status: bytes = b"",
+        head_audit: bytes | None = None,
+    ) -> int:
+        audit_path = root / "reports" / "skill-content-audit.json"
+        audit_path.parent.mkdir(parents=True)
+        audit_path.write_bytes(self.audit_raw)
+        stdout = io.StringIO()
+        with mock.patch.object(PANEL, "ROOT", root), mock.patch.object(
+            PANEL,
+            "_git_output",
+            side_effect=self._git_output(status=status, head_audit=head_audit),
+        ), mock.patch.object(sys, "stdout", stdout):
+            return PANEL.main(self._arguments())
+
+    def test_prepare_creates_complete_full_fresh_semantic_layout(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self.assertEqual(0, self._prepare(root))
+            run = root / ".rd-skills" / "expert-panel" / self.REVIEW_ID
+            packet_path = run / "packet.json"
+            audit_path = run / "inputs" / "skill-content-audit.json"
+            packet = _json(packet_path)
+            self.assertEqual(self.audit_raw, audit_path.read_bytes())
+            self.assertGreater(len(packet["semantic_targets"]), 0)
+            self.assertIs(
+                packet,
+                PANEL.validate_semantic_packet_current(packet, self.audit),
+            )
+            packet_sha256 = hashlib.sha256(packet_path.read_bytes()).hexdigest()
+            for voter_id, agent_id, role, _expertise in self.REVIEWERS:
+                template_path = run / "ballots" / f"{voter_id}.template.json"
+                template = _json(template_path)
+                self.assertEqual(
+                    len(packet["semantic_targets"]),
+                    len(template["semantic_votes"]),
+                )
+                self.assertEqual(
+                    (voter_id, agent_id, role),
+                    (
+                        template["voter"]["voter_id"],
+                        template["voter"]["agent_id"],
+                        template["voter"]["role"],
+                    ),
+                )
+                self.assertIs(
+                    template,
+                    PANEL.validate_ballot_template(
+                        packet,
+                        template,
+                        packet_sha256=packet_sha256,
+                    ),
+                )
+            self.assertEqual(
+                sorted(
+                    [
+                        f"ballots/{voter_id}.template.json"
+                        for voter_id, *_rest in self.REVIEWERS
+                    ]
+                    + ["inputs/skill-content-audit.json", "packet.json"]
+                ),
+                sorted(
+                    path.relative_to(run).as_posix()
+                    for path in run.rglob("*")
+                    if path.is_file()
+                ),
+            )
+
+    def test_prepared_full_fresh_template_materializes_through_cli(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self.assertEqual(0, self._prepare(root))
+            run = root / ".rd-skills" / "expert-panel" / self.REVIEW_ID
+            packet_path = run / "packet.json"
+            voter_id = self.REVIEWERS[0][0]
+            template_path = run / "ballots" / f"{voter_id}.template.json"
+            output_path = run / "ballots" / f"{voter_id}.json"
+            template = _json(template_path)
+            template_raw = template_path.read_bytes()
+            filled = copy.deepcopy(template)
+            for index, vote in enumerate(filled["semantic_votes"]):
+                vote.update(
+                    disposition="valid-contextual-rule",
+                    rationale=(
+                        "The synthetic reviewer fixture evaluated complete current "
+                        f"semantic evidence for target {index}."
+                    ),
+                    authority_or_condition=(
+                        "The current bounded candidate context and authority apply."
+                    ),
+                    decision_owner="semantic-prepare-fixture-owner",
+                    mitigation=(
+                        "Re-review when bound source or detector evidence changes."
+                    ),
+                    review_after=None,
+                )
+            records = MANIFEST.project_ballot_to_manifest(
+                filled,
+                template_sha256=hashlib.sha256(template_raw).hexdigest(),
+            )
+            manifest_raw = MANIFEST.encode_manifest_records(records)
+            arguments = [
+                "materialize-ballot",
+                "--packet",
+                packet_path.relative_to(root).as_posix(),
+                "--template",
+                template_path.relative_to(root).as_posix(),
+                "--template-sha256",
+                hashlib.sha256(template_raw).hexdigest(),
+                "--manifest",
+                "-",
+                "--manifest-size",
+                str(len(manifest_raw)),
+                "--manifest-sha256",
+                hashlib.sha256(manifest_raw).hexdigest(),
+                "--stdin-framing",
+                "raw",
+                "--audit",
+                (run / "inputs" / "skill-content-audit.json")
+                .relative_to(root)
+                .as_posix(),
+                "--out",
+                output_path.relative_to(root).as_posix(),
+            ]
+            stdin = mock.Mock(buffer=io.BytesIO(manifest_raw))
+            with mock.patch.object(PANEL, "ROOT", root), mock.patch.object(
+                sys, "stdin", stdin
+            ):
+                self.assertEqual(0, PANEL.main(arguments))
+            ballot = _json(output_path)
+            packet = _json(packet_path)
+            self.assertEqual(filled, ballot)
+            self.assertIs(
+                ballot,
+                PANEL.validate_ballot(
+                    packet,
+                    ballot,
+                    packet_sha256=hashlib.sha256(
+                        packet_path.read_bytes()
+                    ).hexdigest(),
+                ),
+            )
+
+    def test_prepare_collision_symlink_and_partial_failure_leave_no_mixed_run(self) -> None:
+        for mode in ("collision", "symlink", "partial"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                run = root / ".rd-skills" / "expert-panel" / self.REVIEW_ID
+                sentinel: Path | None = None
+                if mode == "collision":
+                    run.mkdir(parents=True)
+                    sentinel = run / "existing.json"
+                    sentinel.write_bytes(b'{"existing":true}\n')
+                elif mode == "symlink":
+                    run.parent.mkdir(parents=True)
+                    target = root / "outside"
+                    target.mkdir()
+                    run.symlink_to(target, target_is_directory=True)
+                    sentinel = target
+
+                if mode == "partial":
+                    original_fsync = PANEL.os.fsync
+                    fsync_calls = 0
+
+                    def fail_during_prepare(descriptor: int) -> None:
+                        nonlocal fsync_calls
+                        fsync_calls += 1
+                        if fsync_calls == 3:
+                            raise OSError("injected prepare fsync failure")
+                        original_fsync(descriptor)
+
+                    with mock.patch.object(
+                        PANEL.os, "fsync", side_effect=fail_during_prepare
+                    ):
+                        self.assertEqual(1, self._prepare(root))
+                    self.assertGreaterEqual(fsync_calls, 3)
+                    self.assertFalse(run.exists())
+                else:
+                    self.assertEqual(1, self._prepare(root))
+                    if mode == "collision":
+                        self.assertEqual(b'{"existing":true}\n', sentinel.read_bytes())
+                    else:
+                        self.assertTrue(run.is_symlink())
+                        self.assertEqual([], list(sentinel.iterdir()))
+
+    def test_prepare_rejects_dirty_stale_and_tracked_output_before_write(self) -> None:
+        for mode in ("dirty", "stale-audit", "tracked-output"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                audit_path = root / "reports" / "skill-content-audit.json"
+                audit_path.parent.mkdir(parents=True)
+                audit_path.write_bytes(self.audit_raw)
+                arguments = self._arguments(
+                    out=(
+                        "evals/expert-panel/semantic-disposition.json"
+                        if mode == "tracked-output"
+                        else None
+                    )
+                )
+                stdout = io.StringIO()
+                with mock.patch.object(PANEL, "ROOT", root), mock.patch.object(
+                    PANEL,
+                    "_git_output",
+                    side_effect=self._git_output(
+                        status=b" M scripts/example.py\n" if mode == "dirty" else b"",
+                        head_audit=b"{}\n" if mode == "stale-audit" else None,
+                    ),
+                ), mock.patch.object(sys, "stdout", stdout):
+                    self.assertEqual(1, PANEL.main(arguments))
+                self.assertFalse(
+                    (root / ".rd-skills" / "expert-panel" / self.REVIEW_ID).exists()
+                )
+
+
 class ExpertPanelManifestRoundtripTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.readability_packet_path = READABILITY_ROOT / "packet.json"
-        cls.readability_packet = _json(cls.readability_packet_path)
-        cls.readability_packet_sha256 = _sha256(cls.readability_packet_path)
-        cls.readability_ballot_paths = [
-            Path(path)
-            for path in sorted(
-                glob.glob(str(READABILITY_ROOT / "panel/readability-r9-*.json"))
-            )
+        cls.readability_packet = _readability_packet_fixture()
+        cls.readability_ballots = [
+            _readability_ballot_fixture(cls.readability_packet, voter=voter)
+            for voter in range(1, 4)
         ]
-        cls.professional_packet_path = PROFESSIONAL_ROOT / "packet.json"
-        cls.professional_packet = _json(cls.professional_packet_path)
-        cls.professional_packet_sha256 = _sha256(cls.professional_packet_path)
-        cls.professional_ballot_paths = [
-            Path(path)
-            for path in sorted(glob.glob(str(PROFESSIONAL_ROOT / "panel/r9-*.json")))
+        cls.readability_packet_sha256 = cls.readability_ballots[0][
+            "packet_sha256"
         ]
-        cls.readability_ballots = [_json(path) for path in cls.readability_ballot_paths]
         cls.professional_ballots = [
-            _json(path) for path in cls.professional_ballot_paths
+            _professional_ballot_fixture(voter=voter) for voter in range(1, 4)
         ]
 
     def test_all_three_readability_ballots_roundtrip_exactly(self) -> None:
         self.assertEqual(3, len(self.readability_ballots))
-        for path, ballot in zip(
-            self.readability_ballot_paths,
-            self.readability_ballots,
-            strict=True,
-        ):
-            with self.subTest(ballot=path.name):
+        for ballot in self.readability_ballots:
+            with self.subTest(ballot=ballot["voter"]["voter_id"]):
                 template = _build_readability_template(
                     self.readability_packet,
                     self.readability_packet_sha256,
@@ -258,44 +1227,11 @@ class ExpertPanelManifestRoundtripTests(unittest.TestCase):
                 self.assertNotIn("classification", records[-1])
 
     def test_representative_professional_axes_roundtrip_and_validate(self) -> None:
-        names = (
-            "r9-architecture-platform-arch.json",
-            "r9-architecture-platform-d1.json",
-            "r9-architecture-platform-d2.json",
-        )
-        ballots_by_name = {
-            path.name: ballot
-            for path, ballot in zip(
-                self.professional_ballot_paths,
-                self.professional_ballots,
-                strict=True,
-            )
-        }
-        for name in names:
-            with self.subTest(ballot=name):
-                ballot = ballots_by_name[name]
-                with self.assertRaisesRegex(
-                    PANEL.PanelReviewError,
-                    "professional completeness schema-3 review contract is stale",
-                ):
-                    _build_professional_template(
-                        self.professional_packet,
-                        self.professional_packet_sha256,
-                        ballot,
-                    )
+        for ballot in self.professional_ballots:
+            with self.subTest(ballot=ballot["voter"]["voter_id"]):
                 template = _blank_template(ballot)
                 records, _encoded, candidate = _roundtrip(ballot, template)
-                with self.assertRaisesRegex(
-                    PANEL.PanelReviewError,
-                    "professional completeness schema-3 review contract is stale",
-                ):
-                    PANEL.validate_ballot(
-                        self.professional_packet,
-                        candidate,
-                        packet_sha256=self.professional_packet_sha256,
-                        validation_root=ROOT,
-                        artifact_path=PROFESSIONAL_ROOT / "panel" / name,
-                    )
+                self.assertEqual(ballot, candidate)
                 for record in records:
                     for candidate_row in record.get(
                         "examined_adjacent_candidates", []
@@ -303,10 +1239,27 @@ class ExpertPanelManifestRoundtripTests(unittest.TestCase):
                         self.assertNotIn("review_origin", candidate_row)
                         self.assertNotIn("discovery_reason", candidate_row)
 
-    def test_all_42_r9_ballots_fit_deterministic_transport_bounds(self) -> None:
+    def test_current_professional_transport_omits_source_fingerprints(self) -> None:
+        ballot = copy.deepcopy(self.professional_ballots[0])
+        self.assertNotIn("source_fingerprints", ballot)
+        template = _blank_template(ballot)
+        _records, _encoded, candidate = _roundtrip(ballot, template)
+        self.assertEqual(ballot, candidate)
+
+        for value in ({}, {"professional_packages": "0" * 64}):
+            with self.subTest(value=value):
+                forged = copy.deepcopy(ballot)
+                forged["source_fingerprints"] = value
+                with self.assertRaises(MANIFEST.ManifestError):
+                    MANIFEST.project_ballot_to_manifest(
+                        forged,
+                        template_sha256=_template_sha256(template),
+                    )
+
+    def test_synthetic_ballot_corpus_fits_deterministic_transport_bounds(self) -> None:
         corpus = [*self.readability_ballots, *self.professional_ballots]
-        self.assertEqual(42, len(corpus))
-        self.assertEqual(39, len(self.professional_ballots))
+        self.assertEqual(6, len(corpus))
+        self.assertEqual(3, len(self.professional_ballots))
         templates = [_blank_template(ballot) for ballot in corpus]
         max_record = 0
         max_manifest = 0
@@ -330,7 +1283,10 @@ class ExpertPanelManifestRoundtripTests(unittest.TestCase):
         finally:
             tracemalloc.stop()
         self.assertLessEqual(max_record, MANIFEST.MAX_RECORD_BYTES)
-        self.assertLessEqual(max_manifest, MANIFEST.MAX_MANIFEST_BYTES)
+        self.assertLessEqual(
+            max_manifest,
+            MANIFEST.MAX_REVIEWER_MANIFEST_BYTES,
+        )
         self.assertLessEqual(peak, 128 * 1024 * 1024)
 
     def test_largest_current_ballot_stays_within_peak_memory_gate(self) -> None:
@@ -359,15 +1315,19 @@ class ExpertPanelManifestRoundtripTests(unittest.TestCase):
             tracemalloc.stop()
         self.assertLessEqual(peak, 32 * 1024 * 1024)
 
-    def test_professional_review_contract_fingerprint_is_unchanged(self) -> None:
-        self.assertEqual(
-            HISTORICAL_REVIEW_CONTRACT_FINGERPRINT,
-            self.professional_packet["source_fingerprints"][
-                "professional_review_contract"
-            ],
+    def test_professional_ballots_use_semantic_review_contract(self) -> None:
+        semantic_contract_fingerprint = (
+            PANEL.panel_contracts.professional_review_contract_fingerprint()
         )
         self.assertEqual(
-            LIVE_REVIEW_CONTRACT_FINGERPRINT,
+            {semantic_contract_fingerprint},
+            {
+                ballot["review_contract_fingerprint"]
+                for ballot in self.professional_ballots
+            },
+        )
+        self.assertEqual(
+            semantic_contract_fingerprint,
             PANEL._professional_evidence_review_contract_fingerprint(),
         )
 
@@ -375,26 +1335,20 @@ class ExpertPanelManifestRoundtripTests(unittest.TestCase):
 class ExpertPanelManifestClosedSchemaTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        readability_path = (
-            READABILITY_ROOT
-            / "panel/readability-r9-instruction-actionability.json"
+        cls.readability_packet = _readability_packet_fixture()
+        cls.readability_ballot = _readability_ballot_fixture(
+            cls.readability_packet, voter=1
         )
-        cls.readability_ballot = _json(readability_path)
-        packet_path = READABILITY_ROOT / "packet.json"
-        cls.readability_packet = _json(packet_path)
         cls.readability_template = _build_readability_template(
             cls.readability_packet,
-            _sha256(packet_path),
+            cls.readability_ballot["packet_sha256"],
             cls.readability_ballot,
         )
         cls.readability_records = MANIFEST.project_ballot_to_manifest(
             cls.readability_ballot,
             template_sha256=_template_sha256(cls.readability_template),
         )
-        professional_path = (
-            PROFESSIONAL_ROOT / "panel/r9-architecture-platform-d1.json"
-        )
-        cls.professional_ballot = _json(professional_path)
+        cls.professional_ballot = _professional_ballot_fixture(voter=1)
         cls.professional_template = _blank_template(cls.professional_ballot)
         cls.professional_records = MANIFEST.project_ballot_to_manifest(
             cls.professional_ballot,
@@ -681,6 +1635,7 @@ class ExpertPanelManifestClosedSchemaTests(unittest.TestCase):
                 MANIFEST.parse_manifest_bytes(value)
 
     def test_record_and_manifest_size_limits_are_enforced(self) -> None:
+        self.assertEqual(16_777_216, MANIFEST.MAX_REVIEWER_MANIFEST_BYTES)
         records = self._records()
         limitation = next(row for row in records if row["record_type"] == "limitation")
         limitation["text"] = "x" * MANIFEST.MAX_RECORD_BYTES
@@ -742,13 +1697,16 @@ class ExpertPanelManifestClosedSchemaTests(unittest.TestCase):
 class ExpertPanelManifestTransportAndFinalizeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.packet_path = READABILITY_ROOT / "packet.json"
-        cls.packet = _json(cls.packet_path)
-        cls.packet_sha256 = _sha256(cls.packet_path)
-        cls.ballot = _json(
-            READABILITY_ROOT
-            / "panel/readability-r9-instruction-actionability.json"
+        cls._scratch = tempfile.TemporaryDirectory(dir=ROOT)
+        cls.addClassCleanup(cls._scratch.cleanup)
+        cls.packet_path = Path(cls._scratch.name) / "packet.json"
+        cls.packet = _readability_packet_fixture()
+        cls.ballot = _readability_ballot_fixture(cls.packet, voter=1)
+        cls.packet_path.write_text(
+            json.dumps(cls.packet, indent=2) + "\n", encoding="utf-8"
         )
+        cls.packet_sha256 = hashlib.sha256(cls.packet_path.read_bytes()).hexdigest()
+        cls.ballot["packet_sha256"] = cls.packet_sha256
         cls.template = _build_readability_template(
             cls.packet,
             cls.packet_sha256,
@@ -794,6 +1752,94 @@ class ExpertPanelManifestTransportAndFinalizeTests(unittest.TestCase):
         self.assertEqual(self.manifest_raw, raw_result)
         self.assertEqual(raw_result, framed_result)
         self.assertEqual(framed_result, file_result)
+
+    def test_generic_artifact_binding_supports_current_professional_packet_size(
+        self,
+    ) -> None:
+        packet_size = 20_880_201
+        prefix = b'{"padding":"'
+        suffix = b'"}\n'
+        packet_raw = (
+            prefix
+            + b"x" * (packet_size - len(prefix) - len(suffix))
+            + suffix
+        )
+        self.assertEqual(packet_size, len(packet_raw))
+
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            packet_relative = (
+                ".rd-skills/expert-panel/current-professional/packet.json"
+            )
+            packet_path = root / packet_relative
+            packet_path.parent.mkdir(parents=True)
+            packet_path.write_bytes(packet_raw)
+            decision_path = packet_path.parent / "panel" / "decision.json"
+            decision_path.parent.mkdir()
+            record = {
+                "packet": {
+                    "path": packet_relative,
+                    "sha256": hashlib.sha256(packet_raw).hexdigest(),
+                },
+                "voters": [],
+            }
+            with mock.patch.object(PANEL, "ROOT", root):
+                bound_path, packet, ballots = PANEL._decision_packet_and_ballots(
+                    record,
+                    decision_path=decision_path,
+                )
+
+        self.assertEqual(packet_path.resolve(), bound_path.resolve())
+        self.assertEqual(
+            packet_size - len(prefix) - len(suffix),
+            len(packet["padding"]),
+        )
+        self.assertEqual([], ballots)
+
+    def test_generic_and_reviewer_manifest_limits_remain_separate(self) -> None:
+        self.assertEqual(33_554_432, MANIFEST.MAX_MANIFEST_BYTES)
+        self.assertEqual(16_777_216, MANIFEST.MAX_REVIEWER_MANIFEST_BYTES)
+        self.assertEqual(
+            MANIFEST.MAX_REVIEWER_MANIFEST_BYTES,
+            MANIFEST.MAX_CHUNK_COUNT * MANIFEST.MAX_CHUNK_RAW_BYTES,
+        )
+
+        oversized_reviewer_size = MANIFEST.MAX_REVIEWER_MANIFEST_BYTES + 1
+        oversized_reviewer = b"x" * oversized_reviewer_size
+        oversized_digest = hashlib.sha256(oversized_reviewer).hexdigest()
+        with self.assertRaises(MANIFEST.ManifestError):
+            MANIFEST.parse_manifest_bytes(oversized_reviewer)
+        with self.assertRaises(MANIFEST.ManifestError):
+            MANIFEST.read_raw_manifest_stream(
+                io.BytesIO(oversized_reviewer),
+                expected_size=oversized_reviewer_size,
+                expected_sha256=oversized_digest,
+            )
+        with self.assertRaises(MANIFEST.ManifestError):
+            MANIFEST.read_framed_manifest_stream(
+                io.BytesIO(b""),
+                expected_size=oversized_reviewer_size,
+                expected_sha256=oversized_digest,
+            )
+        with tempfile.TemporaryDirectory() as raw:
+            manifest_path = Path(raw) / "reviewer-manifest.jsonl"
+            manifest_path.write_bytes(oversized_reviewer)
+            with self.assertRaises(MANIFEST.ManifestError):
+                MANIFEST.read_manifest_file(
+                    manifest_path,
+                    expected_size=oversized_reviewer_size,
+                    expected_sha256=oversized_digest,
+                    repository_root=ROOT,
+                )
+
+            oversized_artifact = Path(raw) / "oversized-artifact.json"
+            with oversized_artifact.open("wb") as stream:
+                stream.truncate(MANIFEST.MAX_MANIFEST_BYTES + 1)
+            with self.assertRaises(MANIFEST.ManifestError):
+                MANIFEST.read_bound_regular_file(
+                    oversized_artifact,
+                    label="oversized generic artifact",
+                )
 
     def test_deeply_nested_template_recursion_fails_closed_before_create(self) -> None:
         voter_id = self.ballot["voter"]["voter_id"]
@@ -1079,6 +2125,9 @@ class ExpertPanelManifestTransportAndFinalizeTests(unittest.TestCase):
                     wrong_template_sha.index("--template-sha256") + 1
                 ] = "0" * 64
                 self.assertEqual(1, PANEL.main(wrong_template_sha))
+                forbidden_audit = copy.deepcopy(arguments)
+                forbidden_audit[1:1] = ["--audit", str(self.packet_path)]
+                self.assertEqual(1, PANEL.main(forbidden_audit))
 
                 invalid_records = copy.deepcopy(self.records)
                 invalid_actionability = next(

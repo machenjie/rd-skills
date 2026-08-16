@@ -22,6 +22,7 @@ from validation_utils import (
     COMPLETION_STATE_MODEL,
     EVIDENCE_LEDGER_MODEL,
     EXECUTION_LEVEL_MODEL,
+    REVIEW_DISCIPLINE_MODEL,
     TASK_CONTRACT_MODEL,
     ExecutionLevelError,
     compute_execution_level,
@@ -243,6 +244,9 @@ COMPLETION_REQUEST_KINDS = {"implementation", "diagnosis", "answer"}
 COMPLETION_VALIDATION_RESULTS = {"passed", "failed", "unavailable", "not-required"}
 COMPLETION_REVIEW_RESULTS = {"passed", "missing", "not-required"}
 COMPLETION_FINDING_RESULTS = {"none", "resolved", "unresolved"}
+COMBINED_REVIEW_BOUNDARY_MODEL = REVIEW_DISCIPLINE_MODEL[
+    "review_boundary_contract"
+]
 
 
 class FixtureCapsuleError(ValueError):
@@ -683,7 +687,7 @@ def _completion_review_authority_errors(
     trigger_rows = (
         basis.get("trigger_evaluations") if isinstance(basis, dict) else None
     )
-    trigger_statuses: dict[str, str] = {}
+    trigger_evaluations: dict[str, dict[str, Any]] = {}
     if not isinstance(trigger_rows, list) or len(trigger_rows) != len(registry):
         errors.append(
             "review requirement task Capsule must cover the trigger registry"
@@ -700,13 +704,23 @@ def _completion_review_authority_errors(
                     "review requirement task Capsule trigger rows are out of order"
                 )
                 continue
-            if row["status"] not in {"matched", "not_matched", "unknown"}:
+            material_candidate = (
+                contract_row["floor"] == "L4"
+                and contract_row["id"]
+                not in {"formal-release-declared", "unknown-critical-boundary"}
+            )
+            allowed_statuses = (
+                set(EXECUTION_LEVEL_MODEL["material_candidate_statuses"])
+                if material_candidate
+                else {"matched", "not_matched", "unknown"}
+            )
+            if row["status"] not in allowed_statuses:
                 errors.append(
                     "review requirement task Capsule trigger "
                     f"{row['id']!r} status is invalid"
                 )
                 continue
-            trigger_statuses[row["id"]] = row["status"]
+            trigger_evaluations[row["id"]] = row
 
     low_risk_strategy = requirement["low_risk_review_strategy"]
     high_risk_strategies = set(requirement["high_risk_review_strategies"])
@@ -725,8 +739,15 @@ def _completion_review_authority_errors(
         critical_statuses = set(requirement["critical_trigger_statuses"])
         high_risk_required = high_risk_required or any(
             ranks[row["floor"]] >= ranks[high_risk_floor]
-            and trigger_statuses.get(row["id"]) in critical_statuses
+            and trigger_evaluations.get(row["id"], {}).get("status")
+            in critical_statuses
             for row in registry
+        )
+        provisional = requirement["provisional_critical_trigger"]
+        provisional_row = trigger_evaluations.get(provisional["id"], {})
+        high_risk_required = high_risk_required or (
+            provisional_row.get("status") == provisional["status"]
+            and provisional_row.get(provisional["flag"]) is True
         )
         high_risk_required = high_risk_required or strategy in high_risk_strategies
     return errors, high_risk_required
@@ -953,6 +974,381 @@ def completion_claim_errors(
                         f"claim {required_review_claim!r}"
                     )
     return errors
+
+
+def combined_review_artifact_sha256(artifact: object) -> str:
+    """Hash the fixture-only combined artifact without its digest field."""
+
+    if not isinstance(artifact, dict):
+        raise FixtureCapsuleError("combined review artifact must be a mapping")
+    material = {
+        field: artifact.get(field)
+        for field in COMBINED_REVIEW_BOUNDARY_MODEL["artifact_fields"]
+        if field != "artifact_digest"
+    }
+    canonical = json.dumps(
+        material,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
+
+
+def combined_review_completion_errors(case: object) -> list[str]:
+    """Validate assignment-aware combined review fixture completion semantics."""
+
+    if not isinstance(case, dict):
+        return ["combined review case must be a mapping"]
+    tasks = case.get("tasks")
+    boundary = case.get("review_boundary")
+    events = case.get("events")
+    if not isinstance(tasks, list) or not tasks or not isinstance(boundary, dict):
+        return ["combined review case requires tasks and a Review Boundary"]
+    if not isinstance(events, list) or not events:
+        return ["combined review case requires ordered events"]
+
+    errors: list[str] = []
+
+    def reject(code: str, message: str) -> None:
+        errors.append(f"[{code}] {message}")
+
+    task_ids: list[str] = []
+    dependencies: dict[str, set[str]] = {}
+    implementation_layer3: set[str] = set()
+    required_skills: set[str] = set()
+    required_specialists: set[str] = set()
+    required_risks: set[str] = set()
+    for task in tasks:
+        if not isinstance(task, dict):
+            reject("combined-task-shape", "each covered Task must be a mapping")
+            continue
+        task_id = task.get("id")
+        if not isinstance(task_id, str) or not task_id or task_id in task_ids:
+            reject("combined-task-shape", "covered Task IDs must be unique text")
+            continue
+        task_ids.append(task_id)
+        raw_dependencies = task.get("dependencies", [])
+        if not isinstance(raw_dependencies, list) or any(
+            not isinstance(item, str) or not item for item in raw_dependencies
+        ):
+            reject("combined-task-dependencies", "Task dependencies must be text")
+            raw_dependencies = []
+        dependencies[task_id] = set(raw_dependencies)
+        raw_layer3 = task.get("implementation_layer3", [])
+        if (
+            not isinstance(raw_layer3, list)
+            or len(raw_layer3) > 3
+            or len(raw_layer3) != len(set(raw_layer3))
+            or any(not isinstance(item, str) or not item for item in raw_layer3)
+        ):
+            reject(
+                "task-layer3-routing",
+                "each Task must select zero to three unique implementation Layer 3 Skills",
+            )
+            raw_layer3 = []
+        implementation_layer3.update(raw_layer3)
+        requirements = task.get("review_requirements")
+        requirement_fields = tuple(
+            re.sub(r"[^a-z0-9]+", "_", field.casefold()).strip("_")
+            for field in COMBINED_REVIEW_BOUNDARY_MODEL[
+                "task_node_requirement_fields"
+            ]
+        )
+        if not isinstance(requirements, dict) or tuple(requirements) != requirement_fields:
+            reject(
+                "task-review-requirements",
+                "Task nodes may retain only the three ordered review requirement fields",
+            )
+            continue
+        for field, target in (
+            ("required_review_skills", required_skills),
+            ("specialist_obligations", required_specialists),
+            ("professional_risk_dimensions", required_risks),
+        ):
+            values = requirements[field]
+            if not isinstance(values, list) or any(
+                not isinstance(item, str) or not item for item in values
+            ) or len(values) != len(set(values)):
+                reject("task-review-requirements", f"{field} must be unique text")
+            else:
+                target.update(values)
+        forbidden = COMBINED_REVIEW_BOUNDARY_MODEL[
+            "task_node_forbidden_scheduling_fields"
+        ]
+        for field in forbidden:
+            fixture_field = re.sub(
+                r"[^a-z0-9]+", "_", field.casefold()
+            ).strip("_")
+            if fixture_field in task:
+                reject(
+                    "task-review-scheduling",
+                    f"Task node must not carry global Review scheduling field {field!r}",
+                )
+
+    for task_id, task_dependencies in dependencies.items():
+        if not task_dependencies <= set(task_ids) or task_id in task_dependencies:
+            reject("combined-task-dependencies", "Task dependencies must name other covered Tasks")
+
+    expected_boundary_fields = tuple(
+        re.sub(r"[^a-z0-9]+", "_", field.casefold()).strip("_")
+        for field in COMBINED_REVIEW_BOUNDARY_MODEL["boundary_fields"]
+    )
+    if tuple(boundary) != expected_boundary_fields:
+        reject(
+            "review-boundary-shape",
+            "Review Boundary fields or order do not match the combined Core contract",
+        )
+        return list(dict.fromkeys(errors))
+    boundary_id = boundary["review_boundary_id"]
+    round_id = boundary["review_round_id"]
+    if not _fixture_nonempty_text(boundary_id) or not _fixture_nonempty_text(round_id):
+        reject("review-boundary-identity", "boundary and round IDs must be non-empty")
+    strategy = boundary["review_strategy"]
+    allowed_final = {"combined-final", "L5-preimplementation", "L5-final"}
+    trigger_prefix = "risk-triggered-intermediate:"
+    if strategy not in allowed_final and not (
+        isinstance(strategy, str) and strategy.startswith(trigger_prefix)
+    ):
+        reject(
+            "review-boundary-frequency",
+            "Review strategy must be combined final, L5-required, or name a Core intermediate trigger",
+        )
+    if isinstance(strategy, str) and strategy.startswith(trigger_prefix):
+        trigger = strategy.removeprefix(trigger_prefix)
+        allowed = set(
+            REVIEW_DISCIPLINE_MODEL["review_frequency_policy"][
+                "intermediate_review_triggers"
+            ]
+        )
+        if trigger not in allowed:
+            reject(
+                "review-boundary-frequency",
+                "intermediate Review Boundary requires a declared Core trigger",
+            )
+    if boundary["covered_task_ids"] != task_ids:
+        reject("review-boundary-coverage", "Review Boundary must cover every ordered Task")
+    if set(boundary["required_review_skills"]) != required_skills:
+        reject("review-skill-preservation", "boundary Review Skills must equal Task requirements")
+    if set(boundary["specialist_obligations"]) != required_specialists:
+        reject("review-obligation-coverage", "boundary Specialist obligations must equal Task requirements")
+    if set(boundary["professional_risk_dimensions"]) != required_risks:
+        reject("review-obligation-coverage", "boundary risk dimensions must equal Task requirements")
+    required_scope = boundary["required_changed_scope"]
+    evidence_binding = boundary["required_validation_evidence_binding"]
+    if not isinstance(required_scope, list) or not required_scope or len(required_scope) != len(set(required_scope)):
+        reject("review-boundary-scope", "required changed scope must be non-empty and unique")
+    if evidence_binding != REVIEW_DISCIPLINE_MODEL["obligation_subsumption"][
+        "required_validation_evidence_binding"
+    ]:
+        reject("review-boundary-validation-binding", "boundary requires current covered-Task validation")
+
+    assignments = boundary["review_assignments"]
+    assignment_fields = tuple(COMBINED_REVIEW_BOUNDARY_MODEL["assignment_fields"])
+    if not isinstance(assignments, list) or not assignments:
+        reject("review-assignment-shape", "Review Boundary requires assignments")
+        assignments = []
+    assignment_ids: list[str] = []
+    assignment_by_id: dict[str, dict[str, Any]] = {}
+    review_layer3: set[str] = set()
+    for assignment in assignments:
+        if not isinstance(assignment, dict) or tuple(assignment) != assignment_fields:
+            reject("review-assignment-shape", "assignment fields or order are invalid")
+            continue
+        assignment_id = assignment["assignment_id"]
+        if not _fixture_nonempty_text(assignment_id) or assignment_id in assignment_ids:
+            reject("review-assignment-identity", "assignment IDs must be unique text")
+            continue
+        assignment_ids.append(assignment_id)
+        assignment_by_id[assignment_id] = assignment
+        if assignment["role"] not in COMBINED_REVIEW_BOUNDARY_MODEL["assignment_roles"]:
+            reject("review-assignment-role", "assignment role is invalid")
+        if assignment["profile"] != COMBINED_REVIEW_BOUNDARY_MODEL["assignment_profile"]:
+            reject("review-assignment-profile", "every assignment must use review-agent")
+        if not _fixture_nonempty_text(assignment["review_skill"]):
+            reject("review-assignment-skill", "each assignment requires exactly one Review Skill")
+        layer3 = assignment["layer3_skills"]
+        if (
+            not isinstance(layer3, list)
+            or len(layer3) > COMBINED_REVIEW_BOUNDARY_MODEL[
+                "maximum_layer3_skills_per_assignment"
+            ]
+            or len(layer3) != len(set(layer3))
+            or any(not isinstance(item, str) or not item for item in layer3)
+        ):
+            reject("review-layer3-routing", "each assignment allows zero to three unique review Layer 3 Skills")
+            layer3 = []
+        review_layer3.update(layer3)
+        if assignment["layer3_selection_basis"] != COMBINED_REVIEW_BOUNDARY_MODEL[
+            "layer3_selection_basis"
+        ]:
+            reject("review-layer3-selection", "review Layer 3 must be selected from review risk")
+        scope = assignment["scope"]
+        if not isinstance(scope, list) or not scope or not set(scope) <= set(required_scope):
+            reject("review-assignment-scope", "assignment scope must be a bounded subset of required changed scope")
+    primary_ids = [
+        assignment["assignment_id"]
+        for assignment in assignments
+        if isinstance(assignment, dict) and assignment.get("role") == "primary"
+    ]
+    specialist_ids = [
+        assignment["assignment_id"]
+        for assignment in assignments
+        if isinstance(assignment, dict) and assignment.get("role") == "specialist"
+    ]
+    if len(primary_ids) != 1:
+        reject("review-assignment-primary", "Review Boundary requires exactly one primary assignment")
+    realized_review_skills = {
+        skill
+        for assignment in assignments
+        if isinstance(assignment, dict)
+        and isinstance((skill := assignment.get("review_skill")), str)
+    }
+    if realized_review_skills != required_skills:
+        reject("review-skill-preservation", "assignments must realize every and only required Review Skill")
+    if implementation_layer3 and review_layer3 == implementation_layer3:
+        reject("review-layer3-task-union", "review Layer 3 must not equal the covered Tasks' implementation Layer 3 union")
+    expected_close_order = {
+        "required_specialist_assignment_ids": specialist_ids,
+        "primary_assignment_id": primary_ids[0] if len(primary_ids) == 1 else None,
+        "specialists_before_primary": True,
+        "primary_close_count": 1,
+    }
+    if boundary["primary_close_ordering"] != expected_close_order:
+        reject("review-primary-ordering", "primary close ordering must name every specialist before the sole primary close")
+
+    latest_generation: dict[str, int] = {}
+    current_validation: set[str] = set()
+    result_by_assignment: dict[str, dict[str, Any]] = {}
+    result_order: dict[str, int] = {}
+    artifact: dict[str, Any] | None = None
+    projections: list[dict[str, Any]] = []
+    completed = False
+    for index, event in enumerate(events):
+        if not isinstance(event, dict):
+            reject("combined-review-event", "events must be mappings")
+            continue
+        action = event.get("action")
+        if action == "edit":
+            task_id = event.get("task_id")
+            generation = event.get("generation")
+            if task_id not in task_ids or not isinstance(generation, int) or generation <= latest_generation.get(str(task_id), 0):
+                reject("material-edit-invalidation", "edit requires an increasing covered-Task generation")
+                continue
+            latest_generation[str(task_id)] = generation
+            dependents = {str(task_id)}
+            changed = True
+            while changed:
+                before = set(dependents)
+                dependents.update(
+                    candidate
+                    for candidate, candidate_dependencies in dependencies.items()
+                    if candidate_dependencies & dependents
+                )
+                changed = dependents != before
+            invalidated = event.get("invalidated_evidence_task_ids")
+            retained = event.get("retained_evidence_task_ids")
+            if set(invalidated or []) != dependents or set(retained or []) != set(task_ids) - dependents:
+                reject("material-edit-invalidation", "edit must invalidate exactly intersecting and transitive dependent evidence and retain unaffected evidence")
+            current_validation.difference_update(dependents)
+            result_by_assignment.clear()
+            result_order.clear()
+            artifact = None
+            projections.clear()
+        elif action == "validate":
+            task_id = event.get("task_id")
+            if task_id not in task_ids or event.get("generation") != latest_generation.get(str(task_id)):
+                reject("combined-review-validation", "validation must bind the Task's current generation")
+            else:
+                current_validation.add(str(task_id))
+        elif action == "assignment-result":
+            assignment_id = event.get("assignment_id")
+            if assignment_id not in assignment_by_id or assignment_id in result_by_assignment:
+                reject("review-assignment-result", "assignment result must name one unresolved assignment")
+                continue
+            if event.get("review_round_id") != round_id:
+                reject("review-round-identity", "all assignment results must share the boundary Review Round ID")
+            if event.get("task_generations") != latest_generation:
+                reject("review-artifact-generation", "assignment result must bind every current Task generation")
+            if not set(event.get("evidence_scope", [])) >= set(assignment_by_id[assignment_id]["scope"]):
+                reject("review-artifact-scope", "assignment result evidence must cover its assignment scope")
+            result_by_assignment[assignment_id] = event
+            result_order[assignment_id] = index
+        elif action == "combined-artifact":
+            candidate = event.get("artifact")
+            artifact_fields = tuple(COMBINED_REVIEW_BOUNDARY_MODEL["artifact_fields"])
+            if not isinstance(candidate, dict) or tuple(candidate) != artifact_fields:
+                reject("review-artifact-shape", "combined artifact fields or order are invalid")
+                continue
+            artifact = candidate
+            if set(result_by_assignment) != set(assignment_ids):
+                reject("review-specialist-result", "combined artifact requires every assignment result")
+            if primary_ids and any(
+                result_order.get(specialist, index + 1) > result_order.get(primary_ids[0], -1)
+                for specialist in specialist_ids
+            ):
+                reject("review-primary-ordering", "primary assignment cannot close before specialist results")
+            expected_artifact = {
+                "review_boundary_id": boundary_id,
+                "review_round_id": round_id,
+                "covered_task_ids": task_ids,
+                "required_changed_scope": required_scope,
+                "task_generations": latest_generation,
+                "assignment_result_ids": [
+                    result_by_assignment.get(assignment_id, {}).get("result_id")
+                    for assignment_id in assignment_ids
+                ],
+                "primary_assignment_id": primary_ids[0] if primary_ids else None,
+            }
+            for field, expected in expected_artifact.items():
+                if candidate.get(field) != expected:
+                    reject("review-artifact-binding", f"combined artifact {field} does not match its boundary")
+            if not set(candidate.get("evidence_scope", [])) >= set(required_scope):
+                reject("review-artifact-scope", "combined artifact evidence scope is incomplete")
+            try:
+                expected_digest = combined_review_artifact_sha256(candidate)
+            except FixtureCapsuleError as exc:
+                reject("review-artifact-digest", str(exc))
+            else:
+                if candidate.get("artifact_digest") != expected_digest:
+                    reject("review-artifact-digest", "combined artifact digest is not canonical")
+        elif action == "task-projection":
+            projection = event.get("projection")
+            projection_fields = tuple(
+                COMBINED_REVIEW_BOUNDARY_MODEL["task_completion_projection_fields"]
+            )
+            if not isinstance(projection, dict) or tuple(projection) != projection_fields:
+                reject("task-review-projection", "Task completion projection fields or order are invalid")
+            else:
+                projections.append(projection)
+        elif action == "complete":
+            completed = True
+            if artifact is None:
+                reject("review-artifact-missing", "completion requires the combined artifact")
+                continue
+            if current_validation != set(task_ids):
+                reject("completion-current-evidence", "completion requires current validation for every covered Task")
+            if event.get("review_round_count") != 1 or event.get("primary_close_count") != 1:
+                reject("review-round-count", "specialists share one round and only the primary closes")
+            if len(projections) != len(task_ids) or {row.get("task_id") for row in projections} != set(task_ids):
+                reject("task-review-projection", "completion requires exactly one projection for every covered Task")
+            for projection in projections:
+                task_id = projection.get("task_id")
+                expected_projection = {
+                    "task_id": task_id,
+                    "artifact_id": artifact.get("artifact_id"),
+                    "artifact_digest": artifact.get("artifact_digest"),
+                    "review_boundary_id": boundary_id,
+                    "review_round_id": round_id,
+                    "generation": latest_generation.get(str(task_id)),
+                }
+                if projection != expected_projection:
+                    reject("task-review-projection", "Task projection must reference the exact current combined artifact")
+        else:
+            reject("combined-review-event", f"unsupported combined review action {action!r}")
+    if not completed:
+        reject("combined-review-terminal", "combined review trajectory must complete")
+    return list(dict.fromkeys(errors))
 
 
 def _lexical_tokens(value: str) -> list[str]:
@@ -1354,7 +1750,7 @@ def _active_execution_decision(
     if not isinstance(basis, dict) or not basis_required <= set(basis):
         raise FixtureCapsuleError("execution Level Basis is missing decision fields")
 
-    trigger_fields = (
+    trigger_base_fields = (
         "id",
         "status",
         "evidence_kind",
@@ -1367,14 +1763,18 @@ def _active_execution_decision(
         raise FixtureCapsuleError("execution Level Basis must cover the trigger registry")
     trigger_evaluations: dict[str, dict[str, object]] = {}
     for index, row in enumerate(trigger_rows):
-        if not isinstance(row, dict) or tuple(row) != trigger_fields:
+        if not isinstance(row, dict) or tuple(row)[: len(trigger_base_fields)] != trigger_base_fields:
             raise FixtureCapsuleError(
                 f"execution trigger row {index} fields are invalid"
+            )
+        if set(row) - {*trigger_base_fields, "material_assessment", "critical_unknown"}:
+            raise FixtureCapsuleError(
+                f"execution trigger row {index} conditional fields are invalid"
             )
         if row["id"] != trigger_ids[index]:
             raise FixtureCapsuleError("execution trigger rows are out of order")
         trigger_evaluations[row["id"]] = {
-            field: row[field] for field in trigger_fields if field != "id"
+            field: row[field] for field in row if field != "id"
         }
 
     l2_fields = ("id", "status", "evidence_kind", "source_anchor")
@@ -1397,6 +1797,8 @@ def _active_execution_decision(
             requested=value["requested_level"],
             trigger_evaluations=trigger_evaluations,
             l2_evaluations=l2_evaluations,
+            prior_historical_max_floor=value.get("prior_historical_max_floor"),
+            prior_historical_max_effective=value.get("prior_historical_max_effective"),
             contract=execution_contract,
         )
     except ExecutionLevelError as exc:
@@ -1407,7 +1809,6 @@ def _active_execution_decision(
         raise FixtureCapsuleError("execution unresolved Basis is not canonical")
     if basis["edit_status"] != result["level_basis"]["edit_status"]:
         raise FixtureCapsuleError("execution edit status is not canonical")
-
     ranks = _closed_execution_level_ranks(execution_contract)
     effective = value["effective_level"]
     if effective not in ranks:

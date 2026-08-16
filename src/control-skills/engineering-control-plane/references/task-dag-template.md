@@ -13,6 +13,16 @@ task node is a verbatim projection, and Main dispatches the Brief slice itself.
 If the Brief is insufficient or any projection conflicts with it, mark the DAG
 blocked and return to analysis through Main for an updated Brief and redispatch.
 
+Each Task is one complete semantic change with one Primary Professional Skill.
+Keep co-effective changes for one Acceptance together when they naturally
+validate together. Split materially different professional domains into
+separate Tasks. File, function, code layer, test, or edit step differences do
+not define Tasks. Define minimum sufficient Review Boundaries. Related work is
+combined by default. Concrete risk justifies an intermediate boundary. Combined
+review preserves Primary Skills, required Review Skills, Specialists, and
+professional-risk obligations. Review-side Layer 3 is selected independently
+from review risk and is not copied from Task implementation Layer 3.
+
 The public Execution Level lines use Core public `execution-level/v1`. The integrity
 fallback for missing, malformed, or duplicate public execution-level data is
 defined in [execution-level-contract.md](execution-level-contract.md).
@@ -64,10 +74,9 @@ Review Owner:
 Stop Conditions:
 Professional Skill:
 Layer 3 Skills:
-Review Strategy: per-task / combined / high-risk-specialized
-Review Skill:
-Review Scope:
-Review Boundary:
+Required Review Skills:
+Specialist Obligations:
+Professional Risk Dimensions:
 
 ## Task B
 
@@ -96,10 +105,9 @@ Review Owner:
 Stop Conditions:
 Professional Skill:
 Layer 3 Skills:
-Review Strategy: per-task / combined / high-risk-specialized
-Review Skill:
-Review Scope:
-Review Boundary:
+Required Review Skills:
+Specialist Obligations:
+Professional Risk Dimensions:
 
 ## Parallel Group
 
@@ -120,14 +128,34 @@ Conflict Resolution Owner:
 
 ## Review Boundary
 
-Primary Review Skill:
 Review Owner:
+Review Boundary ID:
+Review Strategy: combined-final / risk-triggered-intermediate:<Core trigger> / L5-preimplementation / L5-final
+Review Round ID:
+Effective Level:
+Required Review Skills:
+Specialist Obligations:
 Covered Task IDs:
-Changed Scope:
-Specialized Secondary Reviews:
+Required Changed Scope:
+Professional Risk Dimensions:
+Required Validation / Evidence Binding:
+Review Assignments: one primary and zero or more specialists; each has Assignment ID, role, review-agent profile, exactly one Review Skill, zero to three review-risk-routed Layer 3 Skills, selection basis, and bounded scope
+Primary Close Ordering: every required specialist result is current before the primary emits the sole combined artifact
 
-Every task belongs to exactly one primary review boundary. A specialized
-secondary review names its material risk and does not replace final review.
+Task nodes retain only review requirements; Review strategy, round identity,
+assignment scheduling, and primary-close ordering live here. All assignments
+in a boundary share one Review Round ID. Specialist results neither increment
+the round count nor close Tasks. The primary consumes every current required
+specialist result and emits one artifact binding the boundary, covered Tasks,
+required changed and evidence scope, current Task generations, assignment
+results, and verdict. Each covered Task projects that exact artifact identity
+and digest. L1-L3 related work defaults to one combined independent final
+review. L4 adds only triggered professional depth, not review rounds. L5
+retains required independent pre-implementation and final review. An
+equivalent per-Task boundary is invalid without a declared Core intermediate
+trigger, and one stronger boundary subsumes weaker equivalent obligations.
+Review-side Layer 3 is selected independently per assignment from
+review risk and need not equal or contain the Tasks' implementation Layer 3.
 
 ## Validation Boundary
 

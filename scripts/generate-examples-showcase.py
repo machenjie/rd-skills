@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate a ChangeForge scenario showcase from bounded Markdown examples."""
+"""Generate a rd-skills scenario showcase from bounded Markdown examples."""
 
 from __future__ import annotations
 

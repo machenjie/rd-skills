@@ -700,7 +700,12 @@ def main(argv: list[str] | None = None) -> int:
             errors.append(f"{platform}: built Agent Profiles must be exactly the four roles")
         for name in ROLE_CONTRACT_MODEL:
             path = root / f"{name}{extension}"
-            text = path.read_text(encoding="utf-8") if path.is_file() else ""
+            raw = path.read_bytes() if path.is_file() else b""
+            if b"\r" in raw:
+                errors.append(
+                    f"{platform}:{name}: built Agent Profile must use canonical LF bytes"
+                )
+            text = raw.decode("utf-8")
             instruction_surface = _built_instruction_surface(
                 platform, name, text, errors
             )

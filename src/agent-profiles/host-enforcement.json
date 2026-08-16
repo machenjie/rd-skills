@@ -106,7 +106,7 @@
           "external_source_read": "unsupported",
           "rendered_tools": ["Skill", "Read", "Grep", "Glob"],
           "limitations": [
-            "Claude has no ChangeForge-verified read-only Bash projection, so review receives no Bash and consumes the supplied diff and validation artifacts."
+            "Claude has no rd-skills-verified read-only Bash projection, so review receives no Bash and consumes the supplied diff and validation artifacts."
           ]
         }
       }
@@ -156,7 +156,7 @@
           "external_source_read": "unsupported",
           "rendered_tools": ["read", "search"],
           "limitations": [
-            "Copilot has no ChangeForge-verified read-only execute projection, so review receives no execute and consumes the supplied diff and validation artifacts."
+            "Copilot has no rd-skills-verified read-only execute projection, so review receives no execute and consumes the supplied diff and validation artifacts."
           ]
         }
       }
@@ -177,7 +177,7 @@
           "read_only_command_semantics": "unsupported",
           "external_source_read": "unsupported",
           "rendered_tools": [],
-          "limitations": ["ChangeForge does not emit native Agent Profiles for Cline."]
+          "limitations": ["rd-skills does not emit native Agent Profiles for Cline."]
         },
         "analysis-agent": {
           "tool_allowlist": "unsupported",
@@ -185,7 +185,7 @@
           "read_only_command_semantics": "unsupported",
           "external_source_read": "unsupported",
           "rendered_tools": [],
-          "limitations": ["ChangeForge does not emit native Agent Profiles for Cline."]
+          "limitations": ["rd-skills does not emit native Agent Profiles for Cline."]
         },
         "task-agent": {
           "tool_allowlist": "unsupported",
@@ -193,7 +193,7 @@
           "read_only_command_semantics": "unsupported",
           "external_source_read": "unsupported",
           "rendered_tools": [],
-          "limitations": ["ChangeForge does not emit native Agent Profiles for Cline."]
+          "limitations": ["rd-skills does not emit native Agent Profiles for Cline."]
         },
         "review-agent": {
           "tool_allowlist": "unsupported",
@@ -201,7 +201,7 @@
           "read_only_command_semantics": "unsupported",
           "external_source_read": "unsupported",
           "rendered_tools": [],
-          "limitations": ["ChangeForge does not emit native Agent Profiles for Cline."]
+          "limitations": ["rd-skills does not emit native Agent Profiles for Cline."]
         }
       }
     },

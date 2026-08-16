@@ -22,6 +22,7 @@ from validation_utils import (
     load_yaml_file,
     parse_frontmatter,
     reference_paths,
+    report_output_paths,
 )
 from fixture_capsule_contract import (
     CONTRACT_VERSION as FIXTURE_CAPSULE_CONTRACT_VERSION,
@@ -38,6 +39,18 @@ DIST_SKILLS = ROOT / "dist" / "universal" / "skills"
 CONTROL_PROMPT = ROOT / "src" / "control-prompts" / "main-control-agent.md"
 REPORT_JSON = ROOT / "reports" / "rendered-context-budget.json"
 REPORT_MD = ROOT / "reports" / "rendered-context-budget.md"
+LIGHTWEIGHT_REPORT = ROOT / "reports" / "hookless-control-plane-eval.json"
+IMPLEMENTATION_HANDOFF_TEMPLATE = (
+    ROOT
+    / "src"
+    / "control-skills"
+    / "engineering-control-plane"
+    / "references"
+    / "implementation-handoff-template.md"
+)
+REVIEW_HANDOFF_TEMPLATE = IMPLEMENTATION_HANDOFF_TEMPLATE.with_name(
+    "review-handoff-template.md"
+)
 
 BUILD_PROFILES = ("recommended", "full", "dev")
 HOST_PROFILE_ROOTS = {
@@ -66,7 +79,7 @@ MODE_REFERENCES = {
     "source-backed-answer": "references/source-backed-answer.md",
 }
 LIMITATIONS = (
-    "Counts cover deterministic rendered ChangeForge instructions and canonical Capsules rendered from versioned checked-in fixture data, not a host-observed model request.",
+    "Counts cover deterministic rendered rd-skills instructions and canonical Capsules rendered from versioned checked-in fixture data, not a host-observed model request.",
     "Counts exclude host system prompts, tool schemas, user conversation history, repository reads, diffs, command output, and other dynamic evidence.",
     "Host loaders may transform Profile or Skill files and may expose discovery metadata differently; this report does not prove real-host accuracy.",
     "Token counts do not prove wall-clock performance, production accuracy, Profile startup, or the installed user experience.",
@@ -74,6 +87,119 @@ LIMITATIONS = (
     "Nested Layer 3 Reference counts include only explicitly named fixture files; directories, indexes, catalogs, and recursively linked files are never loaded.",
 )
 FIXTURE_SCHEMA_VERSION = 2
+TRANSFER_CATEGORY_ORDER = (
+    "authority",
+    "skill_reference",
+    "task_capsule",
+    "implementation_handoff",
+    "evidence_ledger",
+    "diff",
+    "validation",
+    "review_handoff",
+    "repair_context",
+    "duplicate_context",
+    "superseded_evidence",
+)
+TRANSFER_CATEGORY_LABELS = {
+    "authority": "Authority",
+    "skill_reference": "Skill / Reference",
+    "task_capsule": "Task Capsule",
+    "implementation_handoff": "Implementation Handoff",
+    "evidence_ledger": "Evidence Ledger",
+    "diff": "Diff",
+    "validation": "Validation",
+    "review_handoff": "Review Handoff",
+    "repair_context": "Repair Context",
+    "duplicate_context": "duplicate context",
+    "superseded_evidence": "superseded evidence",
+}
+TRANSFER_EXCLUSIVE_CATEGORIES = (
+    "authority",
+    "skill_reference",
+    "task_capsule",
+    "implementation_handoff",
+    "review_handoff",
+    "repair_context",
+)
+TRANSFER_OVERLAP_VIEWS = tuple(
+    item for item in TRANSFER_CATEGORY_ORDER if item not in TRANSFER_EXCLUSIVE_CATEGORIES
+)
+TRANSFER_MEASUREMENT_CONTRACT = {
+    "baseline_gross_tokens": 47_302,
+    "category_baseline_gross_tokens": {
+        "authority": 4_784,
+        "skill_reference": 1_419,
+        "task_capsule": 2_452,
+        "implementation_handoff": 11_200,
+        "evidence_ledger": 2_551,
+        "diff": 618,
+        "validation": 915,
+        "review_handoff": 27_118,
+        "repair_context": 329,
+        "duplicate_context": 3_297,
+        "superseded_evidence": 876,
+    },
+    "long_task_baseline_gross_tokens": {
+        "api-contract-change": 3_664,
+        "cache-stampede-reliability": 3_670,
+        "data-migration": 3_750,
+        "isolated-write-parallel-contract": 6_023,
+        "release-rollback": 3_671,
+        "repair-and-rereview": 6_434,
+        "security-ssrf-boundary": 3_647,
+        "shared-workspace-serial-write": 4_957,
+        "single-module-feature": 3_460,
+    },
+    "minimum_realized_reduction_ratio": 0.25,
+    "target_realized_reduction_ratio": 0.30,
+}
+TRANSFER_PROJECTION_FIELDS = {
+    "task_to_implementation": (
+        "task_id",
+        "status",
+        "changed_files",
+        "actual_diff",
+        "commands",
+        "validation_result",
+        "freshness",
+        "current_evidence",
+        "unverified_scope",
+        "residual_risk",
+    ),
+    "implementation_to_review": (
+        "acceptance",
+        "review_boundary",
+        "effective_level",
+        "required_review_skills",
+        "required_changed_scope",
+        "latest_diff",
+        "current_validation",
+        "current_evidence",
+        "scope",
+        "freshness",
+        "proof_limit",
+        "unverified_scope",
+    ),
+    "review_to_repair": (
+        "blocking_findings",
+        "affected_scope",
+        "acceptance_impact",
+        "latest_diff",
+        "invalidated_evidence",
+        "reusable_evidence",
+        "required_validation",
+        "required_rereview",
+    ),
+}
+_RAW_LOG_FIELDS = frozenset({"log", "logs", "full_log", "stdout", "stderr"})
+TRANSFER_PROOF_LIMITS = (
+    "Transferred-context counts are deterministic projections from checked-in trace fields, canonical Capsules, and current handoff contracts; they are not host-observed requests or model responses.",
+    "Skill / Reference counts cover only selectors crossing the dispatch boundary; full loaded Skill content remains measured by the existing rendered instruction contexts.",
+    "Execution Delta, review input, and repair input are bounded field projections; the fixtures do not store full natural-language handoff bodies.",
+    "Diff counts cover actual-diff metadata or an accessible fixture reference, not diff contents; validation is structured and excludes full command logs, which remain JIT-only.",
+    "Duplicate context detects exact normalized blocks in the projected transfers, not semantic paraphrases.",
+    "Current-evidence selection uses explicit fixture ordering and freshness; it does not infer unstated runtime evidence.",
+)
 
 _LIST_ITEM_RE = re.compile(r"^\s*(?:[-+*]|\d+[.)])\s+(.*)$")
 _HEADING_RE = re.compile(r"^\s{0,3}#{1,6}(?:\s+|$)")
@@ -210,6 +336,864 @@ def _duplicate_block_metrics(components: list[dict[str, Any]]) -> dict[str, Any]
     return {
         "duplicate_rule_tokens": duplicate_tokens,
         "duplicate_blocks": duplicate_blocks,
+    }
+
+
+def _canonical_json_text(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def _long_task_ids_from_lightweight(
+    report: dict[str, Any],
+    expected_case_ids: set[str],
+) -> set[str]:
+    """Join long-task selection to the existing lightweight report metric."""
+
+    if report.get("schema_version") != 2:
+        raise ValueError("lightweight prerequisite report must use schema_version 2")
+    if report.get("fixture_schema_version") != FIXTURE_SCHEMA_VERSION:
+        raise ValueError("lightweight prerequisite report has stale fixture_schema_version")
+    if report.get("status") != "pass":
+        raise ValueError("lightweight prerequisite report must have status 'pass'")
+    if report.get("evidence_scope") != "deterministic-fixtures":
+        raise ValueError(
+            "lightweight prerequisite report must use deterministic-fixtures evidence"
+        )
+    cases = report.get("cases")
+    if not isinstance(cases, list) or report.get("fixture_count") != len(cases):
+        raise ValueError("lightweight prerequisite report cases/count are malformed")
+    actual_ids: set[str] = set()
+    long_ids: set[str] = set()
+    for index, item in enumerate(cases):
+        if not isinstance(item, dict) or not isinstance(item.get("id"), str):
+            raise ValueError(f"lightweight prerequisite case {index} needs an id")
+        case_id = item["id"]
+        metrics = item.get("metrics")
+        if not isinstance(metrics, dict) or not isinstance(
+            metrics.get("required_progress_for_multi_agent"), bool
+        ):
+            raise ValueError(
+                f"lightweight prerequisite case {case_id!r} metric "
+                "required_progress_for_multi_agent must be boolean"
+            )
+        if case_id in actual_ids:
+            raise ValueError(f"lightweight prerequisite repeats case id {case_id!r}")
+        actual_ids.add(case_id)
+        if metrics["required_progress_for_multi_agent"]:
+            long_ids.add(case_id)
+    if actual_ids != expected_case_ids:
+        raise ValueError(
+            "lightweight prerequisite fixture IDs do not match the rendered fixture"
+        )
+    if not long_ids:
+        raise ValueError("lightweight prerequisite selects no long tasks")
+    _retained_semantic_equality_evidence(report)
+    return long_ids
+
+
+def _retained_semantic_equality_evidence(
+    report: dict[str, Any],
+) -> dict[str, Any]:
+    """Consume the lightweight reducer's independent equality result."""
+
+    fixtures = report.get("orchestration_fixtures")
+    traces = report.get("semantic_traces")
+    declared_count = report.get("orchestration_fixture_count")
+    if (
+        not isinstance(fixtures, list)
+        or not isinstance(traces, list)
+        or declared_count != len(fixtures)
+        or declared_count != len(traces)
+    ):
+        raise ValueError(
+            "lightweight prerequisite retained semantic equality evidence is absent"
+        )
+    fixture_ids: list[str] = []
+    trace_ids: list[str] = []
+    positive_ids: list[str] = []
+    for index, fixture in enumerate(fixtures):
+        if not isinstance(fixture, dict) or not isinstance(fixture.get("id"), str):
+            raise ValueError(
+                f"lightweight prerequisite orchestration fixture {index} needs an id"
+            )
+        fixture_id = fixture["id"]
+        fixture_ids.append(fixture_id)
+        expected_valid = fixture.get("expected_valid")
+        if not isinstance(expected_valid, bool):
+            raise ValueError(
+                f"lightweight prerequisite orchestration fixture {fixture_id!r} "
+                "needs expected_valid"
+            )
+        if expected_valid:
+            positive_ids.append(fixture_id)
+            if fixture.get("retained_semantic_equality") is not True:
+                raise ValueError(
+                    "lightweight prerequisite retained semantic equality is not true "
+                    f"for {fixture_id!r}"
+                )
+    for index, trace in enumerate(traces):
+        if not isinstance(trace, dict) or not isinstance(trace.get("id"), str):
+            raise ValueError(
+                f"lightweight prerequisite semantic trace {index} needs an id"
+            )
+        trace_ids.append(trace["id"])
+    if (
+        len(fixture_ids) != len(set(fixture_ids))
+        or len(trace_ids) != len(set(trace_ids))
+        or set(fixture_ids) != set(trace_ids)
+    ):
+        raise ValueError(
+            "lightweight prerequisite retained semantic equality identities are malformed"
+        )
+    return {
+        "source": f"{_relative(LIGHTWEIGHT_REPORT)}#/orchestration_fixtures",
+        "orchestration_fixture_count": declared_count,
+        "positive_fixture_count": len(positive_ids),
+        "positive_fixture_ids": sorted(positive_ids),
+        "retained_semantic_equality": True,
+        "derivation": "consumed lightweight reducer result; no second semantic reducer",
+    }
+
+
+def _load_lightweight_prerequisite(
+    expected_case_ids: set[str],
+) -> tuple[set[str], dict[str, Any]]:
+    try:
+        value = json.loads(LIGHTWEIGHT_REPORT.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(
+            f"cannot read passing lightweight prerequisite {LIGHTWEIGHT_REPORT}: {exc}"
+        ) from exc
+    if not isinstance(value, dict):
+        raise ValueError("lightweight prerequisite report root must be an object")
+    return (
+        _long_task_ids_from_lightweight(value, expected_case_ids),
+        _retained_semantic_equality_evidence(value),
+    )
+
+
+def _load_lightweight_long_task_ids(expected_case_ids: set[str]) -> set[str]:
+    """Compatibility accessor for the source-bound long-task selector."""
+
+    return _load_lightweight_prerequisite(expected_case_ids)[0]
+
+
+def _registered_long_task_baselines(
+    long_task_ids: set[str],
+) -> dict[str, int]:
+    baselines = TRANSFER_MEASUREMENT_CONTRACT[
+        "long_task_baseline_gross_tokens"
+    ]
+    missing = sorted(long_task_ids - set(baselines))
+    if missing:
+        raise ValueError(f"unregistered long-task transfer baseline: {missing}")
+    return {case_id: int(baselines[case_id]) for case_id in sorted(long_task_ids)}
+
+
+def _context_compaction_classification(ratio: float) -> str:
+    minimum = TRANSFER_MEASUREMENT_CONTRACT[
+        "minimum_realized_reduction_ratio"
+    ]
+    target = TRANSFER_MEASUREMENT_CONTRACT["target_realized_reduction_ratio"]
+    if ratio < minimum:
+        return "stop-below-threshold"
+    if ratio < target:
+        return "marginal"
+    return "continue"
+
+
+def _markdown_h2_sections(text: str) -> list[tuple[str, str]]:
+    sections: list[tuple[str, str]] = []
+    name = "preamble"
+    lines: list[str] = []
+    for line in text.splitlines(keepends=True):
+        if line.startswith("## "):
+            sections.append((name, "".join(lines)))
+            name = line[3:].strip()
+            lines = [line]
+        else:
+            lines.append(line)
+    sections.append((name, "".join(lines)))
+    return [(section, body) for section, body in sections if body]
+
+
+def _template_measurement(
+    path: Path,
+    compactable_sections: frozenset[str],
+) -> tuple[int, int, int, str]:
+    text = path.read_text(encoding="utf-8")
+    sections = _markdown_h2_sections(text)
+    gross = sum(count_o200k_base_tokens(body) for _name, body in sections)
+    compressible = sum(
+        count_o200k_base_tokens(body)
+        for name, body in sections
+        if name in compactable_sections
+    )
+    return gross, gross - compressible, compressible, text
+
+
+def _empty_transfer_categories() -> dict[str, dict[str, Any]]:
+    return {
+        category: {
+            "label": TRANSFER_CATEGORY_LABELS[category],
+            "accounting_role": (
+                "exclusive-denominator"
+                if category in TRANSFER_EXCLUSIVE_CATEGORIES
+                else "overlap-view"
+            ),
+            "gross_tokens": 0,
+            "non_compressible_tokens": 0,
+            "compressible_tokens": 0,
+            "occurrence_count": 0,
+            "source_selectors": set(),
+        }
+        for category in TRANSFER_CATEGORY_ORDER
+    }
+
+
+def _add_transfer_measurement(
+    categories: dict[str, dict[str, Any]],
+    category: str,
+    *,
+    gross: int,
+    non_compressible: int,
+    compressible: int,
+    source: str,
+) -> None:
+    if min(gross, non_compressible, compressible) < 0:
+        raise ValueError(f"negative transferred-context measurement for {category}")
+    if category in TRANSFER_EXCLUSIVE_CATEGORIES and gross != (
+        non_compressible + compressible
+    ):
+        raise ValueError(f"non-exclusive token partition for {category}")
+    entry = categories[category]
+    entry["gross_tokens"] += gross
+    entry["non_compressible_tokens"] += non_compressible
+    entry["compressible_tokens"] += compressible
+    entry["occurrence_count"] += 1
+    entry["source_selectors"].add(source)
+
+
+def _current_blocking_review_window(
+    steps: list[Any], index: int
+) -> tuple[dict[str, Any], list[dict[str, Any]]] | None:
+    review_index = next(
+        (
+            candidate_index
+            for candidate_index in range(index - 1, -1, -1)
+            if isinstance(steps[candidate_index], dict)
+            and steps[candidate_index].get("action") == "review-discipline"
+        ),
+        None,
+    )
+    if review_index is None:
+        return None
+    review = steps[review_index]
+    if review.get("verdict") != "findings":
+        return None
+    blockers = [
+        step
+        for step in steps[review_index + 1 : index]
+        if isinstance(step, dict)
+        and step.get("action") == "finding"
+        and step.get("relation") == "current-task"
+        and step.get("material") is True
+    ]
+    return (review, blockers) if blockers else None
+
+
+def _is_repair_dispatch(steps: list[Any], index: int) -> bool:
+    return _current_blocking_review_window(steps, index) is not None
+
+
+def _contains_raw_log(value: Any) -> bool:
+    if isinstance(value, dict):
+        return any(
+            str(key).casefold() in _RAW_LOG_FIELDS or _contains_raw_log(item)
+            for key, item in value.items()
+        )
+    if isinstance(value, list):
+        return any(_contains_raw_log(item) for item in value)
+    return False
+
+
+def _current_evidence_errors(value: Any, *, context: str) -> list[str]:
+    if not isinstance(value, list):
+        return [f"{context}: current_evidence must be a list"]
+    errors: list[str] = []
+    for index, item in enumerate(value):
+        if not isinstance(item, dict) or item.get("state") != "current":
+            errors.append(f"{context}: current_evidence[{index}] must have state=current")
+        elif not item.get("claim"):
+            errors.append(f"{context}: current_evidence[{index}] needs a claim")
+    return errors
+
+
+def _transfer_projection_errors(boundary: str, projection: Any) -> list[str]:
+    """Validate only the lossy transfer boundary, never orchestration semantics."""
+
+    expected = TRANSFER_PROJECTION_FIELDS.get(boundary)
+    if expected is None:
+        return [f"unknown transfer boundary {boundary!r}"]
+    if not isinstance(projection, dict):
+        return [f"{boundary}: projection must be an object"]
+    errors: list[str] = []
+    if tuple(projection) != expected:
+        errors.append(f"{boundary}: fields must be exactly {list(expected)}")
+    if _contains_raw_log(projection):
+        errors.append(f"{boundary}: raw command logs are JIT-only")
+    if boundary == "task_to_implementation":
+        diff = projection.get("actual_diff")
+        if not isinstance(diff, dict) or diff.get("kind") not in {
+            "actual-diff",
+            "accessible-diff-reference",
+        } or not diff.get("artifact"):
+            errors.append(f"{boundary}: actual_diff needs an actual or accessible artifact")
+        validation = projection.get("validation_result")
+        if not isinstance(validation, dict) or not validation.get("result"):
+            errors.append(f"{boundary}: validation_result must be structured")
+        errors.extend(
+            _current_evidence_errors(
+                projection.get("current_evidence"), context=boundary
+            )
+        )
+    elif boundary == "implementation_to_review":
+        diff = projection.get("latest_diff")
+        if not isinstance(diff, dict) or diff.get("kind") not in {
+            "actual-diff",
+            "accessible-diff-reference",
+        } or not diff.get("artifact"):
+            errors.append(f"{boundary}: latest_diff cannot be a changed-file summary")
+        if not isinstance(projection.get("current_validation"), dict):
+            errors.append(f"{boundary}: current_validation must be structured")
+        for field in ("scope", "freshness", "proof_limit", "unverified_scope"):
+            if field not in projection or projection[field] in (None, ""):
+                errors.append(f"{boundary}: missing {field}")
+        errors.extend(
+            _current_evidence_errors(
+                projection.get("current_evidence"), context=boundary
+            )
+        )
+    else:
+        findings = projection.get("blocking_findings")
+        if (
+            not isinstance(findings, list)
+            or not findings
+            or any(
+                not isinstance(item, dict)
+                or tuple(item) != ("claim", "relation")
+                or item.get("relation") != "current-task"
+                for item in findings
+            )
+        ):
+            errors.append(
+                f"{boundary}: only material current-task findings may enter Repair with Finding Relation preserved"
+            )
+        diff = projection.get("latest_diff")
+        if not isinstance(diff, dict) or diff.get("kind") not in {
+            "actual-diff",
+            "accessible-diff-reference",
+        } or not diff.get("artifact"):
+            errors.append(f"{boundary}: latest_diff needs an actual or accessible artifact")
+        for field in ("invalidated_evidence", "reusable_evidence"):
+            value = projection.get(field)
+            if not isinstance(value, list):
+                errors.append(f"{boundary}: {field} must be a list")
+        invalidated = {
+            item.get("claim")
+            for item in projection.get("invalidated_evidence", [])
+            if isinstance(item, dict)
+        }
+        reusable = {
+            item.get("claim")
+            for item in projection.get("reusable_evidence", [])
+            if isinstance(item, dict)
+        }
+        if invalidated & reusable:
+            errors.append(f"{boundary}: evidence cannot be both invalidated and reusable")
+    return errors
+
+
+def _step_task_ids(step: dict[str, Any]) -> set[str]:
+    result: set[str] = set()
+    task_id = step.get("task_id")
+    if isinstance(task_id, str) and task_id:
+        result.add(task_id)
+    task_ids = step.get("task_ids")
+    if isinstance(task_ids, list):
+        result.update(item for item in task_ids if isinstance(item, str) and item)
+    return result
+
+
+def _task_bound_steps(
+    steps: list[Any], start: int, task_id: str
+) -> list[tuple[int, dict[str, Any]]]:
+    return [
+        (index, step)
+        for index, step in enumerate(steps[start + 1 :], start + 1)
+        if isinstance(step, dict) and task_id in _step_task_ids(step)
+    ]
+
+
+def _next_review_discipline(
+    steps: list[Any], start: int, task_id: str
+) -> dict[str, Any] | None:
+    for step in steps[start + 1 :]:
+        if not isinstance(step, dict):
+            continue
+        if step.get("action") == "review-discipline" and step.get("task_id") == task_id:
+            return step
+    return None
+
+
+def _diff_projection(
+    case_id: str,
+    steps: list[Any],
+    start: int,
+    task_id: str,
+) -> dict[str, Any]:
+    review = _next_review_discipline(steps, start, task_id)
+    if review and isinstance(review.get("diff"), dict):
+        return dict(review["diff"])
+    changed = sorted(
+        {
+            str(step["path"])
+            for _index, step in _task_bound_steps(steps, start, task_id)
+            if step.get("action") in {"edit", "repair"}
+            and isinstance(step.get("path"), str)
+        }
+    )
+    return {
+        "kind": "accessible-diff-reference",
+        "artifact": f"{_relative(FIXTURES)}#/{case_id}/tasks/{task_id}",
+        "generation": 1,
+        "changed_files": changed,
+    }
+
+
+def _evidence_projection(
+    steps: list[Any], start: int, task_id: str
+) -> list[dict[str, Any]]:
+    candidates: list[dict[str, Any]] = []
+    for _index, step in _task_bound_steps(steps, start, task_id):
+        if step.get("action") == "adaptive-test-evidence" and step.get("freshness", 0) > 0:
+            candidates.append(
+                {
+                    "claim": str(step.get("evidence_id")),
+                    "state": "current",
+                    "scope": task_id,
+                    "freshness": step.get("freshness"),
+                    "proof_limit": str(step.get("oracle") or "deterministic fixture oracle"),
+                }
+            )
+        elif step.get("action") == "validate" and step.get("outcome") == "passed":
+            candidates.append(
+                {
+                    "claim": str(step.get("evidence_id")),
+                    "state": "current",
+                    "scope": task_id,
+                    "freshness": "after-latest-material-edit",
+                    "proof_limit": "structured fixture result; raw log JIT-only",
+                }
+            )
+    return candidates
+
+
+def _case_transfer_projection_rows(case: dict[str, Any]) -> list[tuple[str, dict[str, Any], str]]:
+    case_id = str(case["id"])
+    steps = case["steps"]
+    rows: list[tuple[str, dict[str, Any], str]] = []
+    for index, step in enumerate(steps):
+        if not isinstance(step, dict) or step.get("action") != "dispatch":
+            continue
+        payload = step.get("fixture_capsule")
+        if not isinstance(payload, dict):
+            continue
+        contract_type = payload.get("contract_type")
+        task_id = str(payload.get("task_id") or "")
+        if contract_type == "task":
+            task_steps = _task_bound_steps(steps, index, task_id)
+            diff = _diff_projection(case_id, steps, index, task_id)
+            validations = [
+                item for _step_index, item in task_steps if item.get("action") == "validate"
+            ]
+            validation = validations[-1] if validations else {}
+            evidence = _evidence_projection(steps, index, task_id)
+            execution = {
+                "task_id": task_id,
+                "status": "completed" if validation.get("outcome") == "passed" else "partial",
+                "changed_files": diff.get("changed_files", []),
+                "actual_diff": diff,
+                "commands": [str(item.get("command")) for item in validations],
+                "validation_result": {
+                    "evidence_id": validation.get("evidence_id"),
+                    "result": validation.get("outcome", "not-run"),
+                },
+                "freshness": diff.get("generation", 1),
+                "current_evidence": evidence,
+                "unverified_scope": [],
+                "residual_risk": ["deterministic fixture proof only"],
+            }
+            rows.append(
+                (
+                    "task_to_implementation",
+                    execution,
+                    f"{_relative(IMPLEMENTATION_HANDOFF_TEMPLATE)}; {_relative(FIXTURES)}#/{case_id}/tasks/{task_id}",
+                )
+            )
+            repair_window = _current_blocking_review_window(steps, index)
+            if repair_window is not None:
+                prior_review, findings = repair_window
+                for finding in findings:
+                    dependent_scope = finding.get("dependent_scope", [])
+                    if not isinstance(dependent_scope, list) or not all(
+                        isinstance(item, str) and item for item in dependent_scope
+                    ):
+                        raise ValueError(
+                            f"{case_id}: blocking finding dependent_scope must be "
+                            "a string list"
+                        )
+                affected = sorted(
+                    {
+                        scope
+                        for item in findings
+                        for scope in (
+                            [str(item["path"])]
+                            if isinstance(item.get("path"), str)
+                            else []
+                        )
+                        + [
+                            str(dependent)
+                            for dependent in item.get("dependent_scope", [])
+                        ]
+                    }
+                )
+                repair = {
+                    "blocking_findings": [
+                        {
+                            "claim": item.get("evidence_id"),
+                            "relation": item.get("relation"),
+                        }
+                        for item in findings
+                    ],
+                    "affected_scope": affected,
+                    "acceptance_impact": [
+                        item.get("acceptance_impact") for item in findings
+                    ],
+                    "latest_diff": dict(prior_review.get("diff", diff)),
+                    "invalidated_evidence": [
+                        {"claim": prior_review.get("validation", {}).get("evidence_id"), "scope": affected},
+                        {"claim": "previous-diff-review", "scope": affected},
+                    ],
+                    "reusable_evidence": [
+                        {"claim": "owner-placement-inspection", "scope": task_id, "state": "current"}
+                    ],
+                    "required_validation": payload.get("verification", []),
+                    "required_rereview": {"required": True, "owner": payload.get("review_owner")},
+                }
+                rows.append(
+                    (
+                        "review_to_repair",
+                        repair,
+                        f"{_relative(REVIEW_HANDOFF_TEMPLATE)}; {_relative(FIXTURES)}#/{case_id}/steps/{index}",
+                    )
+                )
+        elif contract_type == "review":
+            discipline = _next_review_discipline(steps, index, task_id) or {}
+            latest_diff = dict(
+                discipline.get("diff")
+                or {
+                    "kind": "accessible-diff-reference",
+                    "artifact": f"{_relative(FIXTURES)}#/{case_id}/steps/{index}",
+                    "generation": 0,
+                    "changed_files": payload.get("scope", []),
+                }
+            )
+            current_validation = dict(discipline.get("validation") or {"result": "unverified"})
+            evidence_id = current_validation.get("evidence_id")
+            current_evidence = (
+                [
+                    {
+                        "claim": evidence_id,
+                        "state": "current",
+                        "scope": payload.get("scope", []),
+                        "freshness": current_validation.get("generation", "current"),
+                        "proof_limit": "structured fixture result; raw log JIT-only",
+                    }
+                ]
+                if evidence_id
+                else []
+            )
+            review = {
+                "acceptance": payload.get("acceptance", []),
+                "review_boundary": {
+                    "task_id": task_id,
+                    "review_kind": discipline.get("review_kind", "bounded-review"),
+                },
+                "effective_level": payload.get("execution_level_extension", {}).get("effective_level"),
+                "required_review_skills": [
+                    step.get("primary_skill"), *step.get("layer3_skills", [])
+                ],
+                "required_changed_scope": payload.get("scope", []),
+                "latest_diff": latest_diff,
+                "current_validation": current_validation,
+                "current_evidence": current_evidence,
+                "scope": payload.get("scope", []),
+                "freshness": latest_diff.get("generation", 0),
+                "proof_limit": payload.get("stop_conditions", []),
+                "unverified_scope": [],
+            }
+            rows.append(
+                (
+                    "implementation_to_review",
+                    review,
+                    f"{_relative(REVIEW_HANDOFF_TEMPLATE)}; {_relative(FIXTURES)}#/{case_id}/steps/{index}",
+                )
+            )
+    for boundary, projection, _source in rows:
+        errors = _transfer_projection_errors(boundary, projection)
+        if errors:
+            raise ValueError("; ".join(errors))
+    return rows
+
+
+def _case_transfer_projections(case: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    result: dict[str, dict[str, Any]] = {}
+    for boundary, projection, _source in _case_transfer_projection_rows(case):
+        result[boundary] = projection
+    return result
+
+
+def _case_transfer_measurement(case: dict[str, Any]) -> dict[str, Any]:
+    case_id = str(case["id"])
+    steps = case["steps"]
+    categories = _empty_transfer_categories()
+    duplicate_components: list[dict[str, Any]] = []
+    projection_rows = _case_transfer_projection_rows(case)
+
+    for index, step in enumerate(steps):
+        if not isinstance(step, dict) or step.get("action") != "dispatch":
+            continue
+        selector = {
+            key: step.get(key)
+            for key in (
+                "primary_skill",
+                "professional_references",
+                "layer3_skills",
+                "layer3_references",
+            )
+            if key in step
+        }
+        if any(value not in (None, [], "") for value in selector.values()):
+            selector_text = _canonical_json_text(selector)
+            selector_tokens = count_o200k_base_tokens(selector_text)
+            selector_source = f"{_relative(FIXTURES)}#/{case_id}/steps/{index}/skill-selectors"
+            _add_transfer_measurement(
+                categories,
+                "skill_reference",
+                gross=selector_tokens,
+                non_compressible=selector_tokens,
+                compressible=0,
+                source=selector_source,
+            )
+            duplicate_components.append(
+                _component("skill_reference", selector_source, selector_text)
+            )
+
+        payload = step.get("fixture_capsule")
+        if not isinstance(payload, dict):
+            continue
+        contract_type = payload.get("contract_type")
+        capsule_text = validate_and_render_fixture_capsule(step)
+        capsule_tokens = count_o200k_base_tokens(capsule_text)
+        capsule_source = f"{_relative(FIXTURES)}#/{case_id}/steps/{index}/fixture_capsule"
+        if contract_type == "analysis":
+            _add_transfer_measurement(
+                categories,
+                "authority",
+                gross=capsule_tokens,
+                non_compressible=capsule_tokens,
+                compressible=0,
+                source=capsule_source,
+            )
+            duplicate_components.append(
+                _component("authority", capsule_source, capsule_text)
+            )
+        elif contract_type == "task":
+            if _is_repair_dispatch(steps, index):
+                continue
+            if case.get("kind") == "direct":
+                compressible = 0
+                category = "authority"
+            else:
+                compressible = 0
+                category = "task_capsule"
+            _add_transfer_measurement(
+                categories,
+                category,
+                gross=capsule_tokens,
+                non_compressible=capsule_tokens - compressible,
+                compressible=compressible,
+                source=capsule_source,
+            )
+            duplicate_components.append(
+                _component(category, capsule_source, capsule_text)
+            )
+
+
+    for boundary, projection, source in projection_rows:
+        text = _canonical_json_text(projection)
+        tokens = count_o200k_base_tokens(text)
+        category = {
+            "task_to_implementation": "implementation_handoff",
+            "implementation_to_review": "review_handoff",
+            "review_to_repair": "repair_context",
+        }[boundary]
+        _add_transfer_measurement(
+            categories,
+            category,
+            gross=tokens,
+            non_compressible=tokens,
+            compressible=0,
+            source=source,
+        )
+        duplicate_components.append(_component(boundary, source, text))
+
+    for index, step in enumerate(steps):
+        if not isinstance(step, dict):
+            continue
+        action = step.get("action")
+        source = f"{_relative(FIXTURES)}#/{case_id}/steps/{index}"
+        if action == "adaptive-test-evidence" and step.get("freshness", 0) > 0:
+            tokens = count_o200k_base_tokens(_canonical_json_text(step))
+            _add_transfer_measurement(
+                categories,
+                "evidence_ledger",
+                gross=tokens,
+                non_compressible=0,
+                compressible=0,
+                source=source,
+            )
+        if action in {"edit", "repair"}:
+            value = {key: step.get(key) for key in ("task_id", "path") if key in step}
+            tokens = count_o200k_base_tokens(_canonical_json_text(value))
+            _add_transfer_measurement(
+                categories,
+                "diff",
+                gross=tokens,
+                non_compressible=0,
+                compressible=0,
+                source=source,
+            )
+        if action == "review-discipline" and isinstance(step.get("diff"), dict):
+            tokens = count_o200k_base_tokens(_canonical_json_text(step["diff"]))
+            _add_transfer_measurement(
+                categories,
+                "diff",
+                gross=tokens,
+                non_compressible=0,
+                compressible=0,
+                source=f"{source}/diff",
+            )
+        if action == "validate":
+            tokens = count_o200k_base_tokens(_canonical_json_text(step))
+            _add_transfer_measurement(
+                categories,
+                "validation",
+                gross=tokens,
+                non_compressible=0,
+                compressible=0,
+                source=source,
+            )
+        if action == "review-discipline" and isinstance(step.get("validation"), dict):
+            tokens = count_o200k_base_tokens(_canonical_json_text(step["validation"]))
+            _add_transfer_measurement(
+                categories,
+                "validation",
+                gross=tokens,
+                non_compressible=0,
+                compressible=0,
+                source=f"{source}/validation",
+            )
+
+    categories["superseded_evidence"]["source_selectors"].add(
+        "current-only transfer filter; superseded fixture evidence excluded"
+    )
+
+    duplicates = _duplicate_block_metrics(duplicate_components)
+    _add_transfer_measurement(
+        categories,
+        "duplicate_context",
+        gross=duplicates["duplicate_rule_tokens"],
+        non_compressible=0,
+        compressible=0,
+        source="exact normalized Markdown blocks across exclusive transfer projections",
+    )
+    categories["duplicate_context"]["source_selectors"].update(
+        source["component"]
+        for block in duplicates["duplicate_blocks"]
+        for source in block["sources"]
+    )
+    for category in categories.values():
+        category["source_selectors"] = sorted(category["source_selectors"])
+    gross = sum(categories[item]["gross_tokens"] for item in TRANSFER_EXCLUSIVE_CATEGORIES)
+    non_compressible = sum(
+        categories[item]["non_compressible_tokens"]
+        for item in TRANSFER_EXCLUSIVE_CATEGORIES
+    )
+    compressible = sum(
+        categories[item]["compressible_tokens"]
+        for item in TRANSFER_EXCLUSIVE_CATEGORIES
+    )
+    return {
+        "id": case_id,
+        "boundary_rows": [
+            {
+                "boundary": boundary,
+                "task_id": projection.get("task_id"),
+                "projection": projection,
+                "source": source,
+            }
+            for boundary, projection, source in projection_rows
+        ],
+        "categories": categories,
+        "gross_tokens": gross,
+        "non_compressible_tokens": non_compressible,
+        "compressible_tokens": compressible,
+        "compressible_ratio": round(compressible / gross, 6) if gross else 0.0,
+    }
+
+
+def _aggregate_transfer_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    categories = _empty_transfer_categories()
+    for row in rows:
+        for name, source in row["categories"].items():
+            target = categories[name]
+            for field in (
+                "gross_tokens",
+                "non_compressible_tokens",
+                "compressible_tokens",
+                "occurrence_count",
+            ):
+                target[field] += source[field]
+            target["source_selectors"].update(source["source_selectors"])
+    for category in categories.values():
+        category["source_selectors"] = sorted(category["source_selectors"])
+    gross = sum(categories[item]["gross_tokens"] for item in TRANSFER_EXCLUSIVE_CATEGORIES)
+    non_compressible = sum(
+        categories[item]["non_compressible_tokens"]
+        for item in TRANSFER_EXCLUSIVE_CATEGORIES
+    )
+    compressible = sum(
+        categories[item]["compressible_tokens"]
+        for item in TRANSFER_EXCLUSIVE_CATEGORIES
+    )
+    return {
+        "categories": categories,
+        "gross_tokens": gross,
+        "non_compressible_tokens": non_compressible,
+        "compressible_tokens": compressible,
+        "compressible_ratio": round(compressible / gross, 6) if gross else 0.0,
     }
 
 
@@ -715,6 +1699,11 @@ def evaluate() -> dict[str, Any]:
             f"trajectory fixture schema_version must be {FIXTURE_SCHEMA_VERSION}"
         )
     cases = _fixture_cases(document)
+    expected_case_ids = {str(case.get("id") or "") for _group, case in cases}
+    long_task_ids, semantic_equality = _load_lightweight_prerequisite(
+        expected_case_ids
+    )
+    long_task_baselines = _registered_long_task_baselines(long_task_ids)
     layer3_entries = _layer3_registry_entries()
     manifests = _load_manifests(errors)
     if set(manifests) != set(BUILD_PROFILES):
@@ -1018,6 +2007,130 @@ def evaluate() -> dict[str, Any]:
         else []
     )
     component_catalog = _compact_component_catalog(duplicate_candidates)
+    transfer_rows = [
+        _case_transfer_measurement(case)
+        for _fixture_group, case in cases
+        if case.get("kind") != "utility"
+    ]
+    transfer_by_id = {row["id"]: row for row in transfer_rows}
+    if not long_task_ids.issubset(transfer_by_id):
+        missing = sorted(long_task_ids - set(transfer_by_id))
+        raise ValueError(
+            "lightweight long-task selection includes unmeasured transfer cases: "
+            f"{missing}"
+        )
+    transfer_aggregate = _aggregate_transfer_rows(transfer_rows)
+    category_baselines = TRANSFER_MEASUREMENT_CONTRACT[
+        "category_baseline_gross_tokens"
+    ]
+    for category, measurement in transfer_aggregate["categories"].items():
+        before = category_baselines[category]
+        after = measurement["gross_tokens"]
+        measurement["before_gross_tokens"] = before
+        measurement["after_gross_tokens"] = after
+        measurement["realized_reduction_tokens"] = before - after
+        measurement["realized_reduction_ratio"] = round((before - after) / before, 6)
+    long_task_rows = []
+    for case_id in sorted(long_task_ids):
+        row = dict(transfer_by_id[case_id])
+        row["required_progress_for_multi_agent"] = True
+        row["after_gross_tokens"] = row["gross_tokens"]
+        row["before_gross_tokens"] = long_task_baselines[case_id]
+        row["realized_reduction_tokens"] = (
+            row["before_gross_tokens"] - row["after_gross_tokens"]
+        )
+        row["realized_reduction_ratio"] = round(
+            row["realized_reduction_tokens"] / row["before_gross_tokens"], 6
+        )
+        long_task_rows.append(row)
+    conservative_long_task_ratio = min(
+        row["realized_reduction_ratio"] for row in long_task_rows
+    )
+    after_gross_tokens = transfer_aggregate["gross_tokens"]
+    before_gross_tokens = TRANSFER_MEASUREMENT_CONTRACT["baseline_gross_tokens"]
+    realized_reduction_tokens = before_gross_tokens - after_gross_tokens
+    realized_reduction_ratio = round(
+        realized_reduction_tokens / before_gross_tokens, 6
+    )
+    minimum_reduction = TRANSFER_MEASUREMENT_CONTRACT[
+        "minimum_realized_reduction_ratio"
+    ]
+    target_reduction = TRANSFER_MEASUREMENT_CONTRACT[
+        "target_realized_reduction_ratio"
+    ]
+    compaction_decision = {
+        "classification": _context_compaction_classification(
+            conservative_long_task_ratio
+        ),
+        "observed_conservative_ratio": conservative_long_task_ratio,
+        "minimum_realized_reduction_ratio": minimum_reduction,
+        "target_realized_reduction_ratio": target_reduction,
+    }
+    transferred_context = {
+        "source_scope": {
+            "trajectory_fixture": _relative(FIXTURES),
+            "lightweight_long_task_selector": (
+                f"{_relative(LIGHTWEIGHT_REPORT)}"
+                "#/cases/*/metrics/required_progress_for_multi_agent"
+            ),
+            "canonical_capsule_renderer": "scripts/fixture_capsule_contract.py",
+            "implementation_handoff_template": _relative(
+                IMPLEMENTATION_HANDOFF_TEMPLATE
+            ),
+            "review_handoff_template": _relative(REVIEW_HANDOFF_TEMPLATE),
+        },
+        "accounting": {
+            "denominator": "exclusive transfer occurrence token sum",
+            "exclusive_categories": list(TRANSFER_EXCLUSIVE_CATEGORIES),
+            "overlap_views": list(TRANSFER_OVERLAP_VIEWS),
+            "category_views_do_not_sum_to_gross": True,
+            "skill_reference_scope": "dispatch selectors, not loaded Skill bodies",
+            "compressible_rule": (
+                "post-compaction gross contains only accepted boundary projections; "
+                "Authority, selectors, and authoritative task Capsules remain unchanged"
+            ),
+        },
+        "semantic_baseline": semantic_equality,
+        **transfer_aggregate,
+        "before_gross_tokens": before_gross_tokens,
+        "after_gross_tokens": after_gross_tokens,
+        "realized_reduction_tokens": realized_reduction_tokens,
+        "realized_reduction_ratio": realized_reduction_ratio,
+        "minimum_realized_reduction_ratio": minimum_reduction,
+        "target_realized_reduction_ratio": target_reduction,
+        "context_compaction_decision": compaction_decision,
+        "measured_case_count": len(transfer_rows),
+        "long_task_selector_join_count": len(long_task_rows),
+        "long_task_rows": long_task_rows,
+        "conservative_long_task_ratio": conservative_long_task_ratio,
+        "proof_limits": list(TRANSFER_PROOF_LIMITS),
+    }
+    if realized_reduction_ratio < minimum_reduction:
+        errors.append("aggregate transferred-context realized reduction is below 0.25")
+    for row in long_task_rows:
+        if row["realized_reduction_ratio"] < minimum_reduction:
+            errors.append(
+                f"{row['id']}: long-task realized reduction is below 0.25"
+            )
+    for protected_category in ("authority", "skill_reference", "task_capsule"):
+        if transfer_aggregate["categories"][protected_category]["gross_tokens"] != (
+            category_baselines[protected_category]
+        ):
+            errors.append(
+                f"{TRANSFER_CATEGORY_LABELS[protected_category]} transfer changed "
+                "during derived-context compaction"
+            )
+    duplicate_before = category_baselines["duplicate_context"]
+    duplicate_after = transfer_aggregate["categories"]["duplicate_context"][
+        "gross_tokens"
+    ]
+    duplicate_reduction_ratio = round(
+        (duplicate_before - duplicate_after) / duplicate_before, 6
+    )
+    if duplicate_reduction_ratio < minimum_reduction:
+        errors.append("duplicate context did not decrease by at least 25 percent")
+    if transfer_aggregate["categories"]["superseded_evidence"]["gross_tokens"]:
+        errors.append("superseded evidence must not cross a transfer boundary")
     return {
         "schema_version": 2,
         "status": "pass" if not errors else "fail",
@@ -1076,6 +2189,7 @@ def evaluate() -> dict[str, Any]:
         "discovery_metadata": discovery,
         "component_catalog": component_catalog,
         "cases": case_results,
+        "transferred_context": transferred_context,
         "aggregate": {
             "max_main": (
                 _maximum_summary(max_main, include_dispatch=False)
@@ -1114,9 +2228,13 @@ def _write_reports(
     report: dict[str, Any],
     *,
     release_projection: bool = False,
+    reports_dir: Path = ROOT / "reports",
 ) -> None:
-    REPORT_JSON.parent.mkdir(parents=True, exist_ok=True)
-    REPORT_JSON.write_text(
+    report_json, report_markdown = report_output_paths(
+        reports_dir, REPORT_JSON.name, REPORT_MD.name
+    )
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    report_json.write_text(
         json.dumps(report, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
@@ -1192,6 +2310,27 @@ def _write_reports(
             "",
             "Discovery metadata is reported separately because actual host discovery injection is not observed.",
             "",
+            "## Transferred Context Measurement",
+            "",
+            f"Gross exclusive transferred-context tokens: **{report['transferred_context']['gross_tokens']}**; "
+            f"non-compressible: **{report['transferred_context']['non_compressible_tokens']}**; "
+            f"compressible: **{report['transferred_context']['compressible_tokens']}**; "
+            f"ratio: **{report['transferred_context']['compressible_ratio']}**.",
+            "",
+            f"Long tasks joined from lightweight required progress: "
+            f"**{report['transferred_context']['long_task_selector_join_count']}**; "
+            f"conservative ratio: "
+            f"**{report['transferred_context']['conservative_long_task_ratio']}**.",
+            "",
+            "Overlap views (Evidence Ledger, Diff, Validation, duplicate context, and superseded evidence) are reported outside the gross denominator.",
+            "",
+            "### Transfer Proof Limits",
+            "",
+            *[
+                f"- {item}"
+                for item in report["transferred_context"]["proof_limits"]
+            ],
+            "",
             "## Limitations",
             "",
             *[f"- {item}" for item in report["limitations"]],
@@ -1201,19 +2340,28 @@ def _write_reports(
     if report["errors"]:
         lines.extend(["## Errors", "", *[f"- {item}" for item in report["errors"]], ""])
     if release_projection:
-        REPORT_MD.write_text("\n".join(lines), encoding="utf-8")
+        report_markdown.write_text("\n".join(lines), encoding="utf-8")
+
+
+def _args(argv: list[str] | None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--release-projection", action="store_true")
+    parser.add_argument("--reports-dir", type=Path, default=REPORT_JSON.parent)
+    return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--release-projection", action="store_true")
-    args = parser.parse_args(argv)
+    args = _args(argv)
     try:
         report = evaluate()
     except (OSError, RuntimeError, ValueError) as exc:
         print(f"eval-rendered-context-budget: ERROR: {exc}", file=sys.stderr)
         return 1
-    _write_reports(report, release_projection=args.release_projection)
+    _write_reports(
+        report,
+        release_projection=args.release_projection,
+        reports_dir=args.reports_dir,
+    )
     if report["errors"]:
         for error in report["errors"]:
             print(f"eval-rendered-context-budget: ERROR: {error}", file=sys.stderr)

@@ -287,6 +287,490 @@ class RenderedContextBudgetTests(unittest.TestCase):
             result["duplicate_blocks"][0]["sources"],
         )
 
+    def test_transferred_context_categories_are_source_bound_and_exclusive(self) -> None:
+        report = EVAL.evaluate()
+        transfer = report["transferred_context"]
+        expected_categories = {
+            "authority",
+            "skill_reference",
+            "task_capsule",
+            "implementation_handoff",
+            "evidence_ledger",
+            "diff",
+            "validation",
+            "review_handoff",
+            "repair_context",
+            "duplicate_context",
+            "superseded_evidence",
+        }
+        self.assertEqual(expected_categories, set(transfer["categories"]))
+        exclusive = transfer["accounting"]["exclusive_categories"]
+        self.assertEqual(
+            transfer["gross_tokens"],
+            sum(transfer["categories"][item]["gross_tokens"] for item in exclusive),
+        )
+        self.assertEqual(
+            transfer["gross_tokens"],
+            transfer["non_compressible_tokens"] + transfer["compressible_tokens"],
+        )
+        for category, measurement in transfer["categories"].items():
+            with self.subTest(category=category):
+                self.assertTrue(measurement["source_selectors"])
+                if measurement["accounting_role"] == "exclusive-denominator":
+                    self.assertEqual(
+                        measurement["gross_tokens"],
+                        measurement["non_compressible_tokens"]
+                        + measurement["compressible_tokens"],
+                    )
+
+    def test_long_tasks_join_lightweight_required_progress_metric(self) -> None:
+        report = EVAL.evaluate()
+        lightweight = json.loads(EVAL.LIGHTWEIGHT_REPORT.read_text(encoding="utf-8"))
+        expected = {
+            item["id"]
+            for item in lightweight["cases"]
+            if item["metrics"]["required_progress_for_multi_agent"]
+        }
+        rows = report["transferred_context"]["long_task_rows"]
+
+        self.assertEqual(expected, {item["id"] for item in rows})
+        self.assertTrue(rows)
+        self.assertTrue(
+            all(item["required_progress_for_multi_agent"] is True for item in rows)
+        )
+        self.assertEqual(
+            min(item["realized_reduction_ratio"] for item in rows),
+            report["transferred_context"]["conservative_long_task_ratio"],
+        )
+
+    def test_compacted_transfer_meets_each_realized_reduction_boundary(self) -> None:
+        transfer = EVAL.evaluate()["transferred_context"]
+
+        contract = EVAL.TRANSFER_MEASUREMENT_CONTRACT
+        category_baselines = contract["category_baseline_gross_tokens"]
+        self.assertEqual(contract["baseline_gross_tokens"], transfer["before_gross_tokens"])
+        self.assertLessEqual(transfer["after_gross_tokens"], 14441)
+        self.assertGreaterEqual(transfer["realized_reduction_ratio"], 0.694706)
+        self.assertLessEqual(
+            transfer["categories"]["repair_context"]["gross_tokens"],
+            154,
+        )
+        self.assertEqual(
+            transfer["before_gross_tokens"] - transfer["after_gross_tokens"],
+            transfer["realized_reduction_tokens"],
+        )
+        for category in ("authority", "skill_reference", "task_capsule"):
+            with self.subTest(protected_category=category):
+                self.assertEqual(
+                    category_baselines[category],
+                    transfer["categories"][category]["gross_tokens"],
+                )
+        self.assertLessEqual(
+            transfer["categories"]["duplicate_context"]["gross_tokens"],
+            int(category_baselines["duplicate_context"] * 0.75),
+        )
+        self.assertEqual(0, transfer["categories"]["superseded_evidence"]["gross_tokens"])
+        self.assertTrue(transfer["semantic_baseline"]["retained_semantic_equality"])
+        self.assertEqual(
+            "continue",
+            transfer["context_compaction_decision"]["classification"],
+        )
+        for row in transfer["long_task_rows"]:
+            with self.subTest(case=row["id"]):
+                self.assertEqual(
+                    contract["long_task_baseline_gross_tokens"][row["id"]],
+                    row["before_gross_tokens"],
+                )
+                self.assertGreaterEqual(row["realized_reduction_ratio"], 0.25)
+
+        isolated = next(
+            row
+            for row in transfer["long_task_rows"]
+            if row["id"] == "isolated-write-parallel-contract"
+        )
+        task_rows = {
+            item["task_id"]: item["projection"]
+            for item in isolated["boundary_rows"]
+            if item["boundary"] == "task_to_implementation"
+        }
+        first = "task-isolated-write-parallel-contract-1"
+        second = "task-isolated-write-parallel-contract-2"
+        self.assertEqual(["module-a/service.py"], task_rows[first]["changed_files"])
+        self.assertEqual(["module-b/view.tsx"], task_rows[second]["changed_files"])
+        self.assertEqual(
+            "isolated-module-tests", task_rows[first]["validation_result"]["evidence_id"]
+        )
+        self.assertEqual(
+            "isolated-module-tests", task_rows[second]["validation_result"]["evidence_id"]
+        )
+
+        repair_case = next(
+            row
+            for row in transfer["long_task_rows"]
+            if row["id"] == "repair-and-rereview"
+        )
+        repair = next(
+            item["projection"]
+            for item in repair_case["boundary_rows"]
+            if item["boundary"] == "review_to_repair"
+        )
+        self.assertEqual(
+            ["initial-service-review"],
+            [item["claim"] for item in repair["blocking_findings"]],
+        )
+        self.assertEqual(
+            ["current-task"],
+            [item["relation"] for item in repair["blocking_findings"]],
+        )
+        self.assertTrue(
+            all(
+                set(item) == {"claim", "relation"}
+                for item in repair["blocking_findings"]
+            )
+        )
+        self.assertTrue(
+            all("outcome" not in item for item in repair["blocking_findings"])
+        )
+        self.assertEqual(["service.py"], repair["affected_scope"])
+        self.assertEqual(
+            {"initial-targeted-test", "previous-diff-review"},
+            {item["claim"] for item in repair["invalidated_evidence"]},
+        )
+        self.assertEqual(
+            ["owner-placement-inspection"],
+            [item["claim"] for item in repair["reusable_evidence"]],
+        )
+
+    def test_boundary_projections_reject_lossy_or_expansive_transfer(self) -> None:
+        document = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
+        case = next(
+            item for item in document["cases"] if item["id"] == "repair-and-rereview"
+        )
+        projections = EVAL._case_transfer_projections(case)
+
+        for boundary, projection in projections.items():
+            for field in EVAL.TRANSFER_PROJECTION_FIELDS[boundary]:
+                with self.subTest(boundary=boundary, missing=field):
+                    mutated = copy.deepcopy(projection)
+                    mutated.pop(field)
+                    self.assertTrue(EVAL._transfer_projection_errors(boundary, mutated))
+
+        review = copy.deepcopy(projections["implementation_to_review"])
+        review["latest_diff"] = {"changed_files": ["service.py"]}
+        self.assertTrue(EVAL._transfer_projection_errors("implementation_to_review", review))
+
+        review = copy.deepcopy(projections["implementation_to_review"])
+        review["current_evidence"].append({"claim": "old", "state": "superseded"})
+        self.assertTrue(EVAL._transfer_projection_errors("implementation_to_review", review))
+
+        execution = copy.deepcopy(projections["task_to_implementation"])
+        execution["validation_result"]["stdout"] = "full command log"
+        self.assertTrue(EVAL._transfer_projection_errors("task_to_implementation", execution))
+
+        repair = projections["review_to_repair"]
+        self.assertTrue(repair["invalidated_evidence"])
+        self.assertFalse(
+            {
+                item["claim"] for item in repair["invalidated_evidence"]
+            }
+            & {item["claim"] for item in repair["reusable_evidence"]}
+        )
+        for relation in ("adjacent", "scope-blocker"):
+            with self.subTest(repair_relation=relation):
+                invalid = copy.deepcopy(repair)
+                invalid["blocking_findings"][0]["relation"] = relation
+                self.assertTrue(
+                    any(
+                        "only material current-task findings" in error
+                        for error in EVAL._transfer_projection_errors(
+                            "review_to_repair", invalid
+                        )
+                    )
+                )
+
+    def test_consecutive_task_dispatches_use_canonical_task_identity(self) -> None:
+        def dispatch(task_id: str) -> dict[str, object]:
+            return {
+                "action": "dispatch",
+                "profile": "task-agent",
+                "fixture_capsule": {
+                    "contract_type": "task",
+                    "task_id": task_id,
+                    "status": "in_progress",
+                    "acceptance": [f"complete {task_id}"],
+                    "verification": ["shared-check"],
+                    "review_owner": "review-agent",
+                },
+            }
+
+        case = {
+            "id": "consecutive-task-identity",
+            "steps": [
+                dispatch("task-A"),
+                dispatch("task-B"),
+                {"action": "edit", "task_id": "task-A", "path": "a.py"},
+                {
+                    "action": "adaptive-test-evidence",
+                    "task_id": "task-A",
+                    "evidence_id": "evidence-A",
+                    "freshness": 1,
+                    "oracle": "A oracle",
+                },
+                {"action": "edit", "task_id": "task-B", "path": "b.py"},
+                {
+                    "action": "adaptive-test-evidence",
+                    "task_id": "task-B",
+                    "evidence_id": "evidence-B",
+                    "freshness": 1,
+                    "oracle": "B oracle",
+                },
+                {
+                    "action": "validate",
+                    "task_ids": ["task-A", "task-B"],
+                    "command": "shared-check",
+                    "outcome": "passed",
+                    "evidence_id": "shared-validation",
+                },
+            ],
+        }
+
+        rows = {
+            projection["task_id"]: projection
+            for boundary, projection, _source in EVAL._case_transfer_projection_rows(case)
+            if boundary == "task_to_implementation"
+        }
+
+        self.assertEqual({"task-A", "task-B"}, set(rows))
+        self.assertEqual(["a.py"], rows["task-A"]["changed_files"])
+        self.assertEqual(["b.py"], rows["task-B"]["changed_files"])
+        self.assertEqual(
+            ["evidence-A", "shared-validation"],
+            [item["claim"] for item in rows["task-A"]["current_evidence"]],
+        )
+        self.assertEqual(
+            ["evidence-B", "shared-validation"],
+            [item["claim"] for item in rows["task-B"]["current_evidence"]],
+        )
+        self.assertEqual(
+            "shared-validation", rows["task-A"]["validation_result"]["evidence_id"]
+        )
+        self.assertEqual(
+            "shared-validation", rows["task-B"]["validation_result"]["evidence_id"]
+        )
+
+    def test_repair_projection_uses_complete_current_blocker_window(self) -> None:
+        affected = ["a.py", "a_test.py", "b.py"]
+        case = {
+            "id": "multi-blocker-repair",
+            "steps": [
+                {
+                    "action": "finding",
+                    "path": "historical.py",
+                    "evidence_id": "historical",
+                    "relation": "current-task",
+                    "material": True,
+                },
+                {
+                    "action": "review-discipline",
+                    "task_id": "original-task",
+                    "verdict": "findings",
+                    "diff": {
+                        "kind": "actual-diff",
+                        "artifact": "original.diff",
+                        "generation": 1,
+                        "changed_files": ["a.py", "b.py"],
+                    },
+                    "validation": {
+                        "evidence_id": "original-validation",
+                        "result": "passed",
+                        "generation": 1,
+                    },
+                },
+                {
+                    "action": "finding",
+                    "path": "a.py",
+                    "dependent_scope": ["a_test.py"],
+                    "evidence_id": "blocker-A",
+                    "relation": "current-task",
+                    "material": True,
+                },
+                {
+                    "action": "finding",
+                    "path": "b.py",
+                    "evidence_id": "blocker-B",
+                    "relation": "current-task",
+                    "material": True,
+                },
+                {
+                    "action": "finding",
+                    "path": "noise.py",
+                    "evidence_id": "non-material",
+                    "relation": "current-task",
+                    "material": False,
+                },
+                {
+                    "action": "finding",
+                    "path": "resolved.py",
+                    "evidence_id": "resolved",
+                    "relation": "adjacent",
+                    "material": False,
+                },
+                {
+                    "action": "dispatch",
+                    "profile": "task-agent",
+                    "fixture_capsule": {
+                        "contract_type": "task",
+                        "task_id": "repair-task",
+                        "status": "in_progress",
+                        "acceptance": ["resolve current blockers"],
+                        "verification": ["repair-check"],
+                        "review_owner": "review-agent",
+                    },
+                },
+                {"action": "repair", "task_id": "repair-task", "path": "a.py"},
+                {
+                    "action": "validate",
+                    "task_id": "repair-task",
+                    "command": "repair-check",
+                    "outcome": "passed",
+                    "evidence_id": "repair-validation",
+                },
+            ],
+        }
+
+        repair = next(
+            projection
+            for boundary, projection, _source in EVAL._case_transfer_projection_rows(case)
+            if boundary == "review_to_repair"
+        )
+
+        self.assertEqual(
+            ["blocker-A", "blocker-B"],
+            [item["claim"] for item in repair["blocking_findings"]],
+        )
+        self.assertEqual(
+            ["current-task", "current-task"],
+            [item["relation"] for item in repair["blocking_findings"]],
+        )
+        self.assertTrue(
+            all(
+                set(item) == {"claim", "relation"}
+                for item in repair["blocking_findings"]
+            )
+        )
+        self.assertTrue(
+            all("outcome" not in item for item in repair["blocking_findings"])
+        )
+        self.assertEqual(affected, repair["affected_scope"])
+        self.assertEqual(
+            {"original-validation", "previous-diff-review"},
+            {item["claim"] for item in repair["invalidated_evidence"]},
+        )
+        self.assertTrue(
+            all(item["scope"] == affected for item in repair["invalidated_evidence"])
+        )
+        self.assertEqual(
+            ["owner-placement-inspection"],
+            [item["claim"] for item in repair["reusable_evidence"]],
+        )
+
+    def test_adjacent_and_scope_blocker_findings_never_create_repair_projection(
+        self,
+    ) -> None:
+        for relation in ("adjacent", "scope-blocker"):
+            with self.subTest(relation=relation):
+                case = {
+                    "id": f"reject-{relation}-repair-projection",
+                    "steps": [
+                        {
+                            "action": "review-discipline",
+                            "task_id": "task-A",
+                            "verdict": "findings",
+                        },
+                        {
+                            "action": "finding",
+                            "path": "a.py",
+                            "evidence_id": f"{relation}-finding",
+                            "relation": relation,
+                            "material": True,
+                        },
+                        {
+                            "action": "dispatch",
+                            "profile": "task-agent",
+                            "fixture_capsule": {
+                                "contract_type": "task",
+                                "task_id": "repair-task",
+                            },
+                        },
+                    ],
+                }
+                self.assertIsNone(
+                    EVAL._current_blocking_review_window(case["steps"], 2)
+                )
+
+    def test_missing_long_task_baseline_fails_before_report_write(self) -> None:
+        baselines = EVAL.TRANSFER_MEASUREMENT_CONTRACT[
+            "long_task_baseline_gross_tokens"
+        ]
+        selected = next(iter(baselines))
+        with (
+            mock.patch.dict(
+                baselines,
+                {selected: baselines[selected]},
+                clear=True,
+            ),
+            mock.patch.object(EVAL, "_write_reports") as write_reports,
+        ):
+            self.assertEqual(1, EVAL.main([]))
+        write_reports.assert_not_called()
+
+    def test_context_compaction_threshold_classification_is_exact(self) -> None:
+        self.assertEqual(
+            "stop-below-threshold", EVAL._context_compaction_classification(0.249999)
+        )
+        self.assertEqual("marginal", EVAL._context_compaction_classification(0.25))
+        self.assertEqual("marginal", EVAL._context_compaction_classification(0.299999))
+        self.assertEqual("continue", EVAL._context_compaction_classification(0.30))
+
+    def test_lightweight_join_requires_current_retained_semantic_equality(self) -> None:
+        report = json.loads(EVAL.LIGHTWEIGHT_REPORT.read_text(encoding="utf-8"))
+        expected_case_ids = {item["id"] for item in report["cases"]}
+        positive = next(
+            item for item in report["orchestration_fixtures"] if item["expected_valid"]
+        )
+        mutations = {}
+        missing = copy.deepcopy(report)
+        next(
+            item
+            for item in missing["orchestration_fixtures"]
+            if item["id"] == positive["id"]
+        ).pop("retained_semantic_equality")
+        mutations["missing"] = missing
+        unequal = copy.deepcopy(report)
+        next(
+            item
+            for item in unequal["orchestration_fixtures"]
+            if item["id"] == positive["id"]
+        )["retained_semantic_equality"] = False
+        mutations["unequal"] = unequal
+
+        for label, mutation in mutations.items():
+            with self.subTest(mutation=label):
+                with self.assertRaisesRegex(ValueError, "retained semantic equality"):
+                    EVAL._long_task_ids_from_lightweight(mutation, expected_case_ids)
+
+    def test_lightweight_join_rejects_missing_required_progress_metric(self) -> None:
+        source = {
+            "schema_version": 2,
+            "fixture_schema_version": 2,
+            "status": "pass",
+            "evidence_scope": "deterministic-fixtures",
+            "fixture_count": 1,
+            "cases": [{"id": "one", "metrics": {}}],
+        }
+        with self.assertRaisesRegex(ValueError, "required_progress_for_multi_agent"):
+            EVAL._long_task_ids_from_lightweight(source, {"one"})
+
     def test_fixture_capsule_mutations_fail_closed(self) -> None:
         document = EVAL.json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
         original = copy.deepcopy(document["cases"][0]["steps"][1])
@@ -1130,6 +1614,19 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 EVAL,
                 "validate_and_render_fixture_capsule",
                 return_value="# Classification capsule",
+            ),
+            mock.patch.object(
+                EVAL,
+                "_load_lightweight_prerequisite",
+                return_value=(
+                    {str(cases[0][1]["id"])},
+                    {"retained_semantic_equality": True},
+                ),
+            ),
+            mock.patch.object(
+                EVAL,
+                "_registered_long_task_baselines",
+                return_value={str(cases[0][1]["id"]): 100_000},
             ),
         ):
             report = EVAL.evaluate()

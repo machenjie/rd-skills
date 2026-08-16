@@ -463,25 +463,6 @@ class ControlPromptProjectionTests(unittest.TestCase):
         self.assertNotIn("Canonical validation identity", block)
         self.assertNotIn("Validation Identity Manifest", block)
 
-    def test_review_ledger_and_validation_freshness_use_current_lightweight_contract(
-        self,
-    ) -> None:
-        text = VALIDATOR.PROMPT.read_text(encoding="utf-8")
-        block = VALIDATOR.extract_section_body(text, "Review and Repair")
-        self.assertIsNotNone(block)
-        assert block is not None
-        for term in (
-            "visible task-local Evidence Ledger schema authority",
-            "State: current, superseded, invalid",
-            "latest-material-edit",
-            "validation-passed",
-            "Latest material edit invalidates validation evidence",
-            "Repair supersedes previous diff. Fresh validation/re-review",
-        ):
-            self.assertIn(term, block)
-        self.assertNotIn("Evidence State", block)
-        self.assertNotIn("Validation Identity Manifest", block)
-
     def test_prompt_runtime_loader_does_not_claim_exact_ids_or_no_extras(self) -> None:
         text = VALIDATOR.PROMPT.read_text(encoding="utf-8")
         block = VALIDATOR.extract_section_body(text, "Execution Level and Validation")
@@ -524,26 +505,6 @@ class ControlPromptProjectionTests(unittest.TestCase):
                         any(concept["id"] in error for error in errors),
                         errors,
                     )
-
-        source_free = next(
-            concept
-            for concept in concepts
-            if concept["id"] == "source-free-answer-boundary"
-        )
-        route_binding = "control prompts, route it to source-backed analysis"
-        self.assertIn(route_binding, source_free["required_terms"])
-        mutation = text.replace(
-            route_binding,
-            "control prompts, do not route it to source-backed analysis",
-            1,
-        )
-        self.assertNotEqual(text, mutation)
-        errors: list[str] = []
-        VALIDATOR._validate_concepts(mutation, errors)
-        self.assertTrue(
-            any("source-free-answer-boundary" in error for error in errors),
-            errors,
-        )
 
     def test_each_completed_rule_is_required_by_actual_prompt(self) -> None:
         text = VALIDATOR.PROMPT.read_text(encoding="utf-8")

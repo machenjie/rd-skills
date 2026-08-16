@@ -1,6 +1,6 @@
 # Claude Code Instructions
 
-Treat this repository as a ChangeForge Skill-authoring project. Author, validate, build, package, install, upgrade, and uninstall standard Skills and Agent Profiles only. Build output belongs in `dist/`; never install `src/` or source registries directly.
+Treat this repository as an rd-skills Skill-authoring project. Author, validate, build, package, install, upgrade, and uninstall standard Skills and Agent Profiles only. Build output belongs in `dist/`; never install `src/` or source registries directly.
 
 Do not ingest, index, summarize, map, package, or install personal technical archives. Do not create `src/toolbox` or `registry/toolbox.yaml`. Do not add executable interception, internal task-state machinery, private evidence storage, hidden Skill packaging, or another sandbox/workspace manager.
 

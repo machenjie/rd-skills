@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the hookless ChangeForge source boundary as one composite gate."""
+"""Validate the hookless rd-skills source boundary as one composite gate."""
 
 from __future__ import annotations
 

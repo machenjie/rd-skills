@@ -301,7 +301,6 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
         self.assertNotIn("root-lifecycle-current", ai_first)
         self.assertEqual(
             [
-                "root-lifecycle-current",
                 "readability-review-current",
                 "content-audit-formal-release-current",
             ],
@@ -313,41 +312,6 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
                 not in principle["required_outcomes"]["authoring"]
                 for principle in principles.values()
             )
-        )
-        outcomes = {
-            item["id"]: item
-            for item in contract["principle_acceptance_contract"]["outcomes"]
-        }
-        root_lifecycle = {
-            (predicate["source"], predicate["pointer"]): predicate["expected"]
-            for predicate in outcomes["root-lifecycle-current"]["predicates"]
-        }
-        self.assertEqual(
-            {
-                ("process", "/exit_code"): 0,
-                ("reports/skill-content-audit.json", "/schema_version"): 9,
-                (
-                    "reports/skill-content-audit.json",
-                    "/root_content/schema_version",
-                ): 7,
-                (
-                    "reports/skill-content-audit.json",
-                    "/root_content/semantic_advisories/schema_version",
-                ): 4,
-                (
-                    "reports/skill-content-audit.json",
-                    "/root_content/semantic_advisories/lifecycle/snapshot_current",
-                ): True,
-                (
-                    "reports/skill-content-audit.json",
-                    "/root_content/semantic_advisories/lifecycle/bootstrap_refresh_chain/valid",
-                ): True,
-                (
-                    "reports/skill-content-audit.json",
-                    "/root_content/semantic_advisories/lifecycle/errors",
-                ): [],
-            },
-            root_lifecycle,
         )
 
     def test_c_repository_audit_application_is_formal_only(self) -> None:
@@ -372,7 +336,7 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
         )
         formal_id = "content-audit-formal-release-current"
         self.assertEqual(
-            ["root-lifecycle-current", "readability-review-current", formal_id],
+            ["readability-review-current", formal_id],
             principles["ai-first"]["required_outcomes"]["formal_release"],
         )
         self.assertTrue(
@@ -439,7 +403,7 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
         }
         self.assertEqual(
             {
-                "/schema_version": 3,
+                "/schema_version": 4,
                 "/authoring_gate": "current-contract-pass",
                 "/root_content_summary/readiness_scope": "agent-facing-root-content",
                 "/root_content_summary/structural_strict_ready": True,
@@ -475,12 +439,10 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
         )
         self.assertTrue(
             {
-                "root-lifecycle-current",
                 "readability-review-current",
                 "content-audit-formal-release-current",
                 "professional-completeness-review-current",
                 "professional-review-cost-current",
-                "root-release-current",
                 outcome_id,
             }
             <= {
@@ -495,146 +457,34 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
                 "capabilities"
             ],
         )
+        formal = outcomes[outcome_id]
         self.assertEqual(
-            {
-                "id": outcome_id,
-                "producer": "validate-professionalism-regression",
-                "dimensions": [
-                    "final-goal-verification-and-professionalism-cost"
-                ],
-                "capabilities": [
-                    "professionalism-formal-release-readiness"
-                ],
-                "predicates": [
-                    {
-                        "source": "process",
-                        "pointer": "/exit_code",
-                        "operator": "equals",
-                        "expected": 0,
-                    },
-                    {
-                        "source": "reports/professionalism-regression-report.json",
-                        "pointer": "/release_gate",
-                        "operator": "equals",
-                        "expected": "release-ready",
-                    },
-                ],
-            },
-            outcomes[outcome_id],
+            "validate-professionalism-regression", formal["producer"]
         )
-
-    def test_pending_root_lifecycle_blocks_formal_but_not_ready_authoring(
-        self,
-    ) -> None:
-        canonical = json.loads(
-            (ROOT / "src/control-model/core-contracts.json").read_text(
-                encoding="utf-8"
+        manifest_pointers = {
+            predicate["pointer"]
+            for predicate in formal["predicates"]
+            if predicate["source"]
+            == "reports/professionalism-regression-report.json"
+            and predicate["pointer"].startswith(
+                "/expert_panel_release_manifest/"
             )
-        )
-        outcomes = {
-            row["id"]: row
-            for row in canonical["principle_acceptance_contract"]["outcomes"]
         }
-        professionalism = outcomes["professionalism-authoring-valid"]
-        lifecycle = outcomes["root-lifecycle-current"]
-
-        def passing_payload(outcome: dict, source: str) -> dict:
-            payload: dict = {}
-            for predicate in outcome["predicates"]:
-                if predicate["source"] != source:
-                    continue
-                cursor = payload
-                parts = [part for part in predicate["pointer"].split("/") if part]
-                for part in parts[:-1]:
-                    cursor = cursor.setdefault(part, {})
-                cursor[parts[-1]] = copy.deepcopy(predicate["expected"])
-            return payload
-
-        regression_source = "reports/professionalism-regression-report.json"
-        audit_source = "reports/skill-content-audit.json"
-        regression = passing_payload(professionalism, regression_source)
-        regression["root_content_summary"][
-            "semantic_lifecycle_snapshot_current"
-        ] = False
-        audit = passing_payload(lifecycle, audit_source)
-        audit["root_content"]["semantic_advisories"]["lifecycle"][
-            "snapshot_current"
-        ] = False
-
-        temporary, root = self._root()
-        self.addCleanup(temporary.cleanup)
-        audit_script = self._script(
-            root,
-            "audit",
-            "from pathlib import Path\n"
-            f"Path({audit_source!r}).write_text({json.dumps(audit)!r})\n",
+        self.assertTrue(
+            {
+                "/expert_panel_release_manifest/schema_version",
+                "/expert_panel_release_manifest/status",
+                "/expert_panel_release_manifest/verification_toolchain/head_commit_matches_current",
+                "/expert_panel_release_manifest/verification_toolchain/artifact_count",
+                "/expert_panel_release_manifest/verification_toolchain/accepted_artifact_count",
+                "/expert_panel_release_manifest/verification_toolchain/head_byte_equal_count",
+                "/expert_panel_release_manifest/verification_toolchain/clean_artifact_count",
+                "/expert_panel_release_manifest/artifacts/0/path",
+                "/expert_panel_release_manifest/artifacts/1/path",
+                "/expert_panel_release_manifest/artifacts/2/path",
+            }
+            <= manifest_pointers
         )
-        professionalism_script = self._script(
-            root,
-            "professionalism",
-            "from pathlib import Path\n"
-            f"Path({regression_source!r}).write_text({json.dumps(regression)!r})\n",
-        )
-        contract = self._contract(
-            [
-                self._producer(
-                    "audit-skill-content",
-                    audit_script,
-                    reports=[audit_source],
-                ),
-                self._producer(
-                    "validate-professionalism-regression",
-                    professionalism_script,
-                    reports=[regression_source],
-                ),
-            ],
-            [
-                {
-                    "id": professionalism["id"],
-                    "producer": professionalism["producer"],
-                    "predicates": professionalism["predicates"],
-                },
-                {
-                    "id": lifecycle["id"],
-                    "producer": lifecycle["producer"],
-                    "predicates": lifecycle["predicates"],
-                },
-            ],
-            formal_outcomes=[lifecycle["id"]],
-        )
-        report = EVALUATOR.evaluate(root, contract)
-        result_by_id = {row["id"]: row for row in report["outcomes"]}
-        self.assertEqual("pass", result_by_id[professionalism["id"]]["status"])
-        self.assertEqual("fail", result_by_id[lifecycle["id"]]["status"])
-        self.assertEqual("pass", report["authoring_principles_status"])
-        self.assertEqual("blocked", report["formal_principles_status"])
-        self.assertEqual("partial", report["principles_status"])
-
-        producer_result = {
-            professionalism["producer"]: {"exit_code": 0, "status": "pass"}
-        }
-        mutations = {
-            "readiness_scope": "wrong-scope",
-            "structural_strict_ready": False,
-            "semantic_triage_complete": False,
-            "strict_ready": False,
-            "semantic_unresolved_candidates": 1,
-            "semantic_disposition_errors": 1,
-        }
-        for field, invalid in mutations.items():
-            with self.subTest(field=field):
-                mutated = copy.deepcopy(regression)
-                mutated["root_content_summary"][field] = invalid
-                (root / regression_source).write_text(
-                    json.dumps(mutated), encoding="utf-8"
-                )
-                results, _ = EVALUATOR._evaluate_outcomes(
-                    root,
-                    [professionalism],
-                    producer_result,
-                    {},
-                )
-                self.assertEqual("fail", results[0]["status"])
 
     def _write_contract(self, root: Path, contract: dict) -> str:
         path = root / "src/control-model/core-contracts.json"
@@ -785,7 +635,9 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
                     EVALUATOR._producer_timeout_seconds(changed),
                 )
 
-    def test_timeout_kills_producer_and_propagates_not_run(self) -> None:
+    def test_formal_timeout_kills_producer_settles_tree_and_propagates_not_run(
+        self,
+    ) -> None:
         temporary, root = self._root()
         self.addCleanup(temporary.cleanup)
         slow = self._script(
@@ -811,8 +663,18 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
                 "predicates": [PROCESS_PASS],
             },
         ]
-        report = EVALUATOR.evaluate(root, self._contract(producers, outcomes))
+        with mock.patch.object(
+            EVALUATOR,
+            "input_tree_digest",
+            wraps=EVALUATOR.input_tree_digest,
+        ) as digest:
+            report = EVALUATOR.evaluate(
+                root,
+                self._contract(producers, outcomes),
+                release_projection=True,
+            )
         by_id = {item["id"]: item for item in report["producers"]}
+        self.assertEqual(3, digest.call_count)
         self.assertEqual("timeout", by_id["slow"]["status"])
         self.assertEqual(1, by_id["slow"]["timeout_seconds"])
         self.assertTrue(by_id["slow"]["timed_out"])
@@ -1078,7 +940,6 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
         principles = {row["id"]: row for row in contract["core_principles"]}
         self.assertEqual(
             [
-                "root-lifecycle-current",
                 "readability-review-current",
                 "content-audit-formal-release-current",
             ],
@@ -1257,27 +1118,6 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
             "/professional_review_cost_fixtures/"
             "routing_neutral_isolated_material_binding_sensitivity"
         )
-        authority_lock_pointer = (
-            "/professional_review_cost_fixtures/locked_current_catalog"
-        )
-        numeric_suffixes = [
-            "/case_count",
-            "/full_rereview_deduplicated_capsule_input_bytes_proxy",
-            "/fresh_target_count/min",
-            "/fresh_target_count/sum",
-            "/fresh_target_count/mean_milli",
-            "/fresh_target_count/p95",
-            "/fresh_target_count/max",
-            "/input_ratio_ppm/min",
-            "/input_ratio_ppm/sum",
-            "/input_ratio_ppm/mean",
-            "/input_ratio_ppm/p95",
-            "/input_ratio_ppm/max",
-            "/named_isolated_case/fresh_target_count",
-            "/named_isolated_case/carried_forward_target_count",
-            "/named_isolated_case/canonical_capsule_input_bytes_proxy",
-            "/named_isolated_case/input_ratio_ppm",
-        ]
 
         self.assertEqual(
             [
@@ -1296,130 +1136,44 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
             ],
             authoring_cost["predicates"],
         )
+        pointers = {
+            predicate["pointer"]: predicate
+            for predicate in formal_cost["predicates"]
+            if predicate["source"] == report_source
+        }
         self.assertEqual(
-            [
-                {
-                    "source": "process",
-                    "pointer": "/exit_code",
-                    "operator": "equals",
-                    "expected": 0,
-                },
-                {
-                    "source": report_source,
-                    "pointer": (
-                        "/content_readiness/expert/professional_completeness/"
-                        "panel_artifact_schema_version"
-                    ),
-                    "operator": "equals",
-                    "expected": 3,
-                },
-                {
-                    "source": report_source,
-                    "pointer": (
-                        "/content_readiness/expert/professional_completeness/"
-                        "review_cost_current"
-                    ),
-                    "operator": "equals",
-                    "expected": True,
-                },
-                {
-                    "source": report_source,
-                    "pointer": (
-                        "/content_readiness/expert/professional_completeness/"
-                        "review_cost/effective_vote_count"
-                    ),
-                    "operator": "equals",
-                    "expected": 567,
-                },
-                {
-                    "source": report_source,
-                    "pointer": (
-                        "/content_readiness/expert/professional_completeness/"
-                        "review_cost/effective_criterion_result_count"
-                    ),
-                    "operator": "equals",
-                    "expected": 5670,
-                },
-            ],
-            formal_cost["predicates"][:5],
+            {
+                "/content_readiness/expert/professional_completeness/panel_artifact_schema_version",
+                "/content_readiness/expert/professional_completeness/panel_size",
+                "/content_readiness/expert/professional_completeness/required_target_count",
+                "/content_readiness/expert/professional_completeness/review_cost_current",
+                "/content_readiness/expert/professional_completeness/review_cost/effective_vote_count",
+                "/content_readiness/expert/professional_completeness/review_cost/effective_criterion_result_count",
+                "/professional_review_cost_fixtures/status",
+                f"{sensitivity_pointer}/case_count",
+                f"{sensitivity_pointer}/fresh_target_count/max",
+                f"{sensitivity_pointer}/input_ratio_ppm/max",
+            },
+            set(pointers),
         )
-        self.assertEqual(
-            [
-                {
-                    "source": report_source,
-                    "pointer": "/professional_review_cost_fixtures/status",
-                    "operator": "equals",
-                    "expected": "pass",
-                },
-                {
-                    "source": report_source,
-                    "pointer": f"{sensitivity_pointer}/fresh_target_count/max",
-                    "operator": "less_than_or_equal",
-                    "expected_from": {
-                        "authority": "final-goal-authority",
-                        "pointer": (
-                            "/professional_review_cost_fixtures/thresholds/"
-                            "maximum_fresh_target_count"
-                        ),
-                    },
-                },
-                {
-                    "source": report_source,
-                    "pointer": f"{sensitivity_pointer}/input_ratio_ppm/max",
-                    "operator": "less_than_or_equal",
-                    "expected_from": {
-                        "authority": "final-goal-authority",
-                        "pointer": (
-                            "/professional_review_cost_fixtures/thresholds/"
-                            "maximum_input_ratio_ppm"
-                        ),
-                    },
-                },
-                {
-                    "source": report_source,
-                    "pointer": sensitivity_pointer,
-                    "operator": "equals",
-                    "expected_from": {
-                        "authority": "final-goal-authority",
-                        "pointer": authority_lock_pointer,
-                    },
-                },
-            ],
-            formal_cost["predicates"][5:9],
+        self.assertFalse(
+            any(
+                "locked_current_catalog" in json.dumps(predicate)
+                for predicate in formal_cost["predicates"]
+            )
         )
-        self.assertEqual(
-            [
-                {
-                    "source": report_source,
-                    "pointer": f"{sensitivity_pointer}{suffix}",
-                    "operator": "equals",
-                    "expected_from": {
-                        "authority": "final-goal-authority",
-                        "pointer": f"{authority_lock_pointer}{suffix}",
-                    },
-                }
-                for suffix in numeric_suffixes
-            ],
-            formal_cost["predicates"][9:],
-        )
-
         authority_values = {
             "final-goal-authority": contract["final_goal_contract"]
         }
-        cost_authority = authority_values["final-goal-authority"][
-            "professional_review_cost_fixtures"
-        ]
         self.assertEqual(
-            56,
-            cost_authority["thresholds"]["maximum_fresh_target_count"],
-        )
-        self.assertEqual(
-            189,
-            cost_authority["locked_current_catalog"]["case_count"],
+            {"thresholds", "formal_round_policy"},
+            set(
+                authority_values["final-goal-authority"][
+                    "professional_review_cost_fixtures"
+                ]
+            ),
         )
         positive_report = self._passing_report(formal_cost, authority_values)
-        positive_report["schema_version"] = 3
-        positive_report["authoring_gate"] = "current-contract-pass"
         positive_report["professional_review_cost_fixtures"][
             "schema_version"
         ] = 1
@@ -1433,129 +1187,63 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
             }
         }
 
-        synthetic_report_path.write_text(
-            json.dumps(positive_report),
-            encoding="utf-8",
-        )
-        positive_results, _ = EVALUATOR._evaluate_outcomes(
-            root,
-            [authoring_cost, formal_cost],
-            producer_results,
-            authority_values,
-        )
-        self.assertEqual(
-            {
-                "professional-review-cost-fixtures-valid": "pass",
-                "professional-review-cost-current": "pass",
-            },
-            {row["id"]: row["status"] for row in positive_results},
-        )
+        def outcome_status(candidate: dict) -> str:
+            synthetic_report_path.write_text(
+                json.dumps(candidate),
+                encoding="utf-8",
+            )
+            results, _ = EVALUATOR._evaluate_outcomes(
+                root,
+                [formal_cost],
+                producer_results,
+                authority_values,
+            )
+            return results[0]["status"]
 
-        non_current = copy.deepcopy(positive_report)
-        non_current["professional_review_cost_fixtures"][
-            "status"
-        ] = "formal-non-current"
-        synthetic_report_path.write_text(
-            json.dumps(non_current),
-            encoding="utf-8",
-        )
-        non_current_results, _ = EVALUATOR._evaluate_outcomes(
-            root,
-            [authoring_cost, formal_cost],
-            producer_results,
-            authority_values,
-        )
-        self.assertEqual(
-            {
-                "professional-review-cost-fixtures-valid": "pass",
-                "professional-review-cost-current": "fail",
-            },
-            {row["id"]: row["status"] for row in non_current_results},
-        )
-        self.assertEqual(
-            ["/professional_review_cost_fixtures/status"],
-            [
-                predicate["pointer"]
-                for predicate in non_current_results[1]["predicates"]
-                if predicate["status"] == "fail"
-            ],
-        )
+        self.assertEqual("pass", outcome_status(positive_report))
 
-        forged_pass = copy.deepcopy(positive_report)
-        forged_pass["professional_review_cost_fixtures"][
+        digest_only = copy.deepcopy(positive_report)
+        digest_only["professional_review_cost_fixtures"][
             "routing_neutral_isolated_material_binding_sensitivity"
         ]["cases_fingerprint"] = "f" * 64
-        synthetic_report_path.write_text(
-            json.dumps(forged_pass),
-            encoding="utf-8",
-        )
-        forged_results, _ = EVALUATOR._evaluate_outcomes(
-            root,
-            [formal_cost],
-            producer_results,
-            authority_values,
-        )
-        self.assertEqual("fail", forged_results[0]["status"])
-        self.assertEqual(
-            [sensitivity_pointer],
-            [
-                predicate["pointer"]
-                for predicate in forged_results[0]["predicates"]
-                if predicate["status"] == "fail"
-            ],
-        )
+        self.assertEqual("pass", outcome_status(digest_only))
 
-        float_drift = copy.deepcopy(positive_report)
-        float_drift["professional_review_cost_fixtures"][
-            "routing_neutral_isolated_material_binding_sensitivity"
-        ]["case_count"] = 189.0
-        synthetic_report_path.write_text(
-            json.dumps(float_drift),
-            encoding="utf-8",
-        )
-        float_results, _ = EVALUATOR._evaluate_outcomes(
-            root,
-            [formal_cost],
-            producer_results,
-            authority_values,
-        )
-        float_predicates = {
-            (predicate["pointer"], predicate["operator"]): predicate["status"]
-            for predicate in float_results[0]["predicates"]
-        }
-        self.assertEqual(
-            "pass",
-            float_predicates[(sensitivity_pointer, "equals")],
-        )
-        self.assertEqual(
-            "fail",
-            float_predicates[(f"{sensitivity_pointer}/case_count", "equals")],
-        )
-
-        boolean_drift = copy.deepcopy(positive_report)
-        boolean_drift["professional_review_cost_fixtures"][
-            "routing_neutral_isolated_material_binding_sensitivity"
-        ]["case_count"] = True
-        synthetic_report_path.write_text(
-            json.dumps(boolean_drift),
-            encoding="utf-8",
-        )
-        boolean_results, _ = EVALUATOR._evaluate_outcomes(
-            root,
-            [formal_cost],
-            producer_results,
-            authority_values,
-        )
-        self.assertEqual("fail", boolean_results[0]["status"])
-        self.assertEqual(
-            "fail",
-            next(
-                predicate["status"]
-                for predicate in boolean_results[0]["predicates"]
-                if predicate["pointer"] == f"{sensitivity_pointer}/case_count"
-                and predicate["operator"] == "equals"
+        mutations = {
+            "status": lambda report: report[
+                "professional_review_cost_fixtures"
+            ].update({"status": "formal-non-current"}),
+            "case-count": lambda report: report[
+                "professional_review_cost_fixtures"
+            ]["routing_neutral_isolated_material_binding_sensitivity"].update(
+                {"case_count": 188}
             ),
-        )
+            "float-count": lambda report: report[
+                "professional_review_cost_fixtures"
+            ]["routing_neutral_isolated_material_binding_sensitivity"].update(
+                {"case_count": 189.0}
+            ),
+            "panel-size": lambda report: report["content_readiness"]["expert"][
+                "professional_completeness"
+            ].update({"panel_size": 2}),
+            "currentness": lambda report: report["content_readiness"]["expert"][
+                "professional_completeness"
+            ].update({"review_cost_current": False}),
+            "fresh-threshold": lambda report: report[
+                "professional_review_cost_fixtures"
+            ]["routing_neutral_isolated_material_binding_sensitivity"][
+                "fresh_target_count"
+            ].update({"max": 57}),
+            "ratio-threshold": lambda report: report[
+                "professional_review_cost_fixtures"
+            ]["routing_neutral_isolated_material_binding_sensitivity"][
+                "input_ratio_ppm"
+            ].update({"max": 450001}),
+        }
+        for label, mutate in mutations.items():
+            candidate = copy.deepcopy(positive_report)
+            mutate(candidate)
+            with self.subTest(label=label):
+                self.assertEqual("fail", outcome_status(candidate))
 
     def test_report_must_be_fresh_json_without_scalar_hashes(self) -> None:
         temporary, root = self._root()
@@ -1720,6 +1408,146 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
         self.assertEqual("fail", report["producers"][0]["status"])
         self.assertFalse(report["producers"][0]["source_unchanged"])
         self.assertFalse(report["input_tree"]["unchanged"])
+
+    def test_ordinary_source_mutation_is_deferred_until_all_producers_finish(self) -> None:
+        temporary, root = self._root()
+        self.addCleanup(temporary.cleanup)
+        mutate = self._script(
+            root,
+            "ordinary_mutate",
+            "from pathlib import Path\n"
+            "Path('src/mutated.txt').write_text('changed')\n",
+        )
+        successor = self._script(
+            root,
+            "ordinary_successor",
+            "from pathlib import Path\n"
+            "Path('reports/successor-ran').write_text('yes')\n",
+        )
+        producers = [
+            self._producer("mutate", mutate),
+            self._producer("successor", successor, depends_on=["mutate"]),
+        ]
+        contract = self._contract(
+            producers,
+            [
+                {
+                    "id": "mutate-pass",
+                    "producer": "mutate",
+                    "predicates": [PROCESS_PASS],
+                },
+                {
+                    "id": "successor-pass",
+                    "producer": "successor",
+                    "predicates": [PROCESS_PASS],
+                },
+            ],
+        )
+
+        with mock.patch.object(
+            EVALUATOR,
+            "input_tree_digest",
+            wraps=EVALUATOR.input_tree_digest,
+        ) as digest:
+            report = EVALUATOR.evaluate(root, contract)
+
+        self.assertEqual(2, digest.call_count)
+        self.assertEqual(2, report["command_execution_count"])
+        self.assertTrue((root / "reports/successor-ran").is_file())
+        self.assertEqual("fail", report["authoring_principles_status"])
+        self.assertFalse(report["input_tree"]["unchanged"])
+        for producer in report["producers"]:
+            self.assertEqual("fail", producer["status"])
+            self.assertFalse(producer["source_unchanged"])
+            self.assertIn("source-tree-mutated", producer["failure_reason_codes"])
+
+    def test_formal_source_mutation_prevents_dependent_successor(self) -> None:
+        temporary, root = self._root()
+        self.addCleanup(temporary.cleanup)
+        mutate = self._script(
+            root,
+            "formal_mutate",
+            "from pathlib import Path\n"
+            "Path('src/mutated.txt').write_text('changed')\n",
+        )
+        successor = self._script(
+            root,
+            "formal_successor",
+            "from pathlib import Path\n"
+            "Path('reports/successor-ran').write_text('yes')\n",
+        )
+        producers = [
+            self._producer("mutate", mutate),
+            self._producer("successor", successor, depends_on=["mutate"]),
+        ]
+        contract = self._contract(
+            producers,
+            [
+                {
+                    "id": "mutate-pass",
+                    "producer": "mutate",
+                    "predicates": [PROCESS_PASS],
+                },
+                {
+                    "id": "successor-pass",
+                    "producer": "successor",
+                    "predicates": [PROCESS_PASS],
+                },
+            ],
+        )
+
+        report = EVALUATOR.evaluate(root, contract, release_projection=True)
+
+        by_id = {producer["id"]: producer for producer in report["producers"]}
+        self.assertEqual("fail", by_id["mutate"]["status"])
+        self.assertFalse(by_id["mutate"]["source_unchanged"])
+        self.assertEqual("not_run", by_id["successor"]["status"])
+        self.assertFalse((root / "reports/successor-ran").exists())
+
+    def test_tree_digest_cost_is_constant_for_ordinary_and_linear_for_formal(
+        self,
+    ) -> None:
+        for release_projection, expected_calls in ((False, 2), (True, 4)):
+            with self.subTest(release_projection=release_projection):
+                temporary, root = self._root()
+                self.addCleanup(temporary.cleanup)
+                producers = []
+                outcomes = []
+                previous: str | None = None
+                for index in range(3):
+                    producer_id = f"producer-{index}"
+                    script = self._script(
+                        root,
+                        producer_id,
+                        "raise SystemExit(0)\n",
+                    )
+                    producers.append(
+                        self._producer(
+                            producer_id,
+                            script,
+                            depends_on=[] if previous is None else [previous],
+                        )
+                    )
+                    outcomes.append(
+                        {
+                            "id": f"{producer_id}-pass",
+                            "producer": producer_id,
+                            "predicates": [PROCESS_PASS],
+                        }
+                    )
+                    previous = producer_id
+                with mock.patch.object(
+                    EVALUATOR,
+                    "input_tree_digest",
+                    wraps=EVALUATOR.input_tree_digest,
+                ) as digest:
+                    report = EVALUATOR.evaluate(
+                        root,
+                        self._contract(producers, outcomes),
+                        release_projection=release_projection,
+                    )
+                self.assertEqual("pass", report["authoring_principles_status"])
+                self.assertEqual(expected_calls, digest.call_count)
 
     def test_all_closed_predicate_operators(self) -> None:
         cases = (
@@ -1953,7 +1781,7 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
         self.assertEqual("fail", report["outcomes"][1]["status"])
         self.assertEqual("fail", report["authoring_principles_status"])
 
-    def test_cli_writes_reports_before_nonzero_formal_gate_exit(self) -> None:
+    def test_evaluation_writes_reports_before_nonzero_formal_gate_exit(self) -> None:
         temporary, root = self._root()
         self.addCleanup(temporary.cleanup)
         script = self._script(
@@ -1993,8 +1821,17 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
         self.assertEqual(0, authoring_exit)
         authoring_json = (root / EVALUATOR.JSON_REPORT).read_bytes()
         self.assertFalse((root / EVALUATOR.MARKDOWN_REPORT).exists())
-        formal_exit = EVALUATOR.main(
-            ["--root", str(root), "--gate", "formal-release"]
+        formal_report = EVALUATOR.evaluate(
+            root,
+            contract,
+            contract_sha256=EVALUATOR._sha256_bytes(
+                (root / EVALUATOR.CANONICAL_CONTRACT_SOURCE).read_bytes()
+            ),
+            release_projection=True,
+        )
+        EVALUATOR.write_reports(root, formal_report, release_projection=True)
+        formal_exit = (
+            0 if formal_report["formal_principles_status"] == "pass" else 1
         )
         self.assertEqual(1, formal_exit)
         self.assertTrue((root / EVALUATOR.JSON_REPORT).is_file())
@@ -2095,6 +1932,779 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
             errors,
         )
 
+    def test_ordinary_saved_report_is_historical_and_skips_current_tree_digest(
+        self,
+    ) -> None:
+        temporary, root = self._root()
+        self.addCleanup(temporary.cleanup)
+        script = self._script(
+            root,
+            "historical",
+            "from pathlib import Path\n"
+            "Path('reports/result.json').write_text('{\"schema_version\":1}\\n')\n",
+        )
+        contract = self._contract(
+            [
+                self._producer(
+                    "historical", script, reports=["reports/result.json"]
+                )
+            ],
+            [
+                {
+                    "id": "historical-pass",
+                    "producer": "historical",
+                    "predicates": [PROCESS_PASS, REPORT_SCHEMA],
+                }
+            ],
+        )
+        self._write_contract(root, contract)
+        report = EVALUATOR.evaluate(
+            root,
+            contract,
+            contract_sha256=EVALUATOR._sha256_bytes(
+                (root / EVALUATOR.CANONICAL_CONTRACT_SOURCE).read_bytes()
+            ),
+        )
+        (root / "docs").mkdir()
+        (root / "docs/unrelated.md").write_text("changed\n", encoding="utf-8")
+        (root / "tests").mkdir()
+        (root / "tests/test_unrelated.py").write_text(
+            "# changed\n", encoding="utf-8"
+        )
+        (root / "scripts/unrelated-runner.py").write_text(
+            "raise SystemExit(0)\n", encoding="utf-8"
+        )
+
+        with mock.patch.object(
+            EVALUATOR,
+            "input_tree_digest",
+            side_effect=AssertionError("ordinary validation hashed the current tree"),
+        ) as digest:
+            self.assertEqual([], EVALUATOR.validate_saved_report(root, report))
+        self.assertEqual(0, digest.call_count)
+
+        tampered_tree = copy.deepcopy(report)
+        tampered_tree["input_tree"]["post"]["sha256"] = "0" * 64
+        with mock.patch.object(
+            EVALUATOR,
+            "input_tree_digest",
+            side_effect=AssertionError("ordinary validation hashed the current tree"),
+        ):
+            errors = EVALUATOR.validate_saved_report(root, tampered_tree)
+        self.assertTrue(
+            any("records an input tree mutation" in item for item in errors),
+            errors,
+        )
+
+        semantic_tampering = (
+            (
+                "contract hash",
+                lambda value: value.__setitem__("contract_sha256", "0" * 64),
+                "contract hash is stale",
+            ),
+            (
+                "producer identity",
+                lambda value: value["producers"][0]["argv"].append("--changed"),
+                "producer contract is stale",
+            ),
+            (
+                "artifact evidence",
+                lambda value: value["producers"][0]["reports"][0].__setitem__(
+                    "fresh", False
+                ),
+                "was not fresh JSON",
+            ),
+            (
+                "outcome predicate",
+                lambda value: value["outcomes"][0].__setitem__("status", "fail"),
+                "outcome predicates are stale or inconsistent",
+            ),
+            (
+                "principle projection",
+                lambda value: value["principles"][0].__setitem__(
+                    "name", "tampered"
+                ),
+                "principle statuses are stale or inconsistent",
+            ),
+            (
+                "authority projection",
+                lambda value: value["authorities"][0].__setitem__(
+                    "source", "tampered"
+                ),
+                "authority consumers are stale or inconsistent",
+            ),
+        )
+        for label, mutate, marker in semantic_tampering:
+            with self.subTest(tamper=label), mock.patch.object(
+                EVALUATOR,
+                "input_tree_digest",
+                side_effect=AssertionError(
+                    "ordinary validation hashed the current tree"
+                ),
+            ):
+                tampered = copy.deepcopy(report)
+                mutate(tampered)
+                errors = EVALUATOR.validate_saved_report(root, tampered)
+                self.assertTrue(any(marker in item for item in errors), errors)
+
+    def test_formal_saved_report_still_requires_the_current_tree_digest(self) -> None:
+        temporary, root = self._root()
+        self.addCleanup(temporary.cleanup)
+        script = self._script(root, "formal-current", "raise SystemExit(0)\n")
+        contract = self._contract(
+            [self._producer("formal-current", script)],
+            [
+                {
+                    "id": "formal-current-pass",
+                    "producer": "formal-current",
+                    "predicates": [PROCESS_PASS],
+                }
+            ],
+        )
+        self._write_contract(root, contract)
+        report = EVALUATOR.evaluate(
+            root,
+            contract,
+            contract_sha256=EVALUATOR._sha256_bytes(
+                (root / EVALUATOR.CANONICAL_CONTRACT_SOURCE).read_bytes()
+            ),
+            release_projection=True,
+        )
+        (root / "docs").mkdir()
+        (root / "docs/formal-stale.md").write_text("changed\n", encoding="utf-8")
+
+        with mock.patch.object(
+            EVALUATOR,
+            "input_tree_digest",
+            wraps=EVALUATOR.input_tree_digest,
+        ) as digest:
+            errors = EVALUATOR.validate_saved_report(root, report)
+        self.assertEqual(1, digest.call_count)
+        self.assertTrue(
+            any("input tree digest is stale" in item for item in errors),
+            errors,
+        )
+
+    def test_formal_report_graph_uses_only_head_scoped_staging(self) -> None:
+        temporary, root = self._root()
+        self.addCleanup(temporary.cleanup)
+        source = self._script(
+            root,
+            "source-report",
+            "import argparse, json\n"
+            "from pathlib import Path\n"
+            "parser = argparse.ArgumentParser()\n"
+            "parser.add_argument('--reports-dir', type=Path, default=Path('reports'))\n"
+            "parser.add_argument('--release-projection', action='store_true')\n"
+            "args = parser.parse_args()\n"
+            "args.reports_dir.mkdir(parents=True, exist_ok=True)\n"
+            "(args.reports_dir / 'source.json').write_text(json.dumps("
+            "{'schema_version': 1, 'value': 'staging-source'}) + '\\n')\n"
+            "if args.release_projection:\n"
+            "    (args.reports_dir / 'source.md').write_text('# staging source\\n')\n",
+        )
+        consumer = self._script(
+            root,
+            "consumer-report",
+            "import argparse, json\n"
+            "from pathlib import Path\n"
+            "parser = argparse.ArgumentParser()\n"
+            "parser.add_argument('--reports-dir', type=Path, default=Path('reports'))\n"
+            "parser.add_argument('--release-projection', action='store_true')\n"
+            "args = parser.parse_args()\n"
+            "source = json.loads((args.reports_dir / 'source.json').read_text())\n"
+            "args.reports_dir.mkdir(parents=True, exist_ok=True)\n"
+            "value = 'staging-consumer' if source.get('value') == 'staging-source' else 'wrong'\n"
+            "(args.reports_dir / 'consumer.json').write_text(json.dumps("
+            "{'schema_version': 1, 'value': value}) + '\\n')\n"
+            "if args.release_projection:\n"
+            "    (args.reports_dir / 'consumer.md').write_text('# staging consumer\\n')\n",
+        )
+        docs_consumer = self._script(
+            root,
+            "validate-docs-consistency",
+            "import argparse, json\n"
+            "from pathlib import Path\n"
+            "parser = argparse.ArgumentParser()\n"
+            "parser.add_argument('--reports-dir', type=Path, required=True)\n"
+            "args = parser.parse_args()\n"
+            "source = json.loads((args.reports_dir / 'source.json').read_text())\n"
+            "raise SystemExit(0 if source.get('value') == 'staging-source' else 1)\n",
+        )
+        self._script(
+            root,
+            "validate-professionalism-regression",
+            "import argparse, json, os\n"
+            "from pathlib import Path\n"
+            "parser = argparse.ArgumentParser()\n"
+            "parser.add_argument('--strict', action='store_true')\n"
+            "parser.add_argument('--report-only', action='store_true')\n"
+            "parser.add_argument('--release-projection', action='store_true')\n"
+            "parser.add_argument('--reports-dir', type=Path, default=Path('reports'))\n"
+            "parser.add_argument('--output-dir', type=Path)\n"
+            "args = parser.parse_args()\n"
+            "consumer = json.loads((args.reports_dir / 'consumer.json').read_text())\n"
+            "output = args.output_dir or args.reports_dir\n"
+            "output.mkdir(parents=True, exist_ok=True)\n"
+            "payload = {'schema_version': 1, 'formal': consumer.get('value') == "
+            "'staging-consumer', 'captured_head': os.environ.get("
+            "'CHANGEFORGE_FORMAL_HEAD_COMMIT')}\n"
+            "(output / 'professionalism-regression-report.json').write_text("
+            "json.dumps(payload) + '\\n')\n"
+            "if args.release_projection:\n"
+            "    (output / 'professionalism-regression-report.md').write_text("
+            "'# Formal professionalism\\n')\n",
+        )
+        professionalism = {
+            "id": EVALUATOR.PROFESSIONALISM_PRODUCER_ID,
+            "argv": list(EVALUATOR.PROFESSIONALISM_PRODUCER_ARGV),
+            "depends_on": ["consumer-report", "validate-docs-consistency"],
+            "reports": [EVALUATOR.PROFESSIONALISM_JSON_REPORT],
+            "release_reports": [EVALUATOR.PROFESSIONALISM_MARKDOWN_REPORT],
+            "authority_inputs": ["fixture-authority"],
+            "timeout_seconds": EVALUATOR.PROFESSIONALISM_DECLARED_TIMEOUT_SECONDS,
+        }
+        producers = [
+            self._producer(
+                "source-report",
+                source,
+                reports=["reports/source.json"],
+                release_reports=["reports/source.md"],
+            ),
+            self._producer(
+                "consumer-report",
+                consumer,
+                depends_on=["source-report"],
+                reports=["reports/consumer.json"],
+                release_reports=["reports/consumer.md"],
+            ),
+            self._producer(
+                "validate-docs-consistency",
+                docs_consumer,
+                depends_on=["source-report"],
+            ),
+            professionalism,
+        ]
+        outcomes = [
+            {
+                "id": "source-current",
+                "producer": "source-report",
+                "predicates": [
+                    PROCESS_PASS,
+                    {
+                        "source": "reports/source.json",
+                        "pointer": "/schema_version",
+                        "operator": "equals",
+                        "expected": 1,
+                    },
+                    {
+                        "source": "reports/source.json",
+                        "pointer": "/value",
+                        "operator": "equals",
+                        "expected": "staging-source",
+                    },
+                ],
+            },
+            {
+                "id": "consumer-current",
+                "producer": "consumer-report",
+                "predicates": [
+                    PROCESS_PASS,
+                    {
+                        "source": "reports/consumer.json",
+                        "pointer": "/schema_version",
+                        "operator": "equals",
+                        "expected": 1,
+                    },
+                    {
+                        "source": "reports/consumer.json",
+                        "pointer": "/value",
+                        "operator": "equals",
+                        "expected": "staging-consumer",
+                    },
+                ],
+            },
+            {
+                "id": "docs-current",
+                "producer": "validate-docs-consistency",
+                "predicates": [PROCESS_PASS],
+            },
+            {
+                "id": "professionalism-authoring-current",
+                "producer": EVALUATOR.PROFESSIONALISM_PRODUCER_ID,
+                "predicates": [PROCESS_PASS],
+            },
+            {
+                "id": "professionalism-formal-current",
+                "producer": EVALUATOR.PROFESSIONALISM_PRODUCER_ID,
+                "predicates": [
+                    PROCESS_PASS,
+                    {
+                        "source": EVALUATOR.PROFESSIONALISM_JSON_REPORT,
+                        "pointer": "/schema_version",
+                        "operator": "equals",
+                        "expected": 1,
+                    },
+                    {
+                        "source": EVALUATOR.PROFESSIONALISM_JSON_REPORT,
+                        "pointer": "/formal",
+                        "operator": "equals",
+                        "expected": True,
+                    },
+                ],
+            },
+        ]
+        contract = self._contract(
+            producers,
+            outcomes,
+            formal_outcomes=["professionalism-formal-current"],
+        )
+        self._write_contract(root, contract)
+        tracked = {
+            EVALUATOR.JSON_REPORT: b'{"ordinary":"core"}\n',
+            "reports/source.json": b'{"value":"tracked-wrong"}\n',
+            "reports/source.md": b"tracked source markdown\n",
+            "reports/consumer.json": b'{"value":"tracked-wrong"}\n',
+            "reports/consumer.md": b"tracked consumer markdown\n",
+            EVALUATOR.PROFESSIONALISM_JSON_REPORT: b'{"ordinary":"professionalism"}\n',
+            EVALUATOR.PROFESSIONALISM_MARKDOWN_REPORT: b"tracked professionalism markdown\n",
+        }
+        for relative, content in tracked.items():
+            path = root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(content)
+        (root / ".gitignore").write_text(
+            ".rd-skills/formal-release/\n", encoding="utf-8"
+        )
+        subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+        subprocess.run(
+            ["git", "config", "user.email", "test@example.invalid"],
+            cwd=root,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Test"], cwd=root, check=True
+        )
+        subprocess.run(["git", "add", "."], cwd=root, check=True)
+        subprocess.run(["git", "commit", "-qm", "fixture"], cwd=root, check=True)
+        head = subprocess.run(
+            ["git", "rev-parse", "--verify", "HEAD"],
+            cwd=root,
+            check=True,
+            stdout=subprocess.PIPE,
+            text=True,
+        ).stdout.strip()
+
+        self.assertEqual(
+            0,
+            EVALUATOR.main(["--root", str(root), "--gate", "formal-release"]),
+        )
+
+        formal_root = root / EVALUATOR.FORMAL_EVIDENCE_ROOT / head
+        staging = formal_root / "producer-reports"
+        evidence = formal_root / "reports"
+        self.assertEqual(
+            {"source.json", "source.md", "consumer.json", "consumer.md"},
+            {path.name for path in staging.iterdir() if path.is_file()},
+        )
+        self.assertEqual(
+            EVALUATOR.FORMAL_EVIDENCE_FILENAMES,
+            {path.name for path in evidence.iterdir() if path.is_file()},
+        )
+        core = json.loads((evidence / "core-principles-outcomes.json").read_text())
+        self.assertEqual("pass", core["formal_principles_status"])
+        self.assertNotIn(str(staging), json.dumps(core))
+        for producer in core["producers"]:
+            for artifact in [*producer["reports"], *producer["release_reports"]]:
+                self.assertTrue(artifact["path"].startswith("reports/"))
+        for relative, content in tracked.items():
+            self.assertEqual(content, (root / relative).read_bytes())
+        status = subprocess.run(
+            ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+            cwd=root,
+            check=True,
+            stdout=subprocess.PIPE,
+            text=True,
+        ).stdout
+        self.assertEqual("", status)
+        self.assertEqual(
+            0,
+            EVALUATOR.main(["--root", str(root), "--gate", "formal-release"]),
+        )
+        for relative, content in tracked.items():
+            self.assertEqual(content, (root / relative).read_bytes())
+
+    def test_formal_report_directory_injection_fails_closed(self) -> None:
+        cases = (
+            (
+                "unsupported",
+                "import argparse, json\n"
+                "from pathlib import Path\n"
+                "parser = argparse.ArgumentParser()\n"
+                "parser.add_argument('--release-projection', action='store_true')\n"
+                "parser.parse_args()\n"
+                "Path('reports/result.json').write_text(json.dumps("
+                "{'schema_version': 1}) + '\\n')\n",
+                "process-exit-nonzero",
+            ),
+            (
+                "ignored",
+                "raise SystemExit(0)\n",
+                "report-not-refreshed",
+            ),
+        )
+        for label, body, expected_reason in cases:
+            with self.subTest(case=label):
+                temporary, root = self._root()
+                self.addCleanup(temporary.cleanup)
+                script = self._script(root, label, body)
+                tracked = b'{"schema_version":0,"sentinel":true}\n'
+                (root / "reports/result.json").write_bytes(tracked)
+                (root / ".gitignore").write_text(
+                    ".rd-skills/formal-release/\n", encoding="utf-8"
+                )
+                subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+                subprocess.run(
+                    ["git", "config", "user.email", "test@example.invalid"],
+                    cwd=root,
+                    check=True,
+                )
+                subprocess.run(
+                    ["git", "config", "user.name", "Test"],
+                    cwd=root,
+                    check=True,
+                )
+                subprocess.run(["git", "add", "."], cwd=root, check=True)
+                subprocess.run(
+                    ["git", "commit", "-qm", "fixture"],
+                    cwd=root,
+                    check=True,
+                )
+                producer = self._producer(
+                    label,
+                    script,
+                    reports=["reports/result.json"],
+                )
+                staging = (
+                    root
+                    / EVALUATOR.FORMAL_EVIDENCE_ROOT
+                    / ("a" * 40)
+                    / "producer-reports"
+                )
+                results, _by_id, _post_tree = EVALUATOR._run_producers(
+                    root,
+                    [producer],
+                    EVALUATOR.input_tree_digest(root),
+                    release_projection=True,
+                    report_path_overrides={
+                        "reports/result.json": staging / "result.json"
+                    },
+                    reports_directory_override=staging,
+                )
+                result = results[0]
+                self.assertEqual("fail", result["status"])
+                self.assertIn(expected_reason, result["failure_reason_codes"])
+                self.assertEqual(
+                    tracked, (root / "reports/result.json").read_bytes()
+                )
+                status = subprocess.run(
+                    [
+                        "git",
+                        "status",
+                        "--porcelain=v1",
+                        "--untracked-files=all",
+                    ],
+                    cwd=root,
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    text=True,
+                ).stdout
+                self.assertEqual("", status)
+
+    def test_ordinary_authoring_preserves_default_reports_directory(self) -> None:
+        temporary, root = self._root()
+        self.addCleanup(temporary.cleanup)
+        writer = self._script(
+            root,
+            "ordinary-report",
+            "import argparse, json\n"
+            "from pathlib import Path\n"
+            "parser = argparse.ArgumentParser()\n"
+            "parser.add_argument('--reports-dir', type=Path, default=Path('reports'))\n"
+            "args = parser.parse_args()\n"
+            "args.reports_dir.mkdir(parents=True, exist_ok=True)\n"
+            "(args.reports_dir / 'result.json').write_text(json.dumps("
+            "{'schema_version': 1, 'reports_dir': str(args.reports_dir)}) + '\\n')\n",
+        )
+        report = EVALUATOR.evaluate(
+            root,
+            self._contract(
+                [
+                    self._producer(
+                        "ordinary-report",
+                        writer,
+                        reports=["reports/result.json"],
+                    )
+                ],
+                [
+                    {
+                        "id": "ordinary-current",
+                        "producer": "ordinary-report",
+                        "predicates": [PROCESS_PASS, REPORT_SCHEMA],
+                    }
+                ],
+            ),
+        )
+        self.assertEqual("pass", report["producers"][0]["status"])
+        payload = json.loads((root / "reports/result.json").read_text())
+        self.assertEqual("reports", payload["reports_dir"])
+        self.assertFalse((root / EVALUATOR.FORMAL_EVIDENCE_ROOT).exists())
+
+    def test_formal_core_writes_head_scoped_ephemeral_evidence_and_keeps_tracked_clean(
+        self,
+    ) -> None:
+        temporary, root = self._root()
+        self.addCleanup(temporary.cleanup)
+        self._script(
+            root,
+            "validate-professionalism-regression",
+            "import json, os, sys\n"
+            "from pathlib import Path\n"
+            "reports = Path('reports')\n"
+            "if '--output-dir' in sys.argv:\n"
+            "    reports = Path(sys.argv[sys.argv.index('--output-dir') + 1])\n"
+            "reports.mkdir(parents=True, exist_ok=True)\n"
+            "payload = {'schema_version': 1, 'formal': True, "
+            "'captured_head': os.environ.get('CHANGEFORGE_FORMAL_HEAD_COMMIT')}\n"
+            "(reports / 'professionalism-regression-report.json').write_text("
+            "json.dumps(payload) + '\\n')\n"
+            "if '--release-projection' in sys.argv:\n"
+            "    (reports / 'professionalism-regression-report.md').write_text("
+            "'# Formal professionalism\\n')\n",
+        )
+        producer = {
+            "id": EVALUATOR.PROFESSIONALISM_PRODUCER_ID,
+            "argv": list(EVALUATOR.PROFESSIONALISM_PRODUCER_ARGV),
+            "depends_on": [],
+            "reports": [EVALUATOR.PROFESSIONALISM_JSON_REPORT],
+            "release_reports": [EVALUATOR.PROFESSIONALISM_MARKDOWN_REPORT],
+            "authority_inputs": ["fixture-authority"],
+            "timeout_seconds": EVALUATOR.PROFESSIONALISM_DECLARED_TIMEOUT_SECONDS,
+        }
+        authoring = {
+            "id": "professionalism-process-current",
+            "producer": EVALUATOR.PROFESSIONALISM_PRODUCER_ID,
+            "predicates": [PROCESS_PASS],
+        }
+        formal = {
+            "id": "professionalism-formal-current",
+            "producer": EVALUATOR.PROFESSIONALISM_PRODUCER_ID,
+            "predicates": [
+                PROCESS_PASS,
+                {
+                    "source": EVALUATOR.PROFESSIONALISM_JSON_REPORT,
+                    "pointer": "/schema_version",
+                    "operator": "equals",
+                    "expected": 1,
+                },
+                {
+                    "source": EVALUATOR.PROFESSIONALISM_JSON_REPORT,
+                    "pointer": "/formal",
+                    "operator": "equals",
+                    "expected": True,
+                },
+            ],
+        }
+        contract = self._contract(
+            [producer],
+            [authoring, formal],
+            formal_outcomes=[formal["id"]],
+        )
+        self._write_contract(root, contract)
+        tracked_professionalism = b'{"schema_version":4,"ordinary_authoring":true}\n'
+        tracked_core = b'{"schema_version":4,"ordinary_authoring":true}\n'
+        (root / EVALUATOR.JSON_REPORT).write_bytes(tracked_core)
+        (root / EVALUATOR.PROFESSIONALISM_JSON_REPORT).write_bytes(
+            tracked_professionalism
+        )
+        (root / ".gitignore").write_text(
+            ".rd-skills/formal-release/\n", encoding="utf-8"
+        )
+        subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+        subprocess.run(
+            ["git", "config", "user.email", "test@example.invalid"],
+            cwd=root,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Test"], cwd=root, check=True
+        )
+        subprocess.run(["git", "add", "."], cwd=root, check=True)
+        subprocess.run(
+            ["git", "commit", "-qm", "fixture"], cwd=root, check=True
+        )
+        head = subprocess.run(
+            ["git", "rev-parse", "--verify", "HEAD"],
+            cwd=root,
+            check=True,
+            stdout=subprocess.PIPE,
+            text=True,
+        ).stdout.strip()
+
+        exit_code = EVALUATOR.main(
+            ["--root", str(root), "--gate", "formal-release"]
+        )
+
+        evidence = root / EVALUATOR.FORMAL_EVIDENCE_ROOT / head / "reports"
+        self.assertEqual(0, exit_code)
+        self.assertEqual(
+            head,
+            json.loads(
+                (evidence / "professionalism-regression-report.json").read_text()
+            )["captured_head"],
+        )
+        core = json.loads(
+            (evidence / "core-principles-outcomes.json").read_text()
+        )
+        self.assertEqual(head, core["formal_evidence_head_commit"])
+        self.assertEqual([], EVALUATOR._saved_report_schema_errors(core))
+        self.assertTrue((evidence / "professionalism-regression-report.md").is_file())
+        self.assertTrue((evidence / "core-principles-outcomes.md").is_file())
+        self.assertEqual(
+            tracked_professionalism,
+            (root / EVALUATOR.PROFESSIONALISM_JSON_REPORT).read_bytes(),
+        )
+        self.assertEqual(tracked_core, (root / EVALUATOR.JSON_REPORT).read_bytes())
+        self.assertFalse((root / EVALUATOR.MARKDOWN_REPORT).exists())
+        self.assertFalse((root / EVALUATOR.PROFESSIONALISM_MARKDOWN_REPORT).exists())
+        status = subprocess.run(
+            ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+            cwd=root,
+            check=True,
+            stdout=subprocess.PIPE,
+            text=True,
+        ).stdout
+        self.assertEqual("", status)
+        self.assertEqual(
+            0,
+            EVALUATOR.main(
+                ["--root", str(root), "--gate", "formal-release"]
+            ),
+        )
+        self.assertEqual(
+            EVALUATOR.FORMAL_EVIDENCE_FILENAMES,
+            {path.name for path in evidence.iterdir() if path.is_file()},
+        )
+
+    def test_formal_contract_drift_fails_only_in_head_scoped_evidence(self) -> None:
+        temporary, root = self._root()
+        self.addCleanup(temporary.cleanup)
+        script = self._script(root, "drifted", "raise SystemExit(0)\n")
+        contract = self._contract(
+            [self._producer("drifted", script)],
+            [
+                {
+                    "id": "drifted-pass",
+                    "producer": "drifted",
+                    "predicates": [PROCESS_PASS],
+                }
+            ],
+        )
+        self._write_contract(root, contract)
+        tracked_core = b'{"schema_version":4,"ordinary_authoring":true}\n'
+        (root / EVALUATOR.JSON_REPORT).write_bytes(tracked_core)
+        (root / ".gitignore").write_text(
+            ".rd-skills/formal-release/\n", encoding="utf-8"
+        )
+        subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+        subprocess.run(
+            ["git", "config", "user.email", "test@example.invalid"],
+            cwd=root,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Test"], cwd=root, check=True
+        )
+        subprocess.run(["git", "add", "."], cwd=root, check=True)
+        subprocess.run(["git", "commit", "-qm", "fixture"], cwd=root, check=True)
+        head = subprocess.run(
+            ["git", "rev-parse", "--verify", "HEAD"],
+            cwd=root,
+            check=True,
+            stdout=subprocess.PIPE,
+            text=True,
+        ).stdout.strip()
+
+        exit_code = EVALUATOR.main(
+            ["--root", str(root), "--gate", "formal-release"]
+        )
+
+        evidence = root / EVALUATOR.FORMAL_EVIDENCE_ROOT / head / "reports"
+        self.assertEqual(1, exit_code)
+        self.assertEqual(tracked_core, (root / EVALUATOR.JSON_REPORT).read_bytes())
+        self.assertFalse((root / EVALUATOR.MARKDOWN_REPORT).exists())
+        formal_core = json.loads(
+            (evidence / "core-principles-outcomes.json").read_text()
+        )
+        self.assertEqual(head, formal_core["formal_evidence_head_commit"])
+        self.assertTrue(formal_core["contract_errors"])
+        status = subprocess.run(
+            ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+            cwd=root,
+            check=True,
+            stdout=subprocess.PIPE,
+            text=True,
+        ).stdout
+        self.assertEqual("", status)
+
+    def test_formal_atomic_writer_rejects_symlinked_ancestor(self) -> None:
+        temporary, root = self._root()
+        self.addCleanup(temporary.cleanup)
+        outside = root / "outside"
+        outside.mkdir()
+        (root / ".rd-skills").symlink_to(outside, target_is_directory=True)
+        destination = (
+            root
+            / EVALUATOR.FORMAL_EVIDENCE_ROOT
+            / ("a" * 40)
+            / "reports"
+            / "core-principles-outcomes.json"
+        )
+
+        with self.assertRaisesRegex(ValueError, "symlink|safe directory"):
+            EVALUATOR._atomic_write(
+                destination,
+                "{}\n",
+                trusted_root=root,
+            )
+
+        self.assertFalse((outside / "formal-release").exists())
+        (root / ".rd-skills").unlink()
+        destination.parent.mkdir(parents=True)
+        outside_file = outside / "sentinel.json"
+        outside_file.write_text("unchanged\n", encoding="utf-8")
+        destination.symlink_to(outside_file)
+        with self.assertRaisesRegex(ValueError, "regular file|safe directory"):
+            EVALUATOR._atomic_write(
+                destination,
+                "changed\n",
+                trusted_root=root,
+            )
+        self.assertEqual("unchanged\n", outside_file.read_text(encoding="utf-8"))
+
+    def test_formal_scene_rejects_residue_before_execution(self) -> None:
+        temporary, root = self._root()
+        self.addCleanup(temporary.cleanup)
+        head = "a" * 40
+        reports = root / EVALUATOR.FORMAL_EVIDENCE_ROOT / head / "reports"
+        reports.mkdir(parents=True)
+        (reports / ".core-principles-outcomes.json.stale.tmp").write_text(
+            "stale\n", encoding="utf-8"
+        )
+
+        with self.assertRaisesRegex(ValueError, "unexpected formal evidence"):
+            EVALUATOR._prepare_formal_evidence_scene(root, head)
+
     def test_cli_success_preserves_summary_without_diagnostics(self) -> None:
         temporary, root = self._root()
         self.addCleanup(temporary.cleanup)
@@ -2161,10 +2771,7 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
             '"timed_out":false,"failure_reason_codes":["dependency-not-pass"],'
             '"depends_on":["fail"]}\n'
         )
-        for gate, selected_status in (
-            ("authoring", "fail"),
-            ("formal-release", "blocked"),
-        ):
+        for gate, selected_status in (("authoring", "fail"),):
             with self.subTest(gate=gate), mock.patch.object(
                 sys, "stdout", io.StringIO()
             ) as stdout, mock.patch.object(sys, "stderr", io.StringIO()) as stderr:

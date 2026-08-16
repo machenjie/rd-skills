@@ -8,7 +8,7 @@ import json
 import sys
 import tempfile
 import unittest
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from unittest import mock
 
@@ -17,11 +17,11 @@ ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/audit-skill-content.py"
 
 
-def _load_module():
+def _load_module(name: str = "audit_skill_content_test"):
     scripts = str(ROOT / "scripts")
     if scripts not in sys.path:
         sys.path.insert(0, scripts)
-    spec = importlib.util.spec_from_file_location("audit_skill_content_test", SCRIPT)
+    spec = importlib.util.spec_from_file_location(name, SCRIPT)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
@@ -57,6 +57,176 @@ class AuditSkillContentDeterminismTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.module = _load_module()
+
+    def test_current_root_schema_domains_exclude_lifecycle(self) -> None:
+        self.assertEqual(7, self.module.ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION)
+        self.assertEqual(6, self.module.ROOT_SEMANTIC_SCHEMA_VERSION)
+        self.assertEqual(9, self.module.ROOT_CONTENT_SCHEMA_VERSION)
+        result = self.module._collect_root_content()
+        self.assertNotIn("lifecycle", result["semantic_advisories"])
+        self.assertNotIn("lifecycle_status", result["semantic_advisories"])
+
+    def _detector_source_change(
+        self, original: str, replacement: str, *, relative: str
+    ):
+        source_path = (ROOT / relative).resolve()
+        source_reader = self.module._detector_repository_source_text
+
+        def changed(path: Path) -> str:
+            text = source_reader(path)
+            if path.resolve() != source_path:
+                return text
+            self.assertEqual(1, text.count(original))
+            return text.replace(original, replacement, 1)
+
+        return mock.patch.object(
+            self.module,
+            "_detector_repository_source_text",
+            side_effect=changed,
+        )
+
+    def test_root_detector_contract_binds_only_reachable_behavior(self) -> None:
+        payload = self.module._root_semantic_detector_payload()
+        self.assertEqual(
+            "root-semantic-detector-contract-v1", payload["contract_version"]
+        )
+        self.assertEqual(
+            [
+                "audit-skill-content._fold_root_candidates",
+                "audit-skill-content._root_document_candidates",
+                "audit-skill-content._root_sentence_candidates",
+                "audit-skill-content._root_skill_documents",
+            ],
+            payload["roots"],
+        )
+        baseline = self.module._root_semantic_detector_fingerprint()
+        with self._detector_source_change(
+            "ROOT_LONG_EXAMPLE_LINES = 12",
+            "ROOT_LONG_EXAMPLE_LINES = 13",
+            relative="scripts/audit-skill-content.py",
+        ):
+            self.assertNotEqual(
+                baseline, self.module._root_semantic_detector_fingerprint()
+            )
+        with self._detector_source_change(
+            'MARKDOWN_REPORT = REPORTS_DIR / "skill-content-audit.md"',
+            'MARKDOWN_REPORT = REPORTS_DIR / "unrelated-report-name.md"',
+            relative="scripts/audit-skill-content.py",
+        ):
+            self.assertEqual(
+                baseline, self.module._root_semantic_detector_fingerprint()
+            )
+
+    def test_reachable_detector_source_walker_fails_closed(self) -> None:
+        with mock.patch.object(
+            self.module,
+            "_DETECTOR_REPOSITORY_SOURCE_FILES",
+            (("audit-skill-content", Path("scripts/missing-detector-source.py")),),
+        ):
+            with self.assertRaisesRegex(
+                self.module.ValidationProblem, "detector source is missing"
+            ):
+                self.module._root_semantic_detector_fingerprint()
+
+    def test_detector_fingerprint_is_independent_of_module_load_name(self) -> None:
+        alias = "audit_skill_content_alias_test"
+        try:
+            alias_module = _load_module(alias)
+            self.assertEqual(
+                self.module._root_semantic_detector_fingerprint(),
+                alias_module._root_semantic_detector_fingerprint(),
+            )
+        finally:
+            sys.modules.pop(alias, None)
+
+    def test_semantic_projections_are_cross_date_deterministic_before_expiry(
+        self,
+    ) -> None:
+        projections = []
+        for evaluation_date in (date(2026, 8, 9), date(2026, 8, 10)):
+            result = self.module.audit(evaluation_date=evaluation_date)
+            for axis in ("root_content", "reference_content"):
+                self.assertNotIn(
+                    "evaluated_on",
+                    result[axis]["semantic_advisories"]["disposition_contract"],
+                )
+            projections.append(
+                json.dumps(
+                    self.module._semantic_application_audit_view(
+                        result["root_content"], result["reference_content"]
+                    ),
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode("utf-8")
+            )
+        self.assertEqual(projections[0], projections[1])
+
+    def test_audit_rejects_future_injected_evaluation_date(self) -> None:
+        with self.assertRaisesRegex(ValueError, "evaluation_date must be non-future"):
+            self.module.audit(evaluation_date=date.today() + timedelta(days=1))
+
+    def test_reference_detector_contract_v1_is_reachable_and_schema7(self) -> None:
+        payload = self.module._reference_semantic_detector_payload()
+        self.assertEqual(
+            "reference-semantic-detector-contract-v1",
+            payload["contract_version"],
+        )
+        self.assertEqual(
+            ["audit-skill-content._reference_semantic_candidates"],
+            payload["roots"],
+        )
+        contract = self.module._reference_semantic_detector_contract()
+        self.assertEqual(
+            {
+                "contract_version": "reference-semantic-detector-contract-v1",
+                "algorithm": "sha256-canonical-json-v1",
+                "value": self.module._reference_semantic_detector_fingerprint(),
+            },
+            contract,
+        )
+        report = self.module._collect_reference_semantic_advisories(
+            [], disposition_entries=[], evaluation_date=date(2026, 8, 10)
+        )
+        self.assertEqual(7, report["schema_version"])
+        self.assertEqual(contract, report["detector_contract"])
+
+        baseline = contract["value"]
+        self.assertEqual(
+            "b30afbeafb68bb21ade261d0ada1698865ccef20327dac0fe8edca4138ed1fcb",
+            baseline,
+        )
+        source_reader = self.module._detector_repository_source_text
+        audit_path = SCRIPT.resolve()
+
+        def fingerprint_with_change(original: str, replacement: str) -> str:
+            def changed(path: Path) -> str:
+                text = source_reader(path)
+                if path.resolve() != audit_path:
+                    return text
+                self.assertEqual(1, text.count(original))
+                return text.replace(original, replacement, 1)
+
+            with mock.patch.object(
+                self.module,
+                "_detector_repository_source_text",
+                side_effect=changed,
+            ):
+                return self.module._reference_semantic_detector_fingerprint()
+
+        self.assertNotEqual(
+            baseline,
+            fingerprint_with_change(
+                'r"|hrs?|hours?|days?|weeks?|months?|years?)\\b",',
+                'r"|hrs?|hours?|days?|weeks?|months?|years?|fortnights?)\\b",',
+            ),
+        )
+        self.assertEqual(
+            baseline,
+            fingerprint_with_change(
+                'MARKDOWN_REPORT = REPORTS_DIR / "skill-content-audit.md"',
+                'MARKDOWN_REPORT = REPORTS_DIR / "unrelated-report-name.md"',
+            ),
+        )
 
     def _invoke_gate(
         self,
@@ -533,14 +703,71 @@ class AuditSkillContentDeterminismTests(unittest.TestCase):
             )
 
     def test_current_readability_inventory_is_exact_and_unique(self) -> None:
-        result = self.module._collect_ai_readability()
+        source_documents = self.module._ai_readability_documents()
+        result = self.module._collect_ai_readability(source_documents)
         self.assertEqual(2, result["schema_version"])
-        self.assertEqual(357, result["summary"]["advisory_documents"])
-        # The compressed Main prompt keeps the deterministic advisory inventory bounded.
-        self.assertEqual(978, result["summary"]["advisory_sentences"])
+        source_ids = [item["document_id"] for item in source_documents]
+        document_ids = [item["document_id"] for item in result["documents"]]
+        self.assertEqual(sorted(set(source_ids)), source_ids)
+        self.assertEqual(source_ids, document_ids)
+        self.assertEqual(len(document_ids), result["summary"]["documents"])
+        self.assertEqual(
+            len(document_ids),
+            result["source_fingerprint"]["document_count"],
+        )
+
+        advisory_ids = sorted(
+            item["document_id"]
+            for item in result["documents"]
+            if item["highest_advisory_band"] is not None
+        )
+        finding_document_ids = sorted(
+            {item["document_id"] for item in result["findings"]}
+        )
+        self.assertEqual(advisory_ids, finding_document_ids)
+        self.assertEqual(
+            len(advisory_ids), result["summary"]["advisory_documents"]
+        )
+        self.assertEqual(0, result["summary"]["blocker_findings"])
+
         finding_ids = [item["finding_id"] for item in result["findings"]]
-        self.assertEqual(978, len(finding_ids))
-        self.assertEqual(978, len(set(finding_ids)))
+        self.assertEqual(len(finding_ids), len(set(finding_ids)))
+        self.assertEqual(
+            len(finding_ids), result["summary"]["advisory_sentences"]
+        )
+        span_ids = [
+            (
+                item["document_id"],
+                item["source_span"]["start_offset"],
+                item["source_span"]["end_offset"],
+                item["kind"],
+                item["band"],
+            )
+            for item in result["findings"]
+        ]
+        self.assertEqual(len(span_ids), len(set(span_ids)))
+        documents_by_id = {
+            item["document_id"]: item for item in result["documents"]
+        }
+        for finding in result["findings"]:
+            document = documents_by_id[finding["document_id"]]
+            span = finding["source_span"]
+            source_text = document["document_context"]["text"]
+            exact = source_text[span["start_offset"] : span["end_offset"]]
+            self.assertEqual(
+                hashlib.sha256(exact.encode("utf-8")).hexdigest(),
+                span["sha256"],
+            )
+            self.assertEqual(span["start_line"], finding["line"])
+            self.assertEqual(
+                hashlib.sha256(
+                    (
+                        "ai-readability-sentence-v1\0"
+                        + finding["sentence"]
+                    ).encode("utf-8")
+                ).hexdigest(),
+                finding["sentence_fingerprint"],
+            )
 
     def test_markdown_is_independent_of_common_line_insertion_order(self) -> None:
         rows = [

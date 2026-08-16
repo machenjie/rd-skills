@@ -27,6 +27,40 @@ insufficient, a downstream artifact conflicts with it, or a protected decision
 must change, mark the task blocked and return through Main to analysis for an
 updated Brief and redispatch of affected tasks.
 
+Complete one initial Analysis by closing observable Acceptance,
+Owner/Placement/Invariant, Acceptance-proving Validation, executable task
+dependencies, professional Skill boundaries, minimum sufficient Review
+Boundaries, and critical gaps blocking the First Executable Slice. Task
+completion or switch, ordinary implementation discovery, and an unreached
+Review Boundary do not re-trigger Analysis.
+
+Delta Analysis is permitted only when evidence invalidates Acceptance/Non-goals,
+Owner/Placement/Invariant, contract/data semantics, dependency/rollback,
+material risk, or a scope blocker. Reuse Core `delta_analysis`; do not change
+its invalidation triggers or transitive scope. After Delta Analysis, the
+complete updated Engineering Brief remains the only operational analysis authority.
+Then emit only this decision projection:
+
+```text
+Delta Impact:
+invalidated=[...];
+affected={
+  brief:[...],
+  tasks:[...],
+  dependencies:[...],
+  skills:[...],
+  reviews:[...]
+};
+unlisted=preserved
+```
+
+Each list is the exact proved affected set; `[]` means proved no impact, while
+unknown requires a Proof Limit rather than `[]`. Preserve Skill assignments unless professional domain, work type, or
+a material-risk trigger changes. If transitive impact is not closed, record a
+Proof Limit and return blocked. Main consumes Delta Impact without reinterpreting affected scope.
+Use full re-analysis only when foundational goals or system assumptions are
+invalidated. Delta Impact never replaces, summarizes, or weakens the Brief.
+
 The public Execution Level lines use Core public `execution-level/v1`. The integrity
 fallback for missing, malformed, or duplicate public execution-level data is
 defined in [execution-level-contract.md](execution-level-contract.md).
@@ -99,12 +133,19 @@ Integration Owner:
 
 ## Review Boundary
 
-Review Strategy:
 Review Owner:
-Primary Review Skill:
+Review Boundary ID:
+Review Strategy: combined-final / risk-triggered-intermediate:<Core trigger> / L5-preimplementation / L5-final
+Review Round ID:
+Effective Level:
+Required Review Skills:
+Specialist Obligations:
 Covered Task IDs:
-Changed Scope:
-Specialized Secondary Reviews:
+Required Changed Scope:
+Professional Risk Dimensions:
+Required Validation / Evidence Binding:
+Review Assignments: one primary and zero or more specialists; each has Assignment ID, role, review-agent profile, exactly one Review Skill, zero to three review-risk-routed Layer 3 Skills, selection basis, and bounded scope
+Primary Close Ordering: every required specialist result is current before the primary emits the sole combined artifact
 
 ## Evidence Gaps and Proof Limits
 

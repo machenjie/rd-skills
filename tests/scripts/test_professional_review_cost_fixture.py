@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import copy
 import functools
-import importlib.util
 import json
 import sys
 import unittest
@@ -10,7 +9,8 @@ from dataclasses import FrozenInstanceError
 from pathlib import Path
 from unittest import mock
 
-from . import test_professional_completeness_carry_forward as fixtures
+from . import expert_panel_source_test_support as source_support
+from . import professional_review_cost_test_support as cost_support
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -19,143 +19,59 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 
-def _load_regression_module():
-    path = SCRIPTS / "validate-professionalism-regression.py"
-    spec = importlib.util.spec_from_file_location(
-        "professional_review_cost_fixture_tests",
-        path,
-    )
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
 
 
-REGRESSION = _load_regression_module()
-PANEL = REGRESSION.expert_panel
-CARRY = PANEL.professional_carry
+REGRESSION = source_support.REGRESSION
+PANEL = source_support.PANEL
+CARRY = source_support.CARRY
+_current_catalog_cost_state = cost_support._current_catalog_cost_state
+_synthetic_catalog_cost_state = cost_support._synthetic_catalog_cost_state
 
 
-def _reviewer_added_request(
-    bindings: dict[str, dict],
-    *,
-    target_id: str,
-    candidate_id: str,
-) -> dict:
-    ranking = next(
-        row
-        for row in bindings[target_id]["adjacency"]["full_catalog_ranking"]
-        if row["skill_id"] == candidate_id
-    )
-    return {
-        "skill_id": candidate_id,
-        "discovery_reason": (
-            "The discovery boundary exposes a distinct overlapping responsibility."
-        ),
-        "ranking_evidence": copy.deepcopy(ranking),
-        "material_fingerprint": bindings[candidate_id][
-            "candidate_material_fingerprint"
-        ],
-    }
 
 
-@functools.lru_cache(maxsize=1)
-def _current_catalog_cost_state() -> dict:
-    packet = REGRESSION._current_professional_completeness_packet()
-    state = PANEL._professional_v3_packet_state(
-        packet,
-        validation_root=ROOT,
-        artifact_path=None,
-        validate_baseline=False,
-    )
-    bindings = state["bindings"]
-    target_ids = sorted(bindings)
-    discovery = PANEL._professional_v3_discovery_projection_from_packet(
-        packet=packet,
-        assigned_skill_ids=target_ids,
-        bindings=bindings,
-    )
-    final = PANEL._professional_v3_capsule_projection_from_packet(
-        packet=packet,
-        assigned_skill_ids=target_ids,
-        reviewer_added_requests_by_target=None,
-        bindings=bindings,
-    )
-    index = REGRESSION._professional_review_cost_block_index(
-        source_fingerprints=packet["source_fingerprints"],
-        review_contract_fingerprint=packet["review_contract_fingerprint"],
-        discovery_projection=discovery,
-        reviewer_added_requests=[],
-        final_projection=final,
-    )
-    reverse_dependencies = {skill_id: {skill_id} for skill_id in target_ids}
-    for target_id, binding in bindings.items():
-        for candidate in binding["required_candidate_material_bindings"]:
-            reverse_dependencies[candidate["skill_id"]].add(target_id)
-    return {
-        "packet": packet,
-        "bindings": bindings,
-        "target_ids": target_ids,
-        "index": index,
-        "reverse_dependencies": reverse_dependencies,
-    }
 
 
-@functools.lru_cache(maxsize=1)
-def _synthetic_catalog_cost_state() -> dict:
-    targets = fixtures._catalog()
-    bindings = CARRY.professional_review_bindings(targets)
-    target_ids = sorted(bindings)
-    request = _reviewer_added_request(
-        bindings,
-        target_id="a",
-        candidate_id="b",
-    )
-    requests_by_target = {"a": [request]}
-    request_rows = [{"target_skill_id": "a", **request}]
-    discovery = CARRY.project_professional_discovery_capsule(
-        bindings=bindings,
-        assigned_fresh_target_ids=target_ids,
-    )
-    final = CARRY.project_professional_review_capsule(
-        bindings=bindings,
-        assigned_fresh_target_ids=target_ids,
-        reviewer_added_requests_by_target=requests_by_target,
-    )
-    packet = {
-        "source_fingerprints": {
-            "professional_packages": "1" * 64,
-            "professional_review_bindings": "2" * 64,
-            "professional_review_contract": "3" * 64,
-        },
-        "review_contract_fingerprint": "4" * 64,
-    }
-    index = REGRESSION._professional_review_cost_block_index(
-        source_fingerprints=packet["source_fingerprints"],
-        review_contract_fingerprint=packet["review_contract_fingerprint"],
-        discovery_projection=discovery,
-        reviewer_added_requests=request_rows,
-        final_projection=final,
-    )
-    return {
-        "packet": packet,
-        "bindings": bindings,
-        "index": index,
-        "requests_by_target": requests_by_target,
-    }
 
 
 class ProfessionalReviewCostFixtureTests(unittest.TestCase):
-    def test_shared_fixture_uses_current_unittest_package(self) -> None:
-        expected_module = (
-            f"{__package__}.test_professional_completeness_carry_forward"
-        )
-        self.assertEqual(expected_module, fixtures.__name__)
-        self.assertIs(fixtures, sys.modules[expected_module])
-        self.assertIs(fixtures.PANEL, sys.modules[fixtures.PANEL.__name__])
+    def test_current_cost_fixture_uses_closed_schema3_authority(self) -> None:
+        packet = REGRESSION._current_professional_completeness_packet()
+        self.assertNotIn("source_fingerprints", packet)
 
-    def _assert_exact_legacy_equivalence(
+        fixture = REGRESSION._calculate_professional_review_cost_fixtures()
+        self.assertEqual(
+            189,
+            fixture["review_contract_change"]["fresh_target_count"],
+        )
+
+        legacy_shaped = copy.deepcopy(packet)
+        legacy_shaped["source_fingerprints"] = {
+            "professional_packages": "0" * 64,
+        }
+        with self.assertRaisesRegex(
+            PANEL.PanelReviewError,
+            "professional completeness packet fields do not match schema 3",
+        ):
+            PANEL._professional_v3_packet_state(
+                legacy_shaped,
+                validation_root=ROOT,
+                artifact_path=None,
+                validate_baseline=False,
+            )
+
+    def test_shared_fixture_uses_current_unittest_package(self) -> None:
+        isolated_name = f"{__name__}.isolated_expert_panel_review"
+        self.assertIs(PANEL, source_support.load_panel())
+        self.assertIs(PANEL, sys.modules[PANEL.__name__])
+        with source_support.isolated_source_module(
+            "scripts/expert_panel_review.py", isolated_name
+        ) as isolated:
+            self.assertIsNot(PANEL, isolated)
+            self.assertIs(isolated, sys.modules[isolated_name])
+        self.assertNotIn(isolated_name, sys.modules)
+
+    def _assert_exact_projection_equivalence(
         self,
         *,
         packet: dict,
@@ -182,8 +98,7 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
             for target_id in sorted(reviewer_added_requests_by_target or {})
             for request in (reviewer_added_requests_by_target or {})[target_id]
         ]
-        legacy = PANEL._professional_v3_effective_input_blocks(
-            source_fingerprints=packet["source_fingerprints"],
+        projected = PANEL._professional_v3_effective_input_blocks(
             review_contract_fingerprint=packet[
                 "review_contract_fingerprint"
             ],
@@ -196,13 +111,13 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
             index,
             fresh_skill_ids=fresh_ids,
         )
-        self.assertEqual(legacy, optimized)
+        self.assertEqual(projected, optimized)
         self.assertEqual(
-            CARRY.canonical_json_bytes(legacy),
+            CARRY.canonical_json_bytes(projected),
             CARRY.canonical_json_bytes(optimized),
         )
         expected_bytes = PANEL.PANEL_SIZE * sum(
-            row["canonical_json_bytes_proxy"] for row in legacy
+            row["canonical_json_bytes_proxy"] for row in projected
         )
         self.assertEqual(
             expected_bytes,
@@ -227,7 +142,7 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
             (["b", "c"], None),
         ):
             with self.subTest(fresh_ids=fresh_ids):
-                self._assert_exact_legacy_equivalence(
+                self._assert_exact_projection_equivalence(
                     packet=packet,
                     bindings=bindings,
                     index=index,
@@ -291,7 +206,7 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
             fixture["unchanged"],
         )
 
-    def test_current_catalog_policy_and_lock_are_current_and_fail_closed_on_drift(
+    def test_current_catalog_policy_uses_measured_invariants_and_ceilings(
         self,
     ) -> None:
         contracts = json.loads(
@@ -300,27 +215,27 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
         authority = contracts["final_goal_contract"][
             "professional_review_cost_fixtures"
         ]
+        self.assertEqual({"thresholds", "formal_round_policy"}, set(authority))
         thresholds = authority["thresholds"]
-        locked = authority["locked_current_catalog"]
 
-        current = REGRESSION._calculate_professional_review_cost_fixtures()
+        current = REGRESSION._professional_review_cost_fixtures()
         sensitivity = current[
             "routing_neutral_isolated_material_binding_sensitivity"
         ]
         self.assertEqual(1, current["schema_version"])
         self.assertEqual("pass", current["status"])
-        self.assertEqual(189, sensitivity["case_count"])
-        self.assertEqual(56, sensitivity["fresh_target_count"]["max"])
-        self.assertEqual(348342, sensitivity["input_ratio_ppm"]["max"])
         self.assertEqual(
             {
-                "maximum_fresh_target_count": 56,
-                "maximum_mean_fresh_target_count": 25,
-                "maximum_input_ratio_ppm": 450000,
-                "maximum_mean_input_ratio_ppm": 220000,
+                "case_count",
+                "full_rereview_deduplicated_capsule_input_bytes_proxy",
+                "fresh_target_count",
+                "input_ratio_ppm",
+                "named_isolated_case",
             },
-            current["thresholds"],
+            set(sensitivity),
         )
+        self.assertEqual(189, sensitivity["case_count"])
+        self.assertEqual(189, REGRESSION.expert_panel.PROFESSIONAL_PACKAGE_COUNT)
         self.assertLessEqual(
             sensitivity["fresh_target_count"]["max"],
             thresholds["maximum_fresh_target_count"],
@@ -339,57 +254,6 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
             thresholds["maximum_mean_input_ratio_ppm"]
             * sensitivity["case_count"],
         )
-        self.assertEqual(locked, sensitivity)
-
-        with mock.patch.object(
-            REGRESSION,
-            "_calculate_professional_review_cost_fixtures",
-            return_value=copy.deepcopy(current),
-        ):
-            projected = REGRESSION._professional_review_cost_fixtures()
-        self.assertEqual("pass", projected["status"])
-        self.assertEqual(
-            sensitivity,
-            projected[
-                "routing_neutral_isolated_material_binding_sensitivity"
-            ],
-        )
-
-        with mock.patch.object(
-            REGRESSION,
-            "_calculate_professional_review_cost_fixtures",
-            return_value=copy.deepcopy(current),
-        ):
-            self.assertEqual(
-                "pass",
-                REGRESSION._professional_review_cost_fixtures()["status"],
-            )
-
-        lock_drift = copy.deepcopy(current)
-        lock_drift[
-            "routing_neutral_isolated_material_binding_sensitivity"
-        ]["cases_fingerprint"] = "0" * 64
-        with mock.patch.object(
-            REGRESSION,
-            "_calculate_professional_review_cost_fixtures",
-            return_value=lock_drift,
-        ):
-            self.assertEqual(
-                "formal-non-current",
-                REGRESSION._professional_review_cost_fixtures()["status"],
-            )
-
-        threshold_drift = copy.deepcopy(current)
-        threshold_drift["status"] = "formal-non-current"
-        with mock.patch.object(
-            REGRESSION,
-            "_calculate_professional_review_cost_fixtures",
-            return_value=threshold_drift,
-        ):
-            self.assertEqual(
-                "formal-non-current",
-                REGRESSION._professional_review_cost_fixtures()["status"],
-            )
 
         malformed_core = mock.Mock()
         malformed_core.read_text.return_value = "{}"
@@ -404,12 +268,77 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
                 "CORE_CONTRACTS",
                 malformed_core,
             ),
-        ):
-            with self.assertRaisesRegex(
+            self.assertRaisesRegex(
                 ValueError,
                 "lacks Professional review cost fixture authority",
+            ),
+        ):
+            REGRESSION._professional_review_cost_fixtures()
+
+    def test_digest_only_drift_is_not_cost_currentness(self) -> None:
+        measured = REGRESSION._calculate_professional_review_cost_fixtures()
+        sensitivity = measured[
+            "routing_neutral_isolated_material_binding_sensitivity"
+        ]
+        digest_fields = {
+            "professional_packages_fingerprint",
+            "catalog_fingerprint",
+            "material_catalog_fingerprint",
+            "full_projection_fingerprint",
+            "review_contract_fingerprint",
+            "cases_fingerprint",
+        }
+        for field in digest_fields:
+            if field in sensitivity:
+                sensitivity[field] = "0" * 64
+        with mock.patch.object(
+            REGRESSION,
+            "_calculate_professional_review_cost_fixtures",
+            return_value=measured,
+        ):
+            projected = REGRESSION._professional_review_cost_fixtures()
+        self.assertEqual("pass", projected["status"])
+        self.assertTrue(
+            digest_fields.isdisjoint(
+                projected[
+                    "routing_neutral_isolated_material_binding_sensitivity"
+                ]
+            )
+        )
+
+    def test_count_and_threshold_tamper_remain_non_current(self) -> None:
+        measured = REGRESSION._calculate_professional_review_cost_fixtures()
+        mutations = {
+            "case-count": lambda sensitivity: sensitivity.update(
+                {"case_count": 188}
+            ),
+            "fresh-max": lambda sensitivity: sensitivity[
+                "fresh_target_count"
+            ].update({"max": 57}),
+            "ratio-max": lambda sensitivity: sensitivity[
+                "input_ratio_ppm"
+            ].update({"max": 450001}),
+        }
+        for label, mutate in mutations.items():
+            candidate = copy.deepcopy(measured)
+            mutate(
+                candidate[
+                    "routing_neutral_isolated_material_binding_sensitivity"
+                ]
+            )
+            candidate["status"] = "pass"
+            with mock.patch.object(
+                REGRESSION,
+                "_calculate_professional_review_cost_fixtures",
+                return_value=candidate,
             ):
-                REGRESSION._professional_review_cost_fixtures()
+                with self.subTest(label=label):
+                    self.assertEqual(
+                        "formal-non-current",
+                        REGRESSION._professional_review_cost_fixtures()[
+                            "status"
+                        ],
+                    )
 
     def test_current_catalog_min_named_max_and_full_match_legacy(self) -> None:
         current = _current_catalog_cost_state()
@@ -424,7 +353,7 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
         }
         for label, fresh_ids in cases.items():
             with self.subTest(case=label, fresh_target_count=len(fresh_ids)):
-                self._assert_exact_legacy_equivalence(
+                self._assert_exact_projection_equivalence(
                     packet=current["packet"],
                     bindings=current["bindings"],
                     index=current["index"],

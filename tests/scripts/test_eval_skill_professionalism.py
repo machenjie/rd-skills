@@ -262,6 +262,71 @@ Role text.
         self.assertTrue(negative)
         self.assertTrue(negative.isdisjoint(behavior))
 
+    def test_affected_professional_ignores_legacy_selector_and_uses_fixed_baseline(
+        self,
+    ) -> None:
+        legacy = (
+            "evals/expert-panel/professional-completeness-panel-r1/"
+            "panel/decision.json"
+        )
+        config = {
+            "reviewed_at": "2026-08-10",
+            "professional_completeness_review_attestation": {
+                "panel_record": {"path": legacy, "sha256": "a" * 64}
+            },
+        }
+        panel = mock.Mock()
+        panel.panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH = (
+            "evals/expert-panel/professional-completeness.json"
+        )
+        panel.panel_attestation.ATTESTATION_SCHEMA_VERSION = 2
+        panel.prepare_professional_completeness_packet_v3.return_value = {
+            "review_plan": {
+                "baseline": {
+                    "attestation": {
+                        "path": "evals/expert-panel/professional-completeness.json"
+                    }
+                },
+                "fresh_targets": [],
+                "carried_targets": [],
+            }
+        }
+        panel.reviewer_manifest.parse_json_object_bytes.return_value = {
+            "schema_version": 2
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            sidecar = (
+                root
+                / "evals/expert-panel/professional-completeness.json"
+            )
+            sidecar.parent.mkdir(parents=True)
+            sidecar.write_text("invalid sidecar", encoding="utf-8")
+            with mock.patch.object(self.module, "ROOT", root), mock.patch.object(
+                self.module, "load_yaml_file", return_value=config
+            ), mock.patch.object(
+                self.module, "_load_evaluator", return_value=panel
+            ):
+                plan = self.module._affected_review_plan(
+                    root / "release.yaml", direct_package_ids=[]
+                )
+        self.assertEqual(
+            "evals/expert-panel/professional-completeness.json",
+            plan["baseline_decision"],
+        )
+        panel.prepare_professional_completeness_packet_v3.assert_called_once_with(
+            review_id="affected-professionalism",
+            created_on="2026-08-10",
+            baseline_attestation_path=(
+                root / "evals/expert-panel/professional-completeness.json"
+            ),
+            baseline_attestation_sha256=(
+                panel.reviewer_manifest.read_bound_regular_file.return_value.sha256
+            ),
+            root=root,
+            validation_root=root,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

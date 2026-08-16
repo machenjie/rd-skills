@@ -1,6 +1,6 @@
 # Security Policy
 
-ChangeForge is a skill-authoring, validation, build, packaging, and installer repository. Security reports may involve installer behavior, generated runtime skill artifacts, package shape, registry validation, routing rules, or documentation that could cause unsafe agent behavior.
+rd-skills is a skill-authoring, validation, build, packaging, and installer repository. Security reports may involve installer behavior, generated runtime skill artifacts, package shape, registry validation, routing rules, or documentation that could cause unsafe agent behavior.
 
 ## Supported Versions
 

@@ -7,8 +7,8 @@ description: "Use `review-agent` on implementation or repair diffs for hallucina
 
 ## Role
 
-Support `review-agent` in finding reachable defects in AI-generated or
-AI-assisted code through API, architecture, dependency, and behavior evidence.
+Support `review-agent` in finding reachable defects in AI-generated code
+through API, dependency, and behavior evidence.
 
 ## When To Use
 
@@ -23,7 +23,7 @@ AI-assisted code through API, architecture, dependency, and behavior evidence.
 ## Required Inputs
 
 - Goal, Acceptance, and Non-goals
-- Allowed Write Scope and current invariants
+- Write Scope and invariants
 - Effective Level and triggered professional gates
 - actual diff
 - validation evidence
@@ -31,22 +31,21 @@ AI-assisted code through API, architecture, dependency, and behavior evidence.
 ## Professional Decision Rules
 
 - Limit the matrix to the Current Task Boundary (Goal + Acceptance + Non-goals), latest actual diff, and reachable impact; context reads grant no repair authority.
-- Review specification compliance and code quality against the actual diff and every changed file.
-- Prioritize correctness, security, data loss, compatibility, concurrency, failure handling, and regression risk over style.
+- Prioritize correctness, security, data-loss, compatibility, concurrency, failure, and regression defects.
 - Classify relation before severity: only accepted `current-task` findings enter repair, `scope-blocker` returns through Main to analysis, and `adjacent` stays non-blocking with residual risk.
-- Give L1-L2 one independent final review with the base matrix.
-- Give L3 one independent final review plus only risk-triggered JIT lenses.
-- Give L4 one independent final review plus only triggered gates, specialists, or design-carried pre-review; none is an automatic second reviewer.
-- Retain L5 independent pre-implementation and implementation review, declared-scope negative/failure proof, and exhaustive final review.
+- Apply Core `review_discipline_contract.effective_level_policy` for L1-L5
+  depth, independence, gates, and final-review requirements.
 - Never equate L5 with full CI, formal release, or cross-model review.
-- Delegate only for concrete risk, naming Skill, Scope, and Reason; specialist review never replaces final implementation review.
+- Delegate for concrete risk with Skill, Scope, and Reason; specialist review
+  supplements final implementation review.
 - Let the review owner merge specialist findings.
+- Apply Core `review_discipline_contract` for review boundaries, evidence reuse,
+  material findings, scoped repair, and obligation subsumption.
 
 ## High-Value Gotchas
 
 - Self-review is not independent evidence.
 - Reviewing only the summary misses unmentioned changed files.
-- Style findings must not bury a reachable correctness defect.
 
 ## Execution Checklist
 
@@ -54,6 +53,8 @@ AI-assisted code through API, architecture, dependency, and behavior evidence.
 2. Verify referenced APIs, dependencies, ownership, invariants, and changed-code test coverage.
 3. Classify relation before severity and blocker, then route only accepted `current-task` blockers to repair.
 4. Stop approval when the diff, a changed path, or evidence freshness cannot be established.
+5. Re-review repaired findings and affected dependents with fresh targeted
+   validation; broaden at the Core contract's named shared-risk boundaries.
 
 ## Stop / Escalation Conditions
 
@@ -71,7 +72,7 @@ AI-assisted code through API, architecture, dependency, and behavior evidence.
 - For repeated same-path failure, follow the Core `retry_policy`: return control
   to the main agent or report the review blocked.
 - Return a new L4/L5 risk that invalidates Effective Level blocked through Main for Brief update and recomputation.
-- Never self-upgrade Effective Level during review.
+- Return Effective Level changes through Main for analysis.
 - Route a known failure mechanism with material same-pattern regression exposure
   to `regression-testing`; otherwise keep recurrence scope and exclusions in the
   review finding.

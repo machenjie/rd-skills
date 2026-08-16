@@ -7,7 +7,7 @@ Use this checklist when identity, ownership, representation, or error behavior c
 - **Value versus reference:** define semantic identity, mutation owner, copy independence and cost, and any stored references shared after copying.
 - **Copy-on-write:** define shared storage, mutation detachment, uniqueness checks, nested-reference aliasing, and the boundary that leaves thread safety unproven.
 - **ARC graph:** trace strong edges through closures, delegates, async work, timers, notifications, Objective-C objects, and caches; assign the edge that breaks each cycle.
-- **Weak or unowned:** choose `weak` for valid absence and `unowned` only when every access requires a live referent with an accepted trap on violation.
+- **Weak or unowned:** choose `weak` for valid absence and `unowned` only when every affected reachable access is protected by a live-referent lifetime invariant; a violation may trap only when the contract explicitly accepts that failure.
 - **Protocol/generic:** establish associated types, `Self` requirements, specialization needs, storage and heterogeneous collection needs, and the public compatibility surface.
 - **Opaque/existential:** choose `some` for one hidden producer type or `any` for runtime-erased storage/dispatch, including the lost static relationships.
 - **Optional:** define `nil` as a named state, safe binding/chaining or defaulting, forced-unwrapping preconditions, nested Optional behavior, and public/Objective-C API representation.
@@ -18,7 +18,12 @@ Use this checklist when identity, ownership, representation, or error behavior c
 
 - Verify copy-on-write by copying an alias, mutating across its uniqueness boundary, and observing semantic independence, nested-reference aliasing, and allocation evidence.
 - Release each owner in a closure/delegate/task cycle and prove teardown or the intended retained lifetime.
-- Store the protocol existential, cross an associated-type boundary, and exercise the invalid lifetime of every `unowned` access.
+- For each affected reachable `unowned` access whose contract explicitly accepts
+  a trap, exercise invalid lifetime only in an isolated expected-crash harness.
+  For other `unowned` uses, prove the lifetime invariant and teardown without
+  deliberately dereferencing after deallocation.
+- Separately store the protocol existential and cross an associated-type boundary;
+  record erased and static relationships independently of lifetime probes.
 - Exercise nil, present, nested Optional, failed conversion, chaining, defaulting, and invalid forced-unwrapping paths at each changed API boundary.
 - Force each error category plus cleanup failure and confirm the caller can distinguish cancellation from domain failure.
 

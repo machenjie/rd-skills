@@ -1,7 +1,7 @@
-# ChangeForge Skill Professionalism Base Standard
+# rd-skills Skill Professionalism Base Standard
 
 Status: normative  
-Applies to: all authored and built ChangeForge Skill content
+Applies to: all authored and built rd-skills Skill content
 Skill types covered: professional skills, foundation capabilities, domain extensions  
 Primary goal: evaluate whether the skill content itself expresses professional-grade judgment for its declared responsibility
 
@@ -15,9 +15,9 @@ Primary goal: evaluate whether the skill content itself expresses professional-g
 
 ## 1. Purpose
 
-This standard defines how ChangeForge evaluates the **professional depth** of skill content.
+This standard defines how rd-skills evaluates the **professional depth** of skill content.
 
-It is intentionally separate from skill efficiency. A skill can be efficient, compact, correctly routed, and reference-light while still be professionally shallow. Conversely, a skill can contain professional knowledge but be inefficiently authored. ChangeForge must evaluate both, but it must not collapse them into one score.
+It is intentionally separate from skill efficiency. A skill can be efficient, compact, correctly routed, and reference-light while still be professionally shallow. Conversely, a skill can contain professional knowledge but be inefficiently authored. rd-skills must evaluate both, but it must not collapse them into one score.
 
 This standard answers:
 
@@ -40,7 +40,7 @@ Those are activation, routing, and context-efficiency concerns. They remain gove
 
 ## 2. Definition of Skill Professionalism
 
-A ChangeForge skill is professionally strong when its `SKILL.md` and selected references enable the agent to make decisions that a competent senior engineer, reviewer, architect, tester, release owner, or domain specialist would make for that skill's declared scope.
+A rd-skills skill is professionally strong when its `SKILL.md` and selected references enable the agent to make decisions that a competent senior engineer, reviewer, architect, tester, release owner, or domain specialist would make for that skill's declared scope.
 
 Professionalism is not the presence of polished wording. It is the presence of domain-appropriate decision force.
 

@@ -48,11 +48,15 @@ python3 scripts/validate-installation.py
 
 The complete Formal Release entrypoint is
 `python3 scripts/eval-core-principles.py --gate formal-release`; Core runs each
-declared producer once in dependency order. The sole machine-readable
+declared producer once in dependency order, routing every intermediate report
+write and read through the ignored head-scoped `producer-reports/` staging
+directory rather than this tracked directory. The sole machine-readable
 professionalism readiness authority is
 `professionalism-regression-report.json`. Formal Release additionally emits
 `professionalism-regression-report.md` as a human presentation projection;
-Markdown is not a second authority and Core authoring does not refresh it.
+the final head-scoped `reports/` scene contains exactly the Core and
+professionalism JSON/Markdown pair. Markdown is not a second authority and Core
+authoring does not refresh it.
 `validate-productization-assets.py` validates the saved JSON's closed semantics
 without rerunning the professionalism producer.
 

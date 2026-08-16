@@ -7,10 +7,12 @@ description: "Use `analysis-agent` to create a Task DAG from an accepted source-
 
 ## Role
 
-Support `analysis-agent` in projecting a Task DAG and Task Contract v2 nodes
-from the current Engineering Brief for genuine multi-task work. The Brief
-retains sole operational analysis authority and already owns the First
-Executable Slice.
+Support `analysis-agent` in projecting Task Contract v2 nodes from the current
+Engineering Brief. The Brief retains sole operational analysis authority.
+
+Begin by validating the Brief, semantic Task boundaries, blocking edges, and workspace
+safety. Stop when ownership, dependency, validation, rollback, or safe
+scheduling is unknown.
 
 ## When To Use
 
@@ -22,57 +24,55 @@ Executable Slice.
 - single bounded edit
 - task DAG already accepted
 - unanalysed change request
-- To increase agent count or delay an already safe first slice.
+- agent-count inflation
 
 ## Required Inputs
 
-- Accepted source-backed Engineering Brief, owner boundaries, and observable acceptance.
-- Candidate read/write scopes, shared contracts and resources, validation entry points, rollback needs, and host workspace isolation capability.
-- Resource boundaries.
-- Boundaries for each applicable review mode.
+- Accepted source-backed Brief, observable acceptance, candidate scopes,
+  shared resources, validation, rollback, isolation, and review boundaries.
 
 ## Professional Decision Rules
 
-- Require the current accepted Engineering Brief.
 - Preserve its First Executable Slice verbatim.
 - Never select the First Executable Slice.
 - Never replace the First Executable Slice.
 - Never reinterpret the First Executable Slice.
-- Inspect `task-dag-decomposition` candidate-graph evidence for proposed nodes, edges, blockers, critical path, collisions, uncertainty, and proof limits.
-- Accept or reject each proposed node and edge with an evidence-backed reason before constructing the graph.
-- Project only task splitting, dependencies, parallel safety, critical path,
-  integration/merge/conflict ownership, and remaining Task Contracts from the
-  Brief.
+- Inspect `task-dag-decomposition` candidate-graph evidence for nodes, edges, blockers, critical path, collisions, uncertainty, and proof limits.
+- Accept or reject each node and edge with an evidence-backed reason before construction.
+- Project splitting, dependencies, parallel safety, critical path, ownership, and remaining Task Contracts only.
 - Never modify Acceptance, Non-goals, Owner, Invariants, Placement, contract
-  semantics, or Rollback. A Task DAG and its nodes are derived artifacts, not a
-  parallel analysis authority.
-- Create a DAG only for two or more real tasks whose every edge expresses a blocking fact.
-- Identify the critical path and parallelize only when it shortens that path or adds independent defect discovery.
-- Mark workspace requirement and parallel safety. With shared or unknown workspace, serialize every write task.
-- Reject parallel writes that share files, contracts, schemas, migrations, generated outputs, fixtures, lockfiles, or production resources.
-- Render every node as a complete Task Contract v2 projection with one accountable Owner.
-- Give every parallel group an Integration Owner, Merge Owner, Conflict Resolution Owner, and workspace requirement.
+  semantics, or Rollback. A Task DAG and its nodes are derived artifacts, not a parallel analysis authority.
+- Create a DAG for multiple real tasks with blocking-fact edges.
+- Identify its critical path.
+- Parallelize only when it shortens that path or adds independent defect discovery.
+- With shared or unknown workspace, serialize writes.
+- Reject parallel writes sharing files, contracts, schemas, migrations, outputs, fixtures, lockfiles, or production resources.
+- Render complete Task Contract v2 nodes with one Owner.
+- Define each node as one complete semantic change and Primary Professional Skill.
+- Keep co-effective work together; split materially different professional domains.
+- File, layer, test, and edit-step differences do not define Tasks.
+- Give each parallel group Integration, Merge, Conflict Resolution owners and a workspace requirement.
+- Define minimum sufficient Review Boundaries: combine related work by default and require concrete risk for an intermediate boundary.
+- Preserve each Task's Primary Skill, implementation Layer 3, Review Skills, Specialist obligations, and risk dimensions.
+- Keep strategy, frequency, assignments, round ID, and primary-close ordering on the global Review Boundary; Task nodes carry only requirements.
+- Give the boundary one primary and zero or more specialist review-agent assignments, each with an ID, role, one registered Review Skill, zero to three independently risk-routed Layer 3 Skills, and bounded scope.
+- Share one Review Round ID: specialists neither close Tasks nor add rounds; the primary waits for current required results and emits the sole artifact and Task projections.
 - Carry graph claims and proof limits in the visible task-local Evidence Ledger.
 
 ## High-Value Gotchas
 
-- A broad “implement backend” node hides ownership, migration, authorization, and rollback risks.
-- Verification and rollback are obligations on risky tasks, not decorative nodes.
-- Independent work is not parallel-safe when it mutates a shared contract or workspace.
-- A cycle or placeholder means the work is not executable.
+- Verification and rollback are obligations, not decorative nodes.
+- Shared-contract or workspace writes are not parallel-safe.
 
 ## Execution Checklist
 
-1. Verify that the Brief contains a complete First Executable Slice and retain it verbatim.
-2. Decide whether a DAG is actually required.
-3. Split only by independent owner, risk, dependency, review, or validation boundary.
-4. Check every dependency and shared mutable resource.
-5. Mark critical path, parallel-safe tasks, and workspace requirement.
-6. Define per-task and combined review contracts, integration, validation, rollback, and stop boundaries.
+1. Confirm Brief, slice, and trigger.
+2. Validate graph, workspace, and owners.
+3. Project review, integration, validation, rollback, and stops.
 
 ## Stop / Escalation Conditions
 
-- Stop for an unknown owner, acceptance, dependency, shared write, verification entry, or rollback boundary that changes safe scheduling.
+- Stop when unknown ownership, acceptance, dependency, shared write, verification, or rollback changes safe scheduling.
 - Stop on cycles, placeholders, overlapping writes, or a user-owned destructive or production decision.
 - If the Brief is insufficient, a projection conflicts with it, or a protected
   decision must change, return `blocked` through Main to analysis for an updated
@@ -80,9 +80,10 @@ Executable Slice.
 
 ## Output Contract
 
-- derived Markdown Task DAG Contract v2 that preserves the current Brief
+- derived Task DAG Contract v2 preserving the Brief
 - Status and complete task nodes
 - parallel-group, Integration Owner, and Review Owner boundaries
+- one Primary Professional Skill per Task and sufficient Review Boundaries
 - visible task-local Evidence Ledger
 - unchanged Brief First Executable Slice when a DAG is unnecessary
 

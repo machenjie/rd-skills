@@ -2,35 +2,18 @@ from __future__ import annotations
 
 import copy
 import hashlib
-import importlib.util
 import json
-import sys
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
+from . import expert_panel_source_test_support as source_support
+from . import readability_review_test_support as readability_support
 
 ROOT = Path(__file__).resolve().parents[2]
-
-
-def _load(name: str, relative: str):
-    scripts = str(ROOT / "scripts")
-    if scripts not in sys.path:
-        sys.path.insert(0, scripts)
-    spec = importlib.util.spec_from_file_location(name, ROOT / relative)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-PANEL = _load("actionability_panel_fixture", "scripts/expert_panel_review.py")
-REGRESSION = _load(
-    "actionability_regression_fixture",
-    "scripts/validate-professionalism-regression.py",
-)
+PANEL = source_support.PANEL
+REGRESSION = source_support.REGRESSION
 
 
 def _write(path: Path, value: dict) -> None:
@@ -40,37 +23,12 @@ def _write(path: Path, value: dict) -> None:
 class ExpertPanelActionabilityTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.audit = json.loads(
-            (ROOT / "reports/skill-content-audit.json").read_text(encoding="utf-8")
-        )
-        auditor = PANEL._load_skill_content_auditor()
-        cls.audit["ai_readability"] = auditor._collect_ai_readability(
-            auditor._ai_readability_documents()
-        )
-        cls.readiness = json.loads(
-            (ROOT / "reports/professionalism-regression-report.json").read_text(
-                encoding="utf-8"
-            )
-        )
-        cls.packet = PANEL.prepare_packet(
-            audit=cls.audit,
-            readiness=cls.readiness,
-            review_id="actionability-v2-fixture",
-            created_on="2026-07-17",
-        )
+        cls.audit = readability_support.current_audit()
+        cls.packet = readability_support.current_packet()
 
     @staticmethod
     def _first_substantive_window_line(target: dict) -> tuple[int, str, str]:
-        for row in target["front_window"]["lines"]:
-            tokens = sorted(PANEL._evidence_tokens(row["text"]))
-            if (
-                PANEL._actionability_window_line_is_substantive(
-                    target["front_window"], row["line"]
-                )
-                and tokens
-            ):
-                return row["line"], row["text"], tokens[0]
-        raise AssertionError("front window lacks substantive actionability evidence")
+        return readability_support._first_substantive_window_line(target)
 
     def _ballot(
         self,
@@ -80,69 +38,44 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
         *,
         actionability_decision: str = "accepted-current-actionability",
     ) -> dict:
-        ballot = PANEL.prepare_readability_ballot_template(
-            packet=packet,
-            packet_sha256=packet_sha256,
-            voter_id=f"actionability-expert-{voter}",
-            agent_id=f"actionability-agent-{voter}",
-            role=f"senior AI instruction actionability reviewer {voter}",
-            expertise=["AI instruction semantics and executable action design"],
-            created_on="2026-07-17",
+        return readability_support.ballot(
+            packet,
+            packet_sha256,
+            voter,
+            actionability_decision=actionability_decision,
         )
-        for vote in ballot["content_votes"]:
-            vote.update(
-                decision="accepted-current-density",
-                reason_code="bounded-density-preserves-professional-coverage",
-                rationale=(
-                    "This bounded density preserves one complete and coherent "
-                    "professional decision model."
-                ),
-            )
-        for vote in ballot["readability_votes"]:
-            for finding_review in vote["finding_reviews"]:
-                finding_review.update(
-                    decision="accepted-current-readability",
-                    reason_code="single-indivisible-decision",
-                    rationale=(
-                        "This sentence preserves one complete and coherent decision "
-                        "without separable instructions."
-                    ),
+
+    @staticmethod
+    def _synchronize_actionability_audit_contract(audit: dict) -> None:
+        auditor = PANEL._load_skill_content_auditor()
+        readability_by_owner = auditor._readability_by_owner(
+            audit["ai_readability"]["documents"]
+        )
+        for row in audit["skills"]:
+            row["review_state"], row["review_reasons"] = (
+                auditor._review_state_and_reasons(
+                    row,
+                    readability_by_owner.get(row["name"]),
                 )
-        targets = {
-            target["target_id"]: target
-            for target in packet["actionability_targets"]
+            )
+        audit["summary"]["review_states"] = {
+            state: sum(row["review_state"] == state for row in audit["skills"])
+            for state in auditor.REVIEW_STATE_PRIORITY
+            if any(row["review_state"] == state for row in audit["skills"])
         }
-        reason_code = {
-            "accepted-current-actionability": (
-                "explicit-domain-actions-are-front-loaded"
-            ),
-            "detector-false-positive": "equivalent-action-verb-not-recognized",
-            "rewrite-required": "primary-action-not-front-loaded",
-        }[actionability_decision]
-        for vote in ballot["actionability_votes"]:
-            target = targets[vote["target_id"]]
-            line, source_line, source_token = self._first_substantive_window_line(
-                target
+        audit["summary"]["review_reasons"] = {
+            reason: sum(
+                reason in row["review_reasons"] for row in audit["skills"]
             )
-            vote.update(
-                decision=actionability_decision,
-                reason_code=reason_code,
-                rationale=(
-                    "The reviewed opening lines provide concrete evidence for "
-                    "this actionability disposition."
-                ),
-                evidence=[
-                    {
-                        "line": line,
-                        "source_line": source_line,
-                        "claim": (
-                            f"The {source_token} opening instruction provides concrete "
-                            "actionability review evidence."
-                        ),
-                    }
-                ],
-            )
-        return ballot
+            for reason in auditor.REVIEW_REASON_PRIORITY
+        }
+        actionability_count = sum(
+            row["actionability_applicable"] for row in audit["skills"]
+        )
+        audit["summary"]["actionability_applicable_items"] = actionability_count
+        audit["summary"]["weak_front_loaded_action_all_items"] = (
+            actionability_count
+        )
 
     def _synthetic_actionability_packet(self) -> dict:
         audit = copy.deepcopy(self.audit)
@@ -163,15 +96,54 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
             "runtime-front-loaded-score-below-threshold"
         ]
         candidate["front_loaded_action_score"] = 0
-        if "weak_front_loaded_action" not in candidate["review_reasons"]:
-            candidate["review_reasons"].append("weak_front_loaded_action")
-        audit["summary"]["actionability_applicable_items"] = 1
-        audit["summary"]["weak_front_loaded_action_all_items"] = 1
+        self._synchronize_actionability_audit_contract(audit)
         return PANEL.prepare_packet(
             audit=audit,
-            readiness=self.readiness,
             review_id="synthetic-actionability-target-fixture",
             created_on="2026-07-24",
+        )
+
+    @staticmethod
+    def _current_readability_authority(
+        packet: dict, *, track_source_changes: bool = True
+    ):
+        def projection():
+            if not track_source_changes:
+                return (
+                    packet["source_fingerprints"],
+                    packet["content_targets"],
+                    packet["readability_targets"],
+                    packet["actionability_targets"],
+                )
+            actionability_targets = copy.deepcopy(packet["actionability_targets"])
+            for target in actionability_targets:
+                target["front_window"] = PANEL._actionability_front_window(
+                    target["path"],
+                    limit=packet["panel_contract"][
+                        "actionability_front_window_lines"
+                    ],
+                )
+            fingerprints = dict(packet["source_fingerprints"])
+            fingerprints["readability_target_manifest"] = (
+                PANEL._canonical_json_sha256(
+                    PANEL._readability_target_manifest_projection(
+                        content_targets=packet["content_targets"],
+                        readability_targets=packet["readability_targets"],
+                        actionability_targets=actionability_targets,
+                    )
+                )
+            )
+            return (
+                fingerprints,
+                packet["content_targets"],
+                packet["readability_targets"],
+                actionability_targets,
+            )
+
+        return mock.patch.object(
+            PANEL,
+            "_current_readability_target_projection",
+            side_effect=projection,
         )
 
     def test_prepare_emits_schema_two_and_all_weak_targets(self) -> None:
@@ -207,14 +179,18 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
                 row["text"] for row in context["lines"]
             ])
             missing_advisory += target["path"] not in advisory_paths
-        self.assertEqual(8, missing_advisory)
+        self.assertEqual(7, missing_advisory)
         self.assertLess(
             len(json.dumps(packet, sort_keys=True).encode("utf-8")),
             16 * 1024 * 1024,
         )
         self.assertEqual(
-            self.audit["skill_detector"]["detector_fingerprint"]["value"],
-            packet["source_fingerprints"]["skill_detector"],
+            {
+                "actionability_detector_contract",
+                "readability_detector_contract",
+                "readability_target_manifest",
+            },
+            set(packet["source_fingerprints"]),
         )
         self.assertEqual(0, len(packet["actionability_targets"]))
         self.assertEqual(
@@ -223,16 +199,453 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
         )
         target_ids = [row["target_id"] for row in packet["actionability_targets"]]
         self.assertEqual(sorted(set(target_ids)), target_ids)
-        self.assertEqual(357, len(packet["readability_targets"]))
+        readability_target_ids = [
+            row["document_id"] for row in packet["readability_targets"]
+        ]
+        expected_readability_target_ids = sorted(
+            row["document_id"]
+            for row in self.audit["ai_readability"]["documents"]
+            if row["highest_advisory_band"] is not None
+        )
         self.assertEqual(
-            978,
-            sum(len(row["findings"]) for row in packet["readability_targets"]),
+            expected_readability_target_ids,
+            readability_target_ids,
+        )
+        self.assertEqual(
+            sorted(set(readability_target_ids)),
+            readability_target_ids,
+        )
+        audit_findings_by_document: dict[str, list[dict]] = {}
+        for finding in self.audit["ai_readability"]["findings"]:
+            audit_findings_by_document.setdefault(
+                finding["document_id"], []
+            ).append(finding)
+        packet_finding_ids: list[str] = []
+        for target in packet["readability_targets"]:
+            expected_findings = [
+                {
+                    "finding_id": finding["finding_id"],
+                    "line": finding["line"],
+                    "band": finding["band"],
+                    "words": finding["words"],
+                    "kind": finding["kind"],
+                    "sentence": finding["sentence"],
+                    "sentence_fingerprint": finding[
+                        "sentence_fingerprint"
+                    ],
+                    "source_span": copy.deepcopy(
+                        finding["source_span"]
+                    ),
+                }
+                for finding in audit_findings_by_document[
+                    target["document_id"]
+                ]
+            ]
+            expected_findings.sort(
+                key=lambda row: (
+                    row["source_span"]["start_offset"],
+                    row["source_span"]["end_offset"],
+                    row["kind"],
+                    row["finding_id"],
+                )
+            )
+            self.assertEqual(expected_findings, target["findings"])
+            target_finding_ids = [
+                finding["finding_id"] for finding in target["findings"]
+            ]
+            self.assertEqual(
+                len(target_finding_ids), len(set(target_finding_ids))
+            )
+            packet_finding_ids.extend(target_finding_ids)
+        self.assertEqual(
+            sorted(
+                finding["finding_id"]
+                for finding in self.audit["ai_readability"]["findings"]
+            ),
+            sorted(packet_finding_ids),
+        )
+        self.assertEqual(
+            len(packet_finding_ids), len(set(packet_finding_ids))
         )
         self.assertEqual(
             "finding-grounded-document-majority-v1",
             packet["panel_contract"]["readability_document_decision_method"],
         )
         PANEL.validate_packet(packet)
+
+    def test_packet_source_fingerprints_are_target_local_and_contract_owned(
+        self,
+    ) -> None:
+        packet = PANEL.prepare_packet(
+            audit=self.audit,
+            review_id="current-source-authority-fixture",
+            created_on="2026-08-10",
+        )
+        changed = copy.deepcopy(self.audit)
+        changed["root_content"]["source_fingerprint"]["value"] = "0" * 64
+        changed["reference_content"]["preface_contract"][
+            "source_fingerprint"
+        ]["value"] = "1" * 64
+        changed["root_content"]["documents"].append(
+            {
+                "document_part": "body",
+                "path": "src/foundation/unrelated/SKILL.md",
+                "content_fingerprint": "2" * 64,
+            }
+        )
+        changed["reference_content"]["unrelated_inventory_metadata"] = {
+            "path": "src/foundation/unrelated/references/note.md",
+            "sha256": "3" * 64,
+        }
+        changed["summary"]["unrelated_report_metadata"] = 1
+        changed_packet = PANEL.prepare_packet(
+            audit=changed,
+            review_id="changed-unrelated-authority-fixture",
+            created_on="2026-08-10",
+        )
+        self.assertEqual(
+            packet["source_fingerprints"],
+            changed_packet["source_fingerprints"],
+        )
+
+        arguments = {
+            "readability_contract": self.audit["ai_readability"]["contract"],
+            "content_targets": packet["content_targets"],
+            "readability_targets": packet["readability_targets"],
+            "actionability_targets": packet["actionability_targets"],
+            "actionability_score_threshold": packet["panel_contract"][
+                "actionability_score_threshold"
+            ],
+            "actionability_front_window_lines": packet["panel_contract"][
+                "actionability_front_window_lines"
+            ],
+        }
+        baseline = PANEL._readability_source_fingerprints(**arguments)
+
+        administrative = copy.deepcopy(arguments)
+        administrative["content_targets"] = copy.deepcopy(
+            packet["content_targets"]
+        )
+        administrative["content_targets"][0]["review_state"] = "REPORT_ONLY"
+        administrative["content_targets"][0]["review_reasons"] = [
+            "report-only"
+        ]
+        self.assertEqual(
+            baseline,
+            PANEL._readability_source_fingerprints(**administrative),
+        )
+
+        target_changed = copy.deepcopy(arguments)
+        target_changed["readability_targets"] = copy.deepcopy(
+            packet["readability_targets"]
+        )
+        target_changed["readability_targets"][0]["findings"][0][
+            "sentence_fingerprint"
+        ] = "0" * 64
+        target_changed_fingerprints = PANEL._readability_source_fingerprints(
+            **target_changed
+        )
+        self.assertNotEqual(
+            baseline["readability_target_manifest"],
+            target_changed_fingerprints["readability_target_manifest"],
+        )
+
+        readability_detector_changed = copy.deepcopy(arguments)
+        readability_detector_changed["readability_contract"] = copy.deepcopy(
+            self.audit["ai_readability"]["contract"]
+        )
+        readability_detector_changed["readability_contract"][
+            "ordinary_target_words"
+        ] += 1
+        detector_fingerprints = PANEL._readability_source_fingerprints(
+            **readability_detector_changed
+        )
+        self.assertNotEqual(
+            baseline["readability_detector_contract"],
+            detector_fingerprints["readability_detector_contract"],
+        )
+        self.assertEqual(
+            baseline["readability_target_manifest"],
+            detector_fingerprints["readability_target_manifest"],
+        )
+
+        actionability_changed = {
+            **arguments,
+            "actionability_score_threshold": (
+                arguments["actionability_score_threshold"] + 1
+            ),
+        }
+        actionability_fingerprints = PANEL._readability_source_fingerprints(
+            **actionability_changed
+        )
+        self.assertNotEqual(
+            baseline["actionability_detector_contract"],
+            actionability_fingerprints["actionability_detector_contract"],
+        )
+
+    def test_schema_two_cli_rejects_removed_readiness_flag(self) -> None:
+        with self.assertRaises(SystemExit) as raised:
+            PANEL._parse_args(
+                [
+                    "prepare",
+                    "--panel-kind",
+                    PANEL.READABILITY_PANEL_KIND,
+                    "--audit",
+                    "audit.json",
+                    "--readiness",
+                    "readiness.json",
+                    "--review-id",
+                    "removed-readiness-flag",
+                    "--created-on",
+                    "2026-08-10",
+                    "--out",
+                    ".rd-skills/expert-panel/removed-readiness-flag/packet.json",
+                ]
+            )
+        self.assertEqual(2, raised.exception.code)
+
+    def test_current_audit_actionability_projection_is_fail_closed(self) -> None:
+        weak_reason = "weak_front_loaded_action"
+        mutations = (
+            lambda value: value["skills"][0].pop("actionability_model"),
+            lambda value: value["skills"][0]["review_reasons"].append(
+                weak_reason
+            ),
+            lambda value: value["summary"]["review_reasons"].update(
+                {
+                    weak_reason: value["summary"]["review_reasons"].get(
+                        weak_reason, 0
+                    )
+                    + 1
+                }
+            ),
+        )
+        for index, mutate in enumerate(mutations):
+            stale = copy.deepcopy(self.audit)
+            mutate(stale)
+            with self.subTest(mutation=index), self.assertRaises(PANEL.PanelReviewError):
+                PANEL.prepare_packet(
+                    audit=stale,
+                    review_id="stale-actionability-authority",
+                    created_on="2026-08-10",
+                )
+
+        duplicate = {
+            "path": "src/professional-skills/duplicate/SKILL.md",
+            "name": "duplicate-actionability",
+            "front_loaded_action_score": 0,
+            "review_reasons": [weak_reason],
+            "actionability_model": "runtime-front-loaded-v1",
+            "actionability_applicable": True,
+        }
+        with self.assertRaisesRegex(ValueError, "target IDs must be unique"):
+            REGRESSION._required_actionability_disposition_rows(
+                [duplicate, copy.deepcopy(duplicate)]
+            )
+
+    def test_attest_and_promotion_paths_reach_shared_source_authority(self) -> None:
+        record = {
+            "review_id": self.packet["review_id"],
+            "decided_on": self.packet["created_on"],
+            "voters": [],
+        }
+        with mock.patch.object(
+            PANEL,
+            "_json_object",
+            return_value=self.audit,
+        ) as load, mock.patch.object(
+            PANEL,
+            "_readability_target_authorities",
+            wraps=PANEL._readability_target_authorities,
+        ) as build_authority:
+            _path, authority, validate_after_parse = (
+                PANEL._current_attestation_validation(
+                    PANEL.READABILITY_PANEL_KIND,
+                    review_id=self.packet["review_id"],
+                    decided_on=self.packet["created_on"],
+                    attestation_selector={},
+                )
+            )
+            currentness_builds = build_authority.call_count
+            validate_after_parse({})
+            self.assertEqual(currentness_builds, build_authority.call_count)
+        load.assert_called_once()
+        self.assertEqual(2, currentness_builds)
+        self.assertEqual(
+            self.packet["source_fingerprints"],
+            authority["expected_source_fingerprints"],
+        )
+
+        drifted_audit = copy.deepcopy(self.audit)
+        drifted_audit["thresholds"]["weak_front_loaded_action"] += 1
+        with mock.patch.object(
+            PANEL, "validate_decision_record"
+        ), mock.patch.object(
+            PANEL,
+            "_decision_packet_and_ballots",
+            return_value=(Path("packet.json"), self.packet, []),
+        ), self.assertRaisesRegex(
+            PANEL.PanelReviewError,
+            "readability decision source_fingerprints is incomplete or stale",
+        ):
+            PANEL._readability_attestation_from_decision(
+                record,
+                decision_path=Path("decision.json"),
+                audit=drifted_audit,
+            )
+
+    def test_readability_manifest_authority_is_shared_end_to_end(self) -> None:
+        packet = copy.deepcopy(self.packet)
+        bindings = PANEL._readability_target_authorities(packet)
+        manifest = (
+            PANEL.panel_attestation.readability_target_manifest_projection(
+                bindings
+            )
+        )
+        self.assertEqual(
+            manifest,
+            PANEL._readability_target_manifest_projection(
+                content_targets=packet["content_targets"],
+                readability_targets=packet["readability_targets"],
+                actionability_targets=packet["actionability_targets"],
+            ),
+        )
+        self.assertEqual(
+            PANEL.panel_contracts.READABILITY_TARGET_MANIFEST_CONTRACT_ID,
+            manifest["contract_id"],
+        )
+        self.assertEqual(
+            packet["source_fingerprints"]["readability_target_manifest"],
+            PANEL.panel_attestation.readability_target_manifest_fingerprint(
+                bindings
+            ),
+        )
+        with tempfile.TemporaryDirectory(dir=ROOT) as raw:
+            root = Path(raw)
+            packet_path = root / "packet.json"
+            _write(packet_path, packet)
+            packet_sha256 = hashlib.sha256(packet_path.read_bytes()).hexdigest()
+            ballot_values = []
+            for voter in range(1, 4):
+                ballot = self._ballot(packet, packet_sha256, voter)
+                ballot_path = root / f"ballot-{voter}.json"
+                _write(ballot_path, ballot)
+                ballot_values.append((ballot_path, ballot))
+            decision = PANEL.aggregate_ballots(
+                packet=packet,
+                packet_path=packet_path,
+                ballot_values=ballot_values,
+                decided_on=packet["created_on"],
+            )
+            decision_path = root / "decision.json"
+            _write(decision_path, decision)
+            attestation = PANEL._readability_attestation_from_decision(
+                decision,
+                decision_path=decision_path,
+                audit=self.audit,
+            )
+
+        validation = {
+            "expected_source_fingerprints": packet["source_fingerprints"],
+            "expected_review_contract_fingerprint": PANEL._canonical_json_sha256(
+                packet["panel_contract"]
+            ),
+            "expected_readability_current_bindings": bindings,
+        }
+        payload = PANEL.panel_attestation.canonical_attestation_bytes(
+            attestation,
+            expected_path=(
+                PANEL.panel_attestation.READABILITY_ATTESTATION_PATH
+            ),
+            **validation,
+        )
+        parsed = PANEL.panel_attestation.parse_attestation_bytes(
+            payload,
+            expected_path=(
+                PANEL.panel_attestation.READABILITY_ATTESTATION_PATH
+            ),
+            **validation,
+        )
+        self.assertEqual(attestation, parsed)
+        storage = json.loads(payload)
+        self.assertEqual(
+            packet["source_fingerprints"]["readability_target_manifest"],
+            storage["target_manifest_binding"],
+        )
+
+        without_sources = dict(validation)
+        without_sources.pop("expected_source_fingerprints")
+        with self.assertRaisesRegex(
+            PANEL.panel_attestation.AttestationError,
+            "source fingerprints",
+        ):
+            PANEL.panel_attestation.parse_attestation_bytes(
+                payload,
+                expected_path=(
+                    PANEL.panel_attestation.READABILITY_ATTESTATION_PATH
+                ),
+                **without_sources,
+            )
+
+        for key in (
+            "target_manifest_binding",
+            "readability_detector_contract",
+            "actionability_detector_contract",
+        ):
+            changed = copy.deepcopy(storage)
+            if key == "target_manifest_binding":
+                changed[key] = "0" * 64
+            else:
+                changed["detector_contract_fingerprints"][key] = "0" * 64
+            tampered = (
+                json.dumps(
+                    changed,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode("utf-8")
+                + b"\n"
+            )
+            with self.subTest(tamper=key), self.assertRaises(
+                PANEL.panel_attestation.AttestationError
+            ):
+                PANEL.panel_attestation.parse_attestation_bytes(
+                    tampered,
+                    expected_path=(
+                        PANEL.panel_attestation.READABILITY_ATTESTATION_PATH
+                    ),
+                    **validation,
+                )
+
+        partial = copy.deepcopy(bindings)
+        partial["content"].pop(next(iter(partial["content"])))
+        with self.assertRaises(PANEL.panel_attestation.AttestationError):
+            PANEL.panel_attestation.parse_attestation_bytes(
+                payload,
+                expected_path=(
+                    PANEL.panel_attestation.READABILITY_ATTESTATION_PATH
+                ),
+                **{
+                    **validation,
+                    "expected_readability_current_bindings": partial,
+                },
+            )
+
+        overwritten = copy.deepcopy(attestation)
+        overwritten["source_fingerprints"][
+            "readability_target_manifest"
+        ] = "0" * 64
+        with self.assertRaisesRegex(
+            PANEL.panel_attestation.AttestationError,
+            "manifest",
+        ):
+            PANEL.panel_attestation.finalize_attestation(
+                overwritten,
+                expected_path=(
+                    PANEL.panel_attestation.READABILITY_ATTESTATION_PATH
+                ),
+                expected_readability_current_bindings=bindings,
+            )
 
     def test_content_source_binding_is_current_only_and_fail_closed(self) -> None:
         packet = self.packet
@@ -311,9 +724,10 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
             PANEL,
             "_current_readability_target_projection",
             return_value=(
-                packet["source_fingerprints"]["ai_readability"],
+                packet["source_fingerprints"],
                 stale_content,
                 packet["readability_targets"],
+                packet["actionability_targets"],
             ),
         ), self.assertRaisesRegex(PANEL.PanelReviewError, "bindings or inventory"):
             PANEL.validate_packet(packet)
@@ -368,13 +782,10 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
             ]
         candidate["actionability_applicable"] = True
         candidate["front_loaded_action_score"] = 100
-        candidate["review_reasons"].append("weak_front_loaded_action")
-        audit["summary"]["actionability_applicable_items"] = 1
-        audit["summary"]["weak_front_loaded_action_all_items"] = 1
+        self._synchronize_actionability_audit_contract(audit)
 
         packet = PANEL.prepare_packet(
             audit=audit,
-            readiness=self.readiness,
             review_id="explicit-actionability-model-fixture",
             created_on="2026-07-24",
         )
@@ -399,9 +810,6 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
             output: str,
         ) -> int:
             (validation_root / "audit.json").write_text("{}\n", encoding="utf-8")
-            (validation_root / "readiness.json").write_text(
-                "{}\n", encoding="utf-8"
-            )
             with mock.patch.object(
                 PANEL, "ROOT", validation_root
             ), mock.patch.object(
@@ -416,8 +824,6 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
                         PANEL.READABILITY_PANEL_KIND,
                         "--audit",
                         "audit.json",
-                        "--readiness",
-                        "readiness.json",
                         "--review-id",
                         review_id,
                         "--created-on",
@@ -427,7 +833,7 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
                     ]
                 )
 
-        canonical = f"evals/expert-panel/{review_id}/packet.json"
+        canonical = f".rd-skills/expert-panel/{review_id}/packet.json"
         with tempfile.TemporaryDirectory() as raw:
             validation_root = Path(raw)
             self.assertEqual(
@@ -471,7 +877,7 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
             validation_root = Path(raw)
             actual = validation_root / "actual-round"
             actual.mkdir()
-            round_parent = validation_root / "evals" / "expert-panel"
+            round_parent = validation_root / ".rd-skills" / "expert-panel"
             round_parent.mkdir(parents=True)
             (round_parent / review_id).symlink_to(
                 actual, target_is_directory=True
@@ -488,14 +894,11 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
 
     def test_schema_two_cli_delegates_to_atomic_create_only_writer(self) -> None:
         review_id = self.packet["review_id"]
-        canonical = f"evals/expert-panel/{review_id}/packet.json"
+        canonical = f".rd-skills/expert-panel/{review_id}/packet.json"
 
         with tempfile.TemporaryDirectory() as raw:
             validation_root = Path(raw)
             (validation_root / "audit.json").write_text(
-                "{}\n", encoding="utf-8"
-            )
-            (validation_root / "readiness.json").write_text(
                 "{}\n", encoding="utf-8"
             )
             with mock.patch.object(
@@ -512,8 +915,6 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
                         PANEL.READABILITY_PANEL_KIND,
                         "--audit",
                         "audit.json",
-                        "--readiness",
-                        "readiness.json",
                         "--review-id",
                         review_id,
                         "--created-on",
@@ -648,7 +1049,9 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
 
     def test_full_actionability_ballot_validates_and_aggregates(self) -> None:
         packet = self._synthetic_actionability_packet()
-        with tempfile.TemporaryDirectory(dir=ROOT) as raw:
+        with self._current_readability_authority(
+            packet
+        ), tempfile.TemporaryDirectory(dir=ROOT) as raw:
             root = Path(raw)
             packet_path = root / "packet.json"
             _write(packet_path, packet)
@@ -695,7 +1098,8 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
                 "read_text",
                 new=changed_source_read_text,
             ), self.assertRaisesRegex(
-                PANEL.PanelReviewError, "source is stale|inventory are stale"
+                PANEL.PanelReviewError,
+                "target or detector authority is stale|source is stale|inventory are stale",
             ):
                 PANEL.validate_decision_record(record, record_path=decision_path)
 
@@ -714,7 +1118,9 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
         target = next(
             row for row in packet["readability_targets"] if len(row["findings"]) >= 2
         )
-        with tempfile.TemporaryDirectory(dir=ROOT) as raw:
+        with self._current_readability_authority(
+            packet
+        ), tempfile.TemporaryDirectory(dir=ROOT) as raw:
             root = Path(raw)
             packet_path = root / "packet.json"
             _write(packet_path, packet)
@@ -766,7 +1172,9 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
 
     def test_actionability_ballot_requires_exact_coverage_and_valid_evidence(self) -> None:
         packet = self._synthetic_actionability_packet()
-        with tempfile.TemporaryDirectory(dir=ROOT) as raw:
+        with self._current_readability_authority(
+            packet
+        ), tempfile.TemporaryDirectory(dir=ROOT) as raw:
             packet_path = Path(raw) / "packet.json"
             _write(packet_path, packet)
             packet_sha = hashlib.sha256(packet_path.read_bytes()).hexdigest()
@@ -894,8 +1302,13 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
         packet = self._synthetic_actionability_packet()
         target = packet["actionability_targets"][0]
         target["front_window"] = window
-        PANEL.validate_packet(packet)
-        with tempfile.TemporaryDirectory(dir=ROOT) as raw:
+        with self._current_readability_authority(
+            packet, track_source_changes=False
+        ):
+            PANEL.validate_packet(packet)
+        with self._current_readability_authority(
+            packet, track_source_changes=False
+        ), tempfile.TemporaryDirectory(dir=ROOT) as raw:
             packet_path = Path(raw) / "packet.json"
             _write(packet_path, packet)
             packet_sha = hashlib.sha256(packet_path.read_bytes()).hexdigest()
@@ -922,7 +1335,9 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
 
     def test_majority_rewrite_is_counted_and_blocks_formal_predicate(self) -> None:
         packet = self._synthetic_actionability_packet()
-        with tempfile.TemporaryDirectory(dir=ROOT) as raw:
+        with self._current_readability_authority(
+            packet
+        ), tempfile.TemporaryDirectory(dir=ROOT) as raw:
             root = Path(raw)
             packet_path = root / "packet.json"
             _write(packet_path, packet)

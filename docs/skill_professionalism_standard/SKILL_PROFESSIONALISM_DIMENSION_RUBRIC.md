@@ -1,7 +1,7 @@
 # Skill Professionalism Dimension Rubric
 
 Status: normative scoring rubric  
-Applies to: ChangeForge professional skills, foundation capabilities, and domain extensions  
+Applies to: rd-skills professional skills, foundation capabilities, and domain extensions
 Score model: 100-point professionalism score, independent from activation quality and context efficiency
 
 ---

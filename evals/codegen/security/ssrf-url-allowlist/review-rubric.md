@@ -2,7 +2,7 @@
 
 ## Passing Standard
 
-The implementation must satisfy the benchmark behavior, prove the negative path, and keep the relevant ChangeForge quality gates reviewable from executable evidence.
+The implementation must satisfy the benchmark behavior, prove the negative path, and keep the relevant rd-skills quality gates reviewable from executable evidence.
 
 ## Scoring
 

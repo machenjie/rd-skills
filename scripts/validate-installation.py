@@ -20,6 +20,7 @@ from validation_utils import (
     authoritative_build_input_snapshot_errors,
     execution_level_runtime_reference_errors,
     fail_many,
+    report_output_paths,
 )
 
 
@@ -57,6 +58,15 @@ AGENT_PROFILES = {
     "task-agent",
     "review-agent",
 }
+REPORT_JSON = ROOT / "reports" / "installation-validation.json"
+REPORT_MD = ROOT / "reports" / "installation-validation.md"
+
+
+def _args(argv: list[str] | None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--release-projection", action="store_true")
+    parser.add_argument("--reports-dir", type=Path, default=REPORT_JSON.parent)
+    return parser.parse_args(argv)
 
 
 def _expected_core_model_metadata() -> dict[str, object]:
@@ -85,9 +95,7 @@ def _build_input_freshness_errors(
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--release-projection", action="store_true")
-    args = parser.parse_args(argv)
+    args = _args(argv)
     errors: list[str] = []
     built_count = _validate_skill_roots(errors)
     profile_count = _validate_profile_roots(errors)
@@ -104,6 +112,7 @@ def main(argv: list[str] | None = None) -> int:
         zip_count=zip_count,
         residue_count=residue_count,
         release_projection=args.release_projection,
+        reports_dir=args.reports_dir,
     )
     if errors:
         return fail_many("validate-installation", errors)
@@ -123,9 +132,12 @@ def _write_report(
     zip_count: int,
     residue_count: int,
     release_projection: bool = False,
+    reports_dir: Path = ROOT / "reports",
 ) -> None:
-    report_dir = ROOT / "reports"
-    report_dir.mkdir(parents=True, exist_ok=True)
+    json_report, markdown_report = report_output_paths(
+        reports_dir, REPORT_JSON.name, REPORT_MD.name
+    )
+    reports_dir.mkdir(parents=True, exist_ok=True)
     payload = {
         "schema_version": 2,
         "architecture": "hookless-control-plane-v1",
@@ -146,7 +158,7 @@ def _write_report(
         },
         "errors": errors,
     }
-    (report_dir / "installation-validation.json").write_text(
+    json_report.write_text(
         json.dumps(payload, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
@@ -182,7 +194,7 @@ def _write_report(
     lines.extend(f"- {error}" for error in errors)
     if not errors:
         lines.append("- None")
-    (report_dir / "installation-validation.md").write_text(
+    markdown_report.write_text(
         "\n".join(lines) + "\n",
         encoding="utf-8",
     )
@@ -385,11 +397,11 @@ def _validate_install_cycle(errors: list[str]) -> None:
         if {path.stem for path in profiles.glob("*.toml")} != AGENT_PROFILES:
             errors.append("installer smoke: Agent Profile set mismatch")
         if legacy_script.exists() or legacy_pack.exists():
-            errors.append("installer smoke: legacy ChangeForge residue was not removed")
+            errors.append("installer smoke: legacy pre-hookless residue was not removed")
         if not user_marker.is_file() or "user-owned.py" not in config.read_text(encoding="utf-8"):
             errors.append("installer smoke: user-owned interception configuration was not preserved")
         if "changeforge_hook.py" in config.read_text(encoding="utf-8"):
-            errors.append("installer smoke: ChangeForge command remains in shared config")
+            errors.append("installer smoke: pre-hookless command remains in shared config")
         doctor = _run("doctor.py", "--agent", "codex", "--scope", "project", "--target", str(project), "--profile", "recommended")
         if doctor.returncode != 0:
             errors.append(f"doctor smoke failed: {doctor.stdout.strip()} {doctor.stderr.strip()}")

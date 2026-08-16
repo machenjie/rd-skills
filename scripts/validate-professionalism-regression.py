@@ -15,8 +15,12 @@ import hashlib
 import importlib.util
 import json
 import os
+import re
+import secrets
+import stat
 import subprocess
 import sys
+import tempfile
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import date
@@ -29,6 +33,8 @@ from typing import Any
 from capability_coverage import fixture_ids, validate_capability_coverage
 from validation_utils import (
     AFFECTED_CONTEXT_ENV,
+    EXPERT_PANEL_RELEASE_MANIFEST_ARTIFACTS,
+    EXPERT_PANEL_RELEASE_MANIFEST_SCHEMA_VERSION,
     PROFESSIONAL_COVERAGE_STATES,
     PROFESSIONAL_REVIEW_COST_FIELDS,
     PROFESSIONAL_REVIEW_COST_LIMITATIONS,
@@ -39,6 +45,7 @@ from validation_utils import (
     load_yaml_file,
     parse_affected_professionalism_context,
     validate_core_contracts,
+    validate_expert_panel_release_manifest,
 )
 import expert_panel_review as expert_panel
 
@@ -56,7 +63,12 @@ AUTHORING_GATE_PASS = "current-contract-pass"
 AUTHORING_GATE_FAIL = "current-contract-fail"
 RELEASE_GATE_PASS = "release-ready"
 RELEASE_GATE_FAIL = "release-not-ready"
-PROFESSIONALISM_REPORT_SCHEMA_VERSION = 3
+EXPERT_PANEL_RELEASE_MANIFEST_BLOCKER_CATEGORY = (
+    "expert-panel-release-manifest-release-gate"
+)
+PROFESSIONALISM_REPORT_SCHEMA_VERSION = 4
+FORMAL_HEAD_COMMIT_ENV = "CHANGEFORGE_FORMAL_HEAD_COMMIT"
+FORMAL_EVIDENCE_ROOT = ".rd-skills/formal-release"
 
 REFERENCE_DEFAULT_COUNT_FIELDS = (
     "missing_indexed_references",
@@ -163,34 +175,26 @@ DUAL_PANEL_CONFIG_FIELDS = {
     "readability_review_attestation",
     "professional_completeness_review_attestation",
 }
-DUAL_PANEL_ATTESTATION_FIELDS = {
+READABILITY_CONFIG_ATTESTATION_FIELDS = {
     "schema_version",
     "panel_kind",
     "scope",
     "decision_method",
-    "source_fingerprints",
-    "panel_record",
     "limitations",
 }
-READABILITY_SOURCE_FINGERPRINT_FIELDS = {
-    "reference_content",
-    "root_content",
-    "ai_readability",
-    "skill_detector",
+PROFESSIONAL_CONFIG_ATTESTATION_FIELDS = {
+    "schema_version",
+    "panel_kind",
+    "scope",
+    "decision_method",
+    "limitations",
 }
-LEGACY_READABILITY_SOURCE_FINGERPRINT_FIELDS = {
-    "reference_content",
-    "root_content",
-    "ai_readability",
-}
-PROFESSIONAL_COMPLETENESS_SOURCE_FINGERPRINT_FIELDS = {
-    "professional_packages",
-}
-PROFESSIONAL_COMPLETENESS_V3_SOURCE_FINGERPRINT_FIELDS = {
-    "professional_packages",
-    "professional_review_bindings",
-    "professional_review_contract",
-}
+READABILITY_SOURCE_FINGERPRINT_FIELDS = set(
+    expert_panel.panel_contracts.READABILITY_SOURCE_FINGERPRINT_KEYS
+)
+LEGACY_READABILITY_SOURCE_FINGERPRINT_FIELDS = set(
+    expert_panel.panel_contracts.READABILITY_LEGACY_SOURCE_FINGERPRINT_KEYS
+)
 GENERATED_EXPERT_EVIDENCE_PATHS = {
     "docs/MARKETPLACE_CATALOG.md",
     "docs/SHOWCASE.md",
@@ -250,6 +254,7 @@ class Result:
     root_content_summary: dict[str, Any] = field(default_factory=dict)
     content_readiness: dict[str, Any] = field(default_factory=dict)
     coverage_gate_summary: dict[str, Any] = field(default_factory=dict)
+    expert_panel_release_manifest: dict[str, Any] = field(default_factory=dict)
     professional_review_cost_fixtures: dict[str, Any] = field(
         default_factory=dict
     )
@@ -495,6 +500,13 @@ def _write_affected_result(
         "evidence_scope": "affected-partial-json",
         "affected_context": context,
         "execution_scope": execution_scope,
+        "expert_panel_release_manifest": {
+            "schema_version": EXPERT_PANEL_RELEASE_MANIFEST_SCHEMA_VERSION,
+            "status": "not-evaluated",
+            "head_commit": None,
+            "artifacts": [],
+            "verification_toolchain": None,
+        },
         "blockers": [],
         "release_blockers": [],
         "advisories": [],
@@ -556,6 +568,28 @@ def _affected_main(
 def main(argv: list[str] | None = None) -> int:
     args = _args(sys.argv[1:] if argv is None else argv)
     args.reports_dir.mkdir(parents=True, exist_ok=True)
+    output_directory = args.output_dir or args.reports_dir
+    formal_head_commit = (
+        os.environ.get(FORMAL_HEAD_COMMIT_ENV)
+        if args.release_projection
+        else None
+    )
+    if formal_head_commit is not None:
+        expected_output_directory = (
+            ROOT
+            / FORMAL_EVIDENCE_ROOT
+            / formal_head_commit
+            / "reports"
+        ).absolute()
+        if output_directory.absolute() != expected_output_directory:
+            print(
+                "validate-professionalism-regression: ERROR: formal output "
+                "directory is not bound to the captured Core HEAD",
+                file=sys.stderr,
+            )
+            return 1
+    else:
+        output_directory.mkdir(parents=True, exist_ok=True)
     raw_affected_context = os.environ.get(AFFECTED_CONTEXT_ENV)
     if raw_affected_context is not None:
         try:
@@ -572,6 +606,16 @@ def main(argv: list[str] | None = None) -> int:
                 file=sys.stderr,
             )
             return 1
+    formal_manifest = bool(
+        args.release_projection or args.require_expert_content_review
+    )
+    try:
+        expert_panel_storage_statuses = _validate_current_expert_panel_storage(
+            formal=formal_manifest
+        )
+    except (OSError, json.JSONDecodeError, ValidationProblem, ValueError) as exc:
+        print(f"validate-professionalism-regression: ERROR: {exc}", file=sys.stderr)
+        return 1
     try:
         reports = _reports(args.reports_dir)
         _validate_fresh_benchmark_report(reports["benchmarks"])
@@ -589,6 +633,8 @@ def main(argv: list[str] | None = None) -> int:
             content_skills=reports["content"].get("skills"),
             readability_content=reports["content"].get("ai_readability"),
             content_audit=reports["content"],
+            storage_statuses=expert_panel_storage_statuses,
+            formal=formal_manifest,
         )
         content_readiness = _content_readiness(
             reference_content_summary,
@@ -601,6 +647,10 @@ def main(argv: list[str] | None = None) -> int:
         )
         professional_review_cost_fixtures = (
             _professional_review_cost_fixtures()
+        )
+        expert_panel_release_manifest = _expert_panel_release_manifest(
+            formal=formal_manifest,
+            storage_statuses=expert_panel_storage_statuses,
         )
     except (OSError, json.JSONDecodeError, ValidationProblem, ValueError) as exc:
         print(f"validate-professionalism-regression: ERROR: {exc}", file=sys.stderr)
@@ -734,6 +784,7 @@ def main(argv: list[str] | None = None) -> int:
         expert_reviews,
         root_content_summary,
         content_audit_summary,
+        expert_panel_release_manifest=expert_panel_release_manifest,
     )
     application = content_audit_summary.get(
         "semantic_disposition_application",
@@ -760,6 +811,7 @@ def main(argv: list[str] | None = None) -> int:
         root_content_summary=root_content_summary,
         content_readiness=content_readiness,
         coverage_gate_summary=coverage_gate_summary,
+        expert_panel_release_manifest=expert_panel_release_manifest,
         professional_review_cost_fixtures=(
             professional_review_cost_fixtures
         ),
@@ -796,9 +848,10 @@ def main(argv: list[str] | None = None) -> int:
         result.mode = "baseline-snapshot-updated"
         result.baseline_comparison = "not-numerically-comparable"
     _write(
-        args.reports_dir,
+        output_directory,
         result,
         release_projection=args.release_projection,
+        trusted_root=(ROOT if formal_head_commit is not None else None),
     )
     print(
         "validate-professionalism-regression: "
@@ -841,6 +894,7 @@ def _args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--baseline", type=Path, default=ROOT / "config/professionalism-baseline.yaml")
     parser.add_argument("--reports-dir", type=Path, default=ROOT / "reports")
+    parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--routing-dir", type=Path, default=ROOT / "evals/routing")
     parser.add_argument("--content-exceptions", type=Path)
     parser.add_argument(
@@ -857,7 +911,8 @@ def _args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help=(
             "With --strict, fail unless both independent expert review axes and "
-            "the Root release lifecycle are current; incompatible with --report-only."
+            "the current Semantic disposition application are current; "
+            "incompatible with --report-only."
         ),
     )
     args = parser.parse_args(argv)
@@ -867,6 +922,8 @@ def _args(argv: list[str]) -> argparse.Namespace:
         parser.error(
             "--require-expert-content-review cannot be combined with --report-only"
         )
+    if args.output_dir is not None and not args.release_projection:
+        parser.error("--output-dir requires --release-projection")
     return args
 
 
@@ -1864,11 +1921,6 @@ def _root_content_summary(
             "skill-content-audit.json: root_content semantic disposition contract "
             "must be a mapping"
         )
-    lifecycle = semantic.get("lifecycle")
-    if not isinstance(lifecycle, dict):
-        raise ValueError(
-            "skill-content-audit.json: root_content semantic lifecycle must be a mapping"
-        )
     structural_strict_ready = not any(
         int(counts.get(key, 0)) for key in ROOT_STRUCTURAL_STRICT_COUNT_FIELDS
     )
@@ -1952,25 +2004,6 @@ def _root_content_summary(
         "semantic_disposition_configured": counts["dispositions_configured"],
         "semantic_disposition_applied": counts["dispositions_applied"],
         "semantic_disposition_errors": counts["disposition_errors"],
-        "semantic_lifecycle_status": lifecycle.get("status"),
-        "semantic_lifecycle_detector_fingerprint": lifecycle.get(
-            "detector_fingerprint"
-        ),
-        "semantic_lifecycle_snapshot_current": lifecycle.get("snapshot_current"),
-        "semantic_lifecycle_formal_release_ready": lifecycle.get(
-            "formal_release_ready"
-        ),
-        "semantic_lifecycle_bootstrap_refresh_chain_valid": (
-            lifecycle.get("bootstrap_refresh_chain") or {}
-        ).get("valid"),
-        "semantic_lifecycle_bootstrap_refresh_count": (
-            lifecycle.get("bootstrap_refresh_chain") or {}
-        ).get("count"),
-        "semantic_lifecycle_bootstrap_refresh_latest_delta": (
-            lifecycle.get("bootstrap_refresh_chain") or {}
-        ).get("latest_delta"),
-        "semantic_lifecycle_comparison": lifecycle.get("comparison"),
-        "semantic_lifecycle_age": lifecycle.get("age"),
         "structural_strict_ready": structural_strict_ready,
         "semantic_triage_complete": semantic_triage_complete,
         "strict_ready": not strict_errors,
@@ -2143,6 +2176,44 @@ def _required_actionability_disposition_rows(
     return required
 
 
+def _readability_packet_actionability_projection(
+    content_audit: dict[str, Any],
+) -> dict[str, Any]:
+    """Return only target-local actionability authority for Readability packets."""
+
+    if not isinstance(content_audit, dict):
+        raise ValueError("skill-content-audit.json must be a mapping")
+    required = _required_actionability_disposition_rows(
+        content_audit.get("skills")
+    )
+    target_count = len(required)
+    summary = content_audit.get("summary")
+    review_reasons = summary.get("review_reasons") if isinstance(
+        summary, dict
+    ) else None
+    reason_count = review_reasons.get(
+        "weak_front_loaded_action", 0
+    ) if isinstance(review_reasons, dict) else None
+    applicable_count = summary.get(
+        "actionability_applicable_items"
+    ) if isinstance(summary, dict) else None
+    all_items_count = summary.get(
+        "weak_front_loaded_action_all_items"
+    ) if isinstance(summary, dict) else None
+    if any(
+        type(value) is not int or value != target_count
+        for value in (reason_count, applicable_count, all_items_count)
+    ):
+        raise ValueError(
+            "skill-content-audit.json: actionability summary does not match "
+            "the required disposition rows"
+        )
+    return {
+        "weak_front_loaded_skills": target_count,
+        "required_targets": required,
+    }
+
+
 def _expert_panel_content_review(
     path: Path,
     *,
@@ -2160,6 +2231,7 @@ def _expert_panel_content_review(
     content_blocker_count: int,
     readability_blocker_count: int,
     evaluation_date: date | None,
+    content_audit: object = None,
 ) -> dict[str, Any]:
     """Validate schema 5 three-expert majority evidence and release binding."""
 
@@ -2266,22 +2338,96 @@ def _expert_panel_content_review(
         raise ValueError(f"{_rel(path)}: expert panel packet is unreadable") from exc
     if not isinstance(packet, dict):
         raise ValueError(f"{_rel(path)}: expert panel packet must be a JSON object")
-    try:
-        expected_packet = expert_panel.prepare_packet(
-            audit={"skills": content_skills, "ai_readability": readability_content},
-            readiness={
-                "reference_content_summary": {
-                    "source_fingerprint": reference_fingerprint
-                },
-                "root_content_summary": {"source_fingerprint": root_fingerprint},
-            },
-            review_id=record["review_id"],
-            created_on=packet["created_on"],
+    if packet.get("schema_version") == expert_panel.SCHEMA_VERSION:
+        try:
+            expert_panel.validate_packet(
+                packet,
+                validation_mode=expert_panel.VALIDATION_MODE_HISTORICAL,
+            )
+        except expert_panel.PanelReviewError as exc:
+            raise ValueError(
+                f"{_rel(path)}: legacy expert panel packet is invalid: {exc}"
+            ) from exc
+        legacy_content_targets = {
+            (row.get("path"), row.get("classification"))
+            for row in packet.get("content_targets", [])
+            if isinstance(row, dict)
+        }
+        expected_legacy_content_targets = {
+            (row["path"], row["classification"])
+            for row in required_dispositions
+        }
+        legacy_readability_targets = {
+            (row.get("document_id"), row.get("highest_band"))
+            for row in packet.get("readability_targets", [])
+            if isinstance(row, dict)
+        }
+        expected_legacy_readability_targets = {
+            (row["document_id"], row["highest_band"])
+            for row in required_readability_dispositions
+        }
+        if (
+            packet.get("review_id") != record["review_id"]
+            or packet.get("source_fingerprints") != expected_fingerprints
+            or legacy_content_targets != expected_legacy_content_targets
+            or legacy_readability_targets
+            != expected_legacy_readability_targets
+        ):
+            raise ValueError(
+                f"{_rel(path)}: legacy expert panel packet is stale against "
+                "current source authority"
+            )
+    else:
+        if (
+            not isinstance(content_audit, dict)
+            or content_audit.get("skills") != content_skills
+            or content_audit.get("ai_readability") != readability_content
+        ):
+            raise ValueError(
+                f"{_rel(path)}: current schema-2 packet requires its complete "
+                "bound content audit"
+            )
+        root_content = content_audit.get("root_content")
+        reference_content = content_audit.get("reference_content")
+        reference_preface = (
+            reference_content.get("preface_contract")
+            if isinstance(reference_content, dict)
+            else None
         )
-    except expert_panel.PanelReviewError as exc:
-        raise ValueError(f"{_rel(path)}: cannot recompute expert panel packet: {exc}") from exc
-    if packet != expected_packet:
-        raise ValueError(f"{_rel(path)}: expert panel packet is not current canonical input")
+        root_source = (
+            root_content.get("source_fingerprint")
+            if isinstance(root_content, dict)
+            else None
+        )
+        reference_source = (
+            reference_preface.get("source_fingerprint")
+            if isinstance(reference_preface, dict)
+            else None
+        )
+        root_document_count = (
+            root_source.get("document_count")
+            if isinstance(root_source, dict)
+            else None
+        )
+        reference_document_count = (
+            reference_source.get("document_count")
+            if isinstance(reference_source, dict)
+            else None
+        )
+        try:
+            expected_packet = expert_panel.prepare_packet(
+                audit=content_audit,
+                review_id=record["review_id"],
+                created_on=packet["created_on"],
+            )
+        except expert_panel.PanelReviewError as exc:
+            raise ValueError(
+                f"{_rel(path)}: cannot recompute expert panel packet: {exc}"
+            ) from exc
+        if packet != expected_packet:
+            raise ValueError(
+                f"{_rel(path)}: expert panel packet is not current canonical input"
+            )
 
     expected_content = {
         item["path"]: item["classification"] for item in required_dispositions
@@ -2430,6 +2576,7 @@ def _expert_content_review(
     content_skills: object = None,
     readability_content: object = None,
     evaluation_date: date | None = None,
+    content_audit: object = None,
 ) -> dict[str, Any]:
     source = f"{_rel(path)}#expert_content_review_attestation"
     try:
@@ -2529,6 +2676,7 @@ def _expert_content_review(
             content_blocker_count=content_blocker_count,
             readability_blocker_count=readability_blocker_count,
             evaluation_date=evaluation_date,
+            content_audit=content_audit,
         )
     expected_attestation_fields = {
         2: EXPERT_ATTESTATION_FIELDS
@@ -2850,71 +2998,34 @@ def _expert_content_review(
     }
 
 
-def _validated_dual_attestation(
+def _validated_readability_config(
     path: Path,
     attestation: object,
-    *,
-    field_name: str,
-    panel_kind: str,
-    scope: str,
-    fingerprint_fields: set[str],
-    legacy_fingerprint_fields: set[str] | None = None,
-    decision_methods: set[str] | None = None,
-) -> tuple[dict[str, Any], dict[str, str | None], list[str]]:
-    if not isinstance(attestation, dict) or set(attestation) != DUAL_PANEL_ATTESTATION_FIELDS:
+) -> tuple[dict[str, Any], list[str]]:
+    field_name = "readability_review_attestation"
+    if (
+        not isinstance(attestation, dict)
+        or set(attestation) != READABILITY_CONFIG_ATTESTATION_FIELDS
+    ):
         raise ValueError(
-            f"{_rel(path)}: {field_name} fields must exactly match schema 5"
+            f"{_rel(path)}: {field_name} fields must exactly match the "
+            "selector-free schema 5 contract"
         )
     if attestation.get("schema_version") != 5:
         raise ValueError(f"{_rel(path)}: {field_name}.schema_version must equal 5")
-    if attestation.get("panel_kind") != panel_kind:
+    if attestation.get("panel_kind") != expert_panel.READABILITY_PANEL_KIND:
         raise ValueError(
-            f"{_rel(path)}: {field_name}.panel_kind must equal {panel_kind!r}"
+            f"{_rel(path)}: {field_name}.panel_kind must equal "
+            f"{expert_panel.READABILITY_PANEL_KIND!r}"
         )
-    if attestation.get("scope") != scope:
+    if attestation.get("scope") != "ai-readability-and-density":
         raise ValueError(
-            f"{_rel(path)}: {field_name}.scope must equal {scope!r}"
+            f"{_rel(path)}: {field_name}.scope must equal "
+            "'ai-readability-and-density'"
         )
-    allowed_decision_methods = decision_methods or {expert_panel.DECISION_METHOD}
-    if attestation.get("decision_method") not in allowed_decision_methods:
+    if attestation.get("decision_method") != expert_panel.DECISION_METHOD:
         raise ValueError(
-            f"{_rel(path)}: {field_name}.decision_method must be one of "
-            f"{sorted(allowed_decision_methods)!r}"
-        )
-    fingerprints = attestation.get("source_fingerprints")
-    allowed_fingerprint_fields = {frozenset(fingerprint_fields)}
-    if legacy_fingerprint_fields is not None:
-        allowed_fingerprint_fields.add(frozenset(legacy_fingerprint_fields))
-    if (
-        not isinstance(fingerprints, dict)
-        or frozenset(fingerprints) not in allowed_fingerprint_fields
-    ):
-        raise ValueError(
-            f"{_rel(path)}: {field_name}.source_fingerprints fields are invalid"
-        )
-    panel_record = attestation.get("panel_record")
-    missing_record = panel_record is None
-    for key, value in fingerprints.items():
-        if missing_record:
-            if value is not None:
-                raise ValueError(
-                    f"{_rel(path)}: {field_name} without evidence must use null "
-                    f"fingerprint {key}"
-                )
-        elif not isinstance(value, str) or not _is_sha256(value):
-            raise ValueError(
-                f"{_rel(path)}: {field_name} fingerprint {key} must be lowercase sha256"
-            )
-    if panel_record is not None and (
-        not isinstance(panel_record, dict)
-        or set(panel_record) != EXPERT_PANEL_RECORD_FIELDS
-        or not isinstance(panel_record.get("path"), str)
-        or not panel_record["path"].strip()
-        or not isinstance(panel_record.get("sha256"), str)
-        or not _is_sha256(panel_record["sha256"])
-    ):
-        raise ValueError(
-            f"{_rel(path)}: {field_name}.panel_record must be null or contain path and sha256"
+            f"{_rel(path)}: {field_name}.decision_method is invalid"
         )
     limitations = attestation.get("limitations")
     if not isinstance(limitations, list) or not limitations or not all(
@@ -2923,106 +3034,53 @@ def _validated_dual_attestation(
         raise ValueError(
             f"{_rel(path)}: {field_name}.limitations must be a non-empty string list"
         )
-    return attestation, dict(fingerprints), list(limitations)
+    return attestation, list(limitations)
 
 
-def _load_dual_panel_record(
+def _validated_professional_config(
     path: Path,
-    record_ref: dict[str, str],
-    *,
-    field_name: str,
-    expected_kind: str,
-) -> tuple[dict[str, Any], Path, list[dict[str, str]]]:
-    record_value = record_ref["path"]
-    relative_record = Path(record_value)
+    attestation: object,
+) -> tuple[dict[str, Any], list[str]]:
+    field_name = "professional_completeness_review_attestation"
     if (
-        relative_record.is_absolute()
-        or relative_record.as_posix() != record_value
-        or ".." in relative_record.parts
+        not isinstance(attestation, dict)
+        or set(attestation) != PROFESSIONAL_CONFIG_ATTESTATION_FIELDS
     ):
         raise ValueError(
-            f"{_rel(path)}: {field_name}.panel_record.path must be canonical repository-relative"
+            f"{_rel(path)}: {field_name} fields must exactly match the "
+            "selector-free schema 5 contract"
         )
-    record_path = (ROOT / relative_record).resolve()
-    try:
-        record_path.relative_to(ROOT.resolve())
-    except ValueError as exc:
-        raise ValueError(
-            f"{_rel(path)}: {field_name}.panel_record escapes repository"
-        ) from exc
-    if not record_path.is_file():
-        raise ValueError(f"{_rel(path)}: {field_name}.panel_record is missing")
-    record_sha256 = hashlib.sha256(record_path.read_bytes()).hexdigest()
-    if record_sha256 != record_ref["sha256"]:
-        raise ValueError(f"{_rel(path)}: {field_name}.panel_record sha256 is stale")
-    try:
-        record_value_data = json.loads(record_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise ValueError(
-            f"{_rel(path)}: {field_name}.panel_record is not valid JSON"
-        ) from exc
-    if not isinstance(record_value_data, dict):
-        raise ValueError(
-            f"{_rel(path)}: {field_name}.panel_record must be a JSON object"
-        )
-    if record_value_data.get("kind") != expected_kind:
-        raise ValueError(
-            f"{_rel(path)}: {field_name}.panel_record belongs to the wrong review axis"
-        )
-    try:
-        record = expert_panel.validate_decision_record(
-            record_value_data,
-            record_path=record_path,
-            validation_mode=expert_panel.VALIDATION_MODE_HISTORICAL,
-        )
-    except expert_panel.PanelReviewError as exc:
-        raise ValueError(
-            f"{_rel(path)}: invalid {field_name}.panel_record: {exc}"
-        ) from exc
-    evidence = [{"path": record_value, "sha256": record_sha256}]
-    packet_ref = record["packet"]
-    evidence.append(
-        {"path": packet_ref["path"], "sha256": packet_ref["sha256"]}
-    )
+    if attestation.get("schema_version") != 5:
+        raise ValueError(f"{_rel(path)}: {field_name}.schema_version must equal 5")
     if (
-        record.get("kind")
-        == expert_panel.PROFESSIONAL_COMPLETENESS_DECISION_KIND
-        and record.get("schema_version")
-        == expert_panel.PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION
+        attestation.get("panel_kind")
+        != expert_panel.PROFESSIONAL_COMPLETENESS_PANEL_KIND
     ):
-        for voter in record["voters"]:
-            ballot = voter["ballot"]
-            evidence.append(
-                {"path": ballot["path"], "sha256": ballot["sha256"]}
-            )
-            evidence.extend(
-                _professional_schema3_capsule_chain_evidence(
-                    voter["capsule"],
-                    label=f"schema-3 current voter {voter['voter_id']}",
-                )
-            )
-    else:
-        for voter in record["voters"]:
-            ballot_path = (record_path.parent / voter["ballot_path"]).relative_to(ROOT)
-            evidence.append(
-                {
-                    "path": ballot_path.as_posix(),
-                    "sha256": voter["ballot_sha256"],
-                }
-            )
-    deduplicated: dict[str, str] = {}
-    for item in evidence:
-        prior = deduplicated.get(item["path"])
-        if prior is not None and prior != item["sha256"]:
-            raise ValueError(
-                f"{_rel(path)}: {field_name} reuses one evidence path with conflicting sha256"
-            )
-        deduplicated[item["path"]] = item["sha256"]
-    evidence = [
-        {"path": item_path, "sha256": deduplicated[item_path]}
-        for item_path in sorted(deduplicated)
-    ]
-    return record, record_path, evidence
+        raise ValueError(
+            f"{_rel(path)}: {field_name}.panel_kind must equal "
+            f"{expert_panel.PROFESSIONAL_COMPLETENESS_PANEL_KIND!r}"
+        )
+    if attestation.get("scope") != "professional-skill-packages":
+        raise ValueError(
+            f"{_rel(path)}: {field_name}.scope must equal "
+            "'professional-skill-packages'"
+        )
+    if (
+        attestation.get("decision_method")
+        != expert_panel.PROFESSIONAL_COMPLETENESS_INCREMENTAL_DECISION_METHOD
+    ):
+        raise ValueError(
+            f"{_rel(path)}: {field_name}.decision_method is invalid"
+        )
+    limitations = attestation.get("limitations")
+    if not isinstance(limitations, list) or not limitations or not all(
+        isinstance(item, str) and item.strip() for item in limitations
+    ):
+        raise ValueError(
+            f"{_rel(path)}: {field_name}.limitations must be a non-empty string list"
+        )
+    return attestation, list(limitations)
+
 
 
 def _dual_storage_status(
@@ -3048,6 +3106,7 @@ def _missing_axis_result(
     scope: str,
     config_fingerprint: str,
     current_source_fingerprints: dict[str, str],
+    current_review_contract_fingerprint: str | None = None,
     limitations: list[str],
     required_target_count: int | None = None,
     required_density_count: int | None = None,
@@ -3114,9 +3173,7 @@ def _missing_axis_result(
                 "evidence_summary": None,
                 "review_contract_fingerprint": None,
                 "current_review_contract_fingerprint": (
-                    current_source_fingerprints.get(
-                        "professional_review_contract"
-                    )
+                    current_review_contract_fingerprint
                 ),
                 "review_contract_current": False,
                 "review_plan_fingerprint": None,
@@ -3150,27 +3207,55 @@ def _missing_axis_result(
     return common
 
 
+def _fixed_axis_noncurrent_result(
+    result: dict[str, Any],
+    *,
+    storage_status: str,
+    formal: bool,
+) -> dict[str, Any] | None:
+    if storage_status == "current":
+        return None
+    if storage_status not in {"missing", "stale", "pending", "invalid"}:
+        raise ValueError(
+            f"fixed Expert Panel storage status is invalid: {storage_status}"
+        )
+    if formal:
+        raise ValueError(
+            f"formal fixed Expert Panel attestation is {storage_status}"
+        )
+    updated = copy.deepcopy(result)
+    updated["attestation_status"] = {
+        "missing": "missing-evidence",
+        "stale": "panel-majority-stale",
+        "pending": "panel-majority-pending-checkin",
+        "invalid": "invalid-evidence",
+    }[storage_status]
+    updated["storage_current"] = False
+    updated["source_current"] = False
+    updated["accepted_for_formal"] = False
+    updated["limitations"] = [
+        *updated["limitations"],
+        "Fixed Expert Panel attestation storage is " + storage_status + ".",
+    ]
+    return updated
+
+
 def _readability_review_axis(
     path: Path,
     *,
     config_bytes: bytes,
     config_fingerprint: str,
     attestation: object,
-    current_source_fingerprints: dict[str, str],
     content_skills: object,
     readability_content: object,
     content_audit: object,
     evaluation_date: date | None,
+    storage_status: str = "current",
+    formal: bool = False,
 ) -> dict[str, Any]:
     field_name = "readability_review_attestation"
-    value, fingerprints, limitations = _validated_dual_attestation(
-        path,
-        attestation,
-        field_name=field_name,
-        panel_kind=expert_panel.READABILITY_PANEL_KIND,
-        scope="ai-readability-and-density",
-        fingerprint_fields=READABILITY_SOURCE_FINGERPRINT_FIELDS,
-        legacy_fingerprint_fields=LEGACY_READABILITY_SOURCE_FINGERPRINT_FIELDS,
+    _value, limitations = _validated_readability_config(
+        path, attestation
     )
     required_density, content_blockers = _required_content_disposition_rows(
         content_skills
@@ -3182,255 +3267,60 @@ def _readability_review_axis(
         content_skills
     )
     blocker_count = content_blockers + readability_blockers
-    record_ref = value["panel_record"]
-    if record_ref is None:
-        return _missing_axis_result(
-            path=path,
-            field_name=field_name,
-            panel_kind=expert_panel.READABILITY_PANEL_KIND,
-            scope="ai-readability-and-density",
-            config_fingerprint=config_fingerprint,
-            current_source_fingerprints=current_source_fingerprints,
-            limitations=limitations,
-            required_density_count=len(required_density),
-            required_readability_count=len(required_readability),
-            required_actionability_count=len(required_actionability),
-            blocker_count=blocker_count,
-        )
-    record, record_path, evidence = _load_dual_panel_record(
-        path,
-        record_ref,
-        field_name=field_name,
-        expected_kind=expert_panel.DECISION_KIND,
-    )
-    if record.get("source_fingerprints") != fingerprints:
+    if not isinstance(content_audit, dict):
         raise ValueError(
-            f"{_rel(path)}: {field_name} fingerprints do not match its decision"
+            "fixed readability attestation requires the current content audit"
         )
-
-    density_dispositions: list[dict[str, str]] = []
-    for item in record["content_decisions"]:
-        rationales = item["winning_rationales"]
-        density_dispositions.append(
-            {
-                "path": item["path"],
-                "classification": item["classification"],
-                "disposition": item["winning_disposition"],
-                "rationale": "Majority decision: "
-                + " ".join(str(row["rationale"]) for row in rationales),
-            }
+    try:
+        current_packet = expert_panel.prepare_packet(
+            audit=content_audit,
+            review_id="current-readability-bindings",
+            created_on="2000-01-01",
         )
-    readability_dispositions: list[dict[str, str]] = []
-    for item in record["readability_decisions"]:
-        rationales = item["winning_rationales"]
-        readability_dispositions.append(
-            {
-                "document_id": item["document_id"],
-                "highest_band": item["highest_band"],
-                "disposition": item["winning_disposition"],
-                "rationale": "Majority decision: "
-                + " ".join(str(row["rationale"]) for row in rationales),
-            }
+        current_bindings = expert_panel._readability_target_authorities(
+            current_packet
         )
-    actionability_dispositions: list[dict[str, Any]] = []
-    for item in record.get("actionability_decisions", []):
-        rationales = item["winning_rationales"]
-        actionability_dispositions.append(
-            {
-                "target_id": item["target_id"],
-                "skill_id": item["skill_id"],
-                "path": item["path"],
-                "front_loaded_action_score": item[
-                    "front_loaded_action_score"
-                ],
-                "disposition": item["winning_disposition"],
-                "reason_codes": sorted(
-                    {str(row["reason_code"]) for row in rationales}
-                ),
-                "rationale": "Majority decision: "
-                + " ".join(str(row["rationale"]) for row in rationales),
-                "evidence": [
-                    evidence_item
-                    for row in rationales
-                    for evidence_item in row["evidence"]
-                ],
-            }
-        )
-    tracked_tightening_count = sum(
-        item["disposition"] == "tracked-tightening"
-        for item in (*density_dispositions, *readability_dispositions)
+    except expert_panel.PanelReviewError as exc:
+        raise ValueError(
+            "fixed readability attestation current bindings are invalid"
+        ) from exc
+    current_source_fingerprints = current_packet["source_fingerprints"]
+    expected_review_contract_fingerprint = (
+        expert_panel._canonical_json_sha256(current_packet["panel_contract"])
     )
-    accepted_current_actionability_count = sum(
-        item["disposition"] == "accepted-current-actionability"
-        for item in actionability_dispositions
+    skeleton = _missing_axis_result(
+        path=path,
+        field_name=field_name,
+        panel_kind=expert_panel.READABILITY_PANEL_KIND,
+        scope="ai-readability-and-density",
+        config_fingerprint=config_fingerprint,
+        current_source_fingerprints=current_source_fingerprints,
+        limitations=limitations,
+        required_density_count=len(required_density),
+        required_readability_count=len(required_readability),
+        required_actionability_count=len(required_actionability),
+        blocker_count=blocker_count,
     )
-    detector_false_positive_count = sum(
-        item["disposition"] == "detector-false-positive"
-        for item in actionability_dispositions
+    softened = _fixed_axis_noncurrent_result(
+        skeleton,
+        storage_status=storage_status,
+        formal=formal,
     )
-    rewrite_required_count = sum(
-        item["disposition"] == "rewrite-required"
-        for item in actionability_dispositions
-    )
-    source_current = fingerprints == current_source_fingerprints
-    coverage_current = False
-    if source_current:
-        if (
-            not isinstance(content_skills, list)
-            or not isinstance(readability_content, dict)
-            or not isinstance(content_audit, dict)
-        ):
-            raise ValueError(f"{_rel(path)}: current readability panel inputs are required")
-        packet_path = ROOT / record["packet"]["path"]
-        packet = json.loads(packet_path.read_text(encoding="utf-8"))
-        try:
-            expected_packet = expert_panel.prepare_packet(
-                audit=content_audit,
-                readiness={
-                    "reference_content_summary": {
-                        "source_fingerprint": current_source_fingerprints[
-                            "reference_content"
-                        ]
-                    },
-                    "root_content_summary": {
-                        "source_fingerprint": current_source_fingerprints[
-                            "root_content"
-                        ]
-                    },
-                },
-                review_id=record["review_id"],
-                created_on=packet["created_on"],
-            )
-        except expert_panel.PanelReviewError as exc:
-            raise ValueError(
-                f"{_rel(path)}: cannot recompute current readability packet: {exc}"
-            ) from exc
-        if packet != expected_packet:
-            raise ValueError(
-                f"{_rel(path)}: current readability packet is not canonical"
-            )
-        expected_density = {
-            item["path"]: item["classification"] for item in required_density
-        }
-        actual_density = {
-            item["path"]: item["classification"] for item in density_dispositions
-        }
-        expected_readability = {
-            item["document_id"]: item["highest_band"]
-            for item in required_readability
-        }
-        actual_readability = {
-            item["document_id"]: item["highest_band"]
-            for item in readability_dispositions
-        }
-        expected_actionability = {
-            item["target_id"]: (
-                item["skill_id"],
-                item["path"],
-                item["front_loaded_action_score"],
-            )
-            for item in required_actionability
-        }
-        actual_actionability = {
-            item["target_id"]: (
-                item["skill_id"],
-                item["path"],
-                item["front_loaded_action_score"],
-            )
-            for item in actionability_dispositions
-        }
-        coverage_current = (
-            actual_density == expected_density
-            and actual_readability == expected_readability
-            and actual_actionability == expected_actionability
-        )
-    storage_current, storage_error = _dual_storage_status(
-        path,
-        config_bytes=config_bytes,
-        evidence=evidence,
-    )
-    accepted_for_formal = (
-        source_current
-        and coverage_current
-        and storage_current
-        and blocker_count == 0
-        and tracked_tightening_count == 0
-        and detector_false_positive_count == 0
-        and rewrite_required_count == 0
-        and record.get("schema_version")
-        == expert_panel.READABILITY_SCHEMA_VERSION
-        and len(record["voters"]) == expert_panel.PANEL_SIZE
-    )
-    if not source_current:
-        status = "panel-majority-stale"
-    elif not coverage_current:
-        status = "panel-majority-incomplete-coverage"
-    elif not storage_current:
-        status = "panel-majority-pending-checkin"
-    elif tracked_tightening_count:
-        status = "panel-majority-tracked-tightening"
-    elif rewrite_required_count:
-        status = "panel-majority-actionability-rewrite-required"
-    elif detector_false_positive_count:
-        status = "panel-majority-detector-update-required"
-    elif blocker_count:
-        status = "panel-majority-blocked"
-    else:
-        status = "panel-majority-current"
-    normalized_limitations = list(limitations)
-    if storage_error is not None:
-        normalized_limitations.append(
-            "Formal storage binding is pending: " + storage_error
-        )
-    attested_on = _validated_iso_date(
-        record.get("decided_on"),
-        label=f"{_rel(path)}: readability panel decided_on",
-        evaluation_date=evaluation_date,
-    )
-    return {
-        "scope": "ai-readability-and-density",
-        "panel_kind": expert_panel.READABILITY_PANEL_KIND,
-        "decision_complete": True,
-        "storage_current": storage_current,
-        "source_current": source_current,
-        "accepted_for_formal": accepted_for_formal,
-        "decision_method": expert_panel.DECISION_METHOD,
-        "panel_review_id": record["review_id"],
-        "panel_size": len(record["voters"]),
-        "attestation_status": status,
-        "attestation_source": f"{_rel(path)}#{field_name}",
-        "attestation_schema_version": 5,
-        "attestation_config_fingerprint": config_fingerprint,
-        "source_fingerprints": dict(fingerprints),
-        "current_source_fingerprints": dict(current_source_fingerprints),
-        "attested_by": f"expert-panel:{record['review_id']}",
-        "attested_on": attested_on,
-        "evidence": evidence,
-        "panel_artifact_schema_version": record.get("schema_version"),
-        "density_dispositions": density_dispositions,
-        "readability_dispositions": readability_dispositions,
-        "actionability_dispositions": actionability_dispositions,
-        "required_density_disposition_count": len(required_density),
-        "applied_density_disposition_count": len(density_dispositions),
-        "required_readability_disposition_count": len(required_readability),
-        "applied_readability_disposition_count": len(
-            readability_dispositions
+    if softened is not None:
+        return softened
+    fixed = _apply_fixed_readability_attestation(
+        skeleton,
+        required_density=required_density,
+        required_readability=required_readability,
+        required_actionability=required_actionability,
+        expected_review_contract_fingerprint=(
+            expected_review_contract_fingerprint
         ),
-        "required_actionability_disposition_count": len(
-            required_actionability
-        ),
-        "applied_actionability_disposition_count": len(
-            actionability_dispositions
-        ),
-        "accepted_current_actionability_count": (
-            accepted_current_actionability_count
-        ),
-        "detector_false_positive_count": detector_false_positive_count,
-        "rewrite_required_count": rewrite_required_count,
-        "tracked_tightening_count": tracked_tightening_count,
-        "blocker_count": blocker_count,
-        "limitations": normalized_limitations,
-    }
+        expected_readability_current_bindings=current_bindings,
+        require_equivalent=False,
+    )
+    fixed["limitations"] = list(limitations)
+    return fixed
 
 
 def _read_professional_artifact_reference(
@@ -4147,7 +4037,6 @@ def _professional_schema3_review_cost(
             )
         )
         required_blocks = expert_panel._professional_v3_effective_input_blocks(
-            source_fingerprints=packet["source_fingerprints"],
             review_contract_fingerprint=packet[
                 "review_contract_fingerprint"
             ],
@@ -4796,368 +4685,634 @@ def _professional_completeness_review_axis(
     attestation: object,
     current_packet: dict[str, Any],
     evaluation_date: date | None,
+    storage_status: str = "current",
+    formal: bool = False,
 ) -> dict[str, Any]:
     field_name = "professional_completeness_review_attestation"
-    value, fingerprints, limitations = _validated_dual_attestation(
-        path,
-        attestation,
+    _value, limitations = _validated_professional_config(path, attestation)
+    current_source_fingerprints: dict[str, str] = {}
+    required_target_count = len(current_packet["professional_targets"])
+    skeleton = _missing_axis_result(
+        path=path,
         field_name=field_name,
         panel_kind=expert_panel.PROFESSIONAL_COMPLETENESS_PANEL_KIND,
         scope="professional-skill-packages",
-        fingerprint_fields=(
-            PROFESSIONAL_COMPLETENESS_V3_SOURCE_FINGERPRINT_FIELDS
+        config_fingerprint=config_fingerprint,
+        current_source_fingerprints=current_source_fingerprints,
+        current_review_contract_fingerprint=(
+            expert_panel._professional_evidence_review_contract_fingerprint()
         ),
-        legacy_fingerprint_fields=(
-            PROFESSIONAL_COMPLETENESS_SOURCE_FINGERPRINT_FIELDS
-        ),
-        decision_methods={
-            expert_panel.DECISION_METHOD,
-            expert_panel.PROFESSIONAL_COMPLETENESS_DECISION_METHOD,
-            expert_panel.PROFESSIONAL_COMPLETENESS_INCREMENTAL_DECISION_METHOD,
-        },
+        limitations=limitations,
+        required_target_count=required_target_count,
     )
-    current_source_fingerprints = dict(current_packet["source_fingerprints"])
-    required_target_count = len(current_packet["professional_targets"])
-    record_ref = value["panel_record"]
-    if record_ref is None:
-        return _missing_axis_result(
-            path=path,
-            field_name=field_name,
-            panel_kind=expert_panel.PROFESSIONAL_COMPLETENESS_PANEL_KIND,
-            scope="professional-skill-packages",
-            config_fingerprint=config_fingerprint,
-            current_source_fingerprints=current_source_fingerprints,
-            limitations=limitations,
-            required_target_count=required_target_count,
+    softened = _fixed_axis_noncurrent_result(
+        skeleton,
+        storage_status=storage_status,
+        formal=formal,
+    )
+    if softened is not None:
+        return softened
+    try:
+        fixed = _apply_fixed_professional_attestation(
+            skeleton,
+            current_packet=current_packet,
+            require_equivalent=False,
         )
-    record, record_path, evidence = _load_dual_panel_record(
-        path,
-        record_ref,
-        field_name=field_name,
-        expected_kind=expert_panel.PROFESSIONAL_COMPLETENESS_DECISION_KIND,
-    )
-    if value["decision_method"] != record.get("decision_method"):
-        raise ValueError(
-            f"{_rel(path)}: {field_name}.decision_method does not match its decision"
+    except ValueError as exc:
+        if formal:
+            raise
+        message = str(exc)
+        if "missing" in message:
+            failure_status = "missing"
+        elif "stale" in message or "not current" in message:
+            failure_status = "stale"
+        else:
+            failure_status = "invalid"
+        result = _fixed_axis_noncurrent_result(
+            skeleton,
+            storage_status=failure_status,
+            formal=False,
         )
-    if record.get("source_fingerprints") != fingerprints:
-        raise ValueError(
-            f"{_rel(path)}: {field_name} fingerprints do not match its decision"
-        )
-    artifact_schema = record.get("schema_version")
-    schema3 = artifact_schema == (
-        expert_panel.PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION
-    )
-    professional_dispositions: list[dict[str, Any]] = []
-    for item in record["professional_decisions"]:
-        final_disposition = item.get(
-            "final_disposition", item["winning_disposition"]
-        )
-        domain_critical_defects = list(item.get("domain_critical_defects", []))
-        ordinary_criterion_defects = list(
-            item.get("ordinary_criterion_defects", [])
-        )
-        professional_dispositions.append(
-            {
-                "skill_id": item["skill_id"],
-                "package_fingerprint": item["package_fingerprint"],
-                "review_binding_fingerprint": item.get(
-                    "review_binding_fingerprint"
-                ),
-                "disposition": final_disposition,
-                "majority_disposition": item["winning_disposition"],
-                "domain_critical_defects": domain_critical_defects,
-                "ordinary_criterion_disposition": item.get(
-                    "ordinary_criterion_disposition",
-                    item["winning_disposition"],
-                ),
-                "ordinary_criterion_defects": ordinary_criterion_defects,
-                "reason_codes": sorted(
-                    {
-                        str(row["reason_code"])
-                        for row in item["winning_rationales"]
-                    }
-                ),
-                "rationales": list(item["winning_rationales"]),
-                "review_dependencies": item.get("review_dependencies"),
-                "evidence_metrics": item.get("evidence_metrics"),
-                "provenance": item.get("provenance"),
-                "target_decision_fingerprint": item.get(
-                    "target_decision_fingerprint"
-                ),
-            }
-        )
-    correction_count = sum(
-        item["disposition"] == "requires-professional-correction"
-        for item in professional_dispositions
-    )
-    unresolved_professional_disagreement_count = sum(
-        item["disposition"]
-        == expert_panel.PROFESSIONAL_UNRESOLVED_DISPOSITION
-        for item in professional_dispositions
-    )
-    accepted_current_count = sum(
-        item["disposition"] == "accepted-current-professional-completeness"
-        for item in professional_dispositions
-    )
-    summary = record.get("summary")
-    qualification_summary: dict[str, Any] | None = None
-    evidence_summary: dict[str, Any] | None = None
-    evidence_contract_current = False
-    fresh_target_count = 0
-    carried_forward_target_count = 0
-    review_contract_fingerprint = None
-    current_review_contract_fingerprint = current_source_fingerprints.get(
-        "professional_review_contract"
-    )
-    review_contract_current = False
-    review_plan_fingerprint = None
-    current_review_plan_fingerprint = None
-    review_plan_current = False
-    review_binding_current = False
-    provenance_current = False
-    review_cost = None
-    review_cost_current = False
+        assert result is not None
+        return result
+    fixed["limitations"] = [
+        *limitations,
+        PROFESSIONAL_REVIEW_COST_LIMITATIONS[2],
+    ]
+    return fixed
 
-    if schema3:
-        packet, expected_packet, current_state = (
-            _professional_schema3_current_state(record)
+
+def _load_fixed_compact_attestation(
+    panel_kind: str,
+    *,
+    expected_source_fingerprints: dict[str, str] | None = None,
+    expected_review_contract_fingerprint: str | None = None,
+    expected_readability_current_bindings: dict[
+        str, dict[str, dict[str, Any]]
+    ] | None = None,
+    expected_professional_current_bindings: dict[str, dict[str, Any]] | None = None,
+    expected_attestation_sha256: str | None = None,
+) -> tuple[dict[str, Any], dict[str, str]] | None:
+    relative = expert_panel.panel_attestation.ATTESTATION_PATHS[panel_kind]
+    candidate = ROOT / relative
+    try:
+        bound = expert_panel.reviewer_manifest.read_bound_regular_file(
+            candidate,
+            max_bytes=expert_panel.panel_attestation.MAX_ATTESTATION_BYTES,
+            label=f"fixed {panel_kind} attestation",
         )
-        current_source_fingerprints = dict(
-            expected_packet["source_fingerprints"]
+    except expert_panel.reviewer_manifest.ManifestError as exc:
+        if not candidate.exists() and not candidate.is_symlink():
+            return None
+        raise ValueError(f"invalid fixed {panel_kind} attestation: {exc}") from exc
+    if (
+        expected_attestation_sha256 is not None
+        and bound.sha256 != expected_attestation_sha256
+    ):
+        raise ValueError(f"fixed {panel_kind} attestation selector is stale")
+    try:
+        value = expert_panel.panel_attestation.parse_attestation_bytes(
+            bound.raw,
+            expected_path=relative,
+            expected_source_fingerprints=expected_source_fingerprints,
+            expected_review_contract_fingerprint=(
+                expected_review_contract_fingerprint
+            ),
+            expected_readability_current_bindings=(
+                expected_readability_current_bindings
+            ),
+            expected_professional_current_bindings=(
+                expected_professional_current_bindings
+            ),
         )
-        review_contract_fingerprint = record["review_contract_fingerprint"]
-        current_review_contract_fingerprint = expected_packet[
-            "review_contract_fingerprint"
-        ]
-        review_contract_current = bool(
-            current_state["review_contract_current"]
-        )
-        review_plan_fingerprint = packet["review_plan"]["plan_fingerprint"]
-        current_review_plan_fingerprint = expected_packet["review_plan"][
-            "plan_fingerprint"
-        ]
-        review_plan_current = bool(current_state["review_plan_current"])
-        review_binding_current = bool(
-            current_state["review_binding_current"]
-        )
-        provenance_current = bool(current_state["provenance_current"])
-        artifact_target_count = len(packet["professional_targets"])
-        partition = summary["partition"]
-        fresh_target_count = partition["fresh_target_count"]
-        carried_forward_target_count = partition["carried_target_count"]
-        qualification = summary["qualification"]
-        qualification_summary = {
-            "covered_target_count": qualification[
-                "effective_covered_target_count"
-            ],
-            "required_domain_experts_per_target": 2,
-            "required_architecture_experts_per_target": 1,
-            "per_target_panel_size": expert_panel.PANEL_SIZE,
-            "fresh_reviewer_pool_size": qualification[
-                "fresh_reviewer_pool_size"
-            ],
-            "effective_domain_vote_count": 2 * artifact_target_count,
-            "effective_architecture_vote_count": artifact_target_count,
-        }
-        evidence_summary = dict(summary["evidence"]["effective"])
-        evidence_contract_current = (
-            _professional_completeness_v3_evidence_ready(
-                qualification=qualification_summary,
-                evidence=evidence_summary,
-            )
-        )
-        evidence = _professional_schema3_storage_evidence(
-            record, evidence=evidence
-        )
-        review_cost = _professional_schema3_review_cost(
-            record, packet=packet
-        )
-    elif artifact_schema == expert_panel.PROFESSIONAL_COMPLETENESS_SCHEMA_VERSION:
-        qualification_summary = (
-            summary.get("qualification") if isinstance(summary, dict) else None
-        )
-        evidence_summary = (
-            summary.get("evidence") if isinstance(summary, dict) else None
-        )
-        required_adjacency_candidate_count: int | None = None
-        try:
-            required_adjacency_candidate_count = sum(
-                len(target["routing_adjacency"]["required_candidates"])
-                for target in json.loads(
-                    (ROOT / record["packet"]["path"]).read_text(
-                        encoding="utf-8"
-                    )
-                )["professional_targets"]
-            )
-        except (KeyError, TypeError) as exc:
-            raise ValueError(
-                f"{_rel(path)}: current professional-completeness packet lacks "
-                "canonical required adjacency"
-            ) from exc
-        evidence_contract_current = (
-            _professional_completeness_v2_evidence_ready(
-                schema_version=artifact_schema,
-                qualification=qualification_summary,
-                evidence=evidence_summary,
-                required_adjacency_candidate_count=(
-                    required_adjacency_candidate_count
-                ),
-            )
-        )
-    source_current = (
-        record.get("source_fingerprints") == current_source_fingerprints
-        if schema3
-        else False
-    )
-    expected_targets = {
-        item["skill_id"]: item["package_fingerprint"]
-        for item in current_packet["professional_targets"]
-    }
-    actual_targets = {
-        item["skill_id"]: item["package_fingerprint"]
-        for item in professional_dispositions
-    }
-    coverage_current = actual_targets == expected_targets
-    round_lifecycle = _professional_schema3_round_lifecycle(record_path)
-    lifecycle_storage_evidence = round_lifecycle.pop("_storage_evidence")
-    evidence = _deduplicated_professional_evidence(
-        [*evidence, *lifecycle_storage_evidence]
-    )
-    round_lifecycle_current = bool(
-        schema3 and round_lifecycle["current_decision_is_head"]
-    )
-    storage_current, storage_error = _dual_storage_status(
-        path,
-        config_bytes=config_bytes,
-        evidence=evidence,
-    )
-    review_cost_current = bool(
-        schema3
-        and review_cost is not None
-        and _professional_review_cost_policy_satisfied(
-            review_cost,
-            fresh_target_count=fresh_target_count,
-            carried_forward_target_count=carried_forward_target_count,
-        )
-        and source_current
-        and review_contract_current
-        and review_plan_current
-        and review_binding_current
-        and provenance_current
-        and round_lifecycle_current
-        and storage_current
-    )
-    accepted_for_formal = (
-        schema3
-        and source_current
-        and coverage_current
-        and storage_current
-        and review_contract_current
-        and review_plan_current
-        and review_binding_current
-        and provenance_current
-        and round_lifecycle_current
-        and review_cost_current
-        and correction_count == 0
-        and unresolved_professional_disagreement_count == 0
-        and required_target_count == expert_panel.PROFESSIONAL_PACKAGE_COUNT
-        and evidence_contract_current
-        and record.get("decision_method")
-        == expert_panel.PROFESSIONAL_COMPLETENESS_INCREMENTAL_DECISION_METHOD
-    )
-    if not schema3:
-        status = "panel-legacy-nonformal"
-    elif not source_current or not review_contract_current:
-        status = "panel-majority-stale"
-    elif not coverage_current or not review_plan_current or not review_binding_current:
-        status = "panel-majority-incomplete-coverage"
-    elif not provenance_current or not round_lifecycle_current:
-        status = "panel-majority-invalid-lineage"
-    elif not storage_current:
-        status = "panel-majority-pending-checkin"
-    elif unresolved_professional_disagreement_count:
-        status = "panel-domain-disagreement-unresolved"
-    elif correction_count:
-        status = "panel-majority-corrections-required"
-    elif not evidence_contract_current:
-        status = "panel-majority-evidence-insufficient"
-    elif not review_cost_current:
-        status = "panel-review-cost-policy-not-satisfied"
-    else:
-        status = "panel-majority-current"
-    normalized_limitations = list(limitations)
-    if not schema3:
-        normalized_limitations.append(
-            "Professional Completeness schema 1 and schema 2 remain readable for audit only; neither can satisfy formal release or authorize carry-forward."
-        )
-    normalized_limitations.append(PROFESSIONAL_REVIEW_COST_LIMITATIONS[2])
-    if storage_error is not None:
-        normalized_limitations.append(
-            "Formal storage binding is pending: " + storage_error
-        )
-    attested_on = _validated_iso_date(
-        record.get("decided_on"),
-        label=f"{_rel(path)}: professional-completeness panel decided_on",
-        evaluation_date=evaluation_date,
-    )
-    return {
-        "scope": "professional-skill-packages",
-        "panel_kind": expert_panel.PROFESSIONAL_COMPLETENESS_PANEL_KIND,
-        "decision_complete": True,
-        "storage_current": storage_current,
-        "source_current": source_current,
-        "accepted_for_formal": accepted_for_formal,
-        "decision_method": record["decision_method"],
-        "panel_review_id": record["review_id"],
-        "panel_size": (
-            expert_panel.PANEL_SIZE
-            if artifact_schema in {
-                expert_panel.PROFESSIONAL_COMPLETENESS_SCHEMA_VERSION,
-                expert_panel.PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION,
+    except expert_panel.panel_attestation.AttestationError as exc:
+        raise ValueError(f"invalid fixed {panel_kind} attestation: {exc}") from exc
+    evidence = {"path": relative, "sha256": bound.sha256}
+    _validate_expert_evidence(evidence)
+    return value, evidence
+
+
+def _winning_vote_rationales(
+    row: dict[str, Any], *, professional: bool = False
+) -> list[dict[str, Any]]:
+    winner = row["result"]["winning_disposition"]
+    values = []
+    for vote in (
+        row["votes"]
+        if professional
+        else row["votes"]
+    ):
+        disposition = vote["decision"] if professional else vote["disposition"]
+        if disposition != winner:
+            continue
+        voter_id = vote["reviewer"] if professional else vote["voter_id"]
+        values.append(
+            {
+                "voter_id": voter_id,
+                "reason_code": vote["reason_code"],
+                "rationale": vote["rationale"],
             }
-            else len(record["voters"])
-        ),
-        "reviewer_pool_size": len(record["voters"]),
-        "attestation_status": status,
-        "attestation_source": f"{_rel(path)}#{field_name}",
-        "attestation_schema_version": 5,
-        "attestation_config_fingerprint": config_fingerprint,
-        "source_fingerprints": dict(fingerprints),
-        "current_source_fingerprints": current_source_fingerprints,
-        "attested_by": f"expert-panel:{record['review_id']}",
-        "attested_on": attested_on,
-        "evidence": evidence,
-        "panel_artifact_schema_version": artifact_schema,
-        "evidence_contract_satisfied": evidence_contract_current,
-        "qualification_summary": qualification_summary,
-        "evidence_summary": evidence_summary,
-        "professional_dispositions": professional_dispositions,
-        "review_contract_fingerprint": review_contract_fingerprint,
-        "current_review_contract_fingerprint": (
-            current_review_contract_fingerprint
-        ),
-        "review_contract_current": review_contract_current,
-        "review_plan_fingerprint": review_plan_fingerprint,
-        "current_review_plan_fingerprint": current_review_plan_fingerprint,
-        "review_plan_current": review_plan_current,
-        "review_binding_current": review_binding_current,
-        "provenance_current": provenance_current,
-        "round_lifecycle_current": round_lifecycle_current,
-        "round_lifecycle": round_lifecycle,
-        "review_cost_current": review_cost_current,
-        "review_cost": review_cost,
-        "required_target_count": required_target_count,
-        "fresh_target_count": fresh_target_count,
-        "carried_forward_target_count": carried_forward_target_count,
-        "applied_target_count": len(professional_dispositions),
-        "accepted_current_count": accepted_current_count,
-        "correction_count": correction_count,
-        "unresolved_professional_disagreement_count": (
-            unresolved_professional_disagreement_count
-        ),
-        "limitations": normalized_limitations,
+        )
+    return values
+
+
+def _validate_fixed_readability_coverage(
+    value: dict[str, Any],
+    *,
+    required_density: list[dict[str, Any]],
+    required_readability: list[dict[str, Any]],
+    required_actionability: list[dict[str, Any]],
+    expected_review_contract_fingerprint: str,
+) -> None:
+    if value.get("review_contract_fingerprint") != (
+        expected_review_contract_fingerprint
+    ):
+        raise ValueError("fixed readability attestation review contract is stale")
+    actual_by_category = {
+        category: [
+            row for row in value.get("findings", [])
+            if isinstance(row, dict) and row.get("category") == category
+        ]
+        for category in ("content", "readability", "actionability")
     }
+    if sum(len(rows) for rows in actual_by_category.values()) != len(
+        value.get("findings", [])
+    ):
+        raise ValueError("fixed readability attestation category is invalid")
+    comparisons = (
+        (
+            "content",
+            [(row["path"],) for row in required_density],
+            [
+                (row.get("target_id"),)
+                for row in actual_by_category["content"]
+            ],
+        ),
+        (
+            "readability",
+            [(row["document_id"],) for row in required_readability],
+            [
+                (row.get("target_id"),)
+                for row in actual_by_category["readability"]
+            ],
+        ),
+        (
+            "actionability",
+            [(row["target_id"],) for row in required_actionability],
+            [
+                (row.get("target_id"),)
+                for row in actual_by_category["actionability"]
+            ],
+        ),
+    )
+    for category, expected, actual in comparisons:
+        if actual != sorted(set(actual)) or actual != sorted(expected):
+            raise ValueError(
+                f"fixed readability attestation {category} coverage is stale"
+            )
+
+
+def _apply_fixed_readability_attestation(
+    legacy: dict[str, Any],
+    *,
+    required_density: list[dict[str, Any]],
+    required_readability: list[dict[str, Any]],
+    required_actionability: list[dict[str, Any]],
+    expected_review_contract_fingerprint: str,
+    expected_readability_current_bindings: dict[
+        str, dict[str, dict[str, Any]]
+    ],
+    require_equivalent: bool = True,
+) -> dict[str, Any]:
+    loaded = _load_fixed_compact_attestation(
+        expert_panel.READABILITY_PANEL_KIND,
+        expected_source_fingerprints=legacy["current_source_fingerprints"],
+        expected_review_contract_fingerprint=(
+            expected_review_contract_fingerprint
+        ),
+        expected_readability_current_bindings=(
+            expected_readability_current_bindings
+        ),
+    )
+    if loaded is None:
+        raise ValueError("selected fixed readability attestation is missing")
+    value, evidence = loaded
+    _validate_fixed_readability_coverage(
+        value,
+        required_density=required_density,
+        required_readability=required_readability,
+        required_actionability=required_actionability,
+        expected_review_contract_fingerprint=(
+            expected_review_contract_fingerprint
+        ),
+    )
+    actionability_targets = {
+        row["target_id"]: row
+        for row in required_actionability
+    }
+    density_targets = {row["path"]: row for row in required_density}
+    readability_targets = {
+        row["document_id"]: row for row in required_readability
+    }
+    if (
+        len(actionability_targets) != len(required_actionability)
+        or len(density_targets) != len(required_density)
+        or len(readability_targets) != len(required_readability)
+    ):
+        raise ValueError("fixed readability current target identities are duplicated")
+    current_actionability = expected_readability_current_bindings.get(
+        "actionability"
+    )
+    if (
+        not isinstance(current_actionability, dict)
+        or set(current_actionability) != set(actionability_targets)
+    ):
+        raise ValueError(
+            "fixed readability actionability authority coverage is stale"
+        )
+    density = []
+    readability = []
+    actionability = []
+    for row in value["findings"]:
+        if row["category"] == "content":
+            target = density_targets[row["target_id"]]
+            rationales = _winning_vote_rationales(row)
+            density.append(
+                {
+                    "path": row["target_id"],
+                    "classification": target["classification"],
+                    "disposition": row["result"]["winning_disposition"],
+                    "rationale": "Majority decision: "
+                    + " ".join(item["rationale"] for item in rationales),
+                }
+            )
+        elif row["category"] == "readability":
+            target = readability_targets[row["target_id"]]
+            winning_voters = set(row["result"]["supporting_voters"])
+            rationales = [
+                vote["rationale"]
+                for finding in row["finding_reviews"]
+                for vote in finding["votes"]
+                if vote["voter_id"] in winning_voters
+            ]
+            readability.append(
+                {
+                    "document_id": row["target_id"],
+                    "highest_band": target["highest_band"],
+                    "disposition": row["result"]["winning_disposition"],
+                    "rationale": "Majority decision: " + " ".join(rationales),
+                }
+            )
+        else:
+            target = actionability_targets.get(row["target_id"])
+            authority = current_actionability.get(row["target_id"])
+            current_target = (
+                authority.get("target") if isinstance(authority, dict) else None
+            )
+            if (
+                target is None
+                or not isinstance(current_target, dict)
+                or authority.get("category") != "actionability"
+                or authority.get("target_id") != row["target_id"]
+                or any(
+                    current_target.get(field) != target[field]
+                    for field in (
+                        "target_id",
+                        "skill_id",
+                        "path",
+                        "front_loaded_action_score",
+                    )
+                )
+            ):
+                raise ValueError(
+                    "fixed readability attestation actionability target is stale"
+                )
+            window = current_target.get("front_window")
+            if not isinstance(window, dict) or not isinstance(
+                window.get("lines"), list
+            ):
+                raise ValueError(
+                    "fixed readability actionability authority window is invalid"
+                )
+            current_evidence = [
+                {
+                    "line": evidence_row["line"],
+                    "source_line": evidence_row["text"],
+                    "claim": evidence_row["text"],
+                }
+                for evidence_row in window["lines"]
+                if isinstance(evidence_row, dict)
+                and type(evidence_row.get("line")) is int
+                and isinstance(evidence_row.get("text"), str)
+                and evidence_row["text"].strip()
+                and expert_panel._actionability_window_line_is_substantive(
+                    window, evidence_row["line"]
+                )
+            ]
+            if not current_evidence:
+                raise ValueError(
+                    "fixed readability actionability authority has no substantive evidence"
+                )
+            rationales = _winning_vote_rationales(row)
+            actionability.append(
+                {
+                    "target_id": row["target_id"],
+                    "skill_id": target["skill_id"],
+                    "path": target["path"],
+                    "front_loaded_action_score": target[
+                        "front_loaded_action_score"
+                    ],
+                    "disposition": row["result"]["winning_disposition"],
+                    "reason_codes": sorted(
+                        {item["reason_code"] for item in rationales}
+                    ),
+                    "rationale": "Majority decision: "
+                    + " ".join(item["rationale"] for item in rationales),
+                    "evidence": current_evidence,
+                }
+            )
+    projection = {
+        "density_dispositions": density,
+        "readability_dispositions": readability,
+        "actionability_dispositions": actionability,
+    }
+    for key, rows in projection.items():
+        if require_equivalent and rows != legacy[key]:
+            raise ValueError(
+                f"fixed readability attestation is not field-equivalent for {key}"
+            )
+    updated = copy.deepcopy(legacy)
+    tracked = sum(
+        row["disposition"] == "tracked-tightening"
+        for row in (*density, *readability)
+    )
+    accepted_actionability = sum(
+        row["disposition"] == "accepted-current-actionability"
+        for row in actionability
+    )
+    false_positives = sum(
+        row["disposition"] == "detector-false-positive"
+        for row in actionability
+    )
+    rewrites = sum(
+        row["disposition"] == "rewrite-required"
+        for row in actionability
+    )
+    updated.update(
+        {
+            "decision_complete": True,
+            "storage_current": True,
+            "source_current": True,
+            "panel_review_id": value["review_id"],
+            "panel_size": expert_panel.PANEL_SIZE,
+            "attestation_source": evidence["path"],
+            "attestation_schema_version": 5,
+            "source_fingerprints": value["source_fingerprints"],
+            "attested_by": f"expert-panel:{value['review_id']}",
+            "attested_on": value["decided_on"],
+            "evidence": [evidence],
+            "panel_artifact_schema_version": (
+                expert_panel.READABILITY_SCHEMA_VERSION
+            ),
+            **projection,
+            "applied_density_disposition_count": len(density),
+            "applied_readability_disposition_count": len(readability),
+            "applied_actionability_disposition_count": len(actionability),
+            "accepted_current_actionability_count": accepted_actionability,
+            "detector_false_positive_count": false_positives,
+            "rewrite_required_count": rewrites,
+            "tracked_tightening_count": tracked,
+        }
+    )
+    updated["accepted_for_formal"] = bool(
+        value["verdict"] == "accepted-current-readability"
+        and updated["blocker_count"] == 0
+        and updated["tracked_tightening_count"] == 0
+        and updated["detector_false_positive_count"] == 0
+        and updated["rewrite_required_count"] == 0
+    )
+    updated["attestation_status"] = (
+        "panel-majority-current"
+        if updated["accepted_for_formal"]
+        else legacy["attestation_status"]
+    )
+    return updated
+
+
+def _apply_fixed_professional_attestation(
+    legacy: dict[str, Any], *, current_packet: dict[str, Any],
+    require_equivalent: bool = True,
+) -> dict[str, Any]:
+    fixed_path = (
+        ROOT
+        / expert_panel.panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH
+    )
+    authenticated_bound = expert_panel.reviewer_manifest.read_bound_regular_file(
+        fixed_path,
+        max_bytes=expert_panel.panel_attestation.MAX_ATTESTATION_BYTES,
+        label="fixed Professional attestation authority",
+    )
+    authenticated_value = (
+        expert_panel.panel_attestation.parse_attestation_storage_selector_bytes(
+            authenticated_bound.raw
+        )
+    )
+    authenticated_claims = (
+        expert_panel._professional_authenticated_claims_from_findings(
+            authenticated_value["findings"]
+        )
+    )
+    current_authority = expert_panel._professional_attestation_current_bindings(
+        current_packet,
+        authenticated_claims=authenticated_claims,
+    )
+    loaded = _load_fixed_compact_attestation(
+        expert_panel.PROFESSIONAL_COMPLETENESS_PANEL_KIND,
+        expected_review_contract_fingerprint=current_packet[
+            "review_contract_fingerprint"
+        ],
+        expected_professional_current_bindings=current_authority,
+    )
+    if loaded is None:
+        raise ValueError("selected fixed Professional attestation is missing")
+    value, evidence = loaded
+    try:
+        expert_panel.validate_professional_attestation_current(
+            value,
+            current_packet=current_packet,
+            authenticated_claims=authenticated_claims,
+        )
+    except expert_panel.PanelReviewError as exc:
+        raise ValueError(
+            f"fixed Professional attestation is not current: {exc}"
+        ) from exc
+    dispositions = []
+    for row in value["findings"]:
+        rationales = _winning_vote_rationales(row, professional=True)
+        dispositions.append(
+            {
+                "skill_id": row["skill_id"],
+                "package_material_binding": row[
+                    "package_material_binding"
+                ],
+                "review_unit_binding": row["review_unit_binding"],
+                "disposition": row["result"]["final_disposition"],
+                "majority_disposition": row["result"][
+                    "winning_disposition"
+                ],
+                "domain_critical_defects": row["result"][
+                    "domain_critical_defects"
+                ],
+                "ordinary_criterion_disposition": row["result"][
+                    "ordinary_criterion_disposition"
+                ],
+                "ordinary_criterion_defects": row["result"][
+                    "ordinary_criterion_defects"
+                ],
+                "reason_codes": sorted(
+                    {item["reason_code"] for item in rationales}
+                ),
+                "rationales": rationales,
+                "review_dependencies": row["result"]["review_dependencies"],
+                "evidence_metrics": row["result"]["evidence_metrics"],
+                "provenance": copy.deepcopy(row["provenance"]),
+                "target_decision_fingerprint": row["provenance"]["origin"][
+                    "origin_verdict_digest"
+                ],
+            }
+        )
+    legacy_projection = [
+        {
+            key: row[key]
+            for key in (
+                "skill_id",
+                "package_material_binding",
+                "review_unit_binding",
+                "disposition",
+                "majority_disposition",
+                "domain_critical_defects",
+                "ordinary_criterion_disposition",
+                "ordinary_criterion_defects",
+                "review_dependencies",
+                "evidence_metrics",
+            )
+        }
+        for row in legacy["professional_dispositions"]
+    ]
+    fixed_projection = [
+        {key: row[key] for key in legacy_projection[0]}
+        for row in dispositions
+    ] if legacy_projection else []
+    if require_equivalent and fixed_projection != legacy_projection:
+        raise ValueError(
+            "fixed Professional attestation is not field-equivalent to configured legacy evidence"
+        )
+    partition = value["summary"]["partition"]
+    qualification = value["summary"]["qualification"]
+    review_cost = value["summary"]["review_cost"]
+    evidence_summary = value["summary"]["evidence"]["effective"]
+    accepted = sum(
+        row["disposition"] == "accepted-current-professional-completeness"
+        for row in dispositions
+    )
+    corrections = sum(
+        row["disposition"] == "requires-professional-correction"
+        for row in dispositions
+    )
+    unresolved = sum(
+        row["disposition"] == expert_panel.PROFESSIONAL_UNRESOLVED_DISPOSITION
+        for row in dispositions
+    )
+    qualification_summary = {
+        "covered_target_count": qualification["effective_covered_target_count"],
+        "required_domain_experts_per_target": 2,
+        "required_architecture_experts_per_target": 1,
+        "per_target_panel_size": expert_panel.PANEL_SIZE,
+        "fresh_reviewer_pool_size": qualification["fresh_reviewer_pool_size"],
+        "effective_domain_vote_count": 2 * len(dispositions),
+        "effective_architecture_vote_count": len(dispositions),
+    }
+    evidence_current = _professional_completeness_v3_evidence_ready(
+        qualification=qualification_summary,
+        evidence=evidence_summary,
+    )
+    review_cost_current = _professional_review_cost_policy_satisfied(
+        review_cost,
+        fresh_target_count=partition["fresh_target_count"],
+        carried_forward_target_count=partition["carried_target_count"],
+    )
+    accepted_for_formal = bool(
+        value["verdict"] == "accepted-current-professional-completeness"
+        and len(dispositions) == expert_panel.PROFESSIONAL_PACKAGE_COUNT
+        and corrections == 0
+        and unresolved == 0
+        and evidence_current
+        and review_cost_current
+    )
+    updated = copy.deepcopy(legacy)
+    updated.update(
+        {
+            "decision_complete": True,
+            "storage_current": True,
+            "source_current": True,
+            "accepted_for_formal": accepted_for_formal,
+            "decision_method": (
+                expert_panel.PROFESSIONAL_COMPLETENESS_INCREMENTAL_DECISION_METHOD
+            ),
+            "panel_review_id": value["review_id"],
+            "panel_size": expert_panel.PANEL_SIZE,
+            "reviewer_pool_size": len(value["reviewers"]),
+            "attestation_status": (
+                "panel-majority-current"
+                if accepted_for_formal
+                else "panel-majority-incomplete-coverage"
+            ),
+            "attestation_source": evidence["path"],
+            "attestation_schema_version": 5,
+            "source_fingerprints": {},
+            "attested_by": f"expert-panel:{value['review_id']}",
+            "attested_on": value["decided_on"],
+            "evidence": [evidence],
+            "panel_artifact_schema_version": (
+                expert_panel.PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION
+            ),
+            "evidence_contract_satisfied": evidence_current,
+            "qualification_summary": qualification_summary,
+            "evidence_summary": evidence_summary,
+            "professional_dispositions": dispositions,
+            "review_contract_fingerprint": value[
+                "review_contract_fingerprint"
+            ],
+            "current_review_contract_fingerprint": current_packet[
+                "review_contract_fingerprint"
+            ],
+            "review_contract_current": True,
+            "review_plan_fingerprint": None,
+            "current_review_plan_fingerprint": None,
+            "review_plan_current": True,
+            "review_binding_current": True,
+            "provenance_current": True,
+            "round_lifecycle_current": True,
+            "round_lifecycle": {
+                "status": "fixed-attestation-current",
+                "round_count": 1,
+                "chain_depth": review_cost["plan_lineage_depth"],
+                "head_decision": None,
+                "current_decision_is_head": True,
+                "errors": [],
+                "limitations": [PROFESSIONAL_REVIEW_COST_LIMITATIONS[2]],
+            },
+            "review_cost_current": review_cost_current,
+            "review_cost": review_cost,
+            "fresh_target_count": partition["fresh_target_count"],
+            "carried_forward_target_count": partition["carried_target_count"],
+            "applied_target_count": len(dispositions),
+            "accepted_current_count": accepted,
+            "correction_count": corrections,
+            "unresolved_professional_disagreement_count": unresolved,
+        }
+    )
+    return updated
 
 
 def _dual_expert_reviews_from_data(
@@ -5174,6 +5329,8 @@ def _dual_expert_reviews_from_data(
     evaluation_date: date | None,
     content_audit: object = None,
     skill_detector_fingerprint: str | None = None,
+    storage_statuses: dict[str, str] | None = None,
+    formal: bool = False,
 ) -> dict[str, Any]:
     if data.get("schema_version") != 5 or set(data) != DUAL_PANEL_CONFIG_FIELDS:
         raise ValueError(
@@ -5194,20 +5351,15 @@ def _dual_expert_reviews_from_data(
         config_bytes=config_bytes,
         config_fingerprint=config_fingerprint,
         attestation=data["readability_review_attestation"],
-        current_source_fingerprints={
-            "reference_content": reference_fingerprint,
-            "root_content": root_fingerprint,
-            "ai_readability": ai_readability_fingerprint,
-            "skill_detector": (
-                skill_detector_fingerprint
-                if isinstance(skill_detector_fingerprint, str)
-                else "0" * 64
-            ),
-        },
         content_skills=content_skills,
         readability_content=readability_content,
         content_audit=content_audit,
         evaluation_date=evaluation_date,
+        storage_status=(storage_statuses or {}).get(
+            expert_panel.READABILITY_PANEL_KIND,
+            "current",
+        ),
+        formal=formal,
     )
     completeness = _professional_completeness_review_axis(
         path,
@@ -5216,6 +5368,11 @@ def _dual_expert_reviews_from_data(
         attestation=data["professional_completeness_review_attestation"],
         current_packet=current_completeness_packet,
         evaluation_date=evaluation_date,
+        storage_status=(storage_statuses or {}).get(
+            expert_panel.PROFESSIONAL_COMPLETENESS_PANEL_KIND,
+            "current",
+        ),
+        formal=formal,
     )
     return {
         "deprecated_legacy_attestation": False,
@@ -5385,7 +5542,6 @@ _ProfessionalReviewCostBlock = tuple[str, int]
 class _ProfessionalReviewCostBlockIndex:
     """Packet-bound, recursively immutable canonical cost blocks."""
 
-    source_fingerprints: tuple[tuple[str, str], ...]
     review_contract_fingerprint: str
     assigned_skill_ids: tuple[str, ...]
     base_blocks_by_digest: Mapping[str, int]
@@ -5434,7 +5590,6 @@ def _professional_review_cost_row_index(
 
 def _professional_review_cost_block_index(
     *,
-    source_fingerprints: dict[str, str],
     review_contract_fingerprint: str,
     discovery_projection: dict[str, Any],
     reviewer_added_requests: list[dict[str, Any]],
@@ -5504,7 +5659,6 @@ def _professional_review_cost_block_index(
     review_binding = _professional_review_cost_block(
         {
             "block_kind": "review-binding",
-            "source_fingerprints": source_fingerprints,
             "review_contract_fingerprint": review_contract_fingerprint,
         }
     )
@@ -5598,7 +5752,6 @@ def _professional_review_cost_block_index(
         request_blocks_by_target[target_id].append(block)
 
     return _ProfessionalReviewCostBlockIndex(
-        source_fingerprints=tuple(sorted(source_fingerprints.items())),
         review_contract_fingerprint=review_contract_fingerprint,
         assigned_skill_ids=assigned,
         base_blocks_by_digest=MappingProxyType(
@@ -5714,10 +5867,9 @@ def _calculate_professional_review_cost_fixtures() -> dict[str, Any]:
         raise ValueError("professional review cost fixture requires 189 targets")
     reverse_dependencies = {skill_id: {skill_id} for skill_id in target_ids}
     for target_id, binding in bindings.items():
-        for candidate in binding["required_candidate_material_bindings"]:
-            reverse_dependencies[candidate["skill_id"]].add(target_id)
+        for candidate_id in binding["dependency_material_bindings"]:
+            reverse_dependencies[candidate_id].add(target_id)
 
-    canonical_bytes = expert_panel.professional_carry.canonical_json_bytes
     full_discovery_projection = (
         expert_panel._professional_v3_discovery_projection_from_packet(
             packet=packet,
@@ -5734,17 +5886,12 @@ def _calculate_professional_review_cost_fixtures() -> dict[str, Any]:
         )
     )
     block_index = _professional_review_cost_block_index(
-        source_fingerprints=packet["source_fingerprints"],
         review_contract_fingerprint=packet[
             "review_contract_fingerprint"
         ],
         discovery_projection=full_discovery_projection,
         reviewer_added_requests=[],
         final_projection=full_final_projection,
-    )
-    full_blocks = _professional_review_cost_case_input_blocks(
-        block_index,
-        fresh_skill_ids=target_ids,
     )
     full_round_bytes = _professional_review_cost_case_bytes(
         block_index,
@@ -5772,30 +5919,11 @@ def _calculate_professional_review_cost_fixtures() -> dict[str, Any]:
     fresh_counts = sorted(row["fresh_target_count"] for row in cases)
     ratios = sorted(row["input_ratio_ppm"] for row in cases)
     p95_index = (95 * len(cases) + 99) // 100 - 1
-    cases_fingerprint = hashlib.sha256(
-        canonical_bytes(cases)
-    ).hexdigest()
     named = next(
         row for row in cases if row["skill_id"] == "acceptance-criteria-builder"
     )
     sensitivity = {
-        "professional_packages_fingerprint": packet["source_fingerprints"][
-            "professional_packages"
-        ],
-        "catalog_fingerprint": packet["source_fingerprints"][
-            "professional_review_bindings"
-        ],
-        "material_catalog_fingerprint": hashlib.sha256(
-            canonical_bytes(full_final_projection["material_catalog"])
-        ).hexdigest(),
-        "full_projection_fingerprint": hashlib.sha256(
-            canonical_bytes(full_blocks)
-        ).hexdigest(),
-        "review_contract_fingerprint": packet[
-            "review_contract_fingerprint"
-        ],
         "case_count": len(cases),
-        "cases_fingerprint": cases_fingerprint,
         "full_rereview_deduplicated_capsule_input_bytes_proxy": (
             full_round_bytes
         ),
@@ -5817,10 +5945,7 @@ def _calculate_professional_review_cost_fixtures() -> dict[str, Any]:
     }
     dependency_fixture: dict[str, dict[str, Any]] = {}
     for skill_id, binding in bindings.items():
-        required_ids = [
-            row["skill_id"]
-            for row in binding["required_candidate_material_bindings"]
-        ]
+        required_ids = sorted(binding["dependency_material_bindings"])
         dependency_fixture[skill_id] = {
             "skill_id": skill_id,
             "final_disposition": (
@@ -5835,7 +5960,7 @@ def _calculate_professional_review_cost_fixtures() -> dict[str, Any]:
     adjacency_target = "acceptance-criteria-builder"
     prior_snapshot = copy.deepcopy(state["snapshot"])
     prior_snapshot["targets"][adjacency_target][
-        "adjacency_fingerprint"
+        "review_unit_binding"
     ] = hashlib.sha256(
         b"representative-prior-routing-adjacency"
     ).hexdigest()
@@ -5852,7 +5977,7 @@ def _calculate_professional_review_cost_fixtures() -> dict[str, Any]:
     if (
         adjacency_plan["fresh_target_ids"] != [adjacency_target]
         or adjacency_plan["reasons_by_target"][adjacency_target]
-        != ["adjacency-review-binding-changed"]
+        != ["review-unit-binding-changed"]
         or len(adjacency_plan["carry_target_ids"]) != 188
     ):
         raise ValueError(
@@ -5874,7 +5999,7 @@ def _calculate_professional_review_cost_fixtures() -> dict[str, Any]:
         fixture_contract = contracts["final_goal_contract"][
             "professional_review_cost_fixtures"
         ]
-    except (OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
+    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
         raise ValueError(
             "final_goal_contract lacks Professional review cost fixture authority"
         ) from exc
@@ -5915,20 +6040,102 @@ def _calculate_professional_review_cost_fixtures() -> dict[str, Any]:
 
 
 def _professional_review_cost_fixtures() -> dict[str, Any]:
-    """Recompute and enforce the locked current-catalog cost fixture."""
+    """Recompute current measured review cost and enforce invariant ceilings."""
 
     result = _calculate_professional_review_cost_fixtures()
     try:
         contracts = json.loads(CORE_CONTRACTS.read_text(encoding="utf-8"))
-        expected = contracts["final_goal_contract"][
+        contract_errors = validate_core_contracts(contracts)
+        if contract_errors:
+            raise ValueError("; ".join(contract_errors))
+        authority = contracts["final_goal_contract"][
             "professional_review_cost_fixtures"
-        ]["locked_current_catalog"]
-    except (OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
+        ]
+        thresholds = authority["thresholds"]
+    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
         raise ValueError(
             "final_goal_contract lacks Professional review cost fixture authority"
         ) from exc
-    if result["routing_neutral_isolated_material_binding_sensitivity"] != expected:
+    result = copy.deepcopy(result)
+    sensitivity = result.get(
+        "routing_neutral_isolated_material_binding_sensitivity"
+    )
+    if not isinstance(sensitivity, dict):
         result["status"] = "formal-non-current"
+        return result
+    for legacy_digest_field in (
+        "professional_packages_fingerprint",
+        "catalog_fingerprint",
+        "material_catalog_fingerprint",
+        "full_projection_fingerprint",
+        "review_contract_fingerprint",
+        "cases_fingerprint",
+    ):
+        sensitivity.pop(legacy_digest_field, None)
+    expected_fields = {
+        "case_count",
+        "full_rereview_deduplicated_capsule_input_bytes_proxy",
+        "fresh_target_count",
+        "input_ratio_ppm",
+        "named_isolated_case",
+    }
+    current = set(sensitivity) == expected_fields
+    case_count = sensitivity.get("case_count")
+    full_bytes = sensitivity.get(
+        "full_rereview_deduplicated_capsule_input_bytes_proxy"
+    )
+    fresh = sensitivity.get("fresh_target_count")
+    ratio = sensitivity.get("input_ratio_ppm")
+    named = sensitivity.get("named_isolated_case")
+    current = bool(
+        current
+        and type(case_count) is int
+        and case_count == expert_panel.PROFESSIONAL_PACKAGE_COUNT
+        and type(full_bytes) is int
+        and full_bytes > 0
+        and isinstance(fresh, dict)
+        and set(fresh) == {"min", "sum", "mean_milli", "p95", "max"}
+        and all(type(value) is int and value >= 0 for value in fresh.values())
+        and fresh["mean_milli"] == fresh["sum"] * 1000 // case_count
+        and fresh["min"] <= fresh["p95"] <= fresh["max"]
+        and fresh["max"] <= thresholds["maximum_fresh_target_count"]
+        and fresh["sum"]
+        <= thresholds["maximum_mean_fresh_target_count"] * case_count
+        and isinstance(ratio, dict)
+        and set(ratio) == {"min", "sum", "mean", "p95", "max"}
+        and all(type(value) is int and value >= 0 for value in ratio.values())
+        and ratio["mean"] == ratio["sum"] // case_count
+        and ratio["min"] <= ratio["p95"] <= ratio["max"]
+        and ratio["max"] <= thresholds["maximum_input_ratio_ppm"]
+        and ratio["sum"]
+        <= thresholds["maximum_mean_input_ratio_ppm"] * case_count
+        and isinstance(named, dict)
+        and set(named)
+        == {
+            "skill_id",
+            "fresh_target_count",
+            "carried_forward_target_count",
+            "canonical_capsule_input_bytes_proxy",
+            "input_ratio_ppm",
+        }
+        and named["skill_id"] == "acceptance-criteria-builder"
+        and all(
+            type(named[field]) is int and named[field] >= 0
+            for field in (
+                "fresh_target_count",
+                "carried_forward_target_count",
+                "canonical_capsule_input_bytes_proxy",
+                "input_ratio_ppm",
+            )
+        )
+        and named["fresh_target_count"] + named["carried_forward_target_count"]
+        == case_count
+        and named["canonical_capsule_input_bytes_proxy"] > 0
+        and named["input_ratio_ppm"]
+        == named["canonical_capsule_input_bytes_proxy"] * 1_000_000 // full_bytes
+        and result.get("thresholds") == thresholds
+    )
+    result["status"] = "pass" if current else "formal-non-current"
     return result
 
 
@@ -5942,6 +6149,8 @@ def _expert_reviews(
     readability_content: object = None,
     content_audit: object = None,
     evaluation_date: date | None = None,
+    storage_statuses: dict[str, str] | None = None,
+    formal: bool = False,
 ) -> dict[str, Any]:
     """Parse independent schema-5 axes or normalize a legacy attestation."""
 
@@ -5953,32 +6162,9 @@ def _expert_reviews(
     if not isinstance(data, dict):
         raise ValueError(f"{_rel(path)}: release review config must be a mapping")
     if set(data) == DUAL_PANEL_CONFIG_FIELDS:
-        if not isinstance(ai_readability_fingerprint, str) or not _is_sha256(
-            ai_readability_fingerprint
-        ):
-            raise ValueError(
-                f"{_rel(path)}: current AI-readability fingerprint is required"
-            )
         if not isinstance(content_audit, dict):
             raise ValueError(
                 f"{_rel(path)}: current content audit is required"
-            )
-        detector = content_audit.get("skill_detector")
-        detector_fingerprint = (
-            detector.get("detector_fingerprint")
-            if isinstance(detector, dict)
-            else None
-        )
-        skill_detector_fingerprint = (
-            detector_fingerprint.get("value")
-            if isinstance(detector_fingerprint, dict)
-            else None
-        )
-        if not isinstance(skill_detector_fingerprint, str) or not _is_sha256(
-            skill_detector_fingerprint
-        ):
-            raise ValueError(
-                f"{_rel(path)}: current Skill-detector fingerprint is required"
             )
         current_completeness_packet = (
             _current_professional_completeness_packet()
@@ -5995,7 +6181,8 @@ def _expert_reviews(
             current_completeness_packet=current_completeness_packet,
             evaluation_date=evaluation_date,
             content_audit=content_audit,
-            skill_detector_fingerprint=skill_detector_fingerprint,
+            storage_statuses=storage_statuses,
+            formal=formal,
         )
 
     legacy_review = _expert_content_review(
@@ -6006,6 +6193,7 @@ def _expert_reviews(
         content_skills=content_skills,
         readability_content=readability_content,
         evaluation_date=evaluation_date,
+        content_audit=content_audit,
     )
     return _normalized_expert_reviews(legacy_review)
 
@@ -6050,10 +6238,10 @@ def _git_path_is_tracked(value: str) -> bool:
     return result.returncode == 0
 
 
-def _git_head_blob(value: str) -> bytes:
+def _git_head_blob(value: str, *, commit: str = "HEAD") -> bytes:
     try:
         result = subprocess.run(
-            ["git", "show", f"HEAD:{value}"],
+            ["git", "show", f"{commit}:{value}"],
             cwd=ROOT,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
@@ -6091,6 +6279,510 @@ def _git_path_is_clean(value: str) -> bool:
             f"cannot verify expert content review evidence cleanliness: {value}"
         )
     return not result.stdout.strip()
+
+
+def _git_tracked_expert_panel_paths() -> list[str]:
+    """Return the exact tracked Expert Panel inventory from the current index."""
+
+    try:
+        result = subprocess.run(
+            ["git", "ls-files", "-z", "--", "evals/expert-panel"],
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+    except OSError as exc:
+        raise ValueError("cannot resolve tracked Expert Panel inventory") from exc
+    if result.returncode != 0:
+        raise ValueError("cannot resolve tracked Expert Panel inventory")
+    raw_paths = result.stdout.split(b"\0")
+    if raw_paths and raw_paths[-1] == b"":
+        raw_paths.pop()
+    paths: list[str] = []
+    for raw in raw_paths:
+        try:
+            value = raw.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise ValueError(
+                "tracked Expert Panel inventory paths must be UTF-8"
+            ) from exc
+        relative = Path(value)
+        if (
+            relative.is_absolute()
+            or relative.as_posix() != value
+            or ".." in relative.parts
+            or not value.startswith("evals/expert-panel/")
+        ):
+            raise ValueError(
+                f"tracked Expert Panel inventory path is not canonical: {value}"
+            )
+        paths.append(value)
+    if len(paths) != len(set(paths)):
+        raise ValueError("duplicate tracked Expert Panel inventory path")
+    return sorted(paths)
+
+
+def _expert_panel_currentness_drift(exc: Exception) -> bool:
+    """Classify only external authority drift as non-structural staleness."""
+
+    message = str(exc)
+    if isinstance(
+        exc,
+        expert_panel.panel_attestation.AttestationCurrentnessError,
+    ):
+        return message in {
+            "Readability detector contract binding is stale",
+            "Readability target manifest binding is stale",
+        }
+    if isinstance(exc, expert_panel.PanelReviewError):
+        return message in {
+            "semantic attestation selector must match exactly one current authority",
+            "Professional attestation exact current binding is stale",
+            "Professional attestation target coverage is stale",
+            "Professional baseline attestation selector is stale",
+            "readability attestation exact current coverage or contract is stale",
+            "semantic attestation exact current candidate coverage is stale",
+            "semantic attestation application entries are stale",
+            "semantic fixed rewrite target remains current",
+            "semantic fixed attestation disposition mismatch",
+        }
+    if isinstance(exc, expert_panel.panel_attestation.AttestationError):
+        return (
+            message
+            in {
+                "attestation source fingerprints are stale",
+                "attestation review contract fingerprint is stale",
+                "professional package fingerprints are stale",
+                "readability source or review binding coverage is stale",
+                "semantic candidate authority is incomplete",
+                "Semantic candidate binding is stale",
+                "semantic candidate fingerprints are stale",
+                "semantic candidate fingerprint coverage is stale",
+                "Professional current binding coverage is incomplete",
+            }
+            or message.startswith("Professional current binding for ")
+            or message.startswith("Professional dependency binding for ")
+        )
+    return False
+
+
+def _validate_current_expert_panel_storage(*, formal: bool) -> dict[str, str]:
+    """Validate fixed storage and report per-axis currentness."""
+
+    tracked_paths = _git_tracked_expert_panel_paths()
+    if len(tracked_paths) != len(set(tracked_paths)):
+        raise ValueError("duplicate tracked Expert Panel inventory path")
+    allowed_by_axis = expert_panel.panel_attestation.ATTESTATION_PATHS
+    allowed_paths = set(allowed_by_axis.values())
+    unexpected = sorted(set(tracked_paths) - allowed_paths)
+    if unexpected:
+        raise ValueError(
+            "unexpected tracked Expert Panel storage paths: "
+            + ", ".join(unexpected)
+        )
+    tracked = set(tracked_paths)
+    statuses: dict[str, str] = {}
+    for panel_kind, relative in sorted(allowed_by_axis.items()):
+        candidate = ROOT / relative
+        if not os.path.lexists(candidate):
+            statuses[panel_kind] = "missing"
+            continue
+        label = f"fixed Expert Panel attestation {relative}"
+        bound = expert_panel.reviewer_manifest.read_bound_regular_file(
+            candidate,
+            max_bytes=expert_panel.panel_attestation.MAX_ATTESTATION_BYTES,
+            label=label,
+        )
+        header = (
+            expert_panel.panel_attestation.parse_attestation_storage_selector_bytes(
+                bound.raw
+            )
+        )
+        review_id = header.get("review_id")
+        decided_on = header.get("decided_on")
+        if not isinstance(review_id, str) or not isinstance(decided_on, str):
+            raise ValueError(
+                f"{relative}: attestation review_id and decided_on are required"
+            )
+        actual_panel_kind = (
+            expert_panel.panel_attestation.attestation_axis_for_path(relative)
+        )
+        if actual_panel_kind != panel_kind:
+            raise ValueError(
+                f"current Expert Panel attestation path is invalid: {relative}"
+            )
+        storage_schema = header.get("schema_version")
+        if storage_schema != expert_panel.panel_attestation.ATTESTATION_SCHEMA_VERSION:
+            if storage_schema != 1:
+                raise ValueError(
+                    f"{relative}: unsupported compact storage schema_version"
+                )
+            expected_kind = {
+                expert_panel.READABILITY_PANEL_KIND: (
+                    expert_panel.panel_attestation.READABILITY_ATTESTATION_KIND
+                ),
+                expert_panel.SEMANTIC_DISPOSITION_PANEL_KIND: (
+                    expert_panel.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_KIND
+                ),
+                expert_panel.PROFESSIONAL_COMPLETENESS_PANEL_KIND: (
+                    expert_panel.panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_KIND
+                ),
+            }[panel_kind]
+            if (
+                header.get("axis") != panel_kind
+                or header.get("kind") != expected_kind
+                or not isinstance(header.get("findings"), list)
+                or not isinstance(header.get("summary"), dict)
+                or not isinstance(header.get("review_contract_fingerprint"), str)
+                or re.fullmatch(
+                    r"[0-9a-f]{64}", header["review_contract_fingerprint"]
+                )
+                is None
+            ):
+                raise ValueError(
+                    f"{relative}: historical compact storage envelope is malformed"
+                )
+            try:
+                historical_head_equal = _git_head_blob(relative) == bound.raw
+            except ValueError:
+                historical_head_equal = False
+            if relative not in tracked or not historical_head_equal:
+                raise ValueError(
+                    f"{relative}: historical compact storage must be tracked and HEAD-equal"
+                )
+            if (
+                expert_panel.reviewer_manifest.recheck_bound_file(
+                    bound, label=label
+                )
+                != bound.raw
+            ):
+                raise ValueError(
+                    f"historical Expert Panel attestation changed during validation: {relative}"
+                )
+            statuses[panel_kind] = "stale"
+            continue
+        current = True
+        try:
+            fixed_path, validation, _validate_current = (
+                expert_panel._current_attestation_validation(
+                    panel_kind,
+                    review_id=review_id,
+                    decided_on=decided_on,
+                    attestation_selector=header,
+                )
+            )
+            if fixed_path != relative:
+                raise ValueError(
+                    "current Expert Panel attestation kind does not match path: "
+                    + relative
+                )
+            value = expert_panel.panel_attestation.parse_attestation_bytes(
+                bound.raw,
+                expected_path=relative,
+                **validation,
+            )
+        except (
+            expert_panel.PanelReviewError,
+            expert_panel.panel_attestation.AttestationError,
+        ) as exc:
+            if not _expert_panel_currentness_drift(exc):
+                raise
+            try:
+                trusted_head_bytes = (
+                    relative in tracked
+                    and _git_head_blob(relative) == bound.raw
+                    and _git_path_is_clean(relative)
+                )
+            except ValueError:
+                trusted_head_bytes = False
+            if not trusted_head_bytes:
+                raise
+            current = False
+        if (
+            expert_panel.reviewer_manifest.recheck_bound_file(
+                bound, label=label
+            )
+            != bound.raw
+        ):
+            raise ValueError(
+                f"current Expert Panel attestation changed during validation: {relative}"
+            )
+        if not current:
+            statuses[panel_kind] = "stale"
+            continue
+        if relative not in tracked:
+            statuses[panel_kind] = "pending"
+            continue
+        try:
+            head_current = _git_head_blob(relative) == bound.raw
+        except ValueError:
+            head_current = False
+        statuses[panel_kind] = (
+            "current"
+            if head_current and _git_path_is_clean(relative)
+            else "pending"
+        )
+    noncurrent = [
+        f"{panel_kind}={statuses[panel_kind]}"
+        for panel_kind in sorted(statuses)
+        if statuses[panel_kind] != "current"
+    ]
+    if formal and noncurrent:
+        raise ValueError(
+            "formal Expert Panel storage requires current attestations: "
+            + ", ".join(noncurrent)
+        )
+    return statuses
+
+
+def _derive_expert_panel_release_manifest(
+    *,
+    formal: bool,
+    storage_statuses: dict[str, str],
+    current_head_commit: str | None,
+    manifest_head_commit: str | None,
+    artifact_observations: list[dict[str, Any]] | None,
+) -> dict[str, Any]:
+    """Derive the downstream release identity without affecting panel inputs."""
+
+    expected_axes = {axis for axis, _path, _verdict in (
+        EXPERT_PANEL_RELEASE_MANIFEST_ARTIFACTS
+    )}
+    if set(storage_statuses) != expected_axes:
+        raise ValueError(
+            "Expert Panel release manifest storage axes must be exact"
+        )
+    invalid_statuses = sorted(
+        set(storage_statuses.values()) - {"current", "missing", "stale", "pending"}
+    )
+    if invalid_statuses:
+        raise ValueError(
+            "Expert Panel release manifest storage status is invalid: "
+            + ", ".join(invalid_statuses)
+        )
+    if not formal:
+        status = "not-evaluated"
+        for candidate in ("missing", "stale", "pending"):
+            if candidate in storage_statuses.values():
+                status = candidate
+                break
+        return {
+            "schema_version": EXPERT_PANEL_RELEASE_MANIFEST_SCHEMA_VERSION,
+            "status": status,
+            "head_commit": None,
+            "artifacts": [],
+            "verification_toolchain": None,
+        }
+
+    if set(storage_statuses.values()) != {"current"}:
+        raise ValueError(
+            "formal Expert Panel release manifest requires all axes current"
+        )
+    if (
+        not isinstance(current_head_commit, str)
+        or len(current_head_commit) not in {40, 64}
+        or any(char not in "0123456789abcdef" for char in current_head_commit)
+        or manifest_head_commit != current_head_commit
+    ):
+        raise ValueError(
+            "formal Expert Panel release manifest HEAD is not the current commit"
+        )
+    if not isinstance(artifact_observations, list):
+        raise ValueError(
+            "formal Expert Panel release manifest artifacts are missing"
+        )
+    expected = list(EXPERT_PANEL_RELEASE_MANIFEST_ARTIFACTS)
+    if len(artifact_observations) != len(expected):
+        raise ValueError(
+            "formal Expert Panel release manifest requires exactly three artifacts"
+        )
+
+    artifacts: list[dict[str, Any]] = []
+    head_byte_equal_count = 0
+    clean_artifact_count = 0
+    accepted_artifact_count = 0
+    for observed, (axis, path, accepted_verdict) in zip(
+        artifact_observations,
+        expected,
+        strict=True,
+    ):
+        expected_fields = {
+            "axis",
+            "path",
+            "external_sha256",
+            "size_bytes",
+            "review_id",
+            "verdict",
+            "head_byte_equal",
+            "clean",
+        }
+        if not isinstance(observed, dict) or set(observed) != expected_fields:
+            raise ValueError(
+                "formal Expert Panel release manifest artifact fields are invalid"
+            )
+        if observed["axis"] != axis or observed["path"] != path:
+            raise ValueError(
+                "formal Expert Panel release manifest axis/path is not canonical"
+            )
+        digest = observed["external_sha256"]
+        if (
+            not isinstance(digest, str)
+            or len(digest) != 64
+            or any(char not in "0123456789abcdef" for char in digest)
+        ):
+            raise ValueError(
+                "formal Expert Panel release manifest external sha256 is invalid"
+            )
+        if (
+            type(observed["size_bytes"]) is not int
+            or observed["size_bytes"] <= 0
+            or not isinstance(observed["review_id"], str)
+            or not observed["review_id"]
+        ):
+            raise ValueError(
+                "formal Expert Panel release manifest artifact identity is invalid"
+            )
+        if observed["verdict"] == accepted_verdict:
+            accepted_artifact_count += 1
+        else:
+            raise ValueError(
+                "formal Expert Panel release manifest contains an adverse verdict"
+            )
+        if observed["head_byte_equal"] is True:
+            head_byte_equal_count += 1
+        else:
+            raise ValueError(
+                "formal Expert Panel release manifest artifact differs from HEAD"
+            )
+        if observed["clean"] is True:
+            clean_artifact_count += 1
+        else:
+            raise ValueError(
+                "formal Expert Panel release manifest artifact has dirty Git state"
+            )
+        artifacts.append(
+            {
+                field: observed[field]
+                for field in (
+                    "axis",
+                    "path",
+                    "external_sha256",
+                    "size_bytes",
+                    "review_id",
+                    "verdict",
+                )
+            }
+        )
+    return {
+        "schema_version": EXPERT_PANEL_RELEASE_MANIFEST_SCHEMA_VERSION,
+        "status": "current",
+        "head_commit": manifest_head_commit,
+        "artifacts": artifacts,
+        "verification_toolchain": {
+            "head_commit_matches_current": True,
+            "artifact_count": len(artifacts),
+            "accepted_artifact_count": accepted_artifact_count,
+            "head_byte_equal_count": head_byte_equal_count,
+            "clean_artifact_count": clean_artifact_count,
+        },
+    }
+
+
+def _git_head_commit() -> str:
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--verify", "HEAD"],
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            check=False,
+            text=True,
+        )
+    except OSError as exc:
+        raise ValueError("cannot resolve current HEAD for release manifest") from exc
+    value = result.stdout.strip()
+    if (
+        result.returncode != 0
+        or len(value) not in {40, 64}
+        or any(char not in "0123456789abcdef" for char in value)
+    ):
+        raise ValueError("cannot resolve current HEAD for release manifest")
+    return value
+
+
+def _expert_panel_release_manifest(
+    *, formal: bool, storage_statuses: dict[str, str]
+) -> dict[str, Any]:
+    if not formal:
+        return _derive_expert_panel_release_manifest(
+            formal=False,
+            storage_statuses=storage_statuses,
+            current_head_commit=None,
+            manifest_head_commit=None,
+            artifact_observations=None,
+        )
+
+    captured_head_commit = os.environ.get(FORMAL_HEAD_COMMIT_ENV)
+    if captured_head_commit is None:
+        captured_head_commit = _git_head_commit()
+    if (
+        len(captured_head_commit) not in {40, 64}
+        or any(
+            character not in "0123456789abcdef"
+            for character in captured_head_commit
+        )
+        or _git_head_commit() != captured_head_commit
+    ):
+        raise ValueError(
+            "formal Expert Panel release manifest HEAD is not the current commit "
+            "or captured Core HEAD"
+        )
+    head_commit = captured_head_commit
+    observations: list[dict[str, Any]] = []
+    for axis, relative, _accepted_verdict in (
+        EXPERT_PANEL_RELEASE_MANIFEST_ARTIFACTS
+    ):
+        candidate = ROOT / relative
+        label = f"fixed Expert Panel release artifact {relative}"
+        bound = expert_panel.reviewer_manifest.read_bound_regular_file(
+            candidate,
+            max_bytes=expert_panel.panel_attestation.MAX_ATTESTATION_BYTES,
+            label=label,
+        )
+        value = (
+            expert_panel.panel_attestation.parse_attestation_storage_selector_bytes(
+                bound.raw
+            )
+        )
+        if (
+            expert_panel.reviewer_manifest.recheck_bound_file(bound, label=label)
+            != bound.raw
+        ):
+            raise ValueError(
+                f"fixed Expert Panel release artifact changed during validation: {relative}"
+            )
+        observations.append(
+            {
+                "axis": value.get("axis", axis),
+                "path": relative,
+                "external_sha256": hashlib.sha256(bound.raw).hexdigest(),
+                "size_bytes": len(bound.raw),
+                "review_id": value.get("review_id"),
+                "verdict": value.get("verdict"),
+                "head_byte_equal": (
+                    _git_head_blob(relative, commit=head_commit) == bound.raw
+                ),
+                "clean": _git_path_is_clean(relative),
+            }
+        )
+    return _derive_expert_panel_release_manifest(
+        formal=True,
+        storage_statuses=storage_statuses,
+        current_head_commit=_git_head_commit(),
+        manifest_head_commit=head_commit,
+        artifact_observations=observations,
+    )
 
 
 def _require_default_release_review_config(
@@ -6199,21 +6891,16 @@ def _content_readiness(
             reference["semantic_triage_complete"] and root["semantic_triage_complete"]
         ),
         "readability_review_current": (
-            readability.get("accepted_for_formal") is True
-            and readability.get("tracked_tightening_count") == 0
-            and readability.get("rewrite_required_count") == 0
+            _readability_review_formal_ready(readability)
         ),
         "professional_completeness_review_current": (
-            professional_completeness.get("accepted_for_formal") is True
-            and professional_completeness.get("correction_count") == 0
-            and professional_completeness.get(
-                "unresolved_professional_disagreement_count"
+            _professional_completeness_review_formal_ready(
+                professional_completeness
             )
-            == 0
         ),
     }
     return {
-        "schema_version": 9,
+        "schema_version": 10,
         "reference": reference,
         "root": root,
         "expert": expert,
@@ -6327,8 +7014,23 @@ def _release_gate(
     expert_reviews: dict[str, Any],
     root_summary: dict[str, Any] | None = None,
     content_audit_summary: dict[str, Any] | None = None,
+    *,
+    expert_panel_release_manifest: dict[str, Any],
 ) -> tuple[str, list[Finding]]:
     release_blockers = list(authoring_blockers)
+    manifest_errors = validate_expert_panel_release_manifest(
+        expert_panel_release_manifest,
+        require_current=True,
+    )
+    if manifest_errors:
+        release_blockers.append(
+            Finding(
+                EXPERT_PANEL_RELEASE_MANIFEST_BLOCKER_CATEGORY,
+                "professionalism-regression-report.json"
+                "#expert_panel_release_manifest",
+                "; ".join(manifest_errors),
+            )
+        )
     audit_summary = content_audit_summary or {}
     application = audit_summary.get("semantic_disposition_application")
     audit_gate = audit_summary.get("audit_gate_status")
@@ -6426,27 +7128,6 @@ def _release_gate(
                 f"evidence_contract_satisfied={evidence_contract}; "
                 f"correction_count={corrections}; "
                 f"unresolved_professional_disagreement_count={unresolved}",
-            )
-        )
-    lifecycle_status = str(
-        (root_summary or {}).get("semantic_lifecycle_status", "unknown")
-    )
-    if root_summary is not None and (
-        root_summary.get("semantic_lifecycle_formal_release_ready") is not True
-    ):
-        comparison = root_summary.get("semantic_lifecycle_comparison")
-        unclassified = (
-            comparison.get("unclassified_count")
-            if isinstance(comparison, dict)
-            else None
-        )
-        release_blockers.append(
-            Finding(
-                "root-disposition-lifecycle-release-record-required",
-                "config/skill-content-exceptions.yaml#root_semantic_dispositions.lifecycle",
-                "formal release requires a recorded, current, classified Root "
-                f"disposition release snapshot; status={lifecycle_status}; "
-                f"unclassified={unclassified}",
             )
         )
     release_ready = (
@@ -6642,15 +7323,167 @@ def _write_snapshot(path: Path, result: Result, reports: dict[str, dict[str, Any
     path.write_text(json.dumps(snapshot, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+def _safe_directory_fd(
+    trusted_root: Path,
+    directory: Path,
+    *,
+    create: bool,
+) -> int:
+    root = trusted_root.absolute()
+    try:
+        relative = directory.absolute().relative_to(root)
+    except ValueError as exc:
+        raise ValueError("formal evidence directory escapes its trusted root") from exc
+    if not relative.parts or any(
+        part in {"", ".", ".."} or "/" in part for part in relative.parts
+    ):
+        raise ValueError("formal evidence directory is not contained")
+    flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+    flags |= getattr(os, "O_NOFOLLOW", 0)
+    flags |= getattr(os, "O_CLOEXEC", 0)
+    descriptor: int | None = None
+    try:
+        descriptor = os.open(root, flags)
+        for part in relative.parts:
+            try:
+                next_descriptor = os.open(part, flags, dir_fd=descriptor)
+            except FileNotFoundError:
+                if not create:
+                    raise
+                try:
+                    os.mkdir(part, mode=0o755, dir_fd=descriptor)
+                    os.fsync(descriptor)
+                except FileExistsError:
+                    pass
+                next_descriptor = os.open(part, flags, dir_fd=descriptor)
+            os.close(descriptor)
+            descriptor = next_descriptor
+        return descriptor
+    except OSError as exc:
+        if descriptor is not None:
+            os.close(descriptor)
+        raise ValueError(
+            "formal evidence must use a safe directory without symlinks"
+        ) from exc
+
+
+def _atomic_write(
+    path: Path,
+    content: str,
+    *,
+    trusted_root: Path | None = None,
+) -> None:
+    if trusted_root is None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        descriptor, temporary_name = tempfile.mkstemp(
+            dir=path.parent, prefix=f".{path.name}.", suffix=".tmp"
+        )
+        temporary = Path(temporary_name)
+        try:
+            with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+                stream.write(content)
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(temporary, path)
+        finally:
+            try:
+                temporary.unlink()
+            except FileNotFoundError:
+                pass
+        return
+
+    directory_fd = _safe_directory_fd(trusted_root, path.parent, create=True)
+    name = path.name
+    temporary_name: str | None = None
+    file_fd: int | None = None
+    try:
+        try:
+            current = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+        except FileNotFoundError:
+            current = None
+        if current is not None and (
+            not stat.S_ISREG(current.st_mode) or current.st_nlink != 1
+        ):
+            raise ValueError(
+                "formal evidence destination must be a single-link regular file"
+            )
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+        flags |= getattr(os, "O_NOFOLLOW", 0)
+        flags |= getattr(os, "O_CLOEXEC", 0)
+        for _attempt in range(16):
+            candidate = f".{name}.{secrets.token_hex(12)}.tmp"
+            try:
+                file_fd = os.open(
+                    candidate, flags, 0o644, dir_fd=directory_fd
+                )
+                temporary_name = candidate
+                break
+            except FileExistsError:
+                continue
+        if file_fd is None or temporary_name is None:
+            raise ValueError("formal evidence temporary file could not be reserved")
+        opened = os.fstat(file_fd)
+        if not stat.S_ISREG(opened.st_mode) or opened.st_nlink != 1:
+            raise ValueError(
+                "formal evidence temporary must be a single-link regular file"
+            )
+        raw = content.encode("utf-8")
+        offset = 0
+        while offset < len(raw):
+            written = os.write(file_fd, raw[offset:])
+            if written <= 0:  # pragma: no cover - os.write raises.
+                raise OSError("short formal evidence write")
+            offset += written
+        os.fsync(file_fd)
+        temporary_identity = (opened.st_dev, opened.st_ino)
+        os.close(file_fd)
+        file_fd = None
+        os.replace(
+            temporary_name,
+            name,
+            src_dir_fd=directory_fd,
+            dst_dir_fd=directory_fd,
+        )
+        temporary_name = None
+        stored = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+        if (
+            not stat.S_ISREG(stored.st_mode)
+            or stored.st_nlink != 1
+            or (stored.st_dev, stored.st_ino) != temporary_identity
+        ):
+            raise ValueError("formal evidence publish identity changed")
+        os.fsync(directory_fd)
+    except OSError as exc:
+        raise ValueError("formal evidence safe atomic publish failed") from exc
+    finally:
+        if file_fd is not None:
+            os.close(file_fd)
+        if temporary_name is not None:
+            try:
+                current = os.stat(
+                    temporary_name,
+                    dir_fd=directory_fd,
+                    follow_symlinks=False,
+                )
+                if stat.S_ISREG(current.st_mode):
+                    os.unlink(temporary_name, dir_fd=directory_fd)
+            except OSError:
+                pass
+        os.close(directory_fd)
+
+
 def _write(
     directory: Path,
     result: Result,
     *,
     release_projection: bool = False,
+    trusted_root: Path | None = None,
 ) -> None:
     payload = asdict(result)
-    (directory / "professionalism-regression-report.json").write_text(
-        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    _atomic_write(
+        directory / "professionalism-regression-report.json",
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+        trusted_root=trusted_root,
     )
     if not release_projection:
         return
@@ -6791,22 +7624,6 @@ def _write(
         "dispositions="
         f"{result.root_content_summary.get('semantic_disposition_applied', 0)}/"
         f"{result.root_content_summary.get('semantic_disposition_configured', 0)}",
-        "- Root disposition lifecycle: "
-        f"status={result.root_content_summary.get('semantic_lifecycle_status')}; "
-        "snapshot-current="
-        f"{str(result.root_content_summary.get('semantic_lifecycle_snapshot_current')).lower()}; "
-        "formal-release-ready="
-        f"{str(result.root_content_summary.get('semantic_lifecycle_formal_release_ready')).lower()}; "
-        "comparison="
-        f"{(result.root_content_summary.get('semantic_lifecycle_comparison') or {}).get('comparison_scope')}; "
-        "age-known/unknown/max-days="
-        f"{(result.root_content_summary.get('semantic_lifecycle_age') or {}).get('known_age_count')}/"
-        f"{(result.root_content_summary.get('semantic_lifecycle_age') or {}).get('unknown_age_count')}/"
-        f"{(result.root_content_summary.get('semantic_lifecycle_age') or {}).get('max_age_days')}; "
-        "bootstrap-refresh-valid/count/latest="
-        f"{str(result.root_content_summary.get('semantic_lifecycle_bootstrap_refresh_chain_valid')).lower()}/"
-        f"{result.root_content_summary.get('semantic_lifecycle_bootstrap_refresh_count')}/"
-        f"{result.root_content_summary.get('semantic_lifecycle_bootstrap_refresh_latest_delta')}",
         "",
         "> Passing the authoring gate proves current deterministic source and captured-fixture contracts only; formal release additionally requires the release gate to be `release-ready`.",
         "",
@@ -6820,7 +7637,11 @@ def _write(
     if result.advisories:
         lines.extend(["", "## Advisories", ""] + [f"- `{item.target}`: {item.message}" for item in result.advisories])
     markdown = "\n".join(lines) + "\n"
-    (directory / "professionalism-regression-report.md").write_text(markdown, encoding="utf-8")
+    _atomic_write(
+        directory / "professionalism-regression-report.md",
+        markdown,
+        trusted_root=trusted_root,
+    )
 
 
 def _strings(value: Any) -> list[str]:

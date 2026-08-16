@@ -1,6 +1,6 @@
 # Governance
 
-This document defines the default governance model for ChangeForge until maintainers publish a more formal structure.
+This document defines the default governance model for rd-skills until maintainers publish a more formal structure.
 
 ## Roles
 
@@ -503,57 +503,50 @@ refresh current evidence.
   machine-readable readiness authority is
   `reports/professionalism-regression-report.json`; Core Principles owns the
   complete ordered freshness run.
-- **Acceptance:** Current selectors and their required lineage bind to the final
-  source tree, are tracked and byte-equal to `HEAD`, and report no stale,
-  corrected, or unresolved result. A new round is not required when existing
-  evidence remains current.
+- **Acceptance:** The tracked Expert Panel inventory is exactly
+  `evals/expert-panel/readability.json`,
+  `evals/expert-panel/semantic-disposition.json`, and
+  `evals/expert-panel/professional-completeness.json`. Each is one current
+  compact attestation, is at most 4 MiB, is tracked and byte-equal to `HEAD`,
+  and reports no stale, corrected, or unresolved result. Full packets,
+  templates, ballots, capsules, and decisions remain only under ignored
+  `.rd-skills/expert-panel/<run-id>/` or an optional CI/Release artifact. A new
+  review is not required when existing evidence remains current.
 - **Targeted validation:** the local Full Regression followed by
   `python3 scripts/eval-core-principles.py --gate formal-release`. Core is the
   unique complete formal orchestrator and requires the aggregate
   `professionalism-formal-release-ready` outcome; a direct producer run is a
   diagnostic, not a second formal gate.
-- **Selected evidence and current state:** For selector identity only, the
-  canonical projection is: Current static evidence selectors are r26
-  Readability, r26 Semantic Disposition, r26 Root lifecycle, and r19 schema-3
-  Professional Completeness for all 189 non-Control packages. “Current” in that
-  projection identifies the configured selector set; it does not assert that
-  each selected surface is current. Readability r26 and full-fresh Professional
-  Completeness r19 have complete decisions for their recorded inputs.
-  Readability r26 is historical evidence whose bound Skill detector is stale
-  against the current detector. It has `source_current=false`, status
-  `panel-majority-stale`, remains storage-pending, and is not accepted for formal
-  release. R19 is historical full-fresh evidence whose bound Professional
-  review contract is now stale against the current contract; it remains
-  storage-pending, is not accepted for formal release, and cannot authorize
-  carry across the contract change. The selected Semantic Disposition application
-  is `invalid` because its packet is stale against the current audit. The Root
-  lifecycle is `pending-changes`, with no current snapshot and no formal-release
-  readiness. The sole JSON authority therefore reports
-  `release_gate=release-not-ready`.
+- **Selected evidence and current state:** Canonical fixed-attestation paths,
+  not Readability or Professional policy config, select Expert Panel evidence;
+  the formal target remains
+  all 189 non-Control packages. The Root lifecycle is `pending-changes`, with no
+  current snapshot and no formal-release readiness. The sole JSON authority
+  therefore reports `release_gate=release-not-ready`. These fixed attestations do
+  not prove that the final formal gates or same-commit remote workflow passed.
 - **Next owning stage:** After final content and audit stabilization, the
-  Semantic Disposition owner refreshes the stale decision/application and the
-  Root lifecycle owner records the classified formal snapshot. Formal Release
-  must create a new current schema-2 Readability review under the current Skill
-  detector and a new schema-3 full-fresh Professional Completeness round for all
-  189 current non-Control packages under the current review contract. R26 and
-  r19 remain immutable historical evidence; neither can replace its required
-  new review, and r19 cannot authorize carry. Current evidence must be tracked,
-  byte-equal to `HEAD`, and clean before the formal gates are rerun.
+  Root lifecycle owner records the classified formal snapshot. Formal Release must
+  create new Readability and Professional Completeness runtime reviews after
+  detector, source, or review-contract changes, then promote replacement compact
+  attestations to the three fixed paths. Git history audits replaced
+  attestations; no repository-side last-N archive is retained. Current evidence
+  must be tracked, byte-equal to `HEAD`, and clean before the formal gates rerun.
 - **Report projection and freshness:**
   `scripts/validate-professionalism-regression.py` is the only producer of the
-  authoritative JSON. Core Principles requires that JSON to be refreshed by
-  its declared producer run. Formal-release orchestration additionally requests
-  `reports/professionalism-regression-report.md` as a release-only presentation
-  projection; Markdown is not a second readiness authority and Core authoring
-  does not refresh it. Productization validates the saved JSON's
-  closed semantics without rerunning the producer.
-- **Authoring/formal split:** These static selectors do not prove that the final
+  professionalism JSON. Core authoring refreshes the tracked ordinary JSON;
+  Productization validates that saved projection's closed semantics without
+  rerunning the producer. Formal Core instead writes the professionalism and
+  Core schema-4 JSON outcomes plus their Markdown projections under
+  `.rd-skills/formal-release/<captured-head>/reports/`. The ignored formal scene
+  is bound to the captured `HEAD`, uploaded by CI, and is not a second tracked
+  readiness authority.
+- **Authoring/formal split:** These fixed attestations do not prove that the final
   formal gates or same-commit remote workflow passed. Stale or tampered Root,
   Semantic Disposition, Readability, or Professional Completeness evidence
   remains invalid and blocks formal release.
 - **Dependency:** RDS-001 through RDS-010, final content stabilization, the
-  Semantic Disposition and Root lifecycle refresh stages, and expert-evidence
-  check-in.
+  Semantic Disposition and Root lifecycle refresh stages, and compact
+  expert-attestation promotion.
 - **Proof limit:** Static qualification claims and panel artifacts do not prove
   reviewer identity, credentials, real-host startup, wall-clock performance,
   production accuracy, or installed user experience.

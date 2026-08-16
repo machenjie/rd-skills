@@ -1,6 +1,6 @@
 # Benchmarks
 
-ChangeForge uses bounded, reproducible repository evaluations. Benchmarking is
+rd-skills uses bounded, reproducible repository evaluations. Benchmarking is
 limited to deterministic routing, lightweight trajectories, captured behavior
 and pressure fixtures, professional-quality checks, and code-generation
 definition and harness checks.

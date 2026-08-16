@@ -1,10 +1,10 @@
 # Agent Instructions
 
-Codex must treat this repository as a ChangeForge Skill-authoring repository.
+Codex must treat this repository as a rd-skills Skill-authoring repository.
 
 ## Repository Purpose
 
-This repository exists only to author, validate, build, package, install, upgrade, and uninstall ChangeForge Skills and Agent Profile artifacts. It is not a runtime user-specific content corpus and must not become one.
+This repository exists only to author, validate, build, package, install, upgrade, and uninstall rd-skills Skills and Agent Profile artifacts. It is not a runtime user-specific content corpus and must not become one.
 
 ## Non-Negotiable Boundaries
 
@@ -44,7 +44,7 @@ python3 scripts/validate-marketplace-index.py --profile full
 python3 scripts/validate-marketplace-index.py --profile dev
 python3 scripts/validate-productization-assets.py
 python3 scripts/validate-open-source-readiness.py --require-pass
-python3 -m unittest discover -s tests
+python3 scripts/run-ci-tests.py full --jobs 4 --timeout 900
 python3 scripts/validate-codegen-benchmarks.py
 python3 scripts/run-codegen-benchmarks.py --limit 3
 python3 scripts/quickstart.py --agent codex --scope user --dry-run
@@ -68,6 +68,24 @@ producer graph and requires the aggregate
 `professionalism-formal-release-ready` outcome, including
 `release_gate=release-ready`. Run that producer directly only to diagnose a
 verified Core failure; a second direct pass is not additional release evidence.
+The formal professionalism JSON embeds the downstream
+`expert_panel_release_manifest`: the current commit plus external SHA-256,
+size, review ID, verdict, and axis for exactly the three canonical fixed
+attestations. The manifest is not a fourth tracked panel artifact and never
+feeds Readability, Semantic Disposition, or Professional Completeness
+fingerprints or currentness. Authoring reports only a non-blocking manifest
+state; formal release requires current, accepted, clean, `HEAD`-equal artifacts
+and the workflow verifies the manifest commit against the release object ID.
+Tracked Core and professionalism JSON reports are ordinary authoring
+projections only. Formal Core writes both schema-4 JSON outcomes and their
+Markdown projections to
+`.rd-skills/formal-release/<captured-head>/reports/`; that directory is ignored,
+bound to the captured input `HEAD`, validated and uploaded by the formal
+workflow, and contains exactly those four canonical files. Every declared
+intermediate report producer and consumer in the formal graph uses the sibling
+`.rd-skills/formal-release/<captured-head>/producer-reports/` staging directory;
+the formal run never reads or refreshes tracked `reports/` projections and must
+leave the tracked tree clean.
 
 Release evidence is limited to static contracts, deterministic fixtures,
 code-generation definitions and harness/negative-control checks, builds, and
@@ -113,7 +131,8 @@ attestations. Readability uses schema-2 panel artifacts and exactly
 three independent senior-agent reviewers with distinct voter, agent, and role
 identities; every reviewer covers every target and cannot abstain. Retain its
 immutable packet, three canonical ballots, and derived two-of-three decision
-record. The schema-2 packet binds every advisory sentence to an independently
+record for the duration of the review. The schema-2 packet binds every advisory
+sentence to an independently
 re-extracted logical document part, closed source selector, exact codepoint
 span, and canonical sentence fingerprint. Each ballot decides every finding;
 the reviewer supplies no document override. Any nested tightening derives that
@@ -129,7 +148,9 @@ reviewers whose closed-set expertise tags cover that Skill and one reviewer
 whose only panel expertise tag is `skill-reference-architecture`. An all-carry
 round uses zero fresh reviewers, ballots, capsules, and input bytes. The
 effective decision still contains three votes per Skill, with carried evidence
-bound to its direct fresh-origin decision, packet, ballots, and capsules. The
+bound to the direct fresh origin recorded in the current attestation as its
+origin review id, origin commit, origin verdict digest, and source fingerprint;
+carry validation must not require a predecessor review file in `HEAD`. The
 aggregator derives fresh assignments from capsule-bound ballot subsets; the
 packet does not contain reviewer pre-assignment. Maintainers do not select or
 override dispositions. Readability also covers every weak
@@ -154,29 +175,34 @@ requires all 189 non-Control Skill packages to be accepted with zero
 professional corrections and zero unresolved professional disagreements.
 Qualification claims are static declarations and do not prove reviewer identity,
 credentials, or experience. Professional schema 1 and schema 2 remain
-auditable but cannot satisfy formal release or authorize carry. The checked-in
-schema-3 rounds form one unforked chain whose selected decision is the unique
-head; direct-origin evidence, the full round chain, and the current artifacts
-must be tracked, byte-equal to `HEAD`, and clean. Plan lineage is capped at
-eight rounds before a full-fresh checkpoint. A review-contract change forces
-all 189 packages fresh; a local binding change reopens only the package and its
-machine-derived affected dependencies.
+auditable but cannot satisfy formal release or authorize carry. After the
+storage migration, the repository must track exactly one compact current
+attestation for each panel at
+`evals/expert-panel/readability.json`,
+`evals/expert-panel/semantic-disposition.json`, and
+`evals/expert-panel/professional-completeness.json`; a completed review replaces
+the same panel's previous attestation. Full packets, ballots, capsules, temporary
+decisions, and other regenerable review context remain only in the gitignored
+`.rd-skills/expert-panel/<run-id>/` runtime directory or, when a complete release
+audit scene is required, in a CI/Release artifact. They must not be tracked.
+Current attestations retain only the verdict, findings, rationale, source and
+review-contract fingerprints, reviewer/provenance metadata, and the compact
+vote and criterion results needed to enforce the review contract. They must be
+self-contained. Ordinary affected and authoring validation classifies a
+well-formed fixed axis as `missing`, `stale`, or `pending` without treating it as
+current or letting it authorize carry; malformed or unsafe evidence still fails
+every mode.
+Formal Release additionally requires every fixed attestation to be byte-equal to
+`HEAD` and clean; Git history is the audit trail for replaced attestations.
+Runtime plan lineage is capped at eight rounds before a full-fresh checkpoint. A
+review-contract change forces all 189 packages fresh; a local binding change
+reopens only the package and its machine-derived affected dependencies.
 
-The Phase 2 inventory is the current and final inventory. Selected r26
-Readability is immutable historical evidence, but its Skill detector binding is
-stale against the current detector. It has `source_current=false`, status
-`panel-majority-stale`, remains storage-pending, and is not accepted for formal
-release. Formal Release requires a new current schema-2 Readability review under
-the current Skill detector. Selected r19 schema-3 Professional Completeness is
-immutable historical full-fresh evidence for all 189 non-Control packages, but
-its bound Professional review contract is stale against the current contract.
-It remains storage-pending and is not accepted for formal release. Because a
-review-contract change forces every package fresh, Formal Release must create a
-new schema-3 full-fresh round for all 189 current non-Control packages; r19
-cannot authorize carry. The selected Semantic Disposition application is
-invalid against the current audit and the Root lifecycle is `pending-changes`;
-formal release remains blocked until those bindings are current and the
-final-tree Core formal gate plus same-commit remote workflow pass.
+The Phase 2 inventory is the current and final inventory. Formal Release requires
+each canonical fixed attestation to be current to its selected sources and
+review contracts, byte-equal to `HEAD`, and clean. Stale evidence cannot satisfy
+Formal Release and must be replaced in place after a fresh review. The
+final-tree Core formal gate and same-commit remote workflow must both pass.
 
 Use the four Profile boundaries defined in `src/agent-profiles/role-agents.json`. The main agent dispatches only; analysis reads and searches; task agents implement bounded work; review agents perform independent non-modifying review. Shared-workspace writes are serial unless the host supplies isolated workspaces and the tasks have no dependency or shared write surface.
 

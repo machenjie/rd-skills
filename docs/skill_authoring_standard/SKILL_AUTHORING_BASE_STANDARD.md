@@ -1,8 +1,8 @@
-# ChangeForge Skill Authoring Base Standard
+# rd-skills Skill Authoring Base Standard
 
 ## Purpose
 
-ChangeForge Skills are concise execution contracts for AI agents. They must improve a concrete engineering decision without requiring private product protocols, complete catalog loading, or source-repository knowledge at task runtime.
+rd-skills Skills are concise execution contracts for AI agents. They must improve a concrete engineering decision without requiring private product protocols, complete catalog loading, or source-repository knowledge at task runtime.
 
 ## Quick Use
 

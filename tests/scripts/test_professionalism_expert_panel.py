@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import argparse
 import copy
 import hashlib
-import importlib.util
 import json
+import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -11,30 +13,49 @@ from datetime import date
 from pathlib import Path
 from unittest import mock
 
-from . import test_expert_panel_review as panel_fixtures
-from . import test_professional_completeness_schema3 as schema3_fixtures
+from . import expert_panel_source_test_support as source_support
+from . import professional_completeness_test_support as professional_support
+from . import readability_review_test_support as readability_support
 
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def _load(name: str, relative: str):
-    scripts = str(ROOT / "scripts")
-    if scripts not in sys.path:
-        sys.path.insert(0, scripts)
-    spec = importlib.util.spec_from_file_location(name, ROOT / relative)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
 
 
-PANEL = _load("professionalism_panel_fixture", "scripts/expert_panel_review.py")
-REGRESSION = _load(
-    "professionalism_panel_regression_fixture",
-    "scripts/validate-professionalism-regression.py",
-)
+PANEL = source_support.PANEL
+REGRESSION = source_support.REGRESSION
+
+
+def _formal_release_manifest_fixture() -> dict:
+    head_commit = "1" * 40
+    observations = [
+        {
+            "axis": axis,
+            "path": path,
+            "external_sha256": format(index + 1, "x") * 64,
+            "size_bytes": 100 + index,
+            "review_id": f"fixture-{axis}",
+            "verdict": verdict,
+            "head_byte_equal": True,
+            "clean": True,
+        }
+        for index, (axis, path, verdict) in enumerate(
+            REGRESSION.EXPERT_PANEL_RELEASE_MANIFEST_ARTIFACTS
+        )
+    ]
+    return REGRESSION._derive_expert_panel_release_manifest(
+        formal=True,
+        storage_statuses={
+            axis: "current"
+            for axis, _path, _verdict in (
+                REGRESSION.EXPERT_PANEL_RELEASE_MANIFEST_ARTIFACTS
+            )
+        },
+        current_head_commit=head_commit,
+        manifest_head_commit=head_commit,
+        artifact_observations=observations,
+    )
 
 
 def _full_fresh_review_cost() -> dict:
@@ -267,7 +288,7 @@ def _ballot(packet: dict, packet_sha: str, voter: int) -> dict:
 
 def _professional_ballot(packet: dict, packet_sha: str, voter: int) -> dict:
     if packet.get("schema_version") == PANEL.PROFESSIONAL_COMPLETENESS_SCHEMA_VERSION:
-        return panel_fixtures._professional_ballot(
+        return professional_support._professional_ballot(
             packet,
             packet_sha,
             voter=voter,
@@ -308,94 +329,1761 @@ def _professional_ballot(packet: dict, packet_sha: str, voter: int) -> dict:
     }
 
 
-class ProfessionalismExpertPanelTests(unittest.TestCase):
-    def test_shared_fixture_uses_current_unittest_package(self) -> None:
-        expected_module = f"{__package__}.test_expert_panel_review"
-        self.assertEqual(expected_module, panel_fixtures.__name__)
-        self.assertIs(panel_fixtures, sys.modules[expected_module])
-        self.assertIs(
-            panel_fixtures.PANEL,
-            sys.modules[panel_fixtures.PANEL.__name__],
+def _current_semantic_attestation(
+    axes: tuple[str, ...],
+    *,
+    winner_overrides: dict[str, str] | None = None,
+) -> tuple[dict, dict, dict, bytes]:
+    producer = REGRESSION.expert_panel
+    audit = source_support.live_semantic_audit()
+    review_id = "semantic-current-selector-" + ("-".join(axes) or "ordinary")
+    packet = producer.prepare_semantic_disposition_packet(
+        audit=producer._semantic_audit_for_axis_rereview(audit, list(axes)),
+        review_id=review_id,
+        created_on="2026-08-11",
+    )
+    producer.validate_semantic_packet_current(packet, audit)
+    authorities = producer._semantic_candidate_authorities(packet)
+    reviewers = [
+        {
+            "voter_id": f"semantic-current-voter-{index}",
+            "agent_id": f"semantic-current-agent-{index}",
+            "role": f"semantic-current-role-{index}",
+            "expertise": ["semantic disposition governance"],
+            "independent_review": True,
+        }
+        for index in range(1, producer.PANEL_SIZE + 1)
+    ]
+    winner_overrides = winner_overrides or {}
+    current_dispositions = {
+        f"{axis}:{entry['candidate_id']}": entry["disposition"]
+        for axis in PANEL.SEMANTIC_AXES
+        for entry in audit[f"{axis}_content"]["semantic_advisories"][
+            "disposition_contract"
+        ]["entries"]
+    }
+
+    def votes_for(target_id: str) -> list[dict]:
+        winner = winner_overrides.get(
+            target_id,
+            current_dispositions[target_id],
         )
+        return [
+            {
+                "voter_id": reviewer["voter_id"],
+                "disposition": winner,
+                "rationale": (
+                    "The current candidate received the independently reviewed "
+                    "bounded disposition."
+                ),
+                "authority_or_condition": (
+                    "The current source owner retains authority."
+                ),
+                "decision_owner": "current-source-owner",
+                "mitigation": (
+                    "Repeat review when source or detector evidence changes."
+                ),
+                "review_after": None,
+            }
+            for reviewer in reviewers
+        ]
+    value = {
+        "schema_version": producer.panel_attestation.ATTESTATION_SCHEMA_VERSION,
+        "kind": producer.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_KIND,
+        "axis": producer.panel_attestation.SEMANTIC_DISPOSITION_AXIS,
+        "review_id": review_id,
+        "decided_on": "2026-08-11",
+        "source_fingerprints": copy.deepcopy(packet["source_fingerprints"]),
+        "review_contract_fingerprint": producer._canonical_json_sha256(
+            packet["panel_contract"]
+        ),
+        "reviewers": reviewers,
+        "findings": [
+            {
+                "target_id": target["target_id"],
+                "axis": target["axis"],
+                "candidate_binding_fingerprint": authorities[target["target_id"]][
+                    "candidate_binding_fingerprint"
+                ],
+                "votes": votes_for(target["target_id"]),
+                "result": {},
+            }
+            for target in packet["semantic_targets"]
+        ],
+        "summary": {},
+        "verdict": "",
+        "rationale": [
+            "Every selected current semantic candidate received a complete majority."
+        ],
+    }
+    finalized = producer.panel_attestation.finalize_attestation(
+        value,
+        expected_path=(
+            producer.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_PATH
+        ),
+        expected_semantic_current_bindings=authorities,
+    )
+    raw = producer.panel_attestation.canonical_attestation_bytes(
+        finalized,
+        expected_path=(
+            producer.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_PATH
+        ),
+        expected_semantic_current_bindings=authorities,
+    )
+    selector = json.loads(raw)
+    return audit, packet, selector, raw
+
+
+class ProfessionalismExpertPanelTests(unittest.TestCase):
+    CURRENT_PATHS = (
+        "evals/expert-panel/professional-completeness.json",
+        "evals/expert-panel/readability.json",
+        "evals/expert-panel/semantic-disposition.json",
+    )
+
+    def _git(self, root: Path, *arguments: str) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            ["git", "-C", str(root), *arguments],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+    def _storage_repo(
+        self,
+        root: Path,
+        *,
+        tracked: dict[str, bytes] | None = None,
+        untracked: dict[str, bytes] | None = None,
+    ) -> None:
+        self._git(root, "init", "-q")
+        self._git(root, "config", "user.name", "Storage Contract Test")
+        self._git(root, "config", "user.email", "storage@example.invalid")
+        (root / ".anchor").write_text("tracked\n", encoding="utf-8")
+        for relative, payload in (tracked or {}).items():
+            path = root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(payload)
+        self._git(root, "add", ".anchor", *(tracked or {}))
+        self._git(root, "commit", "-qm", "fixture")
+        for relative, payload in (untracked or {}).items():
+            path = root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(payload)
+
+    def _validate_storage(
+        self,
+        root: Path,
+        *,
+        formal: bool,
+        currentness_error: Exception | None = None,
+        parse_error: Exception | None = None,
+    ) -> dict[str, str]:
+
+        def current_validation(
+            panel_kind, *, review_id, decided_on, attestation_selector
+        ):
+            self.assertEqual("storage-fixture", review_id)
+            self.assertEqual("2026-08-10", decided_on)
+            self.assertEqual(
+                {
+                    "schema_version": 2,
+                    "review_id": "storage-fixture",
+                    "decided_on": "2026-08-10",
+                },
+                attestation_selector,
+            )
+            path = REGRESSION.expert_panel.panel_attestation.ATTESTATION_PATHS[
+                panel_kind
+            ]
+            def validate_current(_value):
+                if currentness_error is not None:
+                    raise currentness_error
+
+            return path, {}, validate_current
+
+        def parse_attestation(_raw, *, expected_path, **_kwargs):
+            if parse_error is not None:
+                raise parse_error
+            if currentness_error is not None:
+                raise currentness_error
+            return {"path": expected_path}
+
+        with mock.patch.object(REGRESSION, "ROOT", root), mock.patch.object(
+            REGRESSION.expert_panel.panel_attestation,
+            "parse_attestation_storage_selector_bytes",
+            return_value={
+                "schema_version": 2,
+                "review_id": "storage-fixture",
+                "decided_on": "2026-08-10",
+            },
+        ), mock.patch.object(
+            REGRESSION.expert_panel,
+            "_current_attestation_validation",
+            side_effect=current_validation,
+        ), mock.patch.object(
+            REGRESSION.expert_panel.panel_attestation,
+            "parse_attestation_bytes",
+            side_effect=parse_attestation,
+        ):
+            return REGRESSION._validate_current_expert_panel_storage(
+                formal=formal
+            )
+
+    def test_current_attestation_storage_authoring_subset_and_formal_exact_set(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._storage_repo(root)
+            self.assertEqual(
+                {
+                    panel_kind: "missing"
+                    for panel_kind in REGRESSION.expert_panel.panel_attestation.ATTESTATION_PATHS
+                },
+                self._validate_storage(root, formal=False),
+            )
+            with self.assertRaisesRegex(ValueError, "formal.*missing"):
+                self._validate_storage(root, formal=True)
+
+        for missing in self.CURRENT_PATHS:
+            with self.subTest(missing=missing), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                tracked = {
+                    path: b"{}\n" for path in self.CURRENT_PATHS if path != missing
+                }
+                self._storage_repo(root, tracked=tracked)
+                expected = {
+                    panel_kind: (
+                        "missing"
+                        if path == missing
+                        else "current"
+                    )
+                    for panel_kind, path in (
+                        REGRESSION.expert_panel.panel_attestation.ATTESTATION_PATHS.items()
+                    )
+                }
+                self.assertEqual(expected, self._validate_storage(root, formal=False))
+                with self.assertRaisesRegex(ValueError, "formal.*missing"):
+                    self._validate_storage(root, formal=True)
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            tracked = {path: b"{}\n" for path in self.CURRENT_PATHS}
+            self._storage_repo(root, tracked=tracked)
+            self.assertEqual(
+                {
+                    panel_kind: "current"
+                    for panel_kind in REGRESSION.expert_panel.panel_attestation.ATTESTATION_PATHS
+                },
+                self._validate_storage(root, formal=True),
+            )
+
+    def test_professional_storage_validates_current_authority_once_per_parse(
+        self,
+    ) -> None:
+        panel_kind = (
+            REGRESSION.expert_panel.PROFESSIONAL_COMPLETENESS_PANEL_KIND
+        )
+        current = (
+            REGRESSION.expert_panel.panel_attestation.ATTESTATION_PATHS[
+                panel_kind
+            ]
+        )
+        authority = {"fixture-skill": {"fixture": "current-authority"}}
+
+        def current_validation(
+            actual_panel_kind,
+            *,
+            review_id,
+            decided_on,
+            attestation_selector,
+        ):
+            self.assertEqual(panel_kind, actual_panel_kind)
+            self.assertEqual("storage-fixture", review_id)
+            self.assertEqual("2026-08-10", decided_on)
+            self.assertEqual(2, attestation_selector["schema_version"])
+
+            def duplicate_post_parse(value):
+                REGRESSION.expert_panel.panel_attestation.validate_attestation(
+                    value,
+                    expected_professional_current_bindings=authority,
+                )
+
+            return current, {
+                "expected_professional_current_bindings": authority,
+            }, duplicate_post_parse
+
+        def parse_attestation(_raw, *, expected_path, **validation):
+            self.assertEqual(current, expected_path)
+            return REGRESSION.expert_panel.panel_attestation.validate_attestation(
+                {"parsed": True},
+                **validation,
+            )
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._storage_repo(root, tracked={current: b"{}\n"})
+            with mock.patch.object(
+                REGRESSION, "ROOT", root
+            ), mock.patch.object(
+                REGRESSION.expert_panel.panel_attestation,
+                "parse_attestation_storage_selector_bytes",
+                return_value={
+                    "schema_version": 2,
+                    "review_id": "storage-fixture",
+                    "decided_on": "2026-08-10",
+                },
+            ) as selector, mock.patch.object(
+                REGRESSION.expert_panel,
+                "_current_attestation_validation",
+                side_effect=current_validation,
+            ), mock.patch.object(
+                REGRESSION.expert_panel.panel_attestation,
+                "parse_attestation_bytes",
+                side_effect=parse_attestation,
+            ) as parse, mock.patch.object(
+                REGRESSION.expert_panel.panel_attestation,
+                "validate_attestation",
+                return_value={"parsed": True},
+            ) as validate:
+                statuses = REGRESSION._validate_current_expert_panel_storage(
+                    formal=False
+                )
+
+        self.assertEqual("current", statuses[panel_kind])
+        self.assertEqual(1, selector.call_count)
+        self.assertEqual(1, parse.call_count)
+        self.assertEqual(parse.call_count, validate.call_count)
+
+    def test_current_attestation_storage_softens_only_currentness_drift(self) -> None:
+        current = self.CURRENT_PATHS[1]
+        panel_kind = REGRESSION.expert_panel.panel_attestation.attestation_axis_for_path(
+            current
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._storage_repo(root, tracked={current: b"{}\n"})
+            statuses = self._validate_storage(
+                root,
+                formal=False,
+                currentness_error=REGRESSION.expert_panel.PanelReviewError(
+                    "readability attestation exact current coverage or contract is stale"
+                ),
+            )
+            self.assertEqual("stale", statuses[panel_kind])
+            with self.assertRaisesRegex(ValueError, "formal.*stale"):
+                self._validate_storage(
+                    root,
+                    formal=True,
+                    currentness_error=REGRESSION.expert_panel.PanelReviewError(
+                        "readability attestation exact current coverage or contract is stale"
+                    ),
+                )
+
+        drift = (
+            REGRESSION.expert_panel.panel_attestation.AttestationCurrentnessError(
+                "Readability target manifest binding is stale"
+            )
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._storage_repo(root, tracked={current: b"{}\n"})
+            statuses = self._validate_storage(
+                root,
+                formal=False,
+                parse_error=drift,
+            )
+            self.assertEqual("stale", statuses[panel_kind])
+            with self.assertRaisesRegex(ValueError, "formal.*stale"):
+                self._validate_storage(
+                    root,
+                    formal=True,
+                    parse_error=drift,
+                )
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._storage_repo(root, tracked={current: b"{}\n"})
+            (root / current).write_bytes(b'{"changed":true}\n')
+            with self.assertRaises(
+                REGRESSION.expert_panel.panel_attestation.AttestationCurrentnessError
+            ):
+                self._validate_storage(
+                    root,
+                    formal=False,
+                    parse_error=drift,
+                )
+
+        generic_drifts = (
+            REGRESSION.expert_panel.panel_attestation.AttestationError(
+                "attestation review contract fingerprint is stale"
+            ),
+            REGRESSION.expert_panel.panel_attestation.AttestationError(
+                "attestation source fingerprints are stale"
+            ),
+        )
+        for generic_drift in generic_drifts:
+            with self.subTest(
+                drift=str(generic_drift)
+            ), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self._storage_repo(root, tracked={current: b"{}\n"})
+                (root / current).write_bytes(b'{"changed":true}\n')
+                with self.assertRaises(type(generic_drift)):
+                    self._validate_storage(
+                        root,
+                        formal=False,
+                        parse_error=generic_drift,
+                    )
+
+        semantic_binding_drift = (
+            REGRESSION.expert_panel.panel_attestation.AttestationError(
+                "Semantic candidate binding is stale"
+            )
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._storage_repo(root, tracked={current: b"{}\n"})
+            self.assertEqual(
+                "stale",
+                self._validate_storage(
+                    root,
+                    formal=False,
+                    parse_error=semantic_binding_drift,
+                )[panel_kind],
+            )
+            with self.assertRaisesRegex(ValueError, "formal.*stale"):
+                self._validate_storage(
+                    root,
+                    formal=True,
+                    parse_error=semantic_binding_drift,
+                )
+            (root / current).write_bytes(b'{"changed":true}\n')
+            with self.assertRaises(
+                REGRESSION.expert_panel.panel_attestation.AttestationError
+            ):
+                self._validate_storage(
+                    root,
+                    formal=False,
+                    parse_error=semantic_binding_drift,
+                )
+
+        panel_drift = REGRESSION.expert_panel.PanelReviewError(
+            "readability attestation exact current coverage or contract is stale"
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._storage_repo(root, tracked={current: b"{}\n"})
+            (root / current).write_bytes(b'{"changed":true}\n')
+            with self.assertRaises(REGRESSION.expert_panel.PanelReviewError):
+                self._validate_storage(
+                    root,
+                    formal=False,
+                    currentness_error=panel_drift,
+                )
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._storage_repo(root, tracked={current: b"{}\n"})
+            (root / current).write_bytes(b'{"changed":true}\n')
+            self.assertEqual(
+                "pending",
+                self._validate_storage(root, formal=False)[panel_kind],
+            )
+            with self.assertRaisesRegex(ValueError, "formal.*pending"):
+                self._validate_storage(root, formal=True)
+
+    def test_current_attestation_storage_keeps_malformed_and_tampered_hard(self) -> None:
+        current = self.CURRENT_PATHS[1]
+        for formal in (False, True):
+            with self.subTest(kind="malformed", formal=formal), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self._storage_repo(root, tracked={current: b"{\n"})
+                with mock.patch.object(REGRESSION, "ROOT", root), self.assertRaisesRegex(
+                    ValueError,
+                    "invalid JSON",
+                ):
+                    REGRESSION._validate_current_expert_panel_storage(
+                        formal=formal
+                    )
+            with self.subTest(kind="tampered", formal=formal), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self._storage_repo(root, tracked={current: b"{}\n"})
+                with self.assertRaisesRegex(
+                    ValueError,
+                    "derived results or summary",
+                ):
+                    self._validate_storage(
+                        root,
+                        formal=formal,
+                        parse_error=(
+                            REGRESSION.expert_panel.panel_attestation.AttestationError(
+                                "attestation derived results or summary are stale"
+                            )
+                        ),
+                    )
+
+    def test_semantic_current_validation_selects_ordinary_root_and_both_authority(
+        self,
+    ) -> None:
+        expected_counts = {
+            ("root", "reference"): 206,
+        }
+        for axes, expected_count in expected_counts.items():
+            with self.subTest(axes=axes):
+                audit, packet, selector, raw = _current_semantic_attestation(axes)
+                with mock.patch.object(
+                    REGRESSION.expert_panel, "_json_object", return_value=audit
+                ):
+                    relative, validation, validate_current = (
+                        REGRESSION.expert_panel._current_attestation_validation(
+                            REGRESSION.expert_panel.SEMANTIC_DISPOSITION_PANEL_KIND,
+                            review_id=selector["review_id"],
+                            decided_on=selector["decided_on"],
+                            attestation_selector=selector,
+                        )
+                    )
+                self.assertEqual(
+                    REGRESSION.expert_panel.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_PATH,
+                    relative,
+                )
+                self.assertEqual(
+                    expected_count,
+                    len(validation["expected_semantic_current_bindings"]),
+                )
+                self.assertNotIn("expected_source_fingerprints", validation)
+                parsed = REGRESSION.expert_panel.panel_attestation.parse_attestation_bytes(
+                    raw,
+                    expected_path=relative,
+                    **validation,
+                )
+                validate_current(parsed)
+
+    def test_semantic_current_validation_rejects_no_match_ambiguous_and_tampered_evidence(
+        self,
+    ) -> None:
+        audit, _packet, selector, raw = _current_semantic_attestation(
+            ("root", "reference")
+        )
+        for field in (
+            "detector_contract_fingerprints",
+            "review_contract_fingerprint",
+            "findings",
+        ):
+            with self.subTest(field=field):
+                tampered_selector = copy.deepcopy(selector)
+                if field == "detector_contract_fingerprints":
+                    tampered_selector[field][
+                        "root_detector_contract"
+                    ] = "0" * 64
+                elif field == "review_contract_fingerprint":
+                    tampered_selector[field] = "0" * 64
+                else:
+                    tampered_selector[field][0]["target_id"] = (
+                        tampered_selector[field][0]["axis"] + ":" + "0" * 64
+                    )
+                with mock.patch.object(
+                    REGRESSION.expert_panel, "_json_object", return_value=audit
+                ), self.assertRaisesRegex(
+                    REGRESSION.expert_panel.PanelReviewError,
+                    "stale|identity|rewrite majority",
+                ):
+                    REGRESSION.expert_panel._current_attestation_validation(
+                        REGRESSION.expert_panel.SEMANTIC_DISPOSITION_PANEL_KIND,
+                        review_id=tampered_selector["review_id"],
+                        decided_on=tampered_selector["decided_on"],
+                        attestation_selector=tampered_selector,
+                    )
+
+        with mock.patch.object(
+            REGRESSION.expert_panel, "_json_object", return_value=audit
+        ), mock.patch.object(
+            REGRESSION.expert_panel,
+            "_semantic_audit_for_axis_rereview",
+            return_value=audit,
+        ), self.assertRaisesRegex(
+            REGRESSION.expert_panel.PanelReviewError,
+            "findings are invalid",
+        ):
+            ordinary = _current_semantic_attestation(())[2]
+            REGRESSION.expert_panel._current_attestation_validation(
+                REGRESSION.expert_panel.SEMANTIC_DISPOSITION_PANEL_KIND,
+                review_id=ordinary["review_id"],
+                decided_on=ordinary["decided_on"],
+                attestation_selector=ordinary,
+            )
+
+        evidence_tamper = json.loads(raw)
+        evidence_tamper["findings"][0]["candidate_binding_fingerprint"] = "0" * 64
+        tampered_raw = (
+            json.dumps(
+                evidence_tamper,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+            + b"\n"
+        )
+        with mock.patch.object(
+            REGRESSION.expert_panel, "_json_object", return_value=audit
+        ):
+            relative, validation, _validate_current = (
+                REGRESSION.expert_panel._current_attestation_validation(
+                    REGRESSION.expert_panel.SEMANTIC_DISPOSITION_PANEL_KIND,
+                    review_id=selector["review_id"],
+                    decided_on=selector["decided_on"],
+                    attestation_selector=evidence_tamper,
+                )
+            )
+        with self.assertRaises(
+            REGRESSION.expert_panel.panel_attestation.AttestationError
+        ):
+            REGRESSION.expert_panel.panel_attestation.parse_attestation_bytes(
+                tampered_raw,
+                expected_path=relative,
+                **validation,
+            )
+
+    def test_fixed_semantic_storage_is_current_without_runtime_authority(self) -> None:
+        for axes, expected_count in ((("root", "reference"), 206),):
+            with self.subTest(axes=axes), tempfile.TemporaryDirectory() as directory:
+                audit, _packet, _selector, raw = _current_semantic_attestation(axes)
+                audit_raw = (
+                    json.dumps(
+                        audit,
+                        ensure_ascii=False,
+                        sort_keys=True,
+                        separators=(",", ":"),
+                    ).encode("utf-8")
+                    + b"\n"
+                )
+                root = Path(directory)
+                self._storage_repo(
+                    root,
+                    tracked={
+                        "reports/skill-content-audit.json": audit_raw,
+                        REGRESSION.expert_panel.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_PATH: raw,
+                    },
+                )
+                self.assertFalse((root / ".rd-skills").exists())
+                with mock.patch.object(REGRESSION, "ROOT", root), mock.patch.object(
+                    REGRESSION.expert_panel, "ROOT", root
+                ):
+                    REGRESSION._validate_current_expert_panel_storage(formal=False)
+                value = json.loads(raw)
+                self.assertEqual(expected_count, len(value["findings"]))
+
+    def test_fixed_semantic_storage_rejects_retained_rewrite_entry_in_all_modes(
+        self,
+    ) -> None:
+        audit = source_support.live_semantic_audit()
+        first_candidate = audit["root_content"]["semantic_advisories"][
+            "candidates"
+        ][0]
+        candidate_id = first_candidate["candidate_id"]
+        target_id = f"root:{candidate_id}"
+        audit, _packet, _selector, raw = _current_semantic_attestation(
+            ("root", "reference"),
+            winner_overrides={target_id: "rewrite"},
+        )
+        semantic = audit["root_content"]["semantic_advisories"]
+        semantic["candidates"] = [
+            candidate
+            for candidate in semantic["candidates"]
+            if candidate.get("candidate_id") != candidate_id
+        ]
+        self.assertTrue(
+            any(
+                entry.get("candidate_id") == candidate_id
+                for entry in semantic["disposition_contract"]["entries"]
+            )
+        )
+        audit_raw = (
+            json.dumps(
+                audit,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+            + b"\n"
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            semantic_path = (
+                REGRESSION.expert_panel.panel_attestation
+                .SEMANTIC_DISPOSITION_ATTESTATION_PATH
+            )
+            self._storage_repo(
+                root,
+                tracked={
+                    "reports/skill-content-audit.json": audit_raw,
+                    semantic_path: raw,
+                },
+            )
+            with mock.patch.object(REGRESSION, "ROOT", root), mock.patch.object(
+                REGRESSION.expert_panel, "ROOT", root
+            ):
+                self.assertEqual(
+                    "stale",
+                    REGRESSION._validate_current_expert_panel_storage(
+                        formal=False
+                    )[REGRESSION.expert_panel.SEMANTIC_DISPOSITION_PANEL_KIND],
+                )
+                with self.assertRaisesRegex(
+                    ValueError,
+                    "semantic-disposition=stale",
+                ):
+                    REGRESSION._validate_current_expert_panel_storage(
+                        formal=True
+                    )
+
+    def test_fixed_semantic_storage_rejects_duplicate_missing_and_mismatched_entries(
+        self,
+    ) -> None:
+        for mutation in ("duplicate", "missing", "mismatch"):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
+                audit, _packet, _selector, raw = _current_semantic_attestation(
+                    ("root", "reference")
+                )
+                entries = audit["root_content"]["semantic_advisories"][
+                    "disposition_contract"
+                ]["entries"]
+                if mutation == "duplicate":
+                    entries.append(copy.deepcopy(entries[0]))
+                elif mutation == "missing":
+                    entries.pop(0)
+                else:
+                    entries[0]["disposition"] = "false-positive"
+                audit_raw = (
+                    json.dumps(
+                        audit,
+                        ensure_ascii=False,
+                        sort_keys=True,
+                        separators=(",", ":"),
+                    ).encode("utf-8")
+                    + b"\n"
+                )
+                root = Path(directory)
+                semantic_path = (
+                    REGRESSION.expert_panel.panel_attestation
+                    .SEMANTIC_DISPOSITION_ATTESTATION_PATH
+                )
+                self._storage_repo(
+                    root,
+                    tracked={
+                        "reports/skill-content-audit.json": audit_raw,
+                        semantic_path: raw,
+                    },
+                )
+                with mock.patch.object(REGRESSION, "ROOT", root), mock.patch.object(
+                    REGRESSION.expert_panel, "ROOT", root
+                ):
+                    if mutation == "duplicate":
+                        for formal in (False, True):
+                            with self.assertRaisesRegex(
+                                REGRESSION.expert_panel.PanelReviewError,
+                                "disposition entries are duplicated",
+                            ):
+                                REGRESSION._validate_current_expert_panel_storage(
+                                    formal=formal
+                                )
+                    else:
+                        self.assertEqual(
+                            "stale",
+                            REGRESSION._validate_current_expert_panel_storage(
+                                formal=False
+                            )[
+                                REGRESSION.expert_panel
+                                .SEMANTIC_DISPOSITION_PANEL_KIND
+                            ],
+                        )
+                        with self.assertRaisesRegex(
+                            ValueError,
+                            "semantic-disposition=stale",
+                        ):
+                            REGRESSION._validate_current_expert_panel_storage(
+                                formal=True
+                            )
+
+    def test_semantic_promotion_selects_ordinary_and_forced_authority(self) -> None:
+        for axes, expected_count in ((("root", "reference"), 206),):
+            with self.subTest(axes=axes), tempfile.TemporaryDirectory() as directory:
+                audit, _packet, selector, raw = _current_semantic_attestation(axes)
+                audit_raw = (
+                    json.dumps(
+                        audit,
+                        ensure_ascii=False,
+                        sort_keys=True,
+                        separators=(",", ":"),
+                    ).encode("utf-8")
+                    + b"\n"
+                )
+                root = Path(directory)
+                self._storage_repo(
+                    root,
+                    tracked={
+                        ".gitignore": b".rd-skills/\n",
+                        "evals/expert-panel/.gitkeep": b"",
+                        "reports/skill-content-audit.json": audit_raw,
+                    },
+                )
+                source = (
+                    root
+                    / REGRESSION.expert_panel.panel_attestation.EPHEMERAL_RUN_ROOT
+                    / selector["review_id"]
+                    / "attestation.json"
+                )
+                source.parent.mkdir(parents=True)
+                source.write_bytes(raw)
+                args = argparse.Namespace(
+                    panel_kind=(
+                        REGRESSION.expert_panel.SEMANTIC_DISPOSITION_PANEL_KIND
+                    ),
+                    review_id=selector["review_id"],
+                    source=source.relative_to(root).as_posix(),
+                    expected_existing_sha256="absent",
+                )
+                with mock.patch.object(REGRESSION.expert_panel, "ROOT", root):
+                    destination = REGRESSION.expert_panel._promote_attestation(args)
+                self.assertEqual(raw, destination.read_bytes())
+                self.assertEqual(
+                    expected_count,
+                    len(json.loads(destination.read_text(encoding="utf-8"))["findings"]),
+                )
+
+    def test_current_attestation_storage_rejects_every_unexpected_tracked_path(self) -> None:
+        unexpected = (
+            "evals/expert-panel/semantic-disposition-panel-2026-08-10-r28/packet.json",
+            "evals/expert-panel/run-r1/ballots/reviewer.json",
+            "evals/expert-panel/run-r1/capsules/reviewer.json",
+            "evals/expert-panel/run-r1/reviewer.template.json",
+            "evals/expert-panel/run-r1/reviewer.manifest.jsonl",
+            "evals/expert-panel/run-r1/panel/decision.json",
+            "evals/expert-panel/run-r1/temporary.json",
+            "evals/expert-panel/fourth.json",
+        )
+        for relative in unexpected:
+            with self.subTest(relative=relative), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self._storage_repo(root, tracked={relative: b"{}\n"})
+                with self.assertRaisesRegex(ValueError, "unexpected tracked"):
+                    self._validate_storage(root, formal=False)
+        actual = REGRESSION._validate_current_expert_panel_storage(formal=False)
+        self.assertEqual(
+            set(REGRESSION.expert_panel.panel_attestation.ATTESTATION_PATHS),
+            set(actual),
+        )
+        self.assertLessEqual(
+            set(actual.values()),
+            {"current", "missing", "stale", "pending"},
+        )
+
+    def test_current_attestation_storage_marks_untracked_pending_and_rejects_duplicate_inventory(self) -> None:
+        current = self.CURRENT_PATHS[0]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._storage_repo(root, untracked={current: b"{}\n"})
+            panel_kind = (
+                REGRESSION.expert_panel.panel_attestation.attestation_axis_for_path(
+                    current
+                )
+            )
+            self.assertEqual(
+                "pending",
+                self._validate_storage(root, formal=False)[panel_kind],
+            )
+            with self.assertRaisesRegex(ValueError, "formal.*pending"):
+                self._validate_storage(root, formal=True)
+        with mock.patch.object(
+            REGRESSION,
+            "_git_tracked_expert_panel_paths",
+            return_value=[current, current],
+        ), self.assertRaisesRegex(ValueError, "duplicate tracked"):
+            REGRESSION._validate_current_expert_panel_storage(formal=False)
+
+    def test_current_attestation_storage_rejects_oversize_symlink_and_nonregular(self) -> None:
+        current = self.CURRENT_PATHS[0]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / current
+            path.parent.mkdir(parents=True)
+            path.write_bytes(
+                b"x" * (REGRESSION.expert_panel.panel_attestation.MAX_ATTESTATION_BYTES + 1)
+            )
+            with mock.patch.object(REGRESSION, "ROOT", root), mock.patch.object(
+                REGRESSION,
+                "_git_tracked_expert_panel_paths",
+                return_value=[current],
+            ), self.assertRaisesRegex(ValueError, "exceeds 4194304 bytes"):
+                REGRESSION._validate_current_expert_panel_storage(formal=False)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / "target"
+            target.write_text("{}\n", encoding="utf-8")
+            path = root / current
+            path.parent.mkdir(parents=True)
+            path.symlink_to(target)
+            with mock.patch.object(REGRESSION, "ROOT", root), mock.patch.object(
+                REGRESSION,
+                "_git_tracked_expert_panel_paths",
+                return_value=[current],
+            ), self.assertRaisesRegex(ValueError, "symbolic links"):
+                REGRESSION._validate_current_expert_panel_storage(formal=False)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / current).mkdir(parents=True)
+            with mock.patch.object(REGRESSION, "ROOT", root), mock.patch.object(
+                REGRESSION,
+                "_git_tracked_expert_panel_paths",
+                return_value=[current],
+            ), self.assertRaisesRegex(ValueError, "regular file"):
+                REGRESSION._validate_current_expert_panel_storage(formal=False)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / "target"
+            target.write_text("{}\n", encoding="utf-8")
+            path = root / current
+            path.parent.mkdir(parents=True)
+            os.link(target, path)
+            with mock.patch.object(REGRESSION, "ROOT", root), mock.patch.object(
+                REGRESSION,
+                "_git_tracked_expert_panel_paths",
+                return_value=[current],
+            ), self.assertRaisesRegex(ValueError, "exactly one hard link"):
+                REGRESSION._validate_current_expert_panel_storage(formal=False)
+
+    def test_current_attestation_storage_marks_head_mismatch_and_dirty_mode_pending(self) -> None:
+        current = self.CURRENT_PATHS[1]
+        panel_kind = REGRESSION.expert_panel.panel_attestation.attestation_axis_for_path(
+            current
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._storage_repo(root, tracked={current: b"{}\n"})
+            (root / current).write_bytes(b'{"changed":true}\n')
+            self.assertEqual(
+                "pending",
+                self._validate_storage(root, formal=False)[panel_kind],
+            )
+            with self.assertRaisesRegex(ValueError, "formal.*pending"):
+                self._validate_storage(root, formal=True)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._storage_repo(root, tracked={current: b"{}\n"})
+            os.chmod(root / current, 0o755)
+            self.assertEqual(
+                "pending",
+                self._validate_storage(root, formal=False)[panel_kind],
+            )
+            with self.assertRaisesRegex(ValueError, "formal.*pending"):
+                self._validate_storage(root, formal=True)
+
+    def test_formal_producer_invokes_storage_validation_once(self) -> None:
+        for formal, arguments in (
+            (False, []),
+            (True, ["--strict", "--require-expert-content-review"]),
+        ):
+            with self.subTest(formal=formal), tempfile.TemporaryDirectory() as directory:
+                with mock.patch.object(
+                    REGRESSION, "_validate_current_expert_panel_storage"
+                ) as validate_storage, mock.patch.object(
+                    REGRESSION, "_reports", side_effect=ValueError("stop after storage")
+                ):
+                    self.assertEqual(
+                        1,
+                        REGRESSION.main(
+                            ["--reports-dir", directory, *arguments]
+                        ),
+                    )
+                validate_storage.assert_called_once_with(formal=formal)
+
+    def test_affected_producer_bypasses_noncurrent_storage_precheck(self) -> None:
+        context = {"fixture": "affected"}
+        with tempfile.TemporaryDirectory() as directory, mock.patch.dict(
+            os.environ,
+            {REGRESSION.AFFECTED_CONTEXT_ENV: "{}"},
+        ), mock.patch.object(
+            REGRESSION,
+            "_validate_current_expert_panel_storage",
+            side_effect=AssertionError(
+                "affected archive must not inspect Git storage"
+            ),
+        ) as validate_storage, mock.patch.object(
+            REGRESSION,
+            "_affected_package_ids",
+            return_value=[],
+        ), mock.patch.object(
+            REGRESSION,
+            "parse_affected_professionalism_context",
+            return_value=context,
+        ), mock.patch.object(
+            REGRESSION,
+            "_affected_main",
+            return_value=0,
+        ) as affected_main:
+            self.assertEqual(
+                0,
+                REGRESSION.main(["--reports-dir", directory]),
+            )
+        validate_storage.assert_not_called()
+        affected_main.assert_called_once()
+
+    def test_shared_fixture_uses_current_unittest_package(self) -> None:
+        self.assertIs(PANEL, source_support.load_panel())
+        self.assertIs(PANEL, sys.modules[PANEL.__name__])
+        self.assertIs(REGRESSION, source_support.REGRESSION)
 
     def test_regression_loader_preserves_current_readability(self) -> None:
         config_path = ROOT / "config/professionalism-release-review.yaml"
+        config_bytes = config_path.read_bytes()
         config = REGRESSION.load_yaml_file(config_path)
-        attestation = config["readability_review_attestation"]
-        record, _path, evidence = REGRESSION._load_dual_panel_record(
-            config_path,
-            attestation["panel_record"],
-            field_name="readability_review_attestation",
-            expected_kind=PANEL.DECISION_KIND,
+        readability_config = config["readability_review_attestation"]
+        self.assertNotIn("panel_record", readability_config)
+        self.assertNotIn("source_fingerprints", readability_config)
+        public_limitations = " ".join(readability_config["limitations"])
+        for stale_claim in (
+            "readability-current-",
+            "readability-fpl001-",
+            "43 density targets",
+            "360 readability documents",
+            "983 nested findings",
+        ):
+            self.assertNotIn(stale_claim, public_limitations)
+        for dynamic_contract in (
+            "canonical fixed Readability attestation",
+            "sole evidence authority",
+            "validated review ID",
+            "target and finding counts",
+            "derived dynamically",
+            "selector-free configuration",
+        ):
+            self.assertIn(dynamic_contract, public_limitations)
+        audit = readability_support.current_audit()
+        packet = readability_support.current_packet()
+        fixture = tempfile.TemporaryDirectory(dir=ROOT)
+        self.addCleanup(fixture.cleanup)
+        fixture_root = Path(fixture.name)
+        packet_path = fixture_root / "packet.json"
+        _write(packet_path, packet)
+        packet_sha256 = hashlib.sha256(packet_path.read_bytes()).hexdigest()
+        ballot_values = []
+        for voter in range(1, PANEL.PANEL_SIZE + 1):
+            ballot = readability_support.ballot(packet, packet_sha256, voter)
+            ballot_path = fixture_root / f"readability-voter-{voter}.json"
+            _write(ballot_path, ballot)
+            ballot_values.append((ballot_path, ballot))
+        decision = PANEL.aggregate_ballots(
+            packet=packet,
+            packet_path=packet_path,
+            ballot_values=ballot_values,
+            decided_on=packet["created_on"],
         )
-        self.assertEqual(2, record["schema_version"])
-        self.assertEqual(5, len(evidence))
+        decision_path = fixture_root / "decision.json"
+        _write(decision_path, decision)
+        attestation = PANEL._readability_attestation_from_decision(
+            decision,
+            decision_path=decision_path,
+            audit=audit,
+        )
+        current_bindings = PANEL._readability_target_authorities(packet)
+        fixed_bytes = PANEL.panel_attestation.canonical_attestation_bytes(
+            attestation,
+            expected_path=PANEL.panel_attestation.READABILITY_ATTESTATION_PATH,
+            expected_readability_current_bindings=current_bindings,
+        )
+        storage_root = fixture_root / "storage"
+        fixed = storage_root / PANEL.panel_attestation.READABILITY_ATTESTATION_PATH
+        fixed.parent.mkdir(parents=True)
+        fixed.write_bytes(fixed_bytes)
+        fixed_bytes = fixed.read_bytes()
+        fixed_sha256 = hashlib.sha256(fixed_bytes).hexdigest()
+        value = json.loads(fixed_bytes)
+        self.assertEqual(
+            {
+                "axis",
+                "decided_on",
+                "detector_contract_fingerprints",
+                "findings",
+                "kind",
+                "rationale",
+                "review_artifacts",
+                "review_contract_fingerprint",
+                "review_id",
+                "reviewers",
+                "schema_version",
+                "target_manifest_binding",
+                "verdict",
+            },
+            set(value),
+        )
+        self.assertEqual(
+            {
+                "axis": PANEL.READABILITY_PANEL_KIND,
+                "kind": PANEL.panel_attestation.READABILITY_ATTESTATION_KIND,
+                "review_contract_fingerprint": PANEL._canonical_json_sha256(
+                    packet["panel_contract"]
+                ),
+                "schema_version": 2,
+                "target_manifest_binding": packet["source_fingerprints"][
+                    "readability_target_manifest"
+                ],
+                "verdict": "accepted-current-readability",
+            },
+            {
+                field: value[field]
+                for field in (
+                    "axis",
+                    "kind",
+                    "review_contract_fingerprint",
+                    "schema_version",
+                    "target_manifest_binding",
+                    "verdict",
+                )
+            },
+        )
+        self.assertIsInstance(value["review_id"], str)
+        self.assertTrue(value["review_id"].strip())
+
+        artifacts = value["review_artifacts"]
+        self.assertEqual({"ballots", "decision", "packet"}, set(artifacts))
+        self.assertEqual({"sha256"}, set(artifacts["packet"]))
+        self.assertEqual({"sha256"}, set(artifacts["decision"]))
+        ballots = artifacts["ballots"]
+        self.assertEqual(3, len(ballots))
+        self.assertTrue(
+            all(set(ballot) == {"sha256", "voter_id"} for ballot in ballots)
+        )
+        self.assertEqual(
+            sorted({ballot["voter_id"] for ballot in ballots}),
+            [ballot["voter_id"] for ballot in ballots],
+        )
+        for digest in (
+            artifacts["packet"]["sha256"],
+            artifacts["decision"]["sha256"],
+            *(ballot["sha256"] for ballot in ballots),
+        ):
+            self.assertRegex(digest, r"^[0-9a-f]{64}$")
+
+        by_category = {
+            category: [
+                row for row in value["findings"]
+                if row["category"] == category
+            ]
+            for category in ("content", "readability", "actionability")
+        }
+        self.assertEqual(
+            {"actionability": 0, "content": 43, "readability": 365},
+            {category: len(rows) for category, rows in by_category.items()},
+        )
+        self.assertTrue(
+            all(
+                set(row)
+                == {"category", "review_unit_binding", "target_id", "votes"}
+                for row in by_category["content"]
+            )
+        )
+        self.assertTrue(
+            all(
+                set(row) == {"category", "finding_reviews", "target_id"}
+                for row in by_category["readability"]
+            )
+        )
+        unit_bindings = [
+            row["review_unit_binding"] for row in by_category["content"]
+        ] + [
+            finding["review_unit_binding"]
+            for row in by_category["readability"]
+            for finding in row["finding_reviews"]
+        ]
+        self.assertEqual(
+            len(packet["content_targets"])
+            + sum(
+                len(target["findings"])
+                for target in packet["readability_targets"]
+            ),
+            len(unit_bindings),
+        )
+        self.assertTrue(
+            all(
+                set(finding) == {"finding_id", "review_unit_binding", "votes"}
+                for row in by_category["readability"]
+                for finding in row["finding_reviews"]
+            )
+        )
+        for binding in unit_bindings:
+            self.assertRegex(binding, r"^[0-9a-f]{64}$")
+
+        def nested_keys(item: object) -> set[str]:
+            if isinstance(item, dict):
+                return set(item) | set().union(
+                    *(nested_keys(child) for child in item.values())
+                )
+            if isinstance(item, list):
+                return set().union(*(nested_keys(child) for child in item))
+            return set()
+
+        self.assertTrue(
+            {
+                "source_fingerprint",
+                "source_fingerprints",
+                "review_binding_fingerprint",
+            }.isdisjoint(nested_keys(value))
+        )
+
+        with mock.patch.object(REGRESSION, "ROOT", storage_root), mock.patch.object(
+            REGRESSION, "_validate_expert_evidence"
+        ) as evidence:
+            application = REGRESSION._readability_review_axis(
+                config_path,
+                config_bytes=config_bytes,
+                config_fingerprint=hashlib.sha256(config_bytes).hexdigest(),
+                attestation=readability_config,
+                content_skills=audit["skills"],
+                readability_content=audit["ai_readability"],
+                content_audit=audit,
+                evaluation_date=date.fromisoformat(config["reviewed_at"]),
+                storage_status="current",
+            )
+
+        evidence.assert_called_once_with(
+            {
+                "path": PANEL.panel_attestation.READABILITY_ATTESTATION_PATH,
+                "sha256": fixed_sha256,
+            }
+        )
+        self.assertEqual(value["review_id"], application["panel_review_id"])
+        self.assertEqual(
+            {
+                "accepted_for_formal": True,
+                "applied_actionability_disposition_count": 0,
+                "applied_density_disposition_count": 43,
+                "applied_readability_disposition_count": 365,
+                "attestation_status": "panel-majority-current",
+                "detector_false_positive_count": 0,
+                "rewrite_required_count": 0,
+                "source_current": True,
+                "storage_current": True,
+                "tracked_tightening_count": 0,
+            },
+            {
+                field: application[field]
+                for field in (
+                    "accepted_for_formal",
+                    "applied_actionability_disposition_count",
+                    "applied_density_disposition_count",
+                    "applied_readability_disposition_count",
+                    "attestation_status",
+                    "detector_false_positive_count",
+                    "rewrite_required_count",
+                    "source_current",
+                    "storage_current",
+                    "tracked_tightening_count",
+                )
+            },
+        )
+        self.assertEqual(
+            value["target_manifest_binding"],
+            application["source_fingerprints"]["readability_target_manifest"],
+        )
+        self.assertEqual(
+            [
+                {
+                    "path": PANEL.panel_attestation.READABILITY_ATTESTATION_PATH,
+                    "sha256": fixed_sha256,
+                }
+            ],
+            application["evidence"],
+        )
+        self.assertEqual(
+            {"accepted-current-density"},
+            {row["disposition"] for row in application["density_dispositions"]},
+        )
+        self.assertEqual(
+            {"accepted-current-readability"},
+            {
+                row["disposition"]
+                for row in application["readability_dispositions"]
+            },
+        )
+
+    def test_readability_config_is_selector_free_and_closed(self) -> None:
+        config_path = ROOT / "config/professionalism-release-review.yaml"
+        config = REGRESSION.load_yaml_file(config_path)
+        readability = config["readability_review_attestation"]
+        REGRESSION._validated_readability_config(config_path, readability)
+
+        for field, value in (
+            ("source_fingerprints", {"readability_target_manifest": "0" * 64}),
+            (
+                "panel_record",
+                {
+                    "path": PANEL.panel_attestation.READABILITY_ATTESTATION_PATH,
+                    "sha256": "0" * 64,
+                },
+            ),
+            ("review_id", "configured-review-id"),
+        ):
+            changed = copy.deepcopy(readability)
+            changed[field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(
+                ValueError, "selector-free schema 5 contract"
+            ):
+                REGRESSION._validated_readability_config(
+                    config_path, changed
+                )
+
+    def test_regression_loader_preserves_current_semantic(self) -> None:
+        config_path = ROOT / "config/skill-content-exceptions.yaml"
+        config = REGRESSION.load_yaml_file(config_path)
+        fixed = (
+            ROOT
+            / PANEL.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_PATH
+        )
+        fixed_bytes = fixed.read_bytes()
+        self.assertEqual(
+            "2a5a19fca3465a4409f3624564c600cdb62fb467f3b3348c3a0b3973c4adc774",
+            hashlib.sha256(fixed_bytes).hexdigest(),
+        )
+        value = json.loads(fixed_bytes)
+        self.assertEqual(
+            {
+                "axis",
+                "decided_on",
+                "detector_contract_fingerprints",
+                "findings",
+                "kind",
+                "rationale",
+                "review_contract_fingerprint",
+                "review_id",
+                "reviewers",
+                "schema_version",
+                "verdict",
+            },
+            set(value),
+        )
+        self.assertEqual(2, value["schema_version"])
+        self.assertEqual(
+            PANEL.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_KIND,
+            value["kind"],
+        )
+        self.assertEqual(PANEL.SEMANTIC_DISPOSITION_PANEL_KIND, value["axis"])
+        self.assertEqual(
+            "accepted-current-semantic-disposition", value["verdict"]
+        )
+        self.assertEqual("semantic-refresh-20260816-r1", value["review_id"])
+        self.assertEqual(206, len(value["findings"]))
+        self.assertEqual(
+            PANEL._canonical_json_sha256(
+                PANEL._semantic_panel_contract(
+                    root_target_count=81,
+                    reference_target_count=125,
+                )
+            ),
+            value["review_contract_fingerprint"],
+        )
+
+        live_audit = copy.deepcopy(source_support.live_semantic_audit())
+        root_semantic, reference_semantic = PANEL._semantic_audit_sections(
+            live_audit
+        )
+        current_fingerprints = PANEL._semantic_source_fingerprints(
+            live_audit,
+            root_semantic=root_semantic,
+            reference_semantic=reference_semantic,
+        )
+        detector_keys = {
+            "reference_detector_contract",
+            "root_detector_contract",
+        }
+        self.assertEqual(
+            detector_keys, set(value["detector_contract_fingerprints"])
+        )
+        self.assertEqual(
+            {
+                key: current_fingerprints[key]
+                for key in sorted(detector_keys)
+            },
+            value["detector_contract_fingerprints"],
+        )
+
+        configured = {
+            f"{axis}:{entry['candidate_id']}": entry["disposition"]
+            for axis, key in (
+                ("root", "root_semantic_dispositions"),
+                ("reference", "reference_semantic_dispositions"),
+            )
+            for entry in config[key]["entries"]
+        }
+        winners = {}
+        for finding in value["findings"]:
+            self.assertEqual(
+                {
+                    "axis",
+                    "candidate_binding_fingerprint",
+                    "target_id",
+                    "votes",
+                },
+                set(finding),
+            )
+            axis = finding["axis"]
+            target_id = finding["target_id"]
+            self.assertIn(axis, PANEL.SEMANTIC_AXES)
+            self.assertRegex(target_id, rf"^{axis}:[0-9a-f]{{64}}$")
+            self.assertRegex(
+                finding["candidate_binding_fingerprint"], r"^[0-9a-f]{64}$"
+            )
+            votes = finding["votes"]
+            self.assertEqual(PANEL.PANEL_SIZE, len(votes))
+            voter_ids = [vote["voter_id"] for vote in votes]
+            self.assertEqual(sorted(set(voter_ids)), voter_ids)
+            vote_counts = {
+                disposition: sum(
+                    vote["disposition"] == disposition for vote in votes
+                )
+                for disposition in sorted(PANEL.SEMANTIC_DISPOSITIONS)
+            }
+            majority = [
+                disposition
+                for disposition, count in vote_counts.items()
+                if count >= 2
+            ]
+            self.assertEqual(1, len(majority))
+            winners[target_id] = majority[0]
+
+        self.assertEqual(
+            {"reference": 125, "root": 81},
+            {
+                axis: sum(target_id.startswith(f"{axis}:") for target_id in winners)
+                for axis in ("reference", "root")
+            },
+        )
+        self.assertEqual(206, len(configured))
+        self.assertEqual(configured, winners)
+
+        application = PANEL.validate_semantic_decision_application(live_audit)
+        self.assertEqual(
+            {
+                "applied_count": 206,
+                "completed_rewrite_count": 0,
+                "decision": {
+                    "path": (
+                        PANEL.panel_attestation
+                        .SEMANTIC_DISPOSITION_ATTESTATION_PATH
+                    ),
+                    "sha256": hashlib.sha256(fixed_bytes).hexdigest(),
+                },
+                "decision_kind": (
+                    PANEL.panel_attestation
+                    .SEMANTIC_DISPOSITION_ATTESTATION_KIND
+                ),
+                "review_id": "semantic-refresh-20260816-r1",
+                "status": "current",
+                "target_count": 206,
+            },
+            {
+                field: application[field]
+                for field in (
+                    "applied_count",
+                    "completed_rewrite_count",
+                    "decision",
+                    "decision_kind",
+                    "review_id",
+                    "status",
+                    "target_count",
+                )
+            },
+        )
 
     def test_regression_loader_preserves_current_professional(self) -> None:
         config_path = ROOT / "config/professionalism-release-review.yaml"
+        config_bytes = config_path.read_bytes()
         config = REGRESSION.load_yaml_file(config_path)
-        attestation = config["professional_completeness_review_attestation"]
-        record, _path, evidence = REGRESSION._load_dual_panel_record(
-            config_path,
-            attestation["panel_record"],
-            field_name="professional_completeness_review_attestation",
-            expected_kind=PANEL.PROFESSIONAL_COMPLETENESS_DECISION_KIND,
+        professional_config = config[
+            "professional_completeness_review_attestation"
+        ]
+        self.assertNotIn("panel_record", professional_config)
+        self.assertNotIn("source_fingerprints", professional_config)
+        current_packet = REGRESSION._current_professional_completeness_packet()
+        current_targets = []
+        for embedded_target in current_packet["professional_targets"]:
+            target = copy.deepcopy(embedded_target)
+            target.pop("review_binding")
+            current_targets.append(target)
+        fixed_bytes = (
+            professional_support._current_compact_professional_fixture_bytes(
+                current_targets,
+                review_contract_fingerprint=current_packet[
+                    "review_contract_fingerprint"
+                ],
+            )
         )
-        self.assertEqual(3, record["schema_version"])
-        self.assertGreater(len(evidence), len(record["voters"]))
-
-    def test_current_schema3_review_cost_is_artifact_relative(self) -> None:
-        config_path = ROOT / "config/professionalism-release-review.yaml"
-        config = REGRESSION.load_yaml_file(config_path)
-        attestation = config["professional_completeness_review_attestation"]
-        record, _path, _evidence = REGRESSION._load_dual_panel_record(
-            config_path,
-            attestation["panel_record"],
-            field_name="professional_completeness_review_attestation",
-            expected_kind=PANEL.PROFESSIONAL_COMPLETENESS_DECISION_KIND,
+        fixture = tempfile.TemporaryDirectory()
+        self.addCleanup(fixture.cleanup)
+        validation_root = Path(fixture.name)
+        fixed = (
+            validation_root
+            / PANEL.panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH
         )
-        _packet_path, packet = REGRESSION._read_professional_artifact_reference(
-            record["packet"],
-            label="tracked schema-3 Professional packet",
-        )
-
-        cost = REGRESSION._professional_schema3_review_cost(
-            record,
-            packet=packet,
-        )
-
-        target_count = len(packet["professional_targets"])
-        expected_vote_count = PANEL.PANEL_SIZE * target_count
-        expected_criterion_result_count = (
-            expected_vote_count * len(PANEL.PROFESSIONAL_COMPLETENESS_CRITERIA)
-        )
-        self.assertEqual(PANEL.PROFESSIONAL_PACKAGE_COUNT, target_count)
-        self.assertEqual(3, len(record["voters"]))
-        self.assertEqual(expected_vote_count, cost["fresh_vote_count"])
-        self.assertEqual(0, cost["carried_forward_vote_count"])
-        self.assertEqual(expected_vote_count, cost["effective_vote_count"])
+        fixed.parent.mkdir(parents=True)
+        fixed.write_bytes(fixed_bytes)
+        fixed_bytes = fixed.read_bytes()
+        fixed_sha256 = hashlib.sha256(fixed_bytes).hexdigest()
+        value = json.loads(fixed_bytes)
         self.assertEqual(
-            expected_criterion_result_count,
-            cost["fresh_criterion_result_count"],
+            {
+                "axis",
+                "decided_on",
+                "dependency_material_catalog",
+                "findings",
+                "kind",
+                "rationale",
+                "review_contract_fingerprint",
+                "review_cost_input",
+                "review_id",
+                "reviewers",
+                "schema_version",
+                "storage_encoding",
+                "string_catalog",
+                "verdict",
+            },
+            set(value),
         )
+        self.assertEqual(2, value["schema_version"])
+        self.assertEqual(
+            PANEL.panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_KIND,
+            value["kind"],
+        )
+        self.assertEqual(
+            PANEL.PROFESSIONAL_COMPLETENESS_PANEL_KIND,
+            value["axis"],
+        )
+        self.assertEqual("professional-refresh-20260816-r1", value["review_id"])
+        self.assertEqual(
+            current_packet["review_contract_fingerprint"],
+            value["review_contract_fingerprint"],
+        )
+        self.assertEqual(
+            PANEL.panel_attestation.PROFESSIONAL_STORAGE_ENCODING,
+            value["storage_encoding"],
+        )
+        catalog = value["string_catalog"]
+        self.assertTrue(catalog)
+        self.assertEqual(sorted(set(catalog)), catalog)
+        for field in (
+            "source_fingerprints",
+            "source_fingerprint",
+            "package_fingerprint",
+            "review_binding_fingerprint",
+        ):
+            self.assertNotIn(field, value)
+
+        self.assertEqual(
+            value["review_contract_fingerprint"],
+            current_packet["review_contract_fingerprint"],
+        )
+        with mock.patch.object(
+            REGRESSION, "ROOT", validation_root
+        ), mock.patch.object(
+            REGRESSION, "_validate_expert_evidence"
+        ) as evidence:
+            application = REGRESSION._professional_completeness_review_axis(
+                config_path,
+                config_bytes=config_bytes,
+                config_fingerprint=hashlib.sha256(config_bytes).hexdigest(),
+                attestation=professional_config,
+                current_packet=current_packet,
+                evaluation_date=date.fromisoformat(config["reviewed_at"]),
+                storage_status="current",
+            )
+
+        evidence.assert_called_once_with(
+            {
+                "path": (
+                    PANEL.panel_attestation
+                    .PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH
+                ),
+                "sha256": fixed_sha256,
+            }
+        )
+        self.assertEqual("panel-majority-current", application["attestation_status"])
+        self.assertTrue(application["storage_current"])
+        self.assertTrue(application["source_current"])
+        self.assertTrue(application["accepted_for_formal"])
+        self.assertEqual(value["review_id"], application["panel_review_id"])
+        self.assertEqual(
+            value["review_contract_fingerprint"],
+            application["review_contract_fingerprint"],
+        )
+        self.assertEqual(
+            PANEL.PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION,
+            application["panel_artifact_schema_version"],
+        )
+        self.assertEqual(189, application["applied_target_count"])
+        self.assertEqual(189, application["accepted_current_count"])
+        self.assertEqual(0, application["correction_count"])
         self.assertEqual(
             0,
-            cost["carried_forward_criterion_result_count"],
+            application["unresolved_professional_disagreement_count"],
         )
         self.assertEqual(
-            expected_criterion_result_count,
-            cost["effective_criterion_result_count"],
+            [
+                {
+                    "path": (
+                        PANEL.panel_attestation
+                        .PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH
+                    ),
+                    "sha256": fixed_sha256,
+                }
+            ],
+            application["evidence"],
+        )
+        dispositions = application["professional_dispositions"]
+        self.assertEqual(
+            {
+                "accepted-current-professional-completeness": 189,
+                "requires-professional-correction": 0,
+                PANEL.PROFESSIONAL_UNRESOLVED_DISPOSITION: 0,
+            },
+            {
+                disposition: sum(
+                    row["disposition"] == disposition
+                    for row in dispositions
+                )
+                for disposition in (
+                    "accepted-current-professional-completeness",
+                    "requires-professional-correction",
+                    PANEL.PROFESSIONAL_UNRESOLVED_DISPOSITION,
+                )
+            },
+        )
+        self.assertEqual(
+            {"carried": 56, "fresh": 133},
+            {
+                mode: sum(
+                    row["provenance"]["mode"] == mode
+                    for row in dispositions
+                )
+                for mode in ("carried", "fresh")
+            },
+        )
+        self.assertEqual(
+            {
+                "carried": {
+                    (
+                        "professional-fpl001-fresh-20260814-r4",
+                        "a31ea263084894ccc4358696d3860e49857d3af2",
+                    )
+                },
+                "fresh": {
+                    (
+                        "professional-refresh-20260816-r1",
+                        "d6534d06d1537ca29da16832b37e078f903f58ee",
+                    )
+                },
+            },
+            {
+                mode: {
+                    (
+                        row["provenance"]["origin"]["origin_review_id"],
+                        row["provenance"]["origin"]["origin_commit"],
+                    )
+                    for row in dispositions
+                    if row["provenance"]["mode"] == mode
+                }
+                for mode in ("carried", "fresh")
+            },
+        )
+
+        cost = application["review_cost"]
+        target_count = application["applied_target_count"]
+        self.assertEqual(PANEL.PROFESSIONAL_PACKAGE_COUNT, target_count)
+        self.assertEqual(3, application["reviewer_pool_size"])
+        self.assertEqual(
+            {
+                "carried_forward_target_count": 56,
+                "fresh_target_count": 133,
+            },
+            {
+                field: application[field]
+                for field in (
+                    "carried_forward_target_count",
+                    "fresh_target_count",
+                )
+            },
+        )
+        self.assertEqual(
+            {
+                "carried_forward_vote_count": 168,
+                "effective_vote_count": 567,
+                "fresh_vote_count": 399,
+            },
+            {
+                field: cost[field]
+                for field in (
+                    "carried_forward_vote_count",
+                    "effective_vote_count",
+                    "fresh_vote_count",
+                )
+            },
+        )
+        self.assertEqual(
+            {
+                "carried_forward_criterion_result_count": 1680,
+                "effective_criterion_result_count": 5670,
+                "fresh_criterion_result_count": 3990,
+            },
+            {
+                field: cost[field]
+                for field in (
+                    "carried_forward_criterion_result_count",
+                    "effective_criterion_result_count",
+                    "fresh_criterion_result_count",
+                )
+            },
         )
         self.assertGreater(cost["canonical_capsule_input_bytes_proxy"], 0)
-        self.assertEqual(1_000_000, cost["input_ratio_ppm"])
-        self.assertEqual(1_000_000, cost["required_only_input_ratio_ppm"])
-        self.assertEqual(1_000_000, cost["source_material_coverage_ratio_ppm"])
-        self.assertEqual("contract-change-full-review", cost["policy_status"])
+        self.assertEqual(
+            (
+                cost["canonical_capsule_input_bytes_proxy"]
+                * 1_000_000
+                // cost[
+                    "full_rereview_deduplicated_capsule_input_bytes_proxy"
+                ]
+            ),
+            cost["input_ratio_ppm"],
+        )
+        self.assertEqual(
+            {
+                "input_ratio_ppm": 729116,
+                "required_only_input_ratio_ppm": 727995,
+                "source_material_coverage_ratio_ppm": 1_000_000,
+            },
+            {
+                field: cost[field]
+                for field in (
+                    "input_ratio_ppm",
+                    "required_only_input_ratio_ppm",
+                    "source_material_coverage_ratio_ppm",
+                )
+            },
+        )
+        self.assertEqual(
+            (
+                cost["reviewer_added_source_material_input_bytes_proxy"]
+                + cost[
+                    "reviewer_added_relationship_evidence_metadata_overhead_bytes_proxy"
+                ]
+            ),
+            (
+                cost["canonical_capsule_input_bytes_proxy"]
+                - cost["required_only_capsule_input_bytes_proxy"]
+            ),
+        )
+        self.assertEqual("incremental-reduced-input", cost["policy_status"])
         self.assertTrue(
             REGRESSION._professional_review_cost_policy_satisfied(
                 cost,
-                fresh_target_count=target_count,
-                carried_forward_target_count=0,
+                fresh_target_count=133,
+                carried_forward_target_count=56,
             )
         )
         self.assertFalse(
@@ -406,165 +2094,86 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             )
         )
 
-        forged_incremental = copy.deepcopy(cost)
-        forged_incremental["policy_status"] = "incremental-reduced-input"
         self.assertFalse(
             REGRESSION._professional_review_cost_policy_satisfied(
-                forged_incremental,
+                cost,
                 fresh_target_count=0,
                 carried_forward_target_count=target_count,
             )
         )
 
-        malformed_partition = copy.deepcopy(record)
-        malformed_partition["professional_decisions"].pop()
-        with self.assertRaisesRegex(ValueError, "target partition"):
-            REGRESSION._professional_schema3_review_cost(
-                malformed_partition,
-                packet=packet,
-            )
+    def test_professional_config_is_selector_free_and_closed(self) -> None:
+        config_path = ROOT / "config/professionalism-release-review.yaml"
+        config = REGRESSION.load_yaml_file(config_path)
+        professional = config["professional_completeness_review_attestation"]
+        REGRESSION._validated_professional_config(config_path, professional)
 
-        malformed_voters = copy.deepcopy(record)
-        malformed_voters["voters"].append(
-            copy.deepcopy(record["voters"][0])
-        )
-        malformed_voters["voters"][-1]["capsule_input_blocks_proxy"][0][
-            "sha256"
-        ] = "0" * 64
-        with self.assertRaisesRegex(ValueError, "conflicts across voters"):
-            REGRESSION._professional_schema3_review_cost(
-                malformed_voters,
-                packet=packet,
-            )
-
-        malformed_input = copy.deepcopy(record)
-        malformed_input["summary"]["review_cost"][
-            "canonical_capsule_input_bytes_proxy"
-        ] = 1
-        with self.assertRaisesRegex(
-            ValueError,
-            "core review_cost does not match raw evidence",
+        for field, value in (
+            (
+                "source_fingerprints",
+                {"professional_packages": "0" * 64},
+            ),
+            (
+                "panel_record",
+                {
+                    "path": PANEL.panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH,
+                    "sha256": "0" * 64,
+                },
+            ),
+            ("review_id", "configured-review-id"),
+            ("review_contract_fingerprint", "0" * 64),
         ):
-            REGRESSION._professional_schema3_review_cost(
-                malformed_input,
-                packet=packet,
-            )
+            changed = copy.deepcopy(professional)
+            changed[field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(
+                ValueError, "selector-free schema 5 contract"
+            ):
+                REGRESSION._validated_professional_config(
+                    config_path, changed
+                )
 
-        malformed_core_cost = copy.deepcopy(record)
-        malformed_core_cost["summary"]["review_cost"][
-            "effective_criterion_result_count"
-        ] += 1
-        with self.assertRaisesRegex(
-            ValueError,
-            "core review_cost does not match raw evidence",
-        ):
-            REGRESSION._professional_schema3_review_cost(
-                malformed_core_cost,
-                packet=packet,
-            )
-
-    def test_current_schema3_axis_is_current_and_accepted(self) -> None:
+    def test_canonical_schema3_axis_preserves_currentness_classification(self) -> None:
         config_path = ROOT / "config/professionalism-release-review.yaml"
         config_bytes = config_path.read_bytes()
         config = REGRESSION.load_yaml_file(config_path)
         evaluation_date = date.fromisoformat(config["reviewed_at"])
-        self.assertEqual(date(2026, 8, 9), evaluation_date)
-        attestation = config["professional_completeness_review_attestation"]
-        record, _record_path, _evidence = REGRESSION._load_dual_panel_record(
-            config_path,
-            attestation["panel_record"],
-            field_name="professional_completeness_review_attestation",
-            expected_kind=PANEL.PROFESSIONAL_COMPLETENESS_DECISION_KIND,
-        )
-        self.assertEqual("2026-08-09", record["decided_on"])
+        current_packet = REGRESSION._current_professional_completeness_packet()
         result = REGRESSION._professional_completeness_review_axis(
             config_path,
             config_bytes=config_bytes,
             config_fingerprint=hashlib.sha256(config_bytes).hexdigest(),
-            attestation=attestation,
-            current_packet=REGRESSION._current_professional_completeness_packet(),
+            attestation=config["professional_completeness_review_attestation"],
+            current_packet=current_packet,
             evaluation_date=evaluation_date,
+            storage_status="stale",
         )
 
-        target_count = PANEL.PROFESSIONAL_PACKAGE_COUNT
-        expected_vote_count = PANEL.PANEL_SIZE * target_count
-        expected_criterion_result_count = (
-            expected_vote_count * len(PANEL.PROFESSIONAL_COMPLETENESS_CRITERIA)
-        )
-        self.assertEqual(record["decided_on"], result["attested_on"])
-        self.assertLessEqual(
-            date.fromisoformat(result["attested_on"]),
-            evaluation_date,
-        )
-        with self.assertRaisesRegex(ValueError, "non-future ISO date"):
-            REGRESSION._validated_iso_date(
-                "not-a-date",
-                label="test malformed decision date",
-                evaluation_date=evaluation_date,
-            )
-        with self.assertRaisesRegex(ValueError, "non-future ISO date"):
-            REGRESSION._validated_iso_date(
-                "2026-08-10",
-                label="test future decision date",
-                evaluation_date=evaluation_date,
-            )
-        self.assertEqual(target_count, result["required_target_count"])
-        self.assertEqual(target_count, result["applied_target_count"])
-        self.assertEqual(target_count, result["fresh_target_count"])
-        self.assertEqual(0, result["carried_forward_target_count"])
-        self.assertEqual(3, result["reviewer_pool_size"])
-        self.assertEqual(
-            3,
-            result["qualification_summary"]["fresh_reviewer_pool_size"],
-        )
-        self.assertEqual(
-            2 * target_count,
-            result["qualification_summary"]["effective_domain_vote_count"],
-        )
-        self.assertEqual(
-            target_count,
-            result["qualification_summary"][
-                "effective_architecture_vote_count"
-            ],
-        )
-        self.assertEqual(
-            expected_vote_count,
-            result["review_cost"]["fresh_vote_count"],
-        )
-        self.assertEqual(0, result["review_cost"]["carried_forward_vote_count"])
-        self.assertEqual(
-            expected_vote_count,
-            result["review_cost"]["effective_vote_count"],
-        )
-        self.assertEqual(
-            expected_criterion_result_count,
-            result["review_cost"]["fresh_criterion_result_count"],
-        )
-        self.assertEqual(
-            0,
-            result["review_cost"]["carried_forward_criterion_result_count"],
-        )
-        self.assertEqual(
-            expected_criterion_result_count,
-            result["review_cost"]["effective_criterion_result_count"],
-        )
-        self.assertEqual(
-            "contract-change-full-review",
-            result["review_cost"]["policy_status"],
-        )
-        self.assertTrue(result["source_current"])
-        self.assertTrue(result["review_contract_current"])
-        self.assertTrue(result["review_plan_current"])
-        self.assertTrue(result["review_binding_current"])
-        self.assertTrue(result["provenance_current"])
-        self.assertTrue(result["round_lifecycle_current"])
-        self.assertTrue(result["evidence_contract_satisfied"])
-        self.assertEqual(
-            "panel-majority-pending-checkin", result["attestation_status"]
-        )
+        self.assertEqual("panel-majority-stale", result["attestation_status"])
+        self.assertFalse(result["decision_complete"])
         self.assertFalse(result["storage_current"])
-        self.assertFalse(result["review_cost_current"])
+        self.assertFalse(result["source_current"])
         self.assertFalse(result["accepted_for_formal"])
+        self.assertEqual(
+            {},
+            result["current_source_fingerprints"],
+        )
+        self.assertIsNone(result["attested_on"])
+
+        stale = REGRESSION._professional_completeness_review_axis(
+            config_path,
+            config_bytes=config_bytes,
+            config_fingerprint=hashlib.sha256(config_bytes).hexdigest(),
+            attestation=config["professional_completeness_review_attestation"],
+            current_packet=current_packet,
+            evaluation_date=evaluation_date,
+            storage_status="stale",
+        )
+        self.assertEqual("panel-majority-stale", stale["attestation_status"])
+        self.assertFalse(stale["decision_complete"])
+        self.assertFalse(stale["storage_current"])
+        self.assertFalse(stale["source_current"])
+        self.assertFalse(stale["accepted_for_formal"])
+        self.assertIsNone(stale["attested_on"])
 
     def test_legacy_review_normalizes_to_two_non_authoritative_axes(self) -> None:
         legacy = {
@@ -667,102 +2276,86 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
         _write(config_path, config)
         return config_path, record_path, ballots, packet
 
-    def _dual_config(
-        self,
-        *,
-        readability_record: Path | None,
-        readability_fingerprints: dict[str, str | None],
-        completeness_record: Path | None = None,
-    ) -> dict:
-        readability_ref = (
-            None
-            if readability_record is None
-            else {
-                "path": readability_record.relative_to(ROOT).as_posix(),
-                "sha256": hashlib.sha256(readability_record.read_bytes()).hexdigest(),
-            }
+    def _dual_config(self) -> dict:
+        config = copy.deepcopy(
+            REGRESSION.load_yaml_file(
+                ROOT / "config/professionalism-release-review.yaml"
+            )
         )
-        completeness_ref = (
-            None
-            if completeness_record is None
-            else {
-                "path": completeness_record.relative_to(ROOT).as_posix(),
-                "sha256": hashlib.sha256(completeness_record.read_bytes()).hexdigest(),
-            }
-        )
-        return {
-            "schema_version": 5,
-            "review_owner": "changeforge-expert-panel-governance",
-            "reviewed_at": "2026-07-16",
-            "decisions": [],
-            "readability_review_attestation": {
-                "schema_version": 5,
-                "panel_kind": PANEL.READABILITY_PANEL_KIND,
-                "scope": "ai-readability-and-density",
-                "decision_method": PANEL.DECISION_METHOD,
-                "source_fingerprints": readability_fingerprints,
-                "panel_record": readability_ref,
-                "limitations": ["Static readability fixture."],
-            },
-            "professional_completeness_review_attestation": {
-                "schema_version": 5,
-                "panel_kind": PANEL.PROFESSIONAL_COMPLETENESS_PANEL_KIND,
-                "scope": "professional-skill-packages",
-                "decision_method": PANEL.DECISION_METHOD,
-                "source_fingerprints": {
-                    "professional_packages": (
-                        "a" * 64 if completeness_record is not None else None
-                    )
-                },
-                "panel_record": completeness_ref,
-                "limitations": ["No completeness evidence in this fixture."],
-            },
-        }
+        config["reviewed_at"] = "2026-07-16"
+        config["decisions"] = []
+        return config
 
     def test_dual_parser_preserves_stale_readability_and_blocks_missing_completeness(
         self,
     ) -> None:
         with tempfile.TemporaryDirectory(dir=ROOT) as raw:
-            _config_path, record_path, _ballots, packet = self._fixture(Path(raw))
-            data = self._dual_config(
-                readability_record=record_path,
-                readability_fingerprints=packet["source_fingerprints"],
-            )
-            result = REGRESSION._dual_expert_reviews_from_data(
-                Path(raw) / "dual-review.yaml",
-                data=data,
-                config_bytes=b"dual-fixture\n",
-                reference_fingerprint="9" * 64,
-                root_fingerprint="8" * 64,
-                ai_readability_fingerprint="7" * 64,
-                content_skills=[
-                    {
-                        "path": "src/foundation/capabilities/a/SKILL.md",
-                        "classification": "REVIEW_DENSITY",
-                    }
-                ],
-                readability_content={
-                    "summary": {"advisory_documents": 1, "blocker_findings": 0},
-                    "documents": [
+            data = self._dual_config()
+            readability_sources = {
+                "readability_target_manifest": "1" * 64,
+                "readability_detector_contract": "2" * 64,
+                "actionability_detector_contract": "3" * 64,
+            }
+            with mock.patch.object(
+                REGRESSION.expert_panel,
+                "prepare_packet",
+                return_value={
+                    "source_fingerprints": readability_sources,
+                    "panel_contract": {},
+                },
+            ), mock.patch.object(
+                REGRESSION.expert_panel,
+                "_readability_target_authorities",
+                return_value={"actionability": {}},
+            ):
+                result = REGRESSION._dual_expert_reviews_from_data(
+                    Path(raw) / "dual-review.yaml",
+                    data=data,
+                    config_bytes=b"dual-fixture\n",
+                    reference_fingerprint="9" * 64,
+                    root_fingerprint="8" * 64,
+                    ai_readability_fingerprint="7" * 64,
+                    content_skills=[
                         {
-                            "document_id": (
-                                "src/foundation/capabilities/a/SKILL.md#body"
-                            ),
-                            "highest_advisory_band": "review-as-complex",
+                            "path": "src/foundation/capabilities/a/SKILL.md",
+                            "classification": "REVIEW_DENSITY",
                         }
                     ],
-                },
-                current_completeness_packet={
-                    "source_fingerprints": {"professional_packages": "6" * 64},
-                    "professional_targets": [
-                        {"skill_id": f"skill-{index}", "package_fingerprint": "5" * 64}
-                        for index in range(PANEL.PROFESSIONAL_PACKAGE_COUNT)
-                    ],
-                },
-                evaluation_date=date(2026, 7, 16),
-            )
+                    readability_content={
+                        "summary": {
+                            "advisory_documents": 1,
+                            "blocker_findings": 0,
+                        },
+                        "documents": [
+                            {
+                                "document_id": (
+                                    "src/foundation/capabilities/a/SKILL.md#body"
+                                ),
+                                "highest_advisory_band": "review-as-complex",
+                            }
+                        ],
+                    },
+                    current_completeness_packet={
+                        "source_fingerprints": {
+                            "professional_packages": "6" * 64
+                        },
+                        "professional_targets": [
+                            {
+                                "skill_id": f"skill-{index}",
+                                "package_fingerprint": "5" * 64,
+                            }
+                            for index in range(PANEL.PROFESSIONAL_PACKAGE_COUNT)
+                        ],
+                    },
+                    evaluation_date=date(2026, 7, 16),
+                    content_audit={},
+                    storage_statuses={
+                        PANEL.READABILITY_PANEL_KIND: "stale",
+                        PANEL.PROFESSIONAL_COMPLETENESS_PANEL_KIND: "missing",
+                    },
+                )
 
-            self.assertTrue(result["readability"]["decision_complete"])
+            self.assertFalse(result["readability"]["decision_complete"])
             self.assertFalse(result["readability"]["source_current"])
             self.assertEqual(
                 "panel-majority-stale",
@@ -777,19 +2370,114 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             )
             self.assertIsNone(completeness["correction_count"])
 
+    def test_fixed_axes_reuse_noncurrent_storage_status_without_formal_authority(
+        self,
+    ) -> None:
+        readability_sources = {
+            "reference_content": "1" * 64,
+            "root_content": "2" * 64,
+            "ai_readability": "3" * 64,
+            "skill_detector": "4" * 64,
+        }
+        with mock.patch.object(
+            REGRESSION,
+            "_validated_readability_config",
+            return_value=({}, []),
+        ), mock.patch.object(
+            REGRESSION.expert_panel,
+            "prepare_packet",
+            return_value={
+                "source_fingerprints": readability_sources,
+                "panel_contract": {},
+            },
+        ), mock.patch.object(
+            REGRESSION.expert_panel,
+            "_readability_target_authorities",
+            return_value={"actionability": {}},
+        ), mock.patch.object(
+            REGRESSION,
+            "_apply_fixed_readability_attestation",
+            side_effect=AssertionError("stale fixed evidence must not be applied"),
+        ):
+            readability = REGRESSION._readability_review_axis(
+                Path("config/professionalism-release-review.yaml"),
+                config_bytes=b"fixture\n",
+                config_fingerprint="6" * 64,
+                attestation={},
+                content_skills=[],
+                readability_content={
+                    "summary": {
+                        "advisory_documents": 0,
+                        "blocker_findings": 0,
+                    },
+                    "documents": [],
+                },
+                content_audit={},
+                evaluation_date=date(2026, 8, 11),
+                storage_status="stale",
+            )
+        self.assertEqual("panel-majority-stale", readability["attestation_status"])
+        self.assertFalse(readability["storage_current"])
+        self.assertFalse(readability["source_current"])
+        self.assertFalse(readability["accepted_for_formal"])
+
+        current_packet = {
+            "source_fingerprints": {
+                "professional_packages": "7" * 64,
+                "professional_review_contract": "8" * 64,
+            },
+            "professional_targets": [],
+        }
+        with mock.patch.object(
+            REGRESSION,
+            "_validated_professional_config",
+            return_value=({}, []),
+        ), mock.patch.object(
+            REGRESSION,
+            "_apply_fixed_professional_attestation",
+            side_effect=AssertionError("pending fixed evidence must not be applied"),
+        ):
+            professional = REGRESSION._professional_completeness_review_axis(
+                Path("config/professionalism-release-review.yaml"),
+                config_bytes=b"fixture\n",
+                config_fingerprint="a" * 64,
+                attestation={},
+                current_packet=current_packet,
+                evaluation_date=date(2026, 8, 11),
+                storage_status="pending",
+            )
+        self.assertEqual(
+            "panel-majority-pending-checkin",
+            professional["attestation_status"],
+        )
+        self.assertFalse(professional["storage_current"])
+        self.assertFalse(professional["source_current"])
+        self.assertFalse(professional["accepted_for_formal"])
+
     def test_dual_parser_rejects_cross_axis_decision_record(self) -> None:
         with tempfile.TemporaryDirectory(dir=ROOT) as raw:
-            _config_path, record_path, _ballots, _packet = self._fixture(Path(raw))
-            data = self._dual_config(
-                readability_record=None,
-                readability_fingerprints={
-                    "reference_content": None,
-                    "root_content": None,
-                    "ai_readability": None,
+            data = self._dual_config()
+            readability_sources = {
+                "readability_target_manifest": "1" * 64,
+                "readability_detector_contract": "2" * 64,
+                "actionability_detector_contract": "3" * 64,
+            }
+            with mock.patch.object(
+                REGRESSION.expert_panel,
+                "prepare_packet",
+                return_value={
+                    "source_fingerprints": readability_sources,
+                    "panel_contract": {},
                 },
-                completeness_record=record_path,
-            )
-            with self.assertRaisesRegex(ValueError, "wrong review axis"):
+            ), mock.patch.object(
+                REGRESSION.expert_panel,
+                "_readability_target_authorities",
+                return_value={"actionability": {}},
+            ), mock.patch.object(
+                REGRESSION,
+                "_load_fixed_compact_attestation",
+                side_effect=ValueError("wrong review axis"),
+            ), self.assertRaisesRegex(ValueError, "wrong review axis"):
                 REGRESSION._dual_expert_reviews_from_data(
                     Path(raw) / "dual-review.yaml",
                     data=data,
@@ -799,20 +2487,20 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                     ai_readability_fingerprint="7" * 64,
                     content_skills=[],
                     readability_content={
-                        "summary": {"advisory_documents": 0, "blocker_findings": 0},
+                        "summary": {
+                            "advisory_documents": 0,
+                            "blocker_findings": 0,
+                        },
                         "documents": [],
                     },
                     current_completeness_packet={
-                        "source_fingerprints": {"professional_packages": "6" * 64},
-                        "professional_targets": [
-                            {
-                                "skill_id": f"skill-{index}",
-                                "package_fingerprint": "5" * 64,
-                            }
-                            for index in range(PANEL.PROFESSIONAL_PACKAGE_COUNT)
-                        ],
+                        "source_fingerprints": {
+                            "professional_packages": "6" * 64
+                        },
+                        "professional_targets": [],
                     },
                     evaluation_date=date(2026, 7, 16),
+                    content_audit={},
                 )
 
     def _formal_reviews(self) -> dict:
@@ -902,15 +2590,83 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             },
         }
 
-    def test_release_gate_accepts_only_two_clean_axes_and_current_root(self) -> None:
+    def test_release_gate_accepts_two_clean_axes_and_current_manifest(self) -> None:
         gate, blockers = REGRESSION._release_gate(
             REGRESSION.AUTHORING_GATE_PASS,
             [],
             self._formal_reviews(),
-            {"semantic_lifecycle_formal_release_ready": True},
+            {},
+            expert_panel_release_manifest=_formal_release_manifest_fixture(),
         )
         self.assertEqual(REGRESSION.RELEASE_GATE_PASS, gate)
         self.assertEqual([], blockers)
+
+    def test_content_readiness_aggregate_uses_complete_axis_contracts(self) -> None:
+        summaries = {
+            "source_fingerprint": "a" * 64,
+            "strict_ready_basis": "fixture",
+            "structural_strict_ready": True,
+            "semantic_triage_complete": True,
+            "strict_ready": True,
+        }
+        reviews = self._formal_reviews()
+        readiness = REGRESSION._content_readiness(
+            summaries,
+            summaries,
+            reviews,
+        )
+        self.assertTrue(readiness["aggregate"]["readability_review_current"])
+        self.assertTrue(
+            readiness["aggregate"]["professional_completeness_review_current"]
+        )
+
+        readability_flips = {
+            "decision_complete": False,
+            "storage_current": False,
+            "source_current": False,
+            "accepted_for_formal": False,
+            "attestation_status": "panel-majority-stale",
+            "applied_density_disposition_count": 1,
+            "applied_readability_disposition_count": 2,
+            "applied_actionability_disposition_count": 119,
+        }
+        for field, changed_value in readability_flips.items():
+            with self.subTest(axis="readability", field=field):
+                changed = copy.deepcopy(reviews)
+                changed["readability"][field] = changed_value
+                actual = REGRESSION._content_readiness(
+                    summaries,
+                    summaries,
+                    changed,
+                )
+                self.assertFalse(
+                    actual["aggregate"]["readability_review_current"]
+                )
+
+        professional_flips = {
+            "decision_complete": False,
+            "storage_current": False,
+            "source_current": False,
+            "accepted_for_formal": False,
+            "attestation_status": "panel-majority-stale",
+            "required_target_count": 188,
+            "applied_target_count": 188,
+            "accepted_current_count": 188,
+        }
+        for field, changed_value in professional_flips.items():
+            with self.subTest(axis="professional_completeness", field=field):
+                changed = copy.deepcopy(reviews)
+                changed["professional_completeness"][field] = changed_value
+                actual = REGRESSION._content_readiness(
+                    summaries,
+                    summaries,
+                    changed,
+                )
+                self.assertFalse(
+                    actual["aggregate"][
+                        "professional_completeness_review_current"
+                    ]
+                )
 
     def test_all_carry_zero_input_requires_zero_fresh_reviewer_pool(self) -> None:
         reviews = self._formal_reviews()
@@ -1108,8 +2864,8 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
     def test_schema3_cost_producer_recomputes_canonical_chain_and_exact_owner_boundaries(
         self,
     ) -> None:
-        producer_panel = schema3_fixtures.PANEL
-        packet = schema3_fixtures._bootstrap_packet()
+        producer_panel = PANEL
+        packet = professional_support._bootstrap_packet()
         state = producer_panel._professional_v3_packet_state(
             packet,
             validation_root=producer_panel.ROOT,
@@ -1166,7 +2922,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                     round_root / "discovery-capsules" / f"{voter_id}.json"
                 )
                 discovery_path.parent.mkdir(parents=True, exist_ok=True)
-                panel_fixtures._write_json(discovery_path, discovery)
+                source_support.write_json(discovery_path, discovery)
                 request = producer_panel.prepare_professional_candidate_request_v3(
                     packet=packet,
                     packet_sha256="a" * 64,
@@ -1189,7 +2945,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                     round_root / "candidate-requests" / f"{voter_id}.json"
                 )
                 request_path.parent.mkdir(parents=True, exist_ok=True)
-                panel_fixtures._write_json(request_path, request)
+                source_support.write_json(request_path, request)
                 capsule = producer_panel.prepare_professional_review_capsule_v3(
                     packet=packet,
                     packet_sha256="a" * 64,
@@ -1203,7 +2959,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                 )
                 capsule_path = round_root / "capsules" / f"{voter_id}.json"
                 capsule_path.parent.mkdir(parents=True, exist_ok=True)
-                panel_fixtures._write_json(capsule_path, capsule)
+                source_support.write_json(capsule_path, capsule)
                 blocks = (
                     REGRESSION.expert_panel._professional_v3_effective_capsule_input_blocks(
                         discovery_capsule=discovery,
@@ -1742,7 +3498,8 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             REGRESSION.AUTHORING_GATE_PASS,
             [],
             reviews,
-            {"semantic_lifecycle_formal_release_ready": True},
+            {},
+            expert_panel_release_manifest=_formal_release_manifest_fixture(),
         )
         self.assertEqual(REGRESSION.RELEASE_GATE_FAIL, gate)
         self.assertEqual(
@@ -1765,7 +3522,8 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             REGRESSION.AUTHORING_GATE_PASS,
             [],
             reviews,
-            {"semantic_lifecycle_formal_release_ready": True},
+            {},
+            expert_panel_release_manifest=_formal_release_manifest_fixture(),
         )
         self.assertEqual(REGRESSION.RELEASE_GATE_FAIL, gate)
         self.assertEqual(
@@ -1788,7 +3546,8 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             REGRESSION.AUTHORING_GATE_PASS,
             [],
             reviews,
-            {"semantic_lifecycle_formal_release_ready": True},
+            {},
+            expert_panel_release_manifest=_formal_release_manifest_fixture(),
         )
         self.assertEqual(REGRESSION.RELEASE_GATE_FAIL, gate)
         self.assertEqual(
@@ -1810,7 +3569,8 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             REGRESSION.AUTHORING_GATE_PASS,
             [],
             reviews,
-            {"semantic_lifecycle_formal_release_ready": True},
+            {},
+            expert_panel_release_manifest=_formal_release_manifest_fixture(),
         )
         self.assertEqual(REGRESSION.RELEASE_GATE_FAIL, gate)
         self.assertEqual(
@@ -1832,7 +3592,8 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             REGRESSION.AUTHORING_GATE_PASS,
             [],
             reviews,
-            {"semantic_lifecycle_formal_release_ready": True},
+            {},
+            expert_panel_release_manifest=_formal_release_manifest_fixture(),
         )
         self.assertEqual(REGRESSION.RELEASE_GATE_FAIL, gate)
         self.assertEqual(
@@ -1852,7 +3613,8 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             REGRESSION.AUTHORING_GATE_PASS,
             [],
             reviews,
-            {"semantic_lifecycle_formal_release_ready": True},
+            {},
+            expert_panel_release_manifest=_formal_release_manifest_fixture(),
         )
 
         self.assertEqual(REGRESSION.RELEASE_GATE_FAIL, gate)
@@ -1871,7 +3633,8 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             REGRESSION.AUTHORING_GATE_PASS,
             [],
             reviews,
-            {"semantic_lifecycle_formal_release_ready": True},
+            {},
+            expert_panel_release_manifest=_formal_release_manifest_fixture(),
         )
         self.assertEqual(REGRESSION.RELEASE_GATE_FAIL, gate)
         self.assertEqual(
@@ -1880,25 +3643,6 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                 "professional-completeness-review-release-gate",
             },
             {item.category for item in blockers},
-        )
-
-    def test_release_gate_blocks_root_bootstrap_after_two_clean_axes(self) -> None:
-        gate, blockers = REGRESSION._release_gate(
-            REGRESSION.AUTHORING_GATE_PASS,
-            [],
-            self._formal_reviews(),
-            {
-                "semantic_lifecycle_formal_release_ready": False,
-                "semantic_lifecycle_status": "bootstrap-current",
-                "semantic_lifecycle_comparison": {
-                    "unclassified_count": None,
-                },
-            },
-        )
-        self.assertEqual(REGRESSION.RELEASE_GATE_FAIL, gate)
-        self.assertEqual(
-            ["root-disposition-lifecycle-release-record-required"],
-            [item.category for item in blockers],
         )
 
     def test_schema_two_professional_decision_is_auditable_but_nonformal(self) -> None:
@@ -1926,62 +3670,65 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             )
             decision_path = root / "decision.json"
             _write(decision_path, decision)
-            attestation = {
-                "schema_version": 5,
-                "panel_kind": PANEL.PROFESSIONAL_COMPLETENESS_PANEL_KIND,
-                "scope": "professional-skill-packages",
-                "decision_method": PANEL.PROFESSIONAL_COMPLETENESS_DECISION_METHOD,
-                "source_fingerprints": packet["source_fingerprints"],
-                "panel_record": {
-                    "path": decision_path.relative_to(ROOT).as_posix(),
-                    "sha256": hashlib.sha256(decision_path.read_bytes()).hexdigest(),
-                },
-                "limitations": ["Temporary parser integration fixture."],
-            }
-            with mock.patch.object(
-                REGRESSION,
-                "_dual_storage_status",
-                return_value=(True, None),
-            ):
-                result = REGRESSION._professional_completeness_review_axis(
-                    root / "review.yaml",
-                    config_bytes=b"fixture\n",
-                    config_fingerprint="f" * 64,
-                    attestation=attestation,
-                    current_packet=packet,
-                    evaluation_date=date(2026, 7, 16),
-                )
+            selector_free = self._dual_config()[
+                "professional_completeness_review_attestation"
+            ]
+            REGRESSION._validated_professional_config(
+                root / "review.yaml", selector_free
+            )
+            result = PANEL.validate_decision_record(
+                decision,
+                record_path=decision_path,
+                validation_mode=PANEL.VALIDATION_MODE_HISTORICAL,
+            )
 
-        self.assertFalse(result["accepted_for_formal"])
-        self.assertFalse(result["source_current"])
-        self.assertEqual("panel-legacy-nonformal", result["attestation_status"])
-        self.assertEqual(PANEL.PROFESSIONAL_PACKAGE_COUNT, result["applied_target_count"])
-        self.assertEqual(0, result["correction_count"])
+        self.assertEqual(2, result["schema_version"])
+        self.assertEqual(
+            PANEL.PROFESSIONAL_PACKAGE_COUNT,
+            len(result["professional_decisions"]),
+        )
+        self.assertEqual(
+            0,
+            result["summary"]["professional_completeness"][
+                "requires-professional-correction"
+            ],
+        )
         self.assertEqual(
             ["all-professional-criteria-satisfied"],
-            result["professional_dispositions"][0]["reason_codes"],
+            sorted(
+                {
+                    row["reason_code"]
+                    for row in result["professional_decisions"][0][
+                        "winning_rationales"
+                    ]
+                }
+            ),
         )
         self.assertEqual(
             "accepted-current-professional-completeness",
-            result["professional_dispositions"][0][
+            result["professional_decisions"][0][
                 "ordinary_criterion_disposition"
             ],
         )
         self.assertEqual(
             [],
-            result["professional_dispositions"][0][
+            result["professional_decisions"][0][
                 "ordinary_criterion_defects"
             ],
+        )
+        self.assertFalse(
+            REGRESSION._professional_completeness_review_formal_ready(
+                {
+                    "panel_artifact_schema_version": result["schema_version"],
+                    "accepted_for_formal": False,
+                }
+            )
         )
 
     def test_panel_decision_is_applied_but_pending_until_checked_in(self) -> None:
         with tempfile.TemporaryDirectory(dir=ROOT) as raw:
             config_path, _record_path, _ballots, packet = self._fixture(Path(raw))
             with mock.patch.object(
-                REGRESSION.expert_panel,
-                "prepare_packet",
-                return_value=packet,
-            ), mock.patch.object(
                 REGRESSION,
                 "load_yaml_file",
                 return_value=json.loads(config_path.read_text(encoding="utf-8")),

@@ -62,7 +62,20 @@ def _load_validator():
     return module
 
 
+def _load_agent_lightweight():
+    spec = importlib.util.spec_from_file_location(
+        "agent_lightweight_combined_review_tests",
+        SCRIPTS / "eval-agent-lightweight.py",
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
 VALIDATOR = _load_validator()
+AGENT_LIGHTWEIGHT = _load_agent_lightweight()
 REFERENCE_ROOT = (
     ROOT / "src" / "control-skills" / "engineering-control-plane" / "references"
 )
@@ -87,6 +100,7 @@ def _execution_evidence(
     *,
     matched_trigger: str | None = None,
     unknown_trigger: str | None = None,
+    non_material_trigger: str | None = None,
     l2_status: str = "true",
 ) -> tuple[dict[str, dict[str, object]], dict[str, dict[str, object]]]:
     triggers = {
@@ -94,16 +108,50 @@ def _execution_evidence(
             "status": (
                 "matched"
                 if row["id"] == matched_trigger
+                else "non_material"
+                if row["id"] == non_material_trigger
                 else "unknown"
                 if row["id"] == unknown_trigger
                 else "not_matched"
             ),
             "evidence_kind": "analysis_handoff",
             "source_anchor": f"handoff:{row['id']}",
-            "plausible_critical": row["id"] == unknown_trigger,
+            "plausible_critical": (
+                row["id"] == unknown_trigger == "unknown-critical-boundary"
+            ),
         }
         for row in CORE_CONTRACTS["execution_level_contract"]["trigger_registry"]
     }
+    applicable = next(
+        (
+            row
+            for row in CORE_CONTRACTS["execution_level_contract"]["trigger_registry"]
+            if row["id"] in {matched_trigger, unknown_trigger, non_material_trigger}
+            and row["floor"] == "L4"
+            and row["id"] not in {
+                "formal-release-declared",
+                "unknown-critical-boundary",
+            }
+        ),
+        None,
+    )
+    if applicable is not None:
+        identifier = applicable["id"]
+        triggers[identifier]["material_assessment"] = {
+            field: f"handoff:{identifier}:{field}"
+            for field in CORE_CONTRACTS["execution_level_contract"][
+                "material_assessment_fields"
+            ]
+        }
+    if unknown_trigger == "unknown-critical-boundary":
+        candidate = "authorization-security-privacy-secret"
+        triggers[candidate]["status"] = "unknown"
+        triggers[candidate]["material_assessment"] = {
+            field: f"handoff:{candidate}:{field}"
+            for field in CORE_CONTRACTS["execution_level_contract"][
+                "material_assessment_fields"
+            ]
+        }
     l2 = {
         row["id"]: {
             "status": l2_status,
@@ -112,6 +160,14 @@ def _execution_evidence(
         }
         for row in CORE_CONTRACTS["execution_level_contract"]["l2_eligibility"]
     }
+    material_candidate_ids = {
+        row["id"]
+        for row in CORE_CONTRACTS["execution_level_contract"]["trigger_registry"]
+        if row["floor"] == "L4"
+        and row["id"] not in {"formal-release-declared", "unknown-critical-boundary"}
+    }
+    if unknown_trigger == "unknown-critical-boundary" or matched_trigger in material_candidate_ids or unknown_trigger in material_candidate_ids:
+        l2["no-material-high-risk-residual-impact"]["status"] = "false"
     return triggers, l2
 
 
@@ -192,6 +248,167 @@ class TaskContractTemplateTests(unittest.TestCase):
     def test_canonical_templates_pass(self) -> None:
         self.assertEqual([], VALIDATOR.validate_contracts(self.root))
 
+    def test_review_handoff_separates_inbound_projection_from_closing_artifact(
+        self,
+    ) -> None:
+        expected_inbound = [
+            "Acceptance",
+            "Review Boundary",
+            "Effective Level",
+            "Required Review Skills",
+            "Required Changed Scope",
+            "Latest Actual Diff or Accessible Reference",
+            "Current Structured Validation",
+            "Relevant Current Evidence",
+            "Scope",
+            "Freshness",
+            "Proof Limit",
+            "Unverified Scope",
+        ]
+        schema = CORE_CONTRACTS["task_contract"]["template_schemas"][
+            "review-handoff-template.md"
+        ]
+        projection_fields = CORE_CONTRACTS["review_discipline_contract"][
+            "review_scope"
+        ]["handoff_projection_fields"]
+        self.assertEqual(expected_inbound, projection_fields)
+        self.assertEqual(
+            projection_fields,
+            schema["labeled_sections"].get("Inbound Review Projection"),
+        )
+
+        text = (self.root / "review-handoff-template.md").read_text(
+            encoding="utf-8"
+        )
+        surface = VALIDATOR._contract_surface(
+            text,
+            container="fenced-markdown",
+            context="review-handoff-template.md",
+            errors=[],
+        )
+        inbound = VALIDATOR.extract_section_body(
+            surface, "Inbound Review Projection"
+        )
+        self.assertIsNotNone(inbound)
+        self.assertEqual(
+            expected_inbound,
+            VALIDATOR._ordered_labeled_fields(inbound or ""),
+        )
+        self.assertTrue(
+            {
+                "Goal",
+                "Non-goals",
+                "Allowed Write Scope",
+                "Owner",
+                "Analysis History",
+                "Task DAG",
+                "Old Validation",
+                "Unrelated Evidence",
+                "Superseded Evidence",
+            }.isdisjoint(VALIDATOR._ordered_labeled_fields(inbound or ""))
+        )
+        headings = [
+            title
+            for _line_number, _level, title in VALIDATOR.heading_entries(surface)
+        ]
+        for required in (
+            "Owner",
+            "Result",
+            "Findings",
+            "Evidence Ledger",
+            "Reviewed Scope",
+            "Unreviewed Scope",
+            "Residual Risk",
+        ):
+            with self.subTest(closing_artifact=required):
+                self.assertIn(required, headings)
+
+    def test_review_handoff_inbound_projection_rejects_loss_and_authority_copy(
+        self,
+    ) -> None:
+        path = self.root / "review-handoff-template.md"
+        original = path.read_text(encoding="utf-8")
+        mutations = {
+            "missing-latest-diff": original.replace(
+                "Latest Actual Diff or Accessible Reference:\n", "", 1
+            ),
+            "copies-goal-authority": original.replace(
+                "Acceptance:\n", "Goal:\nAcceptance:\n", 1
+            ),
+            "includes-old-validation": original.replace(
+                "Current Structured Validation:\n",
+                "Current Structured Validation:\nOld Validation:\n",
+                1,
+            ),
+        }
+        try:
+            for label, mutated in mutations.items():
+                with self.subTest(mutation=label):
+                    self.assertNotEqual(original, mutated)
+                    path.write_text(mutated, encoding="utf-8")
+                    errors = VALIDATOR.validate_contracts(self.root)
+                    self.assertTrue(
+                        any(
+                            "Inbound Review Projection fields must be exactly ordered"
+                            in error
+                            for error in errors
+                        ),
+                        errors,
+                    )
+        finally:
+            path.write_text(original, encoding="utf-8")
+
+    def test_review_handoff_inbound_projection_is_core_owned(self) -> None:
+        mutations = {}
+        missing = copy.deepcopy(CORE_CONTRACTS)
+        missing["review_discipline_contract"]["review_scope"][
+            "handoff_projection_fields"
+        ].pop()
+        mutations["missing"] = missing
+
+        extra = copy.deepcopy(CORE_CONTRACTS)
+        extra["review_discipline_contract"]["review_scope"][
+            "handoff_projection_fields"
+        ].append("Goal")
+        mutations["extra-authority-field"] = extra
+
+        reordered = copy.deepcopy(CORE_CONTRACTS)
+        reordered_fields = reordered["review_discipline_contract"]["review_scope"][
+            "handoff_projection_fields"
+        ]
+        reordered_fields[0], reordered_fields[1] = (
+            reordered_fields[1],
+            reordered_fields[0],
+        )
+        mutations["reordered"] = reordered
+
+        old_projection = copy.deepcopy(CORE_CONTRACTS)
+        old_projection["review_discipline_contract"]["review_scope"][
+            "handoff_projection_fields"
+        ] = ["Goal", "Acceptance", "Non-goals", "Allowed Write Scope"]
+        mutations["old-copied-authority-fields"] = old_projection
+
+        for label, mutation in mutations.items():
+            with self.subTest(mutation=label):
+                errors = validate_core_contracts(mutation)
+                self.assertTrue(
+                    any(
+                        "review_discipline_contract.review_scope" in error
+                        for error in errors
+                    ),
+                    errors,
+                )
+
+        schema_mismatch = copy.deepcopy(CORE_CONTRACTS)
+        schema_mismatch["task_contract"]["template_schemas"][
+            "review-handoff-template.md"
+        ]["labeled_sections"]["Inbound Review Projection"].pop()
+        errors = validate_core_contracts(schema_mismatch)
+        self.assertTrue(
+            any("exact inbound Review projection" in error for error in errors),
+            errors,
+        )
+
     def test_analyzed_work_authority_is_projected_to_each_template(self) -> None:
         expected = {
             "engineering-brief-template.md": (
@@ -271,6 +488,13 @@ class TaskContractTemplateTests(unittest.TestCase):
                         any("authority term" in error for error in errors),
                         errors,
                     )
+
+    def test_task_dag_uses_minimum_sufficient_review_boundaries(self) -> None:
+        text = (self.root / "task-dag-template.md").read_text(encoding="utf-8")
+        self.assertNotIn("per-task / combined", text)
+        self.assertIn("minimum sufficient Review Boundaries", text)
+        self.assertIn("one Primary Professional Skill", text)
+        self.assertIn("subsumes weaker equivalent obligations", text)
 
     def test_conditional_test_evidence_projection_is_exact_once(self) -> None:
         contract = CORE_CONTRACTS["visible_evidence_contract"][
@@ -414,13 +638,7 @@ class TaskContractTemplateTests(unittest.TestCase):
             "Invalid execution data blocks editing and implementation while permitting "
             "only an integrity report or read-only diagnosis."
         )
-        for name in (
-            "direct-task-template.md",
-            "engineering-brief-template.md",
-            "task-dag-template.md",
-            "implementation-handoff-template.md",
-            "review-handoff-template.md",
-        ):
+        for name in VALIDATOR._PUBLIC_EXECUTION_PREAMBLE_TEMPLATES:
             with self.subTest(template=name):
                 path = self.root / name
                 text = path.read_text(encoding="utf-8")
@@ -441,13 +659,7 @@ class TaskContractTemplateTests(unittest.TestCase):
             "For malformed execution data, validation and release stop; diagnosis is "
             "the only route, partial computation stays off, and editing is blocked."
         )
-        for name in (
-            "direct-task-template.md",
-            "engineering-brief-template.md",
-            "task-dag-template.md",
-            "implementation-handoff-template.md",
-            "review-handoff-template.md",
-        ):
+        for name in VALIDATOR._PUBLIC_EXECUTION_PREAMBLE_TEMPLATES:
             with self.subTest(template=name):
                 path = self.root / name
                 text = path.read_text(encoding="utf-8")
@@ -1017,6 +1229,264 @@ class CoreContractModelTests(unittest.TestCase):
         )
         self.assertEqual([], validate_core_contracts(CORE_CONTRACTS))
 
+    def test_analysis_task_review_and_repair_dedup_policy_is_core_owned(self) -> None:
+        task = CORE_CONTRACTS["task_contract"]
+        authority = task["analyzed_work_authority"]
+        self.assertEqual("one-complete-initial-analysis", authority["initial_analysis"])
+        self.assertEqual(
+            [
+                "Acceptance-or-Non-goals",
+                "Owner-or-Placement-or-Invariant",
+                "contract-or-data-semantics",
+                "dependency-or-rollback",
+                "material-risk",
+                "scope-blocker",
+            ],
+            authority["decision_invalidation_triggers"],
+        )
+        self.assertEqual(
+            "invalidated-decisions-and-transitive-impact-only",
+            authority["delta_analysis"]["scope"],
+        )
+        self.assertEqual(
+            ["professional-domain", "work-type", "material-risk-trigger"],
+            authority["delta_analysis"]["skill_reroute_triggers"],
+        )
+        self.assertEqual(
+            "semantic-change-and-primary-professional-skill-boundary",
+            task["task_boundary"]["granularity"],
+        )
+        self.assertEqual("exactly-one", task["task_boundary"]["primary_skill_per_task"])
+
+        review = CORE_CONTRACTS["review_discipline_contract"]
+        self.assertEqual(
+            "effective-level-decides-depth-review-or-risk-boundary-decides-frequency",
+            review["review_frequency_policy"]["separation_rule"],
+        )
+        self.assertEqual(
+            "same-or-stronger-current-independent-review",
+            review["obligation_subsumption"]["satisfier"],
+        )
+        self.assertEqual(
+            [
+                "Review Boundary ID",
+                "Review Strategy",
+                "Review Round ID",
+                "Effective Level",
+                "Required Review Skills",
+                "Specialist Obligations",
+                "Covered Task IDs",
+                "Required Changed Scope",
+                "Professional Risk Dimensions",
+                "Required Validation / Evidence Binding",
+                "Review Assignments",
+                "Primary Close Ordering",
+            ],
+            review["obligation_subsumption"]["review_boundary_fields"],
+        )
+        self.assertEqual(
+            "exactly-one",
+            review["obligation_subsumption"][
+                "primary_review_assignment_per_boundary"
+            ],
+        )
+        self.assertEqual(
+            "intersecting-and-transitively-dependent-evidence-only",
+            review["repair_invalidation_policy"]["default_scope"],
+        )
+        self.assertEqual(
+            "reuse-unless-a-declared-reproduction-trigger-applies",
+            review["validation_evidence_reuse"]["default"],
+        )
+
+    def test_delta_impact_is_minimal_and_the_updated_brief_remains_authority(
+        self,
+    ) -> None:
+        brief = (REFERENCE_ROOT / "engineering-brief-template.md").read_text(
+            encoding="utf-8"
+        )
+        preparation = (
+            ROOT
+            / "src/professional-skills/engineering-change-analysis/references/implementation-preparation.md"
+        ).read_text(encoding="utf-8")
+        required = (
+            "complete updated Engineering Brief remains the only operational analysis authority",
+            "Delta Impact:",
+            "invalidated=[...]",
+            "brief:[...]",
+            "tasks:[...]",
+            "dependencies:[...]",
+            "skills:[...]",
+            "reviews:[...]",
+            "unlisted=preserved",
+            "unknown",
+            "Proof Limit",
+            "blocked",
+            "Main consumes Delta Impact without reinterpreting affected scope",
+        )
+        for path, text in (
+            ("engineering-brief-template.md", brief),
+            ("implementation-preparation.md", preparation),
+        ):
+            for term in required:
+                with self.subTest(path=path, term=term):
+                    self.assertIn(term, text)
+
+    def test_review_handoff_projects_finding_relation_without_reinference(self) -> None:
+        review = (REFERENCE_ROOT / "review-handoff-template.md").read_text(
+            encoding="utf-8"
+        )
+        finding_shape = "\n".join(
+            (
+                "Finding Relation: current-task / scope-blocker / adjacent",
+                "Severity:",
+                "Blocker:",
+                "Description:",
+                "Affected path:",
+                "Acceptance or risk impact:",
+            )
+        )
+        self.assertIn(finding_shape, review)
+        for term in (
+            "before severity or blocker",
+            "Pre-implementation artifact review",
+            "material `current-task` findings",
+            "copies the structured Finding Relation without prose inference",
+            "omits `outcome=blocking`",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term, review)
+
+    def test_review_boundary_projections_derive_all_core_fields(self) -> None:
+        fields = CORE_CONTRACTS["review_discipline_contract"][
+            "obligation_subsumption"
+        ]["review_boundary_fields"]
+        projections = {
+            "engineering-brief-template.md": ["Review Owner", *fields],
+            "task-dag-template.md": ["Review Owner", *fields],
+            "review-handoff-template.md": fields,
+        }
+        for template, expected in projections.items():
+            self.assertEqual(
+                expected,
+                CORE_CONTRACTS["task_contract"]["template_schemas"][template][
+                    "labeled_sections"
+                ]["Review Boundary"],
+            )
+            for operation in ("remove", "mutate"):
+                mutation = copy.deepcopy(CORE_CONTRACTS)
+                projected = mutation["task_contract"]["template_schemas"][template][
+                    "labeled_sections"
+                ]["Review Boundary"]
+                if operation == "remove":
+                    projected.pop()
+                else:
+                    projected[-1] = "Stale Validation Binding"
+                with self.subTest(template=template, operation=operation):
+                    self.assertTrue(validate_core_contracts(mutation))
+
+    def test_combined_review_boundary_assignment_and_artifact_contract_is_core_owned(
+        self,
+    ) -> None:
+        combined = CORE_CONTRACTS["review_discipline_contract"][
+            "review_boundary_contract"
+        ]
+        self.assertEqual(1, combined["schema_version"])
+        self.assertEqual(
+            [
+                "assignment_id",
+                "role",
+                "profile",
+                "review_skill",
+                "layer3_skills",
+                "layer3_selection_basis",
+                "scope",
+            ],
+            combined["assignment_fields"],
+        )
+        self.assertEqual("exactly-one", combined["primary_assignment_count"])
+        self.assertEqual("zero-or-more", combined["specialist_assignment_count"])
+        self.assertEqual("exactly-one", combined["review_skill_per_assignment"])
+        self.assertEqual(3, combined["maximum_layer3_skills_per_assignment"])
+        self.assertEqual(
+            "review-risk-independent-of-task-layer3-union",
+            combined["layer3_selection_rule"],
+        )
+        self.assertEqual(
+            "specialists-before-primary-close-in-one-shared-round",
+            combined["close_order"],
+        )
+        self.assertEqual(
+            [
+                "artifact_id",
+                "artifact_digest",
+                "review_boundary_id",
+                "review_round_id",
+                "covered_task_ids",
+                "required_changed_scope",
+                "evidence_scope",
+                "task_generations",
+                "assignment_result_ids",
+                "primary_assignment_id",
+                "verdict",
+            ],
+            combined["artifact_fields"],
+        )
+        self.assertEqual(
+            [
+                "task_id",
+                "artifact_id",
+                "artifact_digest",
+                "review_boundary_id",
+                "review_round_id",
+                "generation",
+            ],
+            combined["task_completion_projection_fields"],
+        )
+
+    def test_task_nodes_project_review_requirements_not_review_scheduling(self) -> None:
+        task = CORE_CONTRACTS["task_contract"]
+        self.assertEqual(
+            [
+                "Required Review Skills",
+                "Specialist Obligations",
+                "Professional Risk Dimensions",
+            ],
+            task["task_boundary"]["review_requirement_fields"],
+        )
+        self.assertEqual(
+            [
+                "Review Strategy",
+                "Review Round ID",
+                "Review Assignments",
+                "Primary Close Ordering",
+            ],
+            task["task_boundary"]["review_scheduling_forbidden_on_task_nodes"],
+        )
+        schema = task["template_schemas"]["task-dag-template.md"]
+        required = task["task_boundary"]["review_requirement_fields"]
+        for section in schema["task_node_sections"]:
+            fields = schema["labeled_sections"][section]
+            self.assertEqual(required, fields[-len(required) :])
+            for forbidden in task["task_boundary"][
+                "review_scheduling_forbidden_on_task_nodes"
+            ]:
+                self.assertNotIn(forbidden, fields)
+
+    def test_scoped_material_edit_invalidation_is_not_repair_only(self) -> None:
+        invalidation = CORE_CONTRACTS["review_discipline_contract"][
+            "material_edit_invalidation_policy"
+        ]
+        self.assertEqual(
+            "intersecting-scope-and-transitive-task-dependencies-only",
+            invalidation["default_scope"],
+        )
+        self.assertEqual(
+            ["validation-evidence", "review-evidence"],
+            invalidation["invalidates"],
+        )
+        self.assertEqual("unaffected-current-evidence", invalidation["retains"])
+
     def test_task_boundary_relations_and_same_pattern_authorization_are_closed(self) -> None:
         task = CORE_CONTRACTS["task_contract"]
         boundary = task["task_boundary"]
@@ -1178,6 +1648,30 @@ class CoreContractModelTests(unittest.TestCase):
             "levels"
         ]["L4"]["default_preimplementation_review"] = True
         mutations.append(("default-l4-prereview", default_l4_prereview))
+
+        repeated_analysis = copy.deepcopy(CORE_CONTRACTS)
+        repeated_analysis["task_contract"]["analyzed_work_authority"][
+            "non_invalidation_events"
+        ].remove("task-switch")
+        mutations.append(("task-switch-reanalysis", repeated_analysis))
+
+        file_task_split = copy.deepcopy(CORE_CONTRACTS)
+        file_task_split["task_contract"]["task_boundary"]["do_not_split_by"].remove(
+            "file"
+        )
+        mutations.append(("file-task-split", file_task_split))
+
+        duplicate_task_review = copy.deepcopy(CORE_CONTRACTS)
+        duplicate_task_review["review_discipline_contract"][
+            "review_frequency_policy"
+        ]["task_completion_triggers_review"] = True
+        mutations.append(("task-completion-review", duplicate_task_review))
+
+        broad_repair_invalidation = copy.deepcopy(CORE_CONTRACTS)
+        broad_repair_invalidation["review_discipline_contract"][
+            "repair_invalidation_policy"
+        ]["default_scope"] = "entire-history"
+        mutations.append(("broad-repair-invalidation", broad_repair_invalidation))
 
         broad_network = copy.deepcopy(CORE_CONTRACTS)
         broad_network["external_read_contract"]["general_network_counts_as_supported"] = True
@@ -1980,6 +2474,403 @@ class CoreContractModelTests(unittest.TestCase):
             with self.subTest():
                 self.assertTrue(validate_core_contracts(model))
 
+    def test_execution_risk_axes_are_independent_and_material_assessment_is_closed(self) -> None:
+        execution = CORE_CONTRACTS["execution_level_contract"]
+        axes = execution["decision_axes"]
+        self.assertEqual(
+            {
+                "professional_risk_signal": "skill-or-risk-lens-selection",
+                "residual_reachable_material_risk": "execution-level",
+                "concrete_action_authority": "action-decision",
+            },
+            {key: value["decision"] for key, value in axes.items()},
+        )
+        self.assertEqual(
+            [
+                "affected_asset_or_invariant",
+                "actor_or_controlling_input",
+                "authority_or_behavior_delta",
+                "reachable_impact_path",
+                "blast_radius",
+                "reversibility_or_recovery",
+                "existing_enforced_controls",
+                "residual_impact",
+            ],
+            execution["material_assessment_fields"],
+        )
+        self.assertEqual(
+            [
+                "Possibility != Reachability.",
+                "Mutability != Trust Boundary.",
+                "Capability != Authorization.",
+                "Risk Category != Material Risk.",
+            ],
+            execution["calibration_principles"],
+        )
+
+    def test_l4_requires_reachable_material_assessment_except_explicit_policy_floor(self) -> None:
+        trigger_id = "authorization-security-privacy-secret"
+        triggers, l2 = _execution_evidence(matched_trigger=trigger_id)
+        del triggers[trigger_id]["material_assessment"]
+        with self.assertRaisesRegex(ExecutionLevelError, "material assessment"):
+            compute_execution_level(
+                requested="unspecified",
+                trigger_evaluations=triggers,
+                l2_evaluations=l2,
+            )
+
+        triggers[trigger_id]["material_assessment"] = {
+            field: f"evidence:{field}"
+            for field in CORE_CONTRACTS["execution_level_contract"][
+                "material_assessment_fields"
+            ]
+        }
+        result = compute_execution_level(
+            requested="unspecified",
+            trigger_evaluations=triggers,
+            l2_evaluations=l2,
+        )
+        self.assertEqual("L4", result["effective_level"])
+
+        formal, l2 = _execution_evidence(matched_trigger="formal-release-declared")
+        result = compute_execution_level(
+            requested="unspecified",
+            trigger_evaluations=formal,
+            l2_evaluations=l2,
+        )
+        self.assertEqual("L4", result["effective_level"])
+
+    def test_critical_unknown_requires_four_concrete_fields_and_is_provisional(self) -> None:
+        trigger_id = "unknown-critical-boundary"
+        triggers, l2 = _execution_evidence(unknown_trigger=trigger_id)
+        with self.assertRaisesRegex(ExecutionLevelError, "critical unknown"):
+            compute_execution_level(
+                requested="unspecified",
+                trigger_evaluations=triggers,
+                l2_evaluations=l2,
+            )
+
+        triggers[trigger_id]["critical_unknown"] = {
+            "candidate_l4_predicate": "authorization-security-privacy-secret",
+            "missing_fact": "whether a lower-trust writer controls the directory",
+            "plausible_impact_path": "writer replaces executable then privileged consumer runs it",
+            "material_consequence": "privileged code execution",
+        }
+        result = compute_execution_level(
+            requested="unspecified",
+            trigger_evaluations=triggers,
+            l2_evaluations=l2,
+            prior_historical_max_floor="L1",
+            prior_historical_max_effective="L1",
+        )
+        self.assertEqual("L4", result["effective_level"])
+        self.assertEqual("blocked", result["edit_status"])
+        self.assertEqual("L1", result["next_historical_floor"])
+        self.assertEqual("L3", result["next_historical_effective"])
+        self.assertTrue(result["provisional_floor"])
+
+        resolved, resolved_l2 = _execution_evidence()
+        recomputed = compute_execution_level(
+            requested="unspecified",
+            trigger_evaluations=resolved,
+            l2_evaluations=resolved_l2,
+            prior_historical_max_floor=result["next_historical_floor"],
+            prior_historical_max_effective=result["next_historical_effective"],
+        )
+        self.assertEqual("L3", recomputed["effective_level"])
+
+        invalid, invalid_l2 = _execution_evidence(
+            matched_trigger="unknown-critical-boundary"
+        )
+        with self.assertRaisesRegex(ExecutionLevelError, "never a confirmed match"):
+            compute_execution_level(
+                requested="unspecified",
+                trigger_evaluations=invalid,
+                l2_evaluations=invalid_l2,
+            )
+
+    def test_material_l4_candidate_statuses_are_closed_and_evidence_bound(self) -> None:
+        candidate = "authorization-security-privacy-secret"
+        execution = CORE_CONTRACTS["execution_level_contract"]
+        self.assertEqual(
+            ["matched", "non_material", "unknown", "not_matched"],
+            execution["material_candidate_statuses"],
+        )
+        for status, expected_level in (
+            ("matched", "L4"),
+            ("non_material", "L2"),
+            ("unknown", "L3"),
+            ("not_matched", "L2"),
+        ):
+            with self.subTest(status=status):
+                kwargs = {
+                    "matched_trigger": candidate if status == "matched" else None,
+                    "non_material_trigger": candidate if status == "non_material" else None,
+                    "unknown_trigger": candidate if status == "unknown" else None,
+                }
+                triggers, l2 = _execution_evidence(**kwargs)
+                if status == "unknown":
+                    l2["no-material-high-risk-residual-impact"]["status"] = "false"
+                result = compute_execution_level(
+                    requested="unspecified",
+                    trigger_evaluations=triggers,
+                    l2_evaluations=l2,
+                )
+                self.assertEqual(expected_level, result["effective_level"])
+                canonical = next(
+                    row
+                    for row in result["level_basis"]["trigger_evaluations"]
+                    if row["id"] == candidate
+                )
+                self.assertEqual(status, canonical["status"])
+                if status == "not_matched":
+                    self.assertNotIn("material_assessment", canonical)
+                else:
+                    self.assertEqual(
+                        execution["material_assessment_fields"],
+                        list(canonical["material_assessment"]),
+                    )
+
+        for status in ("matched", "unknown"):
+            kwargs = {
+                "matched_trigger": candidate if status == "matched" else None,
+                "unknown_trigger": candidate if status == "unknown" else None,
+            }
+            triggers, l2 = _execution_evidence(**kwargs)
+            l2["no-material-high-risk-residual-impact"]["status"] = "true"
+            with self.assertRaisesRegex(ExecutionLevelError, "no-material"):
+                compute_execution_level(
+                    requested="unspecified",
+                    trigger_evaluations=triggers,
+                    l2_evaluations=l2,
+                )
+
+        triggers, l2 = _execution_evidence(non_material_trigger=candidate)
+        triggers[candidate].pop("material_assessment")
+        with self.assertRaisesRegex(ExecutionLevelError, "material assessment"):
+            compute_execution_level(
+                requested="unspecified",
+                trigger_evaluations=triggers,
+                l2_evaluations=l2,
+            )
+
+        triggers, l2 = _execution_evidence(unknown_trigger=candidate)
+        triggers[candidate].pop("material_assessment")
+        l2["no-material-high-risk-residual-impact"]["status"] = "false"
+        with self.assertRaisesRegex(ExecutionLevelError, "material assessment"):
+            compute_execution_level(
+                requested="unspecified",
+                trigger_evaluations=triggers,
+                l2_evaluations=l2,
+            )
+
+        triggers, l2 = _execution_evidence()
+        triggers[candidate]["status"] = "material"
+        with self.assertRaisesRegex(ExecutionLevelError, "invalid status"):
+            compute_execution_level(
+                requested="unspecified",
+                trigger_evaluations=triggers,
+                l2_evaluations=l2,
+            )
+
+        triggers, l2 = _execution_evidence(unknown_trigger="unknown-critical-boundary")
+        triggers["unknown-critical-boundary"]["critical_unknown"] = {
+            "candidate_l4_predicate": candidate,
+            "missing_fact": "writer identity",
+            "plausible_impact_path": "writer replacement reaches privileged execution",
+            "material_consequence": "privileged code execution",
+        }
+        triggers[candidate]["status"] = "matched"
+        l2["no-material-high-risk-residual-impact"]["status"] = "false"
+        with self.assertRaisesRegex(ExecutionLevelError, "status=unknown"):
+            compute_execution_level(
+                requested="unspecified",
+                trigger_evaluations=triggers,
+                l2_evaluations=l2,
+            )
+
+    def test_confirmed_material_l4_history_cannot_use_provisional_recompute_to_lower(self) -> None:
+        triggers, l2 = _execution_evidence(
+            matched_trigger="authorization-security-privacy-secret"
+        )
+        confirmed = compute_execution_level(
+            requested="unspecified",
+            trigger_evaluations=triggers,
+            l2_evaluations=l2,
+        )
+        self.assertEqual("L4", confirmed["next_historical_floor"])
+        self.assertEqual("L4", confirmed["next_historical_effective"])
+
+        safe, safe_l2 = _execution_evidence()
+        recomputed = compute_execution_level(
+            requested="unspecified",
+            trigger_evaluations=safe,
+            l2_evaluations=safe_l2,
+            prior_historical_max_floor=confirmed["next_historical_floor"],
+            prior_historical_max_effective=confirmed["next_historical_effective"],
+        )
+        self.assertEqual("L4", recomputed["effective_level"])
+        self.assertEqual("L4", recomputed["next_historical_floor"])
+        self.assertEqual("L4", recomputed["next_historical_effective"])
+
+    def test_l2_uses_material_residual_impact_not_category_exclusion(self) -> None:
+        l2_ids = [
+            row["id"]
+            for row in CORE_CONTRACTS["execution_level_contract"]["l2_eligibility"]
+        ]
+        self.assertIn("no-material-high-risk-residual-impact", l2_ids)
+        self.assertNotIn(
+            "no-security-privacy-financial-migration-release-boundary",
+            l2_ids,
+        )
+
+    def test_six_material_l4_predicates_and_same_principal_rule_are_explicit(self) -> None:
+        execution = CORE_CONTRACTS["execution_level_contract"]
+        predicates = {
+            row["id"]: row["positive_predicate"]
+            for row in execution["trigger_registry"]
+        }
+        required_terms = {
+            "authorization-security-privacy-secret": [
+                "less-trusted actor, input, or writer",
+                "existing enforced controls",
+            ],
+            "public-api-event-schema-compatibility": [
+                "observable compatibility semantics materially change",
+                "external, shared, deployed, or unresolved consumers",
+            ],
+            "migration-destructive-or-irreversible": [
+                "destructive, irreversible, compatibility-sensitive",
+                "materially uncertain recovery or rollback",
+            ],
+            "production-release-or-privileged-action": [
+                "actually performs production mutation",
+                "privileged runtime action",
+            ],
+            "financial-regulated-or-sensitive-data": [
+                "money invariants",
+                "sensitive-data access, disclosure, processing, retention, deletion, or recipient semantics",
+            ],
+            "major-architecture-or-physical-safety": [
+                "material safety, state, authority, or recovery boundary",
+                "broad difficult-to-reverse blast radius",
+            ],
+        }
+        for identifier, terms in required_terms.items():
+            with self.subTest(identifier=identifier):
+                for term in terms:
+                    self.assertIn(term, predicates[identifier])
+        self.assertIn("same OS user", execution["same_trust_principal"]["rule"])
+        self.assertIn(
+            "less-trusted actor, input, or writer",
+            execution["same_trust_principal"]["escalation_requirement"],
+        )
+
+    def test_integrity_fallback_floor_is_provisional_but_confirmed_history_remains(self) -> None:
+        fresh = execution_level_integrity_fallback(
+            requested="unspecified",
+            prior_historical_max_floor="L1",
+            prior_historical_max_effective="L1",
+        )
+        self.assertEqual("L4", fresh["effective_level"])
+        self.assertEqual("L1", fresh["next_historical_floor"])
+        self.assertEqual("L1", fresh["next_historical_effective"])
+        self.assertTrue(fresh["provisional_floor"])
+
+        confirmed = execution_level_integrity_fallback(
+            requested="unspecified",
+            prior_historical_max_floor="L4",
+            prior_historical_max_effective="L4",
+        )
+        self.assertEqual("L4", confirmed["next_historical_floor"])
+        self.assertEqual("L4", confirmed["next_historical_effective"])
+
+    def test_concrete_action_authority_is_pure_and_does_not_grant_or_raise_level(self) -> None:
+        classify = getattr(VALIDATION_UTILS, "classify_concrete_action_authority", None)
+        self.assertTrue(callable(classify), "missing concrete action authority classifier")
+        facts = {
+            "exact_target": "~/.copilot/skills",
+            "mutation_surface": "one user-owned bounded directory registration",
+            "reversibility": "remove the registration",
+            "recovery": "repeat the bounded remove command",
+            "external_effects": "none",
+            "capability_facts": "host requires access outside the current workspace",
+            "authorization_facts": "user requested the registration",
+            "unresolved_ambiguity": "none",
+            "authority_state": "bounded-extra-authority-required",
+            "material_task_risk_delta": False,
+        }
+        result = classify(facts)
+        self.assertEqual("request-minimum-exact-authority", result["decision"])
+        self.assertEqual("unchanged", result["execution_level_effect"])
+        self.assertNotIn("grant", result)
+
+        changed_risk = copy.deepcopy(facts)
+        changed_risk["material_task_risk_delta"] = True
+        result = classify(changed_risk)
+        self.assertEqual("block", result["decision"])
+        self.assertEqual(
+            "blocked-return-to-main-delta-analysis-recompute-level",
+            result["execution_level_effect"],
+        )
+
+    def test_dedicated_risk_calibration_fixtures_cover_required_controls(self) -> None:
+        document = json.loads(AGENT_LIGHT_CASES.read_text(encoding="utf-8"))
+        fixtures = document.get("risk_calibration_cases")
+        self.assertIsInstance(fixtures, list)
+        fixture_ids = {item["id"] for item in fixtures}
+        self.assertEqual(
+            {
+                "same-principal-copilot-add-dir",
+                "less-trusted-writer-privileged-consumption",
+                "generic-future-replacement",
+                "concrete-critical-writer-authority-unknown",
+                "critical-unknown-resolved-safe",
+                "generated-production-command",
+                "actual-production-execution",
+                "additive-compatible-schema",
+                "breaking-deployed-contract",
+                "reversible-bounded-migration",
+                "destructive-irreversible-migration",
+                "scoped-host-permission",
+                "security-skill-without-material-l4",
+            },
+            fixture_ids,
+        )
+        evaluator = getattr(AGENT_LIGHTWEIGHT, "_risk_calibration_fixture_results", None)
+        self.assertTrue(callable(evaluator), "missing risk calibration evaluator")
+        results, errors = evaluator(fixtures)
+        self.assertEqual([], errors)
+        self.assertEqual(len(fixtures), len(results))
+
+        negative = copy.deepcopy(fixtures)
+        generic = next(
+            item for item in negative if item["id"] == "generic-future-replacement"
+        )
+        generic["decisions"][0]["expected"]["effective_level"] = "L4"
+        _, errors = evaluator(negative)
+        self.assertTrue(any("generic-future-replacement" in error for error in errors))
+
+        invented_primary = copy.deepcopy(fixtures)
+        invented_primary[0]["selected_primary_skill"] = "invented-primary-skill"
+        _, errors = evaluator(invented_primary)
+        self.assertTrue(any("registered Primary Skill" in error for error in errors))
+
+        invented_lens = copy.deepcopy(fixtures)
+        invented_lens[0]["selected_risk_lenses"] = ["invented-risk-lens"]
+        _, errors = evaluator(invented_lens)
+        self.assertTrue(any("registered Foundation or Domain" in error for error in errors))
+
+        security_lower = next(
+            item
+            for item in fixtures
+            if item["id"] == "security-skill-without-material-l4"
+        )
+        assessment = security_lower["decisions"][0]["material_assessment"]
+        self.assertIn("cross-tenant", assessment["affected_asset_or_invariant"])
+        self.assertIn("closes", assessment["authority_or_behavior_delta"])
+        self.assertIn("existing controls", assessment["existing_enforced_controls"])
+
     def test_execution_formula_covers_l1_through_l5_and_historical_floors(self) -> None:
         triggers, l2 = _execution_evidence()
         table = (
@@ -2041,7 +2932,16 @@ class CoreContractModelTests(unittest.TestCase):
     def test_each_trigger_computes_its_declared_floor(self) -> None:
         for row in CORE_CONTRACTS["execution_level_contract"]["trigger_registry"]:
             with self.subTest(trigger=row["id"]):
-                triggers, l2 = _execution_evidence(matched_trigger=row["id"])
+                if row["id"] == "unknown-critical-boundary":
+                    triggers, l2 = _execution_evidence(unknown_trigger=row["id"])
+                    triggers[row["id"]]["critical_unknown"] = {
+                        "candidate_l4_predicate": "authorization-security-privacy-secret",
+                        "missing_fact": "whether a less-trusted writer controls the path",
+                        "plausible_impact_path": "writer replacement reaches privileged consumption",
+                        "material_consequence": "privileged code execution",
+                    }
+                else:
+                    triggers, l2 = _execution_evidence(matched_trigger=row["id"])
                 result = compute_execution_level(
                     requested="unspecified",
                     trigger_evaluations=triggers,
@@ -2049,6 +2949,9 @@ class CoreContractModelTests(unittest.TestCase):
                 )
                 self.assertEqual(row["floor"], result["computed_floor"])
                 triggers[row["id"]]["status"] = "not_matched"
+                triggers[row["id"]]["plausible_critical"] = False
+                triggers[row["id"]].pop("material_assessment", None)
+                triggers[row["id"]].pop("critical_unknown", None)
                 result = compute_execution_level(
                     requested="unspecified",
                     trigger_evaluations=triggers,
@@ -2220,6 +3123,12 @@ class CoreContractModelTests(unittest.TestCase):
     def test_critical_unknown_floors_l4_and_blocks_editing(self) -> None:
         trigger_id = "unknown-critical-boundary"
         triggers, l2 = _execution_evidence(unknown_trigger=trigger_id)
+        triggers[trigger_id]["critical_unknown"] = {
+            "candidate_l4_predicate": "authorization-security-privacy-secret",
+            "missing_fact": "whether a less-trusted writer controls the path",
+            "plausible_impact_path": "writer replacement reaches privileged consumption",
+            "material_consequence": "privileged code execution",
+        }
         result = compute_execution_level(
             requested="L1",
             trigger_evaluations=triggers,
@@ -2258,6 +3167,10 @@ class CoreContractModelTests(unittest.TestCase):
             "current_effective_level": "L4",
             "current_historical_max_floor": "L4",
             "current_historical_max_effective": "L4",
+            "previous_provisional_floor": False,
+            "current_provisional_floor": False,
+            "material_edit_started": False,
+            "provisional_resolution_source": None,
         }
         cases = (
             {
@@ -2335,6 +3248,57 @@ class CoreContractModelTests(unittest.TestCase):
             strict_narrowing_proof=False,
         )
         self.assertTrue(any("cannot lower" in error for error in errors), errors)
+
+    def test_scope_lineage_allows_only_proven_pre_edit_provisional_resolution(self) -> None:
+        base = {
+            "previous_task_id": "task-a",
+            "previous_scope_lineage": "root/a",
+            "previous_mandatory_floor": "L4",
+            "previous_effective_level": "L4",
+            "previous_historical_max_floor": "L1",
+            "previous_historical_max_effective": "L3",
+            "current_task_id": "task-a",
+            "current_scope_lineage": "root/a",
+            "current_mandatory_floor": "L1",
+            "current_effective_level": "L3",
+            "current_historical_max_floor": "L1",
+            "current_historical_max_effective": "L3",
+            "scope_change": "same",
+            "lowering_requested": False,
+            "strict_narrowing_proof": False,
+            "previous_provisional_floor": True,
+            "current_provisional_floor": False,
+            "material_edit_started": False,
+            "provisional_resolution_source": "analysis_handoff:writer-proven-same-principal",
+        }
+        self.assertEqual([], execution_scope_transition_errors(**base))
+
+        unchanged = {
+            **base,
+            "current_mandatory_floor": "L4",
+            "current_effective_level": "L4",
+            "current_provisional_floor": True,
+            "provisional_resolution_source": None,
+        }
+        self.assertEqual([], execution_scope_transition_errors(**unchanged))
+
+        invalid = {
+            "confirmed-numeric-l4": {
+                **base,
+                "previous_provisional_floor": False,
+            },
+            "post-edit": {**base, "material_edit_started": True},
+            "expanded": {**base, "scope_change": "expanded"},
+            "relabel": {**base, "current_scope_lineage": "root/a/relabel"},
+            "missing-proof": {**base, "provisional_resolution_source": None},
+            "history-lowered": {
+                **base,
+            "current_historical_max_effective": "L2",
+            },
+        }
+        for label, case in invalid.items():
+            with self.subTest(label=label):
+                self.assertTrue(execution_scope_transition_errors(**case))
 
     def test_lightweight_evidence_ledger_requires_current_fresh_closure(self) -> None:
         fields = CORE_CONTRACTS["visible_evidence_contract"]["fields"]
@@ -2707,11 +3671,38 @@ class CoreContractModelTests(unittest.TestCase):
         trigger = unknown_critical["level_basis"]["trigger_evaluations"][-1]
         trigger["status"] = "unknown"
         trigger["plausible_critical"] = True
+        trigger["critical_unknown"] = {
+            "candidate_l4_predicate": "authorization-security-privacy-secret",
+            "missing_fact": "whether a less-trusted writer controls the path",
+            "plausible_impact_path": "writer replacement reaches privileged consumption",
+            "material_consequence": "privileged code execution",
+        }
+        candidate = next(
+            row
+            for row in unknown_critical["level_basis"]["trigger_evaluations"]
+            if row["id"] == "authorization-security-privacy-secret"
+        )
+        candidate["status"] = "unknown"
+        candidate["material_assessment"] = {
+            field: f"handoff:{candidate['id']}:{field}"
+            for field in CORE_CONTRACTS["execution_level_contract"][
+                "material_assessment_fields"
+            ]
+        }
+        next(
+            row
+            for row in unknown_critical["level_basis"]["l2_eligibility"]
+            if row["id"] == "no-material-high-risk-residual-impact"
+        )["status"] = "false"
         unknown_critical = _recompute_fixture_extension(unknown_critical)
         encoded = encode_public_task_extension(unknown_critical)
         decoded = decode_public_task_extension(encoded)
         self.assertEqual(
-            ["unknown-critical-boundary"], decoded["basis"]["triggers"]
+            [
+                "authorization-security-privacy-secret",
+                "unknown-critical-boundary",
+            ],
+            decoded["basis"]["triggers"],
         )
         self.assertEqual("L4", decoded["level"]["effective"])
         self.assertEqual("blocked", decoded["level"]["edit"])
@@ -3124,31 +4115,32 @@ class CoreContractModelTests(unittest.TestCase):
 
     def test_malformed_review_cost_authority_returns_errors_without_raising(self) -> None:
         malformed = copy.deepcopy(CORE_CONTRACTS)
-        locked = malformed["final_goal_contract"][
+        fixtures = malformed["final_goal_contract"][
             "professional_review_cost_fixtures"
-        ]["locked_current_catalog"]
-        locked["full_rereview_deduplicated_capsule_input_bytes_proxy"] = 0
-        locked["named_isolated_case"]["fresh_target_count"] = "eight"
+        ]
+        fixtures["locked_current_catalog"] = {}
         errors = validate_core_contracts(malformed)
-        self.assertTrue(any("byte proxy must be positive" in error for error in errors), errors)
-        self.assertTrue(any("counts and bytes" in error for error in errors), errors)
+        self.assertTrue(
+            any("define thresholds and formal_round_policy" in error for error in errors),
+            errors,
+        )
 
-    def test_review_cost_threshold_is_owned_by_core_and_bounds_current_lock(self) -> None:
+    def test_review_cost_threshold_is_owned_by_core_and_bounded_by_inventory(self) -> None:
         fixtures = CORE_CONTRACTS["final_goal_contract"][
             "professional_review_cost_fixtures"
         ]
+        self.assertEqual({"thresholds", "formal_round_policy"}, set(fixtures))
         self.assertEqual(56, fixtures["thresholds"]["maximum_fresh_target_count"])
-        self.assertEqual(189, fixtures["locked_current_catalog"]["case_count"])
         self.assertEqual([], validate_core_contracts(copy.deepcopy(CORE_CONTRACTS)))
 
-        below_current_max = copy.deepcopy(CORE_CONTRACTS)
-        below_current_max["final_goal_contract"][
+        beyond_inventory = copy.deepcopy(CORE_CONTRACTS)
+        beyond_inventory["final_goal_contract"][
             "professional_review_cost_fixtures"
-        ]["thresholds"]["maximum_fresh_target_count"] = 53
-        errors = validate_core_contracts(below_current_max)
+        ]["thresholds"]["maximum_fresh_target_count"] = 190
+        errors = validate_core_contracts(beyond_inventory)
         self.assertTrue(
             any(
-                "fresh-target fixture arithmetic or threshold is stale" in error
+                "threshold ordering or ppm bounds are invalid" in error
                 for error in errors
             ),
             errors,
@@ -3250,7 +4242,7 @@ class CoreContractModelTests(unittest.TestCase):
             {
                 "minimum": 6,
                 "maximum": 16,
-                "maximum_by_role": {"task-agent": 38, "review-agent": 18},
+                "maximum_by_role": {"task-agent": 38, "review-agent": 22},
             },
             limits,
         )
@@ -3887,19 +4879,72 @@ class CompletionReviewRequirementTests(unittest.TestCase):
             for row in CORE_CONTRACTS["execution_level_contract"]["trigger_registry"]
             if row["floor"] == "L4"
         )
-        for status in ("matched", "unknown"):
-            authority = self._authority()
-            trigger = next(
-                row
-                for row in authority["task_dispatch"]["fixture_capsule"][
-                    "execution_level_extension"
-                ]["level_basis"]["trigger_evaluations"]
-                if row["id"] == critical_trigger
-            )
-            trigger["status"] = status
-            self._recompute_execution(authority)
-            self._refresh_task_digest(authority)
-            authorities.append(authority)
+        authority = self._authority()
+        trigger = next(
+            row
+            for row in authority["task_dispatch"]["fixture_capsule"][
+                "execution_level_extension"
+            ]["level_basis"]["trigger_evaluations"]
+            if row["id"] == critical_trigger
+        )
+        trigger["status"] = "matched"
+        trigger["material_assessment"] = {
+            field: f"handoff:{critical_trigger}:{field}"
+            for field in CORE_CONTRACTS["execution_level_contract"][
+                "material_assessment_fields"
+            ]
+        }
+        next(
+            row
+            for row in authority["task_dispatch"]["fixture_capsule"][
+                "execution_level_extension"
+            ]["level_basis"]["l2_eligibility"]
+            if row["id"] == "no-material-high-risk-residual-impact"
+        )["status"] = "false"
+        self._recompute_execution(authority)
+        self._refresh_task_digest(authority)
+        authorities.append(authority)
+
+        provisional = self._authority()
+        trigger = next(
+            row
+            for row in provisional["task_dispatch"]["fixture_capsule"][
+                "execution_level_extension"
+            ]["level_basis"]["trigger_evaluations"]
+            if row["id"] == "unknown-critical-boundary"
+        )
+        trigger["status"] = "unknown"
+        trigger["plausible_critical"] = True
+        trigger["critical_unknown"] = {
+            "candidate_l4_predicate": critical_trigger,
+            "missing_fact": "whether a less-trusted writer controls the path",
+            "plausible_impact_path": "writer replacement reaches privileged consumption",
+            "material_consequence": "privileged code execution",
+        }
+        candidate = next(
+            row
+            for row in provisional["task_dispatch"]["fixture_capsule"][
+                "execution_level_extension"
+            ]["level_basis"]["trigger_evaluations"]
+            if row["id"] == critical_trigger
+        )
+        candidate["status"] = "unknown"
+        candidate["material_assessment"] = {
+            field: f"handoff:{critical_trigger}:{field}"
+            for field in CORE_CONTRACTS["execution_level_contract"][
+                "material_assessment_fields"
+            ]
+        }
+        next(
+            row
+            for row in provisional["task_dispatch"]["fixture_capsule"][
+                "execution_level_extension"
+            ]["level_basis"]["l2_eligibility"]
+            if row["id"] == "no-material-high-risk-residual-impact"
+        )["status"] = "false"
+        self._recompute_execution(provisional)
+        self._refresh_task_digest(provisional)
+        authorities.append(provisional)
         specialized = self._authority()
         specialized["review_assignment"]["mode"] = "security-review"
         authorities.append(specialized)
@@ -3970,6 +5015,49 @@ class CompletionReviewRequirementTests(unittest.TestCase):
             ),
             errors,
         )
+
+
+class CombinedReviewBoundaryFixtureTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        document = json.loads(AGENT_LIGHT_CASES.read_text(encoding="utf-8"))
+        cls.cases = document["combined_review_cases"]
+
+    def test_assignment_artifact_projection_and_invalidation_controls(self) -> None:
+        results, errors = AGENT_LIGHTWEIGHT._combined_review_fixture_results(
+            self.cases
+        )
+        self.assertEqual([], errors)
+        self.assertEqual(15, len(results))
+        self.assertTrue(all(result["matches_expected"] for result in results))
+        by_id = {result["id"]: result for result in results}
+        self.assertTrue(by_id["combined-review-positive"]["actual_valid"])
+        self.assertTrue(
+            by_id["combined-review-risk-triggered-intermediate"]["actual_valid"]
+        )
+        expected_negative_controls = {
+            "combined-review-rejects-task-layer3-union": "review-layer3-task-union",
+            "combined-review-rejects-unrouted-layer3": "review-layer3-routing",
+            "combined-review-rejects-duplicate-layer3": "review-layer3-routing",
+            "combined-review-rejects-more-than-three-layer3": "review-layer3-routing",
+            "combined-review-rejects-missing-task-projection": "task-review-projection",
+            "combined-review-rejects-different-artifact-identity": "task-review-projection",
+            "combined-review-rejects-stale-generation": "review-artifact-generation",
+            "combined-review-rejects-incomplete-required-scope": "review-artifact-scope",
+            "combined-review-rejects-missing-specialist-result": "review-specialist-result",
+            "combined-review-rejects-primary-before-specialist": "review-primary-ordering",
+            "combined-review-rejects-multiple-primary-assignments": "review-assignment-primary",
+            "combined-review-rejects-multiple-review-skills-per-assignment": "review-assignment-skill",
+            "combined-review-rejects-untriggered-per-task-review": "review-boundary-frequency",
+        }
+        for case_id, expected in expected_negative_controls.items():
+            with self.subTest(case=case_id):
+                result = by_id[case_id]
+                self.assertFalse(result["actual_valid"])
+                self.assertTrue(
+                    any(expected in error for error in result["errors"]),
+                    result["errors"],
+                )
 
 
 class CompletionTransitionTests(unittest.TestCase):

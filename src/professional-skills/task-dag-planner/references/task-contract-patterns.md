@@ -17,11 +17,32 @@ Owner: `task-dag-planner` in read/search-only `analysis-agent` mode after an acc
 
 ## Split, Dependency, And Workspace Rules
 
-- Split when migration, public contract, authorization, UI behavior, data backfill, release, documentation, ownership, validation, rollback, or specialized review has a distinct blocking boundary. Keep together only when a split creates artificial handoff and one owner/reviewer can verify the same artifact.
+- Each node is one complete semantic change.
+- Each Task has exactly one Primary Professional Skill.
+- Modifications that jointly satisfy one Acceptance stay together.
+- Co-dependent modifications stay together.
+- Modifications with one natural validation boundary stay together.
+- Materially different Primary Professional Skills split into separate Tasks.
+- File, function, code layer, test, or edit step alone does not split a Task.
+- Review and risk boundaries do not redefine the Task boundary.
 - Each DAG edge requires a concrete downstream blocker. Blockers may arise from required artifacts, accepted contracts, schema or data availability, shared resources, validation results, or release order. Exclude nonblocking sequence preferences.
 - Return the First Executable Slice as soon as it is safe, reversible, verifiable, and cannot be invalidated by unresolved analysis. Name critical path and parallel value.
 - With shared or unknown workspace isolation, serialize the write tasks in that workspace. Even with isolation, do not parallelize tasks that share files, schemas, public contracts, migrations, generated outputs, fixtures, lockfiles, external systems, or later integration assumptions.
-- Name an integration/validation boundary and a combined Review Boundary when multiple nodes produce one changed surface; identify covered tasks, final paths, primary Review Skill, and only triggered specialist reviews.
+- Name integration/validation and minimum sufficient Review Boundaries.
+- Related nodes default to one combined Review Boundary.
+- Reserve intermediate review for a concrete public-contract/schema/protocol,
+  migration/data, security/privacy, transaction/concurrency/persistence,
+  material-rework, independent-integration, L5, or explicit professional gate.
+- For each Review Boundary, identify Covered Task IDs, final paths, Effective
+  Level, required Review Skills, professional-risk dimensions, and triggered
+  Specialist reviews.
+- Combined review preserves each Task Primary Skill.
+- Task nodes retain only required Review Skills, Specialist obligations, and professional-risk dimensions. Review strategy, frequency, assignment scheduling, round identity, and primary-close ordering exist only on the global Review Boundary.
+- A boundary has one primary and zero or more specialist assignments. Each assignment names one ID, one role, the review-agent profile, exactly one registered Review Skill, zero to three unique Layer 3 selections routed by that Review Skill from review risk, and bounded scope.
+- Review-side Layer 3 is independent from the Tasks' implementation Layer 3; neither equality nor union containment is an obligation.
+- All assignments share one Review Round ID. Specialist completion does not increment the round count or close covered Tasks.
+- The primary consumes every current required specialist result and emits the only closing artifact. Each covered Task projects that artifact's exact identity, digest, boundary, round, and current generation.
+- Any scoped material edit invalidates current validation and review evidence only for intersecting scope and transitive Task dependencies. Unaffected current evidence remains reusable.
 
 ## Natural-Language Shape And Proof Limits
 

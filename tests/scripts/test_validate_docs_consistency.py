@@ -6,8 +6,10 @@ import importlib.util
 import json
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
+import tomllib
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -124,7 +126,9 @@ class DocsCoreProjectionTests(unittest.TestCase):
                 "src/registry/domain-skills.yaml",
                 "config/skill-content-exceptions.yaml",
                 "config/professionalism-release-review.yaml",
+                "AGENTS.md",
                 "GOVERNANCE.md",
+                ".github/pull_request_template.md",
                 "docs/RELEASE.md",
                 "docs/VALIDATION.md",
                 "docs/SKILL_CONTENT_GOVERNANCE.md",
@@ -470,6 +474,18 @@ class DocsCoreProjectionTests(unittest.TestCase):
             errors.extend(self.validator._shell_fence_placeholder_errors(ROOT, path))
         self.assertEqual([], errors)
 
+    def test_public_project_metadata_uses_rd_skills_brand(self) -> None:
+        project = tomllib.loads(
+            (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+        )["project"]
+        self.assertEqual("rd-skills", project["name"])
+        self.assertEqual([{"name": "rd-skills"}], project["authors"])
+        self.assertEqual(
+            "Authoring, validation, build, packaging, and installation tools "
+            "for rd-skills professional skills.",
+            project["description"],
+        )
+
     def test_shell_fence_usage_placeholder_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
@@ -504,16 +520,123 @@ class DocsCoreProjectionTests(unittest.TestCase):
     def test_current_evidence_selectors_match_authoritative_configs(self) -> None:
         self.assertEqual([], self.validator._current_evidence_projection_errors(ROOT))
 
-    def test_stale_current_evidence_selector_is_rejected(self) -> None:
+    def test_fixed_current_evidence_requires_all_three_exact_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._current_evidence_inputs(root)
+
+            authority = self.validator._current_evidence_authority(root)
+
+            self.assertEqual(
+                {
+                    "non_control",
+                    "canonical_fixed_paths",
+                    "migration_state",
+                    "fixed_paths",
+                },
+                set(authority),
+            )
+            self.assertEqual("current", authority["migration_state"])
+            self.assertTrue(authority["canonical_fixed_paths"])
+            self.assertEqual(
+                {
+                    "readability": "evals/expert-panel/readability.json",
+                    "semantic-disposition": (
+                        "evals/expert-panel/semantic-disposition.json"
+                    ),
+                    "professional-completeness": (
+                        "evals/expert-panel/professional-completeness.json"
+                    ),
+                },
+                authority["fixed_paths"],
+            )
+
+    def test_fixed_current_evidence_rejects_reintroduced_root_lifecycle(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._current_evidence_inputs(root)
+            exceptions = root / "config/skill-content-exceptions.yaml"
+            text = exceptions.read_text(encoding="utf-8")
+            exceptions.write_text(
+                text.replace(
+                    "  schema_version: 7\n",
+                    "  schema_version: 7\n  lifecycle: {}\n",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+
+            errors = self.validator._current_evidence_projection_errors(root)
+
+            self.assertTrue(
+                any("current evidence authority is invalid" in error for error in errors),
+                errors,
+            )
+
+    def test_malformed_or_incomplete_evidence_authority_is_rejected(self) -> None:
+        cases = (
+            (
+                "missing panel identity",
+                "config/professionalism-release-review.yaml",
+                "  panel_kind: readability\n",
+                "  panel_kind: \n",
+            ),
+        )
+        for label, relative, value_key, malformed in cases:
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                self._current_evidence_inputs(root)
+                original = "  panel_kind: readability\n"
+                replacement = "  panel_kind: \n"
+                path = root / relative
+                text = path.read_text(encoding="utf-8")
+                self.assertIn(original, text)
+                path.write_text(
+                    text.replace(original, replacement, 1),
+                    encoding="utf-8",
+                )
+
+                errors = self.validator._current_evidence_projection_errors(root)
+
+                self.assertTrue(
+                    any("current evidence authority is invalid" in error for error in errors),
+                    errors,
+                )
+
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._current_evidence_inputs(root)
+            review_config = root / "config/professionalism-release-review.yaml"
+            text = review_config.read_text(encoding="utf-8")
+            anchor = "  scope: ai-readability-and-density\n"
+            self.assertIn(anchor, text)
+            review_config.write_text(
+                text.replace(
+                    anchor,
+                    anchor + "  extra_authority: unexpected\n",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+
+            errors = self.validator._current_evidence_projection_errors(root)
+
+            self.assertTrue(
+                any("selector-free schema 5" in error for error in errors),
+                errors,
+            )
+
+    def test_stale_current_evidence_projection_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             self._current_evidence_inputs(root)
             governance = root / "GOVERNANCE.md"
             current = governance.read_text(encoding="utf-8")
-            self.assertIn("r26 Root lifecycle", current)
+            authority = "Canonical fixed-attestation paths"
+            self.assertIn(authority, current)
             stale = current.replace(
-                "r26 Root lifecycle",
-                "r25 Root lifecycle",
+                authority,
+                "Legacy configured evidence paths",
                 1,
             )
             self.assertNotEqual(current, stale)
@@ -707,6 +830,23 @@ class DocsCoreProjectionTests(unittest.TestCase):
     def test_validation_path_surfaces_are_consistent(self) -> None:
         self.assertEqual([], self.validator._validation_path_consistency_errors(ROOT))
 
+    def test_parallel_full_runner_is_the_unique_official_unittest_command(self) -> None:
+        official = (
+            "python3 scripts/run-ci-tests.py full --jobs 4 --timeout 900"
+        )
+        legacy = "python3 -m unittest discover -s tests"
+        self.assertEqual(official, self.validator.FULL_REGRESSION_COMMANDS[9])
+        for relative in ("AGENTS.md", "docs/VALIDATION.md"):
+            text = (ROOT / relative).read_text(encoding="utf-8")
+            self.assertEqual(1, text.count(official), relative)
+            self.assertNotIn(legacy, text, relative)
+
+        validation = (ROOT / "docs/VALIDATION.md").read_text(encoding="utf-8")
+        stale_marker = "opt" + "-in"
+        self.assertNotIn(stale_marker, validation.casefold())
+        self.assertNotIn("replace `python3 -m unittest discover -s tests`", validation)
+        self.assertIn("`full-regression`", validation)
+
     def test_out_of_order_validation_path_command_is_rejected(self) -> None:
         command_sets = (
             (
@@ -729,6 +869,23 @@ class DocsCoreProjectionTests(unittest.TestCase):
                 self.assertTrue(
                     any("out-of-order" in error for error in errors), errors
                 )
+
+    def test_duplicate_validation_path_command_is_rejected(self) -> None:
+        commands = self.validator.FULL_REGRESSION_COMMANDS
+        with tempfile.TemporaryDirectory() as raw:
+            path = Path(raw) / "AGENTS.md"
+            path.write_text(
+                "\n".join((*commands, commands[-1])),
+                encoding="utf-8",
+            )
+
+            errors = self.validator._ordered_command_errors(
+                path, commands, "local Full Regression"
+            )
+
+            self.assertTrue(
+                any("exactly once" in error for error in errors), errors
+            )
 
     def _ci_errors(self, text: str) -> list[str]:
         with tempfile.TemporaryDirectory() as raw:
@@ -809,11 +966,20 @@ class DocsCoreProjectionTests(unittest.TestCase):
                 ),
                 "exactly one affected producer gate",
             ),
-            "unconditional full suite": (
+            "legacy unconditional full suite": (
                 text.replace(
                     "        run: git diff --exit-code --no-ext-diff --no-textconv HEAD --\n",
                     "        run: git diff --exit-code --no-ext-diff --no-textconv HEAD --\n"
                     "      - run: python3 -m unittest discover -s tests\n",
+                    1,
+                ),
+                "unconditional Full Regression",
+            ),
+            "official unconditional full suite": (
+                text.replace(
+                    "        run: git diff --exit-code --no-ext-diff --no-textconv HEAD --\n",
+                    "        run: git diff --exit-code --no-ext-diff --no-textconv HEAD --\n"
+                    "      - run: python3 scripts/run-ci-tests.py full --jobs 4 --timeout 900\n",
                     1,
                 ),
                 "unconditional Full Regression",
@@ -1114,39 +1280,54 @@ class DocsCoreProjectionTests(unittest.TestCase):
                 errors,
             )
 
-    def test_paraphrased_outside_conflicts_fail_whole_document_binding(self) -> None:
-        additions = (
-            "If tests fail, the work may still be completed.",
-            "When review is absent, closure can still report completed.",
-            "A task additionally carries Runtime ID.",
+    def test_ordinary_prose_outside_managed_sections_does_not_drift(self) -> None:
+        projections = (
+            *CORE_CONTRACTS["docs_contract"]["projections"],
+            *CORE_CONTRACTS["docs_contract"]["context_budget_projections"],
         )
-        for addition in additions:
-            with self.subTest(addition=addition), tempfile.TemporaryDirectory() as raw:
+        for projection in projections:
+            with (
+                self.subTest(path=projection["path"]),
+                tempfile.TemporaryDirectory() as raw,
+            ):
                 root = Path(raw)
                 self._projected_docs(root)
-                target = root / "docs" / "SUBAGENT_MODEL.md"
+                target = root / projection["path"]
+                text = target.read_text(encoding="utf-8")
+                heading = f"## {projection['section']}"
+                self.assertIn(heading, text)
                 target.write_text(
-                    target.read_text(encoding="utf-8") + f"\n{addition}\n",
+                    text.replace(
+                        heading,
+                        "## Ordinary Maintenance Note\n\n"
+                        "This explanatory prose is outside the managed projection.\n\n"
+                        + heading,
+                        1,
+                    ),
                     encoding="utf-8",
                 )
 
-                errors = self.validator._core_projection_errors(
-                    root, CORE_CONTRACTS
+                self.assertEqual(
+                    [],
+                    self.validator._core_projection_errors(root, CORE_CONTRACTS),
                 )
 
-                self.assertTrue(
-                    any("whole-document SHA-256" in error for error in errors),
-                    errors,
-                )
-
-    def test_document_fingerprint_must_be_lowercase_sha256(self) -> None:
+    def test_governed_docs_reject_legacy_whole_document_hash_keys(self) -> None:
         mutated = copy.deepcopy(CORE_CONTRACTS)
-        mutated["docs_contract"]["projections"][0]["document_sha256"] = "ABC"
+        projections = (
+            *mutated["docs_contract"]["projections"],
+            *mutated["docs_contract"]["context_budget_projections"],
+        )
+        for projection in projections:
+            projection["document_sha256"] = "0" * 64
 
         errors = validate_core_contracts(mutated)
 
         self.assertTrue(
-            any("document_sha256 must be lowercase SHA-256" in error for error in errors),
+            any(
+                "fields must be exactly" in error and "document_sha256" in error
+                for error in errors
+            ),
             errors,
         )
 
@@ -1414,7 +1595,6 @@ class DocsCoreProjectionTests(unittest.TestCase):
             ROOT / "docs/VALIDATION.md",
             ROOT
             / "docs/skill_professionalism_standard/SKILL_PROFESSIONALISM_EVALUATION_AND_GOVERNANCE.md",
-            ROOT / "reports/professionalism-regression-report.md",
         )
         forbidden = (
             "professional completeness panel is schema 2",
@@ -1432,7 +1612,87 @@ class DocsCoreProjectionTests(unittest.TestCase):
                     failures.append(f"{path.relative_to(ROOT)}: {phrase}")
         self.assertEqual([], failures)
 
-    def test_packaging_and_lifecycle_authorities_are_required(self) -> None:
+    def test_compact_expert_panel_storage_contract_is_canonical(self) -> None:
+        paths = (
+            ROOT / "AGENTS.md",
+            ROOT / "GOVERNANCE.md",
+            ROOT / ".github/pull_request_template.md",
+            ROOT / "docs/RELEASE.md",
+            ROOT / "docs/SKILL_CONTENT_GOVERNANCE.md",
+            ROOT / "docs/VALIDATION.md",
+            ROOT
+            / "docs/skill_professionalism_standard/SKILL_PROFESSIONALISM_EVALUATION_AND_GOVERNANCE.md",
+        )
+        current_inventory = (
+            "`evals/expert-panel/readability.json`",
+            "`evals/expert-panel/semantic-disposition.json`",
+            "`evals/expert-panel/professional-completeness.json`",
+        )
+        runtime_root = "`.rd-skills/expert-panel/<run-id>/`"
+        forbidden = (
+            "full round chain",
+            "round-chain closure",
+            "one unforked checked-in round chain",
+            "never overwrite an accepted ballot or predecessor",
+            "evals/expert-panel/review_id/",
+            "evals/expert-panel/prior_",
+        )
+        failures = []
+        for path in paths:
+            text = path.read_text(encoding="utf-8")
+            normalized = text.casefold()
+            if any(item not in text for item in current_inventory):
+                failures.append(
+                    f"{path.relative_to(ROOT)}: missing exact compact inventory"
+                )
+            if runtime_root not in text:
+                failures.append(
+                    f"{path.relative_to(ROOT)}: missing ignored runtime root"
+                )
+            for phrase in forbidden:
+                if phrase in normalized:
+                    failures.append(f"{path.relative_to(ROOT)}: {phrase}")
+
+        owner = (ROOT / "docs/SKILL_CONTENT_GOVERNANCE.md").read_text(
+            encoding="utf-8"
+        )
+        for term in (
+            "4 MiB",
+            "replacement, not append",
+            "Git history",
+            "optional CI or Release artifact",
+            "no keep-last-N",
+            "origin_review_id",
+            "origin_commit",
+            "origin_verdict_digest",
+            "source_fingerprint",
+        ):
+            if term not in owner:
+                failures.append(f"docs/SKILL_CONTENT_GOVERNANCE.md: {term}")
+        authority = self.validator._current_evidence_authority(ROOT)
+        tracked = set(
+            subprocess.run(
+                ["git", "ls-files", "--", "evals/expert-panel"],
+                cwd=ROOT,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.splitlines()
+        )
+        canonical = {
+            "evals/expert-panel/readability.json",
+            "evals/expert-panel/semantic-disposition.json",
+            "evals/expert-panel/professional-completeness.json",
+        }
+        if authority["migration_state"] != "current":
+            failures.append("expert evidence selectors are not current")
+        if tracked != canonical:
+            failures.append(
+                "tracked expert-panel inventory is not the exact current set"
+            )
+        self.assertEqual([], failures)
+
+    def test_packaging_and_release_authorities_are_required(self) -> None:
         self.assertTrue(
             {
                 "docs/BUILD_PROFILES.md",

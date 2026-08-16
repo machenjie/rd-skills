@@ -11,6 +11,9 @@ from pathlib import Path
 from unittest import mock
 
 
+FULL_TEST_RESOURCE_CLASS = "heavy"
+
+
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "validate-capabilities.py"
 BUILD_SCRIPT = ROOT / "scripts" / "build.py"
@@ -113,16 +116,26 @@ Bound the example decision to its named invariant and current source evidence.
         )
         return skills_root, registry
 
-    def _run(self, root: Path, skills_root: Path, registry: Path) -> tuple[int, str]:
+    def _run(
+        self,
+        root: Path,
+        skills_root: Path,
+        registry: Path,
+        *,
+        matrix_errors: tuple[str, ...] = (),
+    ) -> tuple[int, str]:
         output = io.StringIO()
+        matrix_validation = mock.Mock(return_value=list(matrix_errors))
         with mock.patch.multiple(
             self.module,
             ROOT=root,
             SKILLS_ROOT=skills_root,
             REGISTRY=registry,
             EXPECTED_FOUNDATION_CAPABILITY_COUNT=1,
+            validate_capability_coverage_matrix=matrix_validation,
         ), contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
             result = self.module.main()
+        matrix_validation.assert_called_once_with()
         return result, output.getvalue()
 
     def _root_use_triggers(self, skill_file: Path) -> list[str]:
@@ -340,11 +353,35 @@ Bound the example decision to its named invariant and current source evidence.
         return errors
 
     def test_five_section_core_passes_without_optional_scaffolding(self) -> None:
+        with mock.patch.object(
+            self.module,
+            "validate_capability_coverage",
+            wraps=self.module.validate_capability_coverage,
+        ) as real_matrix_validation:
+            with tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                skills_root, registry = self._fixture(root)
+                result, output = self._run(root, skills_root, registry)
+            real_matrix_validation.assert_not_called()
+            self.assertEqual(
+                [],
+                self.module.validate_capability_coverage_matrix(),
+            )
+            real_matrix_validation.assert_called_once()
+        self.assertEqual(0, result, output)
+
+        matrix_error = "synthetic capability matrix failure"
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             skills_root, registry = self._fixture(root)
-            result, output = self._run(root, skills_root, registry)
-        self.assertEqual(0, result, output)
+            result, output = self._run(
+                root,
+                skills_root,
+                registry,
+                matrix_errors=(matrix_error,),
+            )
+        self.assertEqual(1, result)
+        self.assertIn(matrix_error, output)
 
     def test_current_foundation_roots_meet_readability_and_sentence_limits(
         self,
@@ -436,6 +473,42 @@ Bound the example decision to its named invariant and current source evidence.
             shell[
                 shell.index(destructive_boundary) : shell.index(destructive_boundary) + 2
             ],
+        )
+
+    def test_degradation_circuit_breaking_rejects_inverted_anti_patterns(self) -> None:
+        skill_file = (
+            self.module.SKILLS_ROOT
+            / "degradation-circuit-breaking"
+            / "SKILL.md"
+        )
+        _metadata, _raw, body = self.module.parse_frontmatter(skill_file)
+        high_value_rules = self.module._section(body, "High-Value Rules")
+        anti_patterns = self.module._section(body, "Anti-Patterns")
+
+        self.assertIn("deadline-aware backoff and jitter", high_value_rules)
+        self.assertIn(
+            "- Skip jitter when concurrent callers can synchronize retries.",
+            anti_patterns,
+        )
+        self.assertNotIn(
+            "- Add jitter when concurrent callers can synchronize retries.",
+            anti_patterns,
+        )
+        self.assertIn(
+            "- Allow layered retries because they multiply dependency load.",
+            anti_patterns,
+        )
+        self.assertNotIn(
+            "- Prevent layered retries because they multiply dependency load.",
+            anti_patterns,
+        )
+        self.assertIn(
+            "- Continue ordinary attempts while the circuit breaker is open.",
+            anti_patterns,
+        )
+        self.assertNotIn(
+            "- Stop further attempts while the circuit breaker is open.",
+            anti_patterns,
         )
 
     def test_solution_optimality_routes_stack_commitments_in_all_consumers(

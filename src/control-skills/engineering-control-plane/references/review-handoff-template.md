@@ -5,11 +5,37 @@ review requires observable acceptance, the latest actual diff, the declared
 changed-path set, current validation results, and the Evidence Requirements.
 
 For Analyzed Work, this handoff is a derived projection of the current
-Engineering Brief. Goal, Acceptance, Non-goals, Allowed Write Scope, Owner, and
-review boundaries are copied from the Brief and dispatched Slice; review
-evidence and findings cannot redefine them or any other protected Brief
-decision. If the handoff conflicts with the current Brief or a protected
-decision must change, mark it blocked and return to analysis through Main.
+Engineering Brief. Protected Brief decisions stay resolvable at their Authority
+source; review evidence and findings cannot redefine them. If the handoff
+conflicts with the current Brief or a protected decision must change, mark it
+blocked and return to analysis through Main.
+
+The `Inbound Review Projection` section contains only Acceptance; Review Boundary;
+Effective Level; required Review Skills; required changed scope; the latest
+actual diff or accessible reference; current structured validation; relevant
+current Evidence; Scope, Freshness, and Proof Limit; and Unverified Scope.
+Resolve Goal, Non-goals, Allowed Write Scope, Owner, and other protected
+decisions from Authority. Do not send analysis history, the Task DAG, old
+validation, unrelated Evidence, or superseded Evidence. Raw logs stay
+JIT-readable unless the reviewer explicitly requires one. The remaining
+sections are the closing review artifact; they record the review Owner, result,
+findings, evidence, reviewed and unreviewed scope, and residual risk.
+
+For implementation or repair review, classify and output Core `Finding Relation`
+before severity or blocker. Use only `current-task`, `scope-blocker`, or
+`adjacent`; relation grants neither write scope nor Repair authority.
+Pre-implementation artifact review is exempt from this implementation-finding
+format.
+
+Main projects to Repair the material `current-task` findings, affected scope,
+Acceptance impact, latest diff, invalidated/reusable Evidence, required
+validation, and required re-review. Each item preserves its Finding Relation
+and omits `outcome=blocking`, which the projection premise already proves. Main
+copies the structured Finding Relation without prose inference. A
+`scope-blocker` returns blocked through Main to Analysis; `adjacent` is recorded,
+does not block, and is ineligible for Repair. Do not re-inject task history. Invalidate
+only affected or transitively dependent Evidence; preserve unrelated current
+Evidence.
 
 The public Execution Level lines use Core public `execution-level/v1`. The integrity
 fallback for missing, malformed, or duplicate public execution-level data is
@@ -34,10 +60,35 @@ Basis: source=user_fact:<anchor> / analysis_handoff:<anchor>; triggers=["<matche
 L5 Evidence: when=effective L5 only; requires=independent pre-implementation review / strong safety and applicability proof / declared-scope comprehensive negative and failure proof / exhaustive final review
 <!-- END CHANGEFORGE CORE PUBLIC EXECUTION TEMPLATE: review-handoff-template.md -->
 
-Goal:
+## Inbound Review Projection
+
 Acceptance:
-Non-goals:
-Allowed Write Scope:
+Review Boundary:
+Effective Level:
+Required Review Skills:
+Required Changed Scope:
+Latest Actual Diff or Accessible Reference:
+Current Structured Validation:
+Relevant Current Evidence:
+Scope:
+Freshness:
+Proof Limit:
+Unverified Scope:
+
+## Review Boundary
+
+Review Boundary ID:
+Review Strategy:
+Review Round ID:
+Effective Level:
+Required Review Skills:
+Specialist Obligations:
+Covered Task IDs:
+Required Changed Scope:
+Professional Risk Dimensions:
+Required Validation / Evidence Binding:
+Review Assignments:
+Primary Close Ordering:
 
 ## Owner
 
@@ -70,8 +121,18 @@ an implementation diff review.
 
 ## Findings
 
-For each finding, state severity, description, affected path, and acceptance
-or risk impact. Do not invent private identifiers.
+For each implementation or repair finding, state fields in this order:
+
+Finding Relation: current-task / scope-blocker / adjacent
+Severity:
+Blocker:
+Description:
+Affected path:
+Acceptance or risk impact:
+
+Finding Relation appears before severity or blocker. Do not invent private
+identifiers. Pre-implementation artifact review may use its artifact-specific
+finding shape without implementation Finding Relation.
 
 ## Core Review Discipline
 
@@ -105,7 +166,43 @@ duplicate, or unknown dimension or status blocks the verdict.
 <!-- END CHANGEFORGE CORE PROFESSIONAL RISK MATRIX -->
 
 After repair, require fresh validation, then the latest actual diff, then fresh
-re-review. An older review cannot cover the new modification.
+re-review. Invalidate only Evidence whose Scope intersects the repair, Claims
+that depend on modified behavior, and transitive impact. Retain unaffected fresh
+Evidence. Expand for a public/shared contract, schema, common abstraction,
+ownership/dependency graph, security boundary, transaction/concurrency
+semantics, or integration behavior. Focus re-review on the original finding,
+repair diff, and affected dependents; an older review cannot cover the new
+modification.
+
+Effective Level determines review depth; the Review/Risk Boundary determines
+frequency. Task completion is not a Review Boundary. L1-L3 related work uses one
+combined independent final review; L4 adds only triggered professional depth;
+L5 retains required pre-implementation and final review. A current independent
+review subsumes weaker obligations only when its boundary and round identities,
+strategy, Effective Level, assignments and required Review Skills, Specialist
+obligations, Covered Task IDs, required changed scope, professional-risk
+dimensions, current validation/evidence binding, and primary-close ordering
+are the same or stronger. Every assignment has exactly one Review Skill and
+zero to three review-risk-routed Layer 3 selections. Those selections are
+independent from the covered Tasks' implementation Layer 3. Specialists share
+the boundary's one Review Round ID, do not close Tasks, and return current
+results before the primary emits the sole combined artifact. Every covered
+Task completion projection references that artifact's exact identity and
+digest. A covering scoped re-review satisfies Final Review without an extra
+final round.
+
+Reuse fresh, scope-correct, trustworthy-oracle validation evidence. Reproduce
+only for stale evidence, a coverage gap, suspicious oracle/test, flaky/retry,
+environment sensitivity, concrete reviewer doubt, or an Effective
+Level/professional-risk requirement for independent reproduction.
+
+Only material current-task findings affecting Acceptance, correctness or an
+invariant, regression, security/reliability, or material code health require
+Repair. Adjacent issues, optional cleanup, style preference, speculative
+abstraction, unrelated debt, and future improvement do not enter the mandatory
+Repair loop. Fundamental architecture, contract, security, or Acceptance
+failure may return `blocked` after naming Reviewed and Unreviewed Scope. Only
+`pass` requires complete required changed-scope review.
 
 ## Evidence Ledger
 
@@ -113,8 +210,12 @@ re-review. An older review cannot cover the new modification.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 
 Use only `current` evidence. Mark evidence from an older diff `superseded` or
-`invalid`. A material edit invalidates older evidence. Repair requires fresh validation
-and re-review of the latest diff.
+`invalid`. A scoped material edit invalidates validation and review evidence
+only for intersecting scope and transitive Task dependencies; unaffected
+current evidence remains reusable. Repair requires fresh validation and
+re-review of the latest diff.
+Only consumer-required current rows enter the downstream repair projection;
+noncurrent rows remain excluded.
 Current review-agent evidence after the latest material edit uses
 `changed-scope-reviewed`, `high-risk-review-passed` when applicable, and
 `blocking-findings-none` or `blocking-findings-resolved` Claim values.

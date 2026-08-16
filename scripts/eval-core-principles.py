@@ -11,8 +11,10 @@ import json
 import math
 import ntpath
 import os
+import secrets
 import signal
 import shutil
+import stat
 import subprocess
 import sys
 import tarfile
@@ -76,6 +78,22 @@ PROFESSIONALISM_PRODUCER_ARGV = [
 ]
 PROFESSIONALISM_DECLARED_TIMEOUT_SECONDS = 1200
 PROFESSIONALISM_TIMEOUT_SECONDS = 3600
+FORMAL_EVIDENCE_ROOT = ".rd-skills/formal-release"
+FORMAL_PRODUCER_REPORTS_DIRECTORY = "producer-reports"
+FORMAL_HEAD_COMMIT_ENV = "CHANGEFORGE_FORMAL_HEAD_COMMIT"
+PROFESSIONALISM_JSON_REPORT = "reports/professionalism-regression-report.json"
+PROFESSIONALISM_MARKDOWN_REPORT = "reports/professionalism-regression-report.md"
+FORMAL_EVIDENCE_FILENAMES = frozenset(
+    {
+        "professionalism-regression-report.json",
+        "professionalism-regression-report.md",
+        "core-principles-outcomes.json",
+        "core-principles-outcomes.md",
+    }
+)
+FORMAL_REPORT_DIRECTORY_CONSUMER_IDS = frozenset(
+    {"validate-docs-consistency"}
+)
 UNCOVERED_MANDATORY_RELEASE_GATES = [
     "examples-validation",
     "showcase-freshness",
@@ -100,6 +118,7 @@ EXCLUDED_TREE_PREFIXES = (
     ".pytest_cache/",
     ".ruff_cache/",
     ".venv/",
+    f"{FORMAL_EVIDENCE_ROOT}/",
     "dist/",
     "evals/agent-behavior/outputs/",
     "evals/pressure/outputs/",
@@ -184,6 +203,328 @@ def _fresh_report(before: dict[str, object], after: dict[str, object]) -> bool:
         before["mtime_ns"] != after["mtime_ns"]
         or before["size"] != after["size"]
     )
+
+
+def _canonical_formal_professionalism_producer(
+    producer: dict[str, Any],
+) -> bool:
+    return (
+        producer.get("id") == PROFESSIONALISM_PRODUCER_ID
+        and producer.get("argv") == PROFESSIONALISM_PRODUCER_ARGV
+        and producer.get("reports") == [PROFESSIONALISM_JSON_REPORT]
+        and producer.get("release_reports") == [PROFESSIONALISM_MARKDOWN_REPORT]
+    )
+
+
+def _canonical_formal_evidence_enabled(
+    contract: dict[str, Any], *, release_projection: bool
+) -> bool:
+    if not release_projection:
+        return False
+    acceptance = contract.get("principle_acceptance_contract")
+    if not isinstance(acceptance, dict):
+        return False
+    producers = acceptance.get("producers")
+    return isinstance(producers, list) and any(
+        isinstance(producer, dict)
+        and _canonical_formal_professionalism_producer(producer)
+        for producer in producers
+    )
+
+
+def _git_head_with_clean_tracked_tree(
+    root: Path, *, expected_head: str | None = None
+) -> str:
+    environment = {**os.environ, "GIT_OPTIONAL_LOCKS": "0", "LC_ALL": "C"}
+    head = subprocess.run(
+        ["git", "rev-parse", "--verify", "HEAD^{commit}"],
+        cwd=root,
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        env=environment,
+    )
+    current = head.stdout.strip()
+    dirty = subprocess.run(
+        ["git", "status", "--porcelain=v1", "--untracked-files=no"],
+        cwd=root,
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=environment,
+    )
+    if (
+        head.returncode != 0
+        or len(current) not in {40, 64}
+        or any(character not in "0123456789abcdef" for character in current)
+        or (expected_head is not None and current != expected_head)
+        or dirty.returncode != 0
+        or dirty.stdout
+    ):
+        raise ValueError(
+            "formal release requires the captured HEAD and a clean tracked tree"
+        )
+    return current
+
+
+def _formal_reports_directory(root: Path, head_commit: str) -> Path:
+    if (
+        len(head_commit) not in {40, 64}
+        or any(character not in "0123456789abcdef" for character in head_commit)
+    ):
+        raise ValueError("formal evidence HEAD is not a Git commit")
+    return root / FORMAL_EVIDENCE_ROOT / head_commit / "reports"
+
+
+def _formal_producer_reports_directory(root: Path, head_commit: str) -> Path:
+    _formal_reports_directory(root, head_commit)
+    return (
+        root
+        / FORMAL_EVIDENCE_ROOT
+        / head_commit
+        / FORMAL_PRODUCER_REPORTS_DIRECTORY
+    )
+
+
+def _safe_directory_fd(
+    trusted_root: Path,
+    directory: Path,
+    *,
+    create: bool,
+) -> int:
+    root = trusted_root.absolute()
+    try:
+        relative = directory.absolute().relative_to(root)
+    except ValueError as exc:
+        raise ValueError("formal evidence directory escapes its trusted root") from exc
+    if not relative.parts or any(
+        part in {"", ".", ".."} or "/" in part for part in relative.parts
+    ):
+        raise ValueError("formal evidence directory is not contained")
+    flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+    flags |= getattr(os, "O_NOFOLLOW", 0)
+    flags |= getattr(os, "O_CLOEXEC", 0)
+    descriptor: int | None = None
+    try:
+        descriptor = os.open(root, flags)
+        for part in relative.parts:
+            try:
+                next_descriptor = os.open(part, flags, dir_fd=descriptor)
+            except FileNotFoundError:
+                if not create:
+                    raise
+                try:
+                    os.mkdir(part, mode=0o755, dir_fd=descriptor)
+                    os.fsync(descriptor)
+                except FileExistsError:
+                    pass
+                next_descriptor = os.open(part, flags, dir_fd=descriptor)
+            os.close(descriptor)
+            descriptor = next_descriptor
+        return descriptor
+    except OSError as exc:
+        if descriptor is not None:
+            os.close(descriptor)
+        raise ValueError(
+            "formal evidence must use a safe directory without symlinks"
+        ) from exc
+
+
+def _atomic_write(
+    path: Path,
+    content: str,
+    *,
+    trusted_root: Path | None = None,
+) -> None:
+    if trusted_root is None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        descriptor, temporary_name = tempfile.mkstemp(
+            dir=path.parent, prefix=f".{path.name}.", suffix=".tmp"
+        )
+        temporary = Path(temporary_name)
+        try:
+            with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+                stream.write(content)
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(temporary, path)
+        finally:
+            try:
+                temporary.unlink()
+            except FileNotFoundError:
+                pass
+        return
+
+    directory_fd = _safe_directory_fd(trusted_root, path.parent, create=True)
+    name = path.name
+    temporary_name: str | None = None
+    file_fd: int | None = None
+    try:
+        try:
+            current = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+        except FileNotFoundError:
+            current = None
+        if current is not None and (
+            not stat.S_ISREG(current.st_mode) or current.st_nlink != 1
+        ):
+            raise ValueError(
+                "formal evidence destination must be a single-link regular file"
+            )
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+        flags |= getattr(os, "O_NOFOLLOW", 0)
+        flags |= getattr(os, "O_CLOEXEC", 0)
+        for _attempt in range(16):
+            candidate = f".{name}.{secrets.token_hex(12)}.tmp"
+            try:
+                file_fd = os.open(
+                    candidate, flags, 0o644, dir_fd=directory_fd
+                )
+                temporary_name = candidate
+                break
+            except FileExistsError:
+                continue
+        if file_fd is None or temporary_name is None:
+            raise ValueError("formal evidence temporary file could not be reserved")
+        opened = os.fstat(file_fd)
+        if not stat.S_ISREG(opened.st_mode) or opened.st_nlink != 1:
+            raise ValueError(
+                "formal evidence temporary must be a single-link regular file"
+            )
+        raw = content.encode("utf-8")
+        offset = 0
+        while offset < len(raw):
+            written = os.write(file_fd, raw[offset:])
+            if written <= 0:  # pragma: no cover - os.write raises.
+                raise OSError("short formal evidence write")
+            offset += written
+        os.fsync(file_fd)
+        temporary_identity = (opened.st_dev, opened.st_ino)
+        os.close(file_fd)
+        file_fd = None
+        os.replace(
+            temporary_name,
+            name,
+            src_dir_fd=directory_fd,
+            dst_dir_fd=directory_fd,
+        )
+        temporary_name = None
+        stored = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+        if (
+            not stat.S_ISREG(stored.st_mode)
+            or stored.st_nlink != 1
+            or (stored.st_dev, stored.st_ino) != temporary_identity
+        ):
+            raise ValueError("formal evidence publish identity changed")
+        os.fsync(directory_fd)
+    except OSError as exc:
+        raise ValueError("formal evidence safe atomic publish failed") from exc
+    finally:
+        if file_fd is not None:
+            os.close(file_fd)
+        if temporary_name is not None:
+            try:
+                current = os.stat(
+                    temporary_name,
+                    dir_fd=directory_fd,
+                    follow_symlinks=False,
+                )
+                if stat.S_ISREG(current.st_mode):
+                    os.unlink(temporary_name, dir_fd=directory_fd)
+            except OSError:
+                pass
+        os.close(directory_fd)
+
+
+def _formal_scene_entries(
+    root: Path,
+    head_commit: str,
+    *,
+    create: bool,
+) -> set[str]:
+    reports = _formal_reports_directory(root, head_commit)
+    descriptor = _safe_directory_fd(root, reports, create=create)
+    try:
+        names = set(os.listdir(descriptor))
+        for name in names:
+            metadata = os.stat(
+                name, dir_fd=descriptor, follow_symlinks=False
+            )
+            if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
+                raise ValueError(
+                    "formal evidence scene contains a non-regular artifact"
+                )
+        return names
+    except OSError as exc:
+        raise ValueError("formal evidence scene cannot be inspected safely") from exc
+    finally:
+        os.close(descriptor)
+
+
+def _prepare_formal_evidence_scene(root: Path, head_commit: str) -> None:
+    names = _formal_scene_entries(root, head_commit, create=True)
+    unexpected = names - FORMAL_EVIDENCE_FILENAMES
+    if unexpected:
+        raise ValueError(
+            "unexpected formal evidence residue: " + ", ".join(sorted(unexpected))
+        )
+
+
+def _prepare_formal_producer_reports_directory(
+    root: Path, head_commit: str
+) -> Path:
+    directory = _formal_producer_reports_directory(root, head_commit)
+    descriptor = _safe_directory_fd(root, directory, create=True)
+    try:
+        for name in os.listdir(descriptor):
+            metadata = os.stat(
+                name, dir_fd=descriptor, follow_symlinks=False
+            )
+            if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
+                raise ValueError(
+                    "formal producer reports contain a non-regular artifact"
+                )
+    except OSError as exc:
+        raise ValueError(
+            "formal producer reports cannot be inspected safely"
+        ) from exc
+    finally:
+        os.close(descriptor)
+    return directory
+
+
+def _formal_report_path_overrides(
+    root: Path,
+    head_commit: str,
+    producers: list[dict[str, Any]],
+) -> tuple[Path, dict[str, Path]]:
+    staging = _prepare_formal_producer_reports_directory(root, head_commit)
+    overrides: dict[str, Path] = {}
+    for producer in producers:
+        for logical_path in [
+            *producer["reports"],
+            *producer["release_reports"],
+        ]:
+            relative = PurePosixPath(logical_path).relative_to("reports")
+            overrides[logical_path] = staging.joinpath(*relative.parts)
+    final_reports = _formal_reports_directory(root, head_commit)
+    overrides[PROFESSIONALISM_JSON_REPORT] = (
+        final_reports / Path(PROFESSIONALISM_JSON_REPORT).name
+    )
+    overrides[PROFESSIONALISM_MARKDOWN_REPORT] = (
+        final_reports / Path(PROFESSIONALISM_MARKDOWN_REPORT).name
+    )
+    return staging, overrides
+
+
+def _validate_complete_formal_evidence_scene(
+    root: Path, head_commit: str
+) -> None:
+    names = _formal_scene_entries(root, head_commit, create=False)
+    if names != FORMAL_EVIDENCE_FILENAMES:
+        raise ValueError(
+            "formal evidence scene does not contain exactly four canonical files"
+        )
 
 
 def _json_value_type(value: object) -> str:
@@ -681,6 +1022,8 @@ def _run_producers(
     *,
     release_projection: bool = False,
     producer_environment: dict[str, str] | None = None,
+    report_path_overrides: dict[str, Path] | None = None,
+    reports_directory_override: Path | None = None,
 ) -> tuple[list[dict[str, object]], dict[str, dict[str, object]], dict[str, object]]:
     results: list[dict[str, object]] = []
     by_id: dict[str, dict[str, object]] = {}
@@ -708,13 +1051,41 @@ def _run_producers(
         executed_argv.add(canonical_argv)
         timeout_seconds = _producer_timeout_seconds(producer)
         report_before = {
-            path: _file_snapshot(root / path) for path in producer["reports"]
+            path: _file_snapshot(
+                (report_path_overrides or {}).get(path, root / path)
+            )
+            for path in producer["reports"]
         }
         release_before = {
-            path: _file_snapshot(root / path)
+            path: _file_snapshot(
+                (report_path_overrides or {}).get(path, root / path)
+            )
             for path in producer["release_reports"]
         }
         command = [sys.executable, *producer["argv"][1:]]
+        if (
+            release_projection
+            and reports_directory_override is not None
+            and (
+                producer["reports"]
+                or producer["release_reports"]
+                or producer_id in FORMAL_REPORT_DIRECTORY_CONSUMER_IDS
+            )
+        ):
+            command.extend(
+                ["--reports-dir", str(reports_directory_override)]
+            )
+        if (
+            release_projection
+            and report_path_overrides
+            and _canonical_formal_professionalism_producer(producer)
+        ):
+            command.extend(
+                [
+                    "--output-dir",
+                    str(report_path_overrides[PROFESSIONALISM_JSON_REPORT].parent),
+                ]
+            )
         if release_projection and producer["release_reports"]:
             command.append("--release-projection")
         exit_code: int | None = None
@@ -758,7 +1129,7 @@ def _run_producers(
             failure_reason_codes.append("process-exit-nonzero")
         report_results: list[dict[str, object]] = []
         for report in producer["reports"]:
-            path = root / report
+            path = (report_path_overrides or {}).get(report, root / report)
             after = _file_snapshot(path)
             fresh = _fresh_report(report_before[report], after)
             payload: object | None = None
@@ -783,7 +1154,7 @@ def _run_producers(
         release_report_results: list[dict[str, object]] = []
         if release_projection:
             for report in producer["release_reports"]:
-                path = root / report
+                path = (report_path_overrides or {}).get(report, root / report)
                 after = _file_snapshot(path)
                 fresh = _fresh_report(release_before[report], after)
                 text_report = False
@@ -803,16 +1174,20 @@ def _run_producers(
                         "text_report": text_report,
                     }
                 )
-        next_tree = input_tree_digest(root)
-        if timed_out:
-            time.sleep(TIMEOUT_TREE_RECHECK_SECONDS)
-            settled_tree = input_tree_digest(root)
-            source_unchanged = (
-                current_tree == next_tree == settled_tree
-            )
-            next_tree = settled_tree
+        if release_projection:
+            next_tree = input_tree_digest(root)
+            if timed_out:
+                time.sleep(TIMEOUT_TREE_RECHECK_SECONDS)
+                settled_tree = input_tree_digest(root)
+                source_unchanged = (
+                    current_tree == next_tree == settled_tree
+                )
+                next_tree = settled_tree
+            else:
+                source_unchanged = current_tree == next_tree
         else:
-            source_unchanged = current_tree == next_tree
+            next_tree = current_tree
+            source_unchanged = True
         if not source_unchanged:
             failure_reason_codes.append("source-tree-mutated")
         failure_reason_codes = list(dict.fromkeys(failure_reason_codes))
@@ -834,6 +1209,23 @@ def _run_producers(
         by_id[producer_id] = result
         current_tree = next_tree
     return results, by_id, current_tree
+
+
+def _record_deferred_source_mutation(
+    producers: list[dict[str, object]],
+) -> None:
+    """Fail every attempted ordinary producer after one final tree comparison."""
+
+    for producer in producers:
+        if producer["status"] == "not_run":
+            continue
+        producer["source_unchanged"] = False
+        failure_reason_codes = producer["failure_reason_codes"]
+        assert isinstance(failure_reason_codes, list)
+        if "source-tree-mutated" not in failure_reason_codes:
+            failure_reason_codes.append("source-tree-mutated")
+        if producer["status"] == "pass":
+            producer["status"] = "fail"
 
 
 def evaluate_operator(actual: object, operator: str, expected: object) -> bool:
@@ -882,6 +1274,8 @@ def _evaluate_outcomes(
     outcomes: list[dict[str, Any]],
     producer_results: dict[str, dict[str, object]],
     authority_values: dict[str, object],
+    *,
+    report_path_overrides: dict[str, Path] | None = None,
 ) -> tuple[list[dict[str, object]], dict[str, dict[str, object]]]:
     results: list[dict[str, object]] = []
     by_id: dict[str, dict[str, object]] = {}
@@ -900,7 +1294,9 @@ def _evaluate_outcomes(
                 if source not in report_cache:
                     try:
                         report_cache[source] = json.loads(
-                            (root / source).read_text(encoding="utf-8")
+                            (report_path_overrides or {})
+                            .get(source, root / source)
+                            .read_text(encoding="utf-8")
                         )
                     except (OSError, UnicodeError, json.JSONDecodeError):
                         report_cache[source] = None
@@ -1060,6 +1456,7 @@ def evaluate(
     *,
     contract_sha256: str | None = None,
     release_projection: bool = False,
+    formal_evidence_head_commit: str | None = None,
 ) -> dict[str, object]:
     """Run one complete outcome evaluation and return the deterministic report."""
 
@@ -1072,13 +1469,37 @@ def evaluate(
             release_projection=release_projection,
         )
     acceptance = contract["principle_acceptance_contract"]
+    report_path_overrides: dict[str, Path] | None = None
+    reports_directory_override: Path | None = None
+    producer_environment: dict[str, str] | None = None
+    if formal_evidence_head_commit is not None:
+        reports_directory_override, report_path_overrides = (
+            _formal_report_path_overrides(
+                root,
+                formal_evidence_head_commit,
+                acceptance["producers"],
+            )
+        )
+        producer_environment = {
+            FORMAL_HEAD_COMMIT_ENV: formal_evidence_head_commit
+        }
     pre_tree = input_tree_digest(root)
-    producers, producers_by_id, post_tree = _run_producers(
+    producers, producers_by_id, producer_post_tree = _run_producers(
         root,
         acceptance["producers"],
         pre_tree,
         release_projection=release_projection,
+        producer_environment=producer_environment,
+        report_path_overrides=report_path_overrides,
+        reports_directory_override=reports_directory_override,
     )
+    post_tree = (
+        producer_post_tree
+        if release_projection
+        else input_tree_digest(root)
+    )
+    if not release_projection and pre_tree != post_tree:
+        _record_deferred_source_mutation(producers)
     authority_values = {
         authority["id"]: resolve_json_pointer(contract, authority["pointer"])
         for authority in acceptance["authorities"]
@@ -1088,7 +1509,12 @@ def evaluate(
         acceptance["outcomes"],
         producers_by_id,
         authority_values,
+        report_path_overrides=report_path_overrides,
     )
+    if formal_evidence_head_commit is not None:
+        _git_head_with_clean_tracked_tree(
+            root, expected_head=formal_evidence_head_commit
+        )
     principles = _principle_results(contract["core_principles"], outcomes_by_id)
     authoring = "pass" if all(item["authoring_status"] == "pass" for item in principles) else "fail"
     formal = (
@@ -1171,7 +1597,7 @@ def evaluate_affected(
         if producer["id"] in selected_set
     ]
     pre_tree = input_tree_digest(root)
-    producers, producers_by_id, post_tree = _run_producers(
+    producers, producers_by_id, _producer_post_tree = _run_producers(
         root,
         selected,
         pre_tree,
@@ -1187,6 +1613,9 @@ def evaluate_affected(
             else None
         ),
     )
+    post_tree = input_tree_digest(root)
+    if pre_tree != post_tree:
+        _record_deferred_source_mutation(producers)
     authoring_outcome_ids = {
         outcome_id
         for principle in contract["core_principles"]
@@ -1422,16 +1851,38 @@ def write_reports(
     report: dict[str, Any],
     *,
     release_projection: bool = False,
+    formal_evidence_head_commit: str | None = None,
 ) -> None:
-    json_path = root / JSON_REPORT
-    markdown_path = root / MARKDOWN_REPORT
-    json_path.parent.mkdir(parents=True, exist_ok=True)
-    json_path.write_text(
-        json.dumps(report, indent=2, ensure_ascii=False, sort_keys=True) + "\n",
-        encoding="utf-8",
+    output_report = report
+    if formal_evidence_head_commit is not None:
+        output_directory = _formal_reports_directory(
+            root, formal_evidence_head_commit
+        )
+        json_path = output_directory / Path(JSON_REPORT).name
+        markdown_path = output_directory / Path(MARKDOWN_REPORT).name
+        output_report = {
+            **report,
+            "formal_evidence_head_commit": formal_evidence_head_commit,
+        }
+    else:
+        json_path = root / JSON_REPORT
+        markdown_path = root / MARKDOWN_REPORT
+    _atomic_write(
+        json_path,
+        json.dumps(output_report, indent=2, ensure_ascii=False, sort_keys=True)
+        + "\n",
+        trusted_root=(
+            root if formal_evidence_head_commit is not None else None
+        ),
     )
     if release_projection:
-        markdown_path.write_text(render_markdown(report), encoding="utf-8")
+        _atomic_write(
+            markdown_path,
+            render_markdown(output_report),
+            trusted_root=(
+                root if formal_evidence_head_commit is not None else None
+            ),
+        )
 
 
 def _saved_report_schema_errors(report: object) -> list[str]:
@@ -1601,6 +2052,11 @@ def _saved_report_schema_errors(report: object) -> list[str]:
         "authorities",
         "principles",
     }
+    if (
+        type(report) is dict
+        and "formal_evidence_head_commit" in report
+    ):
+        top_fields.add("formal_evidence_head_commit")
     top = closed_object(report, top_fields, "core principles report")
     if top is None:
         return errors
@@ -1617,6 +2073,21 @@ def _saved_report_schema_errors(report: object) -> list[str]:
         top["release_projection"],
         "core principles report.release_projection",
     )
+    if "formal_evidence_head_commit" in top:
+        formal_head = top["formal_evidence_head_commit"]
+        if (
+            top["release_projection"] is not True
+            or type(formal_head) is not str
+            or len(formal_head) not in {40, 64}
+            or any(
+                character not in "0123456789abcdef"
+                for character in formal_head
+            )
+        ):
+            add(
+                "core principles report.formal_evidence_head_commit must be "
+                "a formal-release Git commit"
+            )
     closed_value(
         top["principles_status"],
         {"pass", "partial", "fail"},
@@ -2033,7 +2504,7 @@ def _saved_report_schema_errors(report: object) -> list[str]:
 
 
 def validate_saved_report(root: Path, report: object) -> list[str]:
-    """Validate a checked-in report's schema and current input/report truth."""
+    """Validate a saved execution record and formal currentness when requested."""
 
     schema_errors = _saved_report_schema_errors(report)
     if schema_errors:
@@ -2065,14 +2536,16 @@ def validate_saved_report(root: Path, report: object) -> list[str]:
         except json.JSONDecodeError:
             contract = None
             errors.append("core principles report contract source is malformed")
-    tree = input_tree_digest(root)
     input_tree = report["input_tree"]
     if not isinstance(input_tree, dict) or set(input_tree) != {"pre", "post", "unchanged"}:
         errors.append("core principles report input tree schema is invalid")
     else:
         if input_tree["pre"] != input_tree["post"] or input_tree["unchanged"] is not True:
             errors.append("core principles report records an input tree mutation")
-        if input_tree["post"] != tree:
+        if (
+            report["release_projection"]
+            and input_tree["post"] != input_tree_digest(root)
+        ):
             errors.append("core principles report input tree digest is stale")
     principles = report["principles"] if isinstance(report["principles"], list) else []
     authoring = "pass" if principles and all(item.get("authoring_status") == "pass" for item in principles if isinstance(item, dict)) and len(principles) == 15 else "fail"
@@ -2347,17 +2820,33 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 2
+    formal_evidence_enabled = args.gate == "formal-release"
+    formal_evidence_head_commit: str | None = None
+    formal_scene_ready = False
     try:
+        if formal_evidence_enabled:
+            formal_evidence_head_commit = _git_head_with_clean_tracked_tree(root)
+            _prepare_formal_evidence_scene(
+                root, formal_evidence_head_commit
+            )
+            formal_scene_ready = True
         contract_bytes = contract_path.read_bytes()
         contract = json.loads(contract_bytes)
         if not isinstance(contract, dict):
             raise ValueError("Core Model root must be an object")
         contract_sha256 = _sha256_bytes(contract_bytes)
+        if formal_evidence_enabled and not _canonical_formal_evidence_enabled(
+            contract, release_projection=True
+        ):
+            raise ValueError(
+                "formal release contract lacks the canonical professionalism producer"
+            )
         report = evaluate(
             root,
             contract,
             contract_sha256=contract_sha256,
             release_projection=args.gate == "formal-release",
+            formal_evidence_head_commit=formal_evidence_head_commit,
         )
     except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
         report = _invalid_report(
@@ -2366,16 +2855,45 @@ def main(argv: list[str] | None = None) -> int:
             [str(exc)],
             release_projection=args.gate == "formal-release",
         )
-    write_reports(
-        root,
-        report,
-        release_projection=args.gate == "formal-release",
-    )
+    if formal_evidence_enabled and not formal_scene_ready:
+        print(
+            "eval-core-principles: formal evidence capture failed before execution",
+            file=sys.stderr,
+        )
+        return 1
+    try:
+        write_reports(
+            root,
+            report,
+            release_projection=args.gate == "formal-release",
+            formal_evidence_head_commit=formal_evidence_head_commit,
+        )
+    except (OSError, ValueError) as exc:
+        print(
+            f"eval-core-principles: formal evidence publish failed: {exc}",
+            file=sys.stderr,
+        )
+        return 1
     selected_gate_status = (
         report["authoring_principles_status"]
         if args.gate == "authoring"
         else report["formal_principles_status"]
     )
+    if formal_evidence_head_commit is not None:
+        try:
+            _git_head_with_clean_tracked_tree(
+                root, expected_head=formal_evidence_head_commit
+            )
+            if selected_gate_status == "pass":
+                _validate_complete_formal_evidence_scene(
+                    root, formal_evidence_head_commit
+                )
+        except ValueError as exc:
+            print(
+                f"eval-core-principles: formal evidence finalization failed: {exc}",
+                file=sys.stderr,
+            )
+            return 1
     print(
         "eval-core-principles: "
         f"authoring_principles={report['authoring_principles_status']}; "

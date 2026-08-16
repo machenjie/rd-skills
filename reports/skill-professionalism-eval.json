@@ -870,17 +870,17 @@
         "review-agent"
       ],
       "trigger_signals": [
-        "ChangeForge routing registry or router change",
+        "rd-skills routing registry or router change",
         "route fixture owner conflict",
-        "independently assigned post-authoring review of a changed ChangeForge routing asset"
+        "independently assigned post-authoring review of a changed rd-skills routing asset"
       ],
       "anti_trigger_signals": [
         "ordinary product engineering task",
         "global re-routing from inside a dispatched task agent",
-        "no changed ChangeForge routing asset or route-owner conflict to review"
+        "no changed rd-skills routing asset or route-owner conflict to review"
       ],
       "layer3_candidates": [],
-      "line_count": 69,
+      "line_count": 75,
       "decision_rule_count": 5,
       "gotcha_count": 3,
       "reference_count": 1,
@@ -1013,8 +1013,8 @@
         "configuration-runtime-policy",
         "dependency-vulnerability-scanning"
       ],
-      "line_count": 80,
-      "decision_rule_count": 9,
+      "line_count": 75,
+      "decision_rule_count": 6,
       "gotcha_count": 1,
       "reference_count": 7,
       "routing_coverage_count": 103,
@@ -1107,9 +1107,9 @@
         "task-dag-decomposition",
         "release-rollback"
       ],
-      "line_count": 96,
-      "decision_rule_count": 16,
-      "gotcha_count": 4,
+      "line_count": 97,
+      "decision_rule_count": 24,
+      "gotcha_count": 2,
       "reference_count": 4,
       "routing_coverage_count": 1,
       "benchmark_coverage_count": 0
@@ -1776,8 +1776,7 @@
         "review-agent"
       ],
       "trigger_signals": [
-        "security permission or privacy boundary",
-        "secret exposure risk",
+        "proved trust, privilege, permission, privacy, credential, or secret boundary change with a reachable abuse or disclosure path",
         "credential or session lifecycle behavior change"
       ],
       "anti_trigger_signals": [
@@ -1786,7 +1785,9 @@
         "internal refactor with evidence that credential and session lifecycle behavior is unchanged",
         "reliability-only failure with no abuse or privacy risk",
         "input shape change with no security sink",
-        "scanner report organization without a security verdict"
+        "scanner report organization without a security verdict",
+        "security terminology, a permission API, path mutability, or future replacement possibility without a proved trust, privilege, secret, or privacy boundary change",
+        "bounded same-principal non-sensitive local access with no privilege elevation or less-trusted writer"
       ],
       "layer3_candidates": [
         "threat-modeling",
@@ -1807,8 +1808,8 @@
         "cryptography-key-lifecycle",
         "audit-evidence-integrity"
       ],
-      "line_count": 80,
-      "decision_rule_count": 4,
+      "line_count": 84,
+      "decision_rule_count": 6,
       "gotcha_count": 2,
       "reference_count": 4,
       "routing_coverage_count": 17,
@@ -2043,9 +2044,9 @@
         "linux-desktop-platform-extension",
         "cross-platform-client-extension"
       ],
-      "line_count": 97,
-      "decision_rule_count": 11,
-      "gotcha_count": 3,
+      "line_count": 98,
+      "decision_rule_count": 8,
+      "gotcha_count": 2,
       "reference_count": 5,
       "routing_coverage_count": 82,
       "benchmark_coverage_count": 5
@@ -7891,16 +7892,17 @@
         "review-agent"
       ],
       "trigger_signals": [
-        "local file mutation untrusted path resolution file protection or direct child-process control changes application behavior"
+        "local file mutation path resolution file protection writer trust classification or direct child-process control changes application behavior"
       ],
       "anti_trigger_signals": [
         "uploads shell-language semantics build graphs service rules or host administration",
-        "no local filesystem mutation path-authority or child-process contract changes"
+        "no local filesystem mutation path-authority writer-trust or child-process contract changes",
+        "path difference or writability alone without a less-trusted writer or reachable material impact"
       ],
       "layer3_candidates": [],
-      "line_count": 64,
+      "line_count": 65,
       "decision_rule_count": 8,
-      "gotcha_count": 5,
+      "gotcha_count": 6,
       "reference_count": 2,
       "routing_coverage_count": 1,
       "benchmark_coverage_count": 0

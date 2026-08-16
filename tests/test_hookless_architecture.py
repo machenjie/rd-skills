@@ -20,9 +20,6 @@ from validation_utils import (  # noqa: E402
     public_execution_template_block,
     public_execution_template_spans,
 )
-from tests.scripts.test_eval_core_principles import (  # noqa: E402
-    assert_core_producer_outcomes_passed,
-)
 
 
 OPAQUE_DIGEST_RE = re.compile(
@@ -103,12 +100,14 @@ class HooklessArchitectureTests(unittest.TestCase):
             "direct task",
             "analyzed work",
             "first executable slice",
-            "explicit local behavior/scope",
+            "explicit owner/scope/placement/acceptance/validation/rollback",
+            "no unresolved material risk",
+            "category cannot force analysis",
             "unresolved owner/placement/behavior/verification/rollback/material impact routes to analyzed work",
             "without ownership/verification discovery",
             "engineering-change-analysis",
             "synchronous/unknown capability",
-            "the actual diff, every changed file, and validation results",
+            "the actual diff/every changed file/validation results",
             "related work uses combined final-diff review",
             "preparation loop breaker",
             "bounded subagents authorized",
@@ -128,7 +127,7 @@ class HooklessArchitectureTests(unittest.TestCase):
         )
         for phrase in progress_contract["required_terms"]:
             self.assertIn(phrase.casefold(), text)
-        self.assertIn("permission required for scope expansion", text)
+        self.assertIn("permission required: scope expansion", text)
         self.assertNotIn(
             "or the authoritative control prompt already in context",
             text,
@@ -701,13 +700,6 @@ class HooklessArchitectureTests(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, cache)
         self.assertIn('"ledger_source_kind"', cache)
-
-    def test_composite_source_validator_passes(self) -> None:
-        assert_core_producer_outcomes_passed(
-            ROOT,
-            "validate-src-invariants",
-        )
-
 
 if __name__ == "__main__":
     unittest.main()

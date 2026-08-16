@@ -1,6 +1,6 @@
 ---
 name: routing-quality-review
-description: "Use an independently assigned `review-agent` for post-authoring review of changed ChangeForge routing registries, fixtures, mappings, or owner conflicts without repair. Skip product work and in-task global rerouting."
+description: "Use an independently assigned `review-agent` for post-authoring review of changed rd-skills routing registries, fixtures, mappings, or owner conflicts without repair. Skip product work and in-task global rerouting."
 ---
 
 # Routing Quality Review
@@ -12,15 +12,15 @@ anti-triggers, and fixtures.
 
 ## When To Use
 
-- ChangeForge routing registry or router change
+- rd-skills routing registry or router change
 - route fixture owner conflict
-- independently assigned post-authoring review of a changed ChangeForge routing asset
+- independently assigned post-authoring review of a changed rd-skills routing asset
 
 ## Do Not Use
 
 - ordinary product engineering task
 - global re-routing from inside a dispatched task agent
-- no changed ChangeForge routing asset or route-owner conflict to review
+- no changed rd-skills routing asset or route-owner conflict to review
 
 ## Required Inputs
 
@@ -30,8 +30,14 @@ anti-triggers, and fixtures.
 
 ## Professional Decision Rules
 
-- Keep one primary Professional Skill per task and one Review Skill per review boundary.
-- Add Layer 3 candidates only for concrete risk signals; keep ordinary task selection to zero through three.
+- Keep one primary Professional Skill per Task. Treat Task Review Skills as
+  requirements; the global Review Boundary realizes them through one primary
+  and zero or more specialist review-agent assignments with exactly one Review
+  Skill each.
+- Add Layer 3 candidates only for concrete risk signals; keep both Task-side
+  implementation selection and each review assignment's independent
+  review-risk selection to zero through three. Never copy or union Task Layer 3
+  into a review assignment.
 - Prefer deterministic signal-to-owner mappings and explicit anti-triggers.
 - Do not select this Skill as an implementation owner; keep it non-routable and assign it only for post-authoring review.
 - Validate that every selected Skill and reference is present in built output.

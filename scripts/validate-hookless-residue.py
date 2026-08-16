@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reject obsolete ChangeForge runtime mechanisms in source and built output."""
+"""Reject obsolete pre-hookless runtime mechanisms in source and built output."""
 
 from __future__ import annotations
 

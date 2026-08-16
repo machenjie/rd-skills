@@ -1,6 +1,6 @@
 # Code Of Conduct
 
-ChangeForge should be a professional, practical, and welcoming project space. This code of conduct applies to project repositories, issues, pull requests, discussions, reviews, and other project-controlled collaboration spaces.
+rd-skills should be a professional, practical, and welcoming project space. This code of conduct applies to project repositories, issues, pull requests, discussions, reviews, and other project-controlled collaboration spaces.
 
 ## Expected Behavior
 

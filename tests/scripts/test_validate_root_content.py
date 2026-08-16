@@ -11,6 +11,9 @@ from pathlib import Path
 from unittest import mock
 
 
+FULL_TEST_RESOURCE_CLASS = "heavy-tokenizer"
+
+
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/validate-root-content.py"
 
@@ -28,11 +31,19 @@ def _load_module():
 
 
 class ValidateRootContentTests(unittest.TestCase):
+    _baseline_root_content_cache: dict | None = None
+
     @classmethod
     def setUpClass(cls) -> None:
         cls.module = _load_module()
         cls.auditor = cls.module._load_auditor()
         cls.validation_utils = importlib.import_module("validation_utils")
+
+    @classmethod
+    def _baseline_root_content(cls) -> dict:
+        if cls._baseline_root_content_cache is None:
+            cls._baseline_root_content_cache = cls.module._fresh_root_content()
+        return deepcopy(cls._baseline_root_content_cache)
 
     def _unfenced_logical_list_items(self, markdown: str) -> dict[str, list[str]]:
         unfenced = "\n".join(
@@ -63,17 +74,17 @@ class ValidateRootContentTests(unittest.TestCase):
             "foundation_documents": 150,
             "compact_documents": 124,
             "complex_documents": 26,
-            "sum_tokens": 82726,
+            "sum_tokens": 82758,
             "min_tokens": 315,
             "p25_tokens": 517,
-            "p50_tokens": 550,
+            "p50_tokens": 551,
             "p75_tokens": 598,
             "p90_tokens": 641,
             "p95_tokens": 654,
             "p99_tokens": 717,
             "distribution_max_tokens": 730,
-            "mean_tokens": 551.507,
-            "sum_words": 58259,
+            "mean_tokens": 551.720,
+            "sum_words": 58283,
             "min_words": 238,
             "p25_words": 368,
             "p50_words": 392,
@@ -82,22 +93,39 @@ class ValidateRootContentTests(unittest.TestCase):
             "p95_words": 459,
             "p99_words": 489,
             "max_words": 497,
-            "mean_words": 388.393,
+            "mean_words": 388.553,
             "median_token_word_ratio": 1.411,
             "p90_token_word_ratio": 1.505,
             "p95_token_word_ratio": 1.543,
             "max_token_word_ratio": 1.630,
             "mean_token_word_ratio": 1.419,
         }
-        snapshot = self.module._fresh_root_content()[
-            "foundation_budget_contract"
-        ]["derivation_snapshot"]
+        test_class = type(self)
+        existing_cache = test_class._baseline_root_content_cache
+        synthetic = {"nested": {"value": 1}}
+        try:
+            test_class._baseline_root_content_cache = None
+            with mock.patch.object(
+                self.module,
+                "_fresh_root_content",
+                return_value=synthetic,
+            ) as fresh_root_content:
+                first = self._baseline_root_content()
+                first["nested"]["value"] = 2
+                second = self._baseline_root_content()
+            fresh_root_content.assert_called_once_with()
+            self.assertEqual(1, second["nested"]["value"])
+        finally:
+            test_class._baseline_root_content_cache = existing_cache
+
+        snapshot = self._baseline_root_content()["foundation_budget_contract"][
+            "derivation_snapshot"
+        ]
         self.assertEqual(expected, snapshot)
         self.assertNotIn("reviewed_positive_sample_max_tokens", snapshot)
 
     def test_foundation_derivation_snapshot_stat_drift_fails_closed(self) -> None:
-        root_content = self.module._fresh_root_content()
-        drifted = deepcopy(root_content)
+        drifted = self._baseline_root_content()
         snapshot = drifted["foundation_budget_contract"][
             "derivation_snapshot"
         ]
@@ -113,7 +141,7 @@ class ValidateRootContentTests(unittest.TestCase):
         )
 
     def test_foundation_derivation_snapshot_recomputes_document_metrics(self) -> None:
-        root_content = self.module._fresh_root_content()
+        root_content = self._baseline_root_content()
         foundation_documents = [
             document
             for document in root_content["documents"]
@@ -213,9 +241,6 @@ class ValidateRootContentTests(unittest.TestCase):
         return (
             {
                 "schema_version": self.auditor.ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION,
-                "lifecycle": self.auditor._root_bootstrap_lifecycle(
-                    [], self.auditor._root_document_fingerprints(documents)
-                ),
                 "entries": [],
             },
             [],
@@ -915,6 +940,10 @@ Use the owned boundary instead of a generic organization policy.
         expired = self._entry(candidates[0], disposition="time-bounded-exception")
         expired["review_after"] = "2026-07-14"
         _, _, errors = self.auditor._validate_root_semantic_dispositions(
+            candidates, [expired], date(2026, 7, 13), require_applied=False
+        )
+        self.assertEqual([], errors)
+        _, _, errors = self.auditor._validate_root_semantic_dispositions(
             candidates, [expired], date(2026, 7, 14), require_applied=False
         )
         self.assertTrue(any("after 2026-07-14" in item for item in errors), errors)
@@ -923,6 +952,28 @@ Use the owned boundary instead of a generic organization policy.
             candidates, list(reversed(entries)), date(2026, 7, 14), require_applied=False
         )
         self.assertTrue(any("sorted by candidate_id" in item for item in errors), errors)
+
+    def test_disposition_projection_rejects_volatile_evaluated_on(self) -> None:
+        evaluation_date = date(2026, 8, 9)
+        content = self.auditor._collect_root_content(
+            evaluation_date=evaluation_date
+        )
+        contract = content["semantic_advisories"]["disposition_contract"]
+        self.assertNotIn("evaluated_on", contract)
+
+        malformed = deepcopy(content)
+        malformed["semantic_advisories"]["disposition_contract"][
+            "evaluated_on"
+        ] = evaluation_date.isoformat()
+        _counts, errors = self.module._evaluate(
+            malformed,
+            strict=False,
+            evaluation_date=evaluation_date,
+        )
+        self.assertTrue(
+            any("disposition_contract fields do not match" in item for item in errors),
+            errors,
+        )
 
     def test_disposition_contract_rejects_duplicate_entry(self) -> None:
         document = self._document(

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate ChangeForge code generation benchmark definitions."""
+"""Validate rd-skills code generation benchmark definitions."""
 
 from __future__ import annotations
 

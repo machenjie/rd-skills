@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Propose a ChangeForge Skill, Profile, installer, validation, packaging, or documentation improvement
+about: Propose a rd-skills Skill, Profile, installer, validation, packaging, or documentation improvement
 labels: enhancement
 ---
 

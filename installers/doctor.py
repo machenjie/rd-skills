@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Inspect a hookless ChangeForge installation."""
+"""Inspect a hookless rd-skills installation."""
 
 from __future__ import annotations
 
@@ -147,7 +147,7 @@ def _profile_projection_issues(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Check ChangeForge installation health.")
+    parser = argparse.ArgumentParser(description="Check rd-skills installation health.")
     parser.add_argument("--agent", choices=AGENTS, required=True)
     parser.add_argument("--scope", choices=SCOPES, required=True)
     parser.add_argument("--target", type=Path)
@@ -227,7 +227,7 @@ def main() -> int:
                     )
                 )
         for path in legacy_residue_paths(args.agent, args.scope, args.target, targets.skills):
-            issues.append(f"legacy ChangeForge residue remains: {path}")
+            issues.append(f"legacy pre-hookless residue remains: {path}")
         if issues:
             print("doctor: issues")
             for issue in issues:

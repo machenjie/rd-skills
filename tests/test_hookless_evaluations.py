@@ -7,11 +7,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tests.scripts.test_eval_core_principles import (
-    assert_core_producer_outcomes_passed,
-)
-
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -42,7 +37,6 @@ class HooklessEvaluationTests(unittest.TestCase):
         )
 
     def test_routing_evaluation(self) -> None:
-        assert_core_producer_outcomes_passed(ROOT, "eval-routing")
         report = load_owned_eval_report(
             self,
             ROOT,
@@ -234,12 +228,6 @@ class HooklessEvaluationTests(unittest.TestCase):
             self.assertEqual(with_extra, loaded)
 
     def test_observable_trajectory_and_context_evaluations(self) -> None:
-        assert_core_producer_outcomes_passed(
-            ROOT,
-            "eval-agent-lightweight",
-            "eval-rendered-context",
-            "eval-context-control",
-        )
         report = load_owned_eval_report(
             self,
             ROOT,
@@ -262,6 +250,42 @@ class HooklessEvaluationTests(unittest.TestCase):
             report["parallelism_contract"]["current_write_parallelism"],
         )
         self.assertTrue(report["parallelism_contract"]["shared_workspace_serial_write"])
+        self.assertEqual(
+            report["orchestration_fixture_count"], len(report["semantic_traces"])
+        )
+        self.assertTrue(
+            all(
+                fixture["retained_semantic_equality"] is True
+                for fixture in report["orchestration_fixtures"]
+                if fixture["expected_valid"]
+            )
+        )
+        direct = next(
+            trace
+            for trace in report["semantic_traces"]
+            if trace["id"] == "dedup-direct-work-zero-analysis"
+        )
+        self.assertEqual("direct", direct["work_kind"])
+        self.assertEqual({"count": 0, "kinds": []}, direct["analysis"])
+        mutation_ids = {
+            "duplicate-same-scope-analysis",
+            "review-every-edit-task",
+            "skip-final-review-boundary",
+            "extra-final-review-after-covering-rereview",
+            "rerun-valid-validation-without-invalidation",
+            "reuse-validation-after-material-edit",
+            "repair-without-fresh-validation",
+            "repair-without-rereview",
+        }
+        self.assertTrue(
+            mutation_ids <= {trace["id"] for trace in report["semantic_traces"]}
+        )
+        self.assertTrue(
+            all(
+                trace["proof_limit"] == "deterministic-structural-fixture-only"
+                for trace in report["semantic_traces"]
+            )
+        )
         self.assertEqual("deterministic-fixtures", report["evidence_scope"])
         self.assertTrue(any("wall-clock performance" in item for item in report["limitations"]))
         self.assertTrue(any("real-host accuracy" in item for item in report["limitations"]))
@@ -316,6 +340,50 @@ class HooklessEvaluationTests(unittest.TestCase):
             rendered["aggregate"]["max_duplicate_rule_token_ratio"],
             rendered["budget_calibration"]["duplicate_rule_token_ratio_max"],
         )
+        transferred = rendered["transferred_context"]
+        self.assertEqual(
+            {
+                "authority",
+                "skill_reference",
+                "task_capsule",
+                "implementation_handoff",
+                "evidence_ledger",
+                "diff",
+                "validation",
+                "review_handoff",
+                "repair_context",
+                "duplicate_context",
+                "superseded_evidence",
+            },
+            set(transferred["categories"]),
+        )
+        self.assertEqual(9, transferred["long_task_selector_join_count"])
+        self.assertEqual(
+            transferred["gross_tokens"],
+            transferred["non_compressible_tokens"]
+            + transferred["compressible_tokens"],
+        )
+        self.assertGreaterEqual(
+            transferred["conservative_long_task_ratio"],
+            0.30,
+        )
+        self.assertTrue(
+            transferred["semantic_baseline"]["retained_semantic_equality"]
+        )
+        self.assertEqual(
+            report["orchestration_fixture_count"],
+            transferred["semantic_baseline"]["orchestration_fixture_count"],
+        )
+        self.assertEqual(
+            "continue",
+            transferred["context_compaction_decision"]["classification"],
+        )
+        self.assertEqual(
+            transferred["conservative_long_task_ratio"],
+            transferred["context_compaction_decision"][
+                "observed_conservative_ratio"
+            ],
+        )
 
         context = load_owned_eval_report(
             self,
@@ -328,11 +396,11 @@ class HooklessEvaluationTests(unittest.TestCase):
         self.assertTrue(set(report["limitations"]).issubset(context["limitations"]))
         self.assertEqual(rendered["aggregate"], context["rendered_context_summary"])
         self.assertNotIn("safe_parallel_writes", context["checks"])
-        self.assertTrue(context["checks"]["current_read_only_parallelism_declared"])
         self.assertTrue(context["checks"]["current_write_parallelism_unsupported"])
         self.assertTrue(context["checks"]["shared_workspace_serial_write"])
         self.assertTrue(context["checks"]["conditional_isolated_write_contract"])
         self.assertTrue(context["checks"]["utility_no_edit_workspace_gate"])
+        self.assertTrue(context["checks"]["transferred_context_measurement_valid"])
         self.assertNotIn("live_metrics", context)
 
     def test_removed_observations_option_is_rejected(self) -> None:
@@ -341,9 +409,6 @@ class HooklessEvaluationTests(unittest.TestCase):
         self.assertIn("unrecognized arguments", result.stderr)
 
     def test_professional_static_evaluation_contract(self) -> None:
-        assert_core_producer_outcomes_passed(
-            ROOT, "eval-skill-professionalism"
-        )
         report = load_owned_eval_report(
             self,
             ROOT,

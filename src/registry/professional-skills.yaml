@@ -27,8 +27,8 @@ professional_skills:
     required_expertise_tags: ["foundation-engineering-workflow", "foundation-repository-intelligence"]
     path: "src/professional-skills/routing-quality-review"
     role_support: ["review-agent"]
-    trigger_signals: ["ChangeForge routing registry or router change", "route fixture owner conflict", "independently assigned post-authoring review of a changed ChangeForge routing asset"]
-    anti_trigger_signals: ["ordinary product engineering task", "global re-routing from inside a dispatched task agent", "no changed ChangeForge routing asset or route-owner conflict to review"]
+    trigger_signals: ["rd-skills routing registry or router change", "route fixture owner conflict", "independently assigned post-authoring review of a changed rd-skills routing asset"]
+    anti_trigger_signals: ["ordinary product engineering task", "global re-routing from inside a dispatched task agent", "no changed rd-skills routing asset or route-owner conflict to review"]
     required_inputs: ["four Skill registries", "compact routing index", "changed routing fixtures"]
     output_contract: ["routing findings", "trigger and anti-trigger conflicts", "coverage gaps", "validation results"]
     escalation_signals: ["scope, authority, or material risk exceeds the selected task contract"]
@@ -86,7 +86,7 @@ professional_skills:
     trigger_signals: ["implementation-preparation for source-backed desired-behavior, affected-consumer, and verification analysis before implementation or repair", "diagnosis-only for verified cause analysis", "source-backed-answer for a repository-dependent engineering question"]
     anti_trigger_signals: ["eligible bounded Direct Task", "source-free question", "accepted Engineering Brief already exists and the user explicitly requests one narrow artifact analysis", "module-boundary placement decision", "dependency-direction placement decision"]
     required_inputs: ["explicit mode: implementation-preparation, diagnosis-only, or source-backed-answer", "user request or question", "bounded repository read scope and known constraints", "current source and test evidence discovered within the assigned scope"]
-    output_contract: ["implementation-preparation result defined by references/implementation-preparation.md", "diagnosis-only result defined by references/diagnosis-only.md", "source-backed-answer result defined by references/source-backed-answer.md", "source-backed affected-consumer evidence and unresolved structural-risk handoff to `architecture-impact-reviewer`"]
+    output_contract: ["implementation-preparation result defined by references/implementation-preparation.md with one initial Analysis or protected-decision Delta Analysis", "diagnosis-only result defined by references/diagnosis-only.md", "source-backed-answer result defined by references/source-backed-answer.md", "source-backed affected-consumer evidence and unresolved structural-risk handoff to `architecture-impact-reviewer`"]
     escalation_signals: ["scope, authority, or material risk exceeds the selected task contract"]
     reference_index:
       - path: "references/checklist.md"
@@ -171,8 +171,8 @@ professional_skills:
     role_support: ["analysis-agent"]
     trigger_signals: ["explicit Task DAG request with accepted Engineering Brief", "accepted Brief has multiple tasks with a dependency parallel benefit integration need or release order"]
     anti_trigger_signals: ["single bounded edit", "task DAG already accepted", "unanalysed change request"]
-    required_inputs: ["accepted Engineering Brief", "source evidence", "resource and review boundaries"]
-    output_contract: ["Task Capsules", "dependency edges", "integration order", "per-task and combined review contracts"]
+    required_inputs: ["accepted Engineering Brief", "source evidence", "semantic and Primary Professional Skill boundaries", "resource and minimum sufficient Review Boundaries"]
+    output_contract: ["Task Capsules with one Primary Professional Skill each", "dependency edges", "integration order", "minimum sufficient Review Boundaries preserving required Review Skills and Specialist obligations"]
     escalation_signals: ["scope, authority, or material risk exceeds the selected task contract"]
     reference_index:
       - path: "references/checklist.md"
@@ -620,7 +620,7 @@ professional_skills:
     required_expertise_tags: ["foundation-backend-engineering", "foundation-domain-modeling", "foundation-security-privacy", "specialty-identity-access-control"]
     path: "src/professional-skills/security-privacy-gate"
     role_support: ["analysis-agent", "task-agent", "review-agent"]
-    trigger_signals: ["security permission or privacy boundary", "secret exposure risk", "credential or session lifecycle behavior change"]
+    trigger_signals: ["proved trust, privilege, permission, privacy, credential, or secret boundary change with a reachable abuse or disclosure path", "credential or session lifecycle behavior change"]
     anti_trigger_signals:
       - "no trust boundary impact"
       - "self review request"
@@ -628,6 +628,8 @@ professional_skills:
       - "reliability-only failure with no abuse or privacy risk"
       - "input shape change with no security sink"
       - "scanner report organization without a security verdict"
+      - "security terminology, a permission API, path mutability, or future replacement possibility without a proved trust, privilege, secret, or privacy boundary change"
+      - "bounded same-principal non-sensitive local access with no privilege elevation or less-trusted writer"
     required_inputs: ["acceptance", "trust boundary summary"]
     required_inputs_by_role:
       analysis-agent: ["affected assets", "actors", "entry points", "sinks", "current control evidence"]
@@ -820,7 +822,7 @@ professional_skills:
     trigger_signals: ["implementation diff ready", "repair diff ready for re-review"]
     anti_trigger_signals: ["no actual diff", "reviewer implemented changed scope"]
     required_inputs: ["acceptance", "boundary summary", "actual diff", "validation evidence"]
-    output_contract: ["reviewed files", "unreviewed files", "findings", "residual risk"]
+    output_contract: ["reviewed and unreviewed scope", "material current-task findings and non-repair adjacent findings", "review-obligation coverage and subsumption", "scoped repair Evidence invalidation and re-review", "residual risk"]
     escalation_signals: ["scope, authority, or material risk exceeds the selected task contract"]
     reference_index:
       - path: "references/ai-review-pattern-catalog.md"

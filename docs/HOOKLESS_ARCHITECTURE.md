@@ -1,6 +1,6 @@
 # Hookless Architecture
 
-ChangeForge is a non-intercepting, host-native control plane for AI engineering
+rd-skills is a non-intercepting, host-native control plane for AI engineering
 work:
 
 ```text

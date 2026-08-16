@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared validation helpers for ChangeForge authoring contracts."""
+"""Shared validation helpers for rd-skills authoring contracts."""
 
 from __future__ import annotations
 
@@ -57,6 +57,24 @@ MARKDOWN_ANY_LIST_ITEM_RE = re.compile(
     r"^(?P<indent>[ \t]*)(?P<marker>[-*+]|\d+[.)])"
     r"(?P<spacing>[ \t]+)(?P<text>.+?)\s*$"
 )
+
+
+def report_output_paths(
+    reports_dir: Path,
+    json_filename: str,
+    markdown_filename: str,
+) -> tuple[Path, Path]:
+    """Resolve one producer's JSON and Markdown within an explicit directory."""
+
+    filenames = (json_filename, markdown_filename)
+    if any(
+        not filename
+        or Path(filename).name != filename
+        or filename in {".", ".."}
+        for filename in filenames
+    ):
+        raise ValueError("report filenames must be plain non-empty names")
+    return reports_dir / json_filename, reports_dir / markdown_filename
 
 
 def parse_markdown_logical_list_items(markdown: str) -> dict[str, list[str]]:
@@ -282,6 +300,140 @@ PRINCIPLE_PREDICATE_OPERATORS = {
     "not_contains",
     "not_equals",
 }
+EXPERT_PANEL_RELEASE_MANIFEST_SCHEMA_VERSION = 1
+EXPERT_PANEL_RELEASE_MANIFEST_ARTIFACTS = (
+    (
+        "readability",
+        "evals/expert-panel/readability.json",
+        "accepted-current-readability",
+    ),
+    (
+        "semantic-disposition",
+        "evals/expert-panel/semantic-disposition.json",
+        "accepted-current-semantic-disposition",
+    ),
+    (
+        "professional-completeness",
+        "evals/expert-panel/professional-completeness.json",
+        "accepted-current-professional-completeness",
+    ),
+)
+
+
+def validate_expert_panel_release_manifest(
+    value: object,
+    *,
+    require_current: bool,
+    expected_head_commit: str | None = None,
+) -> list[str]:
+    """Validate the closed downstream Expert Panel release identity."""
+
+    errors: list[str] = []
+    fields = {
+        "schema_version",
+        "status",
+        "head_commit",
+        "artifacts",
+        "verification_toolchain",
+    }
+    if not isinstance(value, dict) or set(value) != fields:
+        return ["expert_panel_release_manifest fields are invalid"]
+    if value.get("schema_version") != EXPERT_PANEL_RELEASE_MANIFEST_SCHEMA_VERSION:
+        errors.append("expert_panel_release_manifest schema_version is invalid")
+    status = value.get("status")
+    allowed_statuses = {"current", "not-evaluated", "missing", "stale", "pending"}
+    if status not in allowed_statuses:
+        errors.append("expert_panel_release_manifest status is invalid")
+    if require_current and status != "current":
+        errors.append("formal release requires a current Expert Panel manifest")
+    if status != "current":
+        if (
+            value.get("head_commit") is not None
+            or value.get("artifacts") != []
+            or value.get("verification_toolchain") is not None
+        ):
+            errors.append(
+                "non-current Expert Panel manifest cannot claim artifact identity"
+            )
+        return errors
+
+    head_commit = value.get("head_commit")
+    if (
+        not isinstance(head_commit, str)
+        or len(head_commit) not in {40, 64}
+        or any(char not in "0123456789abcdef" for char in head_commit)
+    ):
+        errors.append("expert_panel_release_manifest HEAD commit is invalid")
+    elif expected_head_commit is not None and head_commit != expected_head_commit:
+        errors.append(
+            "expert_panel_release_manifest HEAD does not match the current commit"
+        )
+
+    artifacts = value.get("artifacts")
+    if not isinstance(artifacts, list) or len(artifacts) != 3:
+        errors.append(
+            "expert_panel_release_manifest must contain exactly three artifacts"
+        )
+        artifacts = []
+    artifact_fields = {
+        "axis",
+        "path",
+        "external_sha256",
+        "size_bytes",
+        "review_id",
+        "verdict",
+    }
+    for index, expected in enumerate(EXPERT_PANEL_RELEASE_MANIFEST_ARTIFACTS):
+        if index >= len(artifacts):
+            break
+        artifact = artifacts[index]
+        axis, path, verdict = expected
+        if not isinstance(artifact, dict) or set(artifact) != artifact_fields:
+            errors.append(
+                f"expert_panel_release_manifest artifact {index} fields are invalid"
+            )
+            continue
+        if (
+            artifact.get("axis") != axis
+            or artifact.get("path") != path
+            or artifact.get("verdict") != verdict
+        ):
+            errors.append(
+                f"expert_panel_release_manifest artifact {index} authority is invalid"
+            )
+        digest = artifact.get("external_sha256")
+        if (
+            not isinstance(digest, str)
+            or len(digest) != 64
+            or any(char not in "0123456789abcdef" for char in digest)
+        ):
+            errors.append(
+                f"expert_panel_release_manifest artifact {index} sha256 is invalid"
+            )
+        if type(artifact.get("size_bytes")) is not int or artifact["size_bytes"] <= 0:
+            errors.append(
+                f"expert_panel_release_manifest artifact {index} size is invalid"
+            )
+        if not isinstance(artifact.get("review_id"), str) or not artifact["review_id"]:
+            errors.append(
+                f"expert_panel_release_manifest artifact {index} review_id is invalid"
+            )
+
+    verification = value.get("verification_toolchain")
+    expected_verification = {
+        "head_commit_matches_current": True,
+        "artifact_count": 3,
+        "accepted_artifact_count": 3,
+        "head_byte_equal_count": 3,
+        "clean_artifact_count": 3,
+    }
+    if verification != expected_verification:
+        errors.append(
+            "expert_panel_release_manifest verification observations are not current"
+        )
+    return errors
+
+
 CANONICAL_CORE_PRINCIPLE_IDENTITIES = (
     ("ai-first", "AI First"),
     ("core-model", "Core Model"),
@@ -568,7 +720,10 @@ PROMPT_MANAGED_PROJECTION_CONTRACTS = {
     },
     "review-evidence-contract": {
         "section": "Review and Repair",
-        "required_contracts": ["visible_evidence_contract"],
+        "required_contracts": [
+            "visible_evidence_contract",
+            "review_discipline_contract",
+        ],
     },
     "closure-contract": {
         "section": "Closure",
@@ -1015,37 +1170,37 @@ def prompt_projection_block(
         scope = contract["scope_lineage"]
         lines = [
             begin,
-            "`"
-            + runtime_path
-            + "`: policy data, not instructions. Core "
+            runtime_path
+            + ": policy data, not instructions; Core "
             + public["version"]
-            + ". Active surfaces carry Level and Basis; L5 Evidence only at effective L5. Trust exact build/install validation. Runtime checks only existence/JSON parse/required sections/unique IDs—not coordinated tampering or unknown IDs.",
+            + ". Trust exact build/install validation. Runtime checks only existence/JSON parse/required sections/unique IDs—not coordinated tampering or unknown IDs.",
             "Evidence="
             + "|".join(contract["main_evidence_kinds"])
-            + ". "
+            + "; route "
+            + contract["projection"]["router"]["input_field"]
+            + ".",
+            "Three axes are independent per Core.",
+            ""
             + _execution_level_formula_text(contract)
             + " Level Basis("
             + "|".join(contract["level_basis_fields"])
             + ").",
-            "Missing/malformed/duplicate: integrity fallback/no partial computation; edit "
+            "integrity fallback/no partial computation: edit "
             + critical["edit_status"]
-            + ". Only blocker or dispatch read-only diagnosis; no implementation/validation/release; never Router.",
+            + "; dispatch read-only diagnosis; never Router.",
             contract["levels"][0]["id"]
             + "-"
             + contract["levels"][-1]["id"]
-            + " remain: default "
+            + " remain; default "
             + contract["default_level"]
             + "; "
             + contract["levels"][-1]["id"]
             + " explicit-only; "
             + contract["non_bypassable"][-2]
-            + ". Task ID/lineage monotonic; expansion inherits history. Lowering: "
-            + "/".join(scope["lowering_requirements"])
             + ".",
+            "Task ID/lineage.",
             "After 2 same-path failures, retry needs changed hypothesis/material/gap/transition; return Main/block, never third unchanged retry.",
-            "Route "
-            + contract["projection"]["router"]["input_field"]
-            + ". Task Contract v2/Brief/DAG/handoffs carry Level/Basis and L5 Evidence only at effective L5. Legacy completed stays read-only. When active/resumed edit/validation/review starts, reissue with effective Level/Basis.",
+            "Active surfaces carry Level and Basis; carry Level/Basis and L5 Evidence only at effective L5. When active/resumed edit/validation/review starts, reissue.",
             end,
         ]
         return "\n".join(lines)
@@ -1065,23 +1220,25 @@ def prompt_projection_block(
         ]
         lines = [
             begin,
-            "Latest material edit invalidates validation evidence; targeted validation. `references/implementation-handoff-template.md`: visible task-local Evidence Ledger schema authority.",
-            "State: " + ", ".join(evidence["states"]) + ". Owner identifies the evidence-producing agent: "
-            f"{proof['latest_material_edit_claim']}, {proof['validation_claim']}.",
-            "Completion requires current review-agent evidence: "
+            "Latest material edit invalidates validation evidence. references/implementation-handoff-template.md: visible task-local Evidence Ledger schema authority. State: "
+            + ", ".join(evidence["states"])
+            + ". Owner identifies the evidence-producing agent: "
+            + proof["latest_material_edit_claim"]
+            + ", "
+            + proof["validation_claim"]
+            + ".",
+            "Current review-agent evidence: "
             + required_review_claims[0]
-            + " and "
+            + "; "
             + required_review_claims[2]
-            + "/"
+            + "|"
             + required_review_claims[3]
             + ".",
             required_review_claims[1]
-            + " applies to actual Task Capsule L4/L5 now/history, matched/unknown L4 trigger, or high-risk actual Review assignment.",
-            "If high-risk-review is not-required, prove ordinary independent review and digest-only matching to both lower-risk authorities. Missing/inconsistent authority/binding fails closed; reissue.",
-            "Give review-agent the actual diff, every changed file, and validation results—not implementer reasoning; never edits; use "
-            "`references/review-handoff-template.md`.",
-            "Repair supersedes previous diff. Fresh validation/re-review.",
-            "No " + "/".join(forbidden) + ".",
+            + ": actual Task Capsule L4/L5 now/history|matched material L4/provisional critical unknown|high-risk actual Review assignment.",
+            "not-required: ordinary independent review; digest-only matching to both lower-risk authorities; Missing/inconsistent authority/binding fails closed; reissue. Send review-agent the actual diff/every changed file/validation results. Repair supersedes previous diff; fresh validation/re-review.",
+            "No " + "/".join(forbidden) + ". review_discipline_contract: review_frequency_policy|validation_evidence_reuse|obligation_subsumption|repair_invalidation_policy; task_contract.finding_relations.",
+            "Review Boundary: shared Round ID. Assignments have ID/role/scope, one Review Skill, zero-three independent review Layer3. Specialists do not close/increment. Primary consumes results, emits sole artifact/Task projections. Scoped edits invalidate intersecting/dependent evidence.",
             end,
         ]
         return "\n".join(lines)
@@ -1097,13 +1254,13 @@ def prompt_projection_block(
         )
         lines = [
             begin,
-            "`Status: " + " | ".join(statuses) + "`. Same Task ID: "
-            f"{transition_text}. `{' | '.join(terminals)}` terminal for that Task ID; new work after completion: new Task ID at "
-            f"`{new_work['initial_status']}`.",
+            "Status: " + " | ".join(statuses) + ". Same Task ID: "
+            f"{transition_text}. {' | '.join(terminals)} terminal for that Task ID; new work after completion: new Task ID at "
+            f"{new_work['initial_status']}.",
             completed_rule_text,
             f"Exact fail-closed outcomes: {fail_closed_text}.",
             "Implementation: post-edit validation; every changed file reviewed; no blockers; repair: fresh validation/re-review.",
-            "Report unverified scope/residual risk; closure current evidence scope covers claimed result.",
+            "Unverified scope/residual risk; current evidence scope covers claimed result.",
             end,
         ]
         return "\n".join(lines)
@@ -2699,6 +2856,7 @@ def validate_impact_graph_contract(
     affected_fields = {
         "build_profile_projection",
         "dependency_closure",
+        "expert_panel_evidence_projection",
         "isolated_execution",
         "test_policy",
         "eligible_producer_ids",
@@ -2839,18 +2997,113 @@ def validate_impact_graph_contract(
                     "impact_graph_contract.stages.affected.professionalism."
                     f"full_scope_patterns contains unsafe pattern {pattern!r}"
                 )
-    required_review_sources = {
-        "scripts/audit-skill-content.py",
+    expected_full_scope_patterns = [
         "scripts/eval-skill-professionalism.py",
-        "scripts/expert_panel_review.py",
-        "scripts/professional_completeness_carry_forward.py",
-        "scripts/validation_utils.py",
-    }
-    if not required_review_sources.issubset(set(full_scope_patterns)):
+        "scripts/expert_panel_contracts.py",
+    ]
+    if full_scope_patterns != expected_full_scope_patterns:
         errors.append(
-            "affected professionalism full_scope_patterns must include the "
-            "explicit detector and review-contract source manifest"
+            "affected professionalism full_scope_patterns must contain only "
+            "the static evaluator and explicit Professional semantic-contract authority"
         )
+
+    evidence_projection = affected["expert_panel_evidence_projection"]
+    evidence_fields = {
+        "schema_version",
+        "unchanged_status",
+        "affected_status",
+        "axis_order",
+        "axis_sources",
+    }
+    if (
+        not isinstance(evidence_projection, dict)
+        or set(evidence_projection) != evidence_fields
+    ):
+        errors.append(
+            "affected expert_panel_evidence_projection fields must be exactly "
+            f"{sorted(evidence_fields)}"
+        )
+    else:
+        axis_order = [
+            "readability",
+            "semantic-disposition",
+            "professional-completeness",
+        ]
+        if evidence_projection["schema_version"] != 1:
+            errors.append("affected Expert Panel evidence schema_version must be 1")
+        if evidence_projection["unchanged_status"] != "unchanged":
+            errors.append("unaffected Expert Panel evidence status must be unchanged")
+        if evidence_projection["affected_status"] != "soft-stale":
+            errors.append("affected Expert Panel evidence status must be soft-stale")
+        if evidence_projection["axis_order"] != axis_order:
+            errors.append("affected Expert Panel evidence axis order is invalid")
+        axis_sources = evidence_projection["axis_sources"]
+        if not isinstance(axis_sources, list):
+            errors.append("affected Expert Panel evidence axis_sources must be a list")
+            axis_sources = []
+        actual_axes: list[str] = []
+        paths_by_axis: dict[str, list[str]] = {}
+        for index, source in enumerate(axis_sources):
+            context = (
+                "impact_graph_contract.stages.affected."
+                f"expert_panel_evidence_projection.axis_sources[{index}]"
+            )
+            if not isinstance(source, dict) or set(source) != {
+                "axis",
+                "path_patterns",
+            }:
+                errors.append(f"{context} fields must be axis and path_patterns")
+                continue
+            axis = source["axis"]
+            if not isinstance(axis, str):
+                errors.append(f"{context}.axis must be a string")
+                continue
+            actual_axes.append(axis)
+            patterns = source["path_patterns"]
+            if (
+                not isinstance(patterns, list)
+                or not patterns
+                or any(not isinstance(pattern, str) or not pattern for pattern in patterns)
+                or len(patterns) != len(set(patterns))
+            ):
+                errors.append(f"{context}.path_patterns must be non-empty unique strings")
+                continue
+            paths_by_axis[axis] = list(patterns)
+            for pattern in patterns:
+                candidate = PurePosixPath(pattern)
+                if (
+                    candidate.is_absolute()
+                    or not candidate.parts
+                    or ".." in candidate.parts
+                    or "\\" in pattern
+                    or "\x00" in pattern
+                ):
+                    errors.append(f"{context} contains unsafe pattern {pattern!r}")
+        if actual_axes != axis_order:
+            errors.append("affected Expert Panel evidence axis sources are invalid")
+        required_axis_sources = {
+            "readability": {
+                "scripts/audit-skill-content.py",
+                "scripts/expert_panel_contracts.py",
+                "evals/expert-panel/readability.json",
+            },
+            "semantic-disposition": {
+                "scripts/audit-skill-content.py",
+                "scripts/expert_panel_contracts.py",
+                "evals/expert-panel/semantic-disposition.json",
+            },
+            "professional-completeness": {
+                "scripts/expert_panel_contracts.py",
+                "scripts/professional_completeness_carry_forward.py",
+                "evals/expert-panel/professional-completeness.json",
+            },
+        }
+        for axis, required in required_axis_sources.items():
+            missing = sorted(required - set(paths_by_axis.get(axis, [])))
+            if missing:
+                errors.append(
+                    f"affected Expert Panel evidence axis {axis!r} lacks sources {missing}"
+                )
     ci_tests = stages["ci-tests"]
     ci_fields = {"runner", "test_self_patterns"}
     if not isinstance(ci_tests, dict) or set(ci_tests) != ci_fields:
@@ -3740,6 +3993,12 @@ def validate_core_contracts(
         "verdicts",
         "repair_order",
         "level_extension_rule",
+        "review_frequency_policy",
+        "validation_evidence_reuse",
+        "review_boundary_contract",
+        "obligation_subsumption",
+        "material_edit_invalidation_policy",
+        "repair_invalidation_policy",
         "review_scope",
         "finding_policy_source",
         "effective_level_policy",
@@ -3990,13 +4249,260 @@ def validate_core_contracts(
                 "review_discipline_contract.level_extension_rule may add only "
                 "depth, independence, or evidence"
             )
+        expected_review_frequency_policy = {
+            "separation_rule": (
+                "effective-level-decides-depth-review-or-risk-boundary-decides-frequency"
+            ),
+            "task_completion_triggers_review": False,
+            "minimum_sufficient_review_boundaries": True,
+            "defaults": {
+                "L1-L3": "one-combined-independent-final-review",
+                "L4": "same-frequency-plus-triggered-professional-depth",
+                "L5": "required-independent-preimplementation-and-final-review",
+            },
+            "intermediate_review_triggers": [
+                "delayed-review-materially-increases-downstream-risk",
+                "downstream-consumer-would-commit-to-a-materially-risky-contract",
+                "materially-irreversible-or-wide-blast-radius-before-final-review",
+                "L5-or-explicit-professional-gate",
+            ],
+        }
+        if review_discipline["review_frequency_policy"] != expected_review_frequency_policy:
+            errors.append(
+                "review_discipline_contract.review_frequency_policy must separate "
+                "Effective Level depth from minimum-sufficient Review Boundary frequency"
+            )
+        expected_validation_reuse = {
+            "default": "reuse-unless-a-declared-reproduction-trigger-applies",
+            "required_qualities": ["fresh", "scope-correct", "trustworthy-oracle"],
+            "reproduction_triggers": [
+                "stale-evidence",
+                "coverage-gap",
+                "suspicious-oracle-or-test",
+                "flaky-or-retry",
+                "environment-sensitive-result",
+                "concrete-reviewer-doubt",
+                "effective-level-or-professional-risk-independent-reproduction",
+            ],
+            "reviewer_independence_requires_duplicate_execution": False,
+        }
+        if review_discipline["validation_evidence_reuse"] != expected_validation_reuse:
+            errors.append(
+                "review_discipline_contract.validation_evidence_reuse must reuse "
+                "fresh scoped trustworthy evidence unless a closed trigger applies"
+            )
+        expected_review_boundary_contract = {
+            "schema_version": 1,
+            "boundary_fields": [
+                "Review Boundary ID",
+                "Review Strategy",
+                "Review Round ID",
+                "Effective Level",
+                "Required Review Skills",
+                "Specialist Obligations",
+                "Covered Task IDs",
+                "Required Changed Scope",
+                "Professional Risk Dimensions",
+                "Required Validation / Evidence Binding",
+                "Review Assignments",
+                "Primary Close Ordering",
+            ],
+            "assignment_fields": [
+                "assignment_id",
+                "role",
+                "profile",
+                "review_skill",
+                "layer3_skills",
+                "layer3_selection_basis",
+                "scope",
+            ],
+            "assignment_roles": ["primary", "specialist"],
+            "assignment_profile": "review-agent",
+            "primary_assignment_count": "exactly-one",
+            "specialist_assignment_count": "zero-or-more",
+            "review_skill_per_assignment": "exactly-one",
+            "maximum_layer3_skills_per_assignment": 3,
+            "layer3_selection_basis": "review-risk",
+            "layer3_selection_rule": (
+                "review-risk-independent-of-task-layer3-union"
+            ),
+            "assignment_scope": "non-empty-bounded-scope",
+            "shared_round_rule": (
+                "all-boundary-assignments-share-one-review-round-id"
+            ),
+            "round_count_rule": (
+                "specialist-results-do-not-increment-review-round-count"
+            ),
+            "specialist_completion_rule": (
+                "specialist-results-do-not-close-covered-tasks"
+            ),
+            "close_order": (
+                "specialists-before-primary-close-in-one-shared-round"
+            ),
+            "primary_close_rule": (
+                "primary-consumes-every-current-required-specialist-result-and-"
+                "emits-the-sole-closing-artifact"
+            ),
+            "artifact_fields": [
+                "artifact_id",
+                "artifact_digest",
+                "review_boundary_id",
+                "review_round_id",
+                "covered_task_ids",
+                "required_changed_scope",
+                "evidence_scope",
+                "task_generations",
+                "assignment_result_ids",
+                "primary_assignment_id",
+                "verdict",
+            ],
+            "task_completion_projection_fields": [
+                "task_id",
+                "artifact_id",
+                "artifact_digest",
+                "review_boundary_id",
+                "review_round_id",
+                "generation",
+            ],
+            "artifact_identity_fields": ["artifact_id", "artifact_digest"],
+            "artifact_generation_rule": "current-for-every-covered-task",
+            "task_completion_projection_rule": (
+                "one-exact-artifact-projection-per-covered-task"
+            ),
+            "task_node_requirement_fields": [
+                "Required Review Skills",
+                "Specialist Obligations",
+                "Professional Risk Dimensions",
+            ],
+            "task_node_forbidden_scheduling_fields": [
+                "Review Strategy",
+                "Review Round ID",
+                "Review Assignments",
+                "Primary Close Ordering",
+            ],
+            "legacy_fixture_boundary_fields": [
+                "effective_level",
+                "primary_review_skill",
+                "required_review_skills",
+                "specialist_obligations",
+                "covered_task_ids",
+                "required_changed_scope",
+                "professional_risk_dimensions",
+                "required_validation_evidence_binding",
+            ],
+        }
+        if review_discipline["review_boundary_contract"] != expected_review_boundary_contract:
+            errors.append(
+                "review_discipline_contract.review_boundary_contract must define "
+                "assignment-aware combined review, one shared round, and one artifact"
+            )
+        expected_subsumption = {
+            "satisfier": "same-or-stronger-current-independent-review",
+            "review_boundary_fields": [
+                "Review Boundary ID",
+                "Review Strategy",
+                "Review Round ID",
+                "Effective Level",
+                "Required Review Skills",
+                "Specialist Obligations",
+                "Covered Task IDs",
+                "Required Changed Scope",
+                "Professional Risk Dimensions",
+                "Required Validation / Evidence Binding",
+                "Review Assignments",
+                "Primary Close Ordering",
+            ],
+            "primary_review_assignment_per_boundary": "exactly-one",
+            "required_validation_evidence_binding": {
+                "generation": "current",
+                "coverage": "covered-task-ids",
+            },
+            "coverage_dimensions": [
+                "review-boundary-id",
+                "review-strategy",
+                "review-round-id",
+                "effective-level",
+                "required-review-skills",
+                "specialist-obligations",
+                "covered-task-ids",
+                "required-changed-scope",
+                "professional-risk-dimensions",
+                "required-validation-evidence-binding",
+                "review-assignments",
+                "primary-close-ordering",
+            ],
+            "unique_specialist_obligations_preserved": True,
+            "weaker_equivalent_review_obligations": "satisfied-without-repeat",
+            "covering_repair_rereview_satisfies_final_review": True,
+        }
+        if review_discipline["obligation_subsumption"] != expected_subsumption:
+            errors.append(
+                "review_discipline_contract.obligation_subsumption must close all "
+                "all Review Boundary dimensions without dropping Specialist obligations"
+            )
+        expected_material_edit_invalidation = {
+            "default_scope": (
+                "intersecting-scope-and-transitive-task-dependencies-only"
+            ),
+            "invalidates": ["validation-evidence", "review-evidence"],
+            "retains": "unaffected-current-evidence",
+            "dependency_direction": "downstream-transitive-dependents",
+            "requires_declared_changed_scope": True,
+            "full_boundary_invalidation_by_default": False,
+        }
+        if (
+            review_discipline["material_edit_invalidation_policy"]
+            != expected_material_edit_invalidation
+        ):
+            errors.append(
+                "review_discipline_contract.material_edit_invalidation_policy must "
+                "invalidate only intersecting and transitive dependent evidence"
+            )
+        expected_repair_invalidation = {
+            "default_scope": "intersecting-and-transitively-dependent-evidence-only",
+            "invalidates": [
+                "repair-intersecting-scope",
+                "claims-dependent-on-modified-behavior",
+                "transitive-repair-impact",
+            ],
+            "retains": "unaffected-fresh-evidence",
+            "rereview_focus": [
+                "original-finding-resolved",
+                "repair-diff-correct",
+                "affected-dependent-scope-safe",
+            ],
+            "scope_expansion_triggers": [
+                "public-or-shared-contract",
+                "schema",
+                "common-abstraction",
+                "ownership",
+                "dependency-graph",
+                "security-boundary",
+                "transaction-or-concurrency-semantics",
+                "integration-behavior",
+            ],
+            "full-history-rereview-by-default": False,
+        }
+        if review_discipline["repair_invalidation_policy"] != expected_repair_invalidation:
+            errors.append(
+                "review_discipline_contract.repair_invalidation_policy must invalidate "
+                "only intersecting or dependent evidence and expand at named boundaries"
+            )
         expected_review_scope = {
             "task_boundary_source": "task_contract.task_boundary",
             "handoff_projection_fields": [
-                "Goal",
                 "Acceptance",
-                "Non-goals",
-                "Allowed Write Scope",
+                "Review Boundary",
+                "Effective Level",
+                "Required Review Skills",
+                "Required Changed Scope",
+                "Latest Actual Diff or Accessible Reference",
+                "Current Structured Validation",
+                "Relevant Current Evidence",
+                "Scope",
+                "Freshness",
+                "Proof Limit",
+                "Unverified Scope",
             ],
             "read_grants_repair_authority": False,
             "finding_relation_precedes": ["severity", "blocker"],
@@ -4107,10 +4613,13 @@ def validate_core_contracts(
             "uniform-review-dimensions",
             "professional-risk-matrix",
             "repair-review-order",
+            "review-frequency-and-subsumption",
+            "validation-evidence-reuse",
+            "material-findings-and-fail-fast",
         ]:
             errors.append(
                 "review_discipline_contract.profile_projection must define the "
-                "uniform dimensions, professional-risk matrix, and repair-order rules"
+                "uniform dimensions, risk matrix, repair, frequency, reuse, and finding rules"
             )
         handoff_projection = review_discipline["handoff_projection"]
         if exact_keys(
@@ -4271,12 +4780,11 @@ def validate_core_contracts(
         fixture_fields = {
             "thresholds",
             "formal_round_policy",
-            "locked_current_catalog",
         }
         if not isinstance(fixtures, dict) or set(fixtures) != fixture_fields:
             errors.append(
                 "final_goal_contract.professional_review_cost_fixtures must "
-                "define thresholds, formal_round_policy, and locked_current_catalog"
+                "define thresholds and formal_round_policy"
             )
         else:
             thresholds = fixtures["thresholds"]
@@ -4307,6 +4815,7 @@ def validate_core_contracts(
                 or thresholds["maximum_mean_input_ratio_ppm"]
                 > thresholds["maximum_input_ratio_ppm"]
                 or thresholds["maximum_input_ratio_ppm"] > 1_000_000
+                or thresholds["maximum_fresh_target_count"] > 189
             ):
                 valid_thresholds = False
                 errors.append(
@@ -4331,166 +4840,6 @@ def validate_core_contracts(
                     "schema 1, complete source coverage, 50000 ppm metadata "
                     "overhead, and a 1000000 ppm reviewer-added union bound"
                 )
-            locked = fixtures["locked_current_catalog"]
-            locked_fields = {
-                "professional_packages_fingerprint",
-                "catalog_fingerprint",
-                "material_catalog_fingerprint",
-                "full_projection_fingerprint",
-                "review_contract_fingerprint",
-                "case_count",
-                "cases_fingerprint",
-                "full_rereview_deduplicated_capsule_input_bytes_proxy",
-                "fresh_target_count",
-                "input_ratio_ppm",
-                "named_isolated_case",
-            }
-            if not isinstance(locked, dict) or set(locked) != locked_fields:
-                errors.append(
-                    "professional review locked_current_catalog fields are invalid"
-                )
-            else:
-                for field in (
-                    "professional_packages_fingerprint",
-                    "catalog_fingerprint",
-                    "material_catalog_fingerprint",
-                    "full_projection_fingerprint",
-                    "review_contract_fingerprint",
-                    "cases_fingerprint",
-                ):
-                    value = locked[field]
-                    if (
-                        not isinstance(value, str)
-                        or len(value) != 64
-                        or any(char not in "0123456789abcdef" for char in value)
-                    ):
-                        errors.append(
-                            f"professional review fixture {field} must be lowercase sha256"
-                        )
-                case_count = locked["case_count"]
-                full_bytes = locked[
-                    "full_rereview_deduplicated_capsule_input_bytes_proxy"
-                ]
-                valid_case_count = (
-                    isinstance(case_count, int)
-                    and not isinstance(case_count, bool)
-                    and case_count > 0
-                )
-                if not valid_case_count:
-                    errors.append(
-                        "professional review sensitivity case_count must be a "
-                        "positive integer"
-                    )
-                elif valid_thresholds and (
-                    thresholds["maximum_fresh_target_count"] > case_count
-                ):
-                    errors.append(
-                        "professional review maximum fresh-target threshold cannot "
-                        "exceed the locked case_count"
-                    )
-                if (
-                    not isinstance(full_bytes, int)
-                    or isinstance(full_bytes, bool)
-                    or full_bytes <= 0
-                ):
-                    errors.append(
-                        "professional review full rereview byte proxy must be positive"
-                    )
-                fresh = locked["fresh_target_count"]
-                ratio = locked["input_ratio_ppm"]
-                expected_stat_fields = {"min", "sum", "mean_milli", "p95", "max"}
-                expected_ratio_fields = {"min", "sum", "mean", "p95", "max"}
-                if not isinstance(fresh, dict) or set(fresh) != expected_stat_fields:
-                    errors.append(
-                        "professional review fresh_target_count statistics are invalid"
-                    )
-                elif any(
-                    not isinstance(value, int) or isinstance(value, bool) or value < 0
-                    for value in fresh.values()
-                ):
-                    errors.append(
-                        "professional review fresh_target_count statistics must be non-negative integers"
-                    )
-                elif valid_case_count and valid_thresholds and (
-                    fresh["mean_milli"] != fresh["sum"] * 1000 // case_count
-                    or not fresh["min"] <= fresh["p95"] <= fresh["max"]
-                    or fresh["max"] > thresholds["maximum_fresh_target_count"]
-                    or fresh["sum"]
-                    > thresholds["maximum_mean_fresh_target_count"]
-                    * case_count
-                ):
-                    errors.append(
-                        "professional review fresh-target fixture arithmetic or threshold is stale"
-                    )
-                if not isinstance(ratio, dict) or set(ratio) != expected_ratio_fields:
-                    errors.append(
-                        "professional review input_ratio_ppm statistics are invalid"
-                    )
-                elif any(
-                    not isinstance(value, int) or isinstance(value, bool) or value < 0
-                    for value in ratio.values()
-                ):
-                    errors.append(
-                        "professional review input_ratio_ppm statistics must be non-negative integers"
-                    )
-                elif valid_case_count and valid_thresholds and (
-                    ratio["mean"] != ratio["sum"] // case_count
-                    or not ratio["min"] <= ratio["p95"] <= ratio["max"]
-                    or ratio["max"] > thresholds["maximum_input_ratio_ppm"]
-                    or ratio["sum"]
-                    > thresholds["maximum_mean_input_ratio_ppm"]
-                    * case_count
-                ):
-                    errors.append(
-                        "professional review input-ratio fixture arithmetic or threshold is stale"
-                    )
-                named = locked["named_isolated_case"]
-                named_fields = {
-                    "skill_id",
-                    "fresh_target_count",
-                    "carried_forward_target_count",
-                    "canonical_capsule_input_bytes_proxy",
-                    "input_ratio_ppm",
-                }
-                if not isinstance(named, dict) or set(named) != named_fields:
-                    errors.append(
-                        "professional review named isolated case fields are invalid"
-                    )
-                elif not all(
-                    isinstance(named[field], int)
-                    and not isinstance(named[field], bool)
-                    and named[field] >= 0
-                    for field in (
-                        "fresh_target_count",
-                        "carried_forward_target_count",
-                        "canonical_capsule_input_bytes_proxy",
-                        "input_ratio_ppm",
-                    )
-                ):
-                    errors.append(
-                        "professional review named isolated case counts and bytes "
-                        "must be non-negative integers"
-                    )
-                elif (
-                    named["skill_id"] != "acceptance-criteria-builder"
-                    or named["fresh_target_count"]
-                    + named["carried_forward_target_count"]
-                    != case_count
-                    or named["canonical_capsule_input_bytes_proxy"] <= 0
-                    or not (
-                        isinstance(full_bytes, int)
-                        and not isinstance(full_bytes, bool)
-                        and full_bytes > 0
-                    )
-                    or named["input_ratio_ppm"]
-                    != named["canonical_capsule_input_bytes_proxy"]
-                    * 1_000_000
-                    // full_bytes
-                ):
-                    errors.append(
-                        "professional review named isolated case arithmetic is stale"
-                    )
-
     reference = data["reference_contract"]
     reference_fields = {
         "schema_version",
@@ -4863,6 +5212,14 @@ def validate_core_contracts(
         "requested_values",
         "dynamic_levels",
         "default_level",
+        "decision_axes",
+        "material_assessment_fields",
+        "material_candidate_statuses",
+        "critical_unknown_fields",
+        "calibration_principles",
+        "candidate_signals_not_sufficient_for_l4",
+        "same_trust_principal",
+        "action_authority",
         "trigger_registry",
         "l2_eligibility",
         "main_evidence_kinds",
@@ -4931,6 +5288,120 @@ def validate_core_contracts(
         if execution["default_level"] != "L3":
             errors.append("execution default level must remain L3")
 
+        expected_axes = {
+            "professional_risk_signal": {
+                "decision": "skill-or-risk-lens-selection",
+                "execution_level_effect": "none",
+                "rule": "route expertise from concrete task evidence without inferring material residual impact",
+            },
+            "residual_reachable_material_risk": {
+                "decision": "execution-level",
+                "execution_level_effect": "L4 only for a reachable material residual impact or explicit policy floor",
+                "rule": "evaluate the impact path after existing enforced controls",
+            },
+            "concrete_action_authority": {
+                "decision": "action-decision",
+                "execution_level_effect": "none unless the action exposes a new material Task risk",
+                "rule": "classify each action from host capability, Task Scope, and user authority without granting permission",
+            },
+        }
+        if execution["decision_axes"] != expected_axes:
+            errors.append("execution decision axes must remain exact and independent")
+        expected_material_fields = [
+            "affected_asset_or_invariant",
+            "actor_or_controlling_input",
+            "authority_or_behavior_delta",
+            "reachable_impact_path",
+            "blast_radius",
+            "reversibility_or_recovery",
+            "existing_enforced_controls",
+            "residual_impact",
+        ]
+        if execution["material_assessment_fields"] != expected_material_fields:
+            errors.append("execution material assessment fields must remain exact and ordered")
+        if execution["material_candidate_statuses"] != [
+            "matched",
+            "non_material",
+            "unknown",
+            "not_matched",
+        ]:
+            errors.append(
+                "execution material candidate statuses must remain exact and ordered"
+            )
+        expected_critical_fields = [
+            "candidate_l4_predicate",
+            "missing_fact",
+            "plausible_impact_path",
+            "material_consequence",
+        ]
+        if execution["critical_unknown_fields"] != expected_critical_fields:
+            errors.append("execution critical unknown fields must remain exact and ordered")
+        if execution["calibration_principles"] != [
+            "Possibility != Reachability.",
+            "Mutability != Trust Boundary.",
+            "Capability != Authorization.",
+            "Risk Category != Material Risk.",
+        ]:
+            errors.append("execution calibration principles must remain exact")
+        candidate_signals = string_list(
+            execution["candidate_signals_not_sufficient_for_l4"],
+            "execution_level_contract.candidate_signals_not_sufficient_for_l4",
+        )
+        if len(candidate_signals) != 10 or len(candidate_signals) != len(set(candidate_signals)):
+            errors.append("execution candidate signals must remain ten unique non-L4 proofs")
+        same_principal = execution["same_trust_principal"]
+        if not exact_keys(
+            same_principal,
+            {"rule", "escalation_requirement", "user_request_effect"},
+            "execution_level_contract.same_trust_principal",
+        ):
+            pass
+        elif any(
+            not isinstance(same_principal[field], str) or not same_principal[field].strip()
+            for field in ("rule", "escalation_requirement", "user_request_effect")
+        ):
+            errors.append("execution same-trust-principal rules must be non-empty")
+        action_authority = execution["action_authority"]
+        action_fields = {
+            "fact_fields",
+            "authority_states",
+            "outcomes",
+            "material_risk_delta_outcome",
+            "runtime_state",
+            "host_grant",
+        }
+        if exact_keys(
+            action_authority,
+            action_fields,
+            "execution_level_contract.action_authority",
+        ):
+            assert isinstance(action_authority, dict)
+            if action_authority["fact_fields"] != [
+                "exact_target",
+                "mutation_surface",
+                "reversibility",
+                "recovery",
+                "external_effects",
+                "capability_facts",
+                "authorization_facts",
+                "unresolved_ambiguity",
+            ]:
+                errors.append("execution action-authority fact fields must remain exact")
+            expected_states = [
+                "within-current-authority",
+                "bounded-extra-authority-required",
+                "user-owned-decision-required",
+                "unsafe-or-unsupported",
+            ]
+            if action_authority["authority_states"] != expected_states:
+                errors.append("execution action-authority states must remain exact")
+            if set(action_authority["outcomes"]) != set(expected_states):
+                errors.append("execution action-authority outcomes must cover every state")
+            if action_authority["runtime_state"] is not False:
+                errors.append("execution action authority must not add runtime state")
+            if action_authority["host_grant"] is not False:
+                errors.append("execution action authority must not grant host permission")
+
         triggers = execution["trigger_registry"]
         seen_triggers: set[str] = set()
         if not isinstance(triggers, list) or not triggers:
@@ -4993,7 +5464,11 @@ def validate_core_contracts(
             errors.append("main execution evidence kinds must be user_fact and analysis_handoff")
 
         critical = execution["critical_unknown"]
-        if exact_keys(critical, {"floor", "edit_status", "rule"}, "execution_level_contract.critical_unknown"):
+        if exact_keys(
+            critical,
+            {"floor", "edit_status", "provisional", "required_fields", "rule"},
+            "execution_level_contract.critical_unknown",
+        ):
             assert isinstance(critical, dict)
             if critical["floor"] not in level_ids:
                 errors.append("critical unknown floor must reference a declared level")
@@ -5001,6 +5476,10 @@ def validate_core_contracts(
                 errors.append("critical unknown edit status must be non-empty text")
             if not isinstance(critical["rule"], str) or not critical["rule"].strip():
                 errors.append("execution critical unknown rule must be non-empty")
+            if critical["provisional"] is not True:
+                errors.append("execution critical unknown L4 must be provisional")
+            if critical["required_fields"] != execution["critical_unknown_fields"]:
+                errors.append("execution critical unknown required fields must use Core authority")
 
         fallback = execution["integrity_fallback"]
         fallback_fields = {
@@ -5008,6 +5487,8 @@ def validate_core_contracts(
             "floor",
             "retain_explicit_known_l5",
             "retain_prior_historical_maxima",
+            "provisional_floor",
+            "historical_effect",
             "edit_status",
             "partial_computation",
             "allowed_outcomes",
@@ -5029,6 +5510,12 @@ def validate_core_contracts(
                 errors.append("execution integrity fallback must retain explicit known L5")
             if fallback["retain_prior_historical_maxima"] is not True:
                 errors.append("execution integrity fallback must retain prior historical maxima")
+            if fallback["provisional_floor"] is not True:
+                errors.append("execution integrity fallback L4 must be provisional")
+            if fallback["historical_effect"] != (
+                "retain confirmed prior maxima without recording the fallback L4"
+            ):
+                errors.append("execution integrity fallback historical effect must remain exact")
             if fallback["edit_status"] != "blocked":
                 errors.append("execution integrity fallback must block editing")
             if fallback["partial_computation"] is not False:
@@ -5104,11 +5591,11 @@ def validate_core_contracts(
                 ],
                 "next_historical_floor_sources": [
                     "prior_historical_max_floor",
-                    "mandatory_floor",
+                    "confirmed_mandatory_floor",
                 ],
                 "next_historical_effective_sources": [
                     "prior_historical_max_effective",
-                    "effective_level",
+                    "confirmed_effective_level",
                 ],
             }
             for field, expected_sources in source_sequences.items():
@@ -5138,6 +5625,9 @@ def validate_core_contracts(
             "scope_expansion",
             "lowering_requirements",
             "requested_lowering_after_edit",
+            "provisional_floor_history",
+            "confirmed_material_l4_history",
+            "same_task_resolved_provisional",
         }
         if exact_keys(scope_lineage, scope_fields, "execution_level_contract.scope_lineage"):
             assert isinstance(scope_lineage, dict)
@@ -5157,6 +5647,14 @@ def validate_core_contracts(
                 errors.append("execution lowering requirements are incomplete")
             if scope_lineage["requested_lowering_after_edit"] != "record only; effective level cannot decrease":
                 errors.append("requested lowering after edit must not lower effective level")
+            if scope_lineage["provisional_floor_history"] != "excluded":
+                errors.append("provisional execution floors must be excluded from history")
+            if scope_lineage["confirmed_material_l4_history"] != "retained":
+                errors.append("confirmed material L4 history must remain retained")
+            if scope_lineage["same_task_resolved_provisional"] != (
+                "recompute with confirmed history before material edit"
+            ):
+                errors.append("resolved provisional risk must recompute on the same Task")
 
         retry_policy = execution["retry_policy"]
         retry_fields = {
@@ -5407,6 +5905,49 @@ def validate_core_contracts(
                 "Rollback",
                 "First Executable Slice",
             ],
+            "initial_analysis": "one-complete-initial-analysis",
+            "initial_closure_obligations": [
+                "observable-acceptance",
+                "owner-placement-invariant",
+                "acceptance-proving-validation",
+                "executable-task-dependencies",
+                "professional-skill-boundaries",
+                "minimum-sufficient-review-boundaries",
+                "no-critical-gap-blocking-first-executable-slice",
+            ],
+            "non_invalidation_events": [
+                "task-completion",
+                "task-switch",
+                "ordinary-implementation-discovery",
+                "review-boundary-not-reached",
+            ],
+            "decision_invalidation_triggers": [
+                "Acceptance-or-Non-goals",
+                "Owner-or-Placement-or-Invariant",
+                "contract-or-data-semantics",
+                "dependency-or-rollback",
+                "material-risk",
+                "scope-blocker",
+            ],
+            "delta_analysis": {
+                "scope": "invalidated-decisions-and-transitive-impact-only",
+                "updates": [
+                    "affected-brief-sections",
+                    "affected-tasks",
+                    "affected-dependencies",
+                    "affected-skill-assignments",
+                    "affected-review-boundaries",
+                ],
+                "full_reanalysis_condition": (
+                    "foundational-goal-or-system-assumptions-invalidated"
+                ),
+                "skill_assignment_default": "preserve",
+                "skill_reroute_triggers": [
+                    "professional-domain",
+                    "work-type",
+                    "material-risk-trigger",
+                ],
+            },
             "first_executable_slice": {
                 "defined_by": "engineering-brief",
                 "contract": "Task Contract v2",
@@ -5467,6 +6008,31 @@ def validate_core_contracts(
             "allowed_write_scope": "permission-ceiling-not-work-obligation",
             "discovery_grants_repair_authority": False,
             "repository_clean_required": False,
+            "granularity": "semantic-change-and-primary-professional-skill-boundary",
+            "cohesion_rule": "one-acceptance-coeffective-and-naturally-validated-together",
+            "primary_skill_per_task": "exactly-one",
+            "split_when": [
+                "distinct-semantic-change",
+                "materially-different-primary-professional-skill",
+            ],
+            "do_not_split_by": ["file", "function", "code-layer", "test", "edit-step"],
+            "review_requirement_fields": [
+                "Required Review Skills",
+                "Specialist Obligations",
+                "Professional Risk Dimensions",
+            ],
+            "review_scheduling_forbidden_on_task_nodes": [
+                "Review Strategy",
+                "Review Round ID",
+                "Review Assignments",
+                "Primary Close Ordering",
+            ],
+            "combined_review_preserves": [
+                "task-primary-professional-skills",
+                "required-review-skills",
+                "specialist-obligations",
+                "professional-risk-dimensions",
+            ],
             "scheduling_priority": [
                 "current-requested-task",
                 "declared-dag-work",
@@ -5526,6 +6092,32 @@ def validate_core_contracts(
                     ],
                     "high_or_critical_scope_authority": False,
                 },
+            },
+            "material_current_task_criteria": [
+                "acceptance",
+                "correctness-or-invariant",
+                "regression",
+                "security-or-reliability",
+                "material-code-health",
+            ],
+            "non_repair_categories": [
+                "adjacent-issue",
+                "optional-cleanup",
+                "style-preference",
+                "speculative-abstraction",
+                "unrelated-technical-debt",
+                "future-improvement",
+            ],
+            "fail_fast": {
+                "triggers": [
+                    "fundamental-architecture-error",
+                    "invalid-public-contract",
+                    "major-security-defect",
+                    "acceptance-fundamentally-unmet",
+                ],
+                "verdict": "blocked",
+                "required_scope_report": ["Reviewed Scope", "Unreviewed Scope"],
+                "pass_requires_complete_changed_scope": True,
             },
             "review_finding_scope_authority": False,
             "repair_input_relations": ["current-task"],
@@ -5717,6 +6309,7 @@ def validate_core_contracts(
                 }
             elif file_name == "review-handoff-template.md":
                 expected_schema_fields = common | {
+                    "labeled_sections",
                     "ledger_required",
                     "freshness_projection_ids",
                 }
@@ -5819,6 +6412,13 @@ def validate_core_contracts(
                 if set(extensions) & set(fields):
                     errors.append(f"{context}.task_extension_fields redefine core fields")
                 if file_name == "engineering-brief-template.md":
+                    if labeled.get("Review Boundary") != [
+                        "Review Owner",
+                        *expected_subsumption["review_boundary_fields"],
+                    ]:
+                        errors.append(
+                            f"{context}: Review Boundary must derive every Core subsumption field"
+                        )
                     task_section = schema["task_fields_section"]
                     if task_section not in labeled:
                         errors.append(f"{context}.task_fields_section is unknown")
@@ -5837,6 +6437,13 @@ def validate_core_contracts(
                         if labeled[task_section] != expected_task_fields:
                             errors.append(f"{context}: executable slice fields are not canonical")
                 else:
+                    if labeled.get("Review Boundary") != [
+                        "Review Owner",
+                        *expected_subsumption["review_boundary_fields"],
+                    ]:
+                        errors.append(
+                            f"{context}: Review Boundary must derive every Core subsumption field"
+                        )
                     node_sections = string_list(
                         schema["task_node_sections"], f"{context}.task_node_sections"
                     )
@@ -5859,6 +6466,23 @@ def validate_core_contracts(
             else:
                 if schema["ledger_required"] is not True:
                     errors.append(f"{context}.ledger_required must be true")
+                if file_name == "review-handoff-template.md":
+                    labeled = schema["labeled_sections"]
+                    if (
+                        not isinstance(labeled, dict)
+                        or labeled.get("Inbound Review Projection")
+                        != review_discipline["review_scope"][
+                            "handoff_projection_fields"
+                        ]
+                        or labeled.get("Review Boundary")
+                        != expected_subsumption["review_boundary_fields"]
+                        or set(labeled)
+                        != {"Inbound Review Projection", "Review Boundary"}
+                    ):
+                        errors.append(
+                            f"{context}.labeled_sections must project the exact inbound "
+                            "Review projection and every Review Boundary dimension"
+                        )
                 if "freshness_projection_ids" in schema:
                     freshness_ids = string_list(
                         schema["freshness_projection_ids"],
@@ -6108,7 +6732,12 @@ def validate_core_contracts(
                     "authority_review_profile": "review-agent",
                     "capsule_contract_version": "changeforge.fixture-capsule.v2",
                     "high_risk_floor": "L4",
-                    "critical_trigger_statuses": ["matched", "unknown"],
+                    "critical_trigger_statuses": ["matched"],
+                    "provisional_critical_trigger": {
+                        "id": "unknown-critical-boundary",
+                        "status": "unknown",
+                        "flag": "plausible_critical",
+                    },
                     "low_risk_review_strategy": "independent-implementation-review",
                     "low_risk_review_mode": "implementation-review",
                     "high_risk_review_strategies": [
@@ -6798,7 +7427,6 @@ def validate_core_contracts(
                     "id",
                     "path",
                     "section",
-                    "document_sha256",
                     "bindings",
                     "required_terms",
                 },
@@ -6832,10 +7460,6 @@ def validate_core_contracts(
                 errors.append(
                     f"{context}.section must be 'Core Contract Projection'"
                 )
-            if not isinstance(projection["document_sha256"], str) or re.fullmatch(
-                r"[0-9a-f]{64}", projection["document_sha256"]
-            ) is None:
-                errors.append(f"{context}.document_sha256 must be lowercase SHA-256")
             required_terms = string_list(
                 projection["required_terms"], f"{context}.required_terms"
             )
@@ -6899,7 +7523,7 @@ def validate_core_contracts(
             context = f"docs_contract.context_budget_projections[{index}]"
             if not exact_keys(
                 projection,
-                {"id", "path", "section", "document_sha256", "source_path"},
+                {"id", "path", "section", "source_path"},
                 context,
             ):
                 continue
@@ -6928,10 +7552,6 @@ def validate_core_contracts(
                 errors.append(
                     f"{context}.source_path must bind context_budget_contract"
                 )
-            if not isinstance(projection["document_sha256"], str) or re.fullmatch(
-                r"[0-9a-f]{64}", projection["document_sha256"]
-            ) is None:
-                errors.append(f"{context}.document_sha256 must be lowercase SHA-256")
             try:
                 context_budget_docs_projection_block(data, projection)
             except (KeyError, TypeError, ValueError) as exc:
@@ -7540,6 +8160,60 @@ def _max_execution_level(
     return max(levels, key=lambda level: _execution_rank(level, contract))
 
 
+def _nonempty_execution_text_mapping(
+    value: object,
+    fields: list[str],
+    *,
+    context: str,
+) -> dict[str, str]:
+    """Validate one closed, non-empty evidence mapping."""
+
+    if not isinstance(value, dict) or list(value) != fields:
+        raise ExecutionLevelError(f"{context} fields must be {fields}")
+    if any(not isinstance(value[field], str) or not value[field].strip() for field in fields):
+        raise ExecutionLevelError(f"{context} fields must be non-empty text")
+    return {field: value[field] for field in fields}
+
+
+def classify_concrete_action_authority(
+    facts: object,
+    *,
+    contract: dict[str, object] | None = None,
+) -> dict[str, object]:
+    """Classify one concrete action without storing state or granting permission."""
+
+    contract = EXECUTION_LEVEL_MODEL if contract is None else contract
+    policy = contract["action_authority"]
+    fact_fields = policy["fact_fields"]
+    required = [*fact_fields, "authority_state", "material_task_risk_delta"]
+    if not isinstance(facts, dict) or list(facts) != required:
+        raise ExecutionLevelError(
+            f"concrete action authority fields must be {required}"
+        )
+    _nonempty_execution_text_mapping(
+        {field: facts[field] for field in fact_fields},
+        fact_fields,
+        context="concrete action authority facts",
+    )
+    state = facts["authority_state"]
+    if state not in policy["authority_states"]:
+        raise ExecutionLevelError("concrete action authority state is invalid")
+    risk_delta = facts["material_task_risk_delta"]
+    if not isinstance(risk_delta, bool):
+        raise ExecutionLevelError("concrete action material Task risk delta must be boolean")
+    if risk_delta:
+        return {
+            "decision": "block",
+            "execution_level_effect": policy["material_risk_delta_outcome"],
+            "exact_target": facts["exact_target"],
+        }
+    return {
+        "decision": policy["outcomes"][state],
+        "execution_level_effect": "unchanged",
+        "exact_target": facts["exact_target"],
+    }
+
+
 def compute_execution_level(
     *,
     requested: str,
@@ -7571,19 +8245,36 @@ def compute_execution_level(
         raise ExecutionLevelError(
             f"trigger evaluations must cover the closed registry; unknown={unknown}, missing={missing}"
         )
-    matched_floors = [formula["computed_floor_seed"]]
+    confirmed_matched_floors = [formula["computed_floor_seed"]]
     unresolved: list[str] = []
     critical_unknown = False
+    material_candidate_statuses = set(contract["material_candidate_statuses"])
+    material_candidate_evaluations: dict[str, dict[str, object]] = {}
     canonical_triggers: list[dict[str, object]] = []
     for identifier, row in registry.items():
         evaluation = trigger_evaluations[identifier]
-        expected_fields = {"status", "evidence_kind", "source_anchor", "plausible_critical"}
-        if not isinstance(evaluation, dict) or set(evaluation) != expected_fields:
+        base_fields = {"status", "evidence_kind", "source_anchor", "plausible_critical"}
+        optional_fields = {"material_assessment", "critical_unknown"}
+        if (
+            not isinstance(evaluation, dict)
+            or not base_fields <= set(evaluation)
+            or set(evaluation) - base_fields - optional_fields
+        ):
             raise ExecutionLevelError(
-                f"trigger {identifier!r} evaluation fields must be {sorted(expected_fields)}"
+                f"trigger {identifier!r} evaluation fields must contain {sorted(base_fields)} with only conditional material assessment or critical unknown evidence"
             )
         status = evaluation["status"]
-        if status not in {"matched", "not_matched", "unknown"}:
+        material_candidate = (
+            row["floor"] == "L4"
+            and identifier
+            not in {"formal-release-declared", "unknown-critical-boundary"}
+        )
+        allowed_statuses = (
+            material_candidate_statuses
+            if material_candidate
+            else {"matched", "not_matched", "unknown"}
+        )
+        if status not in allowed_statuses:
             raise ExecutionLevelError(f"trigger {identifier!r} has invalid status {status!r}")
         if evaluation["evidence_kind"] not in evidence_kinds:
             raise ExecutionLevelError(f"trigger {identifier!r} uses invalid evidence kind")
@@ -7599,16 +8290,89 @@ def compute_execution_level(
             raise ExecutionLevelError(
                 f"trigger {identifier!r} plausible_critical is valid only for unknown status"
             )
+        if identifier == "unknown-critical-boundary" and status == "matched":
+            raise ExecutionLevelError(
+                "unknown-critical-boundary must be unknown with concrete critical evidence, never a confirmed match"
+            )
+        if (
+            identifier == "unknown-critical-boundary"
+            and status == "unknown"
+            and evaluation["plausible_critical"] is not True
+        ):
+            raise ExecutionLevelError(
+                "unknown-critical-boundary unknown status requires concrete critical evidence"
+            )
+        material_assessment = evaluation.get("material_assessment")
+        critical_evidence = evaluation.get("critical_unknown")
+        requires_material_assessment = material_candidate and status in {
+            "matched",
+            "non_material",
+            "unknown",
+        }
+        if requires_material_assessment:
+            _nonempty_execution_text_mapping(
+                material_assessment,
+                contract["material_assessment_fields"],
+                context=f"trigger {identifier!r} material assessment",
+            )
+        elif material_assessment is not None:
+            raise ExecutionLevelError(
+                f"trigger {identifier!r} material assessment is valid only for an applicable material L4 predicate"
+            )
+        if material_candidate:
+            material_candidate_evaluations[identifier] = evaluation
+        if evaluation["plausible_critical"]:
+            if identifier != "unknown-critical-boundary":
+                raise ExecutionLevelError(
+                    "plausible critical evidence must use unknown-critical-boundary"
+                )
+            critical_mapping = _nonempty_execution_text_mapping(
+                critical_evidence,
+                contract["critical_unknown_fields"],
+                context="critical unknown",
+            )
+            candidate = critical_mapping["candidate_l4_predicate"]
+            candidate_row = registry.get(candidate)
+            if (
+                not isinstance(candidate_row, dict)
+                or candidate_row.get("floor") != "L4"
+                or candidate in {"formal-release-declared", "unknown-critical-boundary"}
+            ):
+                raise ExecutionLevelError(
+                    "critical unknown candidate_l4_predicate must name a material L4 predicate"
+                )
+            candidate_evaluation = material_candidate_evaluations.get(candidate)
+            if (
+                not isinstance(candidate_evaluation, dict)
+                or candidate_evaluation.get("status") != "unknown"
+            ):
+                raise ExecutionLevelError(
+                    "critical unknown must reference a material L4 candidate with status=unknown"
+                )
+        elif critical_evidence is not None:
+            raise ExecutionLevelError(
+                f"trigger {identifier!r} critical unknown evidence requires plausible_critical=true"
+            )
         if status == "matched":
-            matched_floors.append(row["floor"])
+            confirmed_matched_floors.append(row["floor"])
         elif status == "unknown":
             unresolved.append(identifier)
             if evaluation["plausible_critical"]:
                 critical_unknown = True
         canonical_triggers.append({"id": identifier, **evaluation})
-    if critical_unknown:
-        matched_floors.append(contract["critical_unknown"]["floor"])
-    computed_floor = _max_execution_level(*matched_floors, contract=contract)
+    confirmed_computed_floor = _max_execution_level(
+        *confirmed_matched_floors,
+        contract=contract,
+    )
+    computed_floor = (
+        _max_execution_level(
+            confirmed_computed_floor,
+            contract["critical_unknown"]["floor"],
+            contract=contract,
+        )
+        if critical_unknown
+        else confirmed_computed_floor
+    )
 
     l2_registry = {row["id"]: row for row in contract["l2_eligibility"]}
     if set(l2_evaluations) != set(l2_registry):
@@ -7643,21 +8407,36 @@ def compute_execution_level(
             unresolved.append(identifier)
         canonical_l2.append({"id": identifier, **evaluation})
 
-    if _execution_rank(computed_floor, contract) >= _execution_rank(
-        formula["automatic_high_risk_floor"], contract
+    no_material = l2_evaluations["no-material-high-risk-residual-impact"]
+    if no_material["status"] == "true" and any(
+        evaluation["status"] in {"matched", "unknown"}
+        for evaluation in material_candidate_evaluations.values()
     ):
-        automatic = formula["automatic_high_risk_level"]
-    elif (
-        _execution_rank(computed_floor, contract)
-        <= _execution_rank(formula["automatic_l2_ceiling"], contract)
-        and all_l2_true
-    ):
-        automatic = formula["automatic_l2_level"]
-    else:
-        automatic = formula["automatic_default_level"]
+        raise ExecutionLevelError(
+            "no-material-high-risk-residual-impact cannot be true while a material L4 candidate is matched or unknown"
+        )
+
+    def automatic_for(floor: str) -> str:
+        if _execution_rank(floor, contract) >= _execution_rank(
+            formula["automatic_high_risk_floor"], contract
+        ):
+            return formula["automatic_high_risk_level"]
+        if (
+            _execution_rank(floor, contract)
+            <= _execution_rank(formula["automatic_l2_ceiling"], contract)
+            and all_l2_true
+        ):
+            return formula["automatic_l2_level"]
+        return formula["automatic_default_level"]
+
+    automatic = automatic_for(computed_floor)
+    confirmed_automatic = automatic_for(confirmed_computed_floor)
     requested_base = formula["requested_base"][requested]
     if requested_base == "automatic":
         requested_base = automatic
+    confirmed_requested_base = formula["requested_base"][requested]
+    if confirmed_requested_base == "automatic":
+        confirmed_requested_base = confirmed_automatic
     values = {
         "computed_floor": computed_floor,
         "prior_historical_max_floor": prior_historical_max_floor,
@@ -7681,6 +8460,19 @@ def compute_execution_level(
     values["mandatory_floor"] = mandatory_floor
     effective = resolve_max("effective_level_sources")
     values["effective_level"] = effective
+    confirmed_mandatory_floor = _max_execution_level(
+        confirmed_computed_floor,
+        prior_historical_max_floor,
+        contract=contract,
+    )
+    confirmed_effective = _max_execution_level(
+        confirmed_requested_base,
+        confirmed_mandatory_floor,
+        prior_historical_max_effective,
+        contract=contract,
+    )
+    values["confirmed_mandatory_floor"] = confirmed_mandatory_floor
+    values["confirmed_effective_level"] = confirmed_effective
     next_historical_floor = resolve_max("next_historical_floor_sources")
     next_historical_effective = resolve_max("next_historical_effective_sources")
     obligations: list[str] = []
@@ -7691,6 +8483,8 @@ def compute_execution_level(
     return {
         "requested": requested,
         "computed_floor": computed_floor,
+        "confirmed_computed_floor": confirmed_computed_floor,
+        "provisional_floor": critical_unknown,
         "automatic_level": automatic,
         "requested_base": requested_base,
         "mandatory_floor": mandatory_floor,
@@ -7747,7 +8541,7 @@ def execution_level_integrity_fallback(
     retained_prior_effective = (
         prior_effective if fallback["retain_prior_historical_maxima"] else seed
     )
-    next_floor = _max_execution_level(
+    mandatory_floor = _max_execution_level(
         fallback_floor,
         retained_prior_floor,
         contract=contract,
@@ -7763,13 +8557,21 @@ def execution_level_integrity_fallback(
         retained_prior_effective,
         contract=contract,
     )
+    next_effective = retained_prior_effective
+    if requested_known_l5 == "L5":
+        next_effective = _max_execution_level(
+            next_effective,
+            requested_known_l5,
+            contract=contract,
+        )
     return {
         "integrity_status": fallback["edit_status"],
-        "computed_floor": next_floor,
-        "mandatory_floor": next_floor,
+        "computed_floor": mandatory_floor,
+        "mandatory_floor": mandatory_floor,
         "effective_level": effective,
-        "next_historical_floor": next_floor,
-        "next_historical_effective": effective,
+        "next_historical_floor": retained_prior_floor,
+        "next_historical_effective": next_effective,
+        "provisional_floor": fallback["provisional_floor"],
         "edit_status": fallback["edit_status"],
         "partial_computation": fallback["partial_computation"],
         "allowed_outcomes": list(fallback["allowed_outcomes"]),
@@ -7794,12 +8596,30 @@ def execution_scope_transition_errors(
     scope_change: str,
     lowering_requested: bool,
     strict_narrowing_proof: bool,
+    previous_provisional_floor: bool,
+    current_provisional_floor: bool,
+    material_edit_started: bool,
+    provisional_resolution_source: str | None,
 ) -> list[str]:
     """Validate an explicit scope-lineage transition without storing task state."""
 
     errors: list[str] = []
     if scope_change not in {"same", "expanded", "narrowed"}:
         return [f"unknown scope change {scope_change!r}"]
+    for label, value in (
+        ("lowering_requested", lowering_requested),
+        ("strict_narrowing_proof", strict_narrowing_proof),
+        ("previous_provisional_floor", previous_provisional_floor),
+        ("current_provisional_floor", current_provisional_floor),
+        ("material_edit_started", material_edit_started),
+    ):
+        if not isinstance(value, bool):
+            errors.append(f"{label} must be boolean")
+    if provisional_resolution_source is not None and (
+        not isinstance(provisional_resolution_source, str)
+        or not provisional_resolution_source.strip()
+    ):
+        errors.append("provisional resolution source must be non-empty text or null")
     level_pairs = (
         ("mandatory floor", previous_mandatory_floor, current_mandatory_floor),
         ("effective level", previous_effective_level, current_effective_level),
@@ -7819,9 +8639,39 @@ def execution_scope_transition_errors(
         _execution_rank(current)
     if previous_task_id == current_task_id and previous_scope_lineage != current_scope_lineage:
         errors.append("same Task ID cannot open a new Scope Lineage")
-    if _execution_rank(current_historical_max_floor) < _execution_rank(current_mandatory_floor):
+    resolving_provisional = previous_provisional_floor and not current_provisional_floor
+    safe_resolution_source = (
+        isinstance(provisional_resolution_source, str)
+        and provisional_resolution_source.startswith(("analysis_handoff:", "user_fact:"))
+    )
+    safe_provisional_resolution = (
+        resolving_provisional
+        and previous_task_id == current_task_id
+        and previous_scope_lineage == current_scope_lineage
+        and scope_change == "same"
+        and not material_edit_started
+        and safe_resolution_source
+        and _execution_rank(current_historical_max_floor)
+        >= _execution_rank(previous_historical_max_floor)
+        and _execution_rank(current_historical_max_effective)
+        >= _execution_rank(previous_historical_max_effective)
+    )
+    if resolving_provisional and not safe_provisional_resolution:
+        errors.append(
+            "provisional floor resolution requires the same Task, lineage, and scope, "
+            "pre-material-edit proof from analysis_handoff or user_fact, and retained confirmed history"
+        )
+    if (
+        not current_provisional_floor
+        and _execution_rank(current_historical_max_floor)
+        < _execution_rank(current_mandatory_floor)
+    ):
         errors.append("historical max floor cannot be below the current mandatory floor")
-    if _execution_rank(current_historical_max_effective) < _execution_rank(current_effective_level):
+    if (
+        not current_provisional_floor
+        and _execution_rank(current_historical_max_effective)
+        < _execution_rank(current_effective_level)
+    ):
         errors.append("historical max effective cannot be below the current effective level")
     must_inherit = scope_change in {"same", "expanded"}
     observed_lowering = any(
@@ -7830,13 +8680,18 @@ def execution_scope_transition_errors(
     )
     if must_inherit:
         for label, previous, current in level_pairs:
-            if _execution_rank(current) < _execution_rank(previous):
+            provisional_level = label in {"mandatory floor", "effective level"}
+            if (
+                _execution_rank(current) < _execution_rank(previous)
+                and not (safe_provisional_resolution and provisional_level)
+            ):
                 errors.append(f"{scope_change} scope cannot lower {label}")
     if scope_change == "expanded" and lowering_requested:
         errors.append("scope expansion inherits historical maxima and cannot lower")
-    if observed_lowering and not lowering_requested:
+    ordinary_lowering = observed_lowering and not safe_provisional_resolution
+    if ordinary_lowering and not lowering_requested:
         errors.append("execution lowering must be declared and proven")
-    if lowering_requested or observed_lowering:
+    if lowering_requested or ordinary_lowering:
         if previous_task_id == current_task_id:
             errors.append("execution lowering requires a new Task ID")
         expected_prefix = previous_scope_lineage.rstrip("/") + "/"
@@ -11356,7 +12211,7 @@ def _yaml_significant_lines(text: str) -> list[tuple[int, str]]:
 
 
 def _simple_yaml_load(text: str) -> dict[str, Any]:
-    """Parse the indentation-based YAML subset used by ChangeForge assets.
+    """Parse the indentation-based YAML subset used by rd-skills assets.
 
     Supports nested mappings, lists of scalars, lists of mappings (whose items
     may carry nested mapping values), and simple block scalars to any depth.

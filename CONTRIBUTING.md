@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for helping improve ChangeForge. This repository authors, validates,
+Thank you for helping improve rd-skills. This repository authors, validates,
 builds, packages, installs, upgrades, and uninstalls standard AI Skills and
 static Agent Profiles. Contributions should preserve that boundary.
 

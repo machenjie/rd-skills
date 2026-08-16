@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.invalid/changeforge/marketplace-index.schema.json",
-  "title": "ChangeForge Marketplace Index v3",
+  "title": "rd-skills Marketplace Index v3",
   "description": "Source-derived discovery metadata for the four Skill layers and three build profiles.",
   "type": "object",
   "required": [

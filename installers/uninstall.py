@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Uninstall ChangeForge-managed Skills and Agent Profiles."""
+"""Uninstall rd-skills-managed Skills and Agent Profiles."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ from changeforge_install import (
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Uninstall ChangeForge-managed artifacts.")
+    parser = argparse.ArgumentParser(description="Uninstall rd-skills-managed artifacts.")
     parser.add_argument("--agent", choices=AGENTS, required=True)
     parser.add_argument("--scope", choices=SCOPES, required=True)
     parser.add_argument("--target", type=Path)

@@ -1,6 +1,6 @@
 schema_version: 5
 review_owner: changeforge-expert-panel-governance
-reviewed_at: "2026-08-09"
+reviewed_at: "2026-08-11"
 decisions:
   - id: release-critical-professional-coverage
     kind: professional-coverage-gate
@@ -59,38 +59,20 @@ readability_review_attestation:
   panel_kind: readability
   scope: ai-readability-and-density
   decision_method: three-independent-experts-majority
-  source_fingerprints:
-    reference_content: 99f628fbcd833e3ac092e09c8dc82a3323a60b2378714d8b7dfff03fb48559f3
-    root_content: c5d7fc264bed96ed3df5bf5ae175f4e55fc00f90ec5f8bf2984f2113c724d822
-    ai_readability: 7fb6c587d6c3233e2e8af64e2168d37ee3f9ee01e8fede7c96ea9940d8e15100
-    skill_detector: 0fa46c5fa8a64c415329b365c82dee9f00618ef3733e0ca2ffe0ea84401c166b
-  panel_record:
-    path: evals/expert-panel/readability-panel-2026-08-09-r26/panel/decision.json
-    sha256: c97db450e793f5cc4e5022791ba0ab4ff3dbe48e7ed3e02f330af23ef102d9b9
   limitations:
-    - The historical r26 three-reviewer majority accepted all 43 density targets and all 357 readability documents. No tracked tightening, detector false positive, or rewrite requirement remained under its bound Skill detector.
+    - The canonical fixed Readability attestation is the sole evidence authority; its validated review ID, target and finding counts, and dispositions are derived dynamically from that artifact and the current application rather than fixed in this selector-free configuration.
     - Reviewer declarations are static. They do not prove identity, qualifications, or experience.
     - Static panel evidence does not prove real-host Profile startup, wall-clock performance, provider behavior, production accuracy, or installed user experience.
     - Canonical byte proxies do not prove actual token use, reviewer effort, or latency.
-    - The selected r26 decision and this config bind Skill detector 0fa46c5fa8a64c415329b365c82dee9f00618ef3733e0ca2ffe0ea84401c166b, while the current detector fingerprint is 01b1a560b8050be27fbd7611461885fc0eb1535c19be2c1378a0982a9233c6d8. R26 is skill-detector-stale with `source_current=false` and `panel-majority-stale`, remains storage-pending, and is not accepted for formal release.
-    - Formal Release requires a new current schema-2 Readability review under the current Skill detector. R26 remains immutable historical evidence and cannot satisfy current Readability review.
+    - The canonical fixed attestation is checked directly against the current Readability target-authority manifest, detector contracts, and review contract; Git history carries replacement audit.
 professional_completeness_review_attestation:
   schema_version: 5
   panel_kind: professional-completeness
   scope: professional-skill-packages
   decision_method: exact-package-carry-forward-qualified-reviewer-pool-domain-critical-fail-closed
-  source_fingerprints:
-    professional_packages: 76319a57c8c84643f36eb7170f3ba7d64e4058d998eafb272ff9b6985e6ede3c
-    professional_review_bindings: 83aa86fc03b5ce14158badc62f5a0f72e9924440c59160c7df574a18f31f5d4e
-    professional_review_contract: dc151b70d3b52ae0424a3d72d9254b89cd1cdfb69fdaec982fb219af59ed30e0
-  panel_record:
-    path: evals/expert-panel/professional-completeness-panel-2026-08-09-r19/panel/decision.json
-    sha256: 815fb75669770c90a7a6f50d4b7602fd44d6659af0838da01946ef9f41595880
   limitations:
-    - The historical schema-3 r19 full-fresh decision accepted all 189 fresh non-Control Skill packages with zero carried packages. Professional corrections and unresolved professional disagreements were zero under its bound review contract.
+    - A canonical compact attestation is current only when strict target-local validation accepts all 189 non-Control Skill packages with zero professional corrections or unresolved professional disagreements.
     - Reviewer declarations are static. They do not prove identity, qualifications, or experience.
     - Static panel evidence does not prove real-host Profile startup, wall-clock performance, provider behavior, production accuracy, or installed user experience.
     - Canonical byte proxies do not prove actual token use, reviewer effort, or latency.
-    - Full-fresh r19 uses r18 as its immediate audited baseline and resets plan lineage depth to zero. The static artifact tree does not prove that historical rounds were never deleted.
-    - The selected r19 decision and this config bind review contract dc151b70d3b52ae0424a3d72d9254b89cd1cdfb69fdaec982fb219af59ed30e0, while the current Professional review contract is 9f17b4775c2668c4c9a03f2063111dcccd6c1f73571ba8d55185e665a6000b22. R19 is review-contract-stale, remains storage-pending, and is not accepted for formal release.
-    - Formal Release requires a new schema-3 full-fresh round covering all 189 current non-Control packages under the current review contract. R19 remains immutable historical evidence and cannot authorize carry across this contract change.
+    - The canonical fixed attestation must be current to all package, binding, dependency, review-contract, reviewer-partition, and authenticated vote authorities; Git history carries replacement audit.

@@ -15,12 +15,12 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when authoring S
 
 **Do not use when**
 
-- ordinary product implementation that does not modify ChangeForge authoring assets
+- ordinary product implementation that does not modify rd-skills authoring assets
 - user-specific content ingestion, indexing, mapping, or packaging
 
 ## Skill Role
 
-Keep ChangeForge source Skills, registries, generated profiles, Marketplace output, routing, and validators aligned without adding runtime control machinery.
+Keep rd-skills source Skills, registries, generated profiles, Marketplace output, routing, and validators aligned without adding runtime control machinery.
 
 ## Inputs
 

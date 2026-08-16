@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import copy
 import json
 import subprocess
@@ -24,6 +25,9 @@ from validation_utils import (  # noqa: E402
 
 BASE = "a" * 40
 HEAD = "b" * 40
+REPORT_DIRECTORY_REGRESSION_TEST = (
+    "tests/scripts/test_report_directory_cli.py"
+)
 
 
 PACKAGE_CATALOG = {
@@ -97,6 +101,7 @@ IMPACT_004_SCRIPT_CASES = {
         "direct_producer_ids": ["eval-context-control"],
         "test_modules": [
             "tests/scripts/test_eval_context_control_plane.py",
+            REPORT_DIRECTORY_REGRESSION_TEST,
             "tests/test_hookless_evaluations.py",
         ],
     },
@@ -118,6 +123,7 @@ IMPACT_004_SCRIPT_CASES = {
         "direct_producer_ids": ["eval-rendered-context"],
         "test_modules": [
             "tests/scripts/test_eval_rendered_context_budget.py",
+            REPORT_DIRECTORY_REGRESSION_TEST,
             "tests/test_hookless_evaluations.py",
         ],
     },
@@ -126,6 +132,7 @@ IMPACT_004_SCRIPT_CASES = {
         "direct_producer_ids": ["eval-routing"],
         "test_modules": [
             "tests/scripts/test_capability_coverage_red.py",
+            REPORT_DIRECTORY_REGRESSION_TEST,
             "tests/scripts/test_route_implementation_owner_candidates.py",
             "tests/scripts/test_route_oracle_instrumentation.py",
             "tests/scripts/test_validate_professional_routing_coverage.py",
@@ -152,13 +159,13 @@ IMPACT_004_SCRIPT_CASES = {
             "tests/scripts/test_deterministic_report_contracts.py",
             "tests/scripts/test_eval_core_principles.py",
             "tests/scripts/test_expert_panel_actionability.py",
+            "tests/scripts/test_expert_panel_attestation.py",
             "tests/scripts/test_expert_panel_manifest.py",
             "tests/scripts/test_expert_panel_review.py",
             "tests/scripts/test_professional_completeness_carry_forward.py",
             "tests/scripts/test_professional_completeness_schema3.py",
             "tests/scripts/test_professional_review_cost_fixture.py",
             "tests/scripts/test_professionalism_expert_panel.py",
-            "tests/scripts/test_root_disposition_lifecycle.py",
         ],
     },
     "scripts/professional_completeness_carry_forward.py": {
@@ -170,13 +177,13 @@ IMPACT_004_SCRIPT_CASES = {
             "tests/scripts/test_deterministic_report_contracts.py",
             "tests/scripts/test_eval_core_principles.py",
             "tests/scripts/test_expert_panel_actionability.py",
+            "tests/scripts/test_expert_panel_attestation.py",
             "tests/scripts/test_expert_panel_manifest.py",
             "tests/scripts/test_expert_panel_review.py",
             "tests/scripts/test_professional_completeness_carry_forward.py",
             "tests/scripts/test_professional_completeness_schema3.py",
             "tests/scripts/test_professional_review_cost_fixture.py",
             "tests/scripts/test_professionalism_expert_panel.py",
-            "tests/scripts/test_root_disposition_lifecycle.py",
         ],
     },
     "scripts/validate-installation.py": {
@@ -185,6 +192,7 @@ IMPACT_004_SCRIPT_CASES = {
         "test_modules": [
             "tests/scripts/test_build_input_freshness.py",
             "tests/scripts/test_deterministic_report_contracts.py",
+            REPORT_DIRECTORY_REGRESSION_TEST,
         ],
     },
     "scripts/validate-productization-assets.py": {
@@ -209,19 +217,223 @@ IMPACT_004_SCRIPT_CASES = {
             "tests/scripts/test_deterministic_report_contracts.py",
             "tests/scripts/test_eval_core_principles.py",
             "tests/scripts/test_expert_panel_actionability.py",
+            "tests/scripts/test_expert_panel_attestation.py",
             "tests/scripts/test_expert_panel_manifest.py",
             "tests/scripts/test_expert_panel_review.py",
             "tests/scripts/test_professional_completeness_carry_forward.py",
             "tests/scripts/test_professional_completeness_schema3.py",
             "tests/scripts/test_professional_review_cost_fixture.py",
             "tests/scripts/test_professionalism_expert_panel.py",
-            "tests/scripts/test_root_disposition_lifecycle.py",
         ],
     },
 }
+IMPACT_004_SCRIPT_CASES["scripts/expert_panel_attestation.py"] = copy.deepcopy(
+    IMPACT_004_SCRIPT_CASES["scripts/expert_panel_review.py"]
+)
+IMPACT_004_SCRIPT_CASES.update(
+    {
+        "scripts/expert_panel_attestation.py": {
+            "rule_id": "expert-panel-attestation-tooling",
+            "direct_producer_ids": [],
+            "test_modules": [
+                "tests/scripts/test_expert_panel_actionability.py",
+                "tests/scripts/test_expert_panel_attestation.py",
+            ],
+        },
+        "scripts/expert_panel_contracts.py": {
+            "rule_id": "expert-panel-contract-projections",
+            "direct_producer_ids": [],
+            "test_modules": [
+                "tests/scripts/test_expert_panel_actionability.py",
+                "tests/scripts/test_expert_panel_attestation.py",
+                "tests/scripts/test_expert_panel_review.py",
+                "tests/scripts/test_professional_completeness_carry_forward.py",
+                "tests/scripts/test_professional_completeness_schema3.py",
+            ],
+        },
+        "scripts/expert_panel_manifest.py": {
+            "rule_id": "expert-panel-manifest-tooling",
+            "direct_producer_ids": [],
+            "test_modules": [
+                "tests/scripts/test_expert_panel_manifest.py",
+                "tests/scripts/test_expert_panel_release_manifest.py",
+            ],
+        },
+        "scripts/expert_panel_review.py": {
+            "rule_id": "expert-panel-review-tooling",
+            "direct_producer_ids": [],
+            "test_modules": [
+                "tests/scripts/test_expert_panel_actionability.py",
+                "tests/scripts/test_expert_panel_attestation.py",
+                "tests/scripts/test_expert_panel_review.py",
+                "tests/scripts/test_professional_completeness_schema3.py",
+            ],
+        },
+        "scripts/professional_completeness_carry_forward.py": {
+            "rule_id": "professional-completeness-carry-tooling",
+            "direct_producer_ids": [],
+            "test_modules": [
+                "tests/scripts/test_professional_completeness_carry_forward.py",
+                "tests/scripts/test_professional_completeness_schema3.py",
+                "tests/scripts/test_professional_review_cost_fixture.py",
+            ],
+        },
+        "scripts/validate-professionalism-regression.py": {
+            "rule_id": "professionalism-regression-tooling",
+            "direct_producer_ids": [],
+            "test_modules": [
+                "tests/scripts/test_deterministic_report_contracts.py",
+                "tests/scripts/test_eval_core_principles.py",
+                "tests/scripts/test_expert_panel_actionability.py",
+                "tests/scripts/test_professional_review_cost_fixture.py",
+            ],
+        },
+    }
+)
 
 
 class ImpactGraphContractTests(unittest.TestCase):
+    def test_expert_panel_fixture_support_has_one_way_dependencies(self) -> None:
+        test_paths = [
+            ROOT / "tests/scripts/test_expert_panel_actionability.py",
+            ROOT / "tests/scripts/test_expert_panel_attestation.py",
+            ROOT / "tests/scripts/test_expert_panel_manifest.py",
+            ROOT / "tests/scripts/test_expert_panel_review.py",
+            ROOT / "tests/scripts/test_professional_completeness_carry_forward.py",
+            ROOT / "tests/scripts/test_professional_completeness_schema3.py",
+            ROOT / "tests/scripts/test_professional_review_cost_fixture.py",
+            ROOT / "tests/scripts/test_professionalism_expert_panel.py",
+        ]
+        support_paths = [
+            ROOT / "tests/scripts/expert_panel_source_test_support.py",
+            ROOT / "tests/scripts/readability_review_test_support.py",
+            ROOT / "tests/scripts/professional_completeness_test_support.py",
+            ROOT / "tests/scripts/professional_review_cost_test_support.py",
+        ]
+
+        test_module_names = {path.stem for path in test_paths}
+        support_module_names = {path.stem for path in support_paths}
+
+        def imported_modules(path: Path) -> set[str]:
+            tree = ast.parse(path.read_text(encoding="utf-8"), path.as_posix())
+            modules: set[str] = set()
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    modules.update(alias.name.split(".")[-1] for alias in node.names)
+                elif isinstance(node, ast.ImportFrom):
+                    if node.module:
+                        modules.add(node.module.split(".")[-1])
+                    modules.update(alias.name.split(".")[-1] for alias in node.names)
+                elif (
+                    isinstance(node, ast.Call)
+                    and (
+                        isinstance(node.func, ast.Attribute)
+                        and node.func.attr == "import_module"
+                        or isinstance(node.func, ast.Name)
+                        and node.func.id == "_import_sibling_test_module"
+                    )
+                    and node.args
+                    and isinstance(node.args[0], ast.Constant)
+                    and isinstance(node.args[0].value, str)
+                ):
+                    modules.add(node.args[0].value.lstrip(".").split(".")[-1])
+            return modules
+
+        for path in test_paths:
+            with self.subTest(path=path.name):
+                self.assertFalse(imported_modules(path) & test_module_names)
+
+        for path in support_paths:
+            with self.subTest(path=path.name):
+                tree = ast.parse(path.read_text(encoding="utf-8"), path.as_posix())
+                self.assertFalse(imported_modules(path) & test_module_names)
+                self.assertFalse(
+                    any(
+                        isinstance(node, ast.ClassDef)
+                        and any(
+                            isinstance(base, ast.Attribute)
+                            and base.attr == "TestCase"
+                            or isinstance(base, ast.Name)
+                            and base.id == "TestCase"
+                            for base in node.bases
+                        )
+                        for node in tree.body
+                    )
+                )
+                self.assertFalse(
+                    any(
+                        isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+                        and node.name.startswith("test_")
+                        for node in tree.body
+                    )
+                )
+
+        expected_support_graph = {
+            "expert_panel_source_test_support": set(),
+            "readability_review_test_support": {
+                "expert_panel_source_test_support"
+            },
+            "professional_completeness_test_support": {
+                "expert_panel_source_test_support"
+            },
+            "professional_review_cost_test_support": {
+                "expert_panel_source_test_support",
+                "professional_completeness_test_support",
+            },
+        }
+        actual_support_graph = {
+            path.stem: imported_modules(path) & support_module_names
+            for path in support_paths
+        }
+        self.assertEqual(expected_support_graph, actual_support_graph)
+
+        visiting: set[str] = set()
+        visited: set[str] = set()
+
+        def visit(module: str) -> None:
+            if module in visiting:
+                self.fail(f"Expert Panel test support dependency cycle at {module}")
+            if module in visited:
+                return
+            visiting.add(module)
+            for dependency in sorted(actual_support_graph[module]):
+                visit(dependency)
+            visiting.remove(module)
+            visited.add(module)
+
+        for module in sorted(actual_support_graph):
+            visit(module)
+        self.assertEqual(set(actual_support_graph), visited)
+
+        expected_owners = {
+            "expert-panel-source-test-support": [
+                path.relative_to(ROOT).as_posix() for path in test_paths
+            ],
+            "readability-review-test-support": [
+                "tests/scripts/test_expert_panel_actionability.py",
+                "tests/scripts/test_expert_panel_review.py",
+            ],
+            "professional-completeness-test-support": [
+                "tests/scripts/test_expert_panel_manifest.py",
+                "tests/scripts/test_expert_panel_review.py",
+                "tests/scripts/test_professional_completeness_carry_forward.py",
+                "tests/scripts/test_professional_completeness_schema3.py",
+                "tests/scripts/test_professional_review_cost_fixture.py",
+                "tests/scripts/test_professionalism_expert_panel.py",
+            ],
+            "professional-review-cost-test-support": [
+                "tests/scripts/test_professional_review_cost_fixture.py"
+            ],
+        }
+        rules = {
+            row["id"]: row
+            for row in CORE_CONTRACTS["impact_graph_contract"]["rules"]
+        }
+        for rule_id, expected_modules in expected_owners.items():
+            with self.subTest(rule=rule_id):
+                self.assertEqual([], rules[rule_id]["producer_ids"])
+                self.assertEqual(expected_modules, rules[rule_id]["test_modules"])
+
     def test_contract_is_single_validated_authority_over_canonical_producers(self) -> None:
         graph = CORE_CONTRACTS["impact_graph_contract"]
         self.assertEqual("scripts/impact_graph.py", graph["resolver"])
@@ -435,18 +647,74 @@ class ImpactGraphResolutionTests(unittest.TestCase):
         self.assertEqual("full", full["professionalism"]["scope"])
         self.assertEqual([], full["professionalism"]["direct_package_ids"])
 
-    def test_review_contract_sources_select_explicit_full_professionalism(self) -> None:
-        for path in (
-            "scripts/audit-skill-content.py",
-            "scripts/expert_panel_review.py",
-            "scripts/professional_completeness_carry_forward.py",
-            "scripts/validation_utils.py",
-        ):
+    def test_panel_tooling_config_attestations_and_docs_do_not_select_full_professionalism(self) -> None:
+        cases = {
+            "scripts/expert_panel_attestation.py": "soft-stale",
+            "scripts/expert_panel_manifest.py": "soft-stale",
+            "scripts/expert_panel_review.py": "soft-stale",
+            "scripts/professional_completeness_carry_forward.py": "soft-stale",
+            "scripts/validate-professionalism-regression.py": "soft-stale",
+            "scripts/validation_utils.py": "soft-stale",
+            "src/control-model/core-contracts.json": "soft-stale",
+            "config/professionalism-release-review.yaml": "soft-stale",
+            "evals/expert-panel/readability.json": "soft-stale",
+            "evals/expert-panel/semantic-disposition.json": "soft-stale",
+            "evals/expert-panel/professional-completeness.json": "soft-stale",
+            "docs/VALIDATION.md": "unchanged",
+        }
+        forbidden = {
+            "eval-skill-professionalism",
+            "validate-professionalism-regression",
+        }
+        for path, evidence_status in cases.items():
             with self.subTest(path=path):
                 result = self._resolve([("M", path)])
-                self.assertEqual("full", result["professionalism"]["scope"])
+                self.assertEqual("none", result["professionalism"]["scope"])
                 self.assertEqual([], result["professionalism"]["direct_package_ids"])
-                self.assertIn("eval-skill-professionalism", result["selected_producer_ids"])
+                self.assertTrue(
+                    forbidden.isdisjoint(result["selected_producer_ids"]), result
+                )
+                self.assertEqual(
+                    evidence_status, result["expert_panel_evidence"]["status"]
+                )
+                self.assertEqual(
+                    [], result["selected_test_modules_by_layer"]["release"]
+                )
+
+    def test_professional_semantic_contract_selects_full_static_validation_and_soft_stale_evidence(self) -> None:
+        result = self._resolve([("M", "scripts/expert_panel_contracts.py")])
+        self.assertEqual("full", result["professionalism"]["scope"])
+        self.assertEqual([], result["professionalism"]["direct_package_ids"])
+        self.assertIn("eval-skill-professionalism", result["selected_producer_ids"])
+        self.assertNotIn(
+            "validate-professionalism-regression", result["selected_producer_ids"]
+        )
+        self.assertEqual("soft-stale", result["expert_panel_evidence"]["status"])
+        self.assertEqual(
+            ["readability", "semantic-disposition", "professional-completeness"],
+            result["expert_panel_evidence"]["affected_axes"],
+        )
+        self.assertIn(
+            "tests/scripts/test_professional_completeness_carry_forward.py",
+            result["selected_test_modules"],
+        )
+
+    def test_readability_and_semantic_detector_change_selects_focused_axis_validators(self) -> None:
+        result = self._resolve([("M", "scripts/audit-skill-content.py")])
+        self.assertEqual("none", result["professionalism"]["scope"])
+        self.assertNotIn("eval-skill-professionalism", result["selected_producer_ids"])
+        self.assertEqual(
+            ["readability", "semantic-disposition"],
+            result["expert_panel_evidence"]["affected_axes"],
+        )
+        self.assertIn(
+            "tests/scripts/test_expert_panel_actionability.py",
+            result["selected_test_modules"],
+        )
+        self.assertIn(
+            "tests/scripts/test_expert_panel_attestation.py",
+            result["selected_test_modules"],
+        )
 
     def test_canonical_producer_dependency_cannot_receive_none_scope(self) -> None:
         result = self._resolve(
@@ -470,7 +738,6 @@ class ImpactGraphResolutionTests(unittest.TestCase):
         for path in (
             "scripts/eval-core-principles.py",
             "scripts/eval-skill-professionalism.py",
-            "scripts/validate-professionalism-regression.py",
         ):
             with self.subTest(path=path):
                 result = self._resolve([("M", path)])
@@ -492,6 +759,32 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                 self.assertIn("audit-skill-content", selected)
                 self.assertIn("validate-reference-content", selected)
                 self.assertTrue(result["producer_explanations"])
+
+    def test_one_package_selection_keeps_exact_canonical_producer_closure(self) -> None:
+        result = self._resolve(
+            [("M", "src/professional-skills/repository-tooling-change-builder/SKILL.md")]
+        )
+        self.assertEqual(
+            ["repository-tooling-change-builder"],
+            result["professionalism"]["direct_package_ids"],
+        )
+        self.assertEqual(
+            [
+                "validate-skills",
+                "validate-registry",
+                "validate-skill-routing",
+                "validate-skill-body-links",
+                "validate-skill-content-size",
+                "audit-skill-content",
+                "validate-reference-content",
+                "validate-root-content",
+                "build-recommended",
+                "build-full",
+                "build-dev",
+                "eval-skill-professionalism",
+            ],
+            result["selected_producer_ids"],
+        )
 
     def test_deletion_has_same_authority_and_targets_as_modification(self) -> None:
         path = (
@@ -544,14 +837,64 @@ class ImpactGraphResolutionTests(unittest.TestCase):
         )
 
     def test_docs_and_known_no_impact_never_expand_to_full_fallback(self) -> None:
+        expected_docs_closure = [
+            "build-recommended",
+            "build-full",
+            "build-dev",
+            "eval-agent-lightweight",
+            "eval-rendered-context",
+            "validate-docs-consistency",
+        ]
         docs = self._resolve([("M", "docs/VALIDATION.md")])
-        self.assertEqual(["validate-docs-consistency"], docs["selected_producer_ids"])
+        self.assertEqual(expected_docs_closure, docs["selected_producer_ids"])
+        self.assertNotIn("eval-context-control", docs["selected_producer_ids"])
+        self.assertEqual([], docs["selected_test_modules_by_layer"]["release"])
         self.assertEqual("affected-targets", docs["reason"])
+        docs_producer = next(
+            producer
+            for producer in CORE_CONTRACTS["principle_acceptance_contract"]["producers"]
+            if producer["id"] == "validate-docs-consistency"
+        )
+        self.assertEqual(["eval-rendered-context"], docs_producer["depends_on"])
+
+        without_report_edge = copy.deepcopy(CORE_CONTRACTS)
+        mutated_docs_producer = next(
+            producer
+            for producer in without_report_edge["principle_acceptance_contract"][
+                "producers"
+            ]
+            if producer["id"] == "validate-docs-consistency"
+        )
+        mutated_docs_producer["depends_on"] = []
+        collapsed = impact_graph.resolve_entries(
+            without_report_edge,
+            [("M", "docs/VALIDATION.md")],
+            base_sha=BASE,
+            head_sha=HEAD,
+            base_package_catalog=copy.deepcopy(PACKAGE_CATALOG),
+            head_package_catalog=copy.deepcopy(PACKAGE_CATALOG),
+        )
+        self.assertEqual(
+            ["validate-docs-consistency"], collapsed["selected_producer_ids"]
+        )
+
         no_impact = self._resolve([("M", "LICENSE")])
         self.assertEqual([], no_impact["selected_producer_ids"])
         self.assertEqual([], no_impact["selected_test_modules"])
         self.assertEqual("known-no-impact", no_impact["reason"])
+        self.assertEqual("unchanged", no_impact["expert_panel_evidence"]["status"])
+        self.assertEqual([], no_impact["expert_panel_evidence"]["affected_axes"])
         self.assertNotIn("fallback", no_impact)
+
+        benchmark = self._resolve(
+            [("M", "tests/scripts/expert_panel_storage_benchmark.py")]
+        )
+        self.assertEqual([], benchmark["selected_producer_ids"])
+        self.assertEqual([], benchmark["selected_test_modules"])
+        self.assertEqual("known-no-impact", benchmark["reason"])
+        self.assertEqual("unchanged", benchmark["expert_panel_evidence"]["status"])
+        self.assertEqual([], benchmark["expert_panel_evidence"]["affected_axes"])
+        self.assertNotIn("fallback", benchmark)
 
     def test_repository_authority_docs_have_one_docs_owner_and_minimal_contract_test(self) -> None:
         paths = (
@@ -577,23 +920,18 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                 self.assertEqual([], result["selected_test_modules_by_layer"]["release"])
                 self.assertNotIn("fallback", result)
 
-    def test_formal_workflow_selects_static_contract_and_governance_only(self) -> None:
+    def test_formal_workflow_selects_its_minimal_static_contract_only(self) -> None:
         result = self._resolve([("M", ".github/workflows/formal-release.yml")])
         decision = result["changed_paths"][0]
         self.assertEqual("rule", decision["classification"])
         self.assertEqual("formal-release-workflow", decision["rule_id"])
         self.assertEqual([], decision["direct_producer_ids"])
         self.assertEqual(
-            [
-                "tests/scripts/test_deterministic_report_contracts.py",
-                "tests/scripts/test_eval_core_principles.py",
-            ],
+            ["tests/scripts/test_deterministic_report_contracts.py"],
             decision["test_modules"],
         )
         grouped = result["selected_test_modules_by_layer"]
-        self.assertEqual(
-            ["tests/scripts/test_eval_core_principles.py"], grouped["contract"]
-        )
+        self.assertEqual([], grouped["contract"])
         self.assertEqual(
             ["tests/scripts/test_deterministic_report_contracts.py"],
             grouped["governance"],
@@ -620,8 +958,17 @@ class ImpactGraphResolutionTests(unittest.TestCase):
             {row["rule_id"] for row in result["changed_paths"]},
         )
         self.assertEqual(
-            ["validate-docs-consistency"], result["selected_producer_ids"]
+            [
+                "build-recommended",
+                "build-full",
+                "build-dev",
+                "eval-agent-lightweight",
+                "eval-rendered-context",
+                "validate-docs-consistency",
+            ],
+            result["selected_producer_ids"],
         )
+        self.assertNotIn("eval-context-control", result["selected_producer_ids"])
         self.assertEqual([], result["selected_test_modules_by_layer"]["release"])
         self.assertNotIn("fallback", result)
 
@@ -694,15 +1041,6 @@ class ImpactGraphResolutionTests(unittest.TestCase):
         self.assertEqual([], result["selected_test_modules_by_layer"]["integration"])
         self.assertEqual([], result["selected_test_modules_by_layer"]["release"])
 
-        release_test = self._resolve(
-            [("M", "tests/scripts/test_root_disposition_lifecycle.py")]
-        )
-        self.assertEqual(
-            ["tests/scripts/test_root_disposition_lifecycle.py"],
-            release_test["changed_paths"][0]["test_modules"],
-        )
-        self.assertEqual([], release_test["selected_test_modules"])
-
     def test_skill_and_reference_never_select_integration_or_governance(self) -> None:
         for path in (
             "src/professional-skills/one/SKILL.md",
@@ -767,6 +1105,7 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                 ["validate-task-contracts"],
                 [
                     "tests/scripts/test_impact_graph.py",
+                    REPORT_DIRECTORY_REGRESSION_TEST,
                     "tests/scripts/test_validate_task_contracts.py",
                     "tests/scripts/test_validation_utils.py",
                 ],
@@ -776,6 +1115,7 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                 ["validate-task-contracts"],
                 [
                     "tests/scripts/test_impact_graph.py",
+                    REPORT_DIRECTORY_REGRESSION_TEST,
                     "tests/scripts/test_validate_task_contracts.py",
                     "tests/scripts/test_validation_utils.py",
                 ],
@@ -804,6 +1144,95 @@ class ImpactGraphResolutionTests(unittest.TestCase):
             "tests/scripts/test_validate_task_contracts.py",
             cases["scripts/impact_graph.py"][2],
         )
+
+    def test_report_directory_regression_follows_every_exact_source_owner(
+        self,
+    ) -> None:
+        cases = {
+            "scripts/validation_utils.py": (
+                "core-schema-and-validation",
+                [
+                    "tests/scripts/test_impact_graph.py",
+                    REPORT_DIRECTORY_REGRESSION_TEST,
+                    "tests/scripts/test_validate_task_contracts.py",
+                    "tests/scripts/test_validation_utils.py",
+                ],
+            ),
+            "scripts/audit-skill-content.py": (
+                "skill-content-collector",
+                [
+                    "tests/scripts/test_audit_skill_content.py",
+                    "tests/scripts/test_expert_panel_actionability.py",
+                    "tests/scripts/test_expert_panel_attestation.py",
+                    REPORT_DIRECTORY_REGRESSION_TEST,
+                    "tests/scripts/test_validate_root_content.py",
+                ],
+            ),
+            "scripts/validate-installation.py": (
+                "installation-validator",
+                [
+                    "tests/scripts/test_build_input_freshness.py",
+                    "tests/scripts/test_deterministic_report_contracts.py",
+                    REPORT_DIRECTORY_REGRESSION_TEST,
+                ],
+            ),
+            "scripts/eval-routing.py": (
+                "routing-evaluator",
+                [
+                    "tests/scripts/test_capability_coverage_red.py",
+                    REPORT_DIRECTORY_REGRESSION_TEST,
+                    "tests/scripts/test_route_implementation_owner_candidates.py",
+                    "tests/scripts/test_route_oracle_instrumentation.py",
+                    "tests/scripts/test_validate_professional_routing_coverage.py",
+                    "tests/test_hookless_evaluations.py",
+                ],
+            ),
+            "scripts/eval-agent-lightweight.py": (
+                "agent-lightweight-fixtures",
+                [
+                    "tests/scripts/test_eval_agent_lightweight_layer3_references.py",
+                    "tests/scripts/test_eval_agent_lightweight_utility.py",
+                    REPORT_DIRECTORY_REGRESSION_TEST,
+                ],
+            ),
+            "scripts/eval-rendered-context-budget.py": (
+                "rendered-context-evaluator",
+                [
+                    "tests/scripts/test_eval_rendered_context_budget.py",
+                    REPORT_DIRECTORY_REGRESSION_TEST,
+                    "tests/test_hookless_evaluations.py",
+                ],
+            ),
+            "scripts/eval-context-control-plane.py": (
+                "context-control-evaluator",
+                [
+                    "tests/scripts/test_eval_context_control_plane.py",
+                    REPORT_DIRECTORY_REGRESSION_TEST,
+                    "tests/test_hookless_evaluations.py",
+                ],
+            ),
+            "scripts/validate-docs-consistency.py": (
+                "docs-consistency-producer",
+                [
+                    REPORT_DIRECTORY_REGRESSION_TEST,
+                    "tests/scripts/test_validate_docs_consistency.py",
+                ],
+            ),
+        }
+        for path, (rule_id, test_modules) in cases.items():
+            with self.subTest(path=path):
+                result = self._resolve([("M", path)])
+                decision = result["changed_paths"][0]
+                self.assertEqual("rule", decision["classification"])
+                self.assertEqual(rule_id, decision["rule_id"])
+                self.assertEqual(test_modules, decision["test_modules"])
+                self.assertEqual(
+                    sorted(test_modules), result["selected_test_modules"]
+                )
+                self.assertEqual(
+                    [], result["selected_test_modules_by_layer"]["release"]
+                )
+                self.assertNotIn("fallback", result)
 
     def test_duplicate_rule_targets_are_deduplicated_after_layer_selection(self) -> None:
         result = self._resolve(
@@ -875,12 +1304,10 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                 "build-dev",
                 "build-full",
                 "build-recommended",
-                "audit-skill-content",
                 "eval-agent-lightweight",
                 "eval-context-control",
                 "eval-professional-benchmarks",
                 "eval-professional-samples",
-                "eval-pressure-behavior",
                 "eval-rendered-context",
                 "eval-routing",
                 "eval-skill-professionalism",
@@ -888,7 +1315,6 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                 "validate-built-links",
                 "validate-installation",
                 "validate-professional-routing",
-                "validate-professionalism-regression",
             },
             set(result["selected_producer_ids"]),
         )
@@ -900,7 +1326,6 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                 if module
                 not in {
                     "tests/scripts/test_professionalism_expert_panel.py",
-                    "tests/scripts/test_root_disposition_lifecycle.py",
                 }
             },
             set(result["selected_test_modules"]),

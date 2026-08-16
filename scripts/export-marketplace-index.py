@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export a source-derived hookless ChangeForge Skill discovery index."""
+"""Export a source-derived hookless rd-skills Skill discovery index."""
 
 from __future__ import annotations
 

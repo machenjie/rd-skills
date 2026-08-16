@@ -27,7 +27,7 @@ the resulting configuration. Configuration is not proof of observed host
 behavior.
 
 When a host cannot express a fine-grained restriction, the generated Profile
-states the limit as prompt-enforced. ChangeForge does not add an executable
+states the limit as prompt-enforced. rd-skills does not add an executable
 interceptor or second sandbox. Current supported hosts declare isolated
 workspaces unsupported, so read-only work may be parallel but writes are serial.
 No-edit utilities are prompt-enforced and fail if their before/after workspace
@@ -38,7 +38,7 @@ change sets differ or are unavailable.
 Task evidence is visible in scoped Markdown contracts and handoffs. Validation
 must follow the latest material edit, and implementation review uses the actual
 diff and every changed file. Older-scope evidence cannot authorize closure.
-ChangeForge does not persist private runtime ledgers, prompt transcripts, or an
+rd-skills does not persist private runtime ledgers, prompt transcripts, or an
 internal task-state database. The exact artifact and completion flow is owned by
 the [Operating model](OPERATING_MODEL.md).
 
