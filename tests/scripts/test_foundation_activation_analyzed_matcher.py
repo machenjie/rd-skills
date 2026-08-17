@@ -52,6 +52,11 @@ def _main_execution(
     execution_contract: dict[str, Any],
 ) -> dict[str, Any]:
     case_task_id = f"{TASK_ID}:{case}"
+    if case != "n4":
+        return {
+            "producer": "main-control-agent",
+            "task_id": case_task_id,
+        }
     trigger_evaluations = {
         row["id"]: {
             "status": "not_matched",
@@ -219,7 +224,7 @@ class FoundationActivationAnalyzedMatcherRedTests(unittest.TestCase):
                 "final_primary_skill": self.activation["primary_skill"],
                 "final_review_skill": self.activation["review_skill"],
                 "final_layer3_skills": [self.target_name],
-                "execution_level": "L3",
+                "execution_level": None,
                 "route_once": True,
                 "trace_route_once": "proven",
                 "raw_domain_intersection": set(),
@@ -484,19 +489,37 @@ class FoundationActivationAnalyzedMatcherRedTests(unittest.TestCase):
                 decision = observed["route_decision"]
                 result = _final_result(observed)
                 selection = decision["selection_evidence"]
-                self.assertEqual("L3", self.main_executions[case]["execution_level"])
-                self.assertEqual(
-                    self.main_executions[case]["execution_level"],
-                    result["execution_level"],
-                )
-                self.assertEqual(
-                    _canonical_bytes(self.main_executions[case]["level_basis"]),
-                    _canonical_bytes(result["level_basis"]),
-                )
-                self.assertEqual(
-                    _canonical_bytes(self.main_executions[case]),
-                    _canonical_bytes(decision["main_execution_provenance"]),
-                )
+                if case == "n4":
+                    self.assertEqual(
+                        "L3",
+                        self.main_executions[case]["execution_level"],
+                    )
+                    self.assertEqual(
+                        self.main_executions[case]["execution_level"],
+                        result["execution_level"],
+                    )
+                    self.assertEqual(
+                        _canonical_bytes(
+                            self.main_executions[case]["level_basis"]
+                        ),
+                        _canonical_bytes(result["level_basis"]),
+                    )
+                    self.assertEqual(
+                        _canonical_bytes(self.main_executions[case]),
+                        _canonical_bytes(
+                            decision["main_execution_provenance"]
+                        ),
+                    )
+                else:
+                    self.assertEqual(
+                        {"producer", "task_id"},
+                        set(self.main_executions[case]),
+                    )
+                    self.assertIsNone(result["execution_level"])
+                    self.assertIsNone(result["level_basis"])
+                    self.assertIsNone(
+                        decision["main_execution_provenance"]
+                    )
                 self.assertIs(decision["route_once"], True)
                 self.assertEqual("proven", observed["winner_trace"]["route_once"])
                 self.assertLessEqual(len(result["layer3_skills"]), 3)

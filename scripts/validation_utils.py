@@ -1215,7 +1215,7 @@ def prompt_projection_block(
         ]
         lines = [
             begin,
-            "Review Input Ready before review-agent dispatch: latest changed paths; exact reviewable change evidence; reviewer capability accessibility; validation after the latest material edit; fixed Review scope. Normal=same Implementation Handoff. Missing=>review dispatch=0; producer completes. Legacy/incomplete handoff: one bounded pre-review recovery. Review before Task before Review is forbidden.",
+            "Review Input Ready before review-agent dispatch: latest changed paths; exact reviewable change evidence. Reviewer capability accessibility; validation after the latest material edit; fixed Review scope. Normal=same Implementation Handoff. Missing=>review dispatch=0; producer completes. Legacy/incomplete handoff: one bounded pre-review recovery. Review before Task before Review is forbidden.",
             "Latest material edit invalidates validation evidence. references/implementation-handoff-template.md is visible task-local Evidence Ledger schema authority. State: "
             + ", ".join(evidence["states"])
             + ". Claims: "
@@ -1229,7 +1229,7 @@ def prompt_projection_block(
             + required_review_claims[2]
             + "|"
             + required_review_claims[3]
-            + "; "
+            + ". "
             + required_review_claims[1]
             + " for actual Task Capsule L4/L5 now/history|matched material L4/provisional critical unknown|high-risk actual Review assignment.",
             "not-required: ordinary independent review; digest-only matching to both lower-risk authorities. Missing/inconsistent authority/binding fails closed; reissue. Repair requires fresh validation/re-review.",

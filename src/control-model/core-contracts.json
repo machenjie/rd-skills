@@ -1432,7 +1432,7 @@
   "prompt_contract": {
     "schema_version": 1,
     "path": "src/control-prompts/main-control-agent.md",
-    "document_sha256": "2099dcac98b520841afb7426fad6b80958530396ee21e1722cd342a039672042",
+    "document_sha256": "157319906997689e2639f130528638a9e7effcb5c1abcbf74081471f0bb1be49",
     "managed_projections": [
       {"id": "execution-level-contract", "section": "Execution Level and Validation", "required_contracts": ["execution_level_contract"]},
       {"id": "review-evidence-contract", "section": "Review and Repair", "required_contracts": ["visible_evidence_contract", "review_discipline_contract"]},

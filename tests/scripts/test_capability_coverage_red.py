@@ -5088,13 +5088,27 @@ class CapabilityCoverageRedTests(unittest.TestCase):
                     f"actual={json.dumps({'route_result': route_result, 'selected': selected}, sort_keys=True)}"
                 )
                 continue
+            main_execution = fixture["main_execution"]
+            analysis_assignment = expected["path"] == "analyzed"
+            if analysis_assignment:
+                if set(main_execution) != {"producer", "task_id"}:
+                    harness_errors.append(
+                        f"[{target_id}] analyzed assignment must contain only producer and task_id"
+                    )
+                expected_execution_level = None
+                expected_level_basis = None
+                expected_provenance = None
+            else:
+                expected_execution_level = "L4"
+                expected_level_basis = main_execution["level_basis"]
+                expected_provenance = main_execution
             expected_route_result = {
                 "start_profile": expected["profile"],
                 "primary_skill": expected["primary_skill"],
                 "layer3_skills": expected["layer3_skills"],
                 "review_skill": expected["review_skill"],
-                "execution_level": "L4",
-                "level_basis": fixture["main_execution"]["level_basis"],
+                "execution_level": expected_execution_level,
+                "level_basis": expected_level_basis,
             }
             if decision.get("path") != actual["path"]:
                 harness_errors.append(
@@ -5112,8 +5126,8 @@ class CapabilityCoverageRedTests(unittest.TestCase):
                     "primary_skill": actual["primary_skill"],
                     "layer3_skills": actual["layer3_skills"],
                     "review_skill": actual["review_skill"],
-                    "execution_level": "L4",
-                    "level_basis": fixture["main_execution"]["level_basis"],
+                    "execution_level": expected_execution_level,
+                    "level_basis": expected_level_basis,
                 }
             ):
                 harness_errors.append(
@@ -5122,13 +5136,13 @@ class CapabilityCoverageRedTests(unittest.TestCase):
                 )
             if (
                 decision.get("main_execution_provenance")
-                != fixture["main_execution"]
+                != expected_provenance
                 or decision.get("route_once") is not True
                 or trace.get("candidate_coverage") != "full"
                 or trace.get("route_once") != "proven"
             ):
                 harness_errors.append(
-                    f"[{target_id}] expected L4 provenance and route-once proof"
+                    f"[{target_id}] expected canonical provenance and route-once proof"
                 )
             if len(actual.get("layer3_skills", [])) > 3:
                 harness_errors.append(

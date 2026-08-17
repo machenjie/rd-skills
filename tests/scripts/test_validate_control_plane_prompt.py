@@ -141,9 +141,10 @@ class ControlPromptProjectionTests(unittest.TestCase):
         scheduling = VALIDATOR.extract_section_body(text, "Scheduling and Context") or ""
 
         for term in (
-            "current Engineering Brief is the only operational analysis authority",
-            "dispatch its First Executable Slice verbatim",
-            "never regenerate or reinterpret",
+            "current Engineering Brief: sole operational analysis authority",
+            "First Executable Slice: complete Task Contract v2",
+            "dispatch verbatim",
+            "never reinterpret",
             "blocked -> main-control-agent -> analysis-agent -> updated Engineering Brief",
             "redispatch affected tasks",
         ):
@@ -433,7 +434,6 @@ class ControlPromptProjectionTests(unittest.TestCase):
         assert block is not None
         for term in (
             "references/execution-level-contract.md",
-            "Core execution-level/v1",
             "Trust exact build/install validation",
             "Runtime checks only",
             "existence",
@@ -448,14 +448,14 @@ class ControlPromptProjectionTests(unittest.TestCase):
             "dispatch read-only diagnosis",
             "never Router",
             "Task ID/lineage",
-            "Active surfaces carry Level and Basis",
+            "Active executable surfaces: carry Level/Basis",
             "default L3",
             "L5 explicit-only",
             "Level Basis(trigger_evaluations|l2_eligibility|obligations|unresolved|edit_status)",
-            "carry Level/Basis and L5 Evidence only at effective L5",
-            "After 2 same-path failures, retry needs changed hypothesis/material/gap/transition",
-            "return Main/block, never third unchanged retry",
-            "When active/resumed edit/validation/review starts, reissue",
+            "L5 Evidence only at effective L5",
+            "After 2 same-path failures: changed hypothesis/material/gap/transition",
+            "return Main/block; never third unchanged retry",
+            "Reissue on active/resumed edit/validation/review",
         ):
             self.assertIn(term, block)
         self.assertNotIn("runtime hash", block.casefold())

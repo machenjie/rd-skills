@@ -577,12 +577,19 @@ class RouteReviewRiskCandidateTests(unittest.TestCase):
                     "legacy-downstream",
                     trace["selected_candidate"]["candidate_type"],
                 )
+                decision = observed["route_decision"]
                 self.assertEqual(
-                    case["main_execution"],
-                    observed["route_decision"][
-                        "main_execution_provenance"
-                    ],
+                    {"producer", "task_id"},
+                    set(case["main_execution"]),
                 )
+                self.assertEqual("analyzed", decision["path"])
+                self.assertIsNone(
+                    decision["route_result"]["execution_level"]
+                )
+                self.assertIsNone(
+                    decision["route_result"]["level_basis"]
+                )
+                self.assertIsNone(decision["main_execution_provenance"])
                 handoff = trace["deferred_handoff"]
                 self.assertEqual("unresolved", handoff["status"])
                 self.assertEqual(
@@ -733,12 +740,19 @@ class RouteReviewRiskCandidateTests(unittest.TestCase):
                     "legacy-downstream",
                     selected["candidate_type"],
                 )
+                decision = observed["route_decision"]
                 self.assertEqual(
-                    case["main_execution"],
-                    observed["route_decision"][
-                        "main_execution_provenance"
-                    ],
+                    {"producer", "task_id"},
+                    set(case["main_execution"]),
                 )
+                self.assertEqual("analyzed", decision["path"])
+                self.assertIsNone(
+                    decision["route_result"]["execution_level"]
+                )
+                self.assertIsNone(
+                    decision["route_result"]["level_basis"]
+                )
+                self.assertIsNone(decision["main_execution_provenance"])
                 self.assertEqual("full", trace["candidate_coverage"])
                 self.assertEqual("proven", trace["route_once"])
 

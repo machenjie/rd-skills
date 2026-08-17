@@ -713,6 +713,51 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                     parse_error=drift,
                 )
 
+    def test_semantic_target_set_drift_is_stale_only_for_trusted_fixed_bytes(
+        self,
+    ) -> None:
+        current = self.CURRENT_PATHS[2]
+        panel_kind = (
+            REGRESSION.expert_panel.panel_attestation.attestation_axis_for_path(
+                current
+            )
+        )
+        messages = (
+            "semantic fixed missing target lacks a rewrite majority",
+            "semantic fixed attestation omits a current candidate",
+        )
+        for message in messages:
+            drift = REGRESSION.expert_panel.PanelReviewError(message)
+            with self.subTest(message=message, state="clean"), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self._storage_repo(root, tracked={current: b"{}\n"})
+                statuses = self._validate_storage(
+                    root,
+                    formal=False,
+                    currentness_error=drift,
+                )
+                self.assertEqual("stale", statuses[panel_kind])
+                with self.assertRaisesRegex(ValueError, "formal.*stale"):
+                    self._validate_storage(
+                        root,
+                        formal=True,
+                        currentness_error=drift,
+                    )
+
+            with self.subTest(message=message, state="dirty"), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self._storage_repo(root, tracked={current: b"{}\n"})
+                (root / current).write_bytes(b'{"changed":true}\n')
+                with self.assertRaisesRegex(
+                    REGRESSION.expert_panel.PanelReviewError,
+                    message,
+                ):
+                    self._validate_storage(
+                        root,
+                        formal=False,
+                        currentness_error=drift,
+                    )
+
         generic_drifts = (
             REGRESSION.expert_panel.panel_attestation.AttestationError(
                 "attestation review contract fingerprint is stale"
@@ -826,7 +871,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
         self,
     ) -> None:
         expected_counts = {
-            ("root", "reference"): 206,
+            ("root", "reference"): 208,
         }
         for axes, expected_count in expected_counts.items():
             with self.subTest(axes=axes):
@@ -944,7 +989,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             )
 
     def test_fixed_semantic_storage_is_current_without_runtime_authority(self) -> None:
-        for axes, expected_count in ((("root", "reference"), 206),):
+        for axes, expected_count in ((("root", "reference"), 208),):
             with self.subTest(axes=axes), tempfile.TemporaryDirectory() as directory:
                 audit, _packet, _selector, raw = _current_semantic_attestation(axes)
                 audit_raw = (
@@ -1105,7 +1150,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                             )
 
     def test_semantic_promotion_selects_ordinary_and_forced_authority(self) -> None:
-        for axes, expected_count in ((("root", "reference"), 206),):
+        for axes, expected_count in ((("root", "reference"), 208),):
             with self.subTest(axes=axes), tempfile.TemporaryDirectory() as directory:
                 audit, _packet, selector, raw = _current_semantic_attestation(axes)
                 audit_raw = (
@@ -1471,7 +1516,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             for category in ("content", "readability", "actionability")
         }
         self.assertEqual(
-            {"actionability": 0, "content": 43, "readability": 365},
+            {"actionability": 0, "content": 43, "readability": 367},
             {category: len(rows) for category, rows in by_category.items()},
         )
         self.assertTrue(
@@ -1556,7 +1601,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                 "accepted_for_formal": True,
                 "applied_actionability_disposition_count": 0,
                 "applied_density_disposition_count": 43,
-                "applied_readability_disposition_count": 365,
+                "applied_readability_disposition_count": 367,
                 "attestation_status": "panel-majority-current",
                 "detector_false_positive_count": 0,
                 "rewrite_required_count": 0,
@@ -1756,42 +1801,14 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                 for axis in ("reference", "root")
             },
         )
-        self.assertEqual(206, len(configured))
-        self.assertEqual(configured, winners)
+        self.assertEqual(208, len(configured))
+        self.assertNotEqual(set(configured), set(winners))
 
-        application = PANEL.validate_semantic_decision_application(live_audit)
-        self.assertEqual(
-            {
-                "applied_count": 206,
-                "completed_rewrite_count": 0,
-                "decision": {
-                    "path": (
-                        PANEL.panel_attestation
-                        .SEMANTIC_DISPOSITION_ATTESTATION_PATH
-                    ),
-                    "sha256": hashlib.sha256(fixed_bytes).hexdigest(),
-                },
-                "decision_kind": (
-                    PANEL.panel_attestation
-                    .SEMANTIC_DISPOSITION_ATTESTATION_KIND
-                ),
-                "review_id": "semantic-refresh-20260816-r1",
-                "status": "current",
-                "target_count": 206,
-            },
-            {
-                field: application[field]
-                for field in (
-                    "applied_count",
-                    "completed_rewrite_count",
-                    "decision",
-                    "decision_kind",
-                    "review_id",
-                    "status",
-                    "target_count",
-                )
-            },
-        )
+        with self.assertRaisesRegex(
+            PANEL.PanelReviewError,
+            "semantic fixed missing target lacks a rewrite majority",
+        ):
+            PANEL.validate_semantic_decision_application(live_audit)
 
     def test_regression_loader_preserves_current_professional(self) -> None:
         config_path = ROOT / "config/professionalism-release-review.yaml"

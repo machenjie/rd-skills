@@ -1691,7 +1691,7 @@ Route current work to `candidate-a`.
         self.assertEqual(PANEL.PROFESSIONAL_COMPLETENESS_SCHEMA_VERSION, packet["schema_version"])
         self.assertEqual(189, len(packet["professional_targets"]))
         self.assertEqual(
-            517,
+            519,
             sum(
                 len(target["indexed_references"])
                 for target in packet["professional_targets"]
@@ -3471,9 +3471,9 @@ Route current work to `candidate-a`.
             attestation_selector=selector,
         )
 
-        self.assertEqual(206, len(selected["semantic_targets"]))
+        self.assertEqual(208, len(selected["semantic_targets"]))
         self.assertEqual(
-            {"root": 81, "reference": 125},
+            {"root": 79, "reference": 129},
             selected["panel_contract"]["required_axis_target_counts"],
         )
 
@@ -3491,7 +3491,7 @@ Route current work to `candidate-a`.
 
         self.assertEqual(original, audit)
         self.assertEqual(
-            {"root": 81, "reference": 125},
+            {"root": 79, "reference": 129},
             packet["panel_contract"]["required_axis_target_counts"],
         )
         PANEL.validate_semantic_packet_current(packet, original)

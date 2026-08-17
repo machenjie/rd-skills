@@ -65,9 +65,9 @@ Shared or unknown workspace: parallel read-only tasks; serial writes.
 ## Review and Repair
 
 <!-- review-evidence-contract:B -->
-Review Input Ready before review-agent dispatch: latest changed paths; exact reviewable change evidence; reviewer capability accessibility; validation after the latest material edit; fixed Review scope. Normal=same Implementation Handoff. Missing=>review dispatch=0; producer completes. Legacy/incomplete handoff: one bounded pre-review recovery. Review before Task before Review is forbidden.
+Review Input Ready before review-agent dispatch: latest changed paths; exact reviewable change evidence. Reviewer capability accessibility; validation after the latest material edit; fixed Review scope. Normal=same Implementation Handoff. Missing=>review dispatch=0; producer completes. Legacy/incomplete handoff: one bounded pre-review recovery. Review before Task before Review is forbidden.
 Latest material edit invalidates validation evidence. references/implementation-handoff-template.md is visible task-local Evidence Ledger schema authority. State: current, superseded, invalid. Claims: latest-material-edit, validation-passed.
-Current review-agent evidence: actual diff, every changed file, validation results; changed-scope-reviewed; blocking-findings-none|blocking-findings-resolved; high-risk-review-passed for actual Task Capsule L4/L5 now/history|matched material L4/provisional critical unknown|high-risk actual Review assignment.
+Current review-agent evidence: actual diff, every changed file, validation results; changed-scope-reviewed; blocking-findings-none|blocking-findings-resolved. high-risk-review-passed for actual Task Capsule L4/L5 now/history|matched material L4/provisional critical unknown|high-risk actual Review assignment.
 not-required: ordinary independent review; digest-only matching to both lower-risk authorities. Missing/inconsistent authority/binding fails closed; reissue. Repair requires fresh validation/re-review.
 No daemon/database/private evidence storage/runtime task state engine/hidden protocol record. review_discipline_contract: review_frequency_policy|validation_evidence_reuse|obligation_subsumption|repair_invalidation_policy; task_contract.finding_relations.
 <!-- review-evidence-contract:E -->

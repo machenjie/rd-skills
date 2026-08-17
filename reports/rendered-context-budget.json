@@ -2972,21 +2972,21 @@
       "id": "component-0192",
       "kind": "rendered_main_profile",
       "path": "dist/claude/project/.claude/agents/main-control-agent.md",
-      "sha256": "1983c9391bc7c7b42615bbb55f63497041b0d57d99be69a1e203e1416930cd4e",
+      "sha256": "56674ee36633f56f8589b064102743e0426eca1187eeca9809106c339879cc6f",
       "tokens": 1544
     },
     {
       "id": "component-0193",
       "kind": "rendered_main_profile",
       "path": "dist/codex/project/.codex/agents/main-control-agent.toml",
-      "sha256": "923a6cfe4c9d35c44c4f9b058cbfb97be14db5c107959d15f3b7f767f7f27eec",
+      "sha256": "0a0508e8d525ce5711f2538318c49f4d88559f247fe87e7cb820748cce25b7e3",
       "tokens": 1551
     },
     {
       "id": "component-0194",
       "kind": "rendered_main_profile",
       "path": "dist/copilot/project/.github/agents/main-control-agent.agent.md",
-      "sha256": "0d507ae201ebd93e5f46809d9bc316ead823aee15593132b7a800a6bd07279d9",
+      "sha256": "840ffb1030232bd8b05adc0953903f677570215c87a70dbab9cd919de21c6264",
       "tokens": 1558
     },
     {

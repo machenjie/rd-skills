@@ -1528,10 +1528,13 @@ class ValidateReferenceContentTests(unittest.TestCase):
         self.assertEqual(2, checked_in["schema_version"])
         self.assertEqual(206, len(checked_in["findings"]))
         self.assertEqual(1, checked_in_application["schema_version"])
-        self.assertEqual("current", checked_in_application["status"])
-        self.assertIsNone(checked_in_application["error"])
-        self.assertEqual(206, checked_in_application["target_count"])
-        self.assertEqual(206, checked_in_application["applied_count"])
+        self.assertEqual("invalid", checked_in_application["status"])
+        self.assertEqual(
+            "semantic-decision-application-invalid",
+            checked_in_application["error"]["id"],
+        )
+        self.assertEqual(0, checked_in_application["target_count"])
+        self.assertEqual(0, checked_in_application["applied_count"])
         self.assertEqual(
             0,
             checked_in_application["completed_rewrite_count"],
@@ -1539,7 +1542,7 @@ class ValidateReferenceContentTests(unittest.TestCase):
 
         audit, compact = _current_semantic_compact_fixture(auditor)
         self.assertEqual(
-            206,
+            208,
             len(json.loads(compact)["findings"]),
         )
         with tempfile.TemporaryDirectory() as raw:
@@ -1556,8 +1559,8 @@ class ValidateReferenceContentTests(unittest.TestCase):
                 )
         self.assertEqual("current", application["status"])
         self.assertIsNone(application["error"])
-        self.assertEqual(206, application["target_count"])
-        self.assertEqual(206, application["applied_count"])
+        self.assertEqual(208, application["target_count"])
+        self.assertEqual(208, application["applied_count"])
         self.assertEqual(0, application["completed_rewrite_count"])
         self.assertEqual(before, hashes())
 

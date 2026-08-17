@@ -872,7 +872,11 @@ class SkillRoutingRoleTests(unittest.TestCase):
                         "review_skill": result["review_skill"],
                     }
                     self.assertEqual(unresolved_expected, actual)
-                    self.assertEqual("L4", result["execution_level"])
+                    self.assertIsNone(result["execution_level"])
+                    self.assertIsNone(result["level_basis"])
+                    self.assertIsNone(
+                        decision["main_execution_provenance"]
+                    )
 
         resolved_placement_phrases = {
             "past": "was previously selected as a same-file function",

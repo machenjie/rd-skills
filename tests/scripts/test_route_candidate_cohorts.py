@@ -6042,11 +6042,19 @@ class RouteCandidateCohortTests(unittest.TestCase):
                     )
                 )
                 if selected_id == "critical-unknown":
+                    decision = _observed(case)["route_decision"]
                     self.assertEqual(
-                        case["main_execution"],
-                        _observed(case)["route_decision"][
-                            "main_execution_provenance"
-                        ],
+                        {"producer", "task_id"},
+                        set(case["main_execution"]),
+                    )
+                    self.assertIsNone(
+                        decision["main_execution_provenance"]
+                    )
+                    self.assertIsNone(
+                        decision["route_result"]["execution_level"]
+                    )
+                    self.assertIsNone(
+                        decision["route_result"]["level_basis"]
                     )
                 else:
                     handoff = trace["deferred_handoff"]
@@ -8029,20 +8037,25 @@ class RouteCandidateCohortTests(unittest.TestCase):
             if not isinstance(decision, dict):
                 errors.append(f"{api_name}: route decision is missing")
                 continue
-            if decision.get("main_execution_provenance") != main_execution:
-                errors.append(f"{api_name}: Main provenance changed")
+            if decision.get("main_execution_provenance") is not None:
+                errors.append(f"{api_name}: analyzed Main provenance leaked")
             result = decision.get("route_result")
             if (
                 not isinstance(result, dict)
                 or result.get("review_skill") != "high-risk-design-review"
             ):
                 errors.append(f"{api_name}: high-risk writer was not projected")
+            elif (
+                result.get("execution_level") is not None
+                or result.get("level_basis") is not None
+            ):
+                errors.append(f"{api_name}: analyzed execution metadata leaked")
         self.assertEqual(
             [],
             errors,
             "[activation-v3-binding-end-to-end] only the two artifact writers "
-            "may carry private provenance, both APIs must preserve Main "
-            "provenance, and no private field or token may escape",
+            "may carry private provenance, both APIs must suppress analyzed "
+            "Main execution metadata, and no private field or token may escape",
         )
 
     def test_activation_v2_139a_enrichment_helper_preserves_candidate_identity(

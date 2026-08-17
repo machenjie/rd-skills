@@ -971,7 +971,7 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
         self.assertEqual(189, len(bindings))
         self.assertEqual(before, after)
         self.assertEqual(
-            "275b8d53e3430460895e501fd9408492074c724e4ec5a19272947b0af55de482",
+            "58908b36949d16299b15b0967376d06f8b0a188087e816463dae18760a076957",
             hashlib.sha256(after).hexdigest(),
         )
         self.assertEqual(
@@ -1244,7 +1244,7 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
         )
         self.assertEqual(before, CARRY.canonical_json_bytes(packet))
         self.assertEqual(
-            "5dadb34b1f828b7aceb368a323a031fefbcec29a14a6d096b60d38df9d856b90",
+            "48a88167ec4cb3af3b1604b8bbba2f0d532bddccd2d89b2849e4895e32e43f2a",
             hashlib.sha256(before).hexdigest(),
         )
 

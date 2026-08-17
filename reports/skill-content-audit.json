@@ -35,11 +35,11 @@
         "tighten_sentences": 2
       },
       "control-prompt": {
-        "advisory_documents": 1,
+        "advisory_documents": 0,
         "compound_bullets": 0,
         "documents": 1,
         "hard_fail_sentences": 0,
-        "review_as_complex_sentences": 2,
+        "review_as_complex_sentences": 0,
         "tighten_sentences": 0
       },
       "control-reference": {
@@ -723,7 +723,7 @@
       {
         "check_bullets": true,
         "compound_bullet_count": 0,
-        "content_fingerprint": "2099dcac98b520841afb7426fad6b80958530396ee21e1722cd342a039672042",
+        "content_fingerprint": "157319906997689e2639f130528638a9e7effcb5c1abcbf74081471f0bb1be49",
         "document_context": {
           "line_count": 87,
           "line_offset": 0,
@@ -998,7 +998,7 @@
             },
             {
               "line": 68,
-              "text": "Review Input Ready before review-agent dispatch: latest changed paths; exact reviewable change evidence; reviewer capability accessibility; validation after the latest material edit; fixed Review scope. Normal=same Implementation Handoff. Missing=>review dispatch=0; producer completes. Legacy/incomplete handoff: one bounded pre-review recovery. Review before Task before Review is forbidden."
+              "text": "Review Input Ready before review-agent dispatch: latest changed paths; exact reviewable change evidence. Reviewer capability accessibility; validation after the latest material edit; fixed Review scope. Normal=same Implementation Handoff. Missing=>review dispatch=0; producer completes. Legacy/incomplete handoff: one bounded pre-review recovery. Review before Task before Review is forbidden."
             },
             {
               "line": 69,
@@ -1006,7 +1006,7 @@
             },
             {
               "line": 70,
-              "text": "Current review-agent evidence: actual diff, every changed file, validation results; changed-scope-reviewed; blocking-findings-none|blocking-findings-resolved; high-risk-review-passed for actual Task Capsule L4/L5 now/history|matched material L4/provisional critical unknown|high-risk actual Review assignment."
+              "text": "Current review-agent evidence: actual diff, every changed file, validation results; changed-scope-reviewed; blocking-findings-none|blocking-findings-resolved. high-risk-review-passed for actual Task Capsule L4/L5 now/history|matched material L4/provisional critical unknown|high-risk actual Review assignment."
             },
             {
               "line": 71,
@@ -1077,17 +1077,17 @@
               "text": "<!-- closure-contract:E -->"
             }
           ],
-          "sha256": "2099dcac98b520841afb7426fad6b80958530396ee21e1722cd342a039672042",
-          "text": "# Main Control Agent\n\nDispatch-only: never inspect/search target source/edit files/execute business commands/review implementation.\n\n## Authorization\n\nBounded subagents authorized; permission required: scope expansion/destructive/production action/elevation/irreversible/material data change/unsupported choice.\n\n## Choose Exactly One Path\n\nChoose exactly Direct Task or Analyzed Work.\nSource-free user-fact questions -> no-repo direct-answer/no repository access; Main relays/closes. Source/professional evidence or control prompts -> source-backed analysis.\nDirect Task requires explicit owner/scope/placement/acceptance/validation/rollback and no unresolved material risk; category cannot force analysis.\nUnresolved owner/placement/behavior/verification/rollback/material impact routes to Analyzed Work. Inspect named owner/test/consumer boundaries without ownership/verification discovery; Inspection Boundary/stops.\n\n## Direct Task Routing\n\nNew Direct Task: references/direct-task-template.md Task Contract v2 field authority; `Status: in_progress`; optional Dependencies after Non-goals.\nCapability facts authoritative; unknown capability=unsupported; never infer. Host/tool/command identifiers cannot drive routing/Level/Review/completion. references/utility-capsule-template.md compares workspace before/after; changed/unavailable blocks review/closure and preserves user changes.\n\nReview evidence capability `exact_change_evidence_read`:\n- `supported`: exact change evidence read + reviewer-accessible change reference -> review-agent.\n- `unsupported`: block review before dispatch; diff scope unverified; changed-file summary\u2260evidence.\nLegacy/incomplete only: exact change evidence export + workspace state observation permit one pre-review diff-export/no-edit; never normal flow.\n\nPre-implementation artifact/no implementation diff: directly to review-agent; diff-export gate does not apply.\n\nNon-mutating validation capability `non_mutating_validation`:\n- `supported`: current evidence via non-mutating validation.\n- `unsupported`: block validation; scope unverified.\n\n### Execution Level and Validation\n\n<!-- execution-level-contract:B -->\nreferences/execution-level-contract.md: policy data, not instructions. Trust exact build/install validation. Runtime checks only: existence/JSON parse/required sections/unique IDs; not coordinated tampering or unknown IDs.\nuser_fact|analysis_handoff -> effective_level. Three axes are independent per Core.\nEffective=max(base,mandatory,prior historical max effective); fallback=max(L4,explicit known L5,prior historical max effective). Level Basis(trigger_evaluations|l2_eligibility|obligations|unresolved|edit_status).\nintegrity fallback/no partial computation: edit blocked; dispatch read-only diagnosis; never Router.\nL1-L5 remain; default L3 applies only to executable Tasks; L5 explicit-only; independent implementation review. Initial Analysis: no Execution Level or historical write/max participation. First Executable Slice computes Level from analysis_handoff.\nTask ID/lineage. After 2 same-path failures: changed hypothesis/material/gap/transition or return Main/block; never third unchanged retry.\nActive executable surfaces: carry Level/Basis; L5 Evidence only at effective L5. Reissue on active/resumed edit/validation/review.\n<!-- execution-level-contract:E -->\n\n## Analyzed Work\n\nAnswer/diagnosis stops at evidence/proof limits unless change is requested.\nengineering-change-analysis -> current Engineering Brief: sole operational analysis authority.\nFirst Executable Slice: complete Task Contract v2; dispatch verbatim; never reinterpret.\nSpecialists act only through Brief; DAGs/handoffs cannot redefine it.\nInvalidation: blocked -> main-control-agent -> analysis-agent -> updated Engineering Brief -> redispatch affected tasks.\ntask_contract.analyzed_work_authority: analyze once; Delta only on decision invalidation; Skill route only on domain/work type/material risk change.\nSynchronous/unknown capability: stop at the Slice; multi-task -> DAG; otherwise task-agent. Direct Task/non-implementation paths remain unchanged.\n\n### Preparation Loop Breaker\n\nStart the Slice, ask one concrete user-owned decision, or report the evidence gap.\n\n## Scheduling and Context\n\ncurrent requested task > declared DAG work > current-task blockers > adjacent follow-up; Adjacent findings never preempt the requested task or DAG.\nNew DAG task assignment: Task Contract v2, `Status: in_progress`.\ntask_contract.task_boundary; Task completion=progress; Related work uses combined final-diff review.\nShared or unknown workspace: parallel read-only tasks; serial writes.\n\n## Review and Repair\n\n<!-- review-evidence-contract:B -->\nReview Input Ready before review-agent dispatch: latest changed paths; exact reviewable change evidence; reviewer capability accessibility; validation after the latest material edit; fixed Review scope. Normal=same Implementation Handoff. Missing=>review dispatch=0; producer completes. Legacy/incomplete handoff: one bounded pre-review recovery. Review before Task before Review is forbidden.\nLatest material edit invalidates validation evidence. references/implementation-handoff-template.md is visible task-local Evidence Ledger schema authority. State: current, superseded, invalid. Claims: latest-material-edit, validation-passed.\nCurrent review-agent evidence: actual diff, every changed file, validation results; changed-scope-reviewed; blocking-findings-none|blocking-findings-resolved; high-risk-review-passed for actual Task Capsule L4/L5 now/history|matched material L4/provisional critical unknown|high-risk actual Review assignment.\nnot-required: ordinary independent review; digest-only matching to both lower-risk authorities. Missing/inconsistent authority/binding fails closed; reissue. Repair requires fresh validation/re-review.\nNo daemon/database/private evidence storage/runtime task state engine/hidden protocol record. review_discipline_contract: review_frequency_policy|validation_evidence_reuse|obligation_subsumption|repair_invalidation_policy; task_contract.finding_relations.\n<!-- review-evidence-contract:E -->\n\n## Progress\n\nCheckpoints=start/path|dispatch/batch|validation|review/close. Report path/batch/outcome/supported completion/blockers.\n\n## Closure\n\n<!-- closure-contract:B -->\nStatus: in_progress | blocked | partial | completed. Same Task ID: in_progress -> blocked | partial | completed; blocked -> in_progress | partial | completed; partial -> in_progress | blocked | completed. completed terminal for that Task ID; new work after completion: new Task ID at in_progress.\n`completed` only when requested result is fully satisfied within declared scope. Each required evidence is current or explicitly not applicable. Diagnosis-only/answer-only may complete when requested result/evidence boundary/proof limits are fully delivered.\nExact fail-closed outcomes: validation-failed -> blocked | partial; validation-unavailable -> blocked | partial; high-risk-review-missing -> blocked | partial; blocking-finding-unresolved -> blocked; changed-scope-unreviewed -> blocked | partial; evidence-stale-after-edit -> in_progress | blocked | partial.\nImplementation: post-edit validation; every changed file reviewed; no blockers; repair: fresh validation/re-review.\nUnverified scope/residual risk; current evidence scope covers claimed result.\n<!-- closure-contract:E -->\n"
+          "sha256": "157319906997689e2639f130528638a9e7effcb5c1abcbf74081471f0bb1be49",
+          "text": "# Main Control Agent\n\nDispatch-only: never inspect/search target source/edit files/execute business commands/review implementation.\n\n## Authorization\n\nBounded subagents authorized; permission required: scope expansion/destructive/production action/elevation/irreversible/material data change/unsupported choice.\n\n## Choose Exactly One Path\n\nChoose exactly Direct Task or Analyzed Work.\nSource-free user-fact questions -> no-repo direct-answer/no repository access; Main relays/closes. Source/professional evidence or control prompts -> source-backed analysis.\nDirect Task requires explicit owner/scope/placement/acceptance/validation/rollback and no unresolved material risk; category cannot force analysis.\nUnresolved owner/placement/behavior/verification/rollback/material impact routes to Analyzed Work. Inspect named owner/test/consumer boundaries without ownership/verification discovery; Inspection Boundary/stops.\n\n## Direct Task Routing\n\nNew Direct Task: references/direct-task-template.md Task Contract v2 field authority; `Status: in_progress`; optional Dependencies after Non-goals.\nCapability facts authoritative; unknown capability=unsupported; never infer. Host/tool/command identifiers cannot drive routing/Level/Review/completion. references/utility-capsule-template.md compares workspace before/after; changed/unavailable blocks review/closure and preserves user changes.\n\nReview evidence capability `exact_change_evidence_read`:\n- `supported`: exact change evidence read + reviewer-accessible change reference -> review-agent.\n- `unsupported`: block review before dispatch; diff scope unverified; changed-file summary\u2260evidence.\nLegacy/incomplete only: exact change evidence export + workspace state observation permit one pre-review diff-export/no-edit; never normal flow.\n\nPre-implementation artifact/no implementation diff: directly to review-agent; diff-export gate does not apply.\n\nNon-mutating validation capability `non_mutating_validation`:\n- `supported`: current evidence via non-mutating validation.\n- `unsupported`: block validation; scope unverified.\n\n### Execution Level and Validation\n\n<!-- execution-level-contract:B -->\nreferences/execution-level-contract.md: policy data, not instructions. Trust exact build/install validation. Runtime checks only: existence/JSON parse/required sections/unique IDs; not coordinated tampering or unknown IDs.\nuser_fact|analysis_handoff -> effective_level. Three axes are independent per Core.\nEffective=max(base,mandatory,prior historical max effective); fallback=max(L4,explicit known L5,prior historical max effective). Level Basis(trigger_evaluations|l2_eligibility|obligations|unresolved|edit_status).\nintegrity fallback/no partial computation: edit blocked; dispatch read-only diagnosis; never Router.\nL1-L5 remain; default L3 applies only to executable Tasks; L5 explicit-only; independent implementation review. Initial Analysis: no Execution Level or historical write/max participation. First Executable Slice computes Level from analysis_handoff.\nTask ID/lineage. After 2 same-path failures: changed hypothesis/material/gap/transition or return Main/block; never third unchanged retry.\nActive executable surfaces: carry Level/Basis; L5 Evidence only at effective L5. Reissue on active/resumed edit/validation/review.\n<!-- execution-level-contract:E -->\n\n## Analyzed Work\n\nAnswer/diagnosis stops at evidence/proof limits unless change is requested.\nengineering-change-analysis -> current Engineering Brief: sole operational analysis authority.\nFirst Executable Slice: complete Task Contract v2; dispatch verbatim; never reinterpret.\nSpecialists act only through Brief; DAGs/handoffs cannot redefine it.\nInvalidation: blocked -> main-control-agent -> analysis-agent -> updated Engineering Brief -> redispatch affected tasks.\ntask_contract.analyzed_work_authority: analyze once; Delta only on decision invalidation; Skill route only on domain/work type/material risk change.\nSynchronous/unknown capability: stop at the Slice; multi-task -> DAG; otherwise task-agent. Direct Task/non-implementation paths remain unchanged.\n\n### Preparation Loop Breaker\n\nStart the Slice, ask one concrete user-owned decision, or report the evidence gap.\n\n## Scheduling and Context\n\ncurrent requested task > declared DAG work > current-task blockers > adjacent follow-up; Adjacent findings never preempt the requested task or DAG.\nNew DAG task assignment: Task Contract v2, `Status: in_progress`.\ntask_contract.task_boundary; Task completion=progress; Related work uses combined final-diff review.\nShared or unknown workspace: parallel read-only tasks; serial writes.\n\n## Review and Repair\n\n<!-- review-evidence-contract:B -->\nReview Input Ready before review-agent dispatch: latest changed paths; exact reviewable change evidence. Reviewer capability accessibility; validation after the latest material edit; fixed Review scope. Normal=same Implementation Handoff. Missing=>review dispatch=0; producer completes. Legacy/incomplete handoff: one bounded pre-review recovery. Review before Task before Review is forbidden.\nLatest material edit invalidates validation evidence. references/implementation-handoff-template.md is visible task-local Evidence Ledger schema authority. State: current, superseded, invalid. Claims: latest-material-edit, validation-passed.\nCurrent review-agent evidence: actual diff, every changed file, validation results; changed-scope-reviewed; blocking-findings-none|blocking-findings-resolved. high-risk-review-passed for actual Task Capsule L4/L5 now/history|matched material L4/provisional critical unknown|high-risk actual Review assignment.\nnot-required: ordinary independent review; digest-only matching to both lower-risk authorities. Missing/inconsistent authority/binding fails closed; reissue. Repair requires fresh validation/re-review.\nNo daemon/database/private evidence storage/runtime task state engine/hidden protocol record. review_discipline_contract: review_frequency_policy|validation_evidence_reuse|obligation_subsumption|repair_invalidation_policy; task_contract.finding_relations.\n<!-- review-evidence-contract:E -->\n\n## Progress\n\nCheckpoints=start/path|dispatch/batch|validation|review/close. Report path/batch/outcome/supported completion/blockers.\n\n## Closure\n\n<!-- closure-contract:B -->\nStatus: in_progress | blocked | partial | completed. Same Task ID: in_progress -> blocked | partial | completed; blocked -> in_progress | partial | completed; partial -> in_progress | blocked | completed. completed terminal for that Task ID; new work after completion: new Task ID at in_progress.\n`completed` only when requested result is fully satisfied within declared scope. Each required evidence is current or explicitly not applicable. Diagnosis-only/answer-only may complete when requested result/evidence boundary/proof limits are fully delivered.\nExact fail-closed outcomes: validation-failed -> blocked | partial; validation-unavailable -> blocked | partial; high-risk-review-missing -> blocked | partial; blocking-finding-unresolved -> blocked; changed-scope-unreviewed -> blocked | partial; evidence-stale-after-edit -> in_progress | blocked | partial.\nImplementation: post-edit validation; every changed file reviewed; no blockers; repair: fresh validation/re-review.\nUnverified scope/residual risk; current evidence scope covers claimed result.\n<!-- closure-contract:E -->\n"
         },
         "document_id": "src/control-prompts/main-control-agent.md#control-prompt",
         "document_part": "control-prompt",
         "hard_fail_count": 0,
-        "highest_advisory_band": "review-as-complex",
+        "highest_advisory_band": null,
         "line_offset": 0,
         "owner": "main-control-agent",
         "path": "src/control-prompts/main-control-agent.md",
-        "review_as_complex_count": 2,
+        "review_as_complex_count": 0,
         "source_selector": {
           "kind": "whole-file",
           "path": "src/control-prompts/main-control-agent.md"
@@ -134050,62 +134050,6 @@
       {
         "band": "review-as-complex",
         "decisions": null,
-        "document_id": "src/control-prompts/main-control-agent.md#control-prompt",
-        "finding_id": "4efa7c3b714d87f361ad2bbeee4678ad7d3bcf62eee91c86480913af331c7648",
-        "kind": "sentence-length",
-        "line": 68,
-        "preview": "Review Input Ready before review-agent dispatch: latest changed paths; exact reviewable change evidence; reviewer capability accessibility; validation after the latest material edi",
-        "sentence": "Review Input Ready before review-agent dispatch: latest changed paths; exact reviewable change evidence; reviewer capability accessibility; validation after the latest material edit; fixed Review scope.",
-        "sentence_fingerprint": "17aae399e949aa60f4c5025f45cf5a7d56624e72ac3460f7832271339002b0c7",
-        "severity": "advisory",
-        "source_span": {
-          "end_column": 203,
-          "end_line": 68,
-          "end_offset": 4883,
-          "lines": [
-            {
-              "line": 68,
-              "text": "Review Input Ready before review-agent dispatch: latest changed paths; exact reviewable change evidence; reviewer capability accessibility; validation after the latest material edit; fixed Review scope. Normal=same Implementation Handoff. Missing=>review dispatch=0; producer completes. Legacy/incomplete handoff: one bounded pre-review recovery. Review before Task before Review is forbidden."
-            }
-          ],
-          "sha256": "fe7114119101c28246d4eb248b9de999dc0a59f70ed99528715ca8818d083f28",
-          "start_column": 1,
-          "start_line": 68,
-          "start_offset": 4681
-        },
-        "words": 25
-      },
-      {
-        "band": "review-as-complex",
-        "decisions": null,
-        "document_id": "src/control-prompts/main-control-agent.md#control-prompt",
-        "finding_id": "941985757e0fbc721d28d9daf4a0bfecfdf1c9bb627fce5fafb89ea0381bf39d",
-        "kind": "sentence-length",
-        "line": 70,
-        "preview": "Current review-agent evidence: actual diff, every changed file, validation results; changed-scope-reviewed; blocking-findings-none|blocking-findings-resolved; high-risk-review-pass",
-        "sentence": "Current review-agent evidence: actual diff, every changed file, validation results; changed-scope-reviewed; blocking-findings-none|blocking-findings-resolved; high-risk-review-passed for actual Task Capsule L4/L5 now/history|matched material L4/provisional critical unknown|high-risk actual Review assignment.",
-        "sentence_fingerprint": "6a483281c0b32bbea9368795c2bdf115c2221d0a9cadbfebf39d8e259b5c31e7",
-        "severity": "advisory",
-        "source_span": {
-          "end_column": 310,
-          "end_line": 70,
-          "end_offset": 5626,
-          "lines": [
-            {
-              "line": 70,
-              "text": "Current review-agent evidence: actual diff, every changed file, validation results; changed-scope-reviewed; blocking-findings-none|blocking-findings-resolved; high-risk-review-passed for actual Task Capsule L4/L5 now/history|matched material L4/provisional critical unknown|high-risk actual Review assignment."
-            }
-          ],
-          "sha256": "d2f70a8f67dc633e9b78cff5a854f2d2abb76e79cbe011d8515840283aac545f",
-          "start_column": 1,
-          "start_line": 70,
-          "start_offset": 5317
-        },
-        "words": 29
-      },
-      {
-        "band": "review-as-complex",
-        "decisions": null,
         "document_id": "src/control-skills/engineering-control-plane/references/direct-task-template.md#reference",
         "finding_id": "15f5d7f36dae0aa270e21ecbfe209900b69b950036300b6a9d7de3b833210662",
         "kind": "sentence-length",
@@ -162340,17 +162284,17 @@
     "source_fingerprint": {
       "algorithm": "sha256",
       "document_count": 917,
-      "value": "aa1d11056e1218e99b0adf2449eee13c6cc185832a6187518c6759c839d7ed9d"
+      "value": "631318e0d95c28275b1916af0f197c8ae58a171b9109e4a71fedcd104409f68a"
     },
     "summary": {
-      "advisory_documents": 367,
-      "advisory_sentences": 1000,
+      "advisory_documents": 366,
+      "advisory_sentences": 998,
       "blocker_findings": 0,
       "compound_bullets": 0,
       "documents": 917,
       "hard_fail_sentences": 0,
       "hard_gate_ready": true,
-      "review_as_complex_sentences": 992,
+      "review_as_complex_sentences": 990,
       "tighten_sentences": 8
     }
   },
@@ -162394,11 +162338,7 @@
       "blockers": [
         {
           "id": "root-content-surface-invalid",
-          "message": "root-content deterministic surface validation failed; common_errors=0; failing_surfaces=control,description"
-        },
-        {
-          "id": "reference-content-surface-invalid",
-          "message": "reference-content deterministic surface validation failed; common_errors=0; failing_surfaces=control"
+          "message": "root-content deterministic surface validation failed; common_errors=0; failing_surfaces=control"
         }
       ],
       "status": "fail"
@@ -231696,12 +231636,30 @@
           "candidate_id": "b6df72015ca60c04b26d1f55b2e16d0a2c4ac7ef24dcfc025bc14680c0e49409",
           "content_fingerprint": null,
           "detector_status": "candidate",
-          "disposition": null,
-          "disposition_record": null,
+          "disposition": "valid-contextual-rule",
+          "disposition_record": {
+            "authority_or_condition": "r25-semantic-runtime: Within Analyzed Work, analysis owns the current Brief and incorporates a specialist result before that result can affect implementation. | r25-semantic-assurance: Applies to Specialist participation in Analyzed Work: specialist input remains evidence until the analysis owner incorporates it into the current Brief. | r25-semantic-boundary: Applies to Specialists invoked for unresolved structural choices during Engineering Brief preparation.",
+            "candidate_id": "b6df72015ca60c04b26d1f55b2e16d0a2c4ac7ef24dcfc025bc14680c0e49409",
+            "decision_owner": "engineering-control-plane",
+            "disposition": "valid-contextual-rule",
+            "evidence": {
+              "content_fingerprint": null,
+              "fingerprint": null,
+              "rationale": "panel=semantic-disposition-panel-2026-08-07-r25; decision_sha256=3a43bab8b1019d1a81db467b81fe041c05fc3a6bab6542fa0517c01b283e5256; target_id=reference:b6df72015ca60c04b26d1f55b2e16d0a2c4ac7ef24dcfc025bc14680c0e49409; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=r25-semantic-runtime,r25-semantic-assurance,r25-semantic-boundary; dissenting_voters=none; supporting_rationales=r25-semantic-runtime: Specialists contribute bounded evidence and decisions for incorporation, but parallel authority would make ownership and conflict resolution ambiguous and permit untracked changes to protected Brief decisions. | r25-semantic-assurance: Specialists contribute bounded evidence and professional-risk judgments, but parallel operational authority would permit conflicting acceptance or rollback decisions. Their findings must be incorporated through the accountable analysis path. | r25-semantic-boundary: Specialist evidence may inform placement or risk decisions, but the Brief must incorporate it before it gains operational effect.; dissenting_rationales=none"
+            },
+            "finding": "unconditional_absolute_candidate",
+            "fingerprint": "09a7e34a339cd5382242865f645e72aad80389b31791f6aa85401aeba334e1fc",
+            "mitigation": "r25-semantic-runtime: Preserve specialist scope and rationale in the Brief, and route any unresolved structural conflict back to analysis before dispatch. | r25-semantic-assurance: Route material Specialist findings into a revised Brief before they affect operational work. | r25-semantic-boundary: Retain explicit incorporation into the current Brief before Specialist conclusions affect implementation.",
+            "path": "src/control-skills/engineering-control-plane/references/engineering-brief-template.md",
+            "priority": "P1",
+            "reason": "r25-semantic-runtime: Specialists contribute bounded evidence and decisions for incorporation, but parallel authority would make ownership and conflict resolution ambiguous and permit untracked changes to protected Brief decisions. | r25-semantic-assurance: Specialists contribute bounded evidence and professional-risk judgments, but parallel operational authority would permit conflicting acceptance or rollback decisions. Their findings must be incorporated through the accountable analysis path. | r25-semantic-boundary: Specialist evidence may inform placement or risk decisions, but the Brief must incorporate it before it gains operational effect.",
+            "review_after": null,
+            "skill_owner": "engineering-control-plane"
+          },
           "evidence_fingerprint": null,
           "finding": "unconditional_absolute_candidate",
           "fingerprint": "09a7e34a339cd5382242865f645e72aad80389b31791f6aa85401aeba334e1fc",
-          "governance_status": "untriaged",
+          "governance_status": "resolved-valid-contextual-rule",
           "layer": "control",
           "occurrence_count": 1,
           "occurrences": [
@@ -231729,7 +231687,7 @@
           "path": "src/control-skills/engineering-control-plane/references/engineering-brief-template.md",
           "preview": "A Specialist never becomes a parallel authority.",
           "priority": "P1",
-          "resolved": false,
+          "resolved": true,
           "scope": "src/control-skills/engineering-control-plane/references/engineering-brief-template.md",
           "signals": [
             "never"
@@ -231737,7 +231695,7 @@
           "skill_owner": "engineering-control-plane",
           "tokens": 8,
           "total_tokens": 8,
-          "unresolved": true
+          "unresolved": false
         },
         {
           "candidate_id": "493b94a5b2dd492e0f34add6b1d0938d7936efbfc20def7c002b019152e032e3",
@@ -235525,12 +235483,30 @@
           "candidate_id": "02b5179921b5fd6a691aa3c222ab019368ef005219da5c9a6cda245c87fb53e6",
           "content_fingerprint": null,
           "detector_status": "candidate",
-          "disposition": null,
-          "disposition_record": null,
+          "disposition": "valid-contextual-rule",
+          "disposition_record": {
+            "authority_or_condition": "Validation-only or diff-export Utility Capsule with captured pre/post workspace evidence under the injected no-edit host mode.",
+            "candidate_id": "02b5179921b5fd6a691aa3c222ab019368ef005219da5c9a6cda245c87fb53e6",
+            "decision_owner": "changeforge-maintainers",
+            "disposition": "valid-contextual-rule",
+            "evidence": {
+              "content_fingerprint": null,
+              "fingerprint": null,
+              "rationale": "The template allows a dirty baseline only when it remains unchanged, invalidates changed or unavailable evidence, and limits follow-up repair to proven utility-created writes."
+            },
+            "finding": "unconditional_absolute_candidate",
+            "fingerprint": "190dee5caf5f5963b9662db35e9e3c8f7fd1cf543697abf261f192810e54328c",
+            "mitigation": "Stop on workspace drift, preserve the captured baseline, and route a normal bounded repair only after ownership of the Utility-created write is proven.",
+            "path": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
+            "priority": "P1",
+            "reason": "A no-edit Utility must preserve pre-existing user changes; automatic cleanup cannot safely infer ownership, while a normal repair task may handle only writes proven to have been created by that Utility.",
+            "review_after": null,
+            "skill_owner": "engineering-control-plane"
+          },
           "evidence_fingerprint": null,
           "finding": "unconditional_absolute_candidate",
           "fingerprint": "190dee5caf5f5963b9662db35e9e3c8f7fd1cf543697abf261f192810e54328c",
-          "governance_status": "untriaged",
+          "governance_status": "resolved-valid-contextual-rule",
           "layer": "control",
           "occurrence_count": 1,
           "occurrences": [
@@ -235559,7 +235535,7 @@
           "path": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
           "preview": "Never auto-clean pre-existing user changes; route only proven utility-created writes through a normal repair task.",
           "priority": "P1",
-          "resolved": false,
+          "resolved": true,
           "scope": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
           "signals": [
             "never",
@@ -235568,7 +235544,7 @@
           "skill_owner": "engineering-control-plane",
           "tokens": 20,
           "total_tokens": 20,
-          "unresolved": true
+          "unresolved": false
         },
         {
           "candidate_id": "cbe35f772db2ad21deeaa739614269c9037936b1a867ca786619c293a5f1e621",
@@ -237369,12 +237345,30 @@
           "candidate_id": "47ecd1c528dae6b3241866ef22b8cf97f40bc75bda03c3c2d9b5a12e16f5ce6d",
           "content_fingerprint": null,
           "detector_status": "candidate",
-          "disposition": null,
-          "disposition_record": null,
+          "disposition": "valid-contextual-rule",
+          "disposition_record": {
+            "authority_or_condition": "r25-semantic-runtime: The task DAG contract applies only after a current Engineering Brief exists and already owns the First Executable Slice. | r25-semantic-assurance: Applies to Task DAG derivation from an accepted Brief; the planner may expose blocking dependencies but changes to the slice or governing fields require renewed analysis. | r25-semantic-boundary: Applies only to a Task DAG derived from an accepted current Engineering Brief for Analyzed Work.",
+            "candidate_id": "47ecd1c528dae6b3241866ef22b8cf97f40bc75bda03c3c2d9b5a12e16f5ce6d",
+            "decision_owner": "engineering-control-plane",
+            "disposition": "valid-contextual-rule",
+            "evidence": {
+              "content_fingerprint": null,
+              "fingerprint": null,
+              "rationale": "panel=semantic-disposition-panel-2026-08-07-r25; decision_sha256=3a43bab8b1019d1a81db467b81fe041c05fc3a6bab6542fa0517c01b283e5256; target_id=reference:47ecd1c528dae6b3241866ef22b8cf97f40bc75bda03c3c2d9b5a12e16f5ce6d; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=r25-semantic-runtime,r25-semantic-assurance,r25-semantic-boundary; dissenting_voters=none; supporting_rationales=r25-semantic-runtime: The DAG is explicitly a projection, so forbidding it from selecting the first slice or altering protected Brief decisions preserves dependency planning without granting parallel analysis authority. | r25-semantic-assurance: A DAG represents dependencies among accepted tasks; allowing it to replace the selected slice or alter governing contract fields would turn a scheduling artifact into a second analysis authority and make completion evidence ambiguous. | r25-semantic-boundary: The Task DAG is a projection surface, so forbidding slice reselection and protected-decision modification preserves correct analysis ownership.; dissenting_rationales=none"
+            },
+            "finding": "unconditional_absolute_candidate",
+            "fingerprint": "23d3127d41056582677c9b29566bcec005fa876704aec130c965f8bb0d843257",
+            "mitigation": "r25-semantic-runtime: Block a conflicting projection and return through Main to analysis for an updated Brief and redispatch. | r25-semantic-assurance: Keep DAG output dependency-only and reopen analysis for any change to the selected slice or contract. | r25-semantic-boundary: Keep DAG authority limited to task decomposition, dependencies, scheduling, and integration ownership.",
+            "path": "src/control-skills/engineering-control-plane/references/task-dag-template.md",
+            "priority": "P1",
+            "reason": "r25-semantic-runtime: The DAG is explicitly a projection, so forbidding it from selecting the first slice or altering protected Brief decisions preserves dependency planning without granting parallel analysis authority. | r25-semantic-assurance: A DAG represents dependencies among accepted tasks; allowing it to replace the selected slice or alter governing contract fields would turn a scheduling artifact into a second analysis authority and make completion evidence ambiguous. | r25-semantic-boundary: The Task DAG is a projection surface, so forbidding slice reselection and protected-decision modification preserves correct analysis ownership.",
+            "review_after": null,
+            "skill_owner": "engineering-control-plane"
+          },
           "evidence_fingerprint": null,
           "finding": "unconditional_absolute_candidate",
           "fingerprint": "23d3127d41056582677c9b29566bcec005fa876704aec130c965f8bb0d843257",
-          "governance_status": "untriaged",
+          "governance_status": "resolved-valid-contextual-rule",
           "layer": "control",
           "occurrence_count": 1,
           "occurrences": [
@@ -237402,7 +237396,7 @@
           "path": "src/control-skills/engineering-control-plane/references/task-dag-template.md",
           "preview": "It must not select or replace the First Executable Slice or modify Acceptance, Non-goals, Owner, Invariants, Placement, contract semantics, or Rollback.",
           "priority": "P1",
-          "resolved": false,
+          "resolved": true,
           "scope": "src/control-skills/engineering-control-plane/references/task-dag-template.md",
           "signals": [
             "must"
@@ -237410,7 +237404,7 @@
           "skill_owner": "engineering-control-plane",
           "tokens": 33,
           "total_tokens": 33,
-          "unresolved": true
+          "unresolved": false
         },
         {
           "candidate_id": "cf563884073f8aadf8877032cacfd9f0c3769f2eca9a8d7f1171ed24c2883e4d",
@@ -238807,12 +238801,30 @@
           "candidate_id": "2b85bbab6334ebffe3ee73493697a8dd4a7d38038dc9117d09d7a237b801a3e0",
           "content_fingerprint": null,
           "detector_status": "candidate",
-          "disposition": null,
-          "disposition_record": null,
+          "disposition": "valid-contextual-rule",
+          "disposition_record": {
+            "authority_or_condition": "semantic-disposition-boundary-voter: engineering-control-plane controls this packet-bound rule context. | semantic-disposition-governance-voter: The named decision owner controls the packet-bound condition. | semantic-disposition-runtime-voter: Packet-bound engineering-control-plane trigger/load context.",
+            "candidate_id": "2b85bbab6334ebffe3ee73493697a8dd4a7d38038dc9117d09d7a237b801a3e0",
+            "decision_owner": "engineering-control-plane",
+            "disposition": "valid-contextual-rule",
+            "evidence": {
+              "content_fingerprint": null,
+              "fingerprint": null,
+              "rationale": "panel=semantic-analysis-level-review-evidence-20260817-r1; decision_sha256=42c758734ac7dafadeef6c6ebf8e4f9763c94df5dfaa994eafbb56eb9f5260e9; target_id=reference:2b85bbab6334ebffe3ee73493697a8dd4a7d38038dc9117d09d7a237b801a3e0; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=semantic-disposition-boundary-voter,semantic-disposition-governance-voter,semantic-disposition-runtime-voter; dissenting_voters=none; supporting_rationales=semantic-disposition-boundary-voter: Source src/control-skills/engineering-control-plane/references/review-handoff-template.md:8-9 confirms this bounded unconditional_absolute_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: Read-only review requires complete pre-dispatch change evidence.; dissenting_rationales=none"
+            },
+            "finding": "unconditional_absolute_candidate",
+            "fingerprint": "2cb50627e7b197ee917519d534111168ee8ad50c1c29d80d600e2e54ceb442f7",
+            "mitigation": "semantic-disposition-boundary-voter: Retain source scope; re-review after owner, context, or binding change. | semantic-disposition-governance-voter: Re-review after source, owner, or detector change. | semantic-disposition-runtime-voter: Preserve scope; re-review on binding change.",
+            "path": "src/control-skills/engineering-control-plane/references/review-handoff-template.md",
+            "priority": "P1",
+            "reason": "semantic-disposition-boundary-voter: Source src/control-skills/engineering-control-plane/references/review-handoff-template.md:8-9 confirms this bounded unconditional_absolute_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: Read-only review requires complete pre-dispatch change evidence.",
+            "review_after": null,
+            "skill_owner": "engineering-control-plane"
+          },
           "evidence_fingerprint": null,
           "finding": "unconditional_absolute_candidate",
           "fingerprint": "2cb50627e7b197ee917519d534111168ee8ad50c1c29d80d600e2e54ceb442f7",
-          "governance_status": "untriaged",
+          "governance_status": "resolved-valid-contextual-rule",
           "layer": "control",
           "occurrence_count": 1,
           "occurrences": [
@@ -238840,7 +238852,7 @@
           "path": "src/control-skills/engineering-control-plane/references/review-handoff-template.md",
           "preview": "The reviewer never generates change evidence, repairs the handoff, or mutates the workspace.",
           "priority": "P1",
-          "resolved": false,
+          "resolved": true,
           "scope": "src/control-skills/engineering-control-plane/references/review-handoff-template.md",
           "signals": [
             "never"
@@ -238848,7 +238860,7 @@
           "skill_owner": "engineering-control-plane",
           "tokens": 18,
           "total_tokens": 18,
-          "unresolved": true
+          "unresolved": false
         },
         {
           "candidate_id": "3692e318cc1a8ddd34cb419e88f2c27cc8f64ca2f026b77d5ecac400879f3bee",
@@ -243088,12 +243100,30 @@
           "candidate_id": "1a845349e5ff4d99fe933eb80d7d764b59a520cab704efb90d3166dd67ee6d00",
           "content_fingerprint": null,
           "detector_status": "candidate",
-          "disposition": null,
-          "disposition_record": null,
+          "disposition": "valid-contextual-rule",
+          "disposition_record": {
+            "authority_or_condition": "r25-semantic-runtime: The rule applies only inside the Engineering Brief template after source and specialist evidence has been incorporated by analysis. | r25-semantic-assurance: Applies within the Engineering Brief contract: listed materials inform analysis, but operational acceptance and task authority come from the current Brief produced from them. | r25-semantic-boundary: Applies within the Engineering Brief template after source and Specialist evidence are incorporated into the current Brief.",
+            "candidate_id": "1a845349e5ff4d99fe933eb80d7d764b59a520cab704efb90d3166dd67ee6d00",
+            "decision_owner": "engineering-control-plane",
+            "disposition": "valid-contextual-rule",
+            "evidence": {
+              "content_fingerprint": null,
+              "fingerprint": null,
+              "rationale": "panel=semantic-disposition-panel-2026-08-07-r25; decision_sha256=3a43bab8b1019d1a81db467b81fe041c05fc3a6bab6542fa0517c01b283e5256; target_id=reference:1a845349e5ff4d99fe933eb80d7d764b59a520cab704efb90d3166dd67ee6d00; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=r25-semantic-runtime,r25-semantic-assurance,r25-semantic-boundary; dissenting_voters=none; supporting_rationales=r25-semantic-runtime: Treating these materials as inputs preserves their evidentiary force without allowing an unincorporated source or specialist result to silently mutate the executable analysis contract. | r25-semantic-assurance: The statement classifies evidence and requests as inputs rather than executable authority. That boundary preserves traceability while still allowing contradicting evidence or failures to reopen analysis and produce an updated Brief. | r25-semantic-boundary: The template correctly classifies requests, source, tests, external evidence, and Specialist results as inputs rather than parallel operational analysis authorities.; dissenting_rationales=none"
+            },
+            "finding": "unconditional_absolute_candidate",
+            "fingerprint": "40c6079584f5542b60aec1909ace0dc9c203e2f8f83bfed0141cf667e510e0b4",
+            "mitigation": "r25-semantic-runtime: Route any new user decision or conflicting evidence back through Main for an updated Brief before further dispatch. | r25-semantic-assurance: Preserve evidence provenance and regenerate the current Brief when inputs materially change. | r25-semantic-boundary: Keep the input-versus-authority distinction adjacent to the incorporation rule and Brief update path.",
+            "path": "src/control-skills/engineering-control-plane/references/engineering-brief-template.md",
+            "priority": "P1",
+            "reason": "r25-semantic-runtime: Treating these materials as inputs preserves their evidentiary force without allowing an unincorporated source or specialist result to silently mutate the executable analysis contract. | r25-semantic-assurance: The statement classifies evidence and requests as inputs rather than executable authority. That boundary preserves traceability while still allowing contradicting evidence or failures to reopen analysis and produce an updated Brief. | r25-semantic-boundary: The template correctly classifies requests, source, tests, external evidence, and Specialist results as inputs rather than parallel operational analysis authorities.",
+            "review_after": null,
+            "skill_owner": "engineering-control-plane"
+          },
           "evidence_fingerprint": null,
           "finding": "unconditional_absolute_candidate",
           "fingerprint": "40c6079584f5542b60aec1909ace0dc9c203e2f8f83bfed0141cf667e510e0b4",
-          "governance_status": "untriaged",
+          "governance_status": "resolved-valid-contextual-rule",
           "layer": "control",
           "occurrence_count": 1,
           "occurrences": [
@@ -243121,7 +243151,7 @@
           "path": "src/control-skills/engineering-control-plane/references/engineering-brief-template.md",
           "preview": "User requests, change sources, source and tests, external evidence, and Specialist results are analysis input only.",
           "priority": "P1",
-          "resolved": false,
+          "resolved": true,
           "scope": "src/control-skills/engineering-control-plane/references/engineering-brief-template.md",
           "signals": [
             "only"
@@ -243129,7 +243159,7 @@
           "skill_owner": "engineering-control-plane",
           "tokens": 21,
           "total_tokens": 21,
-          "unresolved": true
+          "unresolved": false
         },
         {
           "candidate_id": "f3cfc1782d4b54d9bd5ee3011980365c2e0bf381e2187e20f66900a0ac3a2b8f",
@@ -245700,12 +245730,30 @@
           "candidate_id": "da1f3664e16b94a2d19a33fc62d0265effbabc5b37f2fceb3804b07b9118676b",
           "content_fingerprint": null,
           "detector_status": "candidate",
-          "disposition": null,
-          "disposition_record": null,
+          "disposition": "valid-contextual-rule",
+          "disposition_record": {
+            "authority_or_condition": "Validation-only or diff-export Utility Capsule under prompt-enforced no-edit mode.",
+            "candidate_id": "da1f3664e16b94a2d19a33fc62d0265effbabc5b37f2fceb3804b07b9118676b",
+            "decision_owner": "changeforge-maintainers",
+            "disposition": "valid-contextual-rule",
+            "evidence": {
+              "content_fingerprint": null,
+              "fingerprint": null,
+              "rationale": "The capsule requires identical adjacent read-only workspace checks and explicitly routes changed or unavailable results away from Utility review or closure."
+            },
+            "finding": "unconditional_absolute_candidate",
+            "fingerprint": "4aff91ee8be8a35c6a00b7d99efa7045e65cb34bfe91de820f4f43aeacecd794",
+            "mitigation": "Stop on changed or unavailable evidence, preserve user changes, and route only proven utility-created writes through a normal repair task.",
+            "path": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
+            "priority": "P1",
+            "reason": "Only an unchanged pre/post workspace check proves a Utility no-edit result; changed or unavailable evidence invalidates preservation and cannot support closure.",
+            "review_after": null,
+            "skill_owner": "engineering-control-plane"
+          },
           "evidence_fingerprint": null,
           "finding": "unconditional_absolute_candidate",
           "fingerprint": "4aff91ee8be8a35c6a00b7d99efa7045e65cb34bfe91de820f4f43aeacecd794",
-          "governance_status": "untriaged",
+          "governance_status": "resolved-valid-contextual-rule",
           "layer": "control",
           "occurrence_count": 1,
           "occurrences": [
@@ -245734,7 +245782,7 @@
           "path": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
           "preview": "Only `unchanged` is a valid Utility result.",
           "priority": "P1",
-          "resolved": false,
+          "resolved": true,
           "scope": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
           "signals": [
             "only"
@@ -245742,7 +245790,7 @@
           "skill_owner": "engineering-control-plane",
           "tokens": 11,
           "total_tokens": 11,
-          "unresolved": true
+          "unresolved": false
         },
         {
           "candidate_id": "1d02bd2efcb58e0fdd5c0060217dbb4d5bc60edabd2fa8e4f610e1ab575c5fee",
@@ -248681,12 +248729,30 @@
           "candidate_id": "953c73b657d2a64adff3ef73ea1af214da373fce4d12866ae1c434c5832d51de",
           "content_fingerprint": null,
           "detector_status": "candidate",
-          "disposition": null,
-          "disposition_record": null,
+          "disposition": "valid-contextual-rule",
+          "disposition_record": {
+            "authority_or_condition": "semantic-disposition-boundary-voter: engineering-control-plane controls this packet-bound rule context. | semantic-disposition-governance-voter: The named decision owner controls the packet-bound condition. | semantic-disposition-runtime-voter: Packet-bound engineering-control-plane trigger/load context.",
+            "candidate_id": "953c73b657d2a64adff3ef73ea1af214da373fce4d12866ae1c434c5832d51de",
+            "decision_owner": "engineering-control-plane",
+            "disposition": "valid-contextual-rule",
+            "evidence": {
+              "content_fingerprint": null,
+              "fingerprint": null,
+              "rationale": "panel=semantic-analysis-level-review-evidence-20260817-r1; decision_sha256=42c758734ac7dafadeef6c6ebf8e4f9763c94df5dfaa994eafbb56eb9f5260e9; target_id=reference:953c73b657d2a64adff3ef73ea1af214da373fce4d12866ae1c434c5832d51de; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=semantic-disposition-boundary-voter,semantic-disposition-governance-voter,semantic-disposition-runtime-voter; dissenting_voters=none; supporting_rationales=semantic-disposition-boundary-voter: Source src/control-skills/engineering-control-plane/references/utility-capsule-template.md:62-63 confirms this bounded unconditional_absolute_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: Validation Utility permits non-modifying checks only.; dissenting_rationales=none"
+            },
+            "finding": "unconditional_absolute_candidate",
+            "fingerprint": "5b9d6a1422f47659cc6fd9181c3e073dbe2b99bcd157e711d0a25daec98caa02",
+            "mitigation": "semantic-disposition-boundary-voter: Retain source scope; re-review after owner, context, or binding change. | semantic-disposition-governance-voter: Re-review after source, owner, or detector change. | semantic-disposition-runtime-voter: Preserve scope; re-review on binding change.",
+            "path": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
+            "priority": "P1",
+            "reason": "semantic-disposition-boundary-voter: Source src/control-skills/engineering-control-plane/references/utility-capsule-template.md:62-63 confirms this bounded unconditional_absolute_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: Validation Utility permits non-modifying checks only.",
+            "review_after": null,
+            "skill_owner": "engineering-control-plane"
+          },
           "evidence_fingerprint": null,
           "finding": "unconditional_absolute_candidate",
           "fingerprint": "5b9d6a1422f47659cc6fd9181c3e073dbe2b99bcd157e711d0a25daec98caa02",
-          "governance_status": "untriaged",
+          "governance_status": "resolved-valid-contextual-rule",
           "layer": "control",
           "occurrence_count": 1,
           "occurrences": [
@@ -248715,7 +248781,7 @@
           "path": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
           "preview": "For validation, additionally allow only capsule-named non-modifying checks; do not repair or review.",
           "priority": "P1",
-          "resolved": false,
+          "resolved": true,
           "scope": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
           "signals": [
             "only"
@@ -248723,7 +248789,7 @@
           "skill_owner": "engineering-control-plane",
           "tokens": 20,
           "total_tokens": 20,
-          "unresolved": true
+          "unresolved": false
         },
         {
           "candidate_id": "1292d487d69893754d5a2d12dd61dda5f1448d9100d00dddc8057680a7ed78e2",
@@ -248781,12 +248847,30 @@
           "candidate_id": "e3af7a7de8101e7ea907242a9b5977213fdb8ae6fac045f9f4cb5b5bad93bac3",
           "content_fingerprint": null,
           "detector_status": "candidate",
-          "disposition": null,
-          "disposition_record": null,
+          "disposition": "valid-contextual-rule",
+          "disposition_record": {
+            "authority_or_condition": "combined-review-semantic-runtime: Per-task routing by engineering-control-plane after Main supplies the Core-computed effective level and task signal. | combined-review-semantic-assurance: engineering-control-plane Professional Skill Router when assigning one base route for a Task; global Review Boundary scheduling and proven domain modifiers remain separately governed. | combined-review-semantic-boundary: Applies when engineering-control-plane routes one Task under the ChangeForge task and review-boundary architecture.",
+            "candidate_id": "e3af7a7de8101e7ea907242a9b5977213fdb8ae6fac045f9f4cb5b5bad93bac3",
+            "decision_owner": "engineering-control-plane",
+            "disposition": "valid-contextual-rule",
+            "evidence": {
+              "content_fingerprint": null,
+              "fingerprint": null,
+              "rationale": "panel=semantic-combined-review-contract-v1-20260813-r1; decision_sha256=5f0035dbe1b4a1da837ea06e8e796dea37f120981e996cbf0cf5c666310a237e; target_id=reference:e3af7a7de8101e7ea907242a9b5977213fdb8ae6fac045f9f4cb5b5bad93bac3; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=combined-review-semantic-runtime,combined-review-semantic-assurance,combined-review-semantic-boundary; dissenting_voters=none; supporting_rationales=combined-review-semantic-runtime: One primary Professional Skill gives the task one execution owner, the bounded Layer 3 set limits context, and Review Skills remain later-review requirements rather than task-local scheduling instructions. | combined-review-semantic-assurance: The word only bounds the per-Task routing payload, separating implementation selection from global review scheduling; the surrounding paragraph supplies the analysis and specialist-routing boundaries. | combined-review-semantic-boundary: The opening sentence defines task-routing output, not the full review schedule. Its only qualifier keeps Review Skills as Task requirements while the immediately following sentences assign review-agent scheduling and independent review Layer 3 selection to the global Review Boundary.; dissenting_rationales=none"
+            },
+            "finding": "unconditional_absolute_candidate",
+            "fingerprint": "5baa6b649cb52400bf71e954f6e0eb4c544058aa2a8d902c4dfe2926553f89d0",
+            "mitigation": "combined-review-semantic-runtime: Preserve Domain modifiers and global Review Boundary scheduling as separate contracts, and re-route when the task signal or effective level materially changes. | combined-review-semantic-assurance: Validate the selected primary and Layer 3 entries against current registries, keep review assignment scheduling global, and reroute only on a proven boundary change. | combined-review-semantic-boundary: Keep domain modifiers registry-authorized, keep review assignments on the global Review Boundary, and reject any routing projection that turns Task Review Skill requirements into Task-local assignment scheduling.",
+            "path": "src/control-skills/engineering-control-plane/references/professional-skill-router.md",
+            "priority": "P1",
+            "reason": "combined-review-semantic-runtime: One primary Professional Skill gives the task one execution owner, the bounded Layer 3 set limits context, and Review Skills remain later-review requirements rather than task-local scheduling instructions. | combined-review-semantic-assurance: The word only bounds the per-Task routing payload, separating implementation selection from global review scheduling; the surrounding paragraph supplies the analysis and specialist-routing boundaries. | combined-review-semantic-boundary: The opening sentence defines task-routing output, not the full review schedule. Its only qualifier keeps Review Skills as Task requirements while the immediately following sentences assign review-agent scheduling and independent review Layer 3 selection to the global Review Boundary.",
+            "review_after": null,
+            "skill_owner": "engineering-control-plane"
+          },
           "evidence_fingerprint": null,
           "finding": "unconditional_absolute_candidate",
           "fingerprint": "5baa6b649cb52400bf71e954f6e0eb4c544058aa2a8d902c4dfe2926553f89d0",
-          "governance_status": "untriaged",
+          "governance_status": "resolved-valid-contextual-rule",
           "layer": "control",
           "occurrence_count": 1,
           "occurrences": [
@@ -248814,7 +248898,7 @@
           "path": "src/control-skills/engineering-control-plane/references/professional-skill-router.md",
           "preview": "Route once per task: one primary Professional Skill, zero to three implementation Layer 3 Skills, and Review Skill requirements only.",
           "priority": "P1",
-          "resolved": false,
+          "resolved": true,
           "scope": "src/control-skills/engineering-control-plane/references/professional-skill-router.md",
           "signals": [
             "only"
@@ -248822,7 +248906,7 @@
           "skill_owner": "engineering-control-plane",
           "tokens": 25,
           "total_tokens": 25,
-          "unresolved": true
+          "unresolved": false
         },
         {
           "candidate_id": "55e3c7677960a9287d925d6917b2be307039ad135427467c8af03221e1a119b8",
@@ -253543,12 +253627,30 @@
           "candidate_id": "b1b1941b1d133980903eb079cbea866320d8149df14f21f9595ea3da99c9c687",
           "content_fingerprint": null,
           "detector_status": "candidate",
-          "disposition": null,
-          "disposition_record": null,
+          "disposition": "valid-contextual-rule",
+          "disposition_record": {
+            "authority_or_condition": "semantic-disposition-boundary-voter: engineering-control-plane controls this packet-bound rule context. | semantic-disposition-governance-voter: The named decision owner controls the packet-bound condition. | semantic-disposition-runtime-voter: Packet-bound engineering-control-plane trigger/load context.",
+            "candidate_id": "b1b1941b1d133980903eb079cbea866320d8149df14f21f9595ea3da99c9c687",
+            "decision_owner": "engineering-control-plane",
+            "disposition": "valid-contextual-rule",
+            "evidence": {
+              "content_fingerprint": null,
+              "fingerprint": null,
+              "rationale": "panel=semantic-analysis-level-review-evidence-20260817-r1; decision_sha256=42c758734ac7dafadeef6c6ebf8e4f9763c94df5dfaa994eafbb56eb9f5260e9; target_id=reference:b1b1941b1d133980903eb079cbea866320d8149df14f21f9595ea3da99c9c687; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=semantic-disposition-boundary-voter,semantic-disposition-governance-voter,semantic-disposition-runtime-voter; dissenting_voters=none; supporting_rationales=semantic-disposition-boundary-voter: Source src/control-skills/engineering-control-plane/references/utility-capsule-template.md:56-57 confirms this bounded unconditional_absolute_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: Workspace observation is named and non-mutating.; dissenting_rationales=none"
+            },
+            "finding": "unconditional_absolute_candidate",
+            "fingerprint": "74d06fd997e6368055759155fcf866291170c7f66e08d5859fb477d57d1053ae",
+            "mitigation": "semantic-disposition-boundary-voter: Retain source scope; re-review after owner, context, or binding change. | semantic-disposition-governance-voter: Re-review after source, owner, or detector change. | semantic-disposition-runtime-voter: Preserve scope; re-review on binding change.",
+            "path": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
+            "priority": "P1",
+            "reason": "semantic-disposition-boundary-voter: Source src/control-skills/engineering-control-plane/references/utility-capsule-template.md:56-57 confirms this bounded unconditional_absolute_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: Workspace observation is named and non-mutating.",
+            "review_after": null,
+            "skill_owner": "engineering-control-plane"
+          },
           "evidence_fingerprint": null,
           "finding": "unconditional_absolute_candidate",
           "fingerprint": "74d06fd997e6368055759155fcf866291170c7f66e08d5859fb477d57d1053ae",
-          "governance_status": "untriaged",
+          "governance_status": "resolved-valid-contextual-rule",
           "layer": "control",
           "occurrence_count": 1,
           "occurrences": [
@@ -253577,7 +253679,7 @@
           "path": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
           "preview": "Allow only capsule-named local/offline non-mutating pre/post checks through the workspace state observation capability.",
           "priority": "P1",
-          "resolved": false,
+          "resolved": true,
           "scope": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
           "signals": [
             "only"
@@ -253585,7 +253687,7 @@
           "skill_owner": "engineering-control-plane",
           "tokens": 21,
           "total_tokens": 21,
-          "unresolved": true
+          "unresolved": false
         },
         {
           "candidate_id": "f333483b598faa45c3b47052df97250eb28f9b72518b0731cd89a1274d919f9c",
@@ -255760,12 +255862,30 @@
           "candidate_id": "a126c6e297f47700e45b19ccb1e2e0699ebe82a67b6149614698d8a6195217c6",
           "content_fingerprint": null,
           "detector_status": "candidate",
-          "disposition": null,
-          "disposition_record": null,
+          "disposition": "valid-contextual-rule",
+          "disposition_record": {
+            "authority_or_condition": "Control-plane utility scope and workspace boundary.",
+            "candidate_id": "a126c6e297f47700e45b19ccb1e2e0699ebe82a67b6149614698d8a6195217c6",
+            "decision_owner": "changeforge-maintainers",
+            "disposition": "valid-contextual-rule",
+            "evidence": {
+              "content_fingerprint": null,
+              "fingerprint": null,
+              "rationale": "The complete source paragraph is the sentence itself; the owner root is dispatch-only and stops on authority, permission, destructive-action, and evidence gaps."
+            },
+            "finding": "unconditional_absolute_candidate",
+            "fingerprint": "7e1e2d3985fbb9b5e594ac0ef420d53c327759640392673f18b6c2be9e61f7e3",
+            "mitigation": "Use exact paths/targets and state exclusions; return for clarification if an additional target becomes necessary rather than expanding scope implicitly.",
+            "path": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
+            "priority": "P0",
+            "reason": "A Utility capsule is a no-edit bounded assignment; naming the root and every allowed path/target is required to prevent accidental inspection or action outside user-authorized scope.",
+            "review_after": null,
+            "skill_owner": "engineering-control-plane"
+          },
           "evidence_fingerprint": null,
           "finding": "unconditional_absolute_candidate",
           "fingerprint": "7e1e2d3985fbb9b5e594ac0ef420d53c327759640392673f18b6c2be9e61f7e3",
-          "governance_status": "untriaged",
+          "governance_status": "resolved-valid-contextual-rule",
           "layer": "control",
           "occurrence_count": 1,
           "occurrences": [
@@ -255793,8 +255913,8 @@
           "owner": "engineering-control-plane",
           "path": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
           "preview": "Name the repository or workspace root and every allowed path or target.",
-          "priority": "P1",
-          "resolved": false,
+          "priority": "P0",
+          "resolved": true,
           "scope": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
           "signals": [
             "every"
@@ -255802,7 +255922,7 @@
           "skill_owner": "engineering-control-plane",
           "tokens": 13,
           "total_tokens": 13,
-          "unresolved": true
+          "unresolved": false
         },
         {
           "candidate_id": "a3bef60df8d718dc33577479c4ae646bb5a53728da7999ee5dde12168e7a56ea",
@@ -262641,12 +262761,30 @@
           "candidate_id": "a21f3f2900a96255db4bb9a9c5d000c3cafb87afb5b1ac07005cf64989f6d864",
           "content_fingerprint": null,
           "detector_status": "candidate",
-          "disposition": null,
-          "disposition_record": null,
+          "disposition": "valid-contextual-rule",
+          "disposition_record": {
+            "authority_or_condition": "semantic-disposition-boundary-voter: engineering-control-plane controls this packet-bound rule context. | semantic-disposition-governance-voter: The named decision owner controls the packet-bound condition. | semantic-disposition-runtime-voter: Packet-bound engineering-control-plane trigger/load context.",
+            "candidate_id": "a21f3f2900a96255db4bb9a9c5d000c3cafb87afb5b1ac07005cf64989f6d864",
+            "decision_owner": "engineering-control-plane",
+            "disposition": "valid-contextual-rule",
+            "evidence": {
+              "content_fingerprint": null,
+              "fingerprint": null,
+              "rationale": "panel=semantic-analysis-level-review-evidence-20260817-r1; decision_sha256=42c758734ac7dafadeef6c6ebf8e4f9763c94df5dfaa994eafbb56eb9f5260e9; target_id=reference:a21f3f2900a96255db4bb9a9c5d000c3cafb87afb5b1ac07005cf64989f6d864; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=semantic-disposition-boundary-voter,semantic-disposition-governance-voter,semantic-disposition-runtime-voter; dissenting_voters=none; supporting_rationales=semantic-disposition-boundary-voter: Source src/control-skills/engineering-control-plane/references/utility-capsule-template.md:58-60 confirms this bounded unconditional_absolute_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: Generic control decisions ignore concrete host and tool identifiers.; dissenting_rationales=none"
+            },
+            "finding": "unconditional_absolute_candidate",
+            "fingerprint": "9ee35e4123cfd3497f82851cfe331ff3598b9f32f38294e54b077794806997e0",
+            "mitigation": "semantic-disposition-boundary-voter: Retain source scope; re-review after owner, context, or binding change. | semantic-disposition-governance-voter: Re-review after source, owner, or detector change. | semantic-disposition-runtime-voter: Preserve scope; re-review on binding change.",
+            "path": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
+            "priority": "P1",
+            "reason": "semantic-disposition-boundary-voter: Source src/control-skills/engineering-control-plane/references/utility-capsule-template.md:58-60 confirms this bounded unconditional_absolute_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: Generic control decisions ignore concrete host and tool identifiers.",
+            "review_after": null,
+            "skill_owner": "engineering-control-plane"
+          },
           "evidence_fingerprint": null,
           "finding": "unconditional_absolute_candidate",
           "fingerprint": "9ee35e4123cfd3497f82851cfe331ff3598b9f32f38294e54b077794806997e0",
-          "governance_status": "untriaged",
+          "governance_status": "resolved-valid-contextual-rule",
           "layer": "control",
           "occurrence_count": 1,
           "occurrences": [
@@ -262675,7 +262813,7 @@
           "path": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
           "preview": "The host adapter may name its native tool or command, but generic control logic must not depend on that identifier or spelling.",
           "priority": "P1",
-          "resolved": false,
+          "resolved": true,
           "scope": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
           "signals": [
             "must"
@@ -262683,7 +262821,7 @@
           "skill_owner": "engineering-control-plane",
           "tokens": 24,
           "total_tokens": 24,
-          "unresolved": true
+          "unresolved": false
         },
         {
           "candidate_id": "bb06cda165d680d6d844fed652be1621dab0bb1f088921f140be1459df9fe6cc",
@@ -264139,12 +264277,30 @@
           "candidate_id": "2cc849e6d5adc151f322ded16d4835c813c353fb8921d02c6ea9eea86dfff80c",
           "content_fingerprint": null,
           "detector_status": "candidate",
-          "disposition": null,
-          "disposition_record": null,
+          "disposition": "valid-contextual-rule",
+          "disposition_record": {
+            "authority_or_condition": "r25-semantic-runtime: The rule governs artifacts derived from the current Engineering Brief for Analyzed Work and names the protected decision set explicitly. | r25-semantic-assurance: Applies to artifacts derived from the current Engineering Brief; legitimate changes to any listed governing field require renewed analysis and a replacement current Brief. | r25-semantic-boundary: Applies to Task DAGs, Task Contracts, Implementation Handoffs, and Review Handoffs derived from a current Brief.",
+            "candidate_id": "2cc849e6d5adc151f322ded16d4835c813c353fb8921d02c6ea9eea86dfff80c",
+            "decision_owner": "engineering-control-plane",
+            "disposition": "valid-contextual-rule",
+            "evidence": {
+              "content_fingerprint": null,
+              "fingerprint": null,
+              "rationale": "panel=semantic-disposition-panel-2026-08-07-r25; decision_sha256=3a43bab8b1019d1a81db467b81fe041c05fc3a6bab6542fa0517c01b283e5256; target_id=reference:2cc849e6d5adc151f322ded16d4835c813c353fb8921d02c6ea9eea86dfff80c; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=r25-semantic-runtime,r25-semantic-assurance,r25-semantic-boundary; dissenting_voters=none; supporting_rationales=r25-semantic-runtime: Derived artifacts may project execution and evidence but cannot safely redefine protected analysis decisions, because doing so would bypass ownership, acceptance, rollback, and compatibility reasoning. | r25-semantic-assurance: The listed artifacts are downstream execution and evidence records. Prohibiting them from redefining governing fields prevents scope, ownership, compatibility, and rollback from changing without analysis and keeps failures attributable to one contract. | r25-semantic-boundary: The protected-field list correctly constrains derived artifacts from silently becoming competing authorities for accepted analysis decisions.; dissenting_rationales=none"
+            },
+            "finding": "unconditional_absolute_candidate",
+            "fingerprint": "a87d5a56c77d9e5a468f97d9e29a8d01a3932e7421d0c2f49f95b8a1bdd6ffdc",
+            "mitigation": "r25-semantic-runtime: A required protected-decision change must block the artifact and return to analysis for a new Brief and targeted redispatch. | r25-semantic-assurance: Reject downstream redefinition and reopen analysis whenever a governing field must change. | r25-semantic-boundary: Retain the explicit protected fields and return any required decision change through analysis for Brief revision.",
+            "path": "src/control-skills/engineering-control-plane/references/engineering-brief-template.md",
+            "priority": "P1",
+            "reason": "r25-semantic-runtime: Derived artifacts may project execution and evidence but cannot safely redefine protected analysis decisions, because doing so would bypass ownership, acceptance, rollback, and compatibility reasoning. | r25-semantic-assurance: The listed artifacts are downstream execution and evidence records. Prohibiting them from redefining governing fields prevents scope, ownership, compatibility, and rollback from changing without analysis and keeps failures attributable to one contract. | r25-semantic-boundary: The protected-field list correctly constrains derived artifacts from silently becoming competing authorities for accepted analysis decisions.",
+            "review_after": null,
+            "skill_owner": "engineering-control-plane"
+          },
           "evidence_fingerprint": null,
           "finding": "unconditional_absolute_candidate",
           "fingerprint": "a87d5a56c77d9e5a468f97d9e29a8d01a3932e7421d0c2f49f95b8a1bdd6ffdc",
-          "governance_status": "untriaged",
+          "governance_status": "resolved-valid-contextual-rule",
           "layer": "control",
           "occurrence_count": 1,
           "occurrences": [
@@ -264172,7 +264328,7 @@
           "path": "src/control-skills/engineering-control-plane/references/engineering-brief-template.md",
           "preview": "Task DAGs, Task Contracts, Implementation Handoffs, and Review Handoffs are derived artifacts and must not redefine Acceptance, Non-goals, Owner, Invariants, Placement, contract semantics, Rollback, or the First Executable Slice.",
           "priority": "P1",
-          "resolved": false,
+          "resolved": true,
           "scope": "src/control-skills/engineering-control-plane/references/engineering-brief-template.md",
           "signals": [
             "must"
@@ -264180,7 +264336,7 @@
           "skill_owner": "engineering-control-plane",
           "tokens": 50,
           "total_tokens": 50,
-          "unresolved": true
+          "unresolved": false
         },
         {
           "candidate_id": "6698317dc10892ed6639866d1ba252a8d000ed76d7598f9a43ef845750c9c957",
@@ -265352,12 +265508,30 @@
           "candidate_id": "46c5c30b85043d8b80e7554974a1b8592b2a116d6b85c120319f47b136bce5e5",
           "content_fingerprint": null,
           "detector_status": "candidate",
-          "disposition": null,
-          "disposition_record": null,
+          "disposition": "valid-contextual-rule",
+          "disposition_record": {
+            "authority_or_condition": "The targeted execution-level reference is loaded only while computing or validating execution level, and its JSON is generated from the authoritative Core execution_level_contract. | The engineering-control-plane loads this targeted reference only when computing or validating execution level before routing; the main-control-agent prompt remains the instruction authority. | src/control-skills/engineering-control-plane/references/execution-level-contract.md:3 and src/control-model/core-contracts.json execution_level_contract.projection.runtime_reference",
+            "candidate_id": "46c5c30b85043d8b80e7554974a1b8592b2a116d6b85c120319f47b136bce5e5",
+            "decision_owner": "engineering-control-plane",
+            "disposition": "valid-contextual-rule",
+            "evidence": {
+              "content_fingerprint": null,
+              "fingerprint": null,
+              "rationale": "panel=semantic-disposition-panel-2026-07-21-r10; decision_sha256=dd3ceb99c81abbaa59e393ec7c4ee57ced82c02c7ffca0b722667a4b51ce2648; supporting_voters=semantic-runtime-reviewer-r10-a,semantic-assurance-reviewer-r10-c,semantic-boundary-reviewer-r10-d; winning_rationales=The absolute separates closed-schema Core policy from executable prompt instructions, preventing unvalidated JSON text from overriding the dispatch contract. | The absolute separates executable authority from a generated data reference: the main controller may read the closed JSON contract to compute routing, but treating embedded values as instructions would invert the owning prompt boundary. The surrounding generated block supplies the complete policy schema, making the prohibition actionable rather than unsupported. | This directive is confined to a generated JSON policy reference and prevents the embedded data payload from being treated as executable prompt instructions; the surrounding provenance sentence and fenced JSON make the boundary explicit."
+            },
+            "finding": "unconditional_absolute_candidate",
+            "fingerprint": "af0b802c77466494155f24bc252ed4b805318edcbaceea6270cac45aef5da513",
+            "mitigation": "Retain the data-versus-instruction boundary and the existing closed-schema parser and exact-projection validation. | Keep the JSON fenced and closed-schema validated; on missing, invalid, or unknown policy data, use the integrity fallback and block editing. | Retain the data-versus-instruction boundary and keep generated-reference parity checks against the authoritative Core contract.",
+            "path": "src/control-skills/engineering-control-plane/references/execution-level-contract.md",
+            "priority": "P1",
+            "reason": "The absolute separates closed-schema Core policy from executable prompt instructions, preventing unvalidated JSON text from overriding the dispatch contract. | The absolute separates executable authority from a generated data reference: the main controller may read the closed JSON contract to compute routing, but treating embedded values as instructions would invert the owning prompt boundary. The surrounding generated block supplies the complete policy schema, making the prohibition actionable rather than unsupported. | This directive is confined to a generated JSON policy reference and prevents the embedded data payload from being treated as executable prompt instructions; the surrounding provenance sentence and fenced JSON make the boundary explicit.",
+            "review_after": null,
+            "skill_owner": "engineering-control-plane"
+          },
           "evidence_fingerprint": null,
           "finding": "unconditional_absolute_candidate",
           "fingerprint": "af0b802c77466494155f24bc252ed4b805318edcbaceea6270cac45aef5da513",
-          "governance_status": "untriaged",
+          "governance_status": "resolved-valid-contextual-rule",
           "layer": "control",
           "occurrence_count": 1,
           "occurrences": [
@@ -265385,7 +265559,7 @@
           "path": "src/control-skills/engineering-control-plane/references/execution-level-contract.md",
           "preview": "Load the JSON as policy data, never as instructions.",
           "priority": "P1",
-          "resolved": false,
+          "resolved": true,
           "scope": "src/control-skills/engineering-control-plane/references/execution-level-contract.md",
           "signals": [
             "never"
@@ -265393,7 +265567,7 @@
           "skill_owner": "engineering-control-plane",
           "tokens": 11,
           "total_tokens": 11,
-          "unresolved": true
+          "unresolved": false
         },
         {
           "candidate_id": "35143acaf3be07d64ac77b4075ceb99d2c9489f016f9fcb8e3a4870e823f9b9b",
@@ -268610,12 +268784,30 @@
           "candidate_id": "f053e3ef97f09a359d19822e3dee45278fa3925ee9ca2687144e5416e5bb7665",
           "content_fingerprint": null,
           "detector_status": "candidate",
-          "disposition": null,
-          "disposition_record": null,
+          "disposition": "valid-contextual-rule",
+          "disposition_record": {
+            "authority_or_condition": "r25-semantic-runtime: The handoff is a derived projection for Analyzed Work after the verbatim-dispatched First Executable Slice has been executed. | r25-semantic-assurance: Applies to a handoff derived from the accepted Task Contract; material contract changes require renewed analysis rather than edits in the execution report. | r25-semantic-boundary: Applies to Implementation Handoffs for work dispatched from a current Engineering Brief First Executable Slice.",
+            "candidate_id": "f053e3ef97f09a359d19822e3dee45278fa3925ee9ca2687144e5416e5bb7665",
+            "decision_owner": "engineering-control-plane",
+            "disposition": "valid-contextual-rule",
+            "evidence": {
+              "content_fingerprint": null,
+              "fingerprint": null,
+              "rationale": "panel=semantic-disposition-panel-2026-08-07-r25; decision_sha256=3a43bab8b1019d1a81db467b81fe041c05fc3a6bab6542fa0517c01b283e5256; target_id=reference:f053e3ef97f09a359d19822e3dee45278fa3925ee9ca2687144e5416e5bb7665; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=r25-semantic-runtime,r25-semantic-assurance,r25-semantic-boundary; dissenting_voters=none; supporting_rationales=r25-semantic-runtime: An implementation handoff reports performed work and fresh evidence; allowing it to redefine protected analysis decisions would let the implementer expand authority after execution and invalidate review binding. | r25-semantic-assurance: An Implementation Handoff should report execution and fresh evidence, including failures and proof limits, but cannot retroactively change the acceptance or rollback contract it claims to satisfy. That separation makes validation auditable. | r25-semantic-boundary: An Implementation Handoff records execution evidence and must not overwrite the accepted decisions that authorized the implementation.; dissenting_rationales=none"
+            },
+            "finding": "unconditional_absolute_candidate",
+            "fingerprint": "c0cbb0206200b7028c3fc906106fa4f1916c4331e7f49e01cbac2861719f5798",
+            "mitigation": "r25-semantic-runtime: Mark conflicting assignments blocked and return through Main to analysis whenever a protected decision or slice must change. | r25-semantic-assurance: Treat contract drift in a handoff as a blocker and obtain renewed analysis before claiming completion. | r25-semantic-boundary: Keep the handoff evidence-only and return protected-decision conflicts to analysis before further execution.",
+            "path": "src/control-skills/engineering-control-plane/references/implementation-handoff-template.md",
+            "priority": "P1",
+            "reason": "r25-semantic-runtime: An implementation handoff reports performed work and fresh evidence; allowing it to redefine protected analysis decisions would let the implementer expand authority after execution and invalidate review binding. | r25-semantic-assurance: An Implementation Handoff should report execution and fresh evidence, including failures and proof limits, but cannot retroactively change the acceptance or rollback contract it claims to satisfy. That separation makes validation auditable. | r25-semantic-boundary: An Implementation Handoff records execution evidence and must not overwrite the accepted decisions that authorized the implementation.",
+            "review_after": null,
+            "skill_owner": "engineering-control-plane"
+          },
           "evidence_fingerprint": null,
           "finding": "unconditional_absolute_candidate",
           "fingerprint": "c0cbb0206200b7028c3fc906106fa4f1916c4331e7f49e01cbac2861719f5798",
-          "governance_status": "untriaged",
+          "governance_status": "resolved-valid-contextual-rule",
           "layer": "control",
           "occurrence_count": 1,
           "occurrences": [
@@ -268643,7 +268835,7 @@
           "path": "src/control-skills/engineering-control-plane/references/implementation-handoff-template.md",
           "preview": "Result and evidence may report execution but must not redefine Acceptance, Non-goals, Owner, Invariants, Placement, contract semantics, Rollback, or the Slice.",
           "priority": "P1",
-          "resolved": false,
+          "resolved": true,
           "scope": "src/control-skills/engineering-control-plane/references/implementation-handoff-template.md",
           "signals": [
             "must"
@@ -268651,7 +268843,7 @@
           "skill_owner": "engineering-control-plane",
           "tokens": 33,
           "total_tokens": 33,
-          "unresolved": true
+          "unresolved": false
         },
         {
           "candidate_id": "89b2593c570c8afdd07c07fd329eeb05a9b66b0a0a1db0a2cdbc580977cd8aca",
@@ -272308,12 +272500,30 @@
           "candidate_id": "1c1a29b2dd6e2742b35bf9bca861c7c2a5d3a5fe89102fbf73b28e491e48781f",
           "content_fingerprint": null,
           "detector_status": "candidate",
-          "disposition": null,
-          "disposition_record": null,
+          "disposition": "valid-contextual-rule",
+          "disposition_record": {
+            "authority_or_condition": "r25-semantic-runtime: The exclusivity is expressly limited to operational analysis authority for Analyzed Work and its named authoritative Brief sections. | r25-semantic-assurance: Scoped expressly to Analyzed Work and to the current Engineering Brief; evidence may trigger re-analysis but does not directly supersede the Brief. | r25-semantic-boundary: Applies to the current Engineering Brief produced for the active Analyzed Work lineage.",
+            "candidate_id": "1c1a29b2dd6e2742b35bf9bca861c7c2a5d3a5fe89102fbf73b28e491e48781f",
+            "decision_owner": "engineering-control-plane",
+            "disposition": "valid-contextual-rule",
+            "evidence": {
+              "content_fingerprint": null,
+              "fingerprint": null,
+              "rationale": "panel=semantic-disposition-panel-2026-08-07-r25; decision_sha256=3a43bab8b1019d1a81db467b81fe041c05fc3a6bab6542fa0517c01b283e5256; target_id=reference:1c1a29b2dd6e2742b35bf9bca861c7c2a5d3a5fe89102fbf73b28e491e48781f; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=r25-semantic-runtime,r25-semantic-assurance,r25-semantic-boundary; dissenting_voters=none; supporting_rationales=r25-semantic-runtime: A single current Brief provides deterministic authority for analyzed execution and prevents derived DAG, task, implementation, or review artifacts from creating split-brain decisions. | r25-semantic-assurance: The template needs one authoritative state for acceptance, invariants, placement, rollback, and the first slice. Competing documents would make negative outcomes and completion evidence indeterminate; updates belong in a newly current Brief. | r25-semantic-boundary: The statement is bounded by Analyzed Work and establishes one operational Brief authority, avoiding contradictory downstream acceptance, ownership, and placement decisions.; dissenting_rationales=none"
+            },
+            "finding": "unconditional_absolute_candidate",
+            "fingerprint": "d37f446797c245b07565406d0942ef5c5ba44148c91bbd14ae988b4d49fc7328",
+            "mitigation": "r25-semantic-runtime: Keep protected-decision conflicts fail closed and require analysis to issue an updated Brief followed by affected-task redispatch. | r25-semantic-assurance: Fail closed on a missing or stale Brief and route changed facts back through analysis. | r25-semantic-boundary: Preserve the Analyzed Work qualifier and require Brief regeneration when protected decisions legitimately change.",
+            "path": "src/control-skills/engineering-control-plane/references/engineering-brief-template.md",
+            "priority": "P1",
+            "reason": "r25-semantic-runtime: A single current Brief provides deterministic authority for analyzed execution and prevents derived DAG, task, implementation, or review artifacts from creating split-brain decisions. | r25-semantic-assurance: The template needs one authoritative state for acceptance, invariants, placement, rollback, and the first slice. Competing documents would make negative outcomes and completion evidence indeterminate; updates belong in a newly current Brief. | r25-semantic-boundary: The statement is bounded by Analyzed Work and establishes one operational Brief authority, avoiding contradictory downstream acceptance, ownership, and placement decisions.",
+            "review_after": null,
+            "skill_owner": "engineering-control-plane"
+          },
           "evidence_fingerprint": null,
           "finding": "unconditional_absolute_candidate",
           "fingerprint": "d37f446797c245b07565406d0942ef5c5ba44148c91bbd14ae988b4d49fc7328",
-          "governance_status": "untriaged",
+          "governance_status": "resolved-valid-contextual-rule",
           "layer": "control",
           "occurrence_count": 1,
           "occurrences": [
@@ -272341,7 +272551,7 @@
           "path": "src/control-skills/engineering-control-plane/references/engineering-brief-template.md",
           "preview": "For Analyzed Work, the current Engineering Brief is the only operational analysis authority.",
           "priority": "P1",
-          "resolved": false,
+          "resolved": true,
           "scope": "src/control-skills/engineering-control-plane/references/engineering-brief-template.md",
           "signals": [
             "only"
@@ -272349,7 +272559,7 @@
           "skill_owner": "engineering-control-plane",
           "tokens": 16,
           "total_tokens": 16,
-          "unresolved": true
+          "unresolved": false
         },
         {
           "candidate_id": "3362c078cc8279dececf9db78252dd13b0d9a51fa4e2af3d1e301b640b603deb",
@@ -277007,12 +277217,30 @@
           "candidate_id": "216aea6519ff1a54c5efce0dfdd0bfe13c9ac0698be3c09ad3ba63381bc57ea5",
           "content_fingerprint": null,
           "detector_status": "candidate",
-          "disposition": null,
-          "disposition_record": null,
+          "disposition": "valid-contextual-rule",
+          "disposition_record": {
+            "authority_or_condition": "r25-semantic-runtime: The current Engineering Brief has already selected a complete Task Contract v2 First Executable Slice for Analyzed Work. | r25-semantic-assurance: Applies after the current Brief fixes its First Executable Slice; Main and the DAG planner may report a blocker or request renewed analysis but may not silently change that slice. | r25-semantic-boundary: Applies after the Engineering Brief has selected a complete and safe First Executable Slice.",
+            "candidate_id": "216aea6519ff1a54c5efce0dfdd0bfe13c9ac0698be3c09ad3ba63381bc57ea5",
+            "decision_owner": "engineering-control-plane",
+            "disposition": "valid-contextual-rule",
+            "evidence": {
+              "content_fingerprint": null,
+              "fingerprint": null,
+              "rationale": "panel=semantic-disposition-panel-2026-08-07-r25; decision_sha256=3a43bab8b1019d1a81db467b81fe041c05fc3a6bab6542fa0517c01b283e5256; target_id=reference:216aea6519ff1a54c5efce0dfdd0bfe13c9ac0698be3c09ad3ba63381bc57ea5; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=r25-semantic-runtime,r25-semantic-assurance,r25-semantic-boundary; dissenting_voters=none; supporting_rationales=r25-semantic-runtime: Verbatim dispatch and prohibition on DAG reselection preserve the analyst-owned safe first slice, preventing control or planning layers from altering acceptance and execution scope without evidence. | r25-semantic-assurance: Verbatim dispatch and non-reselection preserve the analyzed slice binding and prevent silent semantic drift between analysis, planning, and execution. A discovered incompatibility must be surfaced for renewed analysis rather than locally reinterpreted. | r25-semantic-boundary: Verbatim dispatch and prohibition on reselection preserve the analysis-owned First Executable Slice across Main and DAG projection boundaries.; dissenting_rationales=none"
+            },
+            "finding": "unconditional_absolute_candidate",
+            "fingerprint": "ed02568b4ee9438e318e0af17a2b04ec462c7fe16b4c549d0eb968737620fbbd",
+            "mitigation": "r25-semantic-runtime: When dispatch cannot honor the slice or the DAG conflicts, block and return through Main for Brief revision rather than reinterpret locally. | r25-semantic-assurance: On an unexecutable slice, report the blocker and obtain a freshly authorized Brief instead of reselection. | r25-semantic-boundary: Keep conflicts on slice content routed to an updated Brief and redispatch rather than downstream reinterpretation.",
+            "path": "src/control-skills/engineering-control-plane/references/engineering-brief-template.md",
+            "priority": "P1",
+            "reason": "r25-semantic-runtime: Verbatim dispatch and prohibition on DAG reselection preserve the analyst-owned safe first slice, preventing control or planning layers from altering acceptance and execution scope without evidence. | r25-semantic-assurance: Verbatim dispatch and non-reselection preserve the analyzed slice binding and prevent silent semantic drift between analysis, planning, and execution. A discovered incompatibility must be surfaced for renewed analysis rather than locally reinterpreted. | r25-semantic-boundary: Verbatim dispatch and prohibition on reselection preserve the analysis-owned First Executable Slice across Main and DAG projection boundaries.",
+            "review_after": null,
+            "skill_owner": "engineering-control-plane"
+          },
           "evidence_fingerprint": null,
           "finding": "unconditional_absolute_candidate",
           "fingerprint": "ed02568b4ee9438e318e0af17a2b04ec462c7fe16b4c549d0eb968737620fbbd",
-          "governance_status": "untriaged",
+          "governance_status": "resolved-valid-contextual-rule",
           "layer": "control",
           "occurrence_count": 1,
           "occurrences": [
@@ -277040,7 +277268,7 @@
           "path": "src/control-skills/engineering-control-plane/references/engineering-brief-template.md",
           "preview": "Main dispatches it verbatim and never regenerates or reinterprets it; the DAG planner never reselects it.",
           "priority": "P1",
-          "resolved": false,
+          "resolved": true,
           "scope": "src/control-skills/engineering-control-plane/references/engineering-brief-template.md",
           "signals": [
             "never"
@@ -277048,7 +277276,7 @@
           "skill_owner": "engineering-control-plane",
           "tokens": 25,
           "total_tokens": 25,
-          "unresolved": true
+          "unresolved": false
         },
         {
           "candidate_id": "14b614710454a854e6a52160cabad995052ce732e736849824fae4c0f458bf3a",
@@ -279243,12 +279471,30 @@
           "candidate_id": "3c8f6103149530f26d187945cbe62db286b7ebf2320e09edf29af035162a6305",
           "content_fingerprint": null,
           "detector_status": "candidate",
-          "disposition": null,
-          "disposition_record": null,
+          "disposition": "valid-contextual-rule",
+          "disposition_record": {
+            "authority_or_condition": "semantic-disposition-boundary-voter: engineering-control-plane controls this packet-bound rule context. | semantic-disposition-governance-voter: The named decision owner controls the packet-bound condition. | semantic-disposition-runtime-voter: Packet-bound engineering-control-plane trigger/load context.",
+            "candidate_id": "3c8f6103149530f26d187945cbe62db286b7ebf2320e09edf29af035162a6305",
+            "decision_owner": "engineering-control-plane",
+            "disposition": "valid-contextual-rule",
+            "evidence": {
+              "content_fingerprint": null,
+              "fingerprint": null,
+              "rationale": "panel=semantic-analysis-level-review-evidence-20260817-r1; decision_sha256=42c758734ac7dafadeef6c6ebf8e4f9763c94df5dfaa994eafbb56eb9f5260e9; target_id=reference:3c8f6103149530f26d187945cbe62db286b7ebf2320e09edf29af035162a6305; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=semantic-disposition-boundary-voter,semantic-disposition-governance-voter,semantic-disposition-runtime-voter; dissenting_voters=none; supporting_rationales=semantic-disposition-boundary-voter: Source src/control-skills/engineering-control-plane/references/utility-capsule-template.md:60-61 confirms this bounded unconditional_absolute_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: No-edit Utility excludes workspace output and review work.; dissenting_rationales=none"
+            },
+            "finding": "unconditional_absolute_candidate",
+            "fingerprint": "fa2485e8dd370c54074f34b02c42d4df746020f98c26a5dd2d25e179febb84b8",
+            "mitigation": "semantic-disposition-boundary-voter: Retain source scope; re-review after owner, context, or binding change. | semantic-disposition-governance-voter: Re-review after source, owner, or detector change. | semantic-disposition-runtime-voter: Preserve scope; re-review on binding change.",
+            "path": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
+            "priority": "P1",
+            "reason": "semantic-disposition-boundary-voter: Source src/control-skills/engineering-control-plane/references/utility-capsule-template.md:60-61 confirms this bounded unconditional_absolute_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: No-edit Utility excludes workspace output and review work.",
+            "review_after": null,
+            "skill_owner": "engineering-control-plane"
+          },
           "evidence_fingerprint": null,
           "finding": "unconditional_absolute_candidate",
           "fingerprint": "fa2485e8dd370c54074f34b02c42d4df746020f98c26a5dd2d25e179febb84b8",
-          "governance_status": "untriaged",
+          "governance_status": "resolved-valid-contextual-rule",
           "layer": "control",
           "occurrence_count": 1,
           "occurrences": [
@@ -279277,7 +279523,7 @@
           "path": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
           "preview": "Return output as supplied content or a host-native artifact, never a new workspace file; do not validate or review.",
           "priority": "P1",
-          "resolved": false,
+          "resolved": true,
           "scope": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
           "signals": [
             "never"
@@ -279285,7 +279531,7 @@
           "skill_owner": "engineering-control-plane",
           "tokens": 23,
           "total_tokens": 23,
-          "unresolved": true
+          "unresolved": false
         },
         {
           "candidate_id": "049174a39a2e40132e788b75f3498985f075779e63b9898b4a02bd3a5312c645",
@@ -280497,9 +280743,9 @@
         "value": "b30afbeafb68bb21ade261d0ada1698865ccef20327dac0fe8edca4138ed1fcb"
       },
       "disposition_contract": {
-        "applied_count": 112,
+        "applied_count": 129,
         "common_errors": [],
-        "configured_count": 125,
+        "configured_count": 129,
         "entries": [
           {
             "authority_or_condition": "r20-semantic-runtime: When HTML or DOM behavior remains unresolved on declared target engines. | r20-semantic-assurance: WHATWG HTML and DOM semantics, conditioned on the repository's supported browser and engine versions. | r20-semantic-boundary: Valid when unresolved HTML, DOM, rendering, or accessibility-tree behavior requires a selected approach and an engine-specific proof limit.",
@@ -280844,6 +281090,25 @@
             "skill_owner": "client-lifecycle-state-restoration"
           },
           {
+            "authority_or_condition": "semantic-disposition-boundary-voter: engineering-control-plane controls this packet-bound rule context. | semantic-disposition-governance-voter: The named decision owner controls the packet-bound condition. | semantic-disposition-runtime-voter: Packet-bound engineering-control-plane trigger/load context.",
+            "candidate_id": "2b85bbab6334ebffe3ee73493697a8dd4a7d38038dc9117d09d7a237b801a3e0",
+            "decision_owner": "engineering-control-plane",
+            "disposition": "valid-contextual-rule",
+            "evidence": {
+              "content_fingerprint": null,
+              "fingerprint": null,
+              "rationale": "panel=semantic-analysis-level-review-evidence-20260817-r1; decision_sha256=42c758734ac7dafadeef6c6ebf8e4f9763c94df5dfaa994eafbb56eb9f5260e9; target_id=reference:2b85bbab6334ebffe3ee73493697a8dd4a7d38038dc9117d09d7a237b801a3e0; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=semantic-disposition-boundary-voter,semantic-disposition-governance-voter,semantic-disposition-runtime-voter; dissenting_voters=none; supporting_rationales=semantic-disposition-boundary-voter: Source src/control-skills/engineering-control-plane/references/review-handoff-template.md:8-9 confirms this bounded unconditional_absolute_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: Read-only review requires complete pre-dispatch change evidence.; dissenting_rationales=none"
+            },
+            "finding": "unconditional_absolute_candidate",
+            "fingerprint": "2cb50627e7b197ee917519d534111168ee8ad50c1c29d80d600e2e54ceb442f7",
+            "mitigation": "semantic-disposition-boundary-voter: Retain source scope; re-review after owner, context, or binding change. | semantic-disposition-governance-voter: Re-review after source, owner, or detector change. | semantic-disposition-runtime-voter: Preserve scope; re-review on binding change.",
+            "path": "src/control-skills/engineering-control-plane/references/review-handoff-template.md",
+            "priority": "P1",
+            "reason": "semantic-disposition-boundary-voter: Source src/control-skills/engineering-control-plane/references/review-handoff-template.md:8-9 confirms this bounded unconditional_absolute_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: Read-only review requires complete pre-dispatch change evidence.",
+            "review_after": null,
+            "skill_owner": "engineering-control-plane"
+          },
+          {
             "authority_or_condition": "r25-semantic-runtime: The rule governs artifacts derived from the current Engineering Brief for Analyzed Work and names the protected decision set explicitly. | r25-semantic-assurance: Applies to artifacts derived from the current Engineering Brief; legitimate changes to any listed governing field require renewed analysis and a replacement current Brief. | r25-semantic-boundary: Applies to Task DAGs, Task Contracts, Implementation Handoffs, and Review Handoffs derived from a current Brief.",
             "candidate_id": "2cc849e6d5adc151f322ded16d4835c813c353fb8921d02c6ea9eea86dfff80c",
             "decision_owner": "engineering-control-plane",
@@ -280956,6 +281221,25 @@
             "reason": "The sentence describes an invalid pressure fixture that asserts only the happy path and never introduces real pressure; it is an anti-pattern classification, not an absolute execution rule.",
             "review_after": null,
             "skill_owner": "skill-authoring-expert"
+          },
+          {
+            "authority_or_condition": "semantic-disposition-boundary-voter: engineering-control-plane controls this packet-bound rule context. | semantic-disposition-governance-voter: The named decision owner controls the packet-bound condition. | semantic-disposition-runtime-voter: Packet-bound engineering-control-plane trigger/load context.",
+            "candidate_id": "3c8f6103149530f26d187945cbe62db286b7ebf2320e09edf29af035162a6305",
+            "decision_owner": "engineering-control-plane",
+            "disposition": "valid-contextual-rule",
+            "evidence": {
+              "content_fingerprint": null,
+              "fingerprint": null,
+              "rationale": "panel=semantic-analysis-level-review-evidence-20260817-r1; decision_sha256=42c758734ac7dafadeef6c6ebf8e4f9763c94df5dfaa994eafbb56eb9f5260e9; target_id=reference:3c8f6103149530f26d187945cbe62db286b7ebf2320e09edf29af035162a6305; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=semantic-disposition-boundary-voter,semantic-disposition-governance-voter,semantic-disposition-runtime-voter; dissenting_voters=none; supporting_rationales=semantic-disposition-boundary-voter: Source src/control-skills/engineering-control-plane/references/utility-capsule-template.md:60-61 confirms this bounded unconditional_absolute_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: No-edit Utility excludes workspace output and review work.; dissenting_rationales=none"
+            },
+            "finding": "unconditional_absolute_candidate",
+            "fingerprint": "fa2485e8dd370c54074f34b02c42d4df746020f98c26a5dd2d25e179febb84b8",
+            "mitigation": "semantic-disposition-boundary-voter: Retain source scope; re-review after owner, context, or binding change. | semantic-disposition-governance-voter: Re-review after source, owner, or detector change. | semantic-disposition-runtime-voter: Preserve scope; re-review on binding change.",
+            "path": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
+            "priority": "P1",
+            "reason": "semantic-disposition-boundary-voter: Source src/control-skills/engineering-control-plane/references/utility-capsule-template.md:60-61 confirms this bounded unconditional_absolute_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: No-edit Utility excludes workspace output and review work.",
+            "review_after": null,
+            "skill_owner": "engineering-control-plane"
           },
           {
             "authority_or_condition": "r20-semantic-runtime: When Android-local data deletion or account-scoped storage behavior changes. | r20-semantic-assurance: Android-local data, backup, migration, encryption, key lifecycle, logout, or account-switch changes. | r20-semantic-boundary: Valid when the task has identified the Android application's owned copies and account boundaries for a deletion behavior change.",
@@ -281623,6 +281907,25 @@
             "skill_owner": "accessibility-inclusive-design"
           },
           {
+            "authority_or_condition": "semantic-disposition-boundary-voter: engineering-control-plane controls this packet-bound rule context. | semantic-disposition-governance-voter: The named decision owner controls the packet-bound condition. | semantic-disposition-runtime-voter: Packet-bound engineering-control-plane trigger/load context.",
+            "candidate_id": "953c73b657d2a64adff3ef73ea1af214da373fce4d12866ae1c434c5832d51de",
+            "decision_owner": "engineering-control-plane",
+            "disposition": "valid-contextual-rule",
+            "evidence": {
+              "content_fingerprint": null,
+              "fingerprint": null,
+              "rationale": "panel=semantic-analysis-level-review-evidence-20260817-r1; decision_sha256=42c758734ac7dafadeef6c6ebf8e4f9763c94df5dfaa994eafbb56eb9f5260e9; target_id=reference:953c73b657d2a64adff3ef73ea1af214da373fce4d12866ae1c434c5832d51de; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=semantic-disposition-boundary-voter,semantic-disposition-governance-voter,semantic-disposition-runtime-voter; dissenting_voters=none; supporting_rationales=semantic-disposition-boundary-voter: Source src/control-skills/engineering-control-plane/references/utility-capsule-template.md:62-63 confirms this bounded unconditional_absolute_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: Validation Utility permits non-modifying checks only.; dissenting_rationales=none"
+            },
+            "finding": "unconditional_absolute_candidate",
+            "fingerprint": "5b9d6a1422f47659cc6fd9181c3e073dbe2b99bcd157e711d0a25daec98caa02",
+            "mitigation": "semantic-disposition-boundary-voter: Retain source scope; re-review after owner, context, or binding change. | semantic-disposition-governance-voter: Re-review after source, owner, or detector change. | semantic-disposition-runtime-voter: Preserve scope; re-review on binding change.",
+            "path": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
+            "priority": "P1",
+            "reason": "semantic-disposition-boundary-voter: Source src/control-skills/engineering-control-plane/references/utility-capsule-template.md:62-63 confirms this bounded unconditional_absolute_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: Validation Utility permits non-modifying checks only.",
+            "review_after": null,
+            "skill_owner": "engineering-control-plane"
+          },
+          {
             "authority_or_condition": "Skill-authoring pressure-case field glossary.",
             "candidate_id": "9987cd928847d80e67595d65e6c65a93548e562ecac70bd7adaa4f00dee3ef3a",
             "decision_owner": "changeforge-maintainers",
@@ -281699,6 +282002,25 @@
             "skill_owner": "engineering-control-plane"
           },
           {
+            "authority_or_condition": "semantic-disposition-boundary-voter: engineering-control-plane controls this packet-bound rule context. | semantic-disposition-governance-voter: The named decision owner controls the packet-bound condition. | semantic-disposition-runtime-voter: Packet-bound engineering-control-plane trigger/load context.",
+            "candidate_id": "a21f3f2900a96255db4bb9a9c5d000c3cafb87afb5b1ac07005cf64989f6d864",
+            "decision_owner": "engineering-control-plane",
+            "disposition": "valid-contextual-rule",
+            "evidence": {
+              "content_fingerprint": null,
+              "fingerprint": null,
+              "rationale": "panel=semantic-analysis-level-review-evidence-20260817-r1; decision_sha256=42c758734ac7dafadeef6c6ebf8e4f9763c94df5dfaa994eafbb56eb9f5260e9; target_id=reference:a21f3f2900a96255db4bb9a9c5d000c3cafb87afb5b1ac07005cf64989f6d864; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=semantic-disposition-boundary-voter,semantic-disposition-governance-voter,semantic-disposition-runtime-voter; dissenting_voters=none; supporting_rationales=semantic-disposition-boundary-voter: Source src/control-skills/engineering-control-plane/references/utility-capsule-template.md:58-60 confirms this bounded unconditional_absolute_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: Generic control decisions ignore concrete host and tool identifiers.; dissenting_rationales=none"
+            },
+            "finding": "unconditional_absolute_candidate",
+            "fingerprint": "9ee35e4123cfd3497f82851cfe331ff3598b9f32f38294e54b077794806997e0",
+            "mitigation": "semantic-disposition-boundary-voter: Retain source scope; re-review after owner, context, or binding change. | semantic-disposition-governance-voter: Re-review after source, owner, or detector change. | semantic-disposition-runtime-voter: Preserve scope; re-review on binding change.",
+            "path": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
+            "priority": "P1",
+            "reason": "semantic-disposition-boundary-voter: Source src/control-skills/engineering-control-plane/references/utility-capsule-template.md:58-60 confirms this bounded unconditional_absolute_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: Generic control decisions ignore concrete host and tool identifiers.",
+            "review_after": null,
+            "skill_owner": "engineering-control-plane"
+          },
+          {
             "authority_or_condition": "r20-semantic-assurance: Changed Swift actor isolation or unsafe/imported non-Sendable boundaries in the reviewed scope. | r20-semantic-boundary: Valid when changed Swift concurrency or interop code crosses actor isolation through unsafe or imported non-Sendable values.",
             "candidate_id": "a3f59bc18c0bec3fe63fdbe0c79616a5938f26dec10652936840e4c0db4d7caf",
             "decision_owner": "swift-professional-usage",
@@ -281754,6 +282076,25 @@
             "reason": "logging-error-handling/references/benchmarks.md:28 explicitly depends on an accepted policy and owner for actor, action, resource, outcome, integrity, retention, access, sink, and durability, then limits this Skill to verifying the diagnostic boundary and dependency. The restriction correctly separates diagnostic logging from protected audit-record closure.",
             "review_after": null,
             "skill_owner": "logging-error-handling"
+          },
+          {
+            "authority_or_condition": "semantic-disposition-boundary-voter: engineering-control-plane controls this packet-bound rule context. | semantic-disposition-governance-voter: The named decision owner controls the packet-bound condition. | semantic-disposition-runtime-voter: Packet-bound engineering-control-plane trigger/load context.",
+            "candidate_id": "b1b1941b1d133980903eb079cbea866320d8149df14f21f9595ea3da99c9c687",
+            "decision_owner": "engineering-control-plane",
+            "disposition": "valid-contextual-rule",
+            "evidence": {
+              "content_fingerprint": null,
+              "fingerprint": null,
+              "rationale": "panel=semantic-analysis-level-review-evidence-20260817-r1; decision_sha256=42c758734ac7dafadeef6c6ebf8e4f9763c94df5dfaa994eafbb56eb9f5260e9; target_id=reference:b1b1941b1d133980903eb079cbea866320d8149df14f21f9595ea3da99c9c687; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=semantic-disposition-boundary-voter,semantic-disposition-governance-voter,semantic-disposition-runtime-voter; dissenting_voters=none; supporting_rationales=semantic-disposition-boundary-voter: Source src/control-skills/engineering-control-plane/references/utility-capsule-template.md:56-57 confirms this bounded unconditional_absolute_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: Workspace observation is named and non-mutating.; dissenting_rationales=none"
+            },
+            "finding": "unconditional_absolute_candidate",
+            "fingerprint": "74d06fd997e6368055759155fcf866291170c7f66e08d5859fb477d57d1053ae",
+            "mitigation": "semantic-disposition-boundary-voter: Retain source scope; re-review after owner, context, or binding change. | semantic-disposition-governance-voter: Re-review after source, owner, or detector change. | semantic-disposition-runtime-voter: Preserve scope; re-review on binding change.",
+            "path": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
+            "priority": "P1",
+            "reason": "semantic-disposition-boundary-voter: Source src/control-skills/engineering-control-plane/references/utility-capsule-template.md:56-57 confirms this bounded unconditional_absolute_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: Workspace observation is named and non-mutating.",
+            "review_after": null,
+            "skill_owner": "engineering-control-plane"
           },
           {
             "authority_or_condition": "Skill-authoring pressure scenario for a new trigger without an over-routing guard.",
@@ -282096,25 +282437,6 @@
             "reason": "The shared evidence-taxonomy columns support comparison, while each row records an owner-specific deletion or closure claim and its accident-level proof limit.",
             "review_after": null,
             "skill_owner": "group"
-          },
-          {
-            "authority_or_condition": "Utility assignment and return operating under the injected utility_no_edit host mode.",
-            "candidate_id": "ce578e91b2ae2c629e2c01f825ccd328a8ce7b982ad5af4d0318306dd09bfe99",
-            "decision_owner": "changeforge-maintainers",
-            "disposition": "valid-contextual-rule",
-            "evidence": {
-              "content_fingerprint": null,
-              "fingerprint": null,
-              "rationale": "The Utility template identifies prompt-enforced as the supported projection, requires the field in both assignment and return, and invalidates closure when the no-edit contract cannot be preserved."
-            },
-            "finding": "unconditional_absolute_candidate",
-            "fingerprint": "bd617f422ab19f6ee84b907d35b0c13e7fc723c7df67d8f4a4dbca0e78edb2d6",
-            "mitigation": "Update the template and deterministic validators together when a host adds a different enforcement projection; reject a capsule whose field differs from the injected value.",
-            "path": "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
-            "priority": "P1",
-            "reason": "The equality binds the capsule's reported no-edit enforcement to the host-injected Utility mode and prevents the handoff from claiming stronger enforcement than the host supplied.",
-            "review_after": null,
-            "skill_owner": "engineering-control-plane"
           },
           {
             "authority_or_condition": "Microservice-splitting pattern-fit table context.",
@@ -282877,16 +283199,12 @@
             "skill_owner": "testability-seam-design"
           }
         ],
-        "errors": [
-          "reference_semantic_dispositions.entries[84]: stale semantic disposition entry"
-        ],
+        "errors": [],
         "group_scope": "Group candidate IDs use the literal scope 'group'; evidence.fingerprint must match sorted path/owner membership and evidence.content_fingerprint must match the sorted path/owner/normalized-body multiset.",
         "schema_version": 2,
         "source": "config/skill-content-exceptions.yaml",
         "surface_errors": {
-          "control": [
-            "reference_semantic_dispositions.entries[84]: stale semantic disposition entry"
-          ],
+          "control": [],
           "domain": [],
           "foundation": [],
           "professional": []
@@ -282956,15 +283274,15 @@
             "detector_downgraded": 824,
             "false_positive": 8,
             "p0_unresolved": 0,
-            "p1_unresolved": 17,
+            "p1_unresolved": 0,
             "p2_unresolved": 0,
             "raw": 947,
-            "resolved": 106,
+            "resolved": 123,
             "rewrite": 0,
             "time_bounded_exception": 0,
-            "unresolved": 17,
-            "untriaged": 17,
-            "valid_contextual_rule": 98
+            "unresolved": 0,
+            "untriaged": 0,
+            "valid_contextual_rule": 115
           }
         },
         "detector_downgraded_candidates": 824,
@@ -282982,21 +283300,21 @@
           }
         },
         "p0_unresolved_candidates": 0,
-        "p1_unresolved_candidates": 17,
+        "p1_unresolved_candidates": 0,
         "p2_unresolved_candidates": 0,
         "raw_candidates": 953,
-        "resolved_candidates": 112,
+        "resolved_candidates": 129,
         "rewrite_candidates": 0,
         "strict_unresolved": {
           "fixed_number_candidates": 0,
           "p2_rewrite_advisories": 0,
           "templated_block_groups": 0,
-          "unconditional_absolute_p0_p1_candidates": 17
+          "unconditional_absolute_p0_p1_candidates": 0
         },
         "time_bounded_exception_candidates": 0,
-        "unresolved_candidates": 17,
-        "untriaged_candidates": 17,
-        "valid_contextual_rule_candidates": 104
+        "unresolved_candidates": 0,
+        "untriaged_candidates": 0,
+        "valid_contextual_rule_candidates": 121
       }
     },
     "summary": {
@@ -283033,19 +283351,19 @@
       "physical_markdown_references": 528,
       "reference_type_prefaces": 5,
       "references_with_empty_headings": 1,
-      "semantic_absolute_p0_p1_unresolved": 17,
+      "semantic_absolute_p0_p1_unresolved": 0,
       "semantic_detector_downgraded_candidates": 824,
-      "semantic_disposition_applied": 112,
-      "semantic_disposition_configured": 125,
-      "semantic_disposition_errors": 1,
+      "semantic_disposition_applied": 129,
+      "semantic_disposition_configured": 129,
+      "semantic_disposition_errors": 0,
       "semantic_fixed_number_unresolved": 0,
       "semantic_p2_rewrite_advisories": 0,
       "semantic_raw_candidates": 953,
-      "semantic_resolved_candidates": 112,
+      "semantic_resolved_candidates": 129,
       "semantic_rewrite_candidates": 0,
       "semantic_templated_group_unresolved": 0,
-      "semantic_unresolved_candidates": 17,
-      "semantic_untriaged_candidates": 17,
+      "semantic_unresolved_candidates": 0,
+      "semantic_untriaged_candidates": 0,
       "structural_advisory_references": 0,
       "targeted_over_60_lines": 0,
       "template_assets": 9,
@@ -283056,20 +283374,17 @@
       "schema_version": 1,
       "surfaces": {
         "control": {
-          "disposition_applied_count": 0,
-          "disposition_configured_count": 13,
-          "errors": [
-            "reference_semantic_dispositions.entries[84]: stale semantic disposition entry",
-            "unresolved P0/P1 unconditional-absolute semantic candidate(s): 17"
-          ],
+          "disposition_applied_count": 17,
+          "disposition_configured_count": 17,
+          "errors": [],
           "existing_reference_count": 8,
           "indexed_reference_count": 8,
-          "semantic_absolute_p0_p1_unresolved_count": 17,
+          "semantic_absolute_p0_p1_unresolved_count": 0,
           "semantic_candidate_count": 47,
           "semantic_fixed_number_unresolved_count": 0,
           "semantic_templated_group_unresolved_count": 0,
-          "semantic_unresolved_count": 17,
-          "status": "fail"
+          "semantic_unresolved_count": 0,
+          "status": "pass"
         },
         "domain": {
           "disposition_applied_count": 20,
@@ -283359,7 +283674,7 @@
     },
     "documents": [
       {
-        "content_fingerprint": "2099dcac98b520841afb7426fad6b80958530396ee21e1722cd342a039672042",
+        "content_fingerprint": "157319906997689e2639f130528638a9e7effcb5c1abcbf74081471f0bb1be49",
         "document_id": "src/control-prompts/main-control-agent.md#control-prompt",
         "document_part": "control-prompt",
         "layer": "control-prompt",
@@ -292090,12 +292405,31 @@
         {
           "candidate_id": "8dd0cd64f648cdcbe8d16dbab95b2767a11392348aab839fd9836418662ecfcd",
           "context_fingerprint": "4a2e1ef7c5499824904a7bf36ccf8e2414326ec2a5810433bcce86d138cd0084",
-          "disposition": null,
-          "disposition_record": null,
+          "disposition": "valid-contextual-rule",
+          "disposition_record": {
+            "authority_or_condition": "Routing an explicit DAG request from an accepted source-backed Brief.",
+            "candidate_id": "8dd0cd64f648cdcbe8d16dbab95b2767a11392348aab839fd9836418662ecfcd",
+            "decision_owner": "changeforge-maintainers",
+            "disposition": "valid-contextual-rule",
+            "document_part": "description",
+            "evidence": {
+              "context_fingerprint": "4a2e1ef7c5499824904a7bf36ccf8e2414326ec2a5810433bcce86d138cd0084",
+              "occurrence_fingerprint": "88a8826f498efa68cc801f70d8f8b1911c0dc8c80ef64f324d6f95248618b420",
+              "rationale": "The Professional router requires an accepted Brief and the Task DAG template requires at least two real tasks."
+            },
+            "finding": "fixed_duration_threshold_status_candidate",
+            "fingerprint": "b5bec4242f6ce888cddae246ee80a454d5c203373c88baa8b340624c7fb8c081",
+            "mitigation": "Keep single edits out of this Skill and never manufacture extra tasks to trigger it.",
+            "path": "src/professional-skills/task-dag-planner/SKILL.md",
+            "priority": "P1",
+            "reason": "Two or more is the logical boundary between a dependency graph and a single Task Capsule, not an arbitrary size gate.",
+            "review_after": null,
+            "skill_owner": "task-dag-planner"
+          },
           "document_part": "description",
           "finding": "fixed_duration_threshold_status_candidate",
           "fingerprint": "b5bec4242f6ce888cddae246ee80a454d5c203373c88baa8b340624c7fb8c081",
-          "governance_status": "untriaged",
+          "governance_status": "resolved-valid-contextual-rule",
           "layer": "professional-skill",
           "occurrence_count": 1,
           "occurrence_fingerprint": "88a8826f498efa68cc801f70d8f8b1911c0dc8c80ef64f324d6f95248618b420",
@@ -292121,14 +292455,14 @@
           "path": "src/professional-skills/task-dag-planner/SKILL.md",
           "preview": "Use `analysis-agent` to create a Task DAG from an accepted source-backed Brief when 2+ tasks have dependencies, parallel value, integration",
           "priority": "P1",
-          "resolved": false,
+          "resolved": true,
           "signals": [
             "fixed-count"
           ],
           "skill_owner": "task-dag-planner",
           "tokens": 28,
           "total_tokens": 28,
-          "unresolved": true
+          "unresolved": false
         },
         {
           "candidate_id": "0560f7038ba9ca6c7b59e84f6a7ca98ec4b988b76ad90b8e75afcceb8c3803ab",
@@ -292861,7 +293195,7 @@
         },
         {
           "candidate_id": "7d33c995b85f5a4cd709b2f71211cfa3d6f5f5001c6a9acb03c7f766de59bf34",
-          "context_fingerprint": "17d8e9c40897c6f74cc7131bca2e37cfac101020f75aebc2495e7108c8b681f7",
+          "context_fingerprint": "c408772b183c8172e55c897383b6c150833d0e2ff5a9aac6c13f2e32501c1ec8",
           "disposition": null,
           "disposition_record": null,
           "document_part": "control-prompt",
@@ -292873,7 +293207,7 @@
           "occurrence_fingerprint": "9812629267600f5e1322b65c3dd73435a36cdd7bfd2fa4bf0744c9cba755d8d8",
           "occurrences": [
             {
-              "context_fingerprint": "fc09684697690d8c07ac66c170e93cc76ccfab0cd1c2e3c287d42998afea1606",
+              "context_fingerprint": "92f5a5b76c56ff88821fc3d48aef284c087b5a5944a3f01db813dbfce9ef49da",
               "document_part": "control-prompt",
               "layer": "control-prompt",
               "lines": {
@@ -292906,7 +293240,7 @@
         },
         {
           "candidate_id": "cf6cf1b82ea9c1118d7dc0643a1af67ecdb23d1d29ac939f903230bf11a26a9b",
-          "context_fingerprint": "9deeadf0a9241a288d89d3c0d66a0aeeecc9d198f0a4b553648fb2d16e3907eb",
+          "context_fingerprint": "02bba4c249800cd9450d2c1124592fd1fc35afd12cf853e02f95858263606e41",
           "disposition": null,
           "disposition_record": null,
           "document_part": "control-prompt",
@@ -292918,7 +293252,7 @@
           "occurrence_fingerprint": "9812629267600f5e1322b65c3dd73435a36cdd7bfd2fa4bf0744c9cba755d8d8",
           "occurrences": [
             {
-              "context_fingerprint": "584a20222278cd54bbaa1638eebaa409918d03d0e7102834352282b3b8d4c64c",
+              "context_fingerprint": "69b275417a456fc47a18d0c66434a9325548ed8fd7bc1002ddefc324c2e32c69",
               "document_part": "control-prompt",
               "layer": "control-prompt",
               "lines": {
@@ -296399,9 +296733,9 @@
         "value": "31dd5e2a1444dede44127228211d0226ffb7681bed3ba13cf4e41a9d87b11b79"
       },
       "disposition_contract": {
-        "applied_count": 73,
+        "applied_count": 74,
         "common_errors": [],
-        "configured_count": 81,
+        "configured_count": 79,
         "entries": [
           {
             "authority_or_condition": "The network-protocol-gateway-usage Registry Trigger where 502, 503, and 504 identify gateway-failure tasks that may require this Skill. | Skill selection when observed gateway behavior includes HTTP 502, 503, or 504 responses. | Applies only to discovery and routing for network-protocol-gateway-usage when gateway or upstream failure signals include these statuses.",
@@ -296684,6 +297018,26 @@
             "skill_owner": "task-dag-planner"
           },
           {
+            "authority_or_condition": "semantic-disposition-boundary-voter: main-control-agent controls this packet-bound rule context. | semantic-disposition-governance-voter: The named decision owner controls the packet-bound condition. | semantic-disposition-runtime-voter: Packet-bound main-control-agent trigger/load context.",
+            "candidate_id": "363c93e750aaedd678e7e6e079a326f98c018c0627c30df00770a7fc01a6d52a",
+            "decision_owner": "main-control-agent",
+            "disposition": "valid-contextual-rule",
+            "document_part": "control-prompt",
+            "evidence": {
+              "context_fingerprint": "251c03ef6acf68b45fdce9873efbb69a76ea8bbcd978e8c4a8d5c02a40a2c28b",
+              "occurrence_fingerprint": "9812629267600f5e1322b65c3dd73435a36cdd7bfd2fa4bf0744c9cba755d8d8",
+              "rationale": "panel=semantic-analysis-level-review-evidence-20260817-r1; decision_sha256=42c758734ac7dafadeef6c6ebf8e4f9763c94df5dfaa994eafbb56eb9f5260e9; target_id=root:363c93e750aaedd678e7e6e079a326f98c018c0627c30df00770a7fc01a6d52a; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=semantic-disposition-boundary-voter,semantic-disposition-governance-voter,semantic-disposition-runtime-voter; dissenting_voters=none; supporting_rationales=semantic-disposition-boundary-voter: Source src/control-prompts/main-control-agent.md:40-40 confirms this bounded unconditional_mechanism_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: No third unchanged retry after two failures.; dissenting_rationales=none"
+            },
+            "finding": "unconditional_mechanism_candidate",
+            "fingerprint": "eea485106c2cd92a08915bc37e1b135e51a0e5d23ce7960a48ab3b457a1d3091",
+            "mitigation": "semantic-disposition-boundary-voter: Retain source scope; re-review after owner, context, or binding change. | semantic-disposition-governance-voter: Re-review after source, owner, or detector change. | semantic-disposition-runtime-voter: Preserve scope; re-review on binding change.",
+            "path": "src/control-prompts/main-control-agent.md",
+            "priority": "P1",
+            "reason": "semantic-disposition-boundary-voter: Source src/control-prompts/main-control-agent.md:40-40 confirms this bounded unconditional_mechanism_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: No third unchanged retry after two failures.",
+            "review_after": null,
+            "skill_owner": "main-control-agent"
+          },
+          {
             "authority_or_condition": "r24-semantic-runtime: Applies only under the client-lifecycle-state-restoration Skill role and the conditions expressed by this root candidate. | r24-semantic-assurance: Applies only when the client-lifecycle-state-restoration Skill or control boundary is active and the stated risk or evidence condition is present. | r24-semantic-boundary: Authority: client-lifecycle-state-restoration in layer foundation-capability; condition: its registered positive trigger and the packet-bound context at src/foundation/capabilities/client-lifecycle-state-restoration/SKILL.md:12 are active.",
             "candidate_id": "37ee0ef16d7169dfebcc297a4794f3f268241a7990d2f3f11a58651e21214716",
             "decision_owner": "client-lifecycle-state-restoration",
@@ -296762,26 +297116,6 @@
             "reason": "The requirement governs only comparative claims inside a Skill whose trigger requires materially different feasible options. Comparing the selected approach with the strongest feasible alternative is minimum evidence for relative claims; it does not prescribe an implementation mechanism, and the Root excludes cases where no material alternative remains. | The sentence genuinely requires comparative evidence, but it is bounded by the Registry Trigger to claims of relative superiority among feasible solutions. The Skill and its Reference reject manufactured alternatives for trivial choices and require only a strongest feasible alternative capable of changing the decision, so the rule is readable, necessary, and professionally scoped.",
             "review_after": null,
             "skill_owner": "solution-optimality-evaluation"
-          },
-          {
-            "authority_or_condition": "semantic-execution-risk-r1-governance: main-control-agent owns root target 455a9db03b6b when its registered trigger and packet-bound occurrence apply. | semantic-execution-risk-r1-reference: The main-control-agent control prompt owns dispatcher state transitions and closure outcomes; arrow and status syntax is authoritative contract notation inside those sections.",
-            "candidate_id": "455a9db03b6b2cbeda3f28f1a38b631e61955c4ca9b0d95a0011aac928313486",
-            "decision_owner": "main-control-agent",
-            "disposition": "false-positive",
-            "document_part": "control-prompt",
-            "evidence": {
-              "context_fingerprint": "32f271debc4a441c8e14b42e1e65b0f318cea82127ccdd3749d79abf0457d384",
-              "occurrence_fingerprint": "9812629267600f5e1322b65c3dd73435a36cdd7bfd2fa4bf0744c9cba755d8d8",
-              "rationale": "panel=semantic-execution-risk-calibration-20260815-r1; decision_sha256=9c8e4eac2dc70e26648a3e40b97c1e5252cbba6e4c050aac7a0d78d08c3aae86; target_id=root:455a9db03b6b2cbeda3f28f1a38b631e61955c4ca9b0d95a0011aac928313486; winning_disposition=false-positive; winning_votes=2; vote_counts=false-positive:2,rewrite:0,time-bounded-exception:0,valid-contextual-rule:1; supporting_voters=semantic-execution-risk-r1-governance,semantic-execution-risk-r1-reference; dissenting_voters=semantic-execution-risk-r1-root; supporting_rationales=semantic-execution-risk-r1-governance: The markers encode compact control contracts, not tutorial content; this detector family does not apply. | semantic-execution-risk-r1-reference: Lines 54-89 of src/control-prompts/main-control-agent.md use compact transition, status-enum, and fail-closed contract notation across Preparation, Review, Progress, and Closure. These markers encode executable control semantics rather than tutorial walkthroughs, so teaching-marker density does not apply to this bound context.; dissenting_rationales=semantic-execution-risk-r1-root(valid-contextual-rule): 455a9db0: \u201cChange: blocked -> main-\u2026\u201d is context-scoped."
-            },
-            "finding": "tutorial_explanatory_density_candidate",
-            "fingerprint": "3ec86c9a92f5f46cc5e33528c07476c37c7fec3db435fbf1a0325b25d4811f94",
-            "mitigation": "semantic-execution-risk-r1-governance: Keep 455a9db03b6b in its descriptive/selector context; re-review if it becomes prescriptive. | semantic-execution-risk-r1-reference: Keep the compact state-transition and fail-closed notation, and exclude control-contract state tables, enum alternatives, and marker blocks from tutorial-density detection.",
-            "path": "src/control-prompts/main-control-agent.md",
-            "priority": "P1",
-            "reason": "semantic-execution-risk-r1-governance: The markers encode compact control contracts, not tutorial content; this detector family does not apply. | semantic-execution-risk-r1-reference: Lines 54-89 of src/control-prompts/main-control-agent.md use compact transition, status-enum, and fail-closed contract notation across Preparation, Review, Progress, and Closure. These markers encode executable control semantics rather than tutorial walkthroughs, so teaching-marker density does not apply to this bound context.",
-            "review_after": null,
-            "skill_owner": "main-control-agent"
           },
           {
             "authority_or_condition": "acceptance-criteria-builder selected for vague acceptance or unspecified failure behavior.",
@@ -296984,6 +297318,26 @@
             "skill_owner": "linux-desktop-platform-extension"
           },
           {
+            "authority_or_condition": "semantic-disposition-boundary-voter: main-control-agent controls this packet-bound rule context. | semantic-disposition-governance-voter: The named decision owner controls the packet-bound condition. | semantic-disposition-runtime-voter: Packet-bound main-control-agent trigger/load context.",
+            "candidate_id": "57e129dd67d2f0b2bd094ff0cd4852e8ee6d049d77608b31bb79a397ce66fcaa",
+            "decision_owner": "main-control-agent",
+            "disposition": "valid-contextual-rule",
+            "document_part": "control-prompt",
+            "evidence": {
+              "context_fingerprint": "360e3468dc9535999f775eb743f98d8e1969f3fd40175461d1bb2e83078f4844",
+              "occurrence_fingerprint": "9812629267600f5e1322b65c3dd73435a36cdd7bfd2fa4bf0744c9cba755d8d8",
+              "rationale": "panel=semantic-analysis-level-review-evidence-20260817-r1; decision_sha256=42c758734ac7dafadeef6c6ebf8e4f9763c94df5dfaa994eafbb56eb9f5260e9; target_id=root:57e129dd67d2f0b2bd094ff0cd4852e8ee6d049d77608b31bb79a397ce66fcaa; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=semantic-disposition-boundary-voter,semantic-disposition-governance-voter,semantic-disposition-runtime-voter; dissenting_voters=none; supporting_rationales=semantic-disposition-boundary-voter: Source src/control-prompts/main-control-agent.md:40-40 confirms this bounded fixed_duration_threshold_status_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: Two failures require changed evidence or return.; dissenting_rationales=none"
+            },
+            "finding": "fixed_duration_threshold_status_candidate",
+            "fingerprint": "367e5cb23f9f8a97f6179f8f5ee37633b4c7ba31af29d8ecbbbf4efc382d266a",
+            "mitigation": "semantic-disposition-boundary-voter: Retain source scope; re-review after owner, context, or binding change. | semantic-disposition-governance-voter: Re-review after source, owner, or detector change. | semantic-disposition-runtime-voter: Preserve scope; re-review on binding change.",
+            "path": "src/control-prompts/main-control-agent.md",
+            "priority": "P1",
+            "reason": "semantic-disposition-boundary-voter: Source src/control-prompts/main-control-agent.md:40-40 confirms this bounded fixed_duration_threshold_status_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: Two failures require changed evidence or return.",
+            "review_after": null,
+            "skill_owner": "main-control-agent"
+          },
+          {
             "authority_or_condition": "r20-semantic-assurance: A confirmed Linux desktop target; only supported package and environment dimensions need positive evidence. | r20-semantic-boundary: Valid when the Linux desktop Domain is selected and package, install, update, locale, input, scaling, accessibility, or environment facts affect scope.",
             "candidate_id": "582c19c2a623e847272f6fda41d4c6793edaff0b424396395538af79f81800dc",
             "decision_owner": "linux-desktop-platform-extension",
@@ -297064,26 +297418,6 @@
             "skill_owner": "ios-ipados-platform-extension"
           },
           {
-            "authority_or_condition": "Any use of engineering-control-plane.",
-            "candidate_id": "64829e510d6110c54d7dfc7367d9b26313ced2758d345ce51e46d756fd69ec02",
-            "decision_owner": "changeforge-maintainers",
-            "disposition": "valid-contextual-rule",
-            "document_part": "description",
-            "evidence": {
-              "context_fingerprint": "fc3caf547634d9d7196aca31e38127dff6a7584d953bfeb530f60e87a8922473",
-              "occurrence_fingerprint": "cc8af30f60df620e2ac43d7d45de6e52d0bab1a9b168f52a3706d4afaeaf12d0",
-              "rationale": "The Core Contract and control validator assign implementation to task-agent and independent review to review-agent while limiting this Skill to routing and templates."
-            },
-            "finding": "unconditional_mechanism_candidate",
-            "fingerprint": "396debdc8f1ab8f8d132b75bae5efa5c773d05e92198a0154cca95241e5b2134",
-            "mitigation": "Dispatch the bounded worker or reviewer rather than performing their work from main.",
-            "path": "src/control-skills/engineering-control-plane/SKILL.md",
-            "priority": "P1",
-            "reason": "The prohibition keeps the Control Skill as a dispatch-only router and prevents it from becoming an implementer or reviewer.",
-            "review_after": null,
-            "skill_owner": "engineering-control-plane"
-          },
-          {
             "authority_or_condition": "r25-semantic-runtime: The code-review capability is active for a bounded implementation or repair review with an actual latest diff. | r25-semantic-assurance: Applies to implementation or repair review after the Current Task Boundary and latest diff are resolved; inaccessible diff scope must be marked unverified rather than treated as reviewed. | r25-semantic-boundary: Applies whenever the code-review capability is selected for a task-local implementation or repair review.",
             "candidate_id": "6537235c2554b518a32c51038b8b4c1a27e704764e704ee5f9792898fbc9dad6",
             "decision_owner": "code-review",
@@ -297102,26 +297436,6 @@
             "reason": "r25-semantic-runtime: Resolving the actual diff, every changed file, and reachable consumers is the minimum review surface needed to avoid approving a local line while missing the consequential regression path. | r25-semantic-assurance: Review claims cannot be complete without resolving the latest actual diff and every changed file within the task boundary. The universal scope is necessary to catch split-file regressions, misplaced ownership, and unreviewed generated or contract changes. | r25-semantic-boundary: Resolving the task boundary, latest diff, every changed file, and reachable impact is the necessary first action for any bounded code review.",
             "review_after": null,
             "skill_owner": "code-review"
-          },
-          {
-            "authority_or_condition": "semantic-execution-risk-r1-governance: main-control-agent owns root target 6f971e68153a when its registered trigger and packet-bound occurrence apply. | semantic-execution-risk-r1-reference: The main-control-agent root Skill owns this rule when its documented use, role, decision, evidence, or stop condition at main-control-agent.md:19 is active; the surrounding \"Direct Task Routing\" section limits its scope. | semantic-execution-risk-r1-root: main-control-agent; 1 packet-bound occurrence(s).",
-            "candidate_id": "6f971e68153a3e3673af20cc2a1cc2ad27770043664606dc62aed70beac81365",
-            "decision_owner": "main-control-agent",
-            "disposition": "valid-contextual-rule",
-            "document_part": "control-prompt",
-            "evidence": {
-              "context_fingerprint": "2ad70c5d670ceb4ae1f7b706992d19f3fb7fc343a6cc1b5cc8e1e055dc442e0b",
-              "occurrence_fingerprint": "9812629267600f5e1322b65c3dd73435a36cdd7bfd2fa4bf0744c9cba755d8d8",
-              "rationale": "panel=semantic-execution-risk-calibration-20260815-r1; decision_sha256=9c8e4eac2dc70e26648a3e40b97c1e5252cbba6e4c050aac7a0d78d08c3aae86; target_id=root:6f971e68153a3e3673af20cc2a1cc2ad27770043664606dc62aed70beac81365; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=semantic-execution-risk-r1-governance,semantic-execution-risk-r1-reference,semantic-execution-risk-r1-root; dissenting_voters=none; supporting_rationales=semantic-execution-risk-r1-governance: \u201cnever infer capability. utility_no_edit per references/ut\u2026\u201d is a bounded mechanism rule under main-control-agent, not a cross-scope default. | semantic-execution-risk-r1-reference: At src/control-prompts/main-control-agent.md:19 under \"Direct Task Routing\", \"never infer capability. utility_no_edit per references/utility-capsule-template.md compares workspace before/after\" is a unconditional_mechanism_candidate in the main-control-agent root contract. Its section, adjacent trigger or anti-pattern text, and package role bind the mechanism, count, vendor term, or artifact to work routed to this Skill; it is not an unconditional rule for unrelated tasks. | semantic-execution-risk-r1-root: 6f971e68: \u201cnever infer capability.\u2026\u201d is context-scoped.; dissenting_rationales=none"
-            },
-            "finding": "unconditional_mechanism_candidate",
-            "fingerprint": "1603532a304611e363ab4a38726a1f778667a947482753d28e88ae02673bd9ba",
-            "mitigation": "semantic-execution-risk-r1-governance: Keep 6f971e68153a scoped; re-review trigger, source semantics, occurrence membership, or owner changes. | semantic-execution-risk-r1-reference: Retain \"never infer capability. utility_no_edit per references/utility-capsule-template.md compares\u2026\" in the main-control-agent root package with the \"Direct Task Routing\" qualifier and adjacent routing context; re-review if the trigger, owner, threshold meaning, or package placement changes. | semantic-execution-risk-r1-root: Keep 6f971e68 context-bound.",
-            "path": "src/control-prompts/main-control-agent.md",
-            "priority": "P1",
-            "reason": "semantic-execution-risk-r1-governance: \u201cnever infer capability. utility_no_edit per references/ut\u2026\u201d is a bounded mechanism rule under main-control-agent, not a cross-scope default. | semantic-execution-risk-r1-reference: At src/control-prompts/main-control-agent.md:19 under \"Direct Task Routing\", \"never infer capability. utility_no_edit per references/utility-capsule-template.md compares workspace before/after\" is a unconditional_mechanism_candidate in the main-control-agent root contract. Its section, adjacent trigger or anti-pattern text, and package role bind the mechanism, count, vendor term, or artifact to work routed to this Skill; it is not an unconditional rule for unrelated tasks. | semantic-execution-risk-r1-root: 6f971e68: \u201cnever infer capability.\u2026\u201d is context-scoped.",
-            "review_after": null,
-            "skill_owner": "main-control-agent"
           },
           {
             "authority_or_condition": "Plan execution with a non-empty final changed-file set.",
@@ -297162,6 +297476,46 @@
             "reason": "combined-review-semantic-runtime: A selected Skill or reference that is absent from the build makes the route non-executable, so complete presence validation is required for the bounded selection set. | combined-review-semantic-assurance: The universal quantifier is bounded to selected Skills and references; verifying every selected item exists in current built output prevents routing artifacts from naming unavailable dependencies. | combined-review-semantic-boundary: A routing review cannot claim an executable selection if any selected Skill or reference is absent from the built artifact. Every is scoped to the finite selected set, not the full catalog, and directly checks the consumer boundary created by routing.",
             "review_after": null,
             "skill_owner": "routing-quality-review"
+          },
+          {
+            "authority_or_condition": "semantic-disposition-governance-voter: The named decision owner controls the packet-bound condition. | semantic-disposition-runtime-voter: Packet-bound complete context only.",
+            "candidate_id": "7c4cc17d5782adf25e1cb5da472ddfd090ee2cb793d651343e834c4b566a9cd9",
+            "decision_owner": "main-control-agent",
+            "disposition": "false-positive",
+            "document_part": "control-prompt",
+            "evidence": {
+              "context_fingerprint": "31cfe82a0151599092fef31e6e81a28afc0e9a49ada50d0da6ab798ca6577775",
+              "occurrence_fingerprint": "9812629267600f5e1322b65c3dd73435a36cdd7bfd2fa4bf0744c9cba755d8d8",
+              "rationale": "panel=semantic-analysis-level-review-evidence-20260817-r1; decision_sha256=42c758734ac7dafadeef6c6ebf8e4f9763c94df5dfaa994eafbb56eb9f5260e9; target_id=root:7c4cc17d5782adf25e1cb5da472ddfd090ee2cb793d651343e834c4b566a9cd9; winning_disposition=false-positive; winning_votes=2; vote_counts=false-positive:2,rewrite:0,time-bounded-exception:0,valid-contextual-rule:1; supporting_voters=semantic-disposition-governance-voter,semantic-disposition-runtime-voter; dissenting_voters=semantic-disposition-boundary-voter; supporting_rationales=semantic-disposition-governance-voter: Compressed control syntax, not tutorial exposition or teaching. | semantic-disposition-runtime-voter: Complete context is descriptive, quoted, failure-signal, or control notation; detector does not apply.; dissenting_rationales=semantic-disposition-boundary-voter(valid-contextual-rule): Source src/control-prompts/main-control-agent.md:12-84 confirms this bounded tutorial_explanatory_density_candidate context."
+            },
+            "finding": "tutorial_explanatory_density_candidate",
+            "fingerprint": "1a75ca5da52df979b0ec44797ea31b3a5c2d5a8718d64df4d83ecd1eea3ec40b",
+            "mitigation": "semantic-disposition-governance-voter: Re-review if context becomes prescriptive or changes owner. | semantic-disposition-runtime-voter: Keep context; re-review if prescriptive.",
+            "path": "src/control-prompts/main-control-agent.md",
+            "priority": "P1",
+            "reason": "semantic-disposition-governance-voter: Compressed control syntax, not tutorial exposition or teaching. | semantic-disposition-runtime-voter: Complete context is descriptive, quoted, failure-signal, or control notation; detector does not apply.",
+            "review_after": null,
+            "skill_owner": "main-control-agent"
+          },
+          {
+            "authority_or_condition": "semantic-disposition-boundary-voter: main-control-agent controls this packet-bound rule context. | semantic-disposition-governance-voter: The named decision owner controls the packet-bound condition. | semantic-disposition-runtime-voter: Packet-bound main-control-agent trigger/load context.",
+            "candidate_id": "7d33c995b85f5a4cd709b2f71211cfa3d6f5f5001c6a9acb03c7f766de59bf34",
+            "decision_owner": "main-control-agent",
+            "disposition": "valid-contextual-rule",
+            "document_part": "control-prompt",
+            "evidence": {
+              "context_fingerprint": "17d8e9c40897c6f74cc7131bca2e37cfac101020f75aebc2495e7108c8b681f7",
+              "occurrence_fingerprint": "9812629267600f5e1322b65c3dd73435a36cdd7bfd2fa4bf0744c9cba755d8d8",
+              "rationale": "panel=semantic-analysis-level-review-evidence-20260817-r1; decision_sha256=42c758734ac7dafadeef6c6ebf8e4f9763c94df5dfaa994eafbb56eb9f5260e9; target_id=root:7d33c995b85f5a4cd709b2f71211cfa3d6f5f5001c6a9acb03c7f766de59bf34; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=semantic-disposition-boundary-voter,semantic-disposition-governance-voter,semantic-disposition-runtime-voter; dissenting_voters=none; supporting_rationales=semantic-disposition-boundary-voter: Source src/control-prompts/main-control-agent.md:71-71 confirms this bounded unconditional_mechanism_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: Repair requires fresh validation and re-review.; dissenting_rationales=none"
+            },
+            "finding": "unconditional_mechanism_candidate",
+            "fingerprint": "319940a8ce4a5702e54430b68fea52f3c00dd8f36dbbd3fcbb99c19d2769d23a",
+            "mitigation": "semantic-disposition-boundary-voter: Retain source scope; re-review after owner, context, or binding change. | semantic-disposition-governance-voter: Re-review after source, owner, or detector change. | semantic-disposition-runtime-voter: Preserve scope; re-review on binding change.",
+            "path": "src/control-prompts/main-control-agent.md",
+            "priority": "P1",
+            "reason": "semantic-disposition-boundary-voter: Source src/control-prompts/main-control-agent.md:71-71 confirms this bounded unconditional_mechanism_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: Repair requires fresh validation and re-review.",
+            "review_after": null,
+            "skill_owner": "main-control-agent"
           },
           {
             "authority_or_condition": "r20-semantic-runtime: When a selected Professional review evaluates confirmed Android behavior. | r20-semantic-assurance: ChangeForge's Professional-plus-Domain architecture for confirmed Android platform behavior. | r20-semantic-boundary: Valid when an installed-client Professional review evaluates Android behavior and loads this Domain plus decision-owning client or Kotlin Foundations.",
@@ -297242,26 +297596,6 @@
             "reason": "r20-semantic-assurance: Windows identity, integration, privilege, architecture, artifact, and accessibility boundaries need visible evidence or limits. | r20-semantic-boundary: At windows-platform-extension/SKILL.md:26, artifact and signing are Windows boundary facts recorded with registration, activation, IPC, privilege, loading, service, DPI, and accessibility evidence. The Required Inputs section neither creates a review artifact nor authorizes release.",
             "review_after": null,
             "skill_owner": "windows-platform-extension"
-          },
-          {
-            "authority_or_condition": "semantic-execution-risk-r1-governance: main-control-agent owns root target 812c547ab9ed when its registered trigger and packet-bound occurrence apply. | semantic-execution-risk-r1-reference: The main-control-agent root Skill owns this rule when its documented use, role, decision, evidence, or stop condition at main-control-agent.md:77 is active; the surrounding \"Review and Repair\" section limits its scope. | semantic-execution-risk-r1-root: main-control-agent; 1 packet-bound occurrence(s).",
-            "candidate_id": "812c547ab9edfaa6ec05424a431a97bb37f515d3598ec831abfd3b68a1df6287",
-            "decision_owner": "main-control-agent",
-            "disposition": "valid-contextual-rule",
-            "document_part": "control-prompt",
-            "evidence": {
-              "context_fingerprint": "fd242160a261d1582e58d0cf438314562f87268be1d10e29d33acfc81c5f5591",
-              "occurrence_fingerprint": "9812629267600f5e1322b65c3dd73435a36cdd7bfd2fa4bf0744c9cba755d8d8",
-              "rationale": "panel=semantic-execution-risk-calibration-20260815-r1; decision_sha256=9c8e4eac2dc70e26648a3e40b97c1e5252cbba6e4c050aac7a0d78d08c3aae86; target_id=root:812c547ab9edfaa6ec05424a431a97bb37f515d3598ec831abfd3b68a1df6287; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=semantic-execution-risk-r1-governance,semantic-execution-risk-r1-reference,semantic-execution-risk-r1-root; dissenting_voters=none; supporting_rationales=semantic-execution-risk-r1-governance: \u201cAssignments have ID/role/scope, one Review Skill, zero-th\u2026\u201d is a bounded count/status rule under main-control-agent, not a cross-scope default. | semantic-execution-risk-r1-reference: At src/control-prompts/main-control-agent.md:77 under \"Review and Repair\", \"Assignments have ID/role/scope, one Review Skill, zero-three independent review Layer3.\" is a fixed_duration_threshold_status_candidate in the main-control-agent root contract. Its section, adjacent trigger or anti-pattern text, and package role bind the mechanism, count, vendor term, or artifact to work routed to this Skill; it is not an unconditional rule for unrelated tasks. | semantic-execution-risk-r1-root: 812c547a: \u201cAssignments have ID/role\u2026\u201d is context-scoped.; dissenting_rationales=none"
-            },
-            "finding": "fixed_duration_threshold_status_candidate",
-            "fingerprint": "32e70b38f36d6dfe23045b067030e6f5e54eead9c349184f606d19339d89f2db",
-            "mitigation": "semantic-execution-risk-r1-governance: Keep 812c547ab9ed scoped; re-review trigger, source semantics, occurrence membership, or owner changes. | semantic-execution-risk-r1-reference: Retain \"Assignments have ID/role/scope, one Review Skill, zero-three independent review Layer3.\" in the main-control-agent root package with the \"Review and Repair\" qualifier and adjacent routing context; re-review if the trigger, owner, threshold meaning, or package placement changes. | semantic-execution-risk-r1-root: Keep 812c547a context-bound.",
-            "path": "src/control-prompts/main-control-agent.md",
-            "priority": "P1",
-            "reason": "semantic-execution-risk-r1-governance: \u201cAssignments have ID/role/scope, one Review Skill, zero-th\u2026\u201d is a bounded count/status rule under main-control-agent, not a cross-scope default. | semantic-execution-risk-r1-reference: At src/control-prompts/main-control-agent.md:77 under \"Review and Repair\", \"Assignments have ID/role/scope, one Review Skill, zero-three independent review Layer3.\" is a fixed_duration_threshold_status_candidate in the main-control-agent root contract. Its section, adjacent trigger or anti-pattern text, and package role bind the mechanism, count, vendor term, or artifact to work routed to this Skill; it is not an unconditional rule for unrelated tasks. | semantic-execution-risk-r1-root: 812c547a: \u201cAssignments have ID/role\u2026\u201d is context-scoped.",
-            "review_after": null,
-            "skill_owner": "main-control-agent"
           },
           {
             "authority_or_condition": "quality-test-gate evaluating an accepted change and its material failure paths.",
@@ -297604,26 +297938,6 @@
             "skill_owner": "code-review"
           },
           {
-            "authority_or_condition": "semantic-execution-risk-r1-governance: main-control-agent owns root target c087620838ba when its registered trigger and packet-bound occurrence apply. | semantic-execution-risk-r1-reference: The main-control-agent root Skill owns this rule when its documented use, role, decision, evidence, or stop condition at main-control-agent.md:44 is active; the surrounding \"Execution Level and Validation\" section limits its scope. | semantic-execution-risk-r1-root: main-control-agent; 1 packet-bound occurrence(s).",
-            "candidate_id": "c087620838ba97c47fdfa4b87f78e0483ec886655d6bbeb98d504e18b4f8f977",
-            "decision_owner": "main-control-agent",
-            "disposition": "valid-contextual-rule",
-            "document_part": "control-prompt",
-            "evidence": {
-              "context_fingerprint": "9ca33ccf7d42f001fbae722a41a9e19f42a0f1da3076a9f5eaa7b9dc5374e4c4",
-              "occurrence_fingerprint": "9812629267600f5e1322b65c3dd73435a36cdd7bfd2fa4bf0744c9cba755d8d8",
-              "rationale": "panel=semantic-execution-risk-calibration-20260815-r1; decision_sha256=9c8e4eac2dc70e26648a3e40b97c1e5252cbba6e4c050aac7a0d78d08c3aae86; target_id=root:c087620838ba97c47fdfa4b87f78e0483ec886655d6bbeb98d504e18b4f8f977; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=semantic-execution-risk-r1-governance,semantic-execution-risk-r1-reference,semantic-execution-risk-r1-root; dissenting_voters=none; supporting_rationales=semantic-execution-risk-r1-governance: \u201creturn Main/block, never third unchanged retry.\u201d is a bounded mechanism rule under main-control-agent, not a cross-scope default. | semantic-execution-risk-r1-reference: At src/control-prompts/main-control-agent.md:44 under \"Execution Level and Validation\", \"return Main/block, never third unchanged retry.\" is a unconditional_mechanism_candidate in the main-control-agent root contract. Its section, adjacent trigger or anti-pattern text, and package role bind the mechanism, count, vendor term, or artifact to work routed to this Skill; it is not an unconditional rule for unrelated tasks. | semantic-execution-risk-r1-root: c0876208: \u201creturn Main/block, never\u2026\u201d is context-scoped.; dissenting_rationales=none"
-            },
-            "finding": "unconditional_mechanism_candidate",
-            "fingerprint": "cd0c483840cf2a917d3e913257b9686dd7021ce719fb40fd51eaccf58e2004f2",
-            "mitigation": "semantic-execution-risk-r1-governance: Keep c087620838ba scoped; re-review trigger, source semantics, occurrence membership, or owner changes. | semantic-execution-risk-r1-reference: Retain \"return Main/block, never third unchanged retry.\" in the main-control-agent root package with the \"Execution Level and Validation\" qualifier and adjacent routing context; re-review if the trigger, owner, threshold meaning, or package placement changes. | semantic-execution-risk-r1-root: Keep c0876208 context-bound.",
-            "path": "src/control-prompts/main-control-agent.md",
-            "priority": "P1",
-            "reason": "semantic-execution-risk-r1-governance: \u201creturn Main/block, never third unchanged retry.\u201d is a bounded mechanism rule under main-control-agent, not a cross-scope default. | semantic-execution-risk-r1-reference: At src/control-prompts/main-control-agent.md:44 under \"Execution Level and Validation\", \"return Main/block, never third unchanged retry.\" is a unconditional_mechanism_candidate in the main-control-agent root contract. Its section, adjacent trigger or anti-pattern text, and package role bind the mechanism, count, vendor term, or artifact to work routed to this Skill; it is not an unconditional rule for unrelated tasks. | semantic-execution-risk-r1-root: c0876208: \u201creturn Main/block, never\u2026\u201d is context-scoped.",
-            "review_after": null,
-            "skill_owner": "main-control-agent"
-          },
-          {
             "authority_or_condition": "r20-semantic-runtime: When mixed installed-client versions are included in macOS acceptance. | r20-semantic-assurance: Each mixed macOS client and API or provider combination explicitly claimed supported. | r20-semantic-boundary: Valid when a task claims compatibility for specific mixed macOS installed-client and API versions.",
             "candidate_id": "c457479aa4d59d9b48bd531e06a1e4877e3978c063aa04cba7657c290bab2140",
             "decision_owner": "macos-platform-extension",
@@ -297704,22 +298018,22 @@
             "skill_owner": "cross-platform-client-extension"
           },
           {
-            "authority_or_condition": "semantic-execution-risk-r1-governance: main-control-agent owns root target cf6cf1b82ea9 when its registered trigger and packet-bound occurrence apply. | semantic-execution-risk-r1-reference: The main-control-agent root Skill owns this rule when its documented use, role, decision, evidence, or stop condition at main-control-agent.md:3 is active; the surrounding \"Main Control Agent\" section limits its scope. | semantic-execution-risk-r1-root: main-control-agent; 1 packet-bound occurrence(s).",
+            "authority_or_condition": "semantic-disposition-boundary-voter: main-control-agent controls this packet-bound rule context. | semantic-disposition-governance-voter: The named decision owner controls the packet-bound condition. | semantic-disposition-runtime-voter: Packet-bound main-control-agent trigger/load context.",
             "candidate_id": "cf6cf1b82ea9c1118d7dc0643a1af67ecdb23d1d29ac939f903230bf11a26a9b",
             "decision_owner": "main-control-agent",
             "disposition": "valid-contextual-rule",
             "document_part": "control-prompt",
             "evidence": {
-              "context_fingerprint": "385085de64d9ce136fe923a0b81aec8e818c6839a9f2ddf6519b1eed22998215",
+              "context_fingerprint": "9deeadf0a9241a288d89d3c0d66a0aeeecc9d198f0a4b553648fb2d16e3907eb",
               "occurrence_fingerprint": "9812629267600f5e1322b65c3dd73435a36cdd7bfd2fa4bf0744c9cba755d8d8",
-              "rationale": "panel=semantic-execution-risk-calibration-20260815-r1; decision_sha256=9c8e4eac2dc70e26648a3e40b97c1e5252cbba6e4c050aac7a0d78d08c3aae86; target_id=root:cf6cf1b82ea9c1118d7dc0643a1af67ecdb23d1d29ac939f903230bf11a26a9b; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=semantic-execution-risk-r1-governance,semantic-execution-risk-r1-reference,semantic-execution-risk-r1-root; dissenting_voters=none; supporting_rationales=semantic-execution-risk-r1-governance: \u201cnever inspect/search target source/edit files/execute bus\u2026\u201d is a bounded mechanism rule under main-control-agent, not a cross-scope default. | semantic-execution-risk-r1-reference: At src/control-prompts/main-control-agent.md:3 under \"Main Control Agent\", \"never inspect/search target source/edit files/execute business commands/review implementation.\" is a unconditional_mechanism_candidate in the main-control-agent root contract. Its section, adjacent trigger or anti-pattern text, and package role bind the mechanism, count, vendor term, or artifact to work routed to this Skill; it is not an unconditional rule for unrelated tasks. | semantic-execution-risk-r1-root: cf6cf1b8: \u201cnever inspect/search tar\u2026\u201d is context-scoped.; dissenting_rationales=none"
+              "rationale": "panel=semantic-analysis-level-review-evidence-20260817-r1; decision_sha256=42c758734ac7dafadeef6c6ebf8e4f9763c94df5dfaa994eafbb56eb9f5260e9; target_id=root:cf6cf1b82ea9c1118d7dc0643a1af67ecdb23d1d29ac939f903230bf11a26a9b; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=semantic-disposition-boundary-voter,semantic-disposition-governance-voter,semantic-disposition-runtime-voter; dissenting_voters=none; supporting_rationales=semantic-disposition-boundary-voter: Source src/control-prompts/main-control-agent.md:3-3 confirms this bounded unconditional_mechanism_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: Dispatch-only Main cannot implement, repair, or review changes.; dissenting_rationales=none"
             },
             "finding": "unconditional_mechanism_candidate",
             "fingerprint": "6dfd8148d8c87531cd53075a00fd988b8c52e5a0f643794e68c115f1c378ab39",
-            "mitigation": "semantic-execution-risk-r1-governance: Keep cf6cf1b82ea9 scoped; re-review trigger, source semantics, occurrence membership, or owner changes. | semantic-execution-risk-r1-reference: Retain \"never inspect/search target source/edit files/execute business commands/review implementation.\" in the main-control-agent root package with the \"Main Control Agent\" qualifier and adjacent routing context; re-review if the trigger, owner, threshold meaning, or package placement changes. | semantic-execution-risk-r1-root: Keep cf6cf1b8 context-bound.",
+            "mitigation": "semantic-disposition-boundary-voter: Retain source scope; re-review after owner, context, or binding change. | semantic-disposition-governance-voter: Re-review after source, owner, or detector change. | semantic-disposition-runtime-voter: Preserve scope; re-review on binding change.",
             "path": "src/control-prompts/main-control-agent.md",
             "priority": "P1",
-            "reason": "semantic-execution-risk-r1-governance: \u201cnever inspect/search target source/edit files/execute bus\u2026\u201d is a bounded mechanism rule under main-control-agent, not a cross-scope default. | semantic-execution-risk-r1-reference: At src/control-prompts/main-control-agent.md:3 under \"Main Control Agent\", \"never inspect/search target source/edit files/execute business commands/review implementation.\" is a unconditional_mechanism_candidate in the main-control-agent root contract. Its section, adjacent trigger or anti-pattern text, and package role bind the mechanism, count, vendor term, or artifact to work routed to this Skill; it is not an unconditional rule for unrelated tasks. | semantic-execution-risk-r1-root: cf6cf1b8: \u201cnever inspect/search tar\u2026\u201d is context-scoped.",
+            "reason": "semantic-disposition-boundary-voter: Source src/control-prompts/main-control-agent.md:3-3 confirms this bounded unconditional_mechanism_candidate context. | semantic-disposition-governance-voter: Packet evidence supports this bounded contextual rule. | semantic-disposition-runtime-voter: Dispatch-only Main cannot implement, repair, or review changes.",
             "review_after": null,
             "skill_owner": "main-control-agent"
           },
@@ -297822,26 +298136,6 @@
             "reason": "r24-semantic-runtime: Within the packet-bound repository-impact-inspection decision surface, the rule \u2018Record affected and uninspected consumers, tests, contracts\u2019 is a bounded ownership, safety, failure, or proof obligation rather than a universal default. | r24-semantic-assurance: The requested record is bounded evidence for the triggered repository-impact-inspection decision and makes that decision reviewable; it is not imposed outside this Skill context. | r24-semantic-boundary: The artifact or test term in repository-impact-inspection is one bounded member of the affected platform, input, output, or evidence contract; it is required only when that owner Skill is validly active.",
             "review_after": null,
             "skill_owner": "repository-impact-inspection"
-          },
-          {
-            "authority_or_condition": "semantic-execution-risk-r1-governance: main-control-agent owns root target e74bad828c52 when its registered trigger and packet-bound occurrence apply. | semantic-execution-risk-r1-reference: The main-control-agent root Skill owns this rule when its documented use, role, decision, evidence, or stop condition at main-control-agent.md:44 is active; the surrounding \"Execution Level and Validation\" section limits its scope. | semantic-execution-risk-r1-root: main-control-agent; 1 packet-bound occurrence(s).",
-            "candidate_id": "e74bad828c5246cf23d7cb1109f5dcaf657be1290819b8ec48e40f247da33d1d",
-            "decision_owner": "main-control-agent",
-            "disposition": "valid-contextual-rule",
-            "document_part": "control-prompt",
-            "evidence": {
-              "context_fingerprint": "352a8845b0fef0651d4f63ece5128e63bf490c29a232d01525f22f2bc0f7c58d",
-              "occurrence_fingerprint": "9812629267600f5e1322b65c3dd73435a36cdd7bfd2fa4bf0744c9cba755d8d8",
-              "rationale": "panel=semantic-execution-risk-calibration-20260815-r1; decision_sha256=9c8e4eac2dc70e26648a3e40b97c1e5252cbba6e4c050aac7a0d78d08c3aae86; target_id=root:e74bad828c5246cf23d7cb1109f5dcaf657be1290819b8ec48e40f247da33d1d; winning_disposition=valid-contextual-rule; winning_votes=3; vote_counts=false-positive:0,rewrite:0,time-bounded-exception:0,valid-contextual-rule:3; supporting_voters=semantic-execution-risk-r1-governance,semantic-execution-risk-r1-reference,semantic-execution-risk-r1-root; dissenting_voters=none; supporting_rationales=semantic-execution-risk-r1-governance: \u201cAfter 2 same-path failures, retry needs changed hypothesi\u2026\u201d is a bounded count/status rule under main-control-agent, not a cross-scope default. | semantic-execution-risk-r1-reference: At src/control-prompts/main-control-agent.md:44 under \"Execution Level and Validation\", \"After 2 same-path failures, retry needs changed hypothesis/material/gap/transition\" is a fixed_duration_threshold_status_candidate in the main-control-agent root contract. Its section, adjacent trigger or anti-pattern text, and package role bind the mechanism, count, vendor term, or artifact to work routed to this Skill; it is not an unconditional rule for unrelated tasks. | semantic-execution-risk-r1-root: e74bad82: \u201cAfter 2 same-path failur\u2026\u201d is context-scoped.; dissenting_rationales=none"
-            },
-            "finding": "fixed_duration_threshold_status_candidate",
-            "fingerprint": "168a9c859b3ca53f9112b1f1c8c7b304e18282e30786aa11879c5a4abfc8751f",
-            "mitigation": "semantic-execution-risk-r1-governance: Keep e74bad828c52 scoped; re-review trigger, source semantics, occurrence membership, or owner changes. | semantic-execution-risk-r1-reference: Retain \"After 2 same-path failures, retry needs changed hypothesis/material/gap/transition\" in the main-control-agent root package with the \"Execution Level and Validation\" qualifier and adjacent routing context; re-review if the trigger, owner, threshold meaning, or package placement changes. | semantic-execution-risk-r1-root: Keep e74bad82 context-bound.",
-            "path": "src/control-prompts/main-control-agent.md",
-            "priority": "P1",
-            "reason": "semantic-execution-risk-r1-governance: \u201cAfter 2 same-path failures, retry needs changed hypothesi\u2026\u201d is a bounded count/status rule under main-control-agent, not a cross-scope default. | semantic-execution-risk-r1-reference: At src/control-prompts/main-control-agent.md:44 under \"Execution Level and Validation\", \"After 2 same-path failures, retry needs changed hypothesis/material/gap/transition\" is a fixed_duration_threshold_status_candidate in the main-control-agent root contract. Its section, adjacent trigger or anti-pattern text, and package role bind the mechanism, count, vendor term, or artifact to work routed to this Skill; it is not an unconditional rule for unrelated tasks. | semantic-execution-risk-r1-root: e74bad82: \u201cAfter 2 same-path failur\u2026\u201d is context-scoped.",
-            "review_after": null,
-            "skill_owner": "main-control-agent"
           },
           {
             "authority_or_condition": "r20-semantic-assurance: A confirmed macOS behavior change, with each listed dimension classified as affected, unaffected, or unavailable. | r20-semantic-boundary: Valid when the macOS Domain is selected and affected artifact, channel, architecture, lifecycle, sandbox, or helper topology evidence scopes the task.",
@@ -298025,28 +298319,17 @@
           }
         ],
         "errors": [
-          "root_semantic_dispositions.entries[18]: stale root semantic disposition entry",
-          "root_semantic_dispositions.entries[33]: stale root semantic disposition entry",
-          "root_semantic_dispositions.entries[35]: stale root semantic disposition entry",
-          "root_semantic_dispositions.entries[42]: stale root semantic disposition entry",
-          "root_semantic_dispositions.entries[60]: stale root semantic disposition entry",
-          "root_semantic_dispositions.entries[65]: evidence.context_fingerprint does not match current candidate",
-          "root_semantic_dispositions.entries[71]: stale root semantic disposition entry"
+          "root_semantic_dispositions.entries[38]: evidence.context_fingerprint does not match current candidate",
+          "root_semantic_dispositions.entries[64]: evidence.context_fingerprint does not match current candidate"
         ],
         "schema_version": 7,
         "source": "config/skill-content-exceptions.yaml",
         "surface_errors": {
           "control": [
-            "root_semantic_dispositions.entries[18]: stale root semantic disposition entry",
-            "root_semantic_dispositions.entries[35]: stale root semantic disposition entry",
-            "root_semantic_dispositions.entries[42]: stale root semantic disposition entry",
-            "root_semantic_dispositions.entries[60]: stale root semantic disposition entry",
-            "root_semantic_dispositions.entries[65]: evidence.context_fingerprint does not match current candidate",
-            "root_semantic_dispositions.entries[71]: stale root semantic disposition entry"
+            "root_semantic_dispositions.entries[38]: evidence.context_fingerprint does not match current candidate",
+            "root_semantic_dispositions.entries[64]: evidence.context_fingerprint does not match current candidate"
           ],
-          "description": [
-            "root_semantic_dispositions.entries[33]: stale root semantic disposition entry"
-          ],
+          "description": [],
           "domain": [],
           "foundation": [],
           "professional": []
@@ -298083,13 +298366,13 @@
           },
           "fixed_duration_threshold_status_candidate": {
             "p0_unresolved": 0,
-            "p1_unresolved": 2,
+            "p1_unresolved": 1,
             "p2_unresolved": 0,
             "raw": 11,
-            "resolved": 9,
+            "resolved": 10,
             "rewrite": 0,
-            "unresolved": 2,
-            "untriaged": 2
+            "unresolved": 1,
+            "untriaged": 1
           },
           "fixed_vendor_tool_candidate": {
             "p0_unresolved": 0,
@@ -298143,23 +298426,23 @@
           }
         },
         "p0_unresolved_candidates": 0,
-        "p1_unresolved_candidates": 6,
+        "p1_unresolved_candidates": 5,
         "p2_unresolved_candidates": 0,
         "raw_candidates": 79,
-        "resolved_candidates": 73,
+        "resolved_candidates": 74,
         "rewrite_candidates": 0,
         "strict_unresolved": {
-          "fixed_number_candidates": 2,
-          "p0_p1_candidates": 6
+          "fixed_number_candidates": 1,
+          "p0_p1_candidates": 5
         },
-        "unresolved_candidates": 6,
-        "untriaged_candidates": 6
+        "unresolved_candidates": 5,
+        "untriaged_candidates": 5
       }
     },
     "source_fingerprint": {
       "algorithm": "sha256",
       "document_count": 381,
-      "value": "3061d7764b49c8183bc82fa165e72d7ccc0b3a9ea63cec23e1334d3952135a44"
+      "value": "5ac21237bc6687101a0ef3152c6ce5d37d60fd01b18b5ce79d8e0e6ebfc88e7d"
     },
     "summary": {
       "agent_facing_root_documents": 381,
@@ -298197,13 +298480,13 @@
       "professional_over_target_tokens": 2,
       "professional_over_target_words": 4,
       "professional_skills": 26,
-      "semantic_disposition_applied": 73,
-      "semantic_disposition_configured": 81,
-      "semantic_disposition_errors": 7,
-      "semantic_fixed_number_unresolved": 2,
-      "semantic_p0_p1_unresolved": 6,
+      "semantic_disposition_applied": 74,
+      "semantic_disposition_configured": 79,
+      "semantic_disposition_errors": 2,
+      "semantic_fixed_number_unresolved": 1,
+      "semantic_p0_p1_unresolved": 5,
       "semantic_raw_candidates": 79,
-      "semantic_unresolved_candidates": 6
+      "semantic_unresolved_candidates": 5
     },
     "surface_validation": {
       "common_errors": [],
@@ -298211,15 +298494,11 @@
       "surfaces": {
         "control": {
           "disposition_applied_count": 0,
-          "disposition_configured_count": 6,
+          "disposition_configured_count": 5,
           "document_count": 2,
           "errors": [
-            "root_semantic_dispositions.entries[18]: stale root semantic disposition entry",
-            "root_semantic_dispositions.entries[35]: stale root semantic disposition entry",
-            "root_semantic_dispositions.entries[42]: stale root semantic disposition entry",
-            "root_semantic_dispositions.entries[60]: stale root semantic disposition entry",
-            "root_semantic_dispositions.entries[65]: evidence.context_fingerprint does not match current candidate",
-            "root_semantic_dispositions.entries[71]: stale root semantic disposition entry",
+            "root_semantic_dispositions.entries[38]: evidence.context_fingerprint does not match current candidate",
+            "root_semantic_dispositions.entries[64]: evidence.context_fingerprint does not match current candidate",
             "root P0/P1 unresolved semantic candidate(s): 5",
             "root fixed-number unresolved semantic candidate(s): 1"
           ],
@@ -298230,19 +298509,15 @@
           "status": "fail"
         },
         "description": {
-          "disposition_applied_count": 0,
-          "disposition_configured_count": 2,
+          "disposition_applied_count": 1,
+          "disposition_configured_count": 1,
           "document_count": 190,
-          "errors": [
-            "root_semantic_dispositions.entries[33]: stale root semantic disposition entry",
-            "root P0/P1 unresolved semantic candidate(s): 1",
-            "root fixed-number unresolved semantic candidate(s): 1"
-          ],
+          "errors": [],
           "semantic_candidate_count": 1,
-          "semantic_fixed_number_unresolved_count": 1,
-          "semantic_p0_p1_unresolved_count": 1,
-          "semantic_unresolved_count": 1,
-          "status": "fail"
+          "semantic_fixed_number_unresolved_count": 0,
+          "semantic_p0_p1_unresolved_count": 0,
+          "semantic_unresolved_count": 0,
+          "status": "pass"
         },
         "domain": {
           "disposition_applied_count": 21,
@@ -298308,10 +298583,10 @@
     ],
     "detector_fingerprint": {
       "algorithm": "sha256",
-      "value": "35c1d37e47940ec776474784aaaae7477b0cdaaede561780335405031b6ed14c"
+      "value": "f958d5367dc2db4aa0a1af68754976b76e340b22d6f758d3dc682745e2775807"
     },
     "detector_source_manifest": {
-      "aggregate_source_digest": "35c1d37e47940ec776474784aaaae7477b0cdaaede561780335405031b6ed14c",
+      "aggregate_source_digest": "f958d5367dc2db4aa0a1af68754976b76e340b22d6f758d3dc682745e2775807",
       "contract_fields": {
         "finding_fields": [
           "family",
@@ -298375,7 +298650,7 @@
         },
         {
           "path": "scripts/validation_utils.py",
-          "sha256": "8aaa47a0cc1c01609c36e2728baeba362be835f351f95d0aa3e7cf1263438788"
+          "sha256": "a0ad71604f701455e22041e7581969f4492661d8eebae68c4aa7c69efac75915"
         }
       ]
     },
