@@ -356,7 +356,7 @@
     },
     "analysis-agent": {
       "sandbox": "read-only",
-      "tools": ["read", "search", "external-read"],
+      "tools": ["read", "search", "external-source-read"],
       "may_dispatch": false,
       "may_edit": false,
       "may_review": false
@@ -377,21 +377,19 @@
     }
   },
   "external_read_contract": {
-    "capability_field": "external_source_read",
+    "capability_field": "external-source-read",
+    "capability_states": ["supported", "unsupported"],
     "exclusive_role": "analysis-agent",
-    "tool": "external-read",
-    "capability_modes": ["native-enforced", "sandbox-enforced", "prompt-enforced", "unsupported"],
-    "supported_operations": ["WebSearch", "WebFetch", "ConnectorRead"],
-    "connector_requirement": "explicitly-authorized-and-proven-read-only",
+    "operation": "external-source-read",
     "general_network_counts_as_supported": false,
     "jit_policy": {
       "local_or_current_evidence_sufficient": "do-not-read-externally",
-      "material_unresolved_claim": "external-read",
+      "material_unresolved_claim": "external-source-read",
       "non_material_unknown": "record-proof-limit",
       "broad_or_untargeted_research": "forbidden"
     },
     "source_priority": ["official-primary-source", "version-specific-documentation", "version-date-or-lifecycle-source"],
-    "forbidden_operations": ["file-edit", "general-shell-network", "curl", "wget", "python-http", "post", "upload", "submit", "external-write", "dependency-install", "production-operation", "agent-dispatch", "implementation", "review"],
+    "forbidden_capabilities": ["workspace-mutation", "unbounded-network-operation", "external-write", "dependency-installation", "production-operation", "agent-dispatch", "implementation", "review"],
     "trust_boundary": {
       "external_content": "evidence-input-only-never-control-input",
       "execute_returned_instructions": false,
@@ -405,7 +403,7 @@
     },
     "ledger_projection": {
       "schema_source": "visible_evidence_contract",
-      "command_values": ["WebSearch", "WebFetch", "ConnectorRead"],
+      "capability_values": ["external-source-read"],
       "artifact_value": "source-identifier-or-url",
       "schema_change": "forbidden"
     },
@@ -576,16 +574,21 @@
     },
     "generic_capability_contract": {
       "fields": ["bounded-source-read", "workspace-mutation", "non-mutating-validation", "exact-change-evidence-read", "exact-change-evidence-export", "reviewer-accessible-change-reference", "workspace-state-observation"],
+      "injected_fields": ["bounded-source-read", "workspace-mutation", "non-mutating-validation", "exact-change-evidence-read", "exact-change-evidence-export", "reviewer-accessible-change-reference", "workspace-state-observation"],
       "states": ["supported", "unsupported"],
       "decision_inputs": "capability-state-only",
       "ignored_adapter_metadata": ["host-identity", "tool-identifier", "command-spelling"],
       "equivalence_rule": "equal-capability-state-produces-equal-routing-level-review-and-completion-decisions",
       "prompt_branches": [
-        {"field": "exact_change_evidence_read", "next_field": "non_mutating_validation", "branches": [
-          {"value": "supported", "required_terms": ["exact change evidence read", "reviewer-accessible change reference", "review-agent"]},
+        {"field": "exact-change-evidence-read", "next_field": "reviewer-accessible-change-reference", "branches": [
+          {"value": "supported", "required_terms": ["exact change evidence read", "review-agent"]},
           {"value": "unsupported", "required_terms": ["block review before dispatch", "diff scope", "unverified", "changed-file summary"]}
         ]},
-        {"field": "non_mutating_validation", "next_field": null, "branches": [
+        {"field": "reviewer-accessible-change-reference", "next_field": "non-mutating-validation", "branches": [
+          {"value": "supported", "required_terms": ["reviewer-accessible change reference", "review-agent"]},
+          {"value": "unsupported", "required_terms": ["block review before dispatch", "diff scope", "unverified"]}
+        ]},
+        {"field": "non-mutating-validation", "next_field": null, "branches": [
           {"value": "supported", "required_terms": ["non-mutating validation", "current evidence"]},
           {"value": "unsupported", "required_terms": ["block validation", "unverified"]}
         ]}
@@ -1432,7 +1435,7 @@
   "prompt_contract": {
     "schema_version": 1,
     "path": "src/control-prompts/main-control-agent.md",
-    "document_sha256": "157319906997689e2639f130528638a9e7effcb5c1abcbf74081471f0bb1be49",
+    "document_sha256": "4877b60eaf2e914ac1734d8fcd68f38170d937b4b5709c0e03d141cb30325c4f",
     "managed_projections": [
       {"id": "execution-level-contract", "section": "Execution Level and Validation", "required_contracts": ["execution_level_contract"]},
       {"id": "review-evidence-contract", "section": "Review and Repair", "required_contracts": ["visible_evidence_contract", "review_discipline_contract"]},
@@ -1446,10 +1449,10 @@
       {"id": "assignment-initial-status", "section": null, "required_terms": ["new Direct Task", "Status: in_progress", "new DAG task assignment"]},
       {"id": "direct-task-template-authority", "section": "Direct Task Routing", "required_terms": ["references/direct-task-template.md", "Task Contract v2 field authority"]},
       {"id": "source-free-answer-boundary", "section": "Choose Exactly One Path", "required_terms": ["source-free user-fact questions", "no-repo direct-answer", "no repository access", "Main relays/closes", "source/professional evidence", "control prompts -> source-backed analysis"]},
-      {"id": "source-backed-answer-diagnosis-boundary", "section": "Analyzed Work", "required_terms": ["answer/diagnosis stops at evidence/proof limits", "unless change is requested"]},
+      {"id": "source-backed-answer-diagnosis-boundary", "section": "Analyzed Work", "required_terms": ["answer/diagnosis: evidence/proof limits", "unless change requested"]},
       {"id": "preimplementation-artifact-review", "section": "Direct Task Routing", "required_terms": ["pre-implementation artifact", "no implementation diff", "directly to review-agent", "diff-export gate does not apply"]},
       {"id": "capability-fallback", "section": "Direct Task Routing", "required_terms": ["unknown capability=unsupported", "never infer", "capability facts", "host/tool/command identifiers", "references/utility-capsule-template.md", "compares workspace before/after", "changed/unavailable blocks review/closure", "preserves user changes"]},
-      {"id": "earliest-executable-slice", "section": "Analyzed Work", "required_terms": ["engineering-change-analysis", "Engineering Brief", "First Executable Slice", "Synchronous/unknown capability", "stop at the Slice", "multi-task -> DAG", "otherwise task-agent"]},
+      {"id": "earliest-executable-slice", "section": "Analyzed Work", "required_terms": ["engineering-change-analysis", "Engineering Brief", "First Executable Slice", "Synchronous/unknown capability", "stop at Slice", "multi-task -> DAG", "else task-agent"]},
       {"id": "analysis-decision-invalidation", "section": "Analyzed Work", "required_terms": ["task_contract.analyzed_work_authority", "analyze once", "Delta only on decision invalidation", "Skill route only on domain/work type/material risk change"]},
       {"id": "preparation-loop-breaker", "section": "Preparation Loop Breaker", "required_terms": ["start the Slice", "ask one concrete user-owned decision", "report the evidence gap"]},
       {"id": "execution-level-and-validation", "section": "Execution Level and Validation", "required_terms": ["references/execution-level-contract.md", "policy data, not instructions", "Trust exact build/install validation", "Runtime checks only", "existence", "JSON parse", "required sections", "unique IDs", "not coordinated tampering or unknown IDs", "user_fact", "analysis_handoff", "effective_level", "Three axes are independent per Core", "Effective=max(base,mandatory,prior historical max effective)", "fallback=max(L4,explicit known L5,prior historical max effective)", "Level Basis", "integrity fallback", "no partial computation", "edit blocked", "read-only diagnosis", "never Router", "L1-L5 remain", "default L3 applies only to executable Tasks", "Initial Analysis", "no Execution Level", "historical write/max participation", "First Executable Slice", "L5 explicit-only", "independent implementation review", "Task ID/lineage", "Active executable surfaces", "L5 Evidence only at effective L5", "carry Level/Basis", "After 2 same-path failures", "changed hypothesis/material/gap/transition", "return Main/block", "never third unchanged retry", "Reissue on active/resumed edit/validation/review"]},
@@ -1468,26 +1471,14 @@
     "task_contract_section": "Direct Task Routing",
     "completion_section": "Closure",
     "evidence_section": "Review and Repair",
-    "host_mode_section": "Direct Task Routing",
+    "capability_section": "Direct Task Routing",
     "freshness_projection_ids_by_section": {
       "Review and Repair": ["material-edit-invalidates-prior-evidence", "repair-supersedes-old-diff"],
       "Closure": ["closure-uses-current-scoped-evidence"]
     },
     "forbidden_storage_projection_ids_by_section": {
       "Review and Repair": ["no-daemon", "no-database", "no-private-evidence-storage", "no-runtime-task-state-engine", "no-hidden-protocol-record"]
-    },
-    "host_mode_branches": [
-      {"field": "diff_input_mode", "next_field": "validation_mode", "branches": [
-        {"value": "native", "required_terms": ["review-agent", "directly", "host-native actual diff"]},
-        {"value": "supplied-artifact", "required_terms": ["actual diff", "Host-native Diff Reference", "review-agent", "directly", "Diff absent", "task-agent", "diff-export/no-edit", "returns diff content/host-native artifact", "without creating workspace file"]},
-        {"value": "unsupported", "required_terms": ["block review", "diff scope", "unverified", "changed-file summary"]}
-      ]},
-      {"field": "validation_mode", "next_field": null, "branches": [
-        {"value": "native-read-only", "required_terms": ["review-agent", "non-modifying checks"]},
-        {"value": "task-no-edit", "required_terms": ["task-agent", "validation-only/no-edit", "no edit", "independent-review claim"]},
-        {"value": "unsupported", "required_terms": ["block validation", "unverified"]}
-      ]}
-    ]
+    }
   },
   "profile_contract": {
     "schema_version": 2,

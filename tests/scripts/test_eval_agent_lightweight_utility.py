@@ -1270,10 +1270,85 @@ class LightweightUtilityContractTests(unittest.TestCase):
             "focus-review-supplied-artifact-ready",
             "focus-review-unsupported-capability-blocked",
             "focus-review-normal-flow-no-post-review-export",
-            "focus-capability-equivalent-host-tool-identifiers",
+            "focus-capability-equivalent-adapter-metadata",
         }
         self.assertTrue(required <= set(by_id), required - set(by_id))
         self.assertTrue(all(by_id[case_id]["matches_expected"] for case_id in required))
+
+    def test_review_readiness_requires_read_reference_and_validation_capabilities(self) -> None:
+        case = {
+            "id": "review-reference-unsupported-boundary",
+            "scenario": "review-readiness",
+            "inputs": {
+                "handoff_kind": "normal",
+                "latest_changed_paths": True,
+                "change_evidence_kind": "exact-change-content",
+                "exact-change-evidence-read": "supported",
+                "reviewer-accessible-change-reference": "unsupported",
+                "non-mutating-validation": "supported",
+                "validation_generation": 9,
+                "latest_material_edit_generation": 9,
+                "review_scope_fixed": True,
+                "reviewer_mutation_capability": False,
+                "reviewer_execute_capability": False,
+                "exact-change-evidence-export": "supported",
+                "workspace-state-observation": "supported",
+                "post_review_change_export": False,
+            },
+            "decision": {
+                "review_input_ready": False,
+                "review_dispatches": 0,
+                "legacy_recovery_attempts": 0,
+                "completion": "blocked-before-review",
+            },
+            "expected_valid": True,
+            "expected_error": None,
+        }
+        self.assertEqual([], EVAL._task_focus_case_errors(case))
+
+    def test_capability_equivalence_ignores_arbitrary_adapter_metadata(self) -> None:
+        capabilities = {
+            field: "supported" for field in EVAL.GENERIC_CAPABILITY_FIELDS
+        }
+        case = {
+            "id": "capability-equivalence-arbitrary-metadata",
+            "scenario": "capability-equivalence",
+            "inputs": {
+                "adapters": [
+                    {
+                        "adapter_metadata": {"native_name": "alpha", "mode": "one"},
+                        "capabilities": capabilities,
+                    },
+                    {
+                        "adapter_metadata": {
+                            "provider": "beta",
+                            "native_identifier": "different",
+                            "extra": ["ignored"],
+                        },
+                        "capabilities": dict(capabilities),
+                    },
+                ]
+            },
+            "decision": {
+                "results": [
+                    {
+                        "routing": "direct",
+                        "execution_level": "L3",
+                        "review_required": True,
+                        "completion": "ready-for-review",
+                    },
+                    {
+                        "routing": "direct",
+                        "execution_level": "L3",
+                        "review_required": True,
+                        "completion": "ready-for-review",
+                    },
+                ]
+            },
+            "expected_valid": True,
+            "expected_error": None,
+        }
+        self.assertEqual([], EVAL._task_focus_case_errors(case))
 
     def test_release_reviews_use_one_typed_guard_per_review_outcome(self) -> None:
         for case in [*self.release_cases, *self.scheduling_cases, *self.utility_cases]:
@@ -2955,9 +3030,68 @@ class LightweightUtilityContractTests(unittest.TestCase):
 
     def test_workspace_observation_is_capability_driven(self) -> None:
         for case in self.utility_cases:
+            self.assertNotIn("host_modes", case)
+            self.assertEqual(
+                set(EVAL.GENERIC_CAPABILITY_FIELDS),
+                set(case["capability_facts"]),
+            )
             checks = case["steps"][1]["utility_capsule"]["workspace_baseline"]["check_commands"]
             self.assertEqual(["workspace-state-observation"], checks)
             self.assertNotIn("git", " ".join(checks).casefold())
+
+    def test_utility_workspace_changed_or_unavailable_blocks_downstream(self) -> None:
+        for status in ("changed", "unavailable"):
+            with self.subTest(status=status):
+                case = copy.deepcopy(self.utility_cases[0])
+                evidence = case["steps"][2]["utility_evidence"]
+                evidence["status"] = "blocked"
+                evidence["workspace_diff_check"]["status"] = status
+                errors = self._errors(case)
+                self.assertTrue(
+                    any("invalid unless workspace diff status is unchanged" in error for error in errors),
+                    errors,
+                )
+                self.assertTrue(
+                    any("must not continue to review or closure" in error for error in errors),
+                    errors,
+                )
+
+    def test_utility_requires_exact_pre_operation_post_observation_order(self) -> None:
+        variants = {
+            "operation-first": [
+                "exact-change-evidence-export",
+                "workspace-state-observation",
+                "workspace-state-observation",
+            ],
+            "operation-last": [
+                "workspace-state-observation",
+                "workspace-state-observation",
+                "exact-change-evidence-export",
+            ],
+            "interleaved": [
+                "workspace-state-observation",
+                "exact-change-evidence-export",
+                "non-mutating-validation",
+                "workspace-state-observation",
+            ],
+            "missing-post": [
+                "workspace-state-observation",
+                "exact-change-evidence-export",
+            ],
+        }
+        for label, commands in variants.items():
+            with self.subTest(label=label):
+                case = copy.deepcopy(self.utility_cases[0])
+                case["steps"][2]["utility_evidence"]["commands_run"] = commands
+                errors = self._errors(case)
+                self.assertTrue(
+                    any(
+                        "adjacent ordered pre-check group" in error
+                        or "exactly one mode operation" in error
+                        for error in errors
+                    ),
+                    errors,
+                )
 
     def test_diff_export_must_use_supplied_or_host_native_artifact(self) -> None:
         case = copy.deepcopy(self.utility_cases[0])
@@ -2997,7 +3131,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
         self.assertEqual([], errors)
         self.assertEqual(14, len(results))
         self.assertEqual(
-            {"WebSearch", "WebFetch", "ConnectorRead"},
+            {"external-source-read"},
             {
                 item["operation"]
                 for item in results
@@ -3020,6 +3154,30 @@ class LightweightUtilityContractTests(unittest.TestCase):
         ):
             self.assertFalse(by_id[case_id]["expected_valid"])
             self.assertTrue(by_id[case_id]["matches_expected"])
+
+    def test_external_read_generic_contract_is_capability_driven(self) -> None:
+        contract = EVAL.EXTERNAL_READ_MODEL
+        self.assertEqual("external-source-read", contract["capability_field"])
+        self.assertEqual(["supported", "unsupported"], contract["capability_states"])
+        self.assertNotIn("tool", contract)
+        self.assertNotIn("capability_modes", contract)
+        self.assertNotIn("supported_operations", contract)
+        self.assertEqual(
+            ["external-source-read"],
+            contract["ledger_projection"]["capability_values"],
+        )
+        for case in self.external_read_cases:
+            self.assertNotIn("host_mode", case)
+            self.assertIn(
+                case["external_read_capability"],
+                {"supported", "unsupported"},
+            )
+            self.assertIn(
+                case["operation"],
+                {"external-source-read", "not-applicable"},
+            )
+            if case["operation"] == "external-source-read":
+                self.assertEqual("external-source-read", case["ledger"]["Command"])
 
     def test_external_read_mutations_reject_prompt_execution_and_disclosure(self) -> None:
         base = copy.deepcopy(
@@ -3054,7 +3212,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
             next(
                 case
                 for case in self.external_read_cases
-                if case["id"] == "external-read-websearch-official"
+                if case["id"] == "external-read-official-source"
             )
         )
         task_case = copy.deepcopy(base)

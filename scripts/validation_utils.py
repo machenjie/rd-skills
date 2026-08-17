@@ -3531,7 +3531,7 @@ def validate_core_contracts(
         "edit",
         "execute",
         "execute-read-only",
-        "external-read",
+        "external-source-read",
     }
     for role_name in sorted(role_names):
         role = roles.get(role_name)
@@ -3557,9 +3557,9 @@ def validate_core_contracts(
             errors.append(f"roles.{role_name}: write tools and may_edit disagree")
         if bool(role["may_review"]) != ("execute-read-only" in tools):
             errors.append(f"roles.{role_name}: review tool and may_review disagree")
-        if ("external-read" in tools) != (role_name == "analysis-agent"):
+        if ("external-source-read" in tools) != (role_name == "analysis-agent"):
             errors.append(
-                "external-read must belong only to analysis-agent and be absent "
+                "external-source-read must belong only to analysis-agent and be absent "
                 "from main-control-agent, task-agent, and review-agent"
             )
         expected_sandbox = (
@@ -3574,21 +3574,14 @@ def validate_core_contracts(
 
     external_read = data["external_read_contract"]
     expected_external_read = {
-        "capability_field": "external_source_read",
+        "capability_field": "external-source-read",
+        "capability_states": ["supported", "unsupported"],
         "exclusive_role": "analysis-agent",
-        "tool": "external-read",
-        "capability_modes": [
-            "native-enforced",
-            "sandbox-enforced",
-            "prompt-enforced",
-            "unsupported",
-        ],
-        "supported_operations": ["WebSearch", "WebFetch", "ConnectorRead"],
-        "connector_requirement": "explicitly-authorized-and-proven-read-only",
+        "operation": "external-source-read",
         "general_network_counts_as_supported": False,
         "jit_policy": {
             "local_or_current_evidence_sufficient": "do-not-read-externally",
-            "material_unresolved_claim": "external-read",
+            "material_unresolved_claim": "external-source-read",
             "non_material_unknown": "record-proof-limit",
             "broad_or_untargeted_research": "forbidden",
         },
@@ -3597,17 +3590,11 @@ def validate_core_contracts(
             "version-specific-documentation",
             "version-date-or-lifecycle-source",
         ],
-        "forbidden_operations": [
-            "file-edit",
-            "general-shell-network",
-            "curl",
-            "wget",
-            "python-http",
-            "post",
-            "upload",
-            "submit",
+        "forbidden_capabilities": [
+            "workspace-mutation",
+            "unbounded-network-operation",
             "external-write",
-            "dependency-install",
+            "dependency-installation",
             "production-operation",
             "agent-dispatch",
             "implementation",
@@ -3647,7 +3634,7 @@ def validate_core_contracts(
         },
         "ledger_projection": {
             "schema_source": "visible_evidence_contract",
-            "command_values": ["WebSearch", "WebFetch", "ConnectorRead"],
+            "capability_values": ["external-source-read"],
             "artifact_value": "source-identifier-or-url",
             "schema_change": "forbidden",
         },
@@ -4040,7 +4027,22 @@ def validate_core_contracts(
                 "any producer evidence is missing"
             )
         capability_contract = review_discipline["generic_capability_contract"]
-        if not isinstance(capability_contract, dict) or capability_contract.get(
+        capability_contract_fields = {
+            "fields",
+            "injected_fields",
+            "states",
+            "decision_inputs",
+            "ignored_adapter_metadata",
+            "equivalence_rule",
+            "prompt_branches",
+        }
+        if not exact_keys(
+            capability_contract,
+            capability_contract_fields,
+            "review_discipline_contract.generic_capability_contract",
+        ):
+            capability_contract = {}
+        if capability_contract.get(
             "decision_inputs"
         ) != "capability-state-only" or capability_contract.get(
             "equivalence_rule"
@@ -4060,8 +4062,57 @@ def validate_core_contracts(
             "exact-change-evidence-export",
             "reviewer-accessible-change-reference",
             "workspace-state-observation",
-        ] or capability_contract.get("states") != ["supported", "unsupported"]:
+        ] or capability_contract.get("injected_fields") != capability_contract.get(
+            "fields"
+        ) or capability_contract.get("states") != ["supported", "unsupported"]:
             errors.append("generic capability vocabulary must remain closed and ordered")
+        else:
+            capability_fields = capability_contract["fields"]
+            prompt_branches = capability_contract.get("prompt_branches")
+            expected_prompt_fields = [
+                "exact-change-evidence-read",
+                "reviewer-accessible-change-reference",
+                "non-mutating-validation",
+            ]
+            if not isinstance(prompt_branches, list) or [
+                branch.get("field") if isinstance(branch, dict) else None
+                for branch in prompt_branches
+            ] != expected_prompt_fields:
+                errors.append(
+                    "generic capability prompt branches must use the three canonical "
+                    "injected decision fields in order"
+                )
+            else:
+                for index, branch in enumerate(prompt_branches):
+                    if not exact_keys(
+                        branch,
+                        {"field", "next_field", "branches"},
+                        f"review_discipline_contract.generic_capability_contract."
+                        f"prompt_branches[{index}]",
+                    ):
+                        continue
+                    field = branch["field"]
+                    if field not in capability_fields:
+                        errors.append(
+                            f"generic capability prompt field {field!r} is not injected"
+                        )
+                    expected_next = (
+                        expected_prompt_fields[index + 1]
+                        if index + 1 < len(expected_prompt_fields)
+                        else None
+                    )
+                    if branch["next_field"] != expected_next:
+                        errors.append(
+                            "generic capability prompt branches must form one ordered chain"
+                        )
+                    modes = branch["branches"]
+                    if not isinstance(modes, list) or [
+                        mode.get("value") if isinstance(mode, dict) else None
+                        for mode in modes
+                    ] != ["supported", "unsupported"]:
+                        errors.append(
+                            f"generic capability prompt field {field!r} must use closed states"
+                        )
         expected_event_fields = [
             "actor",
             "action",
@@ -7090,10 +7141,9 @@ def validate_core_contracts(
         "task_contract_section",
         "completion_section",
         "evidence_section",
-        "host_mode_section",
+        "capability_section",
         "freshness_projection_ids_by_section",
         "forbidden_storage_projection_ids_by_section",
-        "host_mode_branches",
     }
     if exact_keys(prompt, prompt_fields, "prompt_contract"):
         assert isinstance(prompt, dict)
@@ -7157,7 +7207,7 @@ def validate_core_contracts(
             "task_contract_section",
             "completion_section",
             "evidence_section",
-            "host_mode_section",
+            "capability_section",
         ):
             if prompt[section_field] not in prompt_headings:
                 errors.append(f"prompt_contract.{section_field} is not an ordered heading")
@@ -7185,53 +7235,6 @@ def validate_core_contracts(
                     f"prompt_contract.{mapping_field}.{section}",
                 )
                 bind_projection_ids(bindings, ids, f"prompt:{section}")
-        branches = prompt["host_mode_branches"]
-        if not isinstance(branches, list) or not branches:
-            errors.append("prompt_contract.host_mode_branches must be a non-empty list")
-        else:
-            branch_fields: list[str] = []
-            for index, branch_contract in enumerate(branches):
-                branch_context = f"prompt_contract.host_mode_branches[{index}]"
-                if not exact_keys(
-                    branch_contract,
-                    {"field", "next_field", "branches"},
-                    branch_context,
-                ):
-                    continue
-                assert isinstance(branch_contract, dict)
-                field = branch_contract["field"]
-                if not isinstance(field, str) or not field:
-                    errors.append(f"{branch_context}.field must be non-empty text")
-                    continue
-                branch_fields.append(field)
-                mode_entries = branch_contract["branches"]
-                if not isinstance(mode_entries, list) or not mode_entries:
-                    errors.append(f"{branch_context}.branches must be non-empty")
-                    continue
-                values: list[str] = []
-                for mode_index, mode in enumerate(mode_entries):
-                    mode_context = f"{branch_context}.branches[{mode_index}]"
-                    if not exact_keys(mode, {"value", "required_terms"}, mode_context):
-                        continue
-                    assert isinstance(mode, dict)
-                    if not isinstance(mode["value"], str) or not mode["value"]:
-                        errors.append(f"{mode_context}.value must be non-empty text")
-                    else:
-                        values.append(mode["value"])
-                    string_list(mode["required_terms"], f"{mode_context}.required_terms")
-                if len(values) != len(set(values)):
-                    errors.append(f"{branch_context} branch values must be unique")
-            if len(branch_fields) != len(set(branch_fields)):
-                errors.append("prompt host-mode fields must be unique")
-            for index, branch_contract in enumerate(branches):
-                if not isinstance(branch_contract, dict):
-                    continue
-                next_field = branch_contract.get("next_field")
-                expected_next = branch_fields[index + 1] if index + 1 < len(branch_fields) else None
-                if next_field != expected_next:
-                    errors.append(
-                        f"prompt_contract.host_mode_branches[{index}].next_field is out of order"
-                    )
 
     profile_contract = data["profile_contract"]
     profile_fields = {

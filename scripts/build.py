@@ -112,12 +112,13 @@ HOST_ENFORCEMENT_CAPABILITIES = (
 GENERIC_CAPABILITY_CONTRACT = CORE_CONTRACTS["review_discipline_contract"][
     "generic_capability_contract"
 ]
-DECISION_CAPABILITY_FIELDS = tuple(GENERIC_CAPABILITY_CONTRACT["fields"])
+DECISION_CAPABILITY_FIELDS = tuple(GENERIC_CAPABILITY_CONTRACT["injected_fields"])
 DECISION_CAPABILITY_STATES = tuple(GENERIC_CAPABILITY_CONTRACT["states"])
 HOST_MODE_VALUES = {
-    contract["field"]: tuple(branch["value"] for branch in contract["branches"])
-    for contract in PROMPT_CONTRACT_MODEL["host_mode_branches"]
+    "diff_input_mode": ("native", "supplied-artifact", "unsupported"),
+    "validation_mode": ("native-read-only", "task-no-edit", "unsupported"),
 }
+NATIVE_DIFF_SAFEGUARDS = ("--no-pager", "--no-ext-diff", "--no-textconv")
 EXTERNAL_READ_HOST_MODES = {
     "codex": "prompt-enforced",
     "claude": "native-enforced",
@@ -1202,9 +1203,13 @@ def _load_agent_profiles() -> list[dict[str, Any]]:
 def _normalized_decision_capabilities(entry: dict[str, Any]) -> dict[str, str]:
     """Project adapter metadata to generic capability facts."""
 
-    profile_supported = entry.get("profile_delivery") != "unsupported"
-    diff_supported = entry.get("diff_input_mode") != "unsupported"
-    validation_supported = entry.get("validation_mode") != "unsupported"
+    profile_supported = entry.get("profile_delivery") in ENFORCEMENT_STATUSES[:-1]
+    diff_supported = entry.get("diff_input_mode") in {"native", "supplied-artifact"}
+    validation_supported = entry.get("validation_mode") in {
+        "native-read-only",
+        "task-no-edit",
+    }
+    observation_supported = entry.get("utility_no_edit") in ENFORCEMENT_STATUSES[:-1]
     supported = "supported"
     unsupported = "unsupported"
     return {
@@ -1214,7 +1219,7 @@ def _normalized_decision_capabilities(entry: dict[str, Any]) -> dict[str, str]:
         "exact-change-evidence-read": supported if diff_supported else unsupported,
         "exact-change-evidence-export": supported if diff_supported else unsupported,
         "reviewer-accessible-change-reference": supported if diff_supported else unsupported,
-        "workspace-state-observation": supported if diff_supported else unsupported,
+        "workspace-state-observation": supported if observation_supported else unsupported,
     }
 
 
@@ -1243,12 +1248,24 @@ def _load_host_enforcement() -> dict[str, Any]:
         data = json.loads(HOST_ENFORCEMENT_SOURCE.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         raise BuildError(f"invalid host enforcement JSON: {exc}") from exc
-    if not isinstance(data, dict) or data.get("schema_version") != 3:
-        raise BuildError("host enforcement matrix must use schema_version 3")
+    if not isinstance(data, dict) or data.get("schema_version") != 4:
+        raise BuildError("host enforcement matrix must use schema_version 4")
+    if set(data) != {
+        "schema_version",
+        "source_summary",
+        "status_values",
+        "mode_values",
+        "hosts",
+    }:
+        raise BuildError("host enforcement matrix fields must match schema v4")
     if tuple(data.get("status_values") or ()) != ENFORCEMENT_STATUSES:
         raise BuildError("host enforcement status_values must match the fixed status enum")
     if not isinstance(data.get("source_summary"), str) or not data["source_summary"].strip():
         raise BuildError("host enforcement matrix requires source_summary")
+    if data.get("mode_values") != {
+        field: list(values) for field, values in HOST_MODE_VALUES.items()
+    }:
+        raise BuildError("host enforcement mode_values must match the adapter contract")
     hosts = data.get("hosts")
     if not isinstance(hosts, dict) or set(hosts) != set(ENFORCEMENT_HOSTS):
         raise BuildError("host enforcement matrix must contain exactly the supported hosts")
@@ -1258,10 +1275,11 @@ def _load_host_enforcement() -> dict[str, Any]:
             *HOST_ENFORCEMENT_CAPABILITIES,
             "diff_input_mode",
             "validation_mode",
+            "native_diff_safeguards",
             "roles",
         }
         if not isinstance(entry, dict) or set(entry) != expected_fields:
-            raise BuildError(f"{host}: host enforcement fields must match schema v3")
+            raise BuildError(f"{host}: host enforcement fields must match schema v4")
         for capability in HOST_ENFORCEMENT_CAPABILITIES:
             if entry.get(capability) not in ENFORCEMENT_STATUSES:
                 raise BuildError(f"{host}: invalid {capability} enforcement")
@@ -1276,6 +1294,10 @@ def _load_host_enforcement() -> dict[str, Any]:
             raise BuildError(f"{host}: normalized decision capabilities drift from Core")
         if utility_no_edit not in ENFORCEMENT_STATUSES:
             raise BuildError(f"{host}: invalid utility_no_edit enforcement")
+        safeguards = entry.get("native_diff_safeguards")
+        expected_safeguards = list(NATIVE_DIFF_SAFEGUARDS) if diff_input_mode == "native" else []
+        if safeguards != expected_safeguards:
+            raise BuildError(f"{host}: native diff safeguards do not match adapter mode")
         roles = entry.get("roles")
         if not isinstance(roles, dict) or set(roles) != expected_roles:
             raise BuildError(f"{host}: enforcement roles must be the four static profiles")
@@ -1413,22 +1435,22 @@ def _profile_instructions(
             raise BuildError(f"missing profile prompt {prompt_path}")
         instructions = f"{instructions}\n\n{path.read_text(encoding='utf-8').strip()}"
     tools = ", ".join(_string_list(profile.get("tools")))
-    host_modes = ""
+    capability_projection = ""
     if host is not None and profile.get("name") == "main-control-agent":
         matrix = enforcement or _load_host_enforcement()
         host_entry = matrix["hosts"][host]
         capability_facts = _normalized_decision_capabilities(host_entry)
-        host_modes = "\n\n" + _render_decision_capability_facts(capability_facts)
+        capability_projection = "\n\n" + _render_decision_capability_facts(capability_facts)
     elif host is not None and profile.get("name") == "analysis-agent":
         matrix = enforcement or _load_host_enforcement()
         mode = matrix["hosts"][host]["roles"]["analysis-agent"][
             "external_source_read"
         ]
-        host_modes = (
+        capability_projection = (
             "\n\nCurrent external-read mode: "
             f"external_source_read={mode}."
         )
-    return f"{instructions}\n\nDeclared tool boundary: {tools}.{host_modes}"
+    return f"{instructions}\n\nDeclared tool boundary: {tools}.{capability_projection}"
 
 
 def _validate_rendered_prompt_embedding(

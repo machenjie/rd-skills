@@ -1097,7 +1097,11 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                 elif mutation == "missing":
                     entries.pop(0)
                 else:
-                    entries[0]["disposition"] = "false-positive"
+                    entries[0]["disposition"] = (
+                        "valid-contextual-rule"
+                        if entries[0]["disposition"] == "false-positive"
+                        else "false-positive"
+                    )
                 audit_raw = (
                     json.dumps(
                         audit,
@@ -1516,7 +1520,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             for category in ("content", "readability", "actionability")
         }
         self.assertEqual(
-            {"actionability": 0, "content": 43, "readability": 367},
+            {"actionability": 0, "content": 43, "readability": 366},
             {category: len(rows) for category, rows in by_category.items()},
         )
         self.assertTrue(
@@ -1601,7 +1605,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                 "accepted_for_formal": True,
                 "applied_actionability_disposition_count": 0,
                 "applied_density_disposition_count": 43,
-                "applied_readability_disposition_count": 367,
+                "applied_readability_disposition_count": 366,
                 "attestation_status": "panel-majority-current",
                 "detector_false_positive_count": 0,
                 "rewrite_required_count": 0,
@@ -1806,7 +1810,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
 
         with self.assertRaisesRegex(
             PANEL.PanelReviewError,
-            "semantic fixed missing target lacks a rewrite majority",
+            "semantic fixed attestation disposition mismatch",
         ):
             PANEL.validate_semantic_decision_application(live_audit)
 

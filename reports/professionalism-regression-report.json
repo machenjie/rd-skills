@@ -8,7 +8,7 @@
   "baseline_comparison": "not-numerically-comparable",
   "evidence_scope": "deterministic-fixtures",
   "content_audit_summary": {
-    "skill_detector_fingerprint": "35c1d37e47940ec776474784aaaae7477b0cdaaede561780335405031b6ed14c",
+    "skill_detector_fingerprint": "f958d5367dc2db4aa0a1af68754976b76e340b22d6f758d3dc682745e2775807",
     "audit_gate_status": {
       "selected_gate": "authoring",
       "authoring": "pass",
@@ -18,7 +18,7 @@
       "status": "invalid",
       "error": {
         "id": "semantic-decision-application-invalid",
-        "message": "semantic fixed missing target lacks a rewrite majority"
+        "message": "semantic fixed attestation disposition mismatch"
       }
     },
     "content_review_density_candidates": 31,
@@ -56,7 +56,7 @@
     "source": "skill-content-audit.json#ai_readability",
     "readiness_scope": "agent-facing-ai-readability",
     "schema_version": 2,
-    "source_fingerprint": "aa1d11056e1218e99b0adf2449eee13c6cc185832a6187518c6759c839d7ed9d",
+    "source_fingerprint": "631318e0d95c28275b1916af0f197c8ae58a171b9109e4a71fedcd104409f68a",
     "source_fingerprint_document_count": 917,
     "contract": {
       "bullet_decision_max": 1,
@@ -67,12 +67,12 @@
       "schema_version": 2
     },
     "documents": 917,
-    "advisory_documents": 367,
-    "review_as_complex_sentences": 992,
+    "advisory_documents": 366,
+    "review_as_complex_sentences": 990,
     "tighten_sentences": 8,
     "hard_fail_sentences": 0,
     "compound_bullets": 0,
-    "advisory_sentences": 1000,
+    "advisory_sentences": 998,
     "blocker_findings": 0,
     "hard_gate_ready": true,
     "by_surface": {
@@ -93,11 +93,11 @@
         "tighten_sentences": 2
       },
       "control-prompt": {
-        "advisory_documents": 1,
+        "advisory_documents": 0,
         "compound_bullets": 0,
         "documents": 1,
         "hard_fail_sentences": 0,
-        "review_as_complex_sentences": 2,
+        "review_as_complex_sentences": 0,
         "tighten_sentences": 0
       },
       "control-reference": {
@@ -271,7 +271,7 @@
     "source": "skill-content-audit.json#root_content",
     "readiness_scope": "agent-facing-root-content",
     "strict_ready_basis": "root-strict-v5",
-    "source_fingerprint": "3061d7764b49c8183bc82fa165e72d7ccc0b3a9ea63cec23e1334d3952135a44",
+    "source_fingerprint": "5ac21237bc6687101a0ef3152c6ce5d37d60fd01b18b5ce79d8e0e6ebfc88e7d",
     "source_fingerprint_document_count": 381,
     "agent_facing_root_documents": 381,
     "foundation_compact_capabilities": 124,
@@ -337,7 +337,7 @@
     },
     "root": {
       "scope": "agent-facing-root-content",
-      "source_fingerprint": "3061d7764b49c8183bc82fa165e72d7ccc0b3a9ea63cec23e1334d3952135a44",
+      "source_fingerprint": "5ac21237bc6687101a0ef3152c6ce5d37d60fd01b18b5ce79d8e0e6ebfc88e7d",
       "strict_ready_basis": "root-strict-v5",
       "structural_strict_ready": true,
       "semantic_triage_complete": true,
@@ -366,7 +366,7 @@
         "current_source_fingerprints": {
           "actionability_detector_contract": "5980b6a90aff04f345c4549c0522f4e493ea9d23f4b7d7aa334a51359aed575e",
           "readability_detector_contract": "f224da76c77a25ed73086603711647c0d728bbab7669870224a7031f3a6cca4f",
-          "readability_target_manifest": "5a7480883fbca493e3a05094640fc8cb2bfaa1dfd4a120901a326b5f79653182"
+          "readability_target_manifest": "46bf246a57aade8d91254232b4d68e86e28555ce3b12d23d383aa97cb352cb4b"
         },
         "attested_by": null,
         "attested_on": null,
@@ -385,7 +385,7 @@
         "panel_artifact_schema_version": null,
         "required_density_disposition_count": 43,
         "applied_density_disposition_count": 0,
-        "required_readability_disposition_count": 367,
+        "required_readability_disposition_count": 366,
         "applied_readability_disposition_count": 0,
         "required_actionability_disposition_count": 0,
         "applied_actionability_disposition_count": 0,
@@ -566,7 +566,7 @@
     {
       "category": "semantic-disposition-application-release-gate",
       "target": "skill-content-audit.json#semantic_disposition_application",
-      "message": "semantic-decision-application-invalid: semantic fixed missing target lacks a rewrite majority",
+      "message": "semantic-decision-application-invalid: semantic fixed attestation disposition mismatch",
       "severity": "error"
     },
     {
@@ -604,7 +604,7 @@
     {
       "category": "ai-readability-advisory",
       "target": "skill-content-audit.json#ai_readability",
-      "message": "advisory_documents=367; review_as_complex_sentences=992; tighten_sentences=8",
+      "message": "advisory_documents=366; review_as_complex_sentences=990; tighten_sentences=8",
       "severity": "warning"
     }
   ],
@@ -630,6 +630,6 @@
     "Root strict readiness is recomputed from fresh agent-facing Root source and blocks the authoring gate when its strict structural or semantic contract fails.",
     "AI-readability uses one three-reviewer full-coverage panel; Professional Completeness uses a separate per-Skill qualified reviewer pool with domain-critical fail-closed decisions. Neither axis can substitute for the other, and pending or stale evidence does not redefine the authoring gate.",
     "Coverage gates are recomputed from deterministic routing, captured benchmark, and captured pressure fixtures; they do not prove live-agent behavior.",
-    "Formal release remains blocked: semantic-decision-application-invalid: semantic fixed missing target lacks a rewrite majority"
+    "Formal release remains blocked: semantic-decision-application-invalid: semantic fixed attestation disposition mismatch"
   ]
 }

@@ -18,16 +18,19 @@ Unresolved owner/placement/behavior/verification/rollback/material impact routes
 New Direct Task: references/direct-task-template.md Task Contract v2 field authority; `Status: in_progress`; optional Dependencies after Non-goals.
 Capability facts authoritative; unknown capability=unsupported; never infer. Host/tool/command identifiers cannot drive routing/Level/Review/completion. references/utility-capsule-template.md compares workspace before/after; changed/unavailable blocks review/closure and preserves user changes.
 
-Review evidence capability `exact_change_evidence_read`:
-- `supported`: exact change evidence read + reviewer-accessible change reference -> review-agent.
+`exact-change-evidence-read`:
+- `supported`: exact change evidence read -> review-agent.
 - `unsupported`: block review before dispatch; diff scope unverified; changed-file summary≠evidence.
-Legacy/incomplete only: exact change evidence export + workspace state observation permit one pre-review diff-export/no-edit; never normal flow.
+`reviewer-accessible-change-reference`:
+- `supported`: reviewer-accessible change reference -> review-agent.
+- `unsupported`: block review before dispatch; diff scope unverified.
+Legacy/incomplete: exact change evidence export + workspace state observation allow one pre-review diff-export/no-edit only.
 
-Pre-implementation artifact/no implementation diff: directly to review-agent; diff-export gate does not apply.
+Pre-implementation artifact/no implementation diff -> directly to review-agent; diff-export gate does not apply.
 
-Non-mutating validation capability `non_mutating_validation`:
+`non-mutating-validation`:
 - `supported`: current evidence via non-mutating validation.
-- `unsupported`: block validation; scope unverified.
+- `unsupported`: block validation; unverified.
 
 ### Execution Level and Validation
 
@@ -43,13 +46,13 @@ Active executable surfaces: carry Level/Basis; L5 Evidence only at effective L5.
 
 ## Analyzed Work
 
-Answer/diagnosis stops at evidence/proof limits unless change is requested.
-engineering-change-analysis -> current Engineering Brief: sole operational analysis authority.
-First Executable Slice: complete Task Contract v2; dispatch verbatim; never reinterpret.
-Specialists act only through Brief; DAGs/handoffs cannot redefine it.
+Answer/diagnosis: evidence/proof limits unless change requested.
+engineering-change-analysis -> current Engineering Brief: sole analysis authority.
+First Executable Slice: Task Contract v2; dispatch verbatim; never reinterpret.
+Specialists: Brief only; DAGs/handoffs cannot redefine it.
 Invalidation: blocked -> main-control-agent -> analysis-agent -> updated Engineering Brief -> redispatch affected tasks.
 task_contract.analyzed_work_authority: analyze once; Delta only on decision invalidation; Skill route only on domain/work type/material risk change.
-Synchronous/unknown capability: stop at the Slice; multi-task -> DAG; otherwise task-agent. Direct Task/non-implementation paths remain unchanged.
+Synchronous/unknown capability: stop at Slice; multi-task -> DAG; else task-agent. Direct Task/non-implementation paths remain unchanged.
 
 ### Preparation Loop Breaker
 
@@ -57,7 +60,7 @@ Start the Slice, ask one concrete user-owned decision, or report the evidence ga
 
 ## Scheduling and Context
 
-current requested task > declared DAG work > current-task blockers > adjacent follow-up; Adjacent findings never preempt the requested task or DAG.
+requested task > DAG > blockers > adjacent; adjacent never preempts task/DAG.
 New DAG task assignment: Task Contract v2, `Status: in_progress`.
 task_contract.task_boundary; Task completion=progress; Related work uses combined final-diff review.
 Shared or unknown workspace: parallel read-only tasks; serial writes.

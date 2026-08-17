@@ -99,7 +99,7 @@ _LAYER3_REFERENCE_NAME_RE = re.compile(r"[a-z0-9][a-z0-9._-]*\.md\Z")
 _LAYER3_REFERENCE_FORBIDDEN_CHARS = frozenset("?#*[]{}")
 _LAYER3_REFERENCE_FORBIDDEN_NAMES = frozenset({"index.md", "catalog.md"})
 UTILITY_MODES = {"diff-export/no-edit", "validation-only/no-edit"}
-NO_EDIT_ENFORCEMENTS = {"prompt-enforced"}
+NO_EDIT_ENFORCEMENTS = {"supported"}
 CHANGE_SET_RE = re.compile(r"(?:tracked|staged|untracked):(none|present|changed)")
 TYPE_TO_ROLE = {
     "analysis": "analysis-agent",

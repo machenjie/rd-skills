@@ -846,16 +846,16 @@ class AgentProfileReadabilityTests(unittest.TestCase):
     def test_external_read_is_analysis_only_and_resident_rules_are_locked(self) -> None:
         source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
         profiles = {item["name"]: item for item in source["profiles"]}
-        self.assertIn("external-read", profiles["analysis-agent"]["tools"])
+        self.assertIn("external-source-read", profiles["analysis-agent"]["tools"])
         for role in ("main-control-agent", "task-agent", "review-agent"):
-            self.assertNotIn("external-read", profiles[role]["tools"])
+            self.assertNotIn("external-source-read", profiles[role]["tools"])
 
         analysis = profiles["analysis-agent"]["instructions"]
         for terms in (
             ("Material unresolved Claim", "local or current evidence", "Proof Limit"),
             ("untrusted evidence input", "normalized Claim", "Engineering Brief"),
             ("minimum public information", "repository-private source", "credential"),
-            ("external_source_read", "unsupported", "unknown-critical-boundary"),
+            ("external-source-read", "unsupported", "unknown-critical-boundary"),
         ):
             self.assertTrue(
                 any(all(term in rule for term in terms) for rule in analysis.splitlines()),
@@ -863,7 +863,7 @@ class AgentProfileReadabilityTests(unittest.TestCase):
             )
         for role in ("task-agent", "review-agent"):
             instructions = profiles[role]["instructions"]
-            self.assertIn("Leave external-read research", instructions)
+            self.assertIn("Leave external-source-read", instructions)
             self.assertIn("analysis-agent", instructions)
 
     def test_external_read_host_modes_and_native_tool_projection_are_exact(self) -> None:

@@ -159,8 +159,8 @@ class HooklessBuildInstallTests(unittest.TestCase):
                 manifest["agent_profile_enforcement_source"]["path"],
             )
             self.assertEqual(
-                3,
-                manifest["agent_profile_enforcement_source"]["schema_version"],
+                    4,
+                    manifest["agent_profile_enforcement_source"]["schema_version"],
             )
             self.assertEqual(
                 {

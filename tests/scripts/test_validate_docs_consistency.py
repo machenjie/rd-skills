@@ -321,7 +321,7 @@ class DocsCoreProjectionTests(unittest.TestCase):
             profiles = root / "docs/BUILD_PROFILES.md"
             changed, replacements = re.subn(
                 r"\d+ registry-indexed Markdown files",
-                "524 registry-indexed Markdown files",
+                "526 registry-indexed Markdown files",
                 profiles.read_text(encoding="utf-8"),
                 count=1,
             )
@@ -330,12 +330,9 @@ class DocsCoreProjectionTests(unittest.TestCase):
 
             errors = self.validator._volatile_fact_errors(root)
 
-            self.assertTrue(
-                any(
-                    "docs/BUILD_PROFILES.md" in error
-                    and "525 registry-indexed Markdown files" in error
-                    for error in errors
-                ),
+            self.assertIn(
+                "docs/BUILD_PROFILES.md: missing authority-derived current fact "
+                "'527 registry-indexed Markdown files and 528 physical Markdown files'",
                 errors,
             )
 
@@ -346,7 +343,7 @@ class DocsCoreProjectionTests(unittest.TestCase):
             profiles = root / "docs/BUILD_PROFILES.md"
             changed, replacements = re.subn(
                 r"\d+(\s+physical Markdown files)",
-                r"525\1",
+                r"527\1",
                 profiles.read_text(encoding="utf-8"),
                 count=1,
             )
@@ -355,12 +352,9 @@ class DocsCoreProjectionTests(unittest.TestCase):
 
             errors = self.validator._volatile_fact_errors(root)
 
-            self.assertTrue(
-                any(
-                    "docs/BUILD_PROFILES.md" in error
-                    and "526 physical Markdown files" in error
-                    for error in errors
-                ),
+            self.assertIn(
+                "docs/BUILD_PROFILES.md: missing authority-derived current fact "
+                "'527 registry-indexed Markdown files and 528 physical Markdown files'",
                 errors,
             )
 

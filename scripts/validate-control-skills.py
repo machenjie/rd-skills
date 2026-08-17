@@ -3,13 +3,13 @@
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path, PurePosixPath
 
 from validation_utils import (
     CONTROL_SKILL_CONTRACT_MODEL,
     EVIDENCE_LEDGER_MODEL,
-    PROMPT_CONTRACT_MODEL,
     REFERENCE_CONTRACT_MODEL,
     ValidationProblem,
     count_nonblank_lines,
@@ -30,6 +30,7 @@ from validation_utils import (
 ROOT = Path(__file__).resolve().parents[1]
 SKILL = ROOT / CONTROL_SKILL_CONTRACT_MODEL["path"]
 PROMPT = ROOT / CONTROL_SKILL_CONTRACT_MODEL["prompt_path"]
+HOST_ENFORCEMENT_SOURCE = ROOT / "src/agent-profiles/host-enforcement.json"
 CONTROL_SKILL_MAX_NONBLANK_LINES = 35
 CONTROL_SKILL_MAX_O200K_BASE_TOKENS = 500
 DECISION_RULES_MAX_NONBLANK_LINES = 6
@@ -39,11 +40,17 @@ REFERENCES = tuple(
     PurePosixPath(path).name
     for path in REFERENCE_CONTRACT_MODEL["control_required_by"]
 )
+try:
+    _HOST_ENFORCEMENT = json.loads(HOST_ENFORCEMENT_SOURCE.read_text(encoding="utf-8"))
+except (OSError, json.JSONDecodeError):
+    _HOST_ENFORCEMENT = {}
 FORBIDDEN_HOST_MODE_BRANCH_LITERALS = tuple(
     dict.fromkeys(
-        branch["value"]
-        for contract in PROMPT_CONTRACT_MODEL["host_mode_branches"]
-        for branch in contract["branches"]
+        value
+        for values in (_HOST_ENFORCEMENT.get("mode_values") or {}).values()
+        if isinstance(values, list)
+        for value in values
+        if isinstance(value, str)
     )
 )
 LEGACY_HOST_MODE_FIELDS = ("diff_inspection", "validation_execution")
@@ -239,7 +246,7 @@ def _validate_no_host_mode_branches(body: str, errors: list[str]) -> None:
         if re.search(pattern, normalized):
             errors.append(
                 f"control Skill must defer host branch value {literal!r} "
-                "to the authoritative prompt"
+                "to the host projection adapter"
             )
 
 

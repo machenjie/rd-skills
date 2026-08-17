@@ -597,10 +597,36 @@ class BuildSafetyTests(unittest.TestCase):
             "prompt-enforced",
             matrix["hosts"]["codex"]["roles"]["main-control-agent"]["tool_allowlist"],
         )
-        self.assertEqual(3, matrix["schema_version"])
+        self.assertEqual(4, matrix["schema_version"])
+        self.assertEqual(
+            {
+                "diff_input_mode": ["native", "supplied-artifact", "unsupported"],
+                "validation_mode": ["native-read-only", "task-no-edit", "unsupported"],
+            },
+            matrix["mode_values"],
+        )
+        self.assertEqual(
+            ["--no-pager", "--no-ext-diff", "--no-textconv"],
+            matrix["hosts"]["codex"]["native_diff_safeguards"],
+        )
+        for host in ("claude", "copilot", "cline", "openai-api"):
+            self.assertEqual([], matrix["hosts"][host]["native_diff_safeguards"])
         self.assertEqual(
             {capability: "supported" for capability in BUILD.DECISION_CAPABILITY_FIELDS},
             BUILD._normalized_decision_capabilities(matrix["hosts"]["codex"]),
+        )
+        unknown_adapter = dict(matrix["hosts"]["codex"])
+        unknown_adapter.update(
+            {
+                "profile_delivery": "unknown-native-id",
+                "diff_input_mode": "unknown-native-id",
+                "validation_mode": "unknown-native-id",
+                "utility_no_edit": "unknown-native-id",
+            }
+        )
+        self.assertEqual(
+            {capability: "unsupported" for capability in BUILD.DECISION_CAPABILITY_FIELDS},
+            BUILD._normalized_decision_capabilities(unknown_adapter),
         )
         renderer_hosts = {
             BUILD._render_codex_profile: "codex",
@@ -627,11 +653,16 @@ class BuildSafetyTests(unittest.TestCase):
 
     def test_host_enforcement_rejects_stale_schema_and_unknown_modes(self) -> None:
         mutations = (
-            ('"schema_version": 3', '"schema_version": 2', "schema_version 3"),
+            ('"schema_version": 4', '"schema_version": 3', "schema_version 4"),
             (
                 '"diff_input_mode": "supplied-artifact"',
                 '"diff_input_mode": "stale-mode"',
                 "invalid diff_input_mode",
+            ),
+            (
+                '"native_diff_safeguards": ["--no-pager", "--no-ext-diff", "--no-textconv"]',
+                '"native_diff_safeguards": ["--no-pager", "--no-ext-diff"]',
+                "native diff safeguards",
             ),
         )
         for old, new, error in mutations:

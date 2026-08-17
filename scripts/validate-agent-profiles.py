@@ -47,12 +47,13 @@ HOST_ENFORCEMENT_CAPABILITIES = {
     "utility_no_edit",
 }
 GENERIC_CAPABILITY_CONTRACT = REVIEW_DISCIPLINE_MODEL["generic_capability_contract"]
-DECISION_CAPABILITY_FIELDS = tuple(GENERIC_CAPABILITY_CONTRACT["fields"])
+DECISION_CAPABILITY_FIELDS = tuple(GENERIC_CAPABILITY_CONTRACT["injected_fields"])
 DECISION_CAPABILITY_STATES = set(GENERIC_CAPABILITY_CONTRACT["states"])
 HOST_MODE_VALUES = {
-    contract["field"]: {branch["value"] for branch in contract["branches"]}
-    for contract in PROMPT_CONTRACT_MODEL["host_mode_branches"]
+    "diff_input_mode": ("native", "supplied-artifact", "unsupported"),
+    "validation_mode": ("native-read-only", "task-no-edit", "unsupported"),
 }
+NATIVE_DIFF_SAFEGUARDS = ["--no-pager", "--no-ext-diff", "--no-textconv"]
 ENFORCEMENT_HOSTS = {"codex", "claude", "copilot", "cline", "openai-api"}
 EXTERNAL_READ_MODEL = CORE_CONTRACTS["external_read_contract"]
 EXTERNAL_READ_HOST_MODES = {
@@ -70,9 +71,10 @@ OLD_NAMES = {
 
 
 def _normalized_decision_capabilities(entry: dict[str, object]) -> dict[str, str]:
-    profile_supported = entry.get("profile_delivery") != "unsupported"
-    diff_supported = entry.get("diff_input_mode") != "unsupported"
-    validation_supported = entry.get("validation_mode") != "unsupported"
+    profile_supported = entry.get("profile_delivery") in ENFORCEMENT_STATUSES - {"unsupported"}
+    diff_supported = entry.get("diff_input_mode") in {"native", "supplied-artifact"}
+    validation_supported = entry.get("validation_mode") in {"native-read-only", "task-no-edit"}
+    observation_supported = entry.get("utility_no_edit") in ENFORCEMENT_STATUSES - {"unsupported"}
     return {
         "bounded-source-read": "supported" if profile_supported else "unsupported",
         "workspace-mutation": "supported" if profile_supported else "unsupported",
@@ -80,7 +82,7 @@ def _normalized_decision_capabilities(entry: dict[str, object]) -> dict[str, str
         "exact-change-evidence-read": "supported" if diff_supported else "unsupported",
         "exact-change-evidence-export": "supported" if diff_supported else "unsupported",
         "reviewer-accessible-change-reference": "supported" if diff_supported else "unsupported",
-        "workspace-state-observation": "supported" if diff_supported else "unsupported",
+        "workspace-state-observation": "supported" if observation_supported else "unsupported",
     }
 
 
@@ -357,9 +359,7 @@ def _validate_external_read_profile_contract(
             {
                 "rule_id": "external-read-disclosure-boundary",
                 "required_terms": [
-                    "WebSearch",
-                    "WebFetch",
-                    "ConnectorRead",
+                    "supported external-source-read capability",
                     "minimum public information",
                     "repository-private source",
                     "credentials",
@@ -368,9 +368,9 @@ def _validate_external_read_profile_contract(
                 ],
             },
             {
-                "rule_id": "external-read-host-fail-closed",
+                "rule_id": "external-read-capability-fail-closed",
                 "required_terms": [
-                    "external_source_read",
+                    "external-source-read",
                     "unsupported",
                     "sufficient local evidence",
                     "unknown-critical-boundary",
@@ -396,7 +396,7 @@ def _validate_external_read_profile_contract(
                 {
                     "rule_id": "external-read-denied",
                     "required_terms": [
-                        "Leave external-read research",
+                        "Leave external-source-read",
                         "analysis-agent",
                     ],
                 }
@@ -620,8 +620,24 @@ def main(argv: list[str] | None = None) -> int:
         if loaded_enforcement is not None:
             enforcement = loaded_enforcement
     hosts = enforcement.get("hosts")
-    if enforcement.get("schema_version") != 3 or set(enforcement.get("status_values") or []) != ENFORCEMENT_STATUSES:
-        errors.append("host enforcement matrix must use schema_version 3 and the fixed status enum")
+    expected_enforcement_fields = {
+        "schema_version",
+        "source_summary",
+        "status_values",
+        "mode_values",
+        "hosts",
+    }
+    if set(enforcement) != expected_enforcement_fields:
+        errors.append(
+            "host enforcement matrix fields must be exactly "
+            f"{sorted(expected_enforcement_fields)}"
+        )
+    if enforcement.get("schema_version") != 4 or set(enforcement.get("status_values") or []) != ENFORCEMENT_STATUSES:
+        errors.append("host enforcement matrix must use schema_version 4 and the fixed status enum")
+    if enforcement.get("mode_values") != {
+        field: list(values) for field, values in HOST_MODE_VALUES.items()
+    }:
+        errors.append("host enforcement mode_values must match the adapter contract")
     if not isinstance(hosts, dict) or set(hosts) != ENFORCEMENT_HOSTS:
         errors.append("host enforcement matrix must contain exactly the supported hosts")
         hosts = {}
@@ -632,6 +648,7 @@ def main(argv: list[str] | None = None) -> int:
         expected_fields = HOST_ENFORCEMENT_CAPABILITIES | {
             "diff_input_mode",
             "validation_mode",
+            "native_diff_safeguards",
             "roles",
         }
         if set(host_entry) != expected_fields:
@@ -643,6 +660,13 @@ def main(argv: list[str] | None = None) -> int:
             errors.append(f"{host}: invalid diff_input_mode")
         if host_entry.get("validation_mode") not in HOST_MODE_VALUES["validation_mode"]:
             errors.append(f"{host}: invalid validation_mode")
+        expected_safeguards = (
+            NATIVE_DIFF_SAFEGUARDS
+            if host_entry.get("diff_input_mode") == "native"
+            else []
+        )
+        if host_entry.get("native_diff_safeguards") != expected_safeguards:
+            errors.append(f"{host}: native diff safeguards do not match adapter mode")
         if tuple(_normalized_decision_capabilities(host_entry)) != DECISION_CAPABILITY_FIELDS:
             errors.append(f"{host}: normalized decision capabilities drift from Core")
         roles = host_entry.get("roles")

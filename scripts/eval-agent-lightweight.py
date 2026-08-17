@@ -512,6 +512,12 @@ REVIEW_FORBIDDEN_EVIDENCE_SOURCES = set(
 )
 REVIEW_KINDS = set(REVIEW_DISCIPLINE_MODEL["review_kinds"])
 REVIEW_VERDICTS = set(REVIEW_DISCIPLINE_MODEL["verdicts"])
+GENERIC_CAPABILITY_FIELDS = tuple(
+    REVIEW_DISCIPLINE_MODEL["generic_capability_contract"]["injected_fields"]
+)
+GENERIC_CAPABILITY_STATES = set(
+    REVIEW_DISCIPLINE_MODEL["generic_capability_contract"]["states"]
+)
 TASK_BOUNDARY_MODEL = CORE_CONTRACTS["task_contract"]["task_boundary"]
 FINDING_RELATION_MODEL = CORE_CONTRACTS["task_contract"]["finding_relations"]
 DELTA_IMPACT_FIELDS = ("brief", "tasks", "dependencies", "skills", "reviews")
@@ -620,7 +626,6 @@ def completion_claim_errors(
         )
     )
     return list(dict.fromkeys(errors))
-UTILITY_NO_EDIT_ENFORCEMENT = "prompt-enforced"
 PROGRESS_TO_PRODUCTIVE_RATIO_MAX = 0.75
 MULTI_AGENT_PROGRESS_MIN = 3
 MULTI_AGENT_PROGRESS_MAX = 5
@@ -3645,14 +3650,16 @@ def _task_focus_case_errors(case: object) -> list[str]:
             "handoff_kind",
             "latest_changed_paths",
             "change_evidence_kind",
-            "reviewer_accessible",
+            "exact-change-evidence-read",
+            "reviewer-accessible-change-reference",
+            "non-mutating-validation",
             "validation_generation",
             "latest_material_edit_generation",
             "review_scope_fixed",
             "reviewer_mutation_capability",
             "reviewer_execute_capability",
-            "exact_change_evidence_export",
-            "workspace_state_observation",
+            "exact-change-evidence-export",
+            "workspace-state-observation",
             "post_review_change_export",
         ) or tuple(decision) != (
             "review_input_ready",
@@ -3667,7 +3674,6 @@ def _task_focus_case_errors(case: object) -> list[str]:
             return errors
         bool_fields = (
             "latest_changed_paths",
-            "reviewer_accessible",
             "review_scope_fixed",
             "reviewer_mutation_capability",
             "reviewer_execute_capability",
@@ -3676,8 +3682,14 @@ def _task_focus_case_errors(case: object) -> list[str]:
         if any(type(inputs[field]) is not bool for field in bool_fields):
             reject("review-readiness-shape", "review-readiness predicates must be booleans")
             return errors
-        for field in ("exact_change_evidence_export", "workspace_state_observation"):
-            if inputs[field] not in {"supported", "unsupported"}:
+        for field in (
+            "exact-change-evidence-read",
+            "reviewer-accessible-change-reference",
+            "non-mutating-validation",
+            "exact-change-evidence-export",
+            "workspace-state-observation",
+        ):
+            if inputs[field] not in GENERIC_CAPABILITY_STATES:
                 reject("review-capability-state", "capability state must be supported or unsupported")
         if not all(
             isinstance(inputs[field], int) and inputs[field] >= 0
@@ -3694,7 +3706,9 @@ def _task_focus_case_errors(case: object) -> list[str]:
         ready = (
             inputs["latest_changed_paths"]
             and inputs["change_evidence_kind"] in exact_kinds
-            and inputs["reviewer_accessible"]
+            and inputs["exact-change-evidence-read"] == "supported"
+            and inputs["reviewer-accessible-change-reference"] == "supported"
+            and inputs["non-mutating-validation"] == "supported"
             and inputs["validation_generation"]
             == inputs["latest_material_edit_generation"]
             and inputs["review_scope_fixed"]
@@ -3705,8 +3719,8 @@ def _task_focus_case_errors(case: object) -> list[str]:
         if (
             not ready
             and inputs["handoff_kind"] == "legacy-incomplete"
-            and inputs["exact_change_evidence_export"] == "supported"
-            and inputs["workspace_state_observation"] == "supported"
+            and inputs["exact-change-evidence-export"] == "supported"
+            and inputs["workspace-state-observation"] == "supported"
         ):
             expected_recovery = 1
         expected_dispatches = 1 if ready else 0
@@ -3736,7 +3750,7 @@ def _task_focus_case_errors(case: object) -> list[str]:
         ):
             reject("capability-equivalence-shape", "exactly two adapters and decisions are required")
             return errors
-        adapter_fields = ("host_identifier", "tool_identifier", "command_identifier", "capabilities")
+        adapter_fields = ("adapter_metadata", "capabilities")
         result_fields = ("routing", "execution_level", "review_required", "completion")
         if any(not isinstance(item, dict) or tuple(item) != adapter_fields for item in adapters):
             reject("capability-adapter-shape", "adapter metadata fields are not canonical")
@@ -3746,16 +3760,15 @@ def _task_focus_case_errors(case: object) -> list[str]:
             return errors
         if adapters[0]["capabilities"] != adapters[1]["capabilities"]:
             reject("capability-state", "equivalence fixture requires equal capability facts")
-        if (
-            adapters[0]["host_identifier"] == adapters[1]["host_identifier"]
-            or adapters[0]["tool_identifier"] == adapters[1]["tool_identifier"]
-            or adapters[0]["command_identifier"] == adapters[1]["command_identifier"]
-        ):
-            reject("adapter-identity", "adapter identifiers must differ")
+        if any(not isinstance(item["adapter_metadata"], dict) for item in adapters):
+            reject("adapter-metadata", "adapter metadata must be a mapping")
+        elif adapters[0]["adapter_metadata"] == adapters[1]["adapter_metadata"]:
+            reject("adapter-metadata", "adapter metadata must differ")
         for capabilities in (adapter["capabilities"] for adapter in adapters):
-            if not isinstance(capabilities, dict) or any(
-                state not in {"supported", "unsupported"}
-                for state in capabilities.values()
+            if (
+                not isinstance(capabilities, dict)
+                or tuple(capabilities) != GENERIC_CAPABILITY_FIELDS
+                or any(state not in GENERIC_CAPABILITY_STATES for state in capabilities.values())
             ):
                 reject("capability-state", "capability facts must use the closed states")
         if results_value[0] != results_value[1]:
@@ -5953,10 +5966,10 @@ def _utility_capsule_errors(
     mode = capsule.get("mode")
     if mode not in UTILITY_MODES:
         errors.append(f"{case_id}: utility capsule at step {index} has invalid mode {mode!r}")
-    if capsule.get("no_edit_enforcement") != UTILITY_NO_EDIT_ENFORCEMENT:
+    if capsule.get("no_edit_enforcement") != "supported":
         errors.append(
             f"{case_id}: utility capsule at step {index} must declare "
-            f"no_edit_enforcement={UTILITY_NO_EDIT_ENFORCEMENT!r}"
+            "no_edit_enforcement='supported'"
         )
     if not isinstance(capsule.get("goal"), str) or not capsule["goal"].strip():
         errors.append(f"{case_id}: utility capsule at step {index} needs a non-empty goal")
@@ -6388,20 +6401,26 @@ def _utility_case_errors(case: dict[str, Any], steps: list[dict[str, Any]]) -> l
         errors.append(f"{case_id}: utility case must not edit or repair")
     if any("implementation_handoff" in step for step in steps):
         errors.append(f"{case_id}: utility case must not use Implementation Handoff")
-    host_modes = case.get("host_modes")
-    if not isinstance(host_modes, dict):
-        errors.append(f"{case_id}: utility case must declare host_modes")
-        host_modes = {}
     capability_facts = case.get("capability_facts")
-    if not isinstance(capability_facts, dict):
-        errors.append(f"{case_id}: utility case must declare capability_facts")
+    if (
+        not isinstance(capability_facts, dict)
+        or tuple(capability_facts) != GENERIC_CAPABILITY_FIELDS
+        or any(state not in GENERIC_CAPABILITY_STATES for state in capability_facts.values())
+    ):
+        errors.append(
+            f"{case_id}: utility case must declare the exact canonical capability_facts"
+        )
         capability_facts = {}
     mode = capsule.get("mode")
-    if host_modes.get("utility_no_edit") != UTILITY_NO_EDIT_ENFORCEMENT:
+    if capsule.get("no_edit_enforcement") != capability_facts.get(
+        "workspace-state-observation"
+    ):
         errors.append(
-            f"{case_id}: utility case requires utility_no_edit="
-            f"{UTILITY_NO_EDIT_ENFORCEMENT}"
+            f"{case_id}: utility no-edit enforcement must equal the injected "
+            "workspace-state-observation capability"
         )
+    if capability_facts.get("workspace-state-observation") != "supported":
+        errors.append(f"{case_id}: utility requires workspace-state-observation")
     utility_evidence = result.get("utility_evidence")
     workspace_check = (
         utility_evidence.get("workspace_diff_check")
@@ -6972,7 +6991,7 @@ def _external_read_fixture_results(
     required_fields = (
         "id",
         "role",
-        "host_mode",
+        "external_read_capability",
         "evidence_state",
         "operation",
         "request",
@@ -6987,8 +7006,6 @@ def _external_read_fixture_results(
         "targeted_claim",
         "minimum_public_information",
         "contains_protected_content",
-        "read_only_capability_proven",
-        "connector_authorized",
     )
     response_fields = (
         "availability",
@@ -7014,8 +7031,8 @@ def _external_read_fixture_results(
         "non-material-unknown",
         "critical-evidence-gap",
     }
-    modes = set(EXTERNAL_READ_MODEL["capability_modes"])
-    operations = {"not-applicable", *EXTERNAL_READ_MODEL["supported_operations"]}
+    capability_states = set(EXTERNAL_READ_MODEL["capability_states"])
+    operations = {"not-applicable", EXTERNAL_READ_MODEL["operation"]}
     source_classes = {"not-applicable", *EXTERNAL_READ_MODEL["source_priority"]}
     protected_fields = tuple(
         EXTERNAL_READ_MODEL["disclosure_guard"]["forbidden_request_content"]
@@ -7041,7 +7058,7 @@ def _external_read_fixture_results(
             reject("external-read-schema", "fixture fields or order are not canonical")
 
         role = raw_case.get("role")
-        mode = raw_case.get("host_mode")
+        external_read_capability = raw_case.get("external_read_capability")
         evidence_state = raw_case.get("evidence_state")
         operation = raw_case.get("operation")
         request = raw_case.get("request")
@@ -7053,8 +7070,11 @@ def _external_read_fixture_results(
 
         if role not in CORE_CONTRACTS["roles"]:
             reject("external-read-schema", "role is not one of the four Profiles")
-        if mode not in modes:
-            reject("external-read-host-mode", "host mode is outside the closed enum")
+        if external_read_capability not in capability_states:
+            reject(
+                "external-read-capability",
+                "external read capability is outside the closed enum",
+            )
         if evidence_state not in evidence_states:
             reject("external-read-schema", "evidence_state is not recognized")
         if operation not in operations:
@@ -7092,7 +7112,7 @@ def _external_read_fixture_results(
             if triggered or outcome.get("proof_limit_recorded") is not True:
                 reject("external-read-jit", "non-material unknown must become only a Proof Limit")
         elif evidence_state == "material-unresolved-claim":
-            if mode == "unsupported" or not triggered:
+            if external_read_capability == "unsupported" or not triggered:
                 reject("external-read-jit", "a material unresolved Claim requires supported external read")
         elif evidence_state == "critical-evidence-gap":
             if (
@@ -7104,8 +7124,11 @@ def _external_read_fixture_results(
                 reject("external-read-critical-gap", "critical gap must block edit and implementation dispatch")
 
         if triggered:
-            if mode == "unsupported":
-                reject("external-read-host-mode", "unsupported host cannot actively read externally")
+            if external_read_capability == "unsupported":
+                reject(
+                    "external-read-capability",
+                    "unsupported capability cannot actively read externally",
+                )
             if request.get("targeted_claim") is not True:
                 reject("external-read-jit", "external request must target one material Claim")
             if request.get("minimum_public_information") is not True:
@@ -7115,12 +7138,8 @@ def _external_read_fixture_results(
                     "external-read-disclosure",
                     "request contains protected content: " + ", ".join(protected_fields),
                 )
-            if request.get("read_only_capability_proven") is not True:
-                reject("external-read-host-mode", "read-only capability is not proven")
             if not isinstance(request.get("value"), str) or not request["value"].strip():
                 reject("external-read-schema", "external request value must be non-empty")
-            if operation == "ConnectorRead" and request.get("connector_authorized") is not True:
-                reject("external-read-operation", "ConnectorRead must be authorized and proven read-only")
         elif response.get("availability") != "not-requested":
             reject("external-read-jit", "non-triggered path cannot contain an external response")
 
@@ -7142,8 +7161,11 @@ def _external_read_fixture_results(
                 reject("external-read-normalization", "external evidence must be normalized before Brief use")
             if ledger.get("Owner") != "analysis-agent":
                 reject("external-read-ledger", "external Claim owner must be analysis-agent")
-            if ledger.get("Command") != operation:
-                reject("external-read-ledger", "ledger Command must name the external read operation")
+            if ledger.get("Command") != EXTERNAL_READ_MODEL["operation"]:
+                reject(
+                    "external-read-ledger",
+                    "ledger Command must name the external read capability",
+                )
             if ledger.get("Artifact") != artifact:
                 reject("external-read-ledger", "ledger Artifact must name the external source")
 

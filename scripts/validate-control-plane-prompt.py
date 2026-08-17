@@ -72,19 +72,19 @@ PROMPT_TEMPLATE_BINDINGS = (
 )
 ANALYZED_WORK_PROMPT_TERMS = {
     "Analyzed Work": (
-        "current Engineering Brief: sole operational analysis authority",
-        "First Executable Slice: complete Task Contract v2",
+        "current Engineering Brief: sole analysis authority",
+        "First Executable Slice: Task Contract v2",
         "dispatch verbatim",
         "never reinterpret",
-        "Specialists act only through Brief",
+        "Specialists: Brief only",
         "DAGs/handoffs cannot redefine it",
         "blocked -> main-control-agent -> analysis-agent -> updated Engineering Brief",
         "redispatch affected tasks",
         "Direct Task/non-implementation paths remain unchanged",
     ),
     "Scheduling and Context": (
-        "current requested task > declared DAG work > current-task blockers > adjacent follow-up",
-        "Adjacent findings never preempt the requested task or DAG",
+        "requested task > DAG > blockers > adjacent",
+        "adjacent never preempts task/DAG",
     ),
 }
 
@@ -377,10 +377,10 @@ def _validate_analyzed_work_authority(text: str, errors: list[str]) -> None:
                 )
 
 
-def _validate_host_mode_branches(text: str, errors: list[str]) -> None:
-    section = extract_section_body(text, PROMPT_CONTRACT_MODEL["host_mode_section"])
+def _validate_capability_branches(text: str, errors: list[str]) -> None:
+    section = extract_section_body(text, PROMPT_CONTRACT_MODEL["capability_section"])
     if section is None:
-        errors.append("cannot validate host mode branches: missing Direct Task Routing")
+        errors.append("cannot validate capability branches: missing Direct Task Routing")
         return
 
     regions: dict[str, str] = {}
@@ -393,7 +393,7 @@ def _validate_host_mode_branches(text: str, errors: list[str]) -> None:
         marker = f"`{field}`"
         if section.count(marker) != 1:
             errors.append(
-                f"Direct Task Routing must name host field {field!r} exactly once"
+                f"Direct Task Routing must name capability field {field!r} exactly once"
             )
             continue
         start = section.index(marker) + len(marker)
@@ -405,7 +405,7 @@ def _validate_host_mode_branches(text: str, errors: list[str]) -> None:
             continue
         end = section.index(next_marker)
         if end <= start:
-            errors.append(f"host field {field!r} must precede {next_field!r}")
+            errors.append(f"capability field {field!r} must precede {next_field!r}")
             continue
         regions[field] = section[start:end]
 
@@ -520,7 +520,7 @@ def main() -> int:
         )
     _validate_concepts(text, errors)
     _validate_analyzed_work_authority(text, errors)
-    _validate_host_mode_branches(text, errors)
+    _validate_capability_branches(text, errors)
     folded = _fold(text)
     for field in LEGACY_HOST_MODE_FIELDS:
         if field in folded:

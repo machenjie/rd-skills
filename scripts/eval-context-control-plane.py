@@ -119,12 +119,8 @@ def _load_source_report(path: Path | None = None) -> dict[str, Any]:
 
 def _load_host_enforcement() -> dict[str, Any]:
     matrix = _read_json(HOST_ENFORCEMENT, "host enforcement matrix")
-    if matrix.get("schema_version") != 3 or not isinstance(matrix.get("hosts"), dict):
-        raise ValueError("host enforcement matrix must use schema_version 3 and contain hosts")
-    for host in ("codex", "claude", "copilot"):
-        entry = matrix["hosts"].get(host)
-        if not isinstance(entry, dict) or entry.get("utility_no_edit") != "prompt-enforced":
-            raise ValueError(f"{host}: utility_no_edit must be prompt-enforced")
+    if matrix.get("schema_version") != 4 or not isinstance(matrix.get("hosts"), dict):
+        raise ValueError("host enforcement matrix must use schema_version 4 and contain hosts")
     return matrix
 
 
