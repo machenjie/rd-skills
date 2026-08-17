@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Report a reproducible ChangeForge build, validation, packaging, install, or documentation bug
+about: Report a reproducible rd-skills build, validation, packaging, install, or documentation bug
 labels: bug
 ---
 

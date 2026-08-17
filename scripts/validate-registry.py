@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the four hookless ChangeForge Skill registries."""
+"""Validate the four hookless rd-skills Skill registries."""
 
 from __future__ import annotations
 

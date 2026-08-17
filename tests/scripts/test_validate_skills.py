@@ -130,7 +130,7 @@ class ValidateProfessionalSkillRoleContractTests(unittest.TestCase):
         ]
         positive_trigger = (
             "independently assigned post-authoring review of a changed "
-            "ChangeForge routing asset"
+            "rd-skills routing asset"
         )
 
         self.assertEqual(entry["trigger_signals"], root_triggers)

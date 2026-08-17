@@ -1,6 +1,6 @@
 # Support
 
-This project supports ChangeForge skill authoring, validation, build, packaging, installation, upgrade, uninstall, and runtime artifact verification.
+This project supports rd-skills skill authoring, validation, build, packaging, installation, upgrade, uninstall, and runtime artifact verification.
 
 ## Where To Ask
 

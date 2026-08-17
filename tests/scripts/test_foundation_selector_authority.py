@@ -5378,9 +5378,16 @@ class _FoundationSelectorSpec:
     def test_r0_10r_route_binding_maps_are_exact_and_unambiguous(
         self,
     ) -> None:
-        observed_scopes: dict[
+        observed_full_identities: set[
+            tuple[str, str, str | None, str | None, str, str]
+        ] = set()
+        primary_by_scope: dict[
             tuple[str, str, str | None, str | None],
-            tuple[str, str],
+            str,
+        ] = {}
+        reviews_by_owner: dict[
+            tuple[str, str, str | None, str | None, str],
+            set[str],
         ] = {}
         route_specs_by_selector: dict[
             str,
@@ -5422,19 +5429,49 @@ class _FoundationSelectorSpec:
                     )
                     self.assertIsInstance(primary_skill, str)
                     self.assertIsInstance(review_skill, str)
+                    self.assertTrue(primary_skill)
+                    self.assertTrue(review_skill)
+                    self.assertNotEqual("*", review_skill)
+                    self.assertIn(
+                        review_skill,
+                        ORACLE._EXPECTED_REVIEW_TASK_SKILLS,
+                    )
                     scope = (
                         selector_id,
                         candidate_id,
                         rule_id,
                         routing_family,
                     )
-                    pair = (primary_skill, review_skill)
-                    self.assertNotIn(
-                        scope,
-                        observed_scopes,
-                        f"{label} route scope has multiple owner pairs",
+                    full_identity = (
+                        *scope,
+                        primary_skill,
+                        review_skill,
                     )
-                    observed_scopes[scope] = pair
+                    self.assertNotIn(
+                        full_identity,
+                        observed_full_identities,
+                        f"{label} route binding is duplicated",
+                    )
+                    observed_full_identities.add(full_identity)
+                    if scope in primary_by_scope:
+                        self.assertEqual(
+                            primary_by_scope[scope],
+                            primary_skill,
+                            f"{label} route scope has a second primary",
+                        )
+                    else:
+                        primary_by_scope[scope] = primary_skill
+                    owner_identity = (*scope, primary_skill)
+                    owner_reviews = reviews_by_owner.setdefault(
+                        owner_identity,
+                        set(),
+                    )
+                    self.assertNotIn(
+                        review_skill,
+                        owner_reviews,
+                        f"{label} owner review is duplicated",
+                    )
+                    owner_reviews.add(review_skill)
                     route_specs_by_selector.setdefault(
                         selector_id,
                         [],
@@ -5521,6 +5558,7 @@ class _FoundationSelectorSpec:
 
         for selector_id, specs in route_specs_by_selector.items():
             record = records_by_id[selector_id]
+            declared_specs = set(specs)
             record_pairs = {
                 (owner.primary_skill, owner.review_skill)
                 for owner in record.owner_bindings
@@ -5540,18 +5578,25 @@ class _FoundationSelectorSpec:
                         mutated["primary_skill"],
                         mutated["review_skill"],
                     ) = alternate_pair
-                    self.assertFalse(
+                    expected = (
+                        spec[0],
+                        spec[1],
+                        spec[2],
+                        *alternate_pair,
+                    ) in declared_specs
+                    self.assertEqual(
+                        expected,
                         ORACLE._foundation_route_binding_declared(
                             mutated,
                             [record],
                         ),
-                        f"{selector_id} route scope accepted another "
-                        f"record pair {alternate_pair!r}",
+                        f"{selector_id} alternate review pair did not match "
+                        "the exact declared spec set",
                     )
                 if str(spec[0]).startswith("implementation-owner:"):
                     for other in specs:
                         if (
-                            other[:3] == spec[:3]
+                            other[:4] == spec[:4]
                             or not str(other[0]).startswith(
                                 "implementation-owner:"
                             )

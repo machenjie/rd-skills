@@ -32,8 +32,13 @@ def _load_auditor() -> ModuleType:
     return module
 
 
-def _fresh_root_content() -> dict[str, Any]:
-    return _load_auditor()._collect_root_content()
+def _fresh_root_content(
+    *, evaluation_date: date | None = None
+) -> dict[str, Any]:
+    auditor = _load_auditor()
+    if evaluation_date is None:
+        return auditor._collect_root_content()
+    return auditor._collect_root_content(evaluation_date=evaluation_date)
 
 
 def _surface_validation_contract(root_content: dict[str, Any]) -> list[str]:
@@ -117,6 +122,11 @@ def _evaluate(
     evaluation_date: date | None = None,
 ) -> tuple[dict[str, int], list[str]]:
     auditor = _load_auditor()
+    effective_evaluation_date = (
+        auditor._effective_evaluation_date()
+        if evaluation_date is None
+        else evaluation_date
+    )
     errors: list[str] = []
     if root_content.get("schema_version") != auditor.ROOT_CONTENT_SCHEMA_VERSION:
         errors.append(
@@ -306,7 +316,6 @@ def _evaluate(
     elif set(contract) != {
         "schema_version",
         "source",
-        "evaluated_on",
         "configured_count",
         "applied_count",
         "entries",
@@ -332,7 +341,7 @@ def _evaluate(
         auditor._validate_root_semantic_dispositions(
             candidates,
             entries,
-            evaluation_date or date.today(),
+            effective_evaluation_date,
             require_applied=False,
         )
     )
@@ -359,7 +368,7 @@ def _evaluate(
         auditor._validate_root_semantic_dispositions(
             candidates,
             entries,
-            evaluation_date or date.today(),
+            effective_evaluation_date,
             require_applied=True,
         )
     )
@@ -373,39 +382,6 @@ def _evaluate(
         errors.append("root semantic configured_count does not match entries")
     if contract.get("applied_count") != len(matches):
         errors.append("root semantic applied_count does not match exact matches")
-
-    lifecycle = semantic.get("lifecycle")
-    if not isinstance(lifecycle, dict):
-        lifecycle = {}
-        errors.append("root semantic lifecycle must be a mapping")
-    lifecycle_contract = lifecycle.get("contract")
-    document_fingerprints = {
-        str(document.get("document_id")): str(document.get("content_fingerprint"))
-        for document in documents
-        if isinstance(document, dict)
-        and isinstance(document.get("document_id"), str)
-        and isinstance(document.get("content_fingerprint"), str)
-    }
-    try:
-        expected_lifecycle = auditor._evaluate_root_semantic_lifecycle(
-            lifecycle_contract,
-            entries,
-            evaluation_date=evaluation_date or date.today(),
-            document_fingerprints=document_fingerprints,
-        )
-    except (KeyError, TypeError, ValueError) as exc:
-        expected_lifecycle = None
-        errors.append(f"root semantic lifecycle cannot be recomputed: {exc}")
-    if expected_lifecycle is not None and lifecycle != expected_lifecycle:
-        errors.append("root semantic lifecycle does not match canonical recomputation")
-    lifecycle_errors = lifecycle.get("errors")
-    if not isinstance(lifecycle_errors, list):
-        errors.append("root semantic lifecycle errors must be a list")
-        lifecycle_errors = []
-    elif lifecycle_errors:
-        errors.extend(
-            f"root semantic lifecycle contract: {item}" for item in lifecycle_errors
-        )
 
     unresolved = sum(bool(item.get("unresolved")) for item in candidates if isinstance(item, dict))
     p0_p1 = sum(
@@ -488,7 +464,6 @@ def _evaluate(
         "dispositions_configured": len(entries),
         "dispositions_applied": len(matches),
         "disposition_errors": len(reported_contract_errors),
-        "lifecycle_errors": len(lifecycle_errors),
     }
     expected_summary = {
         "agent_facing_root_documents": counts["documents"],
@@ -534,47 +509,6 @@ def _evaluate(
         "semantic_disposition_configured": counts["dispositions_configured"],
         "semantic_disposition_applied": counts["dispositions_applied"],
         "semantic_disposition_errors": counts["disposition_errors"],
-        "semantic_lifecycle_status": lifecycle.get("status"),
-        "semantic_lifecycle_snapshot_current": lifecycle.get("snapshot_current"),
-        "semantic_lifecycle_formal_release_ready": lifecycle.get(
-            "formal_release_ready"
-        ),
-        "semantic_lifecycle_bootstrap_refresh_chain_valid": (
-            lifecycle.get("bootstrap_refresh_chain") or {}
-        ).get("valid"),
-        "semantic_lifecycle_bootstrap_refresh_count": (
-            lifecycle.get("bootstrap_refresh_chain") or {}
-        ).get("count"),
-        "semantic_lifecycle_bootstrap_refresh_latest_delta": (
-            lifecycle.get("bootstrap_refresh_chain") or {}
-        ).get("latest_delta"),
-        "semantic_lifecycle_added": (lifecycle.get("comparison") or {}).get(
-            "added_count"
-        ),
-        "semantic_lifecycle_removed": (lifecycle.get("comparison") or {}).get(
-            "removed_count"
-        ),
-        "semantic_lifecycle_disposition_changes": (
-            lifecycle.get("comparison") or {}
-        ).get("disposition_change_count"),
-        "semantic_lifecycle_source_rewrites": (
-            lifecycle.get("comparison") or {}
-        ).get("source_rewrite_count"),
-        "semantic_lifecycle_detector_improvements": (
-            lifecycle.get("comparison") or {}
-        ).get("detector_improvement_count"),
-        "semantic_lifecycle_unclassified": (
-            lifecycle.get("comparison") or {}
-        ).get("unclassified_count"),
-        "semantic_lifecycle_known_age": (lifecycle.get("age") or {}).get(
-            "known_age_count"
-        ),
-        "semantic_lifecycle_unknown_age": (lifecycle.get("age") or {}).get(
-            "unknown_age_count"
-        ),
-        "semantic_lifecycle_max_age_days": (lifecycle.get("age") or {}).get(
-            "max_age_days"
-        ),
     }
     for field, expected in expected_summary.items():
         if summary.get(field) != expected:
@@ -717,10 +651,6 @@ def _format_counts(counts: dict[str, int], *, strict: bool) -> list[str]:
             f"applied={counts['dispositions_applied']} "
             f"errors={counts['disposition_errors']}"
         ),
-        (
-            "validate-root-content: lifecycle "
-            f"errors={counts['lifecycle_errors']}"
-        ),
     ]
 
 
@@ -729,8 +659,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--strict", action="store_true")
     args = parser.parse_args(argv)
     try:
-        root_content = _fresh_root_content()
-        counts, errors = _evaluate(root_content, strict=args.strict)
+        effective_evaluation_date = _load_auditor()._effective_evaluation_date()
+        root_content = _fresh_root_content(
+            evaluation_date=effective_evaluation_date
+        )
+        counts, errors = _evaluate(
+            root_content,
+            strict=args.strict,
+            evaluation_date=effective_evaluation_date,
+        )
     except Exception as exc:  # ValidationProblem is loaded with the auditor.
         print(f"validate-root-content: ERROR: {exc}", file=sys.stderr)
         return 1

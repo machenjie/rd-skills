@@ -194,7 +194,18 @@ class Rds005PublicProjectionTests(unittest.TestCase):
             {
                 "floor": "L4",
                 "edit_status": "blocked",
-                "rule": "a plausible critical unknown requires L4 and blocks editing until resolved",
+                "provisional": True,
+                "required_fields": [
+                    "candidate_l4_predicate",
+                    "missing_fact",
+                    "plausible_impact_path",
+                    "material_consequence",
+                ],
+                "rule": (
+                    "only a concrete critical unknown with every required field "
+                    "receives provisional L4 and blocks editing until resolved; "
+                    "generic possibility is a Proof Limit"
+                ),
             },
             execution["critical_unknown"],
         )

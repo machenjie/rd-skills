@@ -1,7 +1,7 @@
 [project]
-name = "change-forge-skill-mesh"
+name = "rd-skills"
 version = "0.1.0"
-description = "Authoring, validation, build, packaging, and installation tools for ChangeForge professional skills."
+description = "Authoring, validation, build, packaging, and installation tools for rd-skills professional skills."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -17,7 +17,7 @@ keywords = [
   "skill-authoring",
 ]
 authors = [
-  { name = "ChangeForge" }
+  { name = "rd-skills" }
 ]
 classifiers = [
   "Development Status :: 3 - Alpha",

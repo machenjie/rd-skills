@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-"""Audit ChangeForge SKILL content for professionalism, redundancy, and split candidates.
+"""Audit rd-skills SKILL content for professionalism, redundancy, and split candidates.
 
 This tool NEVER modifies SKILL.md files. Its default mode reads authored content
-and writes only the two reports below. The explicit disposition-release recorder
-updates only the marked lifecycle node in the existing governance configuration.
-It walks the three
+and writes only the two reports below. It walks the three
 Layer 2/3 authoring roots, checks description metadata across all four Skill
 layers, computes per-file content metrics, detects cross-file duplicated content,
 scores each skill on four advisory dimensions, classifies a suggested action,
@@ -20,6 +18,8 @@ internal error occurs. Thresholds are centralized in THRESHOLDS below.
 from __future__ import annotations
 
 import argparse
+import ast
+import builtins
 import hashlib
 import json
 import math
@@ -34,6 +34,8 @@ from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from datetime import date
 from pathlib import Path
+
+import validation_utils as _validation_utils
 
 from validation_utils import (
     AI_COMPLEX_SENTENCE_TARGET_WORDS,
@@ -61,6 +63,7 @@ from validation_utils import (
     parse_frontmatter,
     parse_markdown_logical_list_items,
     read_text_preserve_newlines,
+    report_output_paths,
     reference_contracts,
     REFERENCE_CONTRACT_TYPES,
     REFERENCE_CONTRACT_ROLES,
@@ -87,12 +90,9 @@ REPORTS_DIR = ROOT / "reports"
 MARKDOWN_REPORT = REPORTS_DIR / "skill-content-audit.md"
 JSON_REPORT = REPORTS_DIR / "skill-content-audit.json"
 SKILL_CONTENT_EXCEPTIONS_FILE = ROOT / "config" / "skill-content-exceptions.yaml"
-SEMANTIC_DISPOSITION_APPLICATION_KEY = "semantic_disposition_application"
 SEMANTIC_DISPOSITION_APPLICATION_ERROR_ID = (
     "semantic-decision-application-invalid"
 )
-ROOT_LIFECYCLE_START_MARKER = "  # BEGIN ROOT SEMANTIC LIFECYCLE (managed block)"
-ROOT_LIFECYCLE_END_MARKER = "  # END ROOT SEMANTIC LIFECYCLE (managed block)"
 
 REFERENCE_SOURCES = (
     ("control", CONTROL_REGISTRY, "control_skills", CONTROL_SKILLS_DIR),
@@ -165,17 +165,17 @@ FOUNDATION_DERIVATION_SNAPSHOT = {
     "foundation_documents": 150,
     "compact_documents": 124,
     "complex_documents": 26,
-    "sum_tokens": 82726,
+    "sum_tokens": 82758,
     "min_tokens": 315,
     "p25_tokens": 517,
-    "p50_tokens": 550,
+    "p50_tokens": 551,
     "p75_tokens": 598,
     "p90_tokens": 641,
     "p95_tokens": 654,
     "p99_tokens": 717,
     "distribution_max_tokens": 730,
-    "mean_tokens": 551.507,
-    "sum_words": 58259,
+    "mean_tokens": 551.720,
+    "sum_words": 58283,
     "min_words": 238,
     "p25_words": 368,
     "p50_words": 392,
@@ -184,7 +184,7 @@ FOUNDATION_DERIVATION_SNAPSHOT = {
     "p95_words": 459,
     "p99_words": 489,
     "max_words": 497,
-    "mean_words": 388.393,
+    "mean_words": 388.553,
     "median_token_word_ratio": 1.411,
     "p90_token_word_ratio": 1.505,
     "p95_token_word_ratio": 1.543,
@@ -368,7 +368,7 @@ DESCRIPTION_SCOPE_NOUNS = (
     "deployment",
     "request",
 )
-# ChangeForge descriptions conventionally open with a capability verb that states
+# rd-skills descriptions conventionally open with a capability verb that states
 # what the skill does ("Designs ...", "Reviews ..."). A capability-verb opening
 # is itself trigger framing, so the missing-trigger check stays a high-precision
 # guard for genuinely vague descriptions.
@@ -898,12 +898,12 @@ REFERENCE_PREFACE_RE = re.compile(
     r"(?:(?:\*\*|__))?\s*:",
     re.IGNORECASE,
 )
-AUDIT_SCHEMA_VERSION = 9
+AUDIT_SCHEMA_VERSION = 10
 AUDIT_GATE_STATUS_SCHEMA_VERSION = 1
 AUDIT_GATES = ("authoring", "formal-release")
 AI_READABILITY_SCHEMA_VERSION = 2
 SURFACE_VALIDATION_SCHEMA_VERSION = 1
-REFERENCE_CONTENT_SCHEMA_VERSION = 4
+REFERENCE_CONTENT_SCHEMA_VERSION = 5
 REFERENCE_CONTENT_SURFACES = ("control", "professional", "foundation", "domain")
 SKILL_DETECTOR_SCHEMA_VERSION = 3
 SKILL_DETECTOR_KIND = "changeforge.skill-content-detector"
@@ -1024,7 +1024,7 @@ EXACT_DUPLICATE_MIN_LINES = 3
 EXACT_DUPLICATE_MIN_TOKENS = 36
 TEMPLATE_YAML_MIN_FIELDS = 6
 TEMPLATE_OUTPUT_MIN_FIELDS = 4
-SEMANTIC_ADVISORY_SCHEMA_VERSION = 5
+SEMANTIC_ADVISORY_SCHEMA_VERSION = 7
 SEMANTIC_DISPOSITION_SCHEMA_VERSION = 2
 SEMANTIC_DISPOSITION_FIELDS = (
     "candidate_id",
@@ -1113,19 +1113,21 @@ SEMANTIC_GROUP_FINDINGS = frozenset(
 # Root content has a different risk model from selectively loaded References.
 # These families deliberately focus on policy/mechanism leakage and handbook
 # density; Reference duplication/preface rules are not reused here.
-ROOT_CONTENT_SCHEMA_VERSION = 7
-ROOT_SEMANTIC_SCHEMA_VERSION = 4
-ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION = 6
-ROOT_SEMANTIC_LIFECYCLE_SCHEMA_VERSION = 4
-ROOT_SEMANTIC_SNAPSHOT_SCHEMA_VERSION = 4
-ROOT_SEMANTIC_PREVIOUS_DISPOSITION_SCHEMA_VERSION = 5
-ROOT_SEMANTIC_PREVIOUS_LIFECYCLE_SCHEMA_VERSION = 3
-ROOT_SEMANTIC_PREVIOUS_SNAPSHOT_SCHEMA_VERSION = 3
-ROOT_SEMANTIC_LEGACY_DISPOSITION_SCHEMA_VERSION = 4
-ROOT_SEMANTIC_LEGACY_LIFECYCLE_SCHEMA_VERSION = 2
-ROOT_SEMANTIC_LEGACY_SNAPSHOT_SCHEMA_VERSION = 2
-ROOT_BOOTSTRAP_REFRESH_REVIEW_SCHEMA_VERSION = 1
-ROOT_BOOTSTRAP_REFRESH_V1_CORE_SNAPSHOT_SCHEMA_VERSION = 3
+ROOT_CONTENT_SCHEMA_VERSION = 9
+ROOT_SEMANTIC_SCHEMA_VERSION = 6
+ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION = 7
+
+def _effective_evaluation_date(evaluation_date: date | None = None) -> date:
+    """Resolve one non-future date for a complete public invocation."""
+
+    current_date = date.today()
+    if evaluation_date is None:
+        return current_date
+    if type(evaluation_date) is not date or evaluation_date > current_date:
+        raise ValueError("evaluation_date must be non-future")
+    return evaluation_date
+
+
 ROOT_SEMANTIC_FINDINGS = (
     "unconditional_mechanism_candidate",
     "fixed_duration_threshold_status_candidate",
@@ -1164,111 +1166,7 @@ ROOT_SEMANTIC_DISPOSITION_FIELDS = (
 ROOT_SEMANTIC_EVIDENCE_FIELDS = frozenset(
     {"occurrence_fingerprint", "context_fingerprint", "rationale"}
 )
-ROOT_SEMANTIC_LIFECYCLE_FIELDS = frozenset(
-    {"schema_version", "previous", "current"}
-)
-ROOT_SEMANTIC_SNAPSHOT_FIELDS = frozenset(
-    {
-        "schema_version",
-        "kind",
-        "release_id",
-        "released_on",
-        "document_fingerprint",
-        "detector_fingerprint",
-        "entries",
-        "change_reviews",
-        "bootstrap_refresh_reviews",
-        "bootstrap_refresh_origin_state_fingerprint",
-        "bootstrap_refresh_review_count",
-    }
-)
-ROOT_SEMANTIC_LEGACY_SNAPSHOT_FIELDS = frozenset(
-    ROOT_SEMANTIC_SNAPSHOT_FIELDS
-    - {
-        "bootstrap_refresh_reviews",
-        "bootstrap_refresh_origin_state_fingerprint",
-        "bootstrap_refresh_review_count",
-    }
-)
-ROOT_SEMANTIC_SNAPSHOT_ENTRY_FIELDS = frozenset(
-    {
-        "candidate_id",
-        "lineage_id",
-        "document_id",
-        "document_fingerprint",
-        "disposition",
-        "first_observed",
-    }
-)
-ROOT_SEMANTIC_FIRST_OBSERVED_FIELDS = frozenset(
-    {"status", "release_id", "released_on"}
-)
-ROOT_SEMANTIC_CHANGE_REVIEW_FIELDS = frozenset(
-    {
-        "prior_candidate_id",
-        "classification",
-        "reviewed_by",
-        "rationale",
-        "evidence",
-    }
-)
-ROOT_SEMANTIC_CHANGE_REVIEW_EVIDENCE_FIELDS = frozenset(
-    {
-        "prior_lineage_id",
-        "replacement_candidate_ids",
-        "prior_document_fingerprint",
-        "current_document_fingerprint",
-        "prior_detector_fingerprint",
-        "current_detector_fingerprint",
-    }
-)
-ROOT_BOOTSTRAP_REFRESH_REVIEW_FIELDS = frozenset(
-    {"schema_version", "reviewed_by", "rationale", "evidence"}
-)
-ROOT_BOOTSTRAP_REFRESH_REVIEW_EVIDENCE_FIELDS = frozenset(
-    {
-        "prior_state_fingerprint",
-        "current_state_fingerprint",
-        "prior_document_fingerprint",
-        "current_document_fingerprint",
-        "prior_detector_fingerprint",
-        "current_detector_fingerprint",
-        "prior_candidate_fingerprint",
-        "current_candidate_fingerprint",
-        "prior_disposition_fingerprint",
-        "current_disposition_fingerprint",
-        "added_candidate_ids",
-        "removed_entries",
-        "prior_overrides",
-    }
-)
-ROOT_SEMANTIC_FIRST_OBSERVED_STATUSES = frozenset(
-    {"unknown-pre-baseline", "known"}
-)
-ROOT_SEMANTIC_CHANGE_REVIEW_CLASSIFICATIONS = frozenset(
-    {
-        "detector-improvement",
-        "disposition-change",
-        "source-replacement",
-        "source-removal",
-        "source-and-detector-replacement",
-        "source-and-detector-removal",
-    }
-)
-ROOT_SEMANTIC_PREVIOUS_CHANGE_REVIEW_CLASSIFICATIONS = frozenset(
-    {
-        "detector-improvement",
-        "disposition-change",
-        "source-and-detector-replacement",
-        "source-and-detector-removal",
-    }
-)
-ROOT_SEMANTIC_REPLACEMENT_REVIEW_CLASSIFICATIONS = frozenset(
-    {"source-replacement", "source-and-detector-replacement"}
-)
-ROOT_SEMANTIC_SOURCE_REVIEW_CLASSIFICATIONS = frozenset(
-    {"source-replacement", "source-removal"}
-)
+
 ROOT_CONTENT_SURFACES = (
     "control",
     "professional",
@@ -3555,7 +3453,7 @@ def _semantic_candidate_id(finding: str, scope: str, fingerprint: str) -> str:
 
 
 def _semantic_candidate_sort_key(item: object) -> tuple[str, str, str, str]:
-    """Return the schema-v5 canonical order for semantic candidates."""
+    """Return the schema-v6 canonical order for semantic candidates."""
 
     if not isinstance(item, dict):
         return ("", "", "", "")
@@ -5123,13 +5021,8 @@ def _validate_reference_semantic_dispositions(
     return normalized_entries, matched_candidate_by_entry, errors
 
 
-def _collect_reference_semantic_advisories(
-    documents: list[dict],
-    *,
-    disposition_entries: object = _USE_CONFIG_DISPOSITIONS,
-    evaluation_date: date | None = None,
-) -> dict:
-    """Collect stable semantic candidates and apply exact governance decisions."""
+def _reference_semantic_candidates(documents: list[dict]) -> list[dict]:
+    """Collect the pure, canonically ordered Reference detector projection."""
     for index, document in enumerate(documents):
         if not isinstance(document, dict) or not _is_canonical_semantic_path(
             document.get("path")
@@ -5230,7 +5123,6 @@ def _collect_reference_semantic_advisories(
 
     candidates.sort(key=_semantic_candidate_sort_key)
 
-    evaluated_on = evaluation_date or date.today()
     for candidate in candidates:
         candidate["disposition"] = None
         candidate["disposition_record"] = None
@@ -5246,6 +5138,24 @@ def _collect_reference_semantic_advisories(
             candidate["governance_status"] = "untriaged"
             candidate["unresolved"] = True
             candidate["resolved"] = False
+
+    return candidates
+
+
+def _collect_reference_semantic_advisories(
+    documents: list[dict],
+    *,
+    disposition_entries: object = _USE_CONFIG_DISPOSITIONS,
+    evaluation_date: date | None = None,
+) -> dict:
+    """Collect stable semantic candidates and apply exact governance decisions."""
+
+    candidates = _reference_semantic_candidates(documents)
+    evaluated_on = (
+        _effective_evaluation_date()
+        if evaluation_date is None
+        else evaluation_date
+    )
 
     if disposition_entries is _USE_CONFIG_DISPOSITIONS:
         disposition_contract, disposition_errors = (
@@ -5387,6 +5297,7 @@ def _collect_reference_semantic_advisories(
     }
     return {
         "schema_version": SEMANTIC_ADVISORY_SCHEMA_VERSION,
+        "detector_contract": _reference_semantic_detector_contract(),
         "finding_families": list(SEMANTIC_FINDINGS),
         "summary": {
             "raw_candidates": all_counts["raw"],
@@ -5437,7 +5348,6 @@ def _collect_reference_semantic_advisories(
         "disposition_contract": {
             "schema_version": SEMANTIC_DISPOSITION_SCHEMA_VERSION,
             "source": SKILL_CONTENT_EXCEPTIONS_FILE.relative_to(ROOT).as_posix(),
-            "evaluated_on": evaluated_on.isoformat(),
             "configured_count": (
                 len(configured_entries) if isinstance(configured_entries, list) else 0
             ),
@@ -5637,17 +5547,17 @@ def _root_semantic_dispositions_from_data(
     source: str,
 ) -> tuple[dict, list[str]]:
     if not isinstance(data, dict):
-        return {"schema_version": None, "lifecycle": None, "entries": []}, [f"{source}: must be a mapping"]
+        return {"schema_version": None, "entries": []}, [f"{source}: must be a mapping"]
     contract = data.get(ROOT_SEMANTIC_DISPOSITION_KEY)
     if not isinstance(contract, dict):
-        return {"schema_version": None, "lifecycle": None, "entries": []}, [
+        return {"schema_version": None, "entries": []}, [
             f"{source}: missing {ROOT_SEMANTIC_DISPOSITION_KEY} mapping"
         ]
     errors: list[str] = []
-    if set(contract) != {"schema_version", "lifecycle", "entries"}:
+    if set(contract) != {"schema_version", "entries"}:
         errors.append(
             f"{source}: {ROOT_SEMANTIC_DISPOSITION_KEY} must contain exactly "
-            "schema_version, lifecycle, and entries"
+            "schema_version and entries"
         )
     if contract.get("schema_version") != ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION:
         errors.append(
@@ -5660,7 +5570,6 @@ def _root_semantic_dispositions_from_data(
         entries = []
     return {
         "schema_version": contract.get("schema_version"),
-        "lifecycle": contract.get("lifecycle"),
         "entries": entries,
     }, errors
 
@@ -5670,187 +5579,8 @@ def _load_root_semantic_dispositions() -> tuple[dict, list[str]]:
     try:
         data = load_yaml_file(SKILL_CONTENT_EXCEPTIONS_FILE)
     except ValidationProblem as exc:
-        return {"schema_version": None, "lifecycle": None, "entries": []}, [str(exc)]
+        return {"schema_version": None, "entries": []}, [str(exc)]
     return _root_semantic_dispositions_from_data(data, source=source)
-
-
-def _migrate_root_semantic_snapshot_v2(
-    raw: object,
-    *,
-    label: str,
-) -> tuple[dict | None, list[str]]:
-    if not isinstance(raw, dict):
-        return None, [f"{label} must be a mapping"]
-    errors: list[str] = []
-    if set(raw) != ROOT_SEMANTIC_LEGACY_SNAPSHOT_FIELDS:
-        errors.append(
-            f"{label} legacy schema must contain exactly "
-            f"{', '.join(sorted(ROOT_SEMANTIC_LEGACY_SNAPSHOT_FIELDS))}"
-        )
-    if raw.get("schema_version") != ROOT_SEMANTIC_LEGACY_SNAPSHOT_SCHEMA_VERSION:
-        errors.append(
-            f"{label}.schema_version must equal legacy version "
-            f"{ROOT_SEMANTIC_LEGACY_SNAPSHOT_SCHEMA_VERSION}"
-        )
-    migrated = deepcopy(raw)
-    migrated["schema_version"] = ROOT_SEMANTIC_SNAPSHOT_SCHEMA_VERSION
-    migrated["bootstrap_refresh_reviews"] = []
-    migrated["bootstrap_refresh_review_count"] = 0
-    migrated["bootstrap_refresh_origin_state_fingerprint"] = (
-        _root_bootstrap_base_state_fingerprint(migrated)
-        if migrated.get("kind") == "bootstrap"
-        else None
-    )
-    return migrated, errors
-
-
-def _migrate_root_semantic_snapshot_v3(
-    raw: object,
-    *,
-    label: str,
-    evaluation_date: date,
-) -> tuple[dict | None, list[str]]:
-    normalized, errors = _validate_root_semantic_snapshot(
-        raw,
-        label=label,
-        evaluation_date=evaluation_date,
-        snapshot_schema_version=ROOT_SEMANTIC_PREVIOUS_SNAPSHOT_SCHEMA_VERSION,
-    )
-    if errors or normalized is None:
-        return None, errors
-    migrated = deepcopy(raw)
-    migrated["schema_version"] = ROOT_SEMANTIC_SNAPSHOT_SCHEMA_VERSION
-    _normalized, migrated_errors = _validate_root_semantic_snapshot(
-        migrated,
-        label=f"{label} migrated",
-        evaluation_date=evaluation_date,
-    )
-    return migrated, migrated_errors
-
-
-def _load_root_semantic_dispositions_for_recorder(
-    *,
-    evaluation_date: date,
-) -> tuple[dict, int | None, str | None, list[str]]:
-    source = _repository_relative_path(SKILL_CONTENT_EXCEPTIONS_FILE)
-    try:
-        source_bytes = SKILL_CONTENT_EXCEPTIONS_FILE.read_bytes()
-    except OSError as exc:
-        return {"schema_version": None, "lifecycle": None, "entries": []}, None, None, [
-            f"{source}: {exc}"
-        ]
-    source_sha256 = hashlib.sha256(source_bytes).hexdigest()
-    try:
-        source_text = source_bytes.decode("utf-8")
-        data = load_yaml_text(source_text, SKILL_CONTENT_EXCEPTIONS_FILE)
-    except (UnicodeDecodeError, ValidationProblem) as exc:
-        return {"schema_version": None, "lifecycle": None, "entries": []}, None, source_sha256, [
-            str(exc)
-        ]
-    if not isinstance(data, dict):
-        return {"schema_version": None, "lifecycle": None, "entries": []}, None, source_sha256, [
-            f"{source}: must be a mapping"
-        ]
-    raw = data.get(ROOT_SEMANTIC_DISPOSITION_KEY)
-    if not isinstance(raw, dict):
-        return {"schema_version": None, "lifecycle": None, "entries": []}, None, source_sha256, [
-            f"{source}: missing {ROOT_SEMANTIC_DISPOSITION_KEY} mapping"
-        ]
-    source_schema_version = raw.get("schema_version")
-    if isinstance(source_schema_version, bool) or not isinstance(
-        source_schema_version, int
-    ):
-        source_schema_version = None
-    if source_schema_version == ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION:
-        contract, errors = _root_semantic_dispositions_from_data(data, source=source)
-        lifecycle, lifecycle_errors = _validate_root_semantic_lifecycle(
-            contract["lifecycle"], evaluation_date=evaluation_date
-        )
-        errors.extend(lifecycle_errors)
-        if lifecycle is not None:
-            contract["lifecycle"] = lifecycle
-        return contract, source_schema_version, source_sha256, errors
-    errors: list[str] = []
-    supported_source_schemas = {
-        ROOT_SEMANTIC_PREVIOUS_DISPOSITION_SCHEMA_VERSION,
-        ROOT_SEMANTIC_LEGACY_DISPOSITION_SCHEMA_VERSION,
-    }
-    if source_schema_version not in supported_source_schemas:
-        errors.append(
-            f"{source}: recorder migration requires Root disposition schema "
-            f"{ROOT_SEMANTIC_LEGACY_DISPOSITION_SCHEMA_VERSION}, "
-            f"{ROOT_SEMANTIC_PREVIOUS_DISPOSITION_SCHEMA_VERSION}, or "
-            f"{ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION}"
-        )
-    if set(raw) != {"schema_version", "lifecycle", "entries"}:
-        errors.append(
-            f"{source}: recorder-source {ROOT_SEMANTIC_DISPOSITION_KEY} must contain exactly "
-            "schema_version, lifecycle, and entries"
-        )
-    entries = raw.get("entries")
-    if not isinstance(entries, list):
-        entries = []
-        errors.append(
-            f"{source}: recorder-source {ROOT_SEMANTIC_DISPOSITION_KEY}.entries must be a list"
-        )
-    lifecycle = raw.get("lifecycle")
-    if not isinstance(lifecycle, dict):
-        lifecycle = {}
-        errors.append(f"{source}: recorder-source Root lifecycle must be a mapping")
-    if set(lifecycle) != ROOT_SEMANTIC_LIFECYCLE_FIELDS:
-        errors.append(
-            f"{source}: recorder-source Root lifecycle must contain exactly "
-            f"{', '.join(sorted(ROOT_SEMANTIC_LIFECYCLE_FIELDS))}"
-        )
-    expected_lifecycle_schema = (
-        ROOT_SEMANTIC_PREVIOUS_LIFECYCLE_SCHEMA_VERSION
-        if source_schema_version == ROOT_SEMANTIC_PREVIOUS_DISPOSITION_SCHEMA_VERSION
-        else ROOT_SEMANTIC_LEGACY_LIFECYCLE_SCHEMA_VERSION
-    )
-    if lifecycle.get("schema_version") != expected_lifecycle_schema:
-        errors.append(
-            f"{source}: recorder-source Root lifecycle schema_version must equal "
-            f"{expected_lifecycle_schema}"
-        )
-    if source_schema_version == ROOT_SEMANTIC_PREVIOUS_DISPOSITION_SCHEMA_VERSION:
-        def migrate_snapshot(value: object, *, label: str) -> tuple[dict | None, list[str]]:
-            return _migrate_root_semantic_snapshot_v3(
-                value, label=label, evaluation_date=evaluation_date
-            )
-    else:
-        def migrate_snapshot(value: object, *, label: str) -> tuple[dict | None, list[str]]:
-            return _migrate_root_semantic_snapshot_v2(value, label=label)
-    previous_raw = lifecycle.get("previous")
-    if previous_raw is None:
-        previous = None
-    else:
-        previous, previous_errors = migrate_snapshot(
-            previous_raw,
-            label=f"{source}: recorder-source Root lifecycle.previous",
-        )
-        errors.extend(previous_errors)
-    current, current_errors = migrate_snapshot(
-        lifecycle.get("current"),
-        label=f"{source}: recorder-source Root lifecycle.current",
-    )
-    errors.extend(current_errors)
-    contract = {
-        "schema_version": ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION,
-        "lifecycle": {
-            "schema_version": ROOT_SEMANTIC_LIFECYCLE_SCHEMA_VERSION,
-            "previous": previous,
-            "current": current,
-        },
-        "entries": entries,
-    }
-    if not errors:
-        normalized_lifecycle, lifecycle_errors = _validate_root_semantic_lifecycle(
-            contract["lifecycle"], evaluation_date=evaluation_date
-        )
-        errors.extend(lifecycle_errors)
-        if normalized_lifecycle is not None:
-            contract["lifecycle"] = normalized_lifecycle
-    return contract, source_schema_version, source_sha256, errors
 
 
 def _root_rationale_is_generic(value: str) -> bool:
@@ -6606,17 +6336,33 @@ def _root_document_id(path: str, document_part: str) -> str:
     return f"{path}#{document_part}"
 
 
-def _root_document_fingerprints(documents: list[dict]) -> dict[str, str]:
-    return {
-        _root_document_id(str(document["path"]), str(document["document_part"])):
-        hashlib.sha256(str(document["text"]).encode("utf-8")).hexdigest()
-        for document in documents
-    }
+_ROOT_SKILL_DOCUMENTS_DETECTOR_SOURCE = _root_skill_documents
+_ROOT_SENTENCE_CANDIDATES_DETECTOR_SOURCE = _root_sentence_candidates
+_ROOT_DOCUMENT_CANDIDATES_DETECTOR_SOURCE = _root_document_candidates
+_FOLD_ROOT_CANDIDATES_DETECTOR_SOURCE = _fold_root_candidates
 
 
 _DETECTOR_REPOSITORY_SOURCE_PATHS = (
     "scripts/audit-skill-content.py",
     "scripts/validation_utils.py",
+)
+_DETECTOR_REPOSITORY_SOURCE_FILES = (
+    ("audit-skill-content", Path(__file__).resolve()),
+    ("validation_utils", (ROOT / "scripts" / "validation_utils.py").resolve()),
+)
+_DETECTOR_SOURCE_WALKER_CONTRACT = (
+    "repository-source-reachable-symbol-walker-v1"
+)
+_DETECTOR_IMPLICIT_MODULE_NAMES = frozenset(
+    {
+        "__builtins__",
+        "__cached__",
+        "__file__",
+        "__loader__",
+        "__name__",
+        "__package__",
+        "__spec__",
+    }
 )
 
 
@@ -6629,6 +6375,774 @@ def _detector_repository_source_text(path: Path) -> str:
         return path.read_text(encoding="utf-8")
     except (OSError, UnicodeError) as exc:
         raise ValidationProblem(f"detector source is unreadable: {path}: {exc}") from exc
+
+
+class _DetectorDocstringStripper(ast.NodeTransformer):
+    """Remove non-behavioral docstrings before canonical AST projection."""
+
+    @staticmethod
+    def _strip(node: ast.AST) -> ast.AST:
+        body = getattr(node, "body", None)
+        if (
+            isinstance(body, list)
+            and body
+            and isinstance(body[0], ast.Expr)
+            and isinstance(body[0].value, ast.Constant)
+            and isinstance(body[0].value.value, str)
+        ):
+            del body[0]
+        return node
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> ast.AST:
+        self.generic_visit(node)
+        return self._strip(node)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> ast.AST:
+        self.generic_visit(node)
+        return self._strip(node)
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> ast.AST:
+        self.generic_visit(node)
+        return self._strip(node)
+
+
+def _detector_ast_source(source: str, node: ast.AST) -> str:
+    """Return portable normalized behavior AST without comments or docstrings."""
+
+    del source
+    normalized = _DetectorDocstringStripper().visit(deepcopy(node))
+    if not isinstance(normalized, ast.AST):
+        raise ValidationProblem("detector source node cannot be normalized")
+    ast.fix_missing_locations(normalized)
+    try:
+        return ast.unparse(normalized)
+    except (TypeError, ValueError, RecursionError) as exc:
+        raise ValidationProblem("detector source node cannot be projected") from exc
+
+
+def _detector_assignment_names(node: ast.AST) -> list[str]:
+    targets: list[ast.AST] = []
+    if isinstance(node, ast.Assign):
+        targets.extend(node.targets)
+    elif isinstance(node, ast.AnnAssign):
+        targets.append(node.target)
+    names: set[str] = set()
+    for target in targets:
+        names.update(
+            child.id
+            for child in ast.walk(target)
+            if isinstance(child, ast.Name) and isinstance(child.ctx, ast.Store)
+        )
+    return sorted(names)
+
+
+def _detector_compound_binding_names(node: ast.AST) -> list[str]:
+    """Collect module bindings in one compound statement without child scopes."""
+
+    names: set[str] = set()
+    pending = list(ast.iter_child_nodes(node))
+    while pending:
+        child = pending.pop()
+        if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            names.add(child.name)
+            continue
+        if isinstance(
+            child,
+            (ast.Lambda, ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp),
+        ):
+            continue
+        if isinstance(child, ast.Import):
+            names.update(alias.asname or alias.name.split(".")[0] for alias in child.names)
+            continue
+        if isinstance(child, ast.ImportFrom):
+            names.update(alias.asname or alias.name for alias in child.names)
+            continue
+        if isinstance(child, ast.ExceptHandler) and isinstance(child.name, str):
+            names.add(child.name)
+        if isinstance(child, ast.MatchAs) and isinstance(child.name, str):
+            names.add(child.name)
+        if isinstance(child, ast.MatchStar) and isinstance(child.name, str):
+            names.add(child.name)
+        if isinstance(child, ast.MatchMapping) and isinstance(child.rest, str):
+            names.add(child.rest)
+        if isinstance(child, ast.Name) and isinstance(child.ctx, ast.Store):
+            names.add(child.id)
+        pending.extend(ast.iter_child_nodes(child))
+    return sorted(names)
+
+
+def _detector_source_catalog() -> dict[str, dict[str, object]]:
+    catalog: dict[str, dict[str, object]] = {}
+    seen_paths: dict[Path, str] = {}
+    for namespace, path in _DETECTOR_REPOSITORY_SOURCE_FILES:
+        resolved = path.resolve()
+        if namespace in catalog:
+            raise ValidationProblem(
+                f"duplicate detector source namespace: {namespace}"
+            )
+        prior_namespace = seen_paths.get(resolved)
+        if prior_namespace is not None:
+            raise ValidationProblem(
+                "duplicate detector source path: "
+                f"{resolved} ({prior_namespace}, {namespace})"
+            )
+        seen_paths[resolved] = namespace
+        source = _detector_repository_source_text(resolved)
+        try:
+            tree = ast.parse(source, filename=resolved.as_posix())
+        except SyntaxError as exc:
+            raise ValidationProblem(
+                f"cannot parse detector source {resolved}: {exc.msg}"
+            ) from exc
+        symbols: dict[str, dict[str, object]] = {}
+        imports: dict[str, dict[str, str | None]] = {}
+        for node in tree.body:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                if node.name in symbols:
+                    raise ValidationProblem(
+                        "duplicate detector source symbol: "
+                        f"{namespace}.{node.name}"
+                    )
+                symbols[node.name] = {
+                    "kind": "class" if isinstance(node, ast.ClassDef) else "function",
+                    "node": node,
+                    "source": _detector_ast_source(source, node),
+                }
+                continue
+            assignment_names = _detector_assignment_names(node)
+            if not assignment_names and not isinstance(node, (ast.Import, ast.ImportFrom)):
+                assignment_names = _detector_compound_binding_names(node)
+            for name in assignment_names:
+                if name in symbols:
+                    raise ValidationProblem(
+                        "duplicate detector source symbol: "
+                        f"{namespace}.{name}"
+                    )
+                symbols[name] = {
+                    "kind": "binding",
+                    "node": node,
+                    "source": _detector_ast_source(source, node),
+                }
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    imports[alias.asname or alias.name.split(".")[0]] = {
+                        "module": alias.name,
+                        "name": None,
+                    }
+            elif isinstance(node, ast.ImportFrom) and node.module is not None:
+                for alias in node.names:
+                    imports[alias.asname or alias.name] = {
+                        "module": node.module,
+                        "name": alias.name,
+                    }
+        catalog[namespace] = {
+            "path": resolved,
+            "symbols": symbols,
+            "imports": imports,
+        }
+    return catalog
+
+
+def _detector_root_selector(
+    function: object,
+    catalog: dict[str, dict[str, object]],
+) -> tuple[str, str]:
+    function_globals = getattr(function, "__globals__", None)
+    function_name = getattr(function, "__name__", None)
+    source_path = (
+        function_globals.get("__file__")
+        if isinstance(function_globals, dict)
+        else None
+    )
+    if not isinstance(function_name, str) or not isinstance(source_path, str):
+        raise ValidationProblem("detector root is not a repository source function")
+    matches = [
+        namespace
+        for namespace, module in catalog.items()
+        if module["path"] == Path(source_path).resolve()
+    ]
+    if len(matches) != 1:
+        raise ValidationProblem(
+            f"detector root source selector is not unique: {function_name}"
+        )
+    namespace = matches[0]
+    symbols = catalog[namespace]["symbols"]
+    assert isinstance(symbols, dict)
+    symbol = symbols.get(function_name)
+    if not isinstance(symbol, dict) or symbol.get("kind") != "function":
+        raise ValidationProblem(
+            "detector root function is missing from allowlisted source: "
+            f"{namespace}.{function_name}"
+        )
+    return namespace, function_name
+
+
+def _detector_target_names(node: ast.AST) -> set[str]:
+    return {
+        child.id
+        for child in ast.walk(node)
+        if isinstance(child, ast.Name) and isinstance(child.ctx, ast.Store)
+    }
+
+
+def _detector_argument_names(arguments: ast.arguments) -> set[str]:
+    return {
+        argument.arg
+        for argument in (
+            *arguments.posonlyargs,
+            *arguments.args,
+            *arguments.kwonlyargs,
+            *(() if arguments.vararg is None else (arguments.vararg,)),
+            *(() if arguments.kwarg is None else (arguments.kwarg,)),
+        )
+    }
+
+
+class _DetectorScopeBindingCollector(ast.NodeVisitor):
+    """Collect bindings owned by one lexical scope without entering children."""
+
+    def __init__(self) -> None:
+        self.local_names: set[str] = set()
+        self.global_names: set[str] = set()
+        self.nonlocal_names: set[str] = set()
+
+    def visit_Name(self, node: ast.Name) -> None:
+        if isinstance(node.ctx, ast.Store):
+            self.local_names.add(node.id)
+
+    def visit_Global(self, node: ast.Global) -> None:
+        self.global_names.update(node.names)
+
+    def visit_Nonlocal(self, node: ast.Nonlocal) -> None:
+        self.nonlocal_names.update(node.names)
+
+    def visit_Import(self, node: ast.Import) -> None:
+        self.local_names.update(
+            alias.asname or alias.name.split(".")[0] for alias in node.names
+        )
+
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+        self.local_names.update(alias.asname or alias.name for alias in node.names)
+
+    def visit_ExceptHandler(self, node: ast.ExceptHandler) -> None:
+        if isinstance(node.name, str):
+            self.local_names.add(node.name)
+        self.generic_visit(node)
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        self.local_names.add(node.name)
+        self._visit_definition_expressions(node)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        self.local_names.add(node.name)
+        self._visit_definition_expressions(node)
+
+    def _visit_definition_expressions(
+        self,
+        node: ast.FunctionDef | ast.AsyncFunctionDef,
+    ) -> None:
+        for expression in (
+            *node.decorator_list,
+            *node.args.defaults,
+            *(item for item in node.args.kw_defaults if item is not None),
+        ):
+            self.visit(expression)
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        self.local_names.add(node.name)
+        for expression in (*node.decorator_list, *node.bases):
+            self.visit(expression)
+        for keyword in node.keywords:
+            self.visit(keyword.value)
+
+    def visit_Lambda(self, node: ast.Lambda) -> None:
+        for expression in (
+            *node.args.defaults,
+            *(item for item in node.args.kw_defaults if item is not None),
+        ):
+            self.visit(expression)
+
+    def visit_ListComp(self, node: ast.ListComp) -> None:
+        self._visit_comprehension_bindings(node)
+
+    def visit_SetComp(self, node: ast.SetComp) -> None:
+        self._visit_comprehension_bindings(node)
+
+    def visit_DictComp(self, node: ast.DictComp) -> None:
+        self._visit_comprehension_bindings(node)
+
+    def visit_GeneratorExp(self, node: ast.GeneratorExp) -> None:
+        self._visit_comprehension_bindings(node)
+
+    def _visit_comprehension_bindings(
+        self,
+        node: ast.ListComp | ast.SetComp | ast.DictComp | ast.GeneratorExp,
+    ) -> None:
+        collector = _DetectorNamedExpressionBindingCollector()
+        collector.visit(node)
+        self.local_names.update(collector.names)
+
+
+class _DetectorNamedExpressionBindingCollector(ast.NodeVisitor):
+    def __init__(self) -> None:
+        self.names: set[str] = set()
+
+    def visit_NamedExpr(self, node: ast.NamedExpr) -> None:
+        self.names.update(_detector_target_names(node.target))
+        self.visit(node.value)
+
+    def visit_Lambda(self, node: ast.Lambda) -> None:
+        return
+
+
+def _detector_scope_bindings(
+    body: list[ast.stmt],
+    arguments: ast.arguments | None = None,
+) -> tuple[set[str], set[str], set[str]]:
+    collector = _DetectorScopeBindingCollector()
+    for statement in body:
+        collector.visit(statement)
+    local_names = set(collector.local_names)
+    if arguments is not None:
+        local_names.update(_detector_argument_names(arguments))
+    local_names.difference_update(collector.global_names)
+    local_names.difference_update(collector.nonlocal_names)
+    return local_names, collector.global_names, collector.nonlocal_names
+
+
+class _DetectorGlobalLoadCollector(ast.NodeVisitor):
+    """Resolve source loads that reach the repository module namespace."""
+
+    def __init__(
+        self,
+        *,
+        scope_kind: str,
+        local_names: set[str] | None = None,
+        global_names: set[str] | None = None,
+        nonlocal_names: set[str] | None = None,
+        enclosing_function_locals: tuple[frozenset[str], ...] = (),
+        loaded_names: set[str] | None = None,
+    ) -> None:
+        self.scope_kind = scope_kind
+        self.local_names = local_names or set()
+        self.global_names = global_names or set()
+        self.nonlocal_names = nonlocal_names or set()
+        self.enclosing_function_locals = enclosing_function_locals
+        self.loaded_names = loaded_names if loaded_names is not None else set()
+
+    def _child_enclosing_function_locals(self) -> tuple[frozenset[str], ...]:
+        if self.scope_kind in {"function", "lambda", "comprehension"}:
+            return (frozenset(self.local_names), *self.enclosing_function_locals)
+        return self.enclosing_function_locals
+
+    def _child(
+        self,
+        *,
+        scope_kind: str,
+        local_names: set[str],
+        global_names: set[str] | None = None,
+        nonlocal_names: set[str] | None = None,
+    ) -> _DetectorGlobalLoadCollector:
+        return _DetectorGlobalLoadCollector(
+            scope_kind=scope_kind,
+            local_names=local_names,
+            global_names=global_names,
+            nonlocal_names=nonlocal_names,
+            enclosing_function_locals=self._child_enclosing_function_locals(),
+            loaded_names=self.loaded_names,
+        )
+
+    def _resolves_to_module(self, name: str) -> bool:
+        if self.scope_kind == "module" or name in self.global_names:
+            return True
+        if name in self.local_names or name in self.nonlocal_names:
+            return False
+        return not any(
+            name in scope_names for scope_names in self.enclosing_function_locals
+        )
+
+    def visit_Name(self, node: ast.Name) -> None:
+        if isinstance(node.ctx, ast.Load) and self._resolves_to_module(node.id):
+            self.loaded_names.add(node.id)
+
+    def _visit_function_definition(
+        self,
+        node: ast.FunctionDef | ast.AsyncFunctionDef,
+    ) -> None:
+        for expression in (
+            *node.decorator_list,
+            *node.args.defaults,
+            *(item for item in node.args.kw_defaults if item is not None),
+        ):
+            self.visit(expression)
+        for argument in (
+            *node.args.posonlyargs,
+            *node.args.args,
+            *node.args.kwonlyargs,
+            *(() if node.args.vararg is None else (node.args.vararg,)),
+            *(() if node.args.kwarg is None else (node.args.kwarg,)),
+        ):
+            if argument.annotation is not None:
+                self.visit(argument.annotation)
+        if node.returns is not None:
+            self.visit(node.returns)
+        for type_parameter in getattr(node, "type_params", ()):
+            self.visit(type_parameter)
+        local_names, global_names, nonlocal_names = _detector_scope_bindings(
+            node.body, node.args
+        )
+        child = self._child(
+            scope_kind="function",
+            local_names=local_names,
+            global_names=global_names,
+            nonlocal_names=nonlocal_names,
+        )
+        for statement in node.body:
+            child.visit(statement)
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        self._visit_function_definition(node)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        self._visit_function_definition(node)
+
+    def visit_Lambda(self, node: ast.Lambda) -> None:
+        for expression in (
+            *node.args.defaults,
+            *(item for item in node.args.kw_defaults if item is not None),
+        ):
+            self.visit(expression)
+        collector = _DetectorScopeBindingCollector()
+        collector.visit(node.body)
+        local_names = _detector_argument_names(node.args) | collector.local_names
+        local_names.difference_update(collector.global_names)
+        local_names.difference_update(collector.nonlocal_names)
+        self._child(
+            scope_kind="lambda",
+            local_names=local_names,
+            global_names=collector.global_names,
+            nonlocal_names=collector.nonlocal_names,
+        ).visit(node.body)
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        for expression in (*node.decorator_list, *node.bases):
+            self.visit(expression)
+        for keyword in node.keywords:
+            self.visit(keyword.value)
+        for type_parameter in getattr(node, "type_params", ()):
+            self.visit(type_parameter)
+        local_names, global_names, nonlocal_names = _detector_scope_bindings(node.body)
+        child = self._child(
+            scope_kind="class",
+            local_names=local_names,
+            global_names=global_names,
+            nonlocal_names=nonlocal_names,
+        )
+        for statement in node.body:
+            child.visit(statement)
+
+    def _visit_comprehension(
+        self,
+        node: ast.ListComp | ast.SetComp | ast.DictComp | ast.GeneratorExp,
+        result_expressions: tuple[ast.expr, ...],
+    ) -> None:
+        if not node.generators:
+            raise ValidationProblem("detector comprehension has no generator")
+        self.visit(node.generators[0].iter)
+        local_names = set().union(
+            *(_detector_target_names(item.target) for item in node.generators)
+        )
+        child = self._child(scope_kind="comprehension", local_names=local_names)
+        for index, generator in enumerate(node.generators):
+            if index:
+                child.visit(generator.iter)
+            for condition in generator.ifs:
+                child.visit(condition)
+        for expression in result_expressions:
+            child.visit(expression)
+
+    def visit_ListComp(self, node: ast.ListComp) -> None:
+        self._visit_comprehension(node, (node.elt,))
+
+    def visit_SetComp(self, node: ast.SetComp) -> None:
+        self._visit_comprehension(node, (node.elt,))
+
+    def visit_DictComp(self, node: ast.DictComp) -> None:
+        self._visit_comprehension(node, (node.key, node.value))
+
+    def visit_GeneratorExp(self, node: ast.GeneratorExp) -> None:
+        self._visit_comprehension(node, (node.elt,))
+
+
+def _detector_loaded_names(node: ast.AST) -> list[str]:
+    collector = _DetectorGlobalLoadCollector(scope_kind="module")
+    collector.visit(node)
+    return sorted(collector.loaded_names)
+
+
+def _detector_selected_binding_projection(
+    symbol_id: str,
+    symbol: dict[str, object],
+    fields: tuple[str, ...],
+) -> dict[str, object]:
+    """Extract selected literal dict fields from one reachable source binding."""
+
+    node = symbol.get("node")
+    value_node = (
+        node.value
+        if isinstance(node, (ast.Assign, ast.AnnAssign))
+        else None
+    )
+    if not isinstance(value_node, ast.Dict):
+        raise ValidationProblem(
+            f"selected detector binding is not a dict literal: {symbol_id}"
+        )
+    values: dict[str, object] = {}
+    duplicates: set[str] = set()
+    for key_node, item_node in zip(value_node.keys, value_node.values):
+        try:
+            key = ast.literal_eval(key_node) if key_node is not None else None
+        except (TypeError, ValueError, SyntaxError):
+            continue
+        if key not in fields:
+            continue
+        if key in values:
+            duplicates.add(str(key))
+            continue
+        try:
+            values[str(key)] = ast.literal_eval(item_node)
+        except (TypeError, ValueError, SyntaxError) as exc:
+            raise ValidationProblem(
+                f"selected detector binding is not literal: {symbol_id}.{key}"
+            ) from exc
+    if duplicates:
+        raise ValidationProblem(
+            f"selected detector binding fields are duplicated: {symbol_id}: "
+            + ", ".join(sorted(duplicates))
+        )
+    missing = sorted(set(fields) - set(values))
+    if missing:
+        raise ValidationProblem(
+            f"selected detector binding fields are missing: {symbol_id}: "
+            + ", ".join(missing)
+        )
+    return {field: values[field] for field in fields}
+
+
+def _detector_evaluated_binding_projection(
+    symbol_id: str,
+    value: object,
+) -> object:
+    """Project one explicitly selected already-evaluated module constant."""
+
+    try:
+        encoded = json.dumps(
+            value,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        return json.loads(encoded)
+    except (TypeError, ValueError, RecursionError, json.JSONDecodeError) as exc:
+        raise ValidationProblem(
+            f"evaluated detector binding is not canonical JSON: {symbol_id}"
+        ) from exc
+
+
+def _detector_repository_payload(
+    roots: tuple[object, ...],
+    *,
+    contract_version: str,
+    selected_binding_fields: dict[str, tuple[str, ...]] | None = None,
+    evaluated_binding_values: dict[str, object] | None = None,
+) -> dict[str, object]:
+    """Project the exact allowlisted repository-symbol closure for detector roots."""
+
+    catalog = _detector_source_catalog()
+    import_namespaces = {
+        namespace: namespace
+        for namespace in catalog
+        if namespace != "audit-skill-content"
+    }
+    selected_binding_fields = selected_binding_fields or {}
+    evaluated_binding_values = evaluated_binding_values or {}
+    overlap = sorted(set(selected_binding_fields) & set(evaluated_binding_values))
+    if overlap:
+        raise ValidationProblem(
+            "detector binding cannot be both selected and evaluated: "
+            + ", ".join(overlap)
+        )
+    pending = [_detector_root_selector(function, catalog) for function in roots]
+    root_ids = sorted(f"{namespace}.{name}" for namespace, name in pending)
+    symbols_payload: dict[str, dict[str, object]] = {}
+    bindings: dict[str, dict[str, str]] = {}
+    selected_payload: dict[str, dict[str, object]] = {}
+    evaluated_payload: dict[str, object] = {}
+    selected_seen: set[str] = set()
+    evaluated_seen: set[str] = set()
+    while pending:
+        namespace, symbol_name = pending.pop()
+        symbol_id = f"{namespace}.{symbol_name}"
+        if symbol_id in symbols_payload:
+            continue
+        if symbol_id in selected_binding_fields:
+            selected_seen.add(symbol_id)
+            module = catalog[namespace]
+            symbols = module["symbols"]
+            assert isinstance(symbols, dict)
+            symbol = symbols.get(symbol_name)
+            if not isinstance(symbol, dict):
+                raise ValidationProblem(
+                    f"reachable detector symbol is missing: {symbol_id}"
+                )
+            projection = _detector_selected_binding_projection(
+                symbol_id,
+                symbol,
+                selected_binding_fields[symbol_id],
+            )
+            selected_payload[symbol_id] = projection
+            symbols_payload[symbol_id] = {
+                "kind": "selected-binding",
+                "source": json.dumps(
+                    projection,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ),
+            }
+            continue
+        if symbol_id in evaluated_binding_values:
+            evaluated_seen.add(symbol_id)
+            module = catalog[namespace]
+            symbols = module["symbols"]
+            assert isinstance(symbols, dict)
+            symbol = symbols.get(symbol_name)
+            if not isinstance(symbol, dict) or symbol.get("kind") != "binding":
+                raise ValidationProblem(
+                    f"evaluated detector binding is missing: {symbol_id}"
+                )
+            projection = _detector_evaluated_binding_projection(
+                symbol_id,
+                evaluated_binding_values[symbol_id],
+            )
+            evaluated_payload[symbol_id] = projection
+            symbols_payload[symbol_id] = {
+                "kind": "evaluated-binding",
+                "value": projection,
+            }
+            continue
+        module = catalog[namespace]
+        symbols = module["symbols"]
+        imports = module["imports"]
+        assert isinstance(symbols, dict) and isinstance(imports, dict)
+        symbol = symbols.get(symbol_name)
+        if not isinstance(symbol, dict):
+            raise ValidationProblem(
+                f"reachable detector symbol is missing: {symbol_id}"
+            )
+        node = symbol.get("node")
+        source = symbol.get("source")
+        kind = symbol.get("kind")
+        if (
+            not isinstance(node, ast.AST)
+            or not isinstance(source, str)
+            or not isinstance(kind, str)
+        ):
+            raise ValidationProblem(
+                f"reachable detector symbol is malformed: {symbol_id}"
+            )
+        symbols_payload[symbol_id] = {"kind": kind, "source": source}
+        for loaded_name in _detector_loaded_names(node):
+            binding_id = f"{symbol_id}:{loaded_name}"
+            if loaded_name in symbols:
+                target = f"{namespace}.{loaded_name}"
+                bindings[binding_id] = {
+                    "kind": (
+                        "selected-binding"
+                        if target in selected_binding_fields
+                        else "evaluated-binding"
+                        if target in evaluated_binding_values
+                        else "repository-symbol"
+                    ),
+                    "target": target,
+                }
+                pending.append((namespace, loaded_name))
+                continue
+            imported = imports.get(loaded_name)
+            if not isinstance(imported, dict):
+                if hasattr(builtins, loaded_name):
+                    bindings[binding_id] = {
+                        "kind": "external-builtin",
+                        "target": f"builtins.{loaded_name}",
+                    }
+                    continue
+                if loaded_name in _DETECTOR_IMPLICIT_MODULE_NAMES:
+                    bindings[binding_id] = {
+                        "kind": "module-implicit",
+                        "target": f"python.{loaded_name}",
+                    }
+                    continue
+                raise ValidationProblem(
+                    "unknown detector source symbol: "
+                    f"{namespace}.{loaded_name} loaded by {symbol_id}"
+                )
+            imported_module = imported.get("module")
+            imported_name = imported.get("name")
+            target_namespace = (
+                import_namespaces.get(imported_module)
+                if isinstance(imported_module, str)
+                else None
+            )
+            target_symbols = (
+                catalog[target_namespace]["symbols"]
+                if target_namespace is not None
+                else None
+            )
+            if (
+                isinstance(imported_name, str)
+                and isinstance(target_symbols, dict)
+                and imported_name in target_symbols
+            ):
+                target = f"{target_namespace}.{imported_name}"
+                bindings[binding_id] = {
+                    "kind": "repository-symbol",
+                    "target": target,
+                }
+                pending.append((target_namespace, imported_name))
+            else:
+                target = str(imported_module)
+                if isinstance(imported_name, str):
+                    target = f"{target}.{imported_name}"
+                bindings[binding_id] = {
+                    "kind": "external-import",
+                    "target": target,
+                }
+    unused_selected = sorted(set(selected_binding_fields) - selected_seen)
+    if unused_selected:
+        raise ValidationProblem(
+            "selected detector binding is unreachable: " + ", ".join(unused_selected)
+        )
+    unused_evaluated = sorted(set(evaluated_binding_values) - evaluated_seen)
+    if unused_evaluated:
+        raise ValidationProblem(
+            "evaluated detector binding is unreachable: "
+            + ", ".join(unused_evaluated)
+        )
+    return {
+        "contract_version": contract_version,
+        "walker_contract": _DETECTOR_SOURCE_WALKER_CONTRACT,
+        "roots": root_ids,
+        "symbols": {
+            key: symbols_payload[key] for key in sorted(symbols_payload)
+        },
+        "bindings": {key: bindings[key] for key in sorted(bindings)},
+        "selected_bindings": {
+            key: selected_payload[key] for key in sorted(selected_payload)
+        },
+        "evaluated_bindings": {
+            key: evaluated_payload[key] for key in sorted(evaluated_payload)
+        },
+    }
 
 
 def _explicit_detector_source_manifest(
@@ -6664,2628 +7178,79 @@ def _explicit_detector_source_manifest(
 
 
 def _root_semantic_detector_payload() -> dict[str, object]:
-    """Return the explicit source manifest for Root detector behavior."""
+    """Return the closed reachable-behavior projection for Root semantics."""
 
-    return _explicit_detector_source_manifest(
-        contract_version="root-semantic-detector-v4",
-    )
-
-
-def _root_semantic_detector_fingerprint() -> str:
-    """Return the aggregate digest of the explicit Root detector sources."""
-
-    return str(_root_semantic_detector_payload()["aggregate_source_digest"])
-
-def _root_lifecycle_lineage_id(entry: dict) -> str:
-    payload = "\0".join(
-        str(entry[field])
-        for field in ("finding", "path", "document_part", "skill_owner")
-    )
-    return hashlib.sha256(
-        ("root-semantic-lineage-v1\0" + payload).encode("utf-8")
-    ).hexdigest()
-
-
-def _root_document_set_fingerprint(
-    document_fingerprints: dict[str, str],
-) -> str:
-    payload = "root-semantic-document-set-v1\0" + "\0".join(
-        f"{document_id}\0{fingerprint}"
-        for document_id, fingerprint in sorted(document_fingerprints.items())
-    )
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
-
-
-def _root_canonical_fingerprint(contract: str, value: object) -> str:
-    payload = json.dumps(
-        value,
-        ensure_ascii=False,
-        sort_keys=True,
-        separators=(",", ":"),
-    )
-    return hashlib.sha256(f"{contract}\0{payload}".encode("utf-8")).hexdigest()
-
-
-def _root_bootstrap_core_state(
-    snapshot: dict,
-    *,
-    refresh_review_schema_version: int = ROOT_BOOTSTRAP_REFRESH_REVIEW_SCHEMA_VERSION,
-) -> dict:
-    if refresh_review_schema_version != 1:
-        raise ValidationProblem(
-            "Root bootstrap refresh review schema has no core-state bridge: "
-            f"{refresh_review_schema_version}"
-        )
-    return {
-        "schema_version": ROOT_BOOTSTRAP_REFRESH_V1_CORE_SNAPSHOT_SCHEMA_VERSION,
-        "kind": "bootstrap",
-        "release_id": None,
-        "released_on": None,
-        "document_fingerprint": snapshot.get("document_fingerprint"),
-        "detector_fingerprint": snapshot.get("detector_fingerprint"),
-        "entries": list(snapshot.get("entries") or []),
-        "change_reviews": [],
-    }
-
-
-def _root_bootstrap_candidate_fingerprint(entries: list[dict]) -> str:
-    candidates = [
-        {
-            key: entry[key]
-            for key in (
-                "candidate_id",
-                "lineage_id",
-                "document_id",
-                "document_fingerprint",
-                "first_observed",
-            )
-        }
-        for entry in entries
-    ]
-    return _root_canonical_fingerprint(
-        "root-bootstrap-candidates-v1", candidates
-    )
-
-
-def _root_bootstrap_disposition_fingerprint(entries: list[dict]) -> str:
-    dispositions = [
-        {
-            "candidate_id": entry["candidate_id"],
-            "disposition": entry["disposition"],
-        }
-        for entry in entries
-    ]
-    return _root_canonical_fingerprint(
-        "root-bootstrap-dispositions-v1", dispositions
-    )
-
-
-def _root_bootstrap_base_state_fingerprint(snapshot: dict) -> str:
-    return _root_canonical_fingerprint(
-        "root-bootstrap-state-base-v1",
-        _root_bootstrap_core_state(
-            snapshot,
-            refresh_review_schema_version=ROOT_BOOTSTRAP_REFRESH_REVIEW_SCHEMA_VERSION,
+    return _detector_repository_payload(
+        (
+            _ROOT_SKILL_DOCUMENTS_DETECTOR_SOURCE,
+            _ROOT_SENTENCE_CANDIDATES_DETECTOR_SOURCE,
+            _ROOT_DOCUMENT_CANDIDATES_DETECTOR_SOURCE,
+            _FOLD_ROOT_CANDIDATES_DETECTOR_SOURCE,
         ),
-    )
-
-
-def _root_bootstrap_chained_state_fingerprint(
-    snapshot: dict,
-    review: dict,
-) -> str:
-    evidence = dict(review["evidence"])
-    evidence.pop("current_state_fingerprint", None)
-    record = {
-        "schema_version": review["schema_version"],
-        "reviewed_by": review["reviewed_by"],
-        "rationale": review["rationale"],
-        "evidence": evidence,
-    }
-    return _root_canonical_fingerprint(
-        "root-bootstrap-state-chain-v1",
-        {
-            "core_state": _root_bootstrap_core_state(
-                snapshot,
-                refresh_review_schema_version=review["schema_version"],
+        contract_version="root-semantic-detector-contract-v1",
+        selected_binding_fields={
+            "audit-skill-content.THRESHOLDS": (
+                "root_tutorial_density_min_words",
+            )
+        },
+        evaluated_binding_values={
+            "validation_utils.REFERENCE_CONTRACT_MODEL": (
+                _validation_utils.REFERENCE_CONTRACT_MODEL
             ),
-            "review": record,
+            "validation_utils.ROLE_CONTRACT_MODEL": (
+                _validation_utils.ROLE_CONTRACT_MODEL
+            ),
         },
     )
 
 
-def _root_bootstrap_delta(prior: dict, current: dict) -> dict[str, list]:
-    prior_by_id = {
-        str(entry["candidate_id"]): entry for entry in prior.get("entries", [])
-    }
-    current_by_id = {
-        str(entry["candidate_id"]): entry for entry in current.get("entries", [])
-    }
-    prior_ids = set(prior_by_id)
-    current_ids = set(current_by_id)
+def _root_semantic_detector_fingerprint() -> str:
+    """Return the canonical digest of reachable Root detector behavior."""
+
+    return hashlib.sha256(
+        json.dumps(
+            _root_semantic_detector_payload(),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
+
+
+def _root_semantic_detector_contract() -> dict[str, str]:
     return {
-        "added_candidate_ids": sorted(current_ids - prior_ids),
-        "removed_entries": [
-            dict(prior_by_id[candidate_id])
-            for candidate_id in sorted(prior_ids - current_ids)
-        ],
-        "prior_overrides": [
-            dict(prior_by_id[candidate_id])
-            for candidate_id in sorted(prior_ids & current_ids)
-            if prior_by_id[candidate_id] != current_by_id[candidate_id]
-        ],
+        "contract_version": "root-semantic-detector-contract-v1",
+        "algorithm": "sha256-canonical-json-v1",
+        "value": _root_semantic_detector_fingerprint(),
     }
 
 
-def _root_unknown_first_observed() -> dict[str, object]:
+def _reference_semantic_detector_payload() -> dict[str, object]:
+    """Return the closed reachable-behavior projection for Reference semantics."""
+
+    return _detector_repository_payload(
+        (_reference_semantic_candidates,),
+        contract_version="reference-semantic-detector-contract-v1",
+    )
+
+
+def _reference_semantic_detector_fingerprint() -> str:
+    return hashlib.sha256(
+        json.dumps(
+            _reference_semantic_detector_payload(),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
+
+
+def _reference_semantic_detector_contract() -> dict[str, str]:
     return {
-        "status": "unknown-pre-baseline",
-        "release_id": None,
-        "released_on": None,
+        "contract_version": "reference-semantic-detector-contract-v1",
+        "algorithm": "sha256-canonical-json-v1",
+        "value": _reference_semantic_detector_fingerprint(),
     }
-
-
-def _root_known_first_observed(release_id: str, released_on: str) -> dict[str, str]:
-    return {
-        "status": "known",
-        "release_id": release_id,
-        "released_on": released_on,
-    }
-
-
-def _root_semantic_snapshot(
-    entries: list[dict],
-    document_fingerprints: dict[str, str],
-    *,
-    kind: str,
-    release_id: str | None,
-    released_on: str | None,
-    prior: dict | None = None,
-    change_reviews: list[dict] | None = None,
-    bootstrap_refresh_reviews: list[dict] | None = None,
-    bootstrap_refresh_origin_state_fingerprint: str | None = None,
-) -> dict:
-    prior_entries = {
-        str(entry["candidate_id"]): entry
-        for entry in (prior or {}).get("entries", [])
-        if isinstance(entry, dict) and isinstance(entry.get("candidate_id"), str)
-    }
-    snapshot_entries: list[dict] = []
-    for entry in sorted(entries, key=lambda item: str(item["candidate_id"])):
-        document_id = _root_document_id(entry["path"], entry["document_part"])
-        prior_entry = prior_entries.get(str(entry["candidate_id"]))
-        if prior_entry is not None:
-            first_observed = dict(prior_entry["first_observed"])
-        elif kind == "release" and release_id is not None and released_on is not None:
-            first_observed = _root_known_first_observed(release_id, released_on)
-        else:
-            first_observed = _root_unknown_first_observed()
-        snapshot_entries.append(
-            {
-                "candidate_id": entry["candidate_id"],
-                "lineage_id": _root_lifecycle_lineage_id(entry),
-                "document_id": document_id,
-                "document_fingerprint": document_fingerprints[document_id],
-                "disposition": entry["disposition"],
-                "first_observed": first_observed,
-            }
-        )
-    snapshot = {
-        "schema_version": ROOT_SEMANTIC_SNAPSHOT_SCHEMA_VERSION,
-        "kind": kind,
-        "release_id": release_id,
-        "released_on": released_on,
-        "document_fingerprint": _root_document_set_fingerprint(
-            document_fingerprints
-        ),
-        "detector_fingerprint": _root_semantic_detector_fingerprint(),
-        "entries": snapshot_entries,
-        "change_reviews": sorted(
-            list(change_reviews or []),
-            key=lambda item: str(item.get("prior_candidate_id", "")),
-        ),
-        "bootstrap_refresh_reviews": list(bootstrap_refresh_reviews or []),
-        "bootstrap_refresh_origin_state_fingerprint": None,
-        "bootstrap_refresh_review_count": 0,
-    }
-    if kind == "bootstrap":
-        snapshot["bootstrap_refresh_origin_state_fingerprint"] = (
-            bootstrap_refresh_origin_state_fingerprint
-            or _root_bootstrap_base_state_fingerprint(snapshot)
-        )
-        snapshot["bootstrap_refresh_review_count"] = len(
-            snapshot["bootstrap_refresh_reviews"]
-        )
-    if prior is not None:
-        explicit_bindings, _binding_errors = _root_explicit_replacement_bindings(
-            prior, snapshot
-        )
-        automatic_bindings, _ambiguous = _root_source_only_replacement_bindings(
-            prior, snapshot
-        )
-        inherited_by_candidate: dict[str, str] = {}
-        for prior_id, replacement_ids in (
-            *explicit_bindings.items(),
-            *automatic_bindings.items(),
-        ):
-            for replacement_id in replacement_ids:
-                inherited_by_candidate[replacement_id] = prior_id
-        current_by_id = {
-            str(entry["candidate_id"]): entry for entry in snapshot["entries"]
-        }
-        for replacement_id, prior_id in inherited_by_candidate.items():
-            current_entry = current_by_id.get(replacement_id)
-            prior_entry = prior_entries.get(prior_id)
-            if current_entry is not None and prior_entry is not None:
-                current_entry["first_observed"] = dict(prior_entry["first_observed"])
-    return snapshot
-
-
-def _root_bootstrap_lifecycle(
-    entries: list[dict], document_fingerprints: dict[str, str]
-) -> dict:
-    return {
-        "schema_version": ROOT_SEMANTIC_LIFECYCLE_SCHEMA_VERSION,
-        "previous": None,
-        "current": _root_semantic_snapshot(
-            entries,
-            document_fingerprints,
-            kind="bootstrap",
-            release_id=None,
-            released_on=None,
-        ),
-    }
-
-
-def _root_release_id_is_valid(value: object) -> bool:
-    return bool(
-        isinstance(value, str)
-        and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}", value)
-    )
-
-
-def _root_parse_non_future_date(
-    value: object, *, label: str, evaluation_date: date, errors: list[str]
-) -> date | None:
-    try:
-        parsed = date.fromisoformat(value)  # type: ignore[arg-type]
-        if parsed.isoformat() != value or parsed > evaluation_date:
-            raise ValueError
-    except (TypeError, ValueError):
-        errors.append(f"{label} must be a non-future ISO date")
-        return None
-    return parsed
-
-
-def _root_bootstrap_entry_errors(entry: object, label: str) -> list[str]:
-    errors: list[str] = []
-    if not isinstance(entry, dict):
-        return [f"{label} must be a mapping"]
-    if set(entry) != ROOT_SEMANTIC_SNAPSHOT_ENTRY_FIELDS:
-        return [
-            f"{label} must contain exactly "
-            f"{', '.join(sorted(ROOT_SEMANTIC_SNAPSHOT_ENTRY_FIELDS))}"
-        ]
-    for field in ("candidate_id", "lineage_id", "document_fingerprint"):
-        value = entry.get(field)
-        if not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{64}", value):
-            errors.append(f"{label}.{field} must be lowercase sha256")
-    document_id = entry.get("document_id")
-    if (
-        not isinstance(document_id, str)
-        or "#" not in document_id
-        or document_id.startswith("/")
-        or ".." in Path(document_id.split("#", 1)[0]).parts
-    ):
-        errors.append(f"{label}.document_id must be canonical")
-    if entry.get("disposition") not in SEMANTIC_DISPOSITIONS:
-        errors.append(f"{label}.disposition is invalid")
-    if entry.get("first_observed") != _root_unknown_first_observed():
-        errors.append(
-            f"{label}.first_observed must remain unknown throughout bootstrap refresh"
-        )
-    return errors
-
-
-def _normalize_root_bootstrap_refresh_reviews(
-    raw: object,
-    *,
-    label: str,
-) -> tuple[list[dict], list[str]]:
-    if not isinstance(raw, list):
-        return [], [f"{label} must be a list"]
-    errors: list[str] = []
-    normalized: list[dict] = []
-    seen_current_states: set[str] = set()
-    fingerprint_fields = (
-        "prior_state_fingerprint",
-        "current_state_fingerprint",
-        "prior_document_fingerprint",
-        "current_document_fingerprint",
-        "prior_detector_fingerprint",
-        "current_detector_fingerprint",
-        "prior_candidate_fingerprint",
-        "current_candidate_fingerprint",
-        "prior_disposition_fingerprint",
-        "current_disposition_fingerprint",
-    )
-    for index, review in enumerate(raw):
-        review_label = f"{label}[{index}]"
-        if not isinstance(review, dict) or set(review) != ROOT_BOOTSTRAP_REFRESH_REVIEW_FIELDS:
-            errors.append(
-                f"{review_label} must contain exactly "
-                f"{', '.join(sorted(ROOT_BOOTSTRAP_REFRESH_REVIEW_FIELDS))}"
-            )
-            continue
-        if review.get("schema_version") != ROOT_BOOTSTRAP_REFRESH_REVIEW_SCHEMA_VERSION:
-            errors.append(
-                f"{review_label}.schema_version must equal "
-                f"{ROOT_BOOTSTRAP_REFRESH_REVIEW_SCHEMA_VERSION}"
-            )
-        reviewed_by = review.get("reviewed_by")
-        if not isinstance(reviewed_by, str) or not reviewed_by.strip():
-            errors.append(f"{review_label}.reviewed_by must be non-blank")
-        rationale = review.get("rationale")
-        if not isinstance(rationale, str) or _root_rationale_is_generic(rationale):
-            errors.append(f"{review_label}.rationale is blank or generic")
-        evidence = review.get("evidence")
-        if (
-            not isinstance(evidence, dict)
-            or set(evidence) != ROOT_BOOTSTRAP_REFRESH_REVIEW_EVIDENCE_FIELDS
-        ):
-            errors.append(
-                f"{review_label}.evidence must contain exactly "
-                f"{', '.join(sorted(ROOT_BOOTSTRAP_REFRESH_REVIEW_EVIDENCE_FIELDS))}"
-            )
-            continue
-        for field in fingerprint_fields:
-            value = evidence.get(field)
-            if not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{64}", value):
-                errors.append(
-                    f"{review_label}.evidence.{field} must be lowercase sha256"
-                )
-        current_state = evidence.get("current_state_fingerprint")
-        if isinstance(current_state, str):
-            if current_state in seen_current_states:
-                errors.append(
-                    f"{review_label}.evidence.current_state_fingerprint must be unique"
-                )
-            seen_current_states.add(current_state)
-        added_ids = evidence.get("added_candidate_ids")
-        if not isinstance(added_ids, list):
-            added_ids = []
-            errors.append(
-                f"{review_label}.evidence.added_candidate_ids must be a list"
-            )
-        added_valid = all(
-            isinstance(item, str) and bool(re.fullmatch(r"[0-9a-f]{64}", item))
-            for item in added_ids
-        )
-        if not added_valid:
-            errors.append(
-                f"{review_label}.evidence.added_candidate_ids must contain lowercase sha256 values"
-            )
-        elif added_ids != sorted(set(added_ids)):
-            errors.append(
-                f"{review_label}.evidence.added_candidate_ids must be sorted and unique"
-            )
-        delta_entry_ids: dict[str, list[str]] = {}
-        for field in ("removed_entries", "prior_overrides"):
-            rows = evidence.get(field)
-            if not isinstance(rows, list):
-                rows = []
-                errors.append(f"{review_label}.evidence.{field} must be a list")
-            ids: list[str] = []
-            for row_index, row in enumerate(rows):
-                errors.extend(
-                    _root_bootstrap_entry_errors(
-                        row,
-                        f"{review_label}.evidence.{field}[{row_index}]",
-                    )
-                )
-                if isinstance(row, dict) and isinstance(row.get("candidate_id"), str):
-                    ids.append(row["candidate_id"])
-            if ids != sorted(set(ids)):
-                errors.append(
-                    f"{review_label}.evidence.{field} must be sorted and unique by candidate_id"
-                )
-            delta_entry_ids[field] = ids
-        added_set = {item for item in added_ids if isinstance(item, str)}
-        removed_set = set(delta_entry_ids["removed_entries"])
-        override_set = set(delta_entry_ids["prior_overrides"])
-        overlap = sorted(
-            (added_set & removed_set)
-            | (added_set & override_set)
-            | (removed_set & override_set)
-        )
-        if overlap:
-            errors.append(
-                f"{review_label}.evidence delta arrays must be mutually exclusive: "
-                + ", ".join(overlap)
-            )
-        normalized.append(deepcopy(review))
-    return normalized, errors
-
-
-def _root_bootstrap_refresh_chain_summary(snapshot: dict) -> tuple[dict, list[str]]:
-    errors: list[str] = []
-    origin_fingerprint = snapshot.get(
-        "bootstrap_refresh_origin_state_fingerprint"
-    )
-    if not isinstance(origin_fingerprint, str) or not re.fullmatch(
-        r"[0-9a-f]{64}", origin_fingerprint
-    ):
-        errors.append(
-            "bootstrap_refresh_origin_state_fingerprint must be lowercase sha256"
-        )
-    declared_count = snapshot.get("bootstrap_refresh_review_count")
-    if (
-        isinstance(declared_count, bool)
-        or not isinstance(declared_count, int)
-        or declared_count < 0
-    ):
-        errors.append("bootstrap_refresh_review_count must be a non-negative integer")
-    raw_reviews = snapshot.get("bootstrap_refresh_reviews")
-    reviews, review_errors = _normalize_root_bootstrap_refresh_reviews(
-        raw_reviews,
-        label="bootstrap_refresh_reviews",
-    )
-    errors.extend(review_errors)
-    if isinstance(declared_count, int) and not isinstance(declared_count, bool):
-        if declared_count != len(reviews):
-            errors.append(
-                "bootstrap_refresh_review_count must equal the review list length"
-            )
-    if errors:
-        return {
-            "valid": False,
-            "count": len(raw_reviews) if isinstance(raw_reviews, list) else None,
-            "latest_delta": None,
-        }, errors
-    current = _root_bootstrap_core_state(snapshot)
-    transitions: list[tuple[dict, dict, dict]] = []
-    for reverse_index, review in enumerate(reversed(reviews)):
-        index = len(reviews) - reverse_index - 1
-        label = f"bootstrap_refresh_reviews[{index}]"
-        evidence = review["evidence"]
-        current_entries = list(current["entries"])
-        current_by_id = {
-            str(entry["candidate_id"]): entry for entry in current_entries
-        }
-        current_facts = {
-            "current_document_fingerprint": current["document_fingerprint"],
-            "current_detector_fingerprint": current["detector_fingerprint"],
-            "current_candidate_fingerprint": _root_bootstrap_candidate_fingerprint(
-                current_entries
-            ),
-            "current_disposition_fingerprint": _root_bootstrap_disposition_fingerprint(
-                current_entries
-            ),
-        }
-        for field, expected in current_facts.items():
-            if evidence.get(field) != expected:
-                errors.append(f"{label}.evidence.{field} does not match current state")
-        added_ids = list(evidence["added_candidate_ids"])
-        removed_entries = list(evidence["removed_entries"])
-        prior_overrides = list(evidence["prior_overrides"])
-        invalid_added = sorted(set(added_ids) - set(current_by_id))
-        if invalid_added:
-            errors.append(
-                f"{label}.evidence.added_candidate_ids are absent from current state: "
-                + ", ".join(invalid_added)
-            )
-        removed_ids = {str(entry["candidate_id"]) for entry in removed_entries}
-        unexpected_removed = sorted(removed_ids & set(current_by_id))
-        if unexpected_removed:
-            errors.append(
-                f"{label}.evidence.removed_entries still exist in current state: "
-                + ", ".join(unexpected_removed)
-            )
-        override_by_id = {
-            str(entry["candidate_id"]): entry for entry in prior_overrides
-        }
-        invalid_overrides = sorted(
-            set(override_by_id) - (set(current_by_id) - set(added_ids))
-        )
-        if invalid_overrides:
-            errors.append(
-                f"{label}.evidence.prior_overrides do not bind stable current IDs: "
-                + ", ".join(invalid_overrides)
-            )
-        unchanged_overrides = sorted(
-            candidate_id
-            for candidate_id, entry in override_by_id.items()
-            if current_by_id.get(candidate_id) == entry
-        )
-        if unchanged_overrides:
-            errors.append(
-                f"{label}.evidence.prior_overrides must be minimal: "
-                + ", ".join(unchanged_overrides)
-            )
-        first_observed_changes = sorted(
-            candidate_id
-            for candidate_id, entry in override_by_id.items()
-            if candidate_id in current_by_id
-            and entry.get("first_observed")
-            != current_by_id[candidate_id].get("first_observed")
-        )
-        if first_observed_changes:
-            errors.append(
-                f"{label} must not rewrite first_observed: "
-                + ", ".join(first_observed_changes)
-            )
-        prior_by_id = {
-            candidate_id: entry
-            for candidate_id, entry in current_by_id.items()
-            if candidate_id not in set(added_ids)
-        }
-        prior_by_id.update(override_by_id)
-        prior_by_id.update(
-            {str(entry["candidate_id"]): entry for entry in removed_entries}
-        )
-        prior_entries = [prior_by_id[key] for key in sorted(prior_by_id)]
-        prior = {
-            "schema_version": ROOT_SEMANTIC_SNAPSHOT_SCHEMA_VERSION,
-            "kind": "bootstrap",
-            "release_id": None,
-            "released_on": None,
-            "document_fingerprint": evidence["prior_document_fingerprint"],
-            "detector_fingerprint": evidence["prior_detector_fingerprint"],
-            "entries": prior_entries,
-            "change_reviews": [],
-        }
-        expected_added = sorted(set(current_by_id) - set(prior_by_id))
-        expected_removed = sorted(set(prior_by_id) - set(current_by_id))
-        expected_overrides = sorted(
-            candidate_id
-            for candidate_id in set(prior_by_id) & set(current_by_id)
-            if prior_by_id[candidate_id] != current_by_id[candidate_id]
-        )
-        if added_ids != expected_added:
-            errors.append(f"{label}.evidence.added_candidate_ids is not minimal")
-        if [entry["candidate_id"] for entry in removed_entries] != expected_removed:
-            errors.append(f"{label}.evidence.removed_entries is not minimal")
-        if [entry["candidate_id"] for entry in prior_overrides] != expected_overrides:
-            errors.append(f"{label}.evidence.prior_overrides is not minimal")
-        prior_facts = {
-            "prior_candidate_fingerprint": _root_bootstrap_candidate_fingerprint(
-                prior_entries
-            ),
-            "prior_disposition_fingerprint": _root_bootstrap_disposition_fingerprint(
-                prior_entries
-            ),
-        }
-        for field, expected in prior_facts.items():
-            if evidence.get(field) != expected:
-                errors.append(f"{label}.evidence.{field} does not match prior state")
-        transitions.append((prior, current, review))
-        current = prior
-
-    chain_fingerprint = _root_bootstrap_base_state_fingerprint(current)
-    if origin_fingerprint != chain_fingerprint:
-        errors.append(
-            "bootstrap_refresh_origin_state_fingerprint does not match the reconstructed origin"
-        )
-    for forward_index, (prior, next_state, review) in enumerate(reversed(transitions)):
-        label = f"bootstrap_refresh_reviews[{forward_index}]"
-        evidence = review["evidence"]
-        if evidence.get("prior_state_fingerprint") != chain_fingerprint:
-            errors.append(
-                f"{label}.evidence.prior_state_fingerprint breaks the bootstrap chain"
-            )
-        expected_current = _root_bootstrap_chained_state_fingerprint(
-            next_state, review
-        )
-        if evidence.get("current_state_fingerprint") != expected_current:
-            errors.append(
-                f"{label}.evidence.current_state_fingerprint breaks the bootstrap chain"
-            )
-        chain_fingerprint = expected_current
-
-    latest_delta = None
-    if reviews:
-        latest = reviews[-1]["evidence"]
-        latest_delta = {
-            "added_count": len(latest["added_candidate_ids"]),
-            "removed_count": len(latest["removed_entries"]),
-            "prior_override_count": len(latest["prior_overrides"]),
-            "document_changed": latest["prior_document_fingerprint"]
-            != latest["current_document_fingerprint"],
-            "detector_changed": latest["prior_detector_fingerprint"]
-            != latest["current_detector_fingerprint"],
-            "candidate_changed": latest["prior_candidate_fingerprint"]
-            != latest["current_candidate_fingerprint"],
-            "disposition_changed": latest["prior_disposition_fingerprint"]
-            != latest["current_disposition_fingerprint"],
-        }
-    return {
-        "valid": not errors,
-        "count": len(reviews),
-        "latest_delta": latest_delta,
-    }, errors
-
-
-def _validate_root_semantic_snapshot(
-    raw: object,
-    *,
-    label: str,
-    evaluation_date: date,
-    snapshot_schema_version: int = ROOT_SEMANTIC_SNAPSHOT_SCHEMA_VERSION,
-) -> tuple[dict | None, list[str]]:
-    errors: list[str] = []
-    if not isinstance(raw, dict):
-        return None, [f"{label} must be a mapping"]
-    if set(raw) != ROOT_SEMANTIC_SNAPSHOT_FIELDS:
-        errors.append(
-            f"{label} must contain exactly {', '.join(sorted(ROOT_SEMANTIC_SNAPSHOT_FIELDS))}"
-        )
-    if raw.get("schema_version") != snapshot_schema_version:
-        errors.append(
-            f"{label}.schema_version must equal {snapshot_schema_version}"
-        )
-    kind = raw.get("kind")
-    if kind not in {"bootstrap", "release"}:
-        errors.append(f"{label}.kind must be bootstrap or release")
-    release_id = raw.get("release_id")
-    released_on = raw.get("released_on")
-    parsed_released_on: date | None = None
-    if kind == "bootstrap":
-        if release_id is not None or released_on is not None:
-            errors.append(f"{label} bootstrap release identity must be null")
-    elif kind == "release":
-        if not _root_release_id_is_valid(release_id):
-            errors.append(f"{label}.release_id is invalid")
-        parsed_released_on = _root_parse_non_future_date(
-            released_on,
-            label=f"{label}.released_on",
-            evaluation_date=evaluation_date,
-            errors=errors,
-        )
-    for field in ("document_fingerprint", "detector_fingerprint"):
-        value = raw.get(field)
-        if not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{64}", value):
-            errors.append(f"{label}.{field} must be lowercase sha256")
-    bootstrap_origin = raw.get("bootstrap_refresh_origin_state_fingerprint")
-    bootstrap_review_count = raw.get("bootstrap_refresh_review_count")
-    if kind == "bootstrap":
-        if not isinstance(bootstrap_origin, str) or not re.fullmatch(
-            r"[0-9a-f]{64}", bootstrap_origin
-        ):
-            errors.append(
-                f"{label}.bootstrap_refresh_origin_state_fingerprint must be lowercase sha256"
-            )
-        if (
-            isinstance(bootstrap_review_count, bool)
-            or not isinstance(bootstrap_review_count, int)
-            or bootstrap_review_count < 0
-        ):
-            errors.append(
-                f"{label}.bootstrap_refresh_review_count must be a non-negative integer"
-            )
-    else:
-        if bootstrap_origin is not None:
-            errors.append(
-                f"{label} release bootstrap_refresh_origin_state_fingerprint must be null"
-            )
-        if bootstrap_review_count != 0 or isinstance(bootstrap_review_count, bool):
-            errors.append(f"{label} release bootstrap_refresh_review_count must be zero")
-
-    entries = raw.get("entries")
-    if not isinstance(entries, list):
-        entries = []
-        errors.append(f"{label}.entries must be a list")
-    ids = [entry.get("candidate_id") if isinstance(entry, dict) else None for entry in entries]
-    if all(isinstance(item, str) for item in ids) and ids != sorted(ids):
-        errors.append(f"{label}.entries must be sorted by candidate_id")
-    seen: set[str] = set()
-    normalized_entries: list[dict] = []
-    for index, entry in enumerate(entries):
-        entry_label = f"{label}.entries[{index}]"
-        if not isinstance(entry, dict):
-            errors.append(f"{entry_label} must be a mapping")
-            continue
-        if set(entry) != ROOT_SEMANTIC_SNAPSHOT_ENTRY_FIELDS:
-            errors.append(
-                f"{entry_label} must contain exactly "
-                f"{', '.join(sorted(ROOT_SEMANTIC_SNAPSHOT_ENTRY_FIELDS))}"
-            )
-            continue
-        candidate_id = entry.get("candidate_id")
-        if not isinstance(candidate_id, str) or not re.fullmatch(r"[0-9a-f]{64}", candidate_id):
-            errors.append(f"{entry_label}.candidate_id must be lowercase sha256")
-        elif candidate_id in seen:
-            errors.append(f"{entry_label}.candidate_id must be unique")
-        else:
-            seen.add(candidate_id)
-        lineage_id = entry.get("lineage_id")
-        if not isinstance(lineage_id, str) or not re.fullmatch(r"[0-9a-f]{64}", lineage_id):
-            errors.append(f"{entry_label}.lineage_id must be lowercase sha256")
-        document_id = entry.get("document_id")
-        if (
-            not isinstance(document_id, str)
-            or "#" not in document_id
-            or document_id.startswith("/")
-            or ".." in Path(document_id.split("#", 1)[0]).parts
-        ):
-            errors.append(f"{entry_label}.document_id must be canonical")
-        document_fingerprint = entry.get("document_fingerprint")
-        if not isinstance(document_fingerprint, str) or not re.fullmatch(
-            r"[0-9a-f]{64}", document_fingerprint
-        ):
-            errors.append(f"{entry_label}.document_fingerprint must be lowercase sha256")
-        if entry.get("disposition") not in SEMANTIC_DISPOSITIONS:
-            errors.append(f"{entry_label}.disposition is invalid")
-        first_observed = entry.get("first_observed")
-        if not isinstance(first_observed, dict) or set(first_observed) != ROOT_SEMANTIC_FIRST_OBSERVED_FIELDS:
-            errors.append(
-                f"{entry_label}.first_observed must contain exactly "
-                "status, release_id, and released_on"
-            )
-        else:
-            status = first_observed.get("status")
-            first_release = first_observed.get("release_id")
-            first_date = first_observed.get("released_on")
-            if status not in ROOT_SEMANTIC_FIRST_OBSERVED_STATUSES:
-                errors.append(f"{entry_label}.first_observed.status is invalid")
-            elif status == "unknown-pre-baseline":
-                if first_release is not None or first_date is not None:
-                    errors.append(
-                        f"{entry_label} unknown first_observed identity must be null"
-                    )
-            else:
-                if not _root_release_id_is_valid(first_release):
-                    errors.append(f"{entry_label}.first_observed.release_id is invalid")
-                parsed_first = _root_parse_non_future_date(
-                    first_date,
-                    label=f"{entry_label}.first_observed.released_on",
-                    evaluation_date=evaluation_date,
-                    errors=errors,
-                )
-                if (
-                    parsed_first is not None
-                    and parsed_released_on is not None
-                    and parsed_first > parsed_released_on
-                ):
-                    errors.append(
-                        f"{entry_label}.first_observed cannot be after snapshot release"
-                    )
-            if kind == "bootstrap" and first_observed != _root_unknown_first_observed():
-                errors.append(
-                    f"{entry_label}.first_observed must remain unknown in bootstrap"
-                )
-        normalized_entries.append(dict(entry))
-    reviews = raw.get("change_reviews")
-    if not isinstance(reviews, list):
-        reviews = []
-        errors.append(f"{label}.change_reviews must be a list")
-    review_ids = [
-        review.get("prior_candidate_id") if isinstance(review, dict) else None
-        for review in reviews
-    ]
-    if all(isinstance(item, str) for item in review_ids) and review_ids != sorted(review_ids):
-        errors.append(f"{label}.change_reviews must be sorted by prior_candidate_id")
-    seen_reviews: set[str] = set()
-    normalized_reviews: list[dict] = []
-    for index, review in enumerate(reviews):
-        review_label = f"{label}.change_reviews[{index}]"
-        if not isinstance(review, dict) or set(review) != ROOT_SEMANTIC_CHANGE_REVIEW_FIELDS:
-            errors.append(
-                f"{review_label} must contain exactly "
-                f"{', '.join(sorted(ROOT_SEMANTIC_CHANGE_REVIEW_FIELDS))}"
-            )
-            continue
-        prior_id = review.get("prior_candidate_id")
-        if not isinstance(prior_id, str) or not re.fullmatch(r"[0-9a-f]{64}", prior_id):
-            errors.append(f"{review_label}.prior_candidate_id must be lowercase sha256")
-        elif prior_id in seen_reviews:
-            errors.append(f"{review_label}.prior_candidate_id must be unique")
-        else:
-            seen_reviews.add(prior_id)
-        allowed_classifications = (
-            ROOT_SEMANTIC_PREVIOUS_CHANGE_REVIEW_CLASSIFICATIONS
-            if snapshot_schema_version
-            == ROOT_SEMANTIC_PREVIOUS_SNAPSHOT_SCHEMA_VERSION
-            else ROOT_SEMANTIC_CHANGE_REVIEW_CLASSIFICATIONS
-        )
-        if review.get("classification") not in allowed_classifications:
-            errors.append(f"{review_label}.classification is invalid")
-        reviewed_by = review.get("reviewed_by")
-        if not isinstance(reviewed_by, str) or not reviewed_by.strip():
-            errors.append(f"{review_label}.reviewed_by must be non-blank")
-        rationale = review.get("rationale")
-        if not isinstance(rationale, str) or _root_rationale_is_generic(rationale):
-            errors.append(f"{review_label}.rationale is blank or generic")
-        evidence = review.get("evidence")
-        if (
-            not isinstance(evidence, dict)
-            or set(evidence) != ROOT_SEMANTIC_CHANGE_REVIEW_EVIDENCE_FIELDS
-        ):
-            errors.append(
-                f"{review_label}.evidence must contain exactly "
-                f"{', '.join(sorted(ROOT_SEMANTIC_CHANGE_REVIEW_EVIDENCE_FIELDS))}"
-            )
-        else:
-            for field in (
-                "prior_lineage_id",
-                "prior_document_fingerprint",
-                "prior_detector_fingerprint",
-                "current_detector_fingerprint",
-            ):
-                value = evidence.get(field)
-                if not isinstance(value, str) or not re.fullmatch(
-                    r"[0-9a-f]{64}", value
-                ):
-                    errors.append(f"{review_label}.evidence.{field} must be lowercase sha256")
-            current_document_fingerprint = evidence.get(
-                "current_document_fingerprint"
-            )
-            if current_document_fingerprint is not None and (
-                not isinstance(current_document_fingerprint, str)
-                or not re.fullmatch(r"[0-9a-f]{64}", current_document_fingerprint)
-            ):
-                errors.append(
-                    f"{review_label}.evidence.current_document_fingerprint must be "
-                    "null or lowercase sha256"
-                )
-            replacement_ids = evidence.get("replacement_candidate_ids")
-            if not isinstance(replacement_ids, list):
-                errors.append(
-                    f"{review_label}.evidence.replacement_candidate_ids must be a list"
-                )
-            else:
-                replacement_ids_are_valid = all(
-                    isinstance(item, str)
-                    and bool(re.fullmatch(r"[0-9a-f]{64}", item))
-                    for item in replacement_ids
-                )
-                if replacement_ids_are_valid and replacement_ids != sorted(
-                    set(replacement_ids)
-                ):
-                    errors.append(
-                        f"{review_label}.evidence.replacement_candidate_ids must be "
-                        "sorted and unique"
-                    )
-                if not replacement_ids_are_valid:
-                    errors.append(
-                        f"{review_label}.evidence.replacement_candidate_ids must contain "
-                        "lowercase sha256 values"
-                    )
-                elif (
-                    review.get("classification")
-                    in ROOT_SEMANTIC_REPLACEMENT_REVIEW_CLASSIFICATIONS
-                    and not replacement_ids
-                ):
-                    errors.append(
-                        f"{review_label}.evidence.replacement_candidate_ids must be "
-                        "non-empty for source-and-detector-replacement"
-                    )
-                elif (
-                    review.get("classification")
-                    not in ROOT_SEMANTIC_REPLACEMENT_REVIEW_CLASSIFICATIONS
-                    and replacement_ids
-                ):
-                    errors.append(
-                        f"{review_label}.evidence.replacement_candidate_ids must be "
-                        "empty unless the review selects a replacement"
-                    )
-        normalized_reviews.append(dict(review))
-    bootstrap_reviews, bootstrap_review_errors = (
-        _normalize_root_bootstrap_refresh_reviews(
-            raw.get("bootstrap_refresh_reviews"),
-            label=f"{label}.bootstrap_refresh_reviews",
-        )
-    )
-    errors.extend(bootstrap_review_errors)
-    if kind == "bootstrap" and normalized_reviews:
-        errors.append(f"{label} bootstrap change_reviews must be empty")
-    if kind == "release" and bootstrap_reviews:
-        errors.append(f"{label} release bootstrap_refresh_reviews must be empty")
-    normalized = {
-        "schema_version": raw.get("schema_version"),
-        "kind": kind,
-        "release_id": release_id,
-        "released_on": released_on,
-        "document_fingerprint": raw.get("document_fingerprint"),
-        "detector_fingerprint": raw.get("detector_fingerprint"),
-        "entries": normalized_entries,
-        "change_reviews": normalized_reviews,
-        "bootstrap_refresh_reviews": bootstrap_reviews,
-        "bootstrap_refresh_origin_state_fingerprint": bootstrap_origin,
-        "bootstrap_refresh_review_count": bootstrap_review_count,
-    }
-    if kind == "bootstrap" and not errors:
-        _chain, chain_errors = _root_bootstrap_refresh_chain_summary(normalized)
-        errors.extend(f"{label}.{item}" for item in chain_errors)
-    return normalized, errors
-
-
-def _validate_root_semantic_lifecycle(
-    raw: object, *, evaluation_date: date
-) -> tuple[dict | None, list[str]]:
-    label = f"{ROOT_SEMANTIC_DISPOSITION_KEY}.lifecycle"
-    if not isinstance(raw, dict):
-        return None, [f"{label} must be a mapping"]
-    errors: list[str] = []
-    if set(raw) != ROOT_SEMANTIC_LIFECYCLE_FIELDS:
-        errors.append(
-            f"{label} must contain exactly {', '.join(sorted(ROOT_SEMANTIC_LIFECYCLE_FIELDS))}"
-        )
-    if raw.get("schema_version") != ROOT_SEMANTIC_LIFECYCLE_SCHEMA_VERSION:
-        errors.append(
-            f"{label}.schema_version must equal {ROOT_SEMANTIC_LIFECYCLE_SCHEMA_VERSION}"
-        )
-    current, current_errors = _validate_root_semantic_snapshot(
-        raw.get("current"), label=f"{label}.current", evaluation_date=evaluation_date
-    )
-    errors.extend(current_errors)
-    previous_raw = raw.get("previous")
-    if previous_raw is None:
-        previous = None
-    else:
-        previous, previous_errors = _validate_root_semantic_snapshot(
-            previous_raw,
-            label=f"{label}.previous",
-            evaluation_date=evaluation_date,
-        )
-        errors.extend(previous_errors)
-    if current is not None:
-        if current["kind"] == "bootstrap" and previous is not None:
-            errors.append(f"{label} bootstrap current snapshot requires previous=null")
-        if current["kind"] == "release" and previous is None:
-            errors.append(f"{label} release current snapshot requires a previous snapshot")
-    if current is not None and previous is not None:
-        if (
-            previous["kind"] == "release"
-            and current["kind"] == "release"
-            and current["released_on"] < previous["released_on"]
-        ):
-            errors.append(
-                f"{label}.current release cannot be earlier than previous release"
-            )
-        if current.get("release_id") is not None and current.get("release_id") == previous.get("release_id"):
-            errors.append(f"{label} release IDs must be distinct")
-        previous_by_id = {
-            entry["candidate_id"]: entry for entry in previous["entries"]
-        }
-        explicit_bindings, explicit_errors = _root_explicit_replacement_bindings(
-            previous, current
-        )
-        errors.extend(explicit_errors)
-        automatic_bindings, ambiguous_bindings = (
-            _root_source_only_replacement_bindings(previous, current)
-        )
-        for candidate_id, prior_ids in sorted(ambiguous_bindings.items()):
-            errors.append(
-                "root semantic lifecycle cannot infer a many-prior replacement "
-                f"for {candidate_id}; grouped review is required for "
-                + ", ".join(prior_ids)
-            )
-        replacement_owner: dict[str, str] = {}
-        for prior_id, replacement_ids in (
-            *explicit_bindings.items(),
-            *automatic_bindings.items(),
-        ):
-            for replacement_id in replacement_ids:
-                existing_owner = replacement_owner.get(replacement_id)
-                if existing_owner is not None and existing_owner != prior_id:
-                    errors.append(
-                        "root semantic lifecycle replacement candidate cannot bind "
-                        f"multiple prior candidates: {replacement_id}"
-                    )
-                else:
-                    replacement_owner[replacement_id] = prior_id
-        for entry in current["entries"]:
-            prior = previous_by_id.get(entry["candidate_id"])
-            if prior is not None and entry["first_observed"] != prior["first_observed"]:
-                errors.append(
-                    f"{label}.current entry {entry['candidate_id']} changed first_observed"
-                )
-            if prior is None and current["kind"] == "release":
-                replacement_prior_id = replacement_owner.get(entry["candidate_id"])
-                expected_first_observed = (
-                    previous_by_id[replacement_prior_id]["first_observed"]
-                    if replacement_prior_id is not None
-                    else _root_known_first_observed(
-                        current["release_id"], current["released_on"]
-                    )
-                )
-                if entry["first_observed"] != expected_first_observed:
-                    provenance = (
-                        f"inherit prior {replacement_prior_id}"
-                        if replacement_prior_id is not None
-                        else "start at current release"
-                    )
-                    errors.append(
-                        f"{label}.current new entry {entry['candidate_id']} must "
-                        f"{provenance}"
-                    )
-    return {
-        "schema_version": raw.get("schema_version"),
-        "previous": previous,
-        "current": current,
-    }, errors
-
-
-def _root_snapshot_matches_live(
-    snapshot: dict,
-    entries: list[dict],
-    document_fingerprints: dict[str, str],
-    detector_fingerprint: str,
-) -> tuple[bool, list[str]]:
-    expected_entries = _root_semantic_snapshot(
-        entries,
-        document_fingerprints,
-        kind=snapshot["kind"],
-        release_id=snapshot["release_id"],
-        released_on=snapshot["released_on"],
-        prior=snapshot,
-        change_reviews=snapshot["change_reviews"],
-    )["entries"]
-    reasons: list[str] = []
-    if snapshot["entries"] != expected_entries:
-        reasons.append("entries")
-    if snapshot["document_fingerprint"] != _root_document_set_fingerprint(
-        document_fingerprints
-    ):
-        reasons.append("document_fingerprint")
-    if snapshot["detector_fingerprint"] != detector_fingerprint:
-        reasons.append("detector_fingerprint")
-    return not reasons, reasons
-
-
-def _root_review_replacement_ids(review: dict) -> list[str]:
-    evidence = review.get("evidence")
-    if not isinstance(evidence, dict):
-        return []
-    replacement_ids = evidence.get("replacement_candidate_ids")
-    if not isinstance(replacement_ids, list):
-        return []
-    return [item for item in replacement_ids if isinstance(item, str)]
-
-
-def _root_explicit_replacement_bindings(
-    previous: dict,
-    current: dict,
-) -> tuple[dict[str, list[str]], list[str]]:
-    """Validate explicit replacement ownership and enforce one prior owner."""
-
-    previous_by_id = {
-        str(entry["candidate_id"]): entry for entry in previous.get("entries", [])
-    }
-    current_by_id = {
-        str(entry["candidate_id"]): entry for entry in current.get("entries", [])
-    }
-    added_ids = set(current_by_id) - set(previous_by_id)
-    removed_ids = set(previous_by_id) - set(current_by_id)
-    bindings: dict[str, list[str]] = {}
-    selected_owner: dict[str, str] = {}
-    errors: list[str] = []
-    for review in current.get("change_reviews", []):
-        if (
-            not isinstance(review, dict)
-            or review.get("classification")
-            not in ROOT_SEMANTIC_REPLACEMENT_REVIEW_CLASSIFICATIONS
-        ):
-            continue
-        prior_id = review.get("prior_candidate_id")
-        if not isinstance(prior_id, str) or prior_id not in removed_ids:
-            errors.append(
-                "root semantic lifecycle replacement review must bind a removed "
-                f"prior candidate: {prior_id}"
-            )
-            continue
-        prior = previous_by_id[prior_id]
-        selected = _root_review_replacement_ids(review)
-        if not selected:
-            errors.append(
-                f"root semantic lifecycle replacement review {prior_id} must select "
-                "at least one replacement"
-            )
-            continue
-        if selected != sorted(set(selected)):
-            errors.append(
-                f"root semantic lifecycle replacement review {prior_id} selected IDs "
-                "must be sorted and unique"
-            )
-            continue
-        invalid = [
-            candidate_id
-            for candidate_id in selected
-            if candidate_id not in added_ids
-            or current_by_id[candidate_id]["lineage_id"] != prior["lineage_id"]
-        ]
-        if invalid:
-            errors.append(
-                f"root semantic lifecycle replacement review {prior_id} selected IDs "
-                "must be current same-lineage additions: "
-                + ", ".join(invalid)
-            )
-            continue
-        mismatched = [
-            candidate_id
-            for candidate_id in selected
-            if current_by_id[candidate_id]["disposition"] != prior["disposition"]
-        ]
-        if mismatched:
-            errors.append(
-                f"root semantic lifecycle replacement review {prior_id} selected "
-                "dispositions must match the prior disposition: "
-                + ", ".join(mismatched)
-            )
-            continue
-        duplicate = [
-            candidate_id
-            for candidate_id in selected
-            if candidate_id in selected_owner
-            and selected_owner[candidate_id] != prior_id
-        ]
-        if duplicate:
-            errors.append(
-                "root semantic lifecycle replacement candidate cannot bind multiple "
-                "prior candidates: "
-                + ", ".join(duplicate)
-            )
-            continue
-        for candidate_id in selected:
-            selected_owner[candidate_id] = prior_id
-        bindings[prior_id] = selected
-    return bindings, errors
-
-
-def _root_source_only_candidate_priors(
-    previous: dict,
-    current: dict,
-) -> dict[str, list[str]]:
-    if previous.get("detector_fingerprint") != current.get("detector_fingerprint"):
-        return {}
-    previous_by_id = {
-        str(entry["candidate_id"]): entry for entry in previous.get("entries", [])
-    }
-    current_by_id = {
-        str(entry["candidate_id"]): entry for entry in current.get("entries", [])
-    }
-    added_ids = sorted(set(current_by_id) - set(previous_by_id))
-    removed_ids = sorted(set(previous_by_id) - set(current_by_id))
-    candidate_priors: dict[str, list[str]] = {}
-    for candidate_id in added_ids:
-        candidate = current_by_id[candidate_id]
-        eligible_priors = sorted(
-            prior_id
-            for prior_id in removed_ids
-            if previous_by_id[prior_id]["lineage_id"] == candidate["lineage_id"]
-            and previous_by_id[prior_id]["disposition"] == candidate["disposition"]
-            and previous_by_id[prior_id]["document_fingerprint"]
-            != candidate["document_fingerprint"]
-        )
-        if eligible_priors:
-            candidate_priors[candidate_id] = eligible_priors
-    return candidate_priors
-
-
-def _root_source_only_replacement_bindings(
-    previous: dict,
-    current: dict,
-) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
-    """Apply explicit source ownership before conservative automatic inference."""
-
-    candidate_priors = _root_source_only_candidate_priors(previous, current)
-    source_reviewed_priors = {
-        str(review.get("prior_candidate_id"))
-        for review in current.get("change_reviews", [])
-        if isinstance(review, dict)
-        and review.get("classification")
-        in ROOT_SEMANTIC_SOURCE_REVIEW_CLASSIFICATIONS
-    }
-    explicit_bindings, _errors = _root_explicit_replacement_bindings(
-        previous, current
-    )
-    explicitly_owned = {
-        candidate_id
-        for candidate_ids in explicit_bindings.values()
-        for candidate_id in candidate_ids
-    }
-    by_prior: dict[str, list[str]] = defaultdict(list)
-    unresolved_ambiguity: dict[str, list[str]] = {}
-    for candidate_id, eligible_priors in sorted(candidate_priors.items()):
-        if len(eligible_priors) > 1:
-            if not all(
-                prior_id in source_reviewed_priors for prior_id in eligible_priors
-            ):
-                unresolved_ambiguity[candidate_id] = eligible_priors
-            continue
-        prior_id = eligible_priors[0]
-        if (
-            prior_id in source_reviewed_priors
-            or candidate_id in explicitly_owned
-        ):
-            continue
-        by_prior[prior_id].append(candidate_id)
-    return {
-        prior_id: sorted(candidate_ids)
-        for prior_id, candidate_ids in sorted(by_prior.items())
-    }, unresolved_ambiguity
-
-
-def _root_change_review_evidence(
-    previous: dict,
-    current: dict,
-    current_document_fingerprints: dict[str, str],
-    prior_entry: dict,
-    replacement_candidate_ids: list[str],
-) -> dict:
-    """Derive provenance for one review; callers cannot supply these facts."""
-
-    return {
-        "prior_lineage_id": prior_entry["lineage_id"],
-        "replacement_candidate_ids": sorted(set(replacement_candidate_ids)),
-        "prior_document_fingerprint": prior_entry["document_fingerprint"],
-        "current_document_fingerprint": current_document_fingerprints.get(
-            prior_entry["document_id"]
-        ),
-        "prior_detector_fingerprint": previous["detector_fingerprint"],
-        "current_detector_fingerprint": current["detector_fingerprint"],
-    }
-
-
-def _root_lifecycle_comparison(
-    previous: dict | None,
-    current: dict,
-    current_document_fingerprints: dict[str, str],
-) -> tuple[dict, list[str]]:
-    if previous is None:
-        return {
-            "comparison_scope": "bootstrap-no-prior-release",
-            "added_count": None,
-            "removed_count": None,
-            "new_disposition_count": None,
-            "disposition_change_count": None,
-            "source_rewrite_count": None,
-            "source_replacement_count": None,
-            "detector_change_removal_count": None,
-            "detector_improvement_count": None,
-            "unclassified_count": None,
-            "added": [],
-            "removed": [],
-            "disposition_changes": [],
-            "disposition_change_details": [],
-            "source_rewrites": [],
-            "detector_change_removals": [],
-            "detector_improvements": [],
-            "unclassified": [],
-        }, []
-    previous_by_id = {entry["candidate_id"]: entry for entry in previous["entries"]}
-    current_by_id = {entry["candidate_id"]: entry for entry in current["entries"]}
-    added_ids = sorted(set(current_by_id) - set(previous_by_id))
-    removed_ids = sorted(set(previous_by_id) - set(current_by_id))
-    disposition_change_ids = sorted(
-        candidate_id
-        for candidate_id in set(previous_by_id) & set(current_by_id)
-        if previous_by_id[candidate_id]["disposition"]
-        != current_by_id[candidate_id]["disposition"]
-    )
-    added_by_lineage: dict[str, list[str]] = defaultdict(list)
-    for candidate_id in added_ids:
-        added_by_lineage[current_by_id[candidate_id]["lineage_id"]].append(candidate_id)
-    detector_changed = (
-        previous["detector_fingerprint"] != current["detector_fingerprint"]
-    )
-    global_source_changed = previous[
-        "document_fingerprint"
-    ] != _root_document_set_fingerprint(current_document_fingerprints)
-    reviews: dict[str, dict] = {}
-    errors: list[str] = []
-    for review in current.get("change_reviews", []):
-        if not isinstance(review, dict):
-            continue
-        prior_id = review.get("prior_candidate_id")
-        if not isinstance(prior_id, str):
-            continue
-        if prior_id in reviews:
-            errors.append(
-                f"root semantic lifecycle change_review {prior_id} is duplicated"
-            )
-            continue
-        reviews[prior_id] = review
-    disposition_change_details: list[dict] = []
-    source_rewrites: list[dict] = []
-    detector_removals: list[dict] = []
-    detector_improvements: list[dict] = []
-    unclassified: list[dict] = []
-    replacement_additions: set[str] = set()
-    raw_source_candidate_priors = _root_source_only_candidate_priors(
-        previous, current
-    )
-    raw_ambiguous_bindings = {
-        replacement_id: prior_ids
-        for replacement_id, prior_ids in raw_source_candidate_priors.items()
-        if len(prior_ids) > 1
-    }
-    automatic_bindings, ambiguous_bindings = _root_source_only_replacement_bindings(
-        previous, current
-    )
-    ambiguous_by_prior: dict[str, list[str]] = defaultdict(list)
-    for replacement_id, prior_ids in sorted(ambiguous_bindings.items()):
-        for prior_id in prior_ids:
-            ambiguous_by_prior[prior_id].append(replacement_id)
-    source_reviewed_priors = {
-        prior_id
-        for prior_id, review in reviews.items()
-        if review.get("classification")
-        in ROOT_SEMANTIC_SOURCE_REVIEW_CLASSIFICATIONS
-    }
-    raw_ambiguous_by_prior: dict[str, list[str]] = defaultdict(list)
-    for replacement_id, prior_ids in sorted(raw_ambiguous_bindings.items()):
-        for prior_id in prior_ids:
-            raw_ambiguous_by_prior[prior_id].append(replacement_id)
-        reviewed = sorted(set(prior_ids) & source_reviewed_priors)
-        missing = sorted(set(prior_ids) - source_reviewed_priors)
-        if reviewed and missing:
-            errors.append(
-                "root semantic lifecycle source-only ambiguity review is partial "
-                f"for {replacement_id}; missing prior reviews: "
-                + ", ".join(missing)
-            )
-    eligible_reviews: set[tuple[str, str]] = set()
-    bound_reviews: set[tuple[str, str]] = set()
-    evidence_failures: set[tuple[str, str]] = set()
-    explicit_bindings, explicit_errors = _root_explicit_replacement_bindings(
-        previous, current
-    )
-    errors.extend(explicit_errors)
-    replacement_owner: dict[str, str] = {
-        replacement_id: prior_id
-        for prior_id, replacement_ids in explicit_bindings.items()
-        for replacement_id in replacement_ids
-    }
-    for prior_id, replacement_ids in automatic_bindings.items():
-        for replacement_id in replacement_ids:
-            existing_owner = replacement_owner.get(replacement_id)
-            if existing_owner is not None and existing_owner != prior_id:
-                errors.append(
-                    "root semantic lifecycle replacement candidate cannot bind "
-                    f"multiple prior candidates: {replacement_id}"
-                )
-                continue
-            replacement_owner[replacement_id] = prior_id
-
-    def bind_review(
-        prior: dict,
-        classification: str,
-        *,
-        eligible_replacement_ids: list[str] | None = None,
-    ) -> tuple[dict | None, list[str]]:
-        prior_id = str(prior["candidate_id"])
-        eligible_reviews.add((prior_id, classification))
-        review = reviews.get(prior_id)
-        if review is None or review.get("classification") != classification:
-            return None, []
-        selected_ids = _root_review_replacement_ids(review)
-        if classification in ROOT_SEMANTIC_REPLACEMENT_REVIEW_CLASSIFICATIONS:
-            pool = set(eligible_replacement_ids or [])
-            if not selected_ids:
-                errors.append(
-                    f"root semantic lifecycle change_review {prior_id} must select "
-                    "at least one replacement"
-                )
-                evidence_failures.add((prior_id, classification))
-                return None, []
-            if selected_ids != sorted(set(selected_ids)):
-                errors.append(
-                    f"root semantic lifecycle change_review {prior_id} selected IDs "
-                    "must be sorted and unique"
-                )
-                evidence_failures.add((prior_id, classification))
-                return None, []
-            invalid_ids = [
-                candidate_id
-                for candidate_id in selected_ids
-                if candidate_id not in pool
-                or candidate_id not in current_by_id
-                or candidate_id not in added_ids
-                or current_by_id[candidate_id]["lineage_id"]
-                != prior["lineage_id"]
-            ]
-            if invalid_ids:
-                errors.append(
-                    f"root semantic lifecycle change_review {prior_id} selected IDs "
-                    "must be current same-lineage additions: "
-                    + ", ".join(invalid_ids)
-                )
-                evidence_failures.add((prior_id, classification))
-                return None, []
-            mismatched_ids = [
-                candidate_id
-                for candidate_id in selected_ids
-                if current_by_id[candidate_id]["disposition"]
-                != prior["disposition"]
-            ]
-            if mismatched_ids:
-                errors.append(
-                    f"root semantic lifecycle change_review {prior_id} selected "
-                    "dispositions must match the prior disposition: "
-                    + ", ".join(mismatched_ids)
-                )
-                evidence_failures.add((prior_id, classification))
-                return None, []
-            duplicate_ids = [
-                candidate_id
-                for candidate_id in selected_ids
-                if candidate_id in replacement_owner
-                and replacement_owner[candidate_id] != prior_id
-            ]
-            if duplicate_ids:
-                errors.append(
-                    "root semantic lifecycle replacement candidate cannot bind "
-                    "multiple prior candidates: "
-                    + ", ".join(duplicate_ids)
-                )
-                evidence_failures.add((prior_id, classification))
-                return None, []
-        elif selected_ids:
-            errors.append(
-                f"root semantic lifecycle change_review {prior_id} must not select "
-                f"replacement IDs for {classification}"
-            )
-            evidence_failures.add((prior_id, classification))
-            return None, []
-        expected_evidence = _root_change_review_evidence(
-            previous,
-            current,
-            current_document_fingerprints,
-            prior,
-            selected_ids,
-        )
-        if review.get("evidence") != expected_evidence:
-            errors.append(
-                f"root semantic lifecycle change_review {prior_id} evidence does not "
-                "match canonical recomputation"
-            )
-            evidence_failures.add((prior_id, classification))
-            return None, []
-        for candidate_id in selected_ids:
-            replacement_owner[candidate_id] = prior_id
-        bound_reviews.add((prior_id, classification))
-        return review, selected_ids
-
-    for candidate_id in disposition_change_ids:
-        prior = previous_by_id[candidate_id]
-        review, _selected = bind_review(prior, "disposition-change")
-        detail = {
-            "candidate_id": candidate_id,
-            "prior_disposition": prior["disposition"],
-            "current_disposition": current_by_id[candidate_id]["disposition"],
-        }
-        if review is not None:
-            detail["reviewed_by"] = review["reviewed_by"]
-        else:
-            unclassified.append(
-                {**detail, "reason": "unreviewed-disposition-change"}
-            )
-        disposition_change_details.append(detail)
-    for candidate_id in removed_ids:
-        prior = previous_by_id[candidate_id]
-        current_document = current_document_fingerprints.get(prior["document_id"])
-        source_changed = (
-            global_source_changed
-            if current_document is None
-            else current_document != prior["document_fingerprint"]
-        )
-        eligible_replacements = sorted(
-            added_by_lineage.get(prior["lineage_id"], [])
-        )
-        detail = {
-            "prior_candidate_id": candidate_id,
-            "document_id": prior["document_id"],
-            "eligible_replacement_candidate_ids": eligible_replacements,
-            "replacement_candidate_ids": [],
-        }
-        if source_changed and detector_changed:
-            eligible_reviews.add(
-                (candidate_id, "source-and-detector-removal")
-            )
-            if eligible_replacements:
-                eligible_reviews.add(
-                    (candidate_id, "source-and-detector-replacement")
-                )
-            requested_review = reviews.get(candidate_id)
-            classification = (
-                str(requested_review.get("classification"))
-                if isinstance(requested_review, dict)
-                else ""
-            )
-            if classification == "source-and-detector-replacement":
-                review, selected_replacements = bind_review(
-                    prior,
-                    classification,
-                    eligible_replacement_ids=eligible_replacements,
-                )
-            elif classification == "source-and-detector-removal":
-                review, selected_replacements = bind_review(
-                    prior, classification
-                )
-            else:
-                review, selected_replacements = None, []
-            if review is not None:
-                replacement_additions.update(selected_replacements)
-                source_rewrites.append(
-                    {
-                        **detail,
-                        "replacement_candidate_ids": selected_replacements,
-                        "classification": classification,
-                        "reviewed_by": review["reviewed_by"],
-                    }
-                )
-            else:
-                unclassified.append(
-                    {
-                        **detail,
-                        "reason": "source-and-detector-changed",
-                    }
-                )
-        elif source_changed:
-            raw_ambiguous_ids = sorted(
-                raw_ambiguous_by_prior.get(candidate_id, [])
-            )
-            if raw_ambiguous_ids:
-                eligible_reviews.add((candidate_id, "source-removal"))
-                eligible_reviews.add((candidate_id, "source-replacement"))
-                requested_review = reviews.get(candidate_id)
-                classification = (
-                    str(requested_review.get("classification"))
-                    if isinstance(requested_review, dict)
-                    else ""
-                )
-                if classification == "source-replacement":
-                    review, selected_replacements = bind_review(
-                        prior,
-                        classification,
-                        eligible_replacement_ids=raw_ambiguous_ids,
-                    )
-                elif classification == "source-removal":
-                    review, selected_replacements = bind_review(
-                        prior, classification
-                    )
-                else:
-                    review, selected_replacements = None, []
-                unresolved_ids = sorted(
-                    ambiguous_by_prior.get(candidate_id, [])
-                )
-                if review is not None and not unresolved_ids:
-                    replacement_additions.update(selected_replacements)
-                    source_rewrites.append(
-                        {
-                            **detail,
-                            "replacement_candidate_ids": selected_replacements,
-                            "classification": classification,
-                            "reviewed_by": review["reviewed_by"],
-                        }
-                    )
-                else:
-                    unclassified.append(
-                        {
-                            **detail,
-                            "ambiguous_replacement_candidate_ids": (
-                                unresolved_ids or raw_ambiguous_ids
-                            ),
-                            "reason": "implicit-many-prior-replacement",
-                        }
-                    )
-            else:
-                selected_replacements = automatic_bindings.get(candidate_id, [])
-                replacement_additions.update(selected_replacements)
-                source_rewrites.append(
-                    {
-                        **detail,
-                        "replacement_candidate_ids": selected_replacements,
-                        "classification": (
-                            "source-changed-replacement"
-                            if selected_replacements
-                            else "source-changed-removal"
-                        ),
-                    }
-                )
-        elif detector_changed:
-            detector_removals.append(detail)
-            review, _selected = bind_review(prior, "detector-improvement")
-            if review is not None:
-                detector_improvements.append(
-                    {**detail, "reviewed_by": review["reviewed_by"]}
-                )
-            else:
-                unclassified.append(
-                    {
-                        **detail,
-                        "reason": "unreviewed-detector-change-removal",
-                    }
-                )
-        else:
-            unclassified.append({**detail, "reason": "unexplained-removal"})
-    for prior_id, review in sorted(reviews.items()):
-        classification = str(review.get("classification"))
-        binding = (prior_id, classification)
-        if binding in bound_reviews or binding in evidence_failures:
-            continue
-        if binding in eligible_reviews:
-            continue
-        errors.append(
-            f"root semantic lifecycle change_review {prior_id} does not bind its "
-            f"{classification} classification"
-        )
-    new_ids = sorted(set(added_ids) - replacement_additions)
-    comparison_scope = (
-        "since-bootstrap"
-        if previous["kind"] == "bootstrap"
-        else "since-prior-release"
-    )
-    return {
-        "comparison_scope": comparison_scope,
-        "added_count": len(added_ids),
-        "removed_count": len(removed_ids),
-        "new_disposition_count": len(new_ids),
-        "disposition_change_count": len(disposition_change_ids),
-        "source_rewrite_count": len(source_rewrites),
-        "source_replacement_count": sum(
-            bool(item["replacement_candidate_ids"]) for item in source_rewrites
-        ),
-        "detector_change_removal_count": len(detector_removals),
-        "detector_improvement_count": len(detector_improvements),
-        "unclassified_count": len(unclassified),
-        "added": added_ids,
-        "removed": removed_ids,
-        "disposition_changes": disposition_change_ids,
-        "disposition_change_details": disposition_change_details,
-        "source_rewrites": source_rewrites,
-        "detector_change_removals": detector_removals,
-        "detector_improvements": detector_improvements,
-        "unclassified": unclassified,
-    }, errors
-
-
-def _root_lifecycle_age_summary(snapshot: dict) -> dict[str, int | None]:
-    known_dates = [
-        date.fromisoformat(entry["first_observed"]["released_on"])
-        for entry in snapshot["entries"]
-        if entry["first_observed"]["status"] == "known"
-    ]
-    unknown_count = sum(
-        entry["first_observed"]["status"] == "unknown-pre-baseline"
-        for entry in snapshot["entries"]
-    )
-    if snapshot["released_on"] is None or not known_dates:
-        max_age = None
-    else:
-        snapshot_date = date.fromisoformat(snapshot["released_on"])
-        max_age = max((snapshot_date - item).days for item in known_dates)
-    return {
-        "known_age_count": len(known_dates),
-        "unknown_age_count": unknown_count,
-        "max_age_days": max_age,
-    }
-
-
-def _root_retained_bootstrap_refresh_summary(lifecycle: dict) -> dict:
-    current = lifecycle.get("current")
-    previous = lifecycle.get("previous")
-    bootstrap = (
-        current
-        if isinstance(current, dict) and current.get("kind") == "bootstrap"
-        else (
-            previous
-            if isinstance(previous, dict) and previous.get("kind") == "bootstrap"
-            else None
-        )
-    )
-    if bootstrap is None:
-        return {"valid": True, "count": 0, "latest_delta": None}
-    summary, errors = _root_bootstrap_refresh_chain_summary(bootstrap)
-    return {**summary, "valid": not errors}
-
-
-def _evaluate_root_semantic_lifecycle(
-    lifecycle_raw: object,
-    entries: list[dict],
-    documents: list[dict] | None = None,
-    *,
-    evaluation_date: date,
-    document_fingerprints: dict[str, str] | None = None,
-    allow_stale_current: bool = False,
-) -> dict:
-    lifecycle, errors = _validate_root_semantic_lifecycle(
-        lifecycle_raw, evaluation_date=evaluation_date
-    )
-    if document_fingerprints is None:
-        if documents is None:
-            raise ValueError("root lifecycle evaluation requires document fingerprints")
-        document_fingerprints = _root_document_fingerprints(documents)
-    detector_fingerprint = _root_semantic_detector_fingerprint()
-    if lifecycle is None or lifecycle.get("current") is None:
-        return {
-            "schema_version": ROOT_SEMANTIC_LIFECYCLE_SCHEMA_VERSION,
-            "status": "invalid",
-            "detector_fingerprint": detector_fingerprint,
-            "snapshot_current": False,
-            "formal_release_ready": False,
-            "contract": lifecycle,
-            "comparison": None,
-            "age": None,
-            "bootstrap_refresh_chain": {
-                "valid": False,
-                "count": None,
-                "latest_delta": None,
-            },
-            "errors": errors,
-        }
-    current = lifecycle["current"]
-    snapshot_current, stale_fields = _root_snapshot_matches_live(
-        current, entries, document_fingerprints, detector_fingerprint
-    )
-    if (
-        current["kind"] == "bootstrap"
-        and not snapshot_current
-        and not allow_stale_current
-    ):
-        errors.append(
-            "root semantic lifecycle bootstrap snapshot is stale: "
-            + ", ".join(stale_fields)
-        )
-    if snapshot_current:
-        comparison_current = current
-        comparison_previous = lifecycle["previous"]
-        status = "bootstrap-current" if current["kind"] == "bootstrap" else "release-current"
-    else:
-        comparison_current = _root_semantic_snapshot(
-            entries,
-            document_fingerprints,
-            kind="release",
-            release_id=current.get("release_id") or "pending-unrecorded",
-            released_on=current.get("released_on") or evaluation_date.isoformat(),
-            prior=current,
-        )
-        comparison_previous = current
-        status = "pending-changes"
-    comparison, comparison_errors = _root_lifecycle_comparison(
-        comparison_previous, comparison_current, document_fingerprints
-    )
-    errors.extend(comparison_errors)
-    if status == "pending-changes":
-        comparison["comparison_scope"] = "pending-since-current-snapshot"
-    age = _root_lifecycle_age_summary(current)
-    bootstrap_refresh_chain = _root_retained_bootstrap_refresh_summary(lifecycle)
-    unclassified = comparison.get("unclassified_count")
-    formal_release_ready = bool(
-        not errors
-        and status == "release-current"
-        and isinstance(unclassified, int)
-        and unclassified == 0
-    )
-    return {
-        "schema_version": ROOT_SEMANTIC_LIFECYCLE_SCHEMA_VERSION,
-        "status": status if not errors else "invalid",
-        "detector_fingerprint": detector_fingerprint,
-        "snapshot_current": snapshot_current,
-        "formal_release_ready": formal_release_ready,
-        "contract": lifecycle,
-        "comparison": comparison,
-        "age": age,
-        "bootstrap_refresh_chain": bootstrap_refresh_chain,
-        "errors": errors,
-    }
-
-
-def _render_root_semantic_snapshot_yaml(
-    key: str, snapshot: dict | None, *, indent: int
-) -> list[str]:
-    prefix = " " * indent
-    if snapshot is None:
-        return [f"{prefix}{key}: null"]
-    child = " " * (indent + 2)
-    lines = [f"{prefix}{key}:"]
-    for field in (
-        "schema_version",
-        "kind",
-        "release_id",
-        "released_on",
-        "document_fingerprint",
-        "detector_fingerprint",
-        "bootstrap_refresh_origin_state_fingerprint",
-        "bootstrap_refresh_review_count",
-    ):
-        lines.append(
-            f"{child}{field}: "
-            + json.dumps(snapshot[field], ensure_ascii=False, separators=(",", ":"))
-        )
-    lines.append(f"{child}entries:")
-    if snapshot["entries"]:
-        lines.extend(
-            f"{child}  - "
-            + json.dumps(entry, ensure_ascii=False, separators=(",", ":"))
-            for entry in snapshot["entries"]
-        )
-    else:
-        lines[-1] += " []"
-    lines.append(f"{child}change_reviews:")
-    if snapshot["change_reviews"]:
-        lines.extend(
-            f"{child}  - "
-            + json.dumps(review, ensure_ascii=False, separators=(",", ":"))
-            for review in snapshot["change_reviews"]
-        )
-    else:
-        lines[-1] += " []"
-    lines.append(f"{child}bootstrap_refresh_reviews:")
-    if snapshot["bootstrap_refresh_reviews"]:
-        lines.extend(
-            f"{child}  - "
-            + json.dumps(review, ensure_ascii=False, separators=(",", ":"))
-            for review in snapshot["bootstrap_refresh_reviews"]
-        )
-    else:
-        lines[-1] += " []"
-    return lines
-
-
-def _render_root_semantic_lifecycle_yaml(lifecycle: dict) -> str:
-    lines = [
-        ROOT_LIFECYCLE_START_MARKER,
-        "  lifecycle:",
-        f"    schema_version: {ROOT_SEMANTIC_LIFECYCLE_SCHEMA_VERSION}",
-        *_render_root_semantic_snapshot_yaml(
-            "previous", lifecycle["previous"], indent=4
-        ),
-        *_render_root_semantic_snapshot_yaml("current", lifecycle["current"], indent=4),
-        ROOT_LIFECYCLE_END_MARKER,
-    ]
-    return "\n".join(lines)
-
-
-def _write_root_atomic_temp(stream: object, text: str) -> None:
-    stream.write(text)  # type: ignore[attr-defined]
-    stream.flush()  # type: ignore[attr-defined]
-    os.fsync(stream.fileno())  # type: ignore[attr-defined]
-
-
-def _atomic_replace_root_config(
-    path: Path,
-    text: str,
-    *,
-    expected_preimage_sha256: str,
-) -> None:
-    metadata = path.lstat()
-    if not stat.S_ISREG(metadata.st_mode):
-        raise ValidationProblem(f"{path}: Root governance config must be a regular file")
-    descriptor = -1
-    temporary_path: Path | None = None
-    try:
-        descriptor, temporary_name = tempfile.mkstemp(
-            prefix=f".{path.name}.",
-            suffix=".tmp",
-            dir=path.parent,
-        )
-        temporary_path = Path(temporary_name)
-        os.fchmod(descriptor, stat.S_IMODE(metadata.st_mode))
-        stream = os.fdopen(descriptor, "w", encoding="utf-8", newline="")
-        descriptor = -1
-        with stream:
-            _write_root_atomic_temp(stream, text)
-        current_sha256 = hashlib.sha256(path.read_bytes()).hexdigest()
-        if current_sha256 != expected_preimage_sha256:
-            raise ValidationProblem(
-                f"{path}: Root governance config changed before atomic replacement"
-            )
-        os.replace(temporary_path, path)
-        temporary_path = None
-    finally:
-        if descriptor >= 0:
-            os.close(descriptor)
-        if temporary_path is not None:
-            temporary_path.unlink(missing_ok=True)
-
-
-def _replace_root_semantic_lifecycle_block(
-    path: Path,
-    lifecycle: dict,
-    *,
-    source_schema_version: int,
-    expected_preimage_sha256: str,
-) -> None:
-    if (
-        not isinstance(expected_preimage_sha256, str)
-        or not re.fullmatch(r"[0-9a-f]{64}", expected_preimage_sha256)
-    ):
-        raise ValidationProblem("Root governance config preimage must be lowercase sha256")
-    supported_source_schemas = {
-        ROOT_SEMANTIC_LEGACY_DISPOSITION_SCHEMA_VERSION,
-        ROOT_SEMANTIC_PREVIOUS_DISPOSITION_SCHEMA_VERSION,
-        ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION,
-    }
-    if (
-        isinstance(source_schema_version, bool)
-        or not isinstance(source_schema_version, int)
-        or source_schema_version not in supported_source_schemas
-    ):
-        raise ValidationProblem(
-            f"{path}: Root disposition source schema is not recorder-supported"
-        )
-    source_bytes = path.read_bytes()
-    if hashlib.sha256(source_bytes).hexdigest() != expected_preimage_sha256:
-        raise ValidationProblem(
-            f"{path}: Root governance config changed since recorder load"
-        )
-    try:
-        text = source_bytes.decode("utf-8")
-    except UnicodeDecodeError as exc:
-        raise ValidationProblem(f"{path}: Root governance config is not UTF-8") from exc
-    if text.count(ROOT_LIFECYCLE_START_MARKER) != 1 or text.count(
-        ROOT_LIFECYCLE_END_MARKER
-    ) != 1:
-        raise ValidationProblem(
-            f"{path}: managed root lifecycle markers must each occur exactly once"
-        )
-    start = text.index(ROOT_LIFECYCLE_START_MARKER)
-    end = text.index(ROOT_LIFECYCLE_END_MARKER, start) + len(
-        ROOT_LIFECYCLE_END_MARKER
-    )
-    root_start = text.index(f"{ROOT_SEMANTIC_DISPOSITION_KEY}:\n")
-    entries_start = text.index("  entries:\n", end)
-    reference_start = text.index("reference_semantic_dispositions:\n", entries_start)
-    if not root_start < start < end < entries_start < reference_start:
-        raise ValidationProblem(
-            f"{path}: managed root lifecycle markers escaped the root disposition node"
-        )
-    replacement = _render_root_semantic_lifecycle_yaml(lifecycle)
-    updated = text[:start] + replacement + text[end:]
-    current_schema_line = (
-        f"{ROOT_SEMANTIC_DISPOSITION_KEY}:\n"
-        f"  schema_version: {ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION}\n"
-    )
-    source_schema_line = (
-        f"{ROOT_SEMANTIC_DISPOSITION_KEY}:\n"
-        f"  schema_version: {source_schema_version}\n"
-    )
-    if text.count(source_schema_line) != 1:
-        raise ValidationProblem(
-            f"{path}: Root disposition source schema line is missing or ambiguous"
-        )
-    if source_schema_version != ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION:
-        updated = updated.replace(source_schema_line, current_schema_line, 1)
-    original_data = load_yaml_text(text, path)
-    updated_data = load_yaml_text(updated, path)
-    if not isinstance(original_data, dict) or not isinstance(updated_data, dict):
-        raise ValidationProblem(f"{path}: lifecycle update did not round-trip as YAML")
-    expected_data = deepcopy(original_data)
-    root_contract = expected_data.get(ROOT_SEMANTIC_DISPOSITION_KEY)
-    if not isinstance(root_contract, dict):
-        raise ValidationProblem(f"{path}: root disposition contract is missing")
-    root_contract["lifecycle"] = lifecycle
-    if root_contract.get("schema_version") != source_schema_version:
-        raise ValidationProblem(
-            f"{path}: Root schema does not match recorder source schema"
-        )
-    if source_schema_version != ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION:
-        root_contract["schema_version"] = ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION
-    if updated_data != expected_data:
-        raise ValidationProblem(
-            f"{path}: lifecycle update changed content outside the managed node"
-        )
-    if updated == text:
-        return
-    _atomic_replace_root_config(
-        path,
-        updated,
-        expected_preimage_sha256=expected_preimage_sha256,
-    )
-
-
-def _root_recorded_change_reviews(
-    requested: list[tuple[str, str, str]],
-    comparison: dict,
-    *,
-    previous: dict,
-    current: dict,
-    current_document_fingerprints: dict[str, str],
-    source_replacement_reviews: list[tuple[str, str, str, str]] | None = None,
-    source_removal_reviews: list[tuple[str, str, str]] | None = None,
-    source_detector_replacement_reviews: list[tuple[str, str, str, str]] | None = None,
-    source_detector_removal_reviews: list[tuple[str, str, str]] | None = None,
-) -> list[dict]:
-    requested_prior_ids = [
-        *[item[0] for item in requested],
-        *[item[0] for item in list(source_replacement_reviews or [])],
-        *[item[0] for item in list(source_removal_reviews or [])],
-        *[
-            item[0]
-            for item in list(source_detector_replacement_reviews or [])
-        ],
-        *[item[0] for item in list(source_detector_removal_reviews or [])],
-    ]
-    duplicate_prior_ids = sorted(
-        candidate_id
-        for candidate_id in set(requested_prior_ids)
-        if requested_prior_ids.count(candidate_id) > 1
-    )
-    if duplicate_prior_ids:
-        raise ValidationProblem(
-            "duplicate root lifecycle change review prior ID across review flags: "
-            + ", ".join(duplicate_prior_ids)
-        )
-    previous_by_id = {
-        str(entry["candidate_id"]): entry for entry in previous["entries"]
-    }
-    generic_eligible: dict[str, tuple[str, list[str]]] = {
-        str(item["prior_candidate_id"]): (
-            "detector-improvement",
-            [],
-        )
-        for item in comparison.get("detector_change_removals", [])
-    }
-    generic_eligible.update(
-        {
-            str(candidate_id): ("disposition-change", [])
-            for candidate_id in comparison.get("disposition_changes", [])
-        }
-    )
-    dual_eligible: dict[str, list[str]] = {}
-    source_eligible: dict[str, list[str]] = {}
-    for item in comparison.get("unclassified", []):
-        if item.get("reason") == "source-and-detector-changed":
-            dual_eligible[str(item["prior_candidate_id"])] = list(
-                item.get("eligible_replacement_candidate_ids", [])
-            )
-        elif item.get("reason") == "implicit-many-prior-replacement":
-            source_eligible[str(item["prior_candidate_id"])] = list(
-                item.get("ambiguous_replacement_candidate_ids", [])
-            )
-
-    seen: set[str] = set()
-    selected_owner: dict[str, str] = {}
-    reviews: list[dict] = []
-
-    def record(
-        candidate_id: str,
-        reviewer: str,
-        rationale: str,
-        *,
-        classification: str,
-        replacement_ids: list[str],
-    ) -> None:
-        if candidate_id in seen:
-            raise ValidationProblem(
-                f"duplicate root lifecycle change review: {candidate_id}"
-            )
-        seen.add(candidate_id)
-        if not isinstance(reviewer, str) or not reviewer.strip():
-            raise ValidationProblem(
-                f"root lifecycle change review reviewer is blank: {candidate_id}"
-            )
-        if not isinstance(rationale, str) or _root_rationale_is_generic(rationale):
-            raise ValidationProblem(
-                f"root lifecycle change review rationale is blank or generic: {candidate_id}"
-            )
-        prior = previous_by_id.get(candidate_id)
-        if prior is None:
-            raise ValidationProblem(
-                f"unused root lifecycle change review: {candidate_id}"
-            )
-        reviews.append(
-            {
-                "prior_candidate_id": candidate_id,
-                "classification": classification,
-                "reviewed_by": reviewer,
-                "rationale": rationale,
-                "evidence": _root_change_review_evidence(
-                    previous,
-                    current,
-                    current_document_fingerprints,
-                    prior,
-                    replacement_ids,
-                ),
-            }
-        )
-
-    for candidate_id, reviewer, rationale in requested:
-        eligible = generic_eligible.get(candidate_id)
-        if eligible is None:
-            raise ValidationProblem(
-                f"unused root lifecycle change review: {candidate_id}"
-            )
-        classification, replacement_ids = eligible
-        record(
-            candidate_id,
-            reviewer,
-            rationale,
-            classification=classification,
-            replacement_ids=replacement_ids,
-        )
-
-    for candidate_id, replacement_csv, reviewer, rationale in list(
-        source_replacement_reviews or []
-    ):
-        replacement_ids = [item.strip() for item in replacement_csv.split(",")]
-        if (
-            not replacement_ids
-            or any(not item for item in replacement_ids)
-            or any(not re.fullmatch(r"[0-9a-f]{64}", item) for item in replacement_ids)
-        ):
-            raise ValidationProblem(
-                f"source replacement review {candidate_id} requires non-empty "
-                "lowercase sha256 replacement IDs"
-            )
-        if len(replacement_ids) != len(set(replacement_ids)):
-            raise ValidationProblem(
-                f"source replacement review {candidate_id} has duplicate replacement IDs"
-            )
-        eligible_pool = source_eligible.get(candidate_id)
-        if eligible_pool is None:
-            raise ValidationProblem(
-                f"unused source replacement review: {candidate_id}"
-            )
-        replacement_ids = sorted(replacement_ids)
-        invalid_ids = sorted(set(replacement_ids) - set(eligible_pool))
-        if invalid_ids:
-            raise ValidationProblem(
-                f"source replacement review {candidate_id} must name only current "
-                "same-lineage ambiguity additions: "
-                + ", ".join(invalid_ids)
-            )
-        prior = previous_by_id[candidate_id]
-        current_by_id = {
-            str(entry["candidate_id"]): entry for entry in current["entries"]
-        }
-        mismatched_ids = [
-            replacement_id
-            for replacement_id in replacement_ids
-            if current_by_id[replacement_id]["disposition"]
-            != prior["disposition"]
-        ]
-        if mismatched_ids:
-            raise ValidationProblem(
-                f"source replacement review {candidate_id} selected dispositions "
-                "must match the prior disposition: "
-                + ", ".join(mismatched_ids)
-            )
-        duplicate_ids = [
-            replacement_id
-            for replacement_id in replacement_ids
-            if replacement_id in selected_owner
-            and selected_owner[replacement_id] != candidate_id
-        ]
-        if duplicate_ids:
-            raise ValidationProblem(
-                "source replacement candidate cannot bind multiple prior candidates: "
-                + ", ".join(duplicate_ids)
-            )
-        for replacement_id in replacement_ids:
-            selected_owner[replacement_id] = candidate_id
-        record(
-            candidate_id,
-            reviewer,
-            rationale,
-            classification="source-replacement",
-            replacement_ids=replacement_ids,
-        )
-
-    for candidate_id, reviewer, rationale in list(source_removal_reviews or []):
-        if candidate_id not in source_eligible:
-            raise ValidationProblem(f"unused source removal review: {candidate_id}")
-        record(
-            candidate_id,
-            reviewer,
-            rationale,
-            classification="source-removal",
-            replacement_ids=[],
-        )
-
-    reviewed_source_priors = {
-        item["prior_candidate_id"]
-        for item in reviews
-        if item["classification"] in ROOT_SEMANTIC_SOURCE_REVIEW_CLASSIFICATIONS
-    }
-    source_group_priors: dict[str, set[str]] = defaultdict(set)
-    for prior_id, candidate_ids in source_eligible.items():
-        for replacement_id in candidate_ids:
-            source_group_priors[replacement_id].add(prior_id)
-    for replacement_id, prior_ids in sorted(source_group_priors.items()):
-        reviewed = prior_ids & reviewed_source_priors
-        missing = sorted(prior_ids - reviewed_source_priors)
-        if reviewed and missing:
-            raise ValidationProblem(
-                "source-only ambiguity review must adjudicate every eligible prior "
-                f"for {replacement_id}; missing: " + ", ".join(missing)
-            )
-
-    for candidate_id, replacement_csv, reviewer, rationale in list(
-        source_detector_replacement_reviews or []
-    ):
-        raw_replacement_ids = replacement_csv.split(",")
-        replacement_ids = [item.strip() for item in raw_replacement_ids]
-        if (
-            not replacement_ids
-            or any(not item for item in replacement_ids)
-            or any(not re.fullmatch(r"[0-9a-f]{64}", item) for item in replacement_ids)
-        ):
-            raise ValidationProblem(
-                f"source-and-detector replacement review {candidate_id} requires "
-                "non-empty lowercase sha256 replacement IDs"
-            )
-        if len(replacement_ids) != len(set(replacement_ids)):
-            raise ValidationProblem(
-                f"source-and-detector replacement review {candidate_id} has duplicate "
-                "replacement IDs"
-            )
-        eligible_pool = dual_eligible.get(candidate_id)
-        if eligible_pool is None:
-            raise ValidationProblem(
-                f"unused source-and-detector replacement review: {candidate_id}"
-            )
-        replacement_ids = sorted(replacement_ids)
-        invalid_ids = sorted(set(replacement_ids) - set(eligible_pool))
-        if invalid_ids:
-            raise ValidationProblem(
-                f"source-and-detector replacement review {candidate_id} must name "
-                "only current same-lineage additions: "
-                + ", ".join(invalid_ids)
-            )
-        prior = previous_by_id[candidate_id]
-        current_by_id = {
-            str(entry["candidate_id"]): entry for entry in current["entries"]
-        }
-        mismatched_ids = [
-            replacement_id
-            for replacement_id in replacement_ids
-            if current_by_id[replacement_id]["disposition"]
-            != prior["disposition"]
-        ]
-        if mismatched_ids:
-            raise ValidationProblem(
-                f"source-and-detector replacement review {candidate_id} selected "
-                "dispositions must match the prior disposition: "
-                + ", ".join(mismatched_ids)
-            )
-        duplicate_ids = [
-            replacement_id
-            for replacement_id in replacement_ids
-            if replacement_id in selected_owner
-            and selected_owner[replacement_id] != candidate_id
-        ]
-        if duplicate_ids:
-            raise ValidationProblem(
-                "source-and-detector replacement candidate cannot bind multiple "
-                "prior candidates: "
-                + ", ".join(duplicate_ids)
-            )
-        for replacement_id in replacement_ids:
-            selected_owner[replacement_id] = candidate_id
-        record(
-            candidate_id,
-            reviewer,
-            rationale,
-            classification="source-and-detector-replacement",
-            replacement_ids=replacement_ids,
-        )
-
-    for candidate_id, reviewer, rationale in list(
-        source_detector_removal_reviews or []
-    ):
-        if candidate_id not in dual_eligible:
-            raise ValidationProblem(
-                f"unused source-and-detector removal review: {candidate_id}"
-            )
-        record(
-            candidate_id,
-            reviewer,
-            rationale,
-            classification="source-and-detector-removal",
-            replacement_ids=[],
-        )
-    return sorted(reviews, key=lambda item: item["prior_candidate_id"])
-
-
-def _root_recorded_bootstrap_refresh_review(
-    prior: dict,
-    current: dict,
-    *,
-    reviewed_by: str,
-    rationale: str,
-) -> dict:
-    if not isinstance(reviewed_by, str) or not reviewed_by.strip():
-        raise ValidationProblem("Root bootstrap refresh reviewer is blank")
-    if not isinstance(rationale, str) or _root_rationale_is_generic(rationale):
-        raise ValidationProblem("Root bootstrap refresh rationale is blank or generic")
-    chain, chain_errors = _root_bootstrap_refresh_chain_summary(prior)
-    if chain_errors or not chain["valid"]:
-        raise ValidationProblem(
-            "cannot extend invalid Root bootstrap refresh chain: "
-            + "; ".join(chain_errors)
-        )
-    prior_state_fingerprint = (
-        prior["bootstrap_refresh_reviews"][-1]["evidence"][
-            "current_state_fingerprint"
-        ]
-        if prior["bootstrap_refresh_reviews"]
-        else _root_bootstrap_base_state_fingerprint(prior)
-    )
-    delta = _root_bootstrap_delta(prior, current)
-    evidence = {
-        "prior_state_fingerprint": prior_state_fingerprint,
-        "current_state_fingerprint": "0" * 64,
-        "prior_document_fingerprint": prior["document_fingerprint"],
-        "current_document_fingerprint": current["document_fingerprint"],
-        "prior_detector_fingerprint": prior["detector_fingerprint"],
-        "current_detector_fingerprint": current["detector_fingerprint"],
-        "prior_candidate_fingerprint": _root_bootstrap_candidate_fingerprint(
-            prior["entries"]
-        ),
-        "current_candidate_fingerprint": _root_bootstrap_candidate_fingerprint(
-            current["entries"]
-        ),
-        "prior_disposition_fingerprint": _root_bootstrap_disposition_fingerprint(
-            prior["entries"]
-        ),
-        "current_disposition_fingerprint": _root_bootstrap_disposition_fingerprint(
-            current["entries"]
-        ),
-        **delta,
-    }
-    review = {
-        "schema_version": ROOT_BOOTSTRAP_REFRESH_REVIEW_SCHEMA_VERSION,
-        "reviewed_by": reviewed_by.strip(),
-        "rationale": rationale.strip(),
-        "evidence": evidence,
-    }
-    evidence["current_state_fingerprint"] = (
-        _root_bootstrap_chained_state_fingerprint(current, review)
-    )
-    return review
-
-
-def _record_root_semantic_bootstrap_refresh(
-    reviewed_by: str,
-    rationale: str,
-    *,
-    evaluation_date: date | None = None,
-) -> dict:
-    evaluated_on = evaluation_date or date.today()
-    if not isinstance(reviewed_by, str) or not reviewed_by.strip():
-        raise ValidationProblem("Root bootstrap refresh reviewer is blank")
-    if not isinstance(rationale, str) or _root_rationale_is_generic(rationale):
-        raise ValidationProblem("Root bootstrap refresh rationale is blank or generic")
-    loaded, source_schema_version, source_sha256, load_errors = (
-        _load_root_semantic_dispositions_for_recorder(
-            evaluation_date=evaluated_on
-        )
-    )
-    if load_errors:
-        raise ValidationProblem(
-            "cannot load Root bootstrap lifecycle for refresh: "
-            + "; ".join(load_errors)
-        )
-    lifecycle, lifecycle_errors = _validate_root_semantic_lifecycle(
-        loaded["lifecycle"], evaluation_date=evaluated_on
-    )
-    if lifecycle_errors or lifecycle is None:
-        raise ValidationProblem(
-            "cannot refresh invalid Root bootstrap lifecycle: "
-            + "; ".join(lifecycle_errors)
-        )
-    prior = lifecycle["current"]
-    if lifecycle["previous"] is not None:
-        raise ValidationProblem("Root bootstrap refresh requires previous=null")
-    if prior["kind"] != "bootstrap":
-        raise ValidationProblem("Root bootstrap refresh requires current kind=bootstrap")
-    if prior["release_id"] is not None or prior["released_on"] is not None:
-        raise ValidationProblem("Root bootstrap refresh forbids release identity")
-    if prior["change_reviews"]:
-        raise ValidationProblem("Root bootstrap refresh forbids formal change_reviews")
-
-    documents = _root_skill_documents()
-    report = _collect_root_semantic_advisories(
-        documents,
-        disposition_entries=loaded,
-        evaluation_date=evaluated_on,
-        allow_stale_lifecycle=True,
-    )
-    contract = report["disposition_contract"]
-    if contract["errors"]:
-        raise ValidationProblem(
-            "cannot refresh stale or invalid Root dispositions: "
-            + "; ".join(contract["errors"])
-        )
-    if report["summary"]["unresolved_candidates"]:
-        raise ValidationProblem(
-            "cannot refresh Root bootstrap with unresolved dispositions: "
-            f"{report['summary']['unresolved_candidates']}"
-        )
-    document_fingerprints = _root_document_fingerprints(documents)
-    current = _root_semantic_snapshot(
-        contract["entries"],
-        document_fingerprints,
-        kind="bootstrap",
-        release_id=None,
-        released_on=None,
-        prior=prior,
-        bootstrap_refresh_reviews=prior["bootstrap_refresh_reviews"],
-        bootstrap_refresh_origin_state_fingerprint=prior[
-            "bootstrap_refresh_origin_state_fingerprint"
-        ],
-    )
-    if _root_bootstrap_core_state(prior) == _root_bootstrap_core_state(current):
-        raise ValidationProblem("Root bootstrap refresh is a no-op")
-    review = _root_recorded_bootstrap_refresh_review(
-        prior,
-        current,
-        reviewed_by=reviewed_by,
-        rationale=rationale,
-    )
-    current["bootstrap_refresh_reviews"] = [
-        *prior["bootstrap_refresh_reviews"],
-        review,
-    ]
-    current["bootstrap_refresh_review_count"] = len(
-        current["bootstrap_refresh_reviews"]
-    )
-    recorded = {
-        "schema_version": ROOT_SEMANTIC_LIFECYCLE_SCHEMA_VERSION,
-        "previous": None,
-        "current": current,
-    }
-    evaluated = _evaluate_root_semantic_lifecycle(
-        recorded,
-        contract["entries"],
-        documents,
-        evaluation_date=evaluated_on,
-    )
-    if evaluated["errors"]:
-        raise ValidationProblem(
-            "cannot record Root bootstrap refresh: "
-            + "; ".join(evaluated["errors"])
-        )
-    if evaluated["status"] != "bootstrap-current":
-        raise ValidationProblem("Root bootstrap refresh did not produce current state")
-    _replace_root_semantic_lifecycle_block(
-        SKILL_CONTENT_EXCEPTIONS_FILE,
-        recorded,
-        source_schema_version=source_schema_version,
-        expected_preimage_sha256=source_sha256,
-    )
-    return evaluated
-
-
-def _record_root_semantic_release(
-    release_id: str,
-    released_on: str,
-    *,
-    evaluation_date: date | None = None,
-    change_reviews: list[tuple[str, str, str]] | None = None,
-    source_replacement_reviews: list[tuple[str, str, str, str]] | None = None,
-    source_removal_reviews: list[tuple[str, str, str]] | None = None,
-    source_detector_replacement_reviews: list[tuple[str, str, str, str]] | None = None,
-    source_detector_removal_reviews: list[tuple[str, str, str]] | None = None,
-) -> dict:
-    evaluated_on = evaluation_date or date.today()
-    errors: list[str] = []
-    if not _root_release_id_is_valid(release_id):
-        raise ValidationProblem("root disposition release_id is invalid")
-    parsed_release = _root_parse_non_future_date(
-        released_on,
-        label="root disposition released_on",
-        evaluation_date=evaluated_on,
-        errors=errors,
-    )
-    if errors or parsed_release is None:
-        raise ValidationProblem(errors[0])
-    loaded, source_schema_version, source_sha256, load_errors = (
-        _load_root_semantic_dispositions_for_recorder(
-            evaluation_date=evaluated_on
-        )
-    )
-    if load_errors:
-        raise ValidationProblem("; ".join(load_errors))
-    documents = _root_skill_documents()
-    report = _collect_root_semantic_advisories(
-        documents,
-        disposition_entries=loaded,
-        evaluation_date=evaluated_on,
-        allow_stale_lifecycle=True,
-    )
-    contract = report["disposition_contract"]
-    if contract["errors"]:
-        raise ValidationProblem(
-            "cannot record invalid root disposition lifecycle: "
-            + "; ".join(contract["errors"])
-        )
-    lifecycle, lifecycle_errors = _validate_root_semantic_lifecycle(
-        loaded["lifecycle"], evaluation_date=evaluated_on
-    )
-    if lifecycle_errors or lifecycle is None:
-        raise ValidationProblem(
-            "cannot record invalid root lifecycle: " + "; ".join(lifecycle_errors)
-        )
-    prior = lifecycle["current"]
-    used_release_ids = {
-        snapshot["release_id"]
-        for snapshot in (lifecycle.get("previous"), lifecycle.get("current"))
-        if isinstance(snapshot, dict)
-        and snapshot.get("kind") == "release"
-        and isinstance(snapshot.get("release_id"), str)
-    }
-    if release_id in used_release_ids:
-        raise ValidationProblem(
-            "new root disposition release_id must be unique across the current "
-            "snapshot chain"
-        )
-    if prior["kind"] == "release":
-        prior_date = date.fromisoformat(prior["released_on"])
-        if parsed_release < prior_date:
-            raise ValidationProblem(
-                "new root disposition release cannot be earlier than current release snapshot"
-            )
-    document_fingerprints = _root_document_fingerprints(documents)
-    current = _root_semantic_snapshot(
-        contract["entries"],
-        document_fingerprints,
-        kind="release",
-        release_id=release_id,
-        released_on=released_on,
-        prior=prior,
-    )
-    provisional_comparison, provisional_errors = _root_lifecycle_comparison(
-        prior, current, document_fingerprints
-    )
-    if provisional_errors:
-        raise ValidationProblem(
-            "cannot classify root lifecycle changes: "
-            + "; ".join(provisional_errors)
-        )
-    reviews = _root_recorded_change_reviews(
-        list(change_reviews or []),
-        provisional_comparison,
-        previous=prior,
-        current=current,
-        current_document_fingerprints=document_fingerprints,
-        source_replacement_reviews=source_replacement_reviews,
-        source_removal_reviews=source_removal_reviews,
-        source_detector_replacement_reviews=source_detector_replacement_reviews,
-        source_detector_removal_reviews=source_detector_removal_reviews,
-    )
-    if reviews:
-        current = _root_semantic_snapshot(
-            contract["entries"],
-            document_fingerprints,
-            kind="release",
-            release_id=release_id,
-            released_on=released_on,
-            prior=prior,
-            change_reviews=reviews,
-        )
-    recorded = {
-        "schema_version": ROOT_SEMANTIC_LIFECYCLE_SCHEMA_VERSION,
-        "previous": prior,
-        "current": current,
-    }
-    evaluated = _evaluate_root_semantic_lifecycle(
-        recorded,
-        contract["entries"],
-        documents,
-        evaluation_date=evaluated_on,
-    )
-    if evaluated["errors"]:
-        raise ValidationProblem(
-            "cannot record root lifecycle: " + "; ".join(evaluated["errors"])
-        )
-    unclassified = evaluated["comparison"].get("unclassified_count")
-    if unclassified:
-        raise ValidationProblem(
-            "cannot record root lifecycle with unclassified changes: "
-            f"{unclassified}"
-        )
-    _replace_root_semantic_lifecycle_block(
-        SKILL_CONTENT_EXCEPTIONS_FILE,
-        recorded,
-        source_schema_version=source_schema_version,
-        expected_preimage_sha256=source_sha256,
-    )
-    return evaluated
-
 
 def _ordered_unique_strings(values: list[str]) -> list[str]:
     return list(dict.fromkeys(values))
@@ -9464,7 +7429,6 @@ def _collect_root_semantic_advisories(
     *,
     disposition_entries: object = _USE_CONFIG_DISPOSITIONS,
     evaluation_date: date | None = None,
-    allow_stale_lifecycle: bool = False,
 ) -> dict:
     candidates = _fold_root_candidates(
         [
@@ -9475,26 +7439,25 @@ def _collect_root_semantic_advisories(
             )
         ]
     )
-    evaluated_on = evaluation_date or date.today()
+    evaluated_on = (
+        _effective_evaluation_date()
+        if evaluation_date is None
+        else evaluation_date
+    )
     if disposition_entries is _USE_CONFIG_DISPOSITIONS:
         contract, contract_errors = _load_root_semantic_dispositions()
-        synthetic_lifecycle = False
     elif isinstance(disposition_entries, list):
         contract = {
             "schema_version": ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION,
-            "lifecycle": None,
             "entries": disposition_entries,
         }
         contract_errors = []
-        synthetic_lifecycle = True
     elif isinstance(disposition_entries, dict):
         contract = disposition_entries
         contract_errors = []
-        synthetic_lifecycle = "lifecycle" not in contract
     else:
-        contract = {"schema_version": None, "lifecycle": None, "entries": []}
+        contract = {"schema_version": None, "entries": []}
         contract_errors = [f"{ROOT_SEMANTIC_DISPOSITION_KEY} must be a mapping or list"]
-        synthetic_lifecycle = False
     if contract.get("schema_version") != ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION:
         contract_errors.append(
             f"{ROOT_SEMANTIC_DISPOSITION_KEY}.schema_version must equal "
@@ -9545,19 +7508,6 @@ def _collect_root_semantic_advisories(
             if candidate["resolved"] else "unresolved-rewrite"
         )
         applied += 1
-    document_fingerprints = _root_document_fingerprints(documents)
-    lifecycle_raw = contract.get("lifecycle")
-    if synthetic_lifecycle:
-        lifecycle_raw = _root_bootstrap_lifecycle(
-            normalized, document_fingerprints
-        )
-    lifecycle = _evaluate_root_semantic_lifecycle(
-        lifecycle_raw,
-        normalized,
-        documents,
-        evaluation_date=evaluated_on,
-        allow_stale_current=allow_stale_lifecycle,
-    )
     by_finding = {}
     for finding in ROOT_SEMANTIC_FINDINGS:
         rows = [item for item in candidates if item["finding"] == finding]
@@ -9579,6 +7529,7 @@ def _collect_root_semantic_advisories(
     fixed = by_finding["fixed_duration_threshold_status_candidate"]["unresolved"]
     return {
         "schema_version": ROOT_SEMANTIC_SCHEMA_VERSION,
+        "detector_contract": _root_semantic_detector_contract(),
         "finding_families": list(ROOT_SEMANTIC_FINDINGS),
         "summary": {
             "raw_candidates": len(candidates),
@@ -9596,11 +7547,9 @@ def _collect_root_semantic_advisories(
             },
         },
         "candidates": candidates,
-        "lifecycle": lifecycle,
         "disposition_contract": {
             "schema_version": ROOT_SEMANTIC_DISPOSITION_SCHEMA_VERSION,
             "source": SKILL_CONTENT_EXCEPTIONS_FILE.relative_to(ROOT).as_posix(),
-            "evaluated_on": evaluated_on.isoformat(),
             "configured_count": len(entries) if isinstance(entries, list) else 0,
             "applied_count": applied,
             "entries": normalized,
@@ -9613,9 +7562,7 @@ def _collect_root_semantic_advisories(
             "Authority and context downgrades are clause-local; novel valid contexts require an exact disposition rather than borrowing authority from another clause.",
             f"Vendor/tool lexicon source: {ROOT_VENDOR_TOOL_LEXICON_SOURCE}",
             "Tutorial density uses headings plus repeated explanatory markers and does not replace expert content review.",
-            "Lifecycle bootstrap does not reconstruct pre-baseline release age; unknown first-observed values remain unknown.",
-            "Bootstrap refresh reviews prove only an authoring snapshot transition and never satisfy formal release change review.",
-            "Detector-change removal is not called an improvement without an exact reviewed change record.",
+            "Git history and the current fixed Semantic attestation provide the review audit trail.",
         ],
     }
 
@@ -9737,7 +7684,14 @@ def _root_surface_validation(
 
 def _collect_root_content(
     foundation_contracts: dict[str, dict] | None = None,
+    *,
+    evaluation_date: date | None = None,
 ) -> dict:
+    effective_evaluation_date = (
+        _effective_evaluation_date()
+        if evaluation_date is None
+        else evaluation_date
+    )
     foundation_contracts = (
         foundation_contracts
         if foundation_contracts is not None
@@ -9918,14 +7872,17 @@ def _collect_root_content(
         )
         for row in document_rows
     )
-    semantic = _collect_root_semantic_advisories(documents)
+    semantic = _collect_root_semantic_advisories(
+        documents,
+        evaluation_date=effective_evaluation_date,
+    )
     surface_validation = _root_surface_validation(document_rows, advisories, semantic)
     foundation_derivation_snapshot = dict(FOUNDATION_DERIVATION_SNAPSHOT)
     return {
         "schema_version": ROOT_CONTENT_SCHEMA_VERSION,
         "source_fingerprint": {
             "algorithm": "sha256",
-            "value": hashlib.sha256(("root-content-v7\0" + manifest).encode("utf-8")).hexdigest(),
+            "value": hashlib.sha256(("root-content-v8\0" + manifest).encode("utf-8")).hexdigest(),
             "document_count": len(document_rows),
         },
         "summary": {
@@ -10006,45 +7963,6 @@ def _collect_root_content(
             "semantic_disposition_configured": semantic["disposition_contract"]["configured_count"],
             "semantic_disposition_applied": semantic["disposition_contract"]["applied_count"],
             "semantic_disposition_errors": len(semantic["disposition_contract"]["errors"]),
-            "semantic_lifecycle_status": semantic["lifecycle"]["status"],
-            "semantic_lifecycle_snapshot_current": semantic["lifecycle"]["snapshot_current"],
-            "semantic_lifecycle_formal_release_ready": semantic["lifecycle"]["formal_release_ready"],
-            "semantic_lifecycle_bootstrap_refresh_chain_valid": semantic[
-                "lifecycle"
-            ]["bootstrap_refresh_chain"]["valid"],
-            "semantic_lifecycle_bootstrap_refresh_count": semantic["lifecycle"][
-                "bootstrap_refresh_chain"
-            ]["count"],
-            "semantic_lifecycle_bootstrap_refresh_latest_delta": semantic[
-                "lifecycle"
-            ]["bootstrap_refresh_chain"]["latest_delta"],
-            "semantic_lifecycle_added": (
-                semantic["lifecycle"]["comparison"] or {}
-            ).get("added_count"),
-            "semantic_lifecycle_removed": (
-                semantic["lifecycle"]["comparison"] or {}
-            ).get("removed_count"),
-            "semantic_lifecycle_disposition_changes": (
-                semantic["lifecycle"]["comparison"] or {}
-            ).get("disposition_change_count"),
-            "semantic_lifecycle_source_rewrites": (
-                semantic["lifecycle"]["comparison"] or {}
-            ).get("source_rewrite_count"),
-            "semantic_lifecycle_detector_improvements": (
-                semantic["lifecycle"]["comparison"] or {}
-            ).get("detector_improvement_count"),
-            "semantic_lifecycle_unclassified": (
-                semantic["lifecycle"]["comparison"] or {}
-            ).get("unclassified_count"),
-            "semantic_lifecycle_known_age": (
-                semantic["lifecycle"]["age"] or {}
-            ).get("known_age_count"),
-            "semantic_lifecycle_unknown_age": (
-                semantic["lifecycle"]["age"] or {}
-            ).get("unknown_age_count"),
-            "semantic_lifecycle_max_age_days": (
-                semantic["lifecycle"]["age"] or {}
-            ).get("max_age_days"),
         },
         "documents": document_rows,
         "advisories": advisories,
@@ -11387,7 +9305,14 @@ def _reference_surface_validation(reference_content: dict) -> dict:
     }
 
 
-def _collect_reference_content() -> dict:
+def _collect_reference_content(
+    *, evaluation_date: date | None = None
+) -> dict:
+    effective_evaluation_date = (
+        _effective_evaluation_date()
+        if evaluation_date is None
+        else evaluation_date
+    )
     physical, physical_markdown, physical_errors = _physical_references()
     indexed, indexed_errors, registry_texts = _indexed_references()
     physical_by_path = {item["path"]: item for item in physical}
@@ -11629,7 +9554,8 @@ def _collect_reference_content() -> dict:
             }
             for item in references
             if item.exists and item.path in physical_markdown
-        ]
+        ],
+        evaluation_date=effective_evaluation_date,
     )
     semantic_summary = semantic_advisories["summary"]
 
@@ -11828,6 +9754,8 @@ def _semantic_application_audit_view(
 
 def _collect_semantic_content_with_application(
     foundation_contracts: dict[str, dict] | None = None,
+    *,
+    evaluation_date: date | None = None,
 ) -> tuple[dict, dict, dict]:
     """Collect both semantic axes and validate one immutable majority binding."""
 
@@ -11838,18 +9766,20 @@ def _collect_semantic_content_with_application(
         validate_semantic_decision_application,
     )
 
-    root_content = _collect_root_content(foundation_contracts)
-    reference_content = _collect_reference_content()
-    application: object = None
+    effective_evaluation_date = (
+        _effective_evaluation_date()
+        if evaluation_date is None
+        else evaluation_date
+    )
+    root_content = _collect_root_content(
+        foundation_contracts,
+        evaluation_date=effective_evaluation_date,
+    )
+    reference_content = _collect_reference_content(
+        evaluation_date=effective_evaluation_date,
+    )
     try:
-        config = load_yaml_file(SKILL_CONTENT_EXCEPTIONS_FILE)
-        application = (
-            config.get(SEMANTIC_DISPOSITION_APPLICATION_KEY)
-            if isinstance(config, dict)
-            else None
-        )
         application_report = validate_semantic_decision_application(
-            application,
             _semantic_application_audit_view(root_content, reference_content),
         )
         application_report["error"] = None
@@ -11857,21 +9787,14 @@ def _collect_semantic_content_with_application(
         application_report = {
             "schema_version": SEMANTIC_DISPOSITION_APPLICATION_SCHEMA_VERSION,
             "kind": SEMANTIC_DISPOSITION_APPLICATION_KIND,
-            "review_id": (
-                application.get("review_id")
-                if isinstance(application, dict)
-                else None
-            ),
+            "review_id": None,
             "decision_kind": (
-                application.get("decision_kind")
-                if isinstance(application, dict)
-                else None
+                "changeforge.semantic-disposition-attestation"
             ),
-            "decision": (
-                application.get("decision")
-                if isinstance(application, dict)
-                else None
-            ),
+            "decision": {
+                "path": "evals/expert-panel/semantic-disposition.json",
+                "sha256": None,
+            },
             "status": "invalid",
             "target_count": 0,
             "applied_count": 0,
@@ -12686,7 +10609,8 @@ def _skill_detector_contract() -> dict[str, object]:
     }
 
 
-def audit() -> dict:
+def audit(evaluation_date: date | None = None) -> dict:
+    effective_evaluation_date = _effective_evaluation_date(evaluation_date)
     foundation_contracts = _load_foundation_content_contracts()
     used_by_counts = _load_used_by_counts()
     files = _collect_files()
@@ -12769,7 +10693,10 @@ def audit() -> dict:
     for metrics in all_metrics:
         _assign_review_state(metrics, readability_by_owner)
     root_content, reference_content, semantic_application = (
-        _collect_semantic_content_with_application(foundation_contracts)
+        _collect_semantic_content_with_application(
+            foundation_contracts,
+            evaluation_date=effective_evaluation_date,
+        )
     )
     return {
         "metrics": all_metrics,
@@ -12888,7 +10815,7 @@ def _format_md(result: dict) -> str:
     lines: list[str] = []
     a = lines.append
 
-    a("# ChangeForge Skill Content Audit")
+    a("# rd-skills Skill Content Audit")
     a("")
     a("> Generated by `scripts/audit-skill-content.py`. Read-only evidence.")
     a(
@@ -13318,43 +11245,7 @@ def _format_md(result: dict) -> str:
             a("")
             a("Common errors: " + "; ".join(root_surfaces["common_errors"]))
         a("")
-        lifecycle = root_semantic["lifecycle"]
-        comparison = lifecycle.get("comparison") or {}
-        age = lifecycle.get("age") or {}
-        a("### 7.1 Root Disposition Lifecycle")
-        a("")
-        a(
-            f"- Status: `{lifecycle['status']}`; snapshot-current="
-            f"`{str(lifecycle['snapshot_current']).lower()}`; formal-release-ready="
-            f"`{str(lifecycle['formal_release_ready']).lower()}`."
-        )
-        a(
-            "- Comparison: "
-            f"scope=`{comparison.get('comparison_scope', 'unavailable')}`; "
-            f"added={comparison.get('added_count')}; "
-            f"removed={comparison.get('removed_count')}; "
-            f"disposition-changes={comparison.get('disposition_change_count')}; "
-            f"source-rewrites={comparison.get('source_rewrite_count')}; "
-            f"detector-improvements={comparison.get('detector_improvement_count')}; "
-            f"unclassified={comparison.get('unclassified_count')}."
-        )
-        a(
-            "- Age: "
-            f"known={age.get('known_age_count')}; "
-            f"unknown={age.get('unknown_age_count')}; "
-            f"max-days={age.get('max_age_days')}."
-        )
-        bootstrap_chain = lifecycle.get("bootstrap_refresh_chain") or {}
-        a(
-            "- Bootstrap refresh chain: "
-            f"valid={str(bootstrap_chain.get('valid')).lower()}; "
-            f"count={bootstrap_chain.get('count')}; "
-            f"latest-delta={bootstrap_chain.get('latest_delta')}."
-        )
-        if lifecycle["errors"]:
-            a("- Lifecycle errors: " + "; ".join(lifecycle["errors"]))
-        a("")
-        a("### 7.2 Root Semantic Candidates")
+        a("### 7.1 Root Semantic Candidates")
         a("")
         a("| Candidate ID | Finding | Priority | Status | Canonical occurrence | Preview |")
         a("| --- | --- | --- | --- | --- | --- |")
@@ -13551,7 +11442,7 @@ def _format_md(result: dict) -> str:
         a("")
         a(
             "> These rows are deterministic governance candidates. Strict mode blocks "
-            "the unresolved families named by the schema-v5 contract."
+            "the unresolved families named by the schema-v6 contract."
         )
         a("")
         a("| Finding | Raw | Detector-down | Untriaged | Rewrite | Resolved | Unresolved | P0/P1/P2 unresolved |")
@@ -13578,7 +11469,6 @@ def _format_md(result: dict) -> str:
             "Semantic disposition contract: "
             f"schema={disposition_contract['schema_version']}; "
             f"source=`{disposition_contract['source']}`; "
-            f"evaluated_on={disposition_contract['evaluated_on']}; "
             f"configured={disposition_contract['configured_count']}; "
             f"applied={disposition_contract['applied_count']}; "
             f"errors={len(disposition_contract['errors'])}."
@@ -13829,192 +11719,16 @@ def _args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Also emit the human-readable Markdown release projection.",
     )
-    parser.add_argument(
-        "--refresh-root-disposition-bootstrap",
-        action="append",
-        nargs=2,
-        default=[],
-        metavar=("REVIEWER", "RATIONALE"),
-        help=(
-            "Record one authoring-only review that refreshes a changed bootstrap "
-            "snapshot without creating formal release evidence."
-        ),
-    )
-    parser.add_argument(
-        "--record-root-disposition-release",
-        metavar="RELEASE_ID",
-        help="Roll the bounded Root disposition lifecycle to one named release.",
-    )
-    parser.add_argument(
-        "--released-on",
-        metavar="YYYY-MM-DD",
-        help="Non-future release date; required with the Root lifecycle recorder.",
-    )
-    parser.add_argument(
-        "--change-review",
-        action="append",
-        nargs=3,
-        default=[],
-        metavar=("CANDIDATE_ID", "REVIEWER", "RATIONALE"),
-        help=(
-            "Accountable review for one disposition change or detector-only "
-            "removal; repeat for additional candidates."
-        ),
-    )
-    parser.add_argument(
-        "--source-replacement-review",
-        action="append",
-        nargs=4,
-        default=[],
-        metavar=("PRIOR_ID", "NEW_ID[,NEW_ID...]", "REVIEWER", "RATIONALE"),
-        help=(
-            "Accountable source-only ownership review selecting a non-empty subset "
-            "of current same-lineage ambiguity replacements; repeat for additional "
-            "prior candidates."
-        ),
-    )
-    parser.add_argument(
-        "--source-removal-review",
-        action="append",
-        nargs=3,
-        default=[],
-        metavar=("PRIOR_ID", "REVIEWER", "RATIONALE"),
-        help=(
-            "Accountable source-only ambiguity review selecting no successor; "
-            "repeat for additional prior candidates."
-        ),
-    )
-    parser.add_argument(
-        "--source-detector-replacement-review",
-        action="append",
-        nargs=4,
-        default=[],
-        metavar=("PRIOR_ID", "NEW_ID[,NEW_ID...]", "REVIEWER", "RATIONALE"),
-        help=(
-            "Accountable review selecting a non-empty subset of current same-lineage "
-            "replacements when both source and detector changed; repeat for "
-            "additional prior candidates."
-        ),
-    )
-    parser.add_argument(
-        "--source-detector-removal-review",
-        action="append",
-        nargs=3,
-        default=[],
-        metavar=("PRIOR_ID", "REVIEWER", "RATIONALE"),
-        help=(
-            "Accountable review selecting removal, even when unrelated same-lineage "
-            "additions exist, when both source and detector changed; repeat for "
-            "additional candidates."
-        ),
-    )
+    parser.add_argument("--reports-dir", type=Path, default=REPORTS_DIR)
     args = parser.parse_args(argv)
-    review_groups = (
-        args.change_review,
-        args.source_replacement_review,
-        args.source_removal_review,
-        args.source_detector_replacement_review,
-        args.source_detector_removal_review,
-    )
-    release_requested = args.record_root_disposition_release is not None
-    release_date_requested = args.released_on is not None
-    bootstrap_refreshes = args.refresh_root_disposition_bootstrap
-    if len(bootstrap_refreshes) > 1:
-        parser.error("--refresh-root-disposition-bootstrap may be used only once")
-    bootstrap_refresh = (
-        tuple(bootstrap_refreshes[0]) if bootstrap_refreshes else None
-    )
-    if bootstrap_refresh is not None:
-        reviewer, rationale = bootstrap_refresh
-        if not reviewer.strip():
-            parser.error("Root bootstrap refresh reviewer must be non-blank")
-        if _root_rationale_is_generic(rationale):
-            parser.error("Root bootstrap refresh rationale must be specific")
-        if (
-            release_requested
-            or release_date_requested
-            or any(review_groups)
-        ):
-            parser.error(
-                "--refresh-root-disposition-bootstrap is mutually exclusive with "
-                "release, date, and formal review flags"
-            )
-    args.refresh_root_disposition_bootstrap = bootstrap_refresh
-    if release_requested and not args.record_root_disposition_release.strip():
-        parser.error("--record-root-disposition-release must be non-blank")
-    if release_date_requested and not args.released_on.strip():
-        parser.error("--released-on must be non-blank")
-    if release_requested != release_date_requested:
-        parser.error(
-            "--record-root-disposition-release and --released-on must be used together"
-        )
-    if any(review_groups) and not (release_requested and release_date_requested):
-        parser.error(
-            "Root lifecycle review flags require --record-root-disposition-release "
-            "and --released-on"
-        )
-    review_prior_ids = [
-        str(item[0]) for group in review_groups for item in group
-    ]
-    duplicate_prior_ids = sorted(
-        candidate_id
-        for candidate_id in set(review_prior_ids)
-        if review_prior_ids.count(candidate_id) > 1
-    )
-    if duplicate_prior_ids:
-        parser.error(
-            "Root lifecycle review prior IDs must be unique across all review flags: "
-            + ", ".join(duplicate_prior_ids)
-        )
     return args
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _args([] if argv is None else argv)
-    if args.refresh_root_disposition_bootstrap:
-        reviewer, rationale = args.refresh_root_disposition_bootstrap
-        try:
-            lifecycle = _record_root_semantic_bootstrap_refresh(
-                reviewer,
-                rationale,
-            )
-        except (OSError, ValidationProblem, ValueError) as exc:
-            print(f"audit-skill-content: ERROR: {exc}", file=sys.stderr)
-            return 1
-        chain = lifecycle["bootstrap_refresh_chain"]
-        print(
-            "audit-skill-content: refreshed Root disposition bootstrap; "
-            f"reviews={chain['count']}; latest_delta={chain['latest_delta']}"
-        )
-    if args.record_root_disposition_release is not None:
-        try:
-            lifecycle = _record_root_semantic_release(
-                args.record_root_disposition_release,
-                args.released_on,
-                change_reviews=[tuple(item) for item in args.change_review],
-                source_replacement_reviews=[
-                    tuple(item) for item in args.source_replacement_review
-                ],
-                source_removal_reviews=[
-                    tuple(item) for item in args.source_removal_review
-                ],
-                source_detector_replacement_reviews=[
-                    tuple(item) for item in args.source_detector_replacement_review
-                ],
-                source_detector_removal_reviews=[
-                    tuple(item) for item in args.source_detector_removal_review
-                ],
-            )
-        except (OSError, ValidationProblem, ValueError) as exc:
-            print(f"audit-skill-content: ERROR: {exc}", file=sys.stderr)
-            return 1
-        print(
-            "audit-skill-content: recorded Root disposition lifecycle "
-            f"release={args.record_root_disposition_release}; "
-            f"scope={lifecycle['comparison']['comparison_scope']}"
-        )
+    effective_evaluation_date = _effective_evaluation_date()
     try:
-        result = audit()
+        result = audit(evaluation_date=effective_evaluation_date)
         source_safety_errors = _reference_source_safety_errors(result)
         if source_safety_errors:
             first = source_safety_errors[0]
@@ -14030,7 +11744,10 @@ def main(argv: list[str] | None = None) -> int:
     except ValidationProblem as exc:
         print(f"audit-skill-content: ERROR: {exc}")
         return 1
-    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    json_report, markdown_report = report_output_paths(
+        args.reports_dir, JSON_REPORT.name, MARKDOWN_REPORT.name
+    )
+    args.reports_dir.mkdir(parents=True, exist_ok=True)
     result["gate_status"] = _audit_gate_status(
         result,
         summary,
@@ -14063,18 +11780,24 @@ def main(argv: list[str] | None = None) -> int:
         ],
         "gate_status": result["gate_status"],
     }
-    JSON_REPORT.write_text(
+    json_report.write_text(
         json.dumps(json_payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     if args.release_projection:
-        MARKDOWN_REPORT.write_text(_format_md(result), encoding="utf-8")
+        markdown_report.write_text(_format_md(result), encoding="utf-8")
 
     summary = json_payload["summary"]
+    try:
+        displayed_json_report = json_report.relative_to(ROOT)
+        displayed_markdown_report = markdown_report.relative_to(ROOT)
+    except ValueError:
+        displayed_json_report = json_report
+        displayed_markdown_report = markdown_report
     print(
         "audit-skill-content: wrote "
-        f"{JSON_REPORT.relative_to(ROOT)}"
+        f"{displayed_json_report}"
         + (
-            f" and {MARKDOWN_REPORT.relative_to(ROOT)}"
+            f" and {displayed_markdown_report}"
             if args.release_projection
             else ""
         )

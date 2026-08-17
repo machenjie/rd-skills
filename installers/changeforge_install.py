@@ -1,4 +1,4 @@
-"""Shared helpers for hookless ChangeForge Skill and Agent Profile installers."""
+"""Shared helpers for hookless rd-skills Skill and Agent Profile installers."""
 
 from __future__ import annotations
 
@@ -665,7 +665,7 @@ def read_build_manifest(source_dir: Path) -> dict[str, Any]:
     if value is None:
         raise InstallError(f"{source_dir} is missing {BUILD_MANIFEST_NAME}")
     if value.get("architecture") != "hookless-control-plane-v1":
-        raise InstallError(f"{source_dir} is not a hookless ChangeForge build")
+        raise InstallError(f"{source_dir} is not a hookless rd-skills build")
     if value.get("compiled_layer3_format") != COMPILED_LAYER3_FORMAT:
         raise InstallError(
             f"{source_dir} compiled_layer3_format must equal "
@@ -1071,7 +1071,7 @@ def cleanup_legacy_residue(
     skill_target: Path,
     dry_run: bool,
 ) -> list[Path]:
-    """Remove only known ChangeForge artifacts from pre-hookless releases."""
+    """Remove only known artifacts from pre-hookless releases."""
     candidates = _legacy_removal_candidates(agent, scope, project_target, skill_target)
     config_root = _legacy_config_root(agent, scope, project_target)
     shared_config = config_root / "hooks.json" if config_root is not None and agent == "codex" else None
@@ -1121,7 +1121,7 @@ def _legacy_removal_candidates(
                 candidates.append(instructions)
     unique = list(dict.fromkeys(candidates))
     for path in unique:
-        _ensure_parent_within(path, boundaries, "legacy ChangeForge artifact")
+        _ensure_parent_within(path, boundaries, "legacy pre-hookless artifact")
     return unique
 
 

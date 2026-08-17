@@ -29,7 +29,8 @@ from typing import Any
 MANIFEST_KIND = "changeforge.expert-panel-reviewer-manifest"
 MANIFEST_SCHEMA_VERSION = 1
 MAX_RECORD_BYTES = 262_144
-MAX_MANIFEST_BYTES = 16_777_216
+MAX_MANIFEST_BYTES = 33_554_432
+MAX_REVIEWER_MANIFEST_BYTES = 16_777_216
 MAX_CHUNK_RAW_BYTES = 32_768
 MAX_CHUNK_BASE64_CHARS = 43_692
 MAX_CHUNK_ENVELOPE_BYTES = 49_152
@@ -51,10 +52,12 @@ _CHUNK_FIELDS = {
 
 READABILITY_PANEL_KIND = "readability"
 PROFESSIONAL_PANEL_KIND = "professional-completeness"
+SEMANTIC_PANEL_KIND = "semantic-disposition"
 READABILITY_BALLOT_KIND = "changeforge.expert-panel-ballot"
 PROFESSIONAL_BALLOT_KIND = (
     "changeforge.professional-completeness-panel-ballot"
 )
+SEMANTIC_BALLOT_KIND = "changeforge.semantic-disposition-panel-ballot"
 
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _SLUG_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$")
@@ -105,6 +108,18 @@ _ACTIONABILITY_FIELDS = {
     "rationale",
 }
 _ACTIONABILITY_EVIDENCE_FIELDS = {"line", "source_line", "claim"}
+_SEMANTIC_FIELDS = {
+    "record_type",
+    "target_id",
+    "axis",
+    "candidate_id",
+    "disposition",
+    "rationale",
+    "authority_or_condition",
+    "decision_owner",
+    "mitigation",
+    "review_after",
+}
 _PROFESSIONAL_FIELDS = {
     "record_type",
     "skill_id",
@@ -198,13 +213,25 @@ _ACTIONABILITY_BALLOT_FIELDS = {
     "rationale",
 }
 
-_PROFESSIONAL_BALLOT_FIELDS = {
+_SEMANTIC_BALLOT_FIELDS = {
     "schema_version",
     "kind",
     "review_id",
     "created_on",
     "packet_sha256",
     "source_fingerprints",
+    "voter",
+    "semantic_votes",
+    "limitations",
+}
+_SEMANTIC_BALLOT_VOTE_FIELDS = _SEMANTIC_FIELDS - {"record_type"}
+
+_PROFESSIONAL_BALLOT_FIELDS = {
+    "schema_version",
+    "kind",
+    "review_id",
+    "created_on",
+    "packet_sha256",
     "voter",
     "professional_votes",
     "limitations",
@@ -305,6 +332,13 @@ _ADJACENCY_DISPOSITIONS = {
     "not-adjacent",
     "gap-or-overlap-defect",
 }
+_SEMANTIC_DISPOSITIONS = {
+    "rewrite",
+    "valid-contextual-rule",
+    "false-positive",
+    "time-bounded-exception",
+}
+_SEMANTIC_AXES = {"root", "reference"}
 
 
 class ManifestError(ValueError):
@@ -475,6 +509,10 @@ def _validate_header(header: object, *, record_count: int) -> str:
     elif panel_kind == PROFESSIONAL_PANEL_KIND:
         expected = (PROFESSIONAL_BALLOT_KIND, 3)
         _sha256(row.get("capsule_sha256"), label="header.capsule_sha256")
+    elif panel_kind == SEMANTIC_PANEL_KIND:
+        expected = (SEMANTIC_BALLOT_KIND, 2)
+        if row.get("capsule_sha256") is not None:
+            raise ManifestError("semantic header.capsule_sha256 must be null")
     else:
         raise ManifestError("header.panel_kind is invalid")
     if (row.get("ballot_kind"), row.get("ballot_schema_version")) != expected:
@@ -549,6 +587,39 @@ def _validate_actionability(record: object, *, label: str) -> str:
     if lines != sorted(set(lines)):
         raise ManifestError(f"{label}.evidence must be line-sorted and unique")
     return target_id
+
+
+def _validate_semantic(record: object, *, label: str) -> tuple[str, str, str]:
+    row = _object(record, _SEMANTIC_FIELDS, label=label)
+    if row.get("record_type") != "semantic_vote":
+        raise ManifestError(f"{label}.record_type is invalid")
+    target_id = _nonblank(row.get("target_id"), label=f"{label}.target_id")
+    axis = row.get("axis")
+    if axis not in _SEMANTIC_AXES:
+        raise ManifestError(f"{label}.axis is invalid")
+    candidate_id = _sha256(
+        row.get("candidate_id"), label=f"{label}.candidate_id"
+    )
+    if target_id != f"{axis}:{candidate_id}":
+        raise ManifestError(f"{label} identity is inconsistent")
+    disposition = row.get("disposition")
+    if disposition not in _SEMANTIC_DISPOSITIONS:
+        raise ManifestError(f"{label}.disposition is invalid")
+    for field in (
+        "rationale",
+        "authority_or_condition",
+        "decision_owner",
+        "mitigation",
+    ):
+        _nonblank(row.get(field), label=f"{label}.{field}")
+    review_after = row.get("review_after")
+    if disposition == "time-bounded-exception":
+        _iso_date(review_after, label=f"{label}.review_after")
+    elif review_after is not None:
+        raise ManifestError(
+            f"{label}.review_after must be null unless time-bounded-exception"
+        )
+    return target_id, str(axis), candidate_id
 
 
 def _validate_professional(record: object, *, label: str) -> str:
@@ -698,20 +769,24 @@ def _validate_records(records: object) -> str:
     if not isinstance(records, list) or len(records) < 2:
         raise ManifestError("manifest records must be an array with at least two records")
     panel_kind = _validate_header(records[0], record_count=len(records))
-    allowed = (
-        {
+    if panel_kind == READABILITY_PANEL_KIND:
+        allowed = {
             "limitation": 1,
             "readability_content_vote": 2,
             "readability_finding": 3,
             "actionability_vote": 4,
         }
-        if panel_kind == READABILITY_PANEL_KIND
-        else {
+    elif panel_kind == PROFESSIONAL_PANEL_KIND:
+        allowed = {
             "limitation": 1,
             "qualification_claim": 2,
             "professional_vote": 3,
         }
-    )
+    else:
+        allowed = {
+            "limitation": 1,
+            "semantic_vote": 2,
+        }
     last_rank = 0
     limitation_ordinals: list[int] = []
     qualification_tags: list[str] = []
@@ -720,6 +795,7 @@ def _validate_records(records: object) -> str:
     finding_documents: list[str] = []
     actionability_ids: list[str] = []
     professional_ids: list[str] = []
+    semantic_ids: list[tuple[str, str, str]] = []
     for index, record in enumerate(records[1:], start=1):
         if not isinstance(record, dict):
             raise ManifestError(f"record[{index}] must be an object")
@@ -747,6 +823,8 @@ def _validate_records(records: object) -> str:
             actionability_ids.append(_validate_actionability(record, label=label))
         elif record_type == "professional_vote":
             professional_ids.append(_validate_professional(record, label=label))
+        elif record_type == "semantic_vote":
+            semantic_ids.append(_validate_semantic(record, label=label))
     if limitation_ordinals != list(range(len(limitation_ordinals))) or not limitation_ordinals:
         raise ManifestError("limitation ordinals must provide contiguous zero-based coverage")
     _require_sorted_unique(qualification_tags, label="qualification expertise tags")
@@ -759,6 +837,10 @@ def _validate_records(records: object) -> str:
     _require_sorted_unique(professional_ids, label="professional skill IDs")
     if panel_kind == PROFESSIONAL_PANEL_KIND and not professional_ids:
         raise ManifestError("professional manifest must contain at least one vote")
+    if semantic_ids != sorted(set(semantic_ids)):
+        raise ManifestError(
+            "semantic vote identities must be triple-sorted and unique"
+        )
     return panel_kind
 
 
@@ -777,9 +859,10 @@ def _validate_encoded_bounds(records: list[dict[str, Any]]) -> list[bytes]:
                 f"record[{index}] exceeds the {MAX_RECORD_BYTES}-byte limit"
             )
         total += len(line)
-        if total > MAX_MANIFEST_BYTES:
+        if total > MAX_REVIEWER_MANIFEST_BYTES:
             raise ManifestError(
-                f"manifest exceeds the {MAX_MANIFEST_BYTES}-byte limit"
+                "manifest exceeds the "
+                f"{MAX_REVIEWER_MANIFEST_BYTES}-byte limit"
             )
         encoded.append(line)
     return encoded
@@ -796,14 +879,19 @@ def _ballot_axis(ballot: object, *, template: bool) -> str:
     if schema_version == 3 and kind == PROFESSIONAL_BALLOT_KIND:
         _validate_professional_ballot_shape(ballot, template=template)
         return PROFESSIONAL_PANEL_KIND
-    raise ManifestError("only readability schema 2 and professional schema 3 are supported")
+    if schema_version == 2 and kind == SEMANTIC_BALLOT_KIND:
+        _validate_semantic_ballot_shape(ballot, template=template)
+        return SEMANTIC_PANEL_KIND
+    raise ManifestError(
+        "only readability schema 2, professional schema 3, and semantic schema 2 are supported"
+    )
 
 
 def _validate_common_ballot(ballot: dict[str, Any], *, professional: bool) -> None:
     _slug(ballot.get("review_id"), label="ballot.review_id")
     _iso_date(ballot.get("created_on"), label="ballot.created_on")
     _sha256(ballot.get("packet_sha256"), label="ballot.packet_sha256")
-    if not isinstance(ballot.get("source_fingerprints"), dict):
+    if not professional and not isinstance(ballot.get("source_fingerprints"), dict):
         raise ManifestError("ballot.source_fingerprints must be an object")
     voter = ballot.get("voter")
     expected = _PROFESSIONAL_VOTER_FIELDS if professional else _READABILITY_VOTER_FIELDS
@@ -883,6 +971,49 @@ def _validate_readability_ballot_shape(ballot: dict[str, Any], *, template: bool
         else:
             _validate_actionability({"record_type": "actionability_vote", **row}, label=label)
     _require_sorted_unique(target_ids, label="ballot actionability target IDs")
+
+
+def _validate_semantic_ballot_shape(
+    ballot: dict[str, Any], *, template: bool
+) -> None:
+    _object(ballot, _SEMANTIC_BALLOT_FIELDS, label="semantic ballot")
+    _validate_common_ballot(ballot, professional=False)
+    votes = ballot.get("semantic_votes")
+    if not isinstance(votes, list):
+        raise ManifestError("ballot.semantic_votes must be an array")
+    identities: list[tuple[str, str, str]] = []
+    for index, vote in enumerate(votes):
+        label = f"ballot.semantic_votes[{index}]"
+        row = _object(vote, _SEMANTIC_BALLOT_VOTE_FIELDS, label=label)
+        target_id = _nonblank(row.get("target_id"), label=f"{label}.target_id")
+        axis = row.get("axis")
+        if axis not in _SEMANTIC_AXES:
+            raise ManifestError(f"{label}.axis is invalid")
+        candidate_id = _sha256(
+            row.get("candidate_id"), label=f"{label}.candidate_id"
+        )
+        if target_id != f"{axis}:{candidate_id}":
+            raise ManifestError(f"{label} identity is inconsistent")
+        identities.append((target_id, str(axis), candidate_id))
+        if template:
+            if (
+                row.get("disposition") is not None
+                or row.get("rationale") != ""
+                or row.get("authority_or_condition") != ""
+                or row.get("decision_owner") != ""
+                or row.get("mitigation") != ""
+                or row.get("review_after") is not None
+            ):
+                raise ManifestError(f"{label} is not an unfilled template vote")
+        else:
+            _validate_semantic(
+                {"record_type": "semantic_vote", **row},
+                label=label,
+            )
+    if identities != sorted(set(identities)):
+        raise ManifestError(
+            "ballot semantic vote identities must be triple-sorted and unique"
+        )
 
 
 def _validate_fill_state(
@@ -1036,7 +1167,7 @@ def project_ballot_to_manifest(
     *,
     template_sha256: str,
 ) -> list[dict[str, Any]]:
-    """Project one filled schema-2/schema-3 ballot into closed JSONL records."""
+    """Project one filled supported ballot into closed JSONL records."""
 
     template_digest = _sha256(template_sha256, label="template_sha256")
     panel_kind = _ballot_axis(ballot, template=False)
@@ -1104,7 +1235,7 @@ def project_ballot_to_manifest(
             }
             for vote in ballot["actionability_votes"]
         )
-    else:
+    elif panel_kind == PROFESSIONAL_PANEL_KIND:
         records.extend(
             {
                 "record_type": "qualification_claim",
@@ -1140,6 +1271,22 @@ def project_ballot_to_manifest(
             }
             for vote in ballot["professional_votes"]
         )
+    else:
+        records.extend(
+            {
+                "record_type": "semantic_vote",
+                "target_id": vote["target_id"],
+                "axis": vote["axis"],
+                "candidate_id": vote["candidate_id"],
+                "disposition": vote["disposition"],
+                "rationale": vote["rationale"],
+                "authority_or_condition": vote["authority_or_condition"],
+                "decision_owner": vote["decision_owner"],
+                "mitigation": vote["mitigation"],
+                "review_after": vote["review_after"],
+            }
+            for vote in ballot["semantic_votes"]
+        )
     records[0]["record_count"] = len(records)
     _validate_records(records)
     _validate_encoded_bounds(records)
@@ -1173,8 +1320,11 @@ def parse_manifest_bytes(raw: bytes) -> list[dict[str, Any]]:
         raise ManifestError("manifest input must be bytes")
     if not raw:
         raise ManifestError("manifest must not be empty")
-    if len(raw) > MAX_MANIFEST_BYTES:
-        raise ManifestError(f"manifest exceeds the {MAX_MANIFEST_BYTES}-byte limit")
+    if len(raw) > MAX_REVIEWER_MANIFEST_BYTES:
+        raise ManifestError(
+            "manifest exceeds the "
+            f"{MAX_REVIEWER_MANIFEST_BYTES}-byte limit"
+        )
     if raw.startswith(b"\xef\xbb\xbf"):
         raise ManifestError("manifest must not contain a UTF-8 BOM")
     if b"\r" in raw:
@@ -1259,8 +1409,10 @@ def materialize_manifest(
     result["limitations"] = [record["text"] for record in limitations]
     if panel_kind == READABILITY_PANEL_KIND:
         _materialize_readability(result, records)
-    else:
+    elif panel_kind == PROFESSIONAL_PANEL_KIND:
         _materialize_professional(result, records)
+    else:
+        _materialize_semantic(result, records)
     # The closed records were fully validated before the template was copied,
     # and exact identity coverage above fills every reviewer-owned slot.  Do
     # not re-traverse the completed ballot here: the existing panel validator
@@ -1314,6 +1466,36 @@ def _fill_decision(target: dict[str, Any], record: dict[str, Any]) -> None:
     target["decision"] = record["decision"]
     target["reason_code"] = record["reason_code"]
     target["rationale"] = record["rationale"]
+
+
+def _materialize_semantic(
+    result: dict[str, Any], records: list[dict[str, Any]]
+) -> None:
+    votes = _records_of_type(records, "semantic_vote")
+    identity_fields = ("target_id", "axis", "candidate_id")
+    expected = [
+        tuple(vote[field] for field in identity_fields)
+        for vote in result["semantic_votes"]
+    ]
+    actual = [
+        tuple(record[field] for field in identity_fields)
+        for record in votes
+    ]
+    if actual != expected:
+        raise ManifestError(
+            "semantic manifest identity coverage does not match template"
+        )
+    reviewer_fields = (
+        "disposition",
+        "rationale",
+        "authority_or_condition",
+        "decision_owner",
+        "mitigation",
+        "review_after",
+    )
+    for vote, record in zip(result["semantic_votes"], votes, strict=True):
+        for field in reviewer_fields:
+            vote[field] = copy.deepcopy(record[field])
 
 
 def _materialize_professional(
@@ -1376,6 +1558,7 @@ class FileIdentity:
     size: int
     mtime_ns: int
     ctime_ns: int
+    mode: int
 
 
 @dataclass(frozen=True)
@@ -1404,10 +1587,11 @@ def _require_manifest_size(value: object) -> int:
         not isinstance(value, int)
         or isinstance(value, bool)
         or value < 1
-        or value > MAX_MANIFEST_BYTES
+        or value > MAX_REVIEWER_MANIFEST_BYTES
     ):
         raise ManifestError(
-            f"manifest size must be between 1 and {MAX_MANIFEST_BYTES} bytes"
+            "manifest size must be between 1 and "
+            f"{MAX_REVIEWER_MANIFEST_BYTES} bytes"
         )
     return value
 
@@ -1419,6 +1603,7 @@ def _file_identity(value: os.stat_result) -> FileIdentity:
         size=value.st_size,
         mtime_ns=value.st_mtime_ns,
         ctime_ns=value.st_ctime_ns,
+        mode=stat.S_IMODE(value.st_mode),
     )
 
 
@@ -1562,6 +1747,28 @@ def bind_regular_file(
     """Read and bind one no-follow regular file by bytes and POSIX identity."""
 
     digest = _require_lower_sha256(expected_sha256, label=f"{label} SHA-256")
+    bound = read_bound_regular_file(
+        path,
+        expected_size=expected_size,
+        max_bytes=max_bytes,
+        outside_root=outside_root,
+        label=label,
+    )
+    if bound.sha256 != digest:
+        raise ManifestError(f"{label} SHA-256 mismatch")
+    return bound
+
+
+def read_bound_regular_file(
+    path: Path,
+    *,
+    expected_size: int | None = None,
+    max_bytes: int = MAX_MANIFEST_BYTES,
+    outside_root: Path | None = None,
+    label: str,
+) -> BoundFile:
+    """Read and bind a no-follow file when its digest is not known in advance."""
+
     if expected_size is not None:
         if (
             not isinstance(expected_size, int)
@@ -1594,8 +1801,6 @@ def bind_regular_file(
     finally:
         os.close(directory_fd)
     actual_digest = _sha256_bytes(raw)
-    if actual_digest != digest:
-        raise ManifestError(f"{label} SHA-256 mismatch")
     return BoundFile(
         path=absolute,
         raw=raw,
@@ -1646,7 +1851,7 @@ def read_manifest_file(
         path,
         expected_sha256=expected_sha256,
         expected_size=size,
-        max_bytes=MAX_MANIFEST_BYTES,
+        max_bytes=MAX_REVIEWER_MANIFEST_BYTES,
         outside_root=repository_root,
         label="reviewer manifest",
     ).raw
@@ -1695,7 +1900,10 @@ def read_raw_manifest_stream(
     expected_sha256: str,
 ) -> bytes:
     size = _require_manifest_size(expected_size)
-    raw = _read_stream_bounded(stream, max_bytes=min(MAX_MANIFEST_BYTES, size) + 1)
+    raw = _read_stream_bounded(
+        stream,
+        max_bytes=min(MAX_REVIEWER_MANIFEST_BYTES, size) + 1,
+    )
     return _verify_manifest_bytes(
         raw,
         expected_size=size,
@@ -1845,7 +2053,7 @@ def read_framed_manifest_stream(
         if _sha256_bytes(raw_chunk) != chunk_digest:
             raise ManifestError("reviewer manifest chunk SHA-256 mismatch")
         total += len(raw_chunk)
-        if total > size or total > MAX_MANIFEST_BYTES:
+        if total > size or total > MAX_REVIEWER_MANIFEST_BYTES:
             raise ManifestError("reviewer manifest framed payload exceeds its bound")
         chunks.append(raw_chunk)
         expected_sequence += 1
@@ -1924,6 +2132,7 @@ def _create_durable_file(
     raw: bytes,
     *,
     label: str,
+    mode: int = 0o644,
 ) -> tuple[int, int]:
     flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
     flags |= getattr(os, "O_NOFOLLOW", 0)
@@ -1932,11 +2141,12 @@ def _create_durable_file(
     identity: tuple[int, int] | None = None
     succeeded = False
     try:
-        descriptor = os.open(name, flags, 0o644, dir_fd=directory_fd)
+        descriptor = os.open(name, flags, mode, dir_fd=directory_fd)
         initial = os.fstat(descriptor)
         identity = (initial.st_dev, initial.st_ino)
         if not stat.S_ISREG(initial.st_mode) or initial.st_nlink != 1:
             raise ManifestError(f"{label} is not a single-link regular file")
+        os.fchmod(descriptor, mode)
         _write_all(descriptor, raw)
         os.fsync(descriptor)
         final = os.fstat(descriptor)
@@ -2138,6 +2348,185 @@ def replace_bound_ballot_once(
         os.close(directory_fd)
 
 
+def promote_bound_file_atomically(
+    bound_source: BoundFile,
+    destination: Path,
+    *,
+    bound_existing: BoundFile | None,
+    max_bytes: int,
+    validate_final: Callable[[bytes], object],
+) -> None:
+    """CAS-promote bound bytes through a restrictive, verified sibling temp."""
+
+    directory_fd, destination_name = _open_parent_no_follow(destination)
+    temp_name = f".{destination_name}.promote-{secrets.token_hex(16)}.tmp"
+    rollback_name = f".{destination_name}.rollback-{secrets.token_hex(16)}.tmp"
+    temp_identity: tuple[int, int] | None = None
+    rollback_identity: tuple[int, int] | None = None
+    replaced = False
+    final_identity: tuple[int, int] | None = None
+    try:
+        _recheck_destination_cas(
+            directory_fd,
+            destination_name,
+            bound_existing=bound_existing,
+            label="attestation destination",
+        )
+        recheck_bound_file(bound_source, label="attestation promotion source")
+        validate_final(bound_source.raw)
+        temp_identity = _create_durable_file(
+            directory_fd,
+            temp_name,
+            bound_source.raw,
+            label="attestation promotion temporary output",
+            mode=0o600,
+        )
+        stored_temp, temp_stat = _read_regular_at(
+            directory_fd,
+            temp_name,
+            expected_size=len(bound_source.raw),
+            max_bytes=max_bytes,
+            label="attestation promotion temporary output",
+        )
+        if (
+            (temp_stat.device, temp_stat.inode) != temp_identity
+            or stored_temp != bound_source.raw
+        ):
+            raise ManifestError("attestation promotion temporary output is stale")
+        validate_final(stored_temp)
+        if bound_existing is not None:
+            rollback_identity = _create_durable_file(
+                directory_fd,
+                rollback_name,
+                bound_existing.raw,
+                label="attestation promotion rollback copy",
+                mode=bound_existing.identity.mode,
+            )
+        recheck_bound_file(bound_source, label="attestation promotion source")
+        _recheck_destination_cas(
+            directory_fd,
+            destination_name,
+            bound_existing=bound_existing,
+            label="attestation destination",
+        )
+        os.replace(
+            temp_name,
+            destination_name,
+            src_dir_fd=directory_fd,
+            dst_dir_fd=directory_fd,
+        )
+        replaced = True
+        final_identity = temp_identity
+        temp_identity = None
+        os.fsync(directory_fd)
+        stored_final, final_stat = _read_regular_at(
+            directory_fd,
+            destination_name,
+            expected_size=len(bound_source.raw),
+            max_bytes=max_bytes,
+            label="promoted attestation",
+        )
+        if (
+            (final_stat.device, final_stat.inode) != final_identity
+            or stored_final != bound_source.raw
+        ):
+            raise ManifestError("promoted attestation identity or bytes are stale")
+        validate_final(stored_final)
+        if rollback_identity is not None:
+            _unlink_owned_or_raise(
+                directory_fd,
+                rollback_name,
+                rollback_identity,
+                label="attestation promotion rollback copy",
+            )
+            rollback_identity = None
+        os.fsync(directory_fd)
+    except Exception:
+        if replaced:
+            try:
+                if final_identity is None:
+                    raise ManifestError(
+                        "failed promoted attestation ownership is missing"
+                    )
+                promoted, promoted_identity = _read_regular_at(
+                    directory_fd,
+                    destination_name,
+                    expected_size=len(bound_source.raw),
+                    max_bytes=max_bytes,
+                    label="failed promoted attestation",
+                )
+                if (
+                    (promoted_identity.device, promoted_identity.inode)
+                    != final_identity
+                    or promoted != bound_source.raw
+                    or _sha256_bytes(promoted) != bound_source.sha256
+                ):
+                    raise ManifestError(
+                        "failed promoted attestation is no longer owned by rollback"
+                    )
+                if bound_existing is not None and rollback_identity is not None:
+                    os.replace(
+                        rollback_name,
+                        destination_name,
+                        src_dir_fd=directory_fd,
+                        dst_dir_fd=directory_fd,
+                    )
+                    rollback_identity = None
+                    os.fsync(directory_fd)
+                    restored, restored_identity = _read_regular_at(
+                        directory_fd,
+                        destination_name,
+                        expected_size=len(bound_existing.raw),
+                        max_bytes=max_bytes,
+                        label="restored attestation destination",
+                    )
+                    if (
+                        restored != bound_existing.raw
+                        or restored_identity.mode
+                        != bound_existing.identity.mode
+                    ):
+                        raise ManifestError(
+                            "restored attestation destination state is stale"
+                        )
+                elif bound_existing is None:
+                    _unlink_owned_or_raise(
+                        directory_fd,
+                        destination_name,
+                        final_identity,
+                        label="failed promoted attestation",
+                    )
+                    os.fsync(directory_fd)
+            except Exception as rollback_exc:
+                raise ManifestError(
+                    "attestation promotion failed and destination rollback failed"
+                ) from rollback_exc
+        raise
+    finally:
+        _unlink_if_owned(directory_fd, temp_name, temp_identity)
+        _unlink_if_owned(directory_fd, rollback_name, rollback_identity)
+        os.close(directory_fd)
+
+
+def _recheck_destination_cas(
+    directory_fd: int,
+    name: str,
+    *,
+    bound_existing: BoundFile | None,
+    label: str,
+) -> None:
+    if bound_existing is None:
+        try:
+            os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+        except FileNotFoundError:
+            return
+        except OSError as exc:
+            raise ManifestError(f"cannot inspect {label}: {exc}") from exc
+        raise ManifestError(f"{label} was created before commit")
+    if bound_existing.path.name != name:
+        raise ManifestError(f"{label} CAS path is invalid")
+    _recheck_bound_at(bound_existing, directory_fd, label=label)
+
+
 __all__ = [
     "BoundFile",
     "CHUNK_PROTOCOL",
@@ -2151,6 +2540,7 @@ __all__ = [
     "MAX_CHUNK_RAW_BYTES",
     "MAX_MANIFEST_BYTES",
     "MAX_RECORD_BYTES",
+    "MAX_REVIEWER_MANIFEST_BYTES",
     "ManifestError",
     "bind_regular_file",
     "canonical_ballot_bytes",
@@ -2160,9 +2550,11 @@ __all__ = [
     "parse_json_object_bytes",
     "parse_manifest_bytes",
     "project_ballot_to_manifest",
+    "promote_bound_file_atomically",
     "read_framed_manifest_stream",
     "read_manifest_file",
     "read_raw_manifest_stream",
+    "read_bound_regular_file",
     "recheck_bound_file",
     "replace_bound_ballot_once",
 ]

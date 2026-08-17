@@ -4640,11 +4640,11 @@ foundation_skills:
     content_class: complex
     content_class_rationale: "Filesystem containment, atomic replacement, durability, protection, subprocess authority, completion, cancellation, descendants, and cleanup decisions are coupled and must be decided together."
     role_support: ["analysis-agent", "task-agent", "review-agent"]
-    trigger_signals: ["local file mutation untrusted path resolution file protection or direct child-process control changes application behavior"]
-    anti_trigger_signals: ["uploads shell-language semantics build graphs service rules or host administration", "no local filesystem mutation path-authority or child-process contract changes"]
+    trigger_signals: ["local file mutation path resolution file protection writer trust classification or direct child-process control changes application behavior"]
+    anti_trigger_signals: ["uploads shell-language semantics build graphs service rules or host administration", "no local filesystem mutation path-authority writer-trust or child-process contract changes", "path difference or writability alone without a less-trusted writer or reachable material impact"]
     required_inputs: ["current task contract", "selected primary Professional Skill", "task-local trigger evidence"]
     output_contract: ["Return a Filesystem/Process Safety Record covering platform, path/link, commit, durability, protection, cleanup, executable, argv, environment, working-directory, inherited-resource, and stdio decisions.", "Include exit, timeout, cancellation, descendants, unknown results, evidence, proof limits, and residual owners."]
-    escalation_signals: ["path authority mutation scope process identity completion certainty cleanup or recovery remains unresolved"]
+    escalation_signals: ["path authority writer identity writer trust mutation scope process identity completion certainty cleanup or recovery remains materially unresolved"]
     reference_index:
       - path: "references/atomic-filesystem-commit-and-containment.md"
         type: targeted

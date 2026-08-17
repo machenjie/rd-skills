@@ -7,10 +7,9 @@ description: "Use `analysis-agent`: `implementation-preparation` for changes, `d
 
 ## Role
 
-Support `analysis-agent` in one source-backed change, diagnosis, or answer mode.
-Specialist owns unresolved placement. For
-Analyzed Work, the current Engineering Brief is the only operational analysis
-authority; Specialist work is input until Brief incorporation.
+Support `analysis-agent` in the selected source-backed mode. For Analyzed Work,
+the current Engineering Brief is the only operational analysis authority;
+Specialist work is input pending Brief incorporation.
 
 ## When To Use
 
@@ -28,44 +27,40 @@ authority; Specialist work is input until Brief incorporation.
 
 ## Required Inputs
 
-- selected mode and mode-trigger evidence
-- bounded source evidence and known constraints
+- selected mode
+- bounded source evidence and constraints
 
 ## Professional Decision Rules
 
-- Bind the dispatch to its selected mode and corresponding `mode-contract` Reference.
-- Load supporting References independently when their own contracts trigger.
-- In one pass, prove owner, invariants, impact, and proof limits.
-- Do not invent user choices, repeat the scope, or cross modes.
-- Map material behavior, consumers, contracts, data, failure, tests, release, observability, and docs.
-- Put source-proven placement and triggered Specialist results in the Brief.
+- Bind the selected mode to its `mode-contract`.
+- Apply Core `task_contract.analyzed_work_authority` for initial closure,
+  decision-invalidated Delta Analysis, transitive impact, and Skill routing.
+- Prove its owner, impact, failure, validation, and proof limits.
+- Put source-proven placement and Specialist results in the Brief.
+- Route unresolved structural placement to `architecture-impact-reviewer`.
 - Put a complete Task Contract v2 that Main can dispatch verbatim in the Brief,
   not a derived Task DAG or handoff.
-- Use `refactoring` only after source proves its destination owner and placement.
-- Route flagged structural risk with source evidence to `architecture-impact-reviewer` for placement, module-boundary, and dependency-direction decisions.
 
 ## High-Value Gotchas
 
-- The nearest file may not own the rule; inspect same-pattern evidence without mode leakage.
+- Proximity is not ownership.
 
 ## Execution Checklist
 
-1. Classify the request into exactly one supported mode.
-2. Load that mode contract and only task-triggered Layer 3 guidance.
-3. Complete one mode result with its proof limit.
+1. Load the selected mode contract and triggered guidance.
+2. Return its result and proof limit under Core.
 
 ## Stop / Escalation Conditions
 
-- Stop for an underived user decision or a gap that can invalidate the conclusion.
-- Route structural-risk evidence to `architecture-impact-reviewer` with placement, module-boundary, and dependency-direction decisions left unresolved.
-- Return Brief conflicts or protected-decision changes `blocked` through Main
-  for analysis and redispatch.
+- Stop for user decisions or result-invalidating gaps.
+- Brief conflict or protected change returns `blocked`.
+- Structural placement or dependency direction routes to `architecture-impact-reviewer`.
+- Foundational invalidation permits full analysis.
 
 ## Output Contract
 
-- selected mode result
-- implementation-preparation: authoritative Brief with verbatim-dispatchable Slice and incorporated Specialist input
-- source evidence and proof limit
+- mode result, source evidence, and proof limit
+- implementation-preparation: authoritative Brief, dispatchable Slice, Specialist input
 
 ## Targeted References
 

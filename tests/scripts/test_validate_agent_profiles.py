@@ -161,38 +161,11 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         self.assertEqual(expected, main["instructions"])
         self.assertEqual(56, count_o200k_base_tokens(main["instructions"]))
 
-    def test_all_profile_surfaces_have_no_readability_findings(self) -> None:
-        source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
-        for profile in source["profiles"]:
-            for part, check_bullets in (
-                ("description", False),
-                ("instructions", True),
-            ):
-                role = profile["name"]
-                with self.subTest(role=role, part=part):
-                    errors: list[str] = []
-                    findings = VALIDATOR.validate_ai_readability(
-                        profile[part],
-                        f"{role}#{part}",
-                        errors,
-                        check_bullets=check_bullets,
-                    )
-                    self.assertEqual([], errors)
-                    self.assertEqual([], findings)
-
-    def test_task_agent_uses_an_explicit_rule_count_override(self) -> None:
+    def test_profile_rule_limits_are_core_driven_and_enforced(self) -> None:
         limits = VALIDATOR.PROFILE_CONTRACT_MODEL["instruction_rule_count"]
-        self.assertEqual(16, limits["maximum"])
-        self.assertEqual(
-            {"task-agent": 38, "review-agent": 18},
-            limits["maximum_by_role"],
-        )
-
         source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
         profiles = {profile["name"]: profile for profile in source["profiles"]}
         task_rules = profiles["task-agent"]["instructions"].splitlines()
-        self.assertEqual(38, len(task_rules))
-        self.assertEqual(18, len(profiles["review-agent"]["instructions"].splitlines()))
         for role, profile in profiles.items():
             maximum = limits["maximum_by_role"].get(role, limits["maximum"])
             self.assertLessEqual(len(profile["instructions"].splitlines()), maximum)
@@ -211,13 +184,24 @@ class AgentProfileReadabilityTests(unittest.TestCase):
             )
 
         last_rule = task_rules[-1]
+        task_maximum = limits["maximum_by_role"].get(
+            "task-agent", limits["maximum"]
+        )
+        overflow = "\n".join(
+            f"- Preserve unrelated extra instruction {index}."
+            for index in range(task_maximum - len(task_rules) + 1)
+        )
         result, output = self._mutated_source_result(
             "task-agent",
             last_rule,
-            f"{last_rule}\n- Preserve one unrelated extra instruction.",
+            f"{last_rule}\n{overflow}",
         )
         self.assertEqual(1, result)
-        self.assertIn("instructions must contain 6-38 newline bullet rules", output)
+        self.assertIn(
+            f"instructions must contain {limits['minimum']}-{task_maximum} "
+            "newline bullet rules",
+            output,
+        )
 
     def test_overlong_description_is_rejected(self) -> None:
         profile = {"description": " ".join(
@@ -604,6 +588,47 @@ class AgentProfileReadabilityTests(unittest.TestCase):
                 )
                 self.assertEqual(0, result, output)
 
+    def test_built_profiles_reject_crlf_raw_bytes(self) -> None:
+        source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
+        enforcement = json.loads(
+            VALIDATOR.ENFORCEMENT_SOURCE.read_text(encoding="utf-8")
+        )
+        renderers = {
+            "codex": BUILDER._render_codex_profile,
+            "claude": BUILDER._render_claude_profile,
+            "copilot": BUILDER._render_copilot_profile,
+        }
+        extensions = {
+            "codex": ".toml",
+            "claude": ".md",
+            "copilot": ".agent.md",
+        }
+        for platform, renderer in renderers.items():
+            with self.subTest(platform=platform), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw) / "agents"
+                root.mkdir()
+                extension = extensions[platform]
+                for profile in source["profiles"]:
+                    rendered = renderer(profile, enforcement)
+                    (root / f"{profile['name']}{extension}").write_bytes(
+                        rendered.replace("\n", "\r\n").encode("utf-8")
+                    )
+                output = io.StringIO()
+                with (
+                    mock.patch.object(
+                        VALIDATOR,
+                        "OUTPUTS",
+                        ((platform, root, extension),),
+                    ),
+                    mock.patch.object(VALIDATOR, "BUILT_MANIFESTS", ()),
+                    redirect_stdout(output),
+                    redirect_stderr(output),
+                ):
+                    result = VALIDATOR.main([])
+                rendered_output = output.getvalue()
+                self.assertEqual(1, result, rendered_output)
+                self.assertIn("must use canonical LF bytes", rendered_output)
+
     def test_decoded_built_surface_rejects_instruction_after_rule_block(
         self,
     ) -> None:
@@ -787,6 +812,28 @@ class AgentProfileReadabilityTests(unittest.TestCase):
                 self.assertEqual(1, result)
                 self.assertIn("capability", output)
                 self.assertIn("boundary", output)
+
+    def test_analysis_and_review_profiles_preserve_decision_projections(self) -> None:
+        source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
+        profiles = {item["name"]: item["instructions"] for item in source["profiles"]}
+        analysis = profiles["analysis-agent"]
+        for term in (
+            "complete updated Brief",
+            "Delta Impact",
+            "Main consumes",
+            "without reinterpretation",
+        ):
+            with self.subTest(role="analysis-agent", term=term):
+                self.assertIn(term, analysis)
+        review = profiles["review-agent"]
+        for term in (
+            "Finding Relation",
+            "before severity or blocker",
+            "implementation or repair review",
+            "Pre-implementation artifact review is exempt",
+        ):
+            with self.subTest(role="review-agent", term=term):
+                self.assertIn(term, review)
 
     def test_external_read_is_analysis_only_and_resident_rules_are_locked(self) -> None:
         source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))

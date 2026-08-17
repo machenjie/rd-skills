@@ -11,14 +11,22 @@ Use this reference to compare remote execution, credentials, provider operations
 | Authentication | Identity, endpoint authorization, credential source/scope/lifetime, delegation/second hop, transport protection, and audit/redaction | A secret is serialized/logged or broader delegation is enabled to make a command pass |
 | Provider | Provider and drive availability, path/literal rules, dynamic parameters, item type, permissions, mutation/rollback, and platform | File-system assumptions mutate registry, certificate, environment, or other provider data incorrectly |
 | Module | Discovery path, manifest version/edition/platform requirements, dependency versions, exported surface, autoload behavior, and session isolation | A different installed module wins resolution or imports only on the authoring host |
-| Administrative state | Desired-state predicate, current-state read, minimal mutation, `ShouldProcess`, concurrency/lock, restart boundary, verification, rollback, and second run | Repeated execution duplicates, oscillates, broadens privilege, or reports success without post-state |
+| Administrative state | Repeat-safety classification, desired-state predicate, current-state read, minimal mutation, `ShouldProcess`, concurrency/lock, restart boundary, verification, rollback or compensation, and applicable second-run contract | A claimed repeat-safe operation duplicates, oscillates, broadens privilege, or reports success without post-state; an intentionally non-idempotent effect lacks bounded recovery |
 
 ## Required Proof
 
 - Exercise one and many remote targets, unreachable/unauthorized endpoints, partial failure, cancellation, and session cleanup.
 - Verify the serialized remote shape consumed locally and prove secrets are absent from output, verbose/debug logs, transcripts, and command construction.
-- Run provider mutations against the real provider, including absent/present/conflicting state, denied permission, rollback, and literal special-character paths.
-- Execute administrative work twice from the same initial target state; the second run must make no unintended mutation and post-state verification must still pass.
+- Real provider changes require an explicitly authorized, isolated, recoverable
+  test provider; exercise absent/present/conflicting state, denied
+  permission, rollback, and literal special-character paths.
+- For repeat-safe desired-state administration, execute once from the authorized
+  initial state, capture the resulting state, then execute again from that
+  post-first-run state; a valid second-run result makes no unintended mutation
+  and retains passing post-state verification.
+- For an intentionally non-idempotent operation, execute it once, verify the
+  exact effect and post-state, and prove rollback, compensation, or
+  reconciliation rather than invoking it again.
 
 ## Primary Sources
 

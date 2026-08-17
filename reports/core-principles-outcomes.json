@@ -235,22 +235,18 @@
             },
             {
               "id": "readability-review-current",
-              "status": "fail"
+              "status": "pass"
             },
             {
               "id": "professional-completeness-review-current",
-              "status": "fail"
+              "status": "pass"
             },
             {
               "id": "professional-review-cost-current",
-              "status": "fail"
+              "status": "pass"
             },
             {
               "id": "professionalism-formal-release-ready",
-              "status": "fail"
-            },
-            {
-              "id": "root-release-current",
               "status": "fail"
             }
           ],
@@ -818,17 +814,17 @@
   ],
   "command_execution_count": 33,
   "contract_errors": [],
-  "contract_sha256": "74130044b1eedb0e3b28b5660818ffb0adbc86b636364a70d3409235182c4e37",
+  "contract_sha256": "e271fb1c85abbe0987fccb32eaa56253d608ac119536a2ea9bdc78e68e9b110b",
   "contract_source": "src/control-model/core-contracts.json",
   "formal_principles_status": "blocked",
   "input_tree": {
     "post": {
-      "file_count": 2646,
-      "sha256": "2fe10d3aaa8c52bae2b81cdb814a94ff0a6c5ad9ae9b492aaaa4e4e9869f08be"
+      "file_count": 2492,
+      "sha256": "86b730f3930fbdda75d9f831961698d8a1f5cc1da2a9023b9e656a0229384680"
     },
     "pre": {
-      "file_count": 2646,
-      "sha256": "2fe10d3aaa8c52bae2b81cdb814a94ff0a6c5ad9ae9b492aaaa4e4e9869f08be"
+      "file_count": 2492,
+      "sha256": "86b730f3930fbdda75d9f831961698d8a1f5cc1da2a9023b9e656a0229384680"
     },
     "unchanged": true
   },
@@ -1166,7 +1162,7 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 9,
+          "expected": 10,
           "operator": "equals",
           "pointer": "/schema_version",
           "resolution_status": "resolved",
@@ -1210,7 +1206,7 @@
         },
         {
           "actual_metadata": {
-            "length": 7,
+            "length": 4,
             "type": "string"
           },
           "expected": "pass",
@@ -1218,7 +1214,7 @@
           "pointer": "/gate_status/formal_release/status",
           "resolution_status": "resolved",
           "source": "reports/skill-content-audit.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -1230,11 +1226,11 @@
           "pointer": "/semantic_disposition_application/status",
           "resolution_status": "resolved",
           "source": "reports/skill-content-audit.json",
-          "status": "fail"
+          "status": "pass"
         }
       ],
       "producer": "audit-skill-content",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -1260,7 +1256,7 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 9,
+          "expected": 10,
           "operator": "equals",
           "pointer": "/schema_version",
           "resolution_status": "resolved",
@@ -1271,7 +1267,7 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 7,
+          "expected": 9,
           "operator": "equals",
           "pointer": "/root_content/schema_version",
           "resolution_status": "resolved",
@@ -1355,7 +1351,7 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 9,
+          "expected": 10,
           "operator": "equals",
           "pointer": "/schema_version",
           "resolution_status": "resolved",
@@ -1366,7 +1362,7 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 7,
+          "expected": 9,
           "operator": "equals",
           "pointer": "/root_content/schema_version",
           "resolution_status": "resolved",
@@ -1450,7 +1446,7 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 9,
+          "expected": 10,
           "operator": "equals",
           "pointer": "/schema_version",
           "resolution_status": "resolved",
@@ -1461,7 +1457,7 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 7,
+          "expected": 9,
           "operator": "equals",
           "pointer": "/root_content/schema_version",
           "resolution_status": "resolved",
@@ -1545,7 +1541,7 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 9,
+          "expected": 10,
           "operator": "equals",
           "pointer": "/schema_version",
           "resolution_status": "resolved",
@@ -1556,7 +1552,7 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 7,
+          "expected": 9,
           "operator": "equals",
           "pointer": "/root_content/schema_version",
           "resolution_status": "resolved",
@@ -1639,7 +1635,7 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 9,
+          "expected": 10,
           "operator": "equals",
           "pointer": "/schema_version",
           "resolution_status": "resolved",
@@ -1650,7 +1646,7 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 7,
+          "expected": 9,
           "operator": "equals",
           "pointer": "/root_content/schema_version",
           "resolution_status": "resolved",
@@ -1710,97 +1706,6 @@
     },
     {
       "capabilities": [
-        "root-lifecycle-validation"
-      ],
-      "dimensions": [
-        "ai-first-ai-facing-surface-validation"
-      ],
-      "id": "root-lifecycle-current",
-      "predicates": [
-        {
-          "actual_metadata": {
-            "type": "integer"
-          },
-          "expected": 0,
-          "operator": "equals",
-          "pointer": "/exit_code",
-          "resolution_status": "resolved",
-          "source": "process",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "type": "integer"
-          },
-          "expected": 9,
-          "operator": "equals",
-          "pointer": "/schema_version",
-          "resolution_status": "resolved",
-          "source": "reports/skill-content-audit.json",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "type": "integer"
-          },
-          "expected": 7,
-          "operator": "equals",
-          "pointer": "/root_content/schema_version",
-          "resolution_status": "resolved",
-          "source": "reports/skill-content-audit.json",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "type": "integer"
-          },
-          "expected": 4,
-          "operator": "equals",
-          "pointer": "/root_content/semantic_advisories/schema_version",
-          "resolution_status": "resolved",
-          "source": "reports/skill-content-audit.json",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "type": "boolean"
-          },
-          "expected": true,
-          "operator": "equals",
-          "pointer": "/root_content/semantic_advisories/lifecycle/snapshot_current",
-          "resolution_status": "resolved",
-          "source": "reports/skill-content-audit.json",
-          "status": "fail"
-        },
-        {
-          "actual_metadata": {
-            "type": "boolean"
-          },
-          "expected": true,
-          "operator": "equals",
-          "pointer": "/root_content/semantic_advisories/lifecycle/bootstrap_refresh_chain/valid",
-          "resolution_status": "resolved",
-          "source": "reports/skill-content-audit.json",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "length": 0,
-            "type": "array"
-          },
-          "expected": [],
-          "operator": "equals",
-          "pointer": "/root_content/semantic_advisories/lifecycle/errors",
-          "resolution_status": "resolved",
-          "source": "reports/skill-content-audit.json",
-          "status": "pass"
-        }
-      ],
-      "producer": "audit-skill-content",
-      "status": "fail"
-    },
-    {
-      "capabilities": [
         "reference-control-content-validation"
       ],
       "dimensions": [
@@ -1825,7 +1730,7 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 9,
+          "expected": 10,
           "operator": "equals",
           "pointer": "/schema_version",
           "resolution_status": "resolved",
@@ -1836,7 +1741,7 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 4,
+          "expected": 5,
           "operator": "equals",
           "pointer": "/reference_content/schema_version",
           "resolution_status": "resolved",
@@ -1921,7 +1826,7 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 9,
+          "expected": 10,
           "operator": "equals",
           "pointer": "/schema_version",
           "resolution_status": "resolved",
@@ -1932,7 +1837,7 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 4,
+          "expected": 5,
           "operator": "equals",
           "pointer": "/reference_content/schema_version",
           "resolution_status": "resolved",
@@ -2017,7 +1922,7 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 9,
+          "expected": 10,
           "operator": "equals",
           "pointer": "/schema_version",
           "resolution_status": "resolved",
@@ -2028,7 +1933,7 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 4,
+          "expected": 5,
           "operator": "equals",
           "pointer": "/reference_content/schema_version",
           "resolution_status": "resolved",
@@ -2113,7 +2018,7 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 9,
+          "expected": 10,
           "operator": "equals",
           "pointer": "/schema_version",
           "resolution_status": "resolved",
@@ -2124,7 +2029,7 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 4,
+          "expected": 5,
           "operator": "equals",
           "pointer": "/reference_content/schema_version",
           "resolution_status": "resolved",
@@ -3213,7 +3118,7 @@
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 3,
+          "expected": 4,
           "operator": "equals",
           "pointer": "/schema_version",
           "resolution_status": "resolved",
@@ -3367,7 +3272,7 @@
           "pointer": "/content_readiness/aggregate/readability_review_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3389,7 +3294,7 @@
           "pointer": "/content_readiness/expert/readability/storage_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3400,7 +3305,7 @@
           "pointer": "/content_readiness/expert/readability/source_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3411,7 +3316,7 @@
           "pointer": "/content_readiness/expert/readability/accepted_for_formal",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3470,7 +3375,7 @@
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -3501,7 +3406,7 @@
           "pointer": "/content_readiness/aggregate/professional_completeness_review_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3523,7 +3428,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/storage_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3534,7 +3439,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/source_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3545,7 +3450,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/accepted_for_formal",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3601,7 +3506,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/review_contract_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3612,7 +3517,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/review_plan_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3748,7 +3653,7 @@
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -3783,6 +3688,28 @@
         },
         {
           "actual_metadata": {
+            "type": "integer"
+          },
+          "expected": 3,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/panel_size",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "type": "integer"
+          },
+          "expected": 189,
+          "operator": "equals",
+          "pointer": "/content_readiness/expert/professional_completeness/required_target_count",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
             "type": "boolean"
           },
           "expected": true,
@@ -3790,7 +3717,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/review_cost_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3816,7 +3743,7 @@
         },
         {
           "actual_metadata": {
-            "length": 18,
+            "length": 4,
             "type": "string"
           },
           "expected": "pass",
@@ -3824,7 +3751,18 @@
           "pointer": "/professional_review_cost_fixtures/status",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
+          "status": "pass"
+        },
+        {
+          "actual_metadata": {
+            "type": "integer"
+          },
+          "expected": 189,
+          "operator": "equals",
+          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/case_count",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "pass"
         },
         {
           "actual_metadata": {
@@ -3855,296 +3793,10 @@
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
           "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "length": 11,
-            "type": "object"
-          },
-          "expected": {
-            "case_count": 189,
-            "cases_fingerprint": "b257706d44e0d96f38dd220aca7a0f128b5358f10eddc28b8a015c1bb93f35a4",
-            "catalog_fingerprint": "83aa86fc03b5ce14158badc62f5a0f72e9924440c59160c7df574a18f31f5d4e",
-            "fresh_target_count": {
-              "max": 56,
-              "mean_milli": 17148,
-              "min": 3,
-              "p95": 35,
-              "sum": 3241
-            },
-            "full_projection_fingerprint": "16248bf7fa2949bd8a7bd52ef88eaee82ec29d6d24062080a3473bd991688d76",
-            "full_rereview_deduplicated_capsule_input_bytes_proxy": 117058467,
-            "input_ratio_ppm": {
-              "max": 348342,
-              "mean": 137186,
-              "min": 34864,
-              "p95": 238497,
-              "sum": 25928334
-            },
-            "material_catalog_fingerprint": "1350b0cb257a0560a991db7da773a6c9e65e7ed85d64aae4a3ca99dabe989f1e",
-            "named_isolated_case": {
-              "canonical_capsule_input_bytes_proxy": 9958404,
-              "carried_forward_target_count": 181,
-              "fresh_target_count": 8,
-              "input_ratio_ppm": 85072,
-              "skill_id": "acceptance-criteria-builder"
-            },
-            "professional_packages_fingerprint": "76319a57c8c84643f36eb7170f3ba7d64e4058d998eafb272ff9b6985e6ede3c",
-            "review_contract_fingerprint": "f80ffe96349a5cf35fc5c02ea698ede77e01c892a24fa35b1baecc1d9ec48fa1"
-          },
-          "expected_from": {
-            "authority": "final-goal-authority",
-            "pointer": "/professional_review_cost_fixtures/locked_current_catalog"
-          },
-          "operator": "equals",
-          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity",
-          "resolution_status": "resolved",
-          "source": "reports/professionalism-regression-report.json",
-          "status": "fail"
-        },
-        {
-          "actual_metadata": {
-            "type": "integer"
-          },
-          "expected": 189,
-          "expected_from": {
-            "authority": "final-goal-authority",
-            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/case_count"
-          },
-          "operator": "equals",
-          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/case_count",
-          "resolution_status": "resolved",
-          "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "type": "integer"
-          },
-          "expected": 117058467,
-          "expected_from": {
-            "authority": "final-goal-authority",
-            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/full_rereview_deduplicated_capsule_input_bytes_proxy"
-          },
-          "operator": "equals",
-          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/full_rereview_deduplicated_capsule_input_bytes_proxy",
-          "resolution_status": "resolved",
-          "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "type": "integer"
-          },
-          "expected": 3,
-          "expected_from": {
-            "authority": "final-goal-authority",
-            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/fresh_target_count/min"
-          },
-          "operator": "equals",
-          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/fresh_target_count/min",
-          "resolution_status": "resolved",
-          "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "type": "integer"
-          },
-          "expected": 3241,
-          "expected_from": {
-            "authority": "final-goal-authority",
-            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/fresh_target_count/sum"
-          },
-          "operator": "equals",
-          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/fresh_target_count/sum",
-          "resolution_status": "resolved",
-          "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "type": "integer"
-          },
-          "expected": 17148,
-          "expected_from": {
-            "authority": "final-goal-authority",
-            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/fresh_target_count/mean_milli"
-          },
-          "operator": "equals",
-          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/fresh_target_count/mean_milli",
-          "resolution_status": "resolved",
-          "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "type": "integer"
-          },
-          "expected": 35,
-          "expected_from": {
-            "authority": "final-goal-authority",
-            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/fresh_target_count/p95"
-          },
-          "operator": "equals",
-          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/fresh_target_count/p95",
-          "resolution_status": "resolved",
-          "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "type": "integer"
-          },
-          "expected": 56,
-          "expected_from": {
-            "authority": "final-goal-authority",
-            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/fresh_target_count/max"
-          },
-          "operator": "equals",
-          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/fresh_target_count/max",
-          "resolution_status": "resolved",
-          "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "type": "integer"
-          },
-          "expected": 34864,
-          "expected_from": {
-            "authority": "final-goal-authority",
-            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/input_ratio_ppm/min"
-          },
-          "operator": "equals",
-          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/input_ratio_ppm/min",
-          "resolution_status": "resolved",
-          "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "type": "integer"
-          },
-          "expected": 25928334,
-          "expected_from": {
-            "authority": "final-goal-authority",
-            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/input_ratio_ppm/sum"
-          },
-          "operator": "equals",
-          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/input_ratio_ppm/sum",
-          "resolution_status": "resolved",
-          "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "type": "integer"
-          },
-          "expected": 137186,
-          "expected_from": {
-            "authority": "final-goal-authority",
-            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/input_ratio_ppm/mean"
-          },
-          "operator": "equals",
-          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/input_ratio_ppm/mean",
-          "resolution_status": "resolved",
-          "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "type": "integer"
-          },
-          "expected": 238497,
-          "expected_from": {
-            "authority": "final-goal-authority",
-            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/input_ratio_ppm/p95"
-          },
-          "operator": "equals",
-          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/input_ratio_ppm/p95",
-          "resolution_status": "resolved",
-          "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "type": "integer"
-          },
-          "expected": 348342,
-          "expected_from": {
-            "authority": "final-goal-authority",
-            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/input_ratio_ppm/max"
-          },
-          "operator": "equals",
-          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/input_ratio_ppm/max",
-          "resolution_status": "resolved",
-          "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "type": "integer"
-          },
-          "expected": 8,
-          "expected_from": {
-            "authority": "final-goal-authority",
-            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/named_isolated_case/fresh_target_count"
-          },
-          "operator": "equals",
-          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/named_isolated_case/fresh_target_count",
-          "resolution_status": "resolved",
-          "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "type": "integer"
-          },
-          "expected": 181,
-          "expected_from": {
-            "authority": "final-goal-authority",
-            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/named_isolated_case/carried_forward_target_count"
-          },
-          "operator": "equals",
-          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/named_isolated_case/carried_forward_target_count",
-          "resolution_status": "resolved",
-          "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "type": "integer"
-          },
-          "expected": 9958404,
-          "expected_from": {
-            "authority": "final-goal-authority",
-            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/named_isolated_case/canonical_capsule_input_bytes_proxy"
-          },
-          "operator": "equals",
-          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/named_isolated_case/canonical_capsule_input_bytes_proxy",
-          "resolution_status": "resolved",
-          "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
-        },
-        {
-          "actual_metadata": {
-            "type": "integer"
-          },
-          "expected": 85072,
-          "expected_from": {
-            "authority": "final-goal-authority",
-            "pointer": "/professional_review_cost_fixtures/locked_current_catalog/named_isolated_case/input_ratio_ppm"
-          },
-          "operator": "equals",
-          "pointer": "/professional_review_cost_fixtures/routing_neutral_isolated_material_binding_sensitivity/named_isolated_case/input_ratio_ppm",
-          "resolution_status": "resolved",
-          "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "capabilities": [
@@ -4177,39 +3829,153 @@
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
           "status": "fail"
-        }
-      ],
-      "producer": "validate-professionalism-regression",
-      "status": "fail"
-    },
-    {
-      "capabilities": [
-        "root-release-lifecycle"
-      ],
-      "dimensions": [
-        "single-source-of-truth-formal-lifecycle"
-      ],
-      "id": "root-release-current",
-      "predicates": [
+        },
         {
           "actual_metadata": {
             "type": "integer"
           },
-          "expected": 0,
+          "expected": 1,
           "operator": "equals",
-          "pointer": "/exit_code",
+          "pointer": "/expert_panel_release_manifest/schema_version",
           "resolution_status": "resolved",
-          "source": "process",
+          "source": "reports/professionalism-regression-report.json",
           "status": "pass"
         },
         {
           "actual_metadata": {
-            "type": "boolean"
+            "length": 13,
+            "type": "string"
           },
+          "expected": "current",
+          "operator": "equals",
+          "pointer": "/expert_panel_release_manifest/status",
+          "resolution_status": "resolved",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "fail"
+        },
+        {
+          "actual_metadata": null,
           "expected": true,
           "operator": "equals",
-          "pointer": "/root_content_summary/semantic_lifecycle_formal_release_ready",
-          "resolution_status": "resolved",
+          "pointer": "/expert_panel_release_manifest/verification_toolchain/head_commit_matches_current",
+          "resolution_status": "pointer-error",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "fail"
+        },
+        {
+          "actual_metadata": null,
+          "expected": 3,
+          "operator": "equals",
+          "pointer": "/expert_panel_release_manifest/verification_toolchain/artifact_count",
+          "resolution_status": "pointer-error",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "fail"
+        },
+        {
+          "actual_metadata": null,
+          "expected": 3,
+          "operator": "equals",
+          "pointer": "/expert_panel_release_manifest/verification_toolchain/accepted_artifact_count",
+          "resolution_status": "pointer-error",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "fail"
+        },
+        {
+          "actual_metadata": null,
+          "expected": 3,
+          "operator": "equals",
+          "pointer": "/expert_panel_release_manifest/verification_toolchain/head_byte_equal_count",
+          "resolution_status": "pointer-error",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "fail"
+        },
+        {
+          "actual_metadata": null,
+          "expected": 3,
+          "operator": "equals",
+          "pointer": "/expert_panel_release_manifest/verification_toolchain/clean_artifact_count",
+          "resolution_status": "pointer-error",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "fail"
+        },
+        {
+          "actual_metadata": null,
+          "expected": "readability",
+          "operator": "equals",
+          "pointer": "/expert_panel_release_manifest/artifacts/0/axis",
+          "resolution_status": "pointer-error",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "fail"
+        },
+        {
+          "actual_metadata": null,
+          "expected": "evals/expert-panel/readability.json",
+          "operator": "equals",
+          "pointer": "/expert_panel_release_manifest/artifacts/0/path",
+          "resolution_status": "pointer-error",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "fail"
+        },
+        {
+          "actual_metadata": null,
+          "expected": "accepted-current-readability",
+          "operator": "equals",
+          "pointer": "/expert_panel_release_manifest/artifacts/0/verdict",
+          "resolution_status": "pointer-error",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "fail"
+        },
+        {
+          "actual_metadata": null,
+          "expected": "semantic-disposition",
+          "operator": "equals",
+          "pointer": "/expert_panel_release_manifest/artifacts/1/axis",
+          "resolution_status": "pointer-error",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "fail"
+        },
+        {
+          "actual_metadata": null,
+          "expected": "evals/expert-panel/semantic-disposition.json",
+          "operator": "equals",
+          "pointer": "/expert_panel_release_manifest/artifacts/1/path",
+          "resolution_status": "pointer-error",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "fail"
+        },
+        {
+          "actual_metadata": null,
+          "expected": "accepted-current-semantic-disposition",
+          "operator": "equals",
+          "pointer": "/expert_panel_release_manifest/artifacts/1/verdict",
+          "resolution_status": "pointer-error",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "fail"
+        },
+        {
+          "actual_metadata": null,
+          "expected": "professional-completeness",
+          "operator": "equals",
+          "pointer": "/expert_panel_release_manifest/artifacts/2/axis",
+          "resolution_status": "pointer-error",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "fail"
+        },
+        {
+          "actual_metadata": null,
+          "expected": "evals/expert-panel/professional-completeness.json",
+          "operator": "equals",
+          "pointer": "/expert_panel_release_manifest/artifacts/2/path",
+          "resolution_status": "pointer-error",
+          "source": "reports/professionalism-regression-report.json",
+          "status": "fail"
+        },
+        {
+          "actual_metadata": null,
+          "expected": "accepted-current-professional-completeness",
+          "operator": "equals",
+          "pointer": "/expert_panel_release_manifest/artifacts/2/verdict",
+          "resolution_status": "pointer-error",
           "source": "reports/professionalism-regression-report.json",
           "status": "fail"
         }
@@ -4221,7 +3987,7 @@
   "principles": [
     {
       "authoring_status": "pass",
-      "formal_release_status": "blocked",
+      "formal_release_status": "pass",
       "id": "ai-first",
       "name": "AI First",
       "required_dimensions": [
@@ -4252,12 +4018,11 @@
           "professionalism-authoring-valid"
         ],
         "formal_release": [
-          "root-lifecycle-current",
           "readability-review-current",
           "content-audit-formal-release-current"
         ]
       },
-      "status": "partial"
+      "status": "pass"
     },
     {
       "authoring_status": "pass",
@@ -4386,7 +4151,7 @@
     },
     {
       "authoring_status": "pass",
-      "formal_release_status": "blocked",
+      "formal_release_status": "pass",
       "id": "professional-skill-injection",
       "name": "Professional Skill Injection",
       "required_dimensions": [
@@ -4415,7 +4180,7 @@
           "professional-completeness-review-current"
         ]
       },
-      "status": "partial"
+      "status": "pass"
     },
     {
       "authoring_status": "pass",
@@ -4463,12 +4228,11 @@
     },
     {
       "authoring_status": "pass",
-      "formal_release_status": "blocked",
+      "formal_release_status": "pass",
       "id": "single-source-of-truth",
       "name": "Single Source of Truth",
       "required_dimensions": [
-        "single-source-of-truth-source-projections",
-        "single-source-of-truth-formal-lifecycle"
+        "single-source-of-truth-source-projections"
       ],
       "required_outcomes": {
         "authoring": [
@@ -4478,11 +4242,9 @@
           "docs-exact-valid",
           "src-invariants-valid"
         ],
-        "formal_release": [
-          "root-release-current"
-        ]
+        "formal_release": []
       },
-      "status": "partial"
+      "status": "pass"
     },
     {
       "authoring_status": "pass",
@@ -4907,9 +4669,60 @@
     {
       "argv": [
         "python3",
-        "scripts/validate-docs-consistency.py"
+        "scripts/eval-agent-lightweight.py"
       ],
       "depends_on": [],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "eval-agent-lightweight",
+      "release_reports": [],
+      "reports": [
+        {
+          "fresh": true,
+          "json_object": true,
+          "path": "reports/hookless-control-plane-eval.json"
+        }
+      ],
+      "source_unchanged": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/eval-rendered-context-budget.py"
+      ],
+      "depends_on": [
+        "build-recommended",
+        "build-full",
+        "build-dev",
+        "eval-agent-lightweight"
+      ],
+      "exit_code": 0,
+      "failure_reason_codes": [],
+      "id": "eval-rendered-context",
+      "release_reports": [],
+      "reports": [
+        {
+          "fresh": true,
+          "json_object": true,
+          "path": "reports/rendered-context-budget.json"
+        }
+      ],
+      "source_unchanged": true,
+      "status": "pass",
+      "timed_out": false,
+      "timeout_seconds": 600
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/validate-docs-consistency.py"
+      ],
+      "depends_on": [
+        "eval-rendered-context"
+      ],
       "exit_code": 0,
       "failure_reason_codes": [],
       "id": "validate-docs-consistency",
@@ -5065,54 +4878,6 @@
           "fresh": true,
           "json_object": true,
           "path": "reports/professional-routing-coverage.json"
-        }
-      ],
-      "source_unchanged": true,
-      "status": "pass",
-      "timed_out": false,
-      "timeout_seconds": 600
-    },
-    {
-      "argv": [
-        "python3",
-        "scripts/eval-agent-lightweight.py"
-      ],
-      "depends_on": [],
-      "exit_code": 0,
-      "failure_reason_codes": [],
-      "id": "eval-agent-lightweight",
-      "release_reports": [],
-      "reports": [
-        {
-          "fresh": true,
-          "json_object": true,
-          "path": "reports/hookless-control-plane-eval.json"
-        }
-      ],
-      "source_unchanged": true,
-      "status": "pass",
-      "timed_out": false,
-      "timeout_seconds": 600
-    },
-    {
-      "argv": [
-        "python3",
-        "scripts/eval-rendered-context-budget.py"
-      ],
-      "depends_on": [
-        "build-recommended",
-        "build-full",
-        "build-dev"
-      ],
-      "exit_code": 0,
-      "failure_reason_codes": [],
-      "id": "eval-rendered-context",
-      "release_reports": [],
-      "reports": [
-        {
-          "fresh": true,
-          "json_object": true,
-          "path": "reports/rendered-context-budget.json"
         }
       ],
       "source_unchanged": true,

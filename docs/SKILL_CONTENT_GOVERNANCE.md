@@ -1,6 +1,6 @@
 # Skill Content Governance
 
-ChangeForge Skills are written for AI execution. The always-loaded root must provide the smallest complete decision contract; detailed or low-frequency material belongs in targeted references.
+rd-skills Skills are written for AI execution. The always-loaded root must provide the smallest complete decision contract; detailed or low-frequency material belongs in targeted references.
 
 ## Reader Path
 
@@ -185,19 +185,22 @@ field-addition migration and creates an empty bootstrap-review list with its
 schema-1 origin when applicable. Unknown fields, mixed schema triples, or an
 invalid predecessor chain fail before writing. Rolling a release drops
 older snapshot history, so this ledger is not a second baseline file or
-knowledge base. Its detector fingerprint is derived
-deterministically from the Root detector, document enumeration, frontmatter
-parsing and extraction behavior, document-set fingerprinting, scope roots, and
-decision constants. The function closure resolves every name through the
-referencing function's own globals, follows only reachable repository functions
-in the auditor and `validation_utils` (including the YAML fallback parser), and
-binds directly referenced constants such as the frontmatter delimiter. Stable
-repository identities do not depend on the temporary module load name; when
-source is unavailable, bytecode, code constants, defaults, and directly
-referenced constants provide a deterministic fallback. Unreachable
-`validation_utils` code is deliberately excluded rather than whole-file hashed.
-The fingerprint does not depend on Git state, wall-clock evaluation timestamps,
-or a generated report. The global document-set fingerprint lets a
+knowledge base. Its schema-5 `detector_contract` uses
+`root-semantic-detector-contract-v1` and hashes one deterministic, source-only
+reachable-symbol projection rooted at document enumeration, document
+fingerprinting, sentence/document candidate detection, and candidate folding.
+The projection resolves lexical globals through the allowlisted auditor and
+`validation_utils` modules, fails closed on missing, duplicate, malformed,
+syntactically invalid, or unknown reachable symbols, and binds only the selected
+`root_tutorial_density_min_words` member of the shared threshold map. Canonical
+behavior AST excludes comments and docstrings. The already-evaluated Reference
+and role contract models are projected by value, so their module initializers do
+not recursively pull Core contract loading, validation, or documentation
+rendering into Root currentness. Unreachable report writers, release-manifest
+validators, Core hash utilities, other `validation_utils` code, and unused
+thresholds are excluded rather than whole-file hashed. Stable repository
+identities do not depend on a temporary module load name, Git state, wall-clock
+evaluation timestamps, or a generated report. The global document-set fingerprint lets a
 removed document be classified conservatively with the detector fingerprint
 instead of treating a missing per-document hash as proof of a source rewrite.
 
@@ -456,12 +459,18 @@ occurrence invalidates prior evidence but a line move does not. Group occurrence
 also carry normalized decision-row/body fingerprints that exclude pure schema
 headers and line locations. A separate sorted path/owner/content multiset binds
 dispositions to row semantics, so unchanged membership cannot hide converged or
-rewritten rows. The schema-version 5 block reconciles detector-downgraded,
+rewritten rows. The schema-version 7 block reconciles detector-downgraded,
 untriaged, rewrite, resolved, unresolved,
 priority, group, occurrence, and token counts.
-The object, summary, candidate, occurrence, disposition contract, disposition
-entry, and nested evidence shapes are closed; unknown fields and legacy aliases
-fail default validation.
+The schema-version 7 object also carries the exact closed
+`reference-semantic-detector-contract-v1` object
+`{contract_version, algorithm, value}`. Its value hashes the reachable closure
+of the pure Reference candidate entrypoint, including sentence parsing,
+absolute/fixed-number rules, duplicate/template rules, behavior constants, and
+their selected thresholds. Unreachable reporting, lifecycle, and release
+utilities do not perturb it. The object, detector contract, summary, candidate,
+occurrence, disposition contract, disposition entry, and nested evidence shapes
+are closed; unknown fields and legacy aliases fail default validation.
 
 `config/skill-content-exceptions.yaml` remains the single governance file. Its
 versioned `reference_semantic_dispositions` entries name candidate identity,
@@ -483,12 +492,14 @@ ballots. Professional Completeness formal evidence is schema 3: a decision
 binds its packet, machine-derived fresh/carry plan, current fresh immutable
 discovery/request/final capsule chains and ballots, and every carried target's
 direct fresh-origin evidence.
-Readability schema-2 evidence binds current Root, Reference, AI-readability,
-and Skill-detector fingerprints plus every density, readability, or weak
-front-loaded-action target. Its packet independently replays the detector over
-the current closed source-selector inventory and binds each full canonical
-sentence to its logical document-part context and exact source span. Ballots
-decide every finding exactly once; any nested tightening derives each reviewer
+Readability schema-2 evidence binds exactly the current target-authority
+manifest, Readability detector contract, and Actionability detector contract,
+plus every density, readability, or weak front-loaded-action target. Root,
+Reference, audit-summary, and report-presentation drift do not independently
+change that three-key currentness binding. Its packet independently replays the
+detector over the current closed source-selector inventory and binds each full
+canonical sentence to its logical document-part context and exact source span.
+Ballots decide every finding exactly once; any nested tightening derives each reviewer
 document disposition before the document two-of-three majority. Professional
 completeness schema-3 evidence binds
 all 189 non-Control Skill packages, including complete root and indexed
@@ -544,20 +555,86 @@ boundary conditions, or verification methods changes the final disposition to
 `unresolved-professional-disagreement`, regardless of an accepting majority.
 Schema 3 has no arbitration or override. Maintainers do not choose or override
 the result. Schema 1 and schema 2 Professional decisions remain auditable but
-cannot satisfy formal release or authorize carry. Exact carry requires an
+cannot satisfy formal release or authorize carry. Earlier schema-3 review
+contract fingerprints are likewise bounded historical evidence and cannot
+authorize currentness, promotion, Formal Release, or carry. Exact carry requires an
 unchanged review-visible binding and a direct depth-zero fresh origin; an
 all-carry round has no reviewer pool, ballots, capsule-chain artifacts, or input
-bytes. Formal
-readiness also requires one unforked checked-in round chain, the selected unique
-head, current contract/plan/bindings/provenance, and recomputed cost. Formal readiness requires zero `tracked-tightening`, unresolved
+bytes. Professional carry is self-contained: each carried target binds exact
+`origin_review_id`, `origin_commit`, `origin_verdict_digest`, and
+authenticated compact vote fingerprints;
+formal validation never requires a predecessor file or round chain. Formal
+Fresh `origin_commit` is the clean, stable `HEAD` at which the validated
+decision and current package, review, and dependency bindings are projected
+into the attestation. It is not the reviewer-execution commit, decision-file
+creation commit, later promotion commit, or fixed-artifact commit. Attestation
+generation checks that `HEAD` and the nonignored tree remain unchanged and
+clean through the projection write boundary. Carry preserves that direct fresh
+origin commit; a later fixed-artifact commit does not rewrite it.
+Formal readiness requires current contract/plan/bindings/provenance and recomputed
+cost. Formal readiness requires zero `tracked-tightening`, unresolved
 `detector-false-positive`, or `rewrite-required` readability decisions, zero
 professional corrections, and zero unresolved professional disagreements
 across 189 packages. Static qualification claims prove declared tag coverage,
-not real-world identity, credentials, or experience. The default config and both
-Readability artifacts, every schema-3 round decision and packet, current fresh
-ballots and discovery/request/final capsule chains, and each carried
-direct-origin decision/packet/ballot/complete capsule chain
-must be Git-tracked, equal their `HEAD` blobs, and clean.
+not real-world identity, credentials, or experience.
+
+Current Professional schema-3 packets store no target-level
+`package_fingerprint`; each target has one `review_binding` containing
+`package_material_binding`, direct `dependency_material_bindings`, and the
+single `review_unit_binding`. Decisions retain that review-unit binding and the
+packet/ballot artifact chain, but no package or review-binding aliases. Compact
+storage keeps one top-level `review_contract_fingerprint`, one shared
+`dependency_material_catalog`, and per-Skill package material, review unit,
+dependency IDs, votes, result, expertise, and direct-origin provenance. It has
+no `source_fingerprints`, per-finding dependency map, or duplicated origin
+material. The tool derives these projections, validates closed fields, and
+requires all 189 packages fresh whenever the Professional review contract
+changes.
+
+Professional compact schema-2 bytes use the physical
+`professional-string-catalog-v1` codec. The schema version, kind, axis, review
+ID, decision date, and review-contract fingerprint remain literal routing
+fields. Every other string value that occurs at least twice is represented by a
+negative reference into one sorted, unique canonical string catalog. This
+catalog is serialization only: the shared attestation owner expands it before
+the existing semantic and current-authority validation, then requires exact
+canonical reprojection. A current Professional schema-2 object without that
+codec, an incomplete or unused catalog, a literal eligible value, or an
+alternative catalog/reference ordering fails closed. The codec does not change
+the Professional review-contract fingerprint or authorize carry. Generation
+and promotion rederive the same encoded bytes from the authenticated decision;
+after promotion, the tracked artifact SHA-256 and clean `HEAD` bytes remain the
+external anchor.
+
+Readability compact storage keeps the
+`readability-complete-target-authority-manifest-v2` digest as its sole source
+authority. Each content or actionability target and each readability finding
+stores one tool-generated `readability-review-unit-binding-v3` digest over its
+identity and normalized local authority from that manifest. The digest excludes
+votes and outcomes; the document conclusion remains derived from finding votes.
+The top-level `review_artifacts` object retains the packet SHA-256, exactly three
+voter-keyed ballot SHA-256 values in voter order, and the decision SHA-256.
+Attestation generation and promotion validate those immutable runtime artifacts,
+rederive the compact Readability projection from the decision, and require exact
+equality before the destination compare-and-swap. A direct compact parser proves
+closed shape, current source authority, exact coverage, and internal results; it
+does not independently authorize altered conclusions. After promotion, tracked
+`HEAD` bytes and the Formal Release manifest content SHA-256 are the external
+artifact anchor. Readability evidence created under the prior currentness,
+manifest, or review-unit contract requires a fresh review and cannot authorize
+currentness or Formal Release; compact storage remains schema 2.
+
+The tracked Expert Panel inventory is exactly
+`evals/expert-panel/readability.json`,
+`evals/expert-panel/semantic-disposition.json`, and
+`evals/expert-panel/professional-completeness.json`. Each file is one current
+compact attestation, is at most 4 MiB, and uses replacement, not append. Full
+packets, templates, ballots, capsules, decisions, and other review context exist
+only under ignored `.rd-skills/expert-panel/<run-id>/`. A complete scene may be
+retained as an optional CI or Release artifact outside the tracked tree. Git
+history is the audit trail for replaced attestations: there is no keep-last-N,
+dated, or `rN` repository archive. Formal release requires all three compact
+attestations to be tracked, equal their `HEAD` blobs, clean, and current.
 Pending or stale evidence remains non-blocking for `authoring_gate`, but keeps
 `release_gate=release-not-ready`. Authoring blockers cannot be waived.
 
@@ -565,7 +642,10 @@ Pending or stale evidence remains non-blocking for `authoring_gate`, but keeps
 
 `src/control-model/core-contracts.json` at
 `final_goal_contract.professional_review_cost_fixtures` owns the professional
-review cost policy, thresholds, and locked fixture.
+review cost policy and thresholds. Currentness is derived from the measured
+189-case inventory, exact-three review invariants, arithmetic, and ceilings; it
+does not compare catalog, material, projection, case, or review-contract hashes
+with a checked-in cost snapshot.
 `reports/professionalism-regression-report.json` is the sole machine-readable
 professionalism readiness authority and is derived evidence; it does not own or
 override the cost contract.
@@ -583,24 +663,34 @@ and normalized-content evidence. Every other current candidate receives three
 independent votes with no abstention. Build and check an immutable round with:
 
 ```text
-python3 scripts/expert_panel_review.py build-packet --panel-kind semantic-disposition --audit FRESH_AUDIT.json --review-id REVIEW_ID --created-on YYYY-MM-DD --out evals/expert-panel/REVIEW_ID/packet.json
-python3 scripts/expert_panel_review.py template --packet evals/expert-panel/REVIEW_ID/packet.json --voter-id REVIEWER_ID --agent-id AGENT_ID --role SENIOR_ROLE --expertise EXPERTISE --created-on YYYY-MM-DD --out BALLOT_TEMPLATE.json
-python3 scripts/expert_panel_review.py validate --packet evals/expert-panel/REVIEW_ID/packet.json --audit FRESH_AUDIT.json --ballot COMPLETED_BALLOT.json
-python3 scripts/expert_panel_review.py aggregate --packet evals/expert-panel/REVIEW_ID/packet.json --audit FRESH_AUDIT.json --ballot REVIEWER_A.json --ballot REVIEWER_B.json --ballot REVIEWER_C.json --decided-on YYYY-MM-DD --record-dir evals/expert-panel/REVIEW_ID/panel
+python3 scripts/expert_panel_review.py prepare --panel-kind semantic-disposition --audit reports/skill-content-audit.json --review-id REVIEW_ID --created-on YYYY-MM-DD --semantic-re-review-axis root --semantic-re-review-axis reference --reviewer VOTER_1 AGENT_1 ROLE_1 EXPERTISE_1 --reviewer VOTER_2 AGENT_2 ROLE_2 EXPERTISE_2 --reviewer VOTER_3 AGENT_3 ROLE_3 EXPERTISE_3 --out .rd-skills/expert-panel/REVIEW_ID/packet.json
+python3 scripts/expert_panel_review.py materialize-ballot --packet .rd-skills/expert-panel/REVIEW_ID/packet.json --audit .rd-skills/expert-panel/REVIEW_ID/inputs/skill-content-audit.json --template .rd-skills/expert-panel/REVIEW_ID/ballots/VOTER_1.template.json --template-sha256 TEMPLATE_1_SHA256 --manifest /private/tmp/REVIEW_ID/VOTER_1.manifest.jsonl --manifest-size MANIFEST_1_SIZE --manifest-sha256 MANIFEST_1_SHA256 --stdin-framing raw --out .rd-skills/expert-panel/REVIEW_ID/ballots/VOTER_1.json
+python3 scripts/expert_panel_review.py materialize-ballot --packet .rd-skills/expert-panel/REVIEW_ID/packet.json --audit .rd-skills/expert-panel/REVIEW_ID/inputs/skill-content-audit.json --template .rd-skills/expert-panel/REVIEW_ID/ballots/VOTER_2.template.json --template-sha256 TEMPLATE_2_SHA256 --manifest /private/tmp/REVIEW_ID/VOTER_2.manifest.jsonl --manifest-size MANIFEST_2_SIZE --manifest-sha256 MANIFEST_2_SHA256 --stdin-framing raw --out .rd-skills/expert-panel/REVIEW_ID/ballots/VOTER_2.json
+python3 scripts/expert_panel_review.py materialize-ballot --packet .rd-skills/expert-panel/REVIEW_ID/packet.json --audit .rd-skills/expert-panel/REVIEW_ID/inputs/skill-content-audit.json --template .rd-skills/expert-panel/REVIEW_ID/ballots/VOTER_3.template.json --template-sha256 TEMPLATE_3_SHA256 --manifest /private/tmp/REVIEW_ID/VOTER_3.manifest.jsonl --manifest-size MANIFEST_3_SIZE --manifest-sha256 MANIFEST_3_SHA256 --stdin-framing raw --out .rd-skills/expert-panel/REVIEW_ID/ballots/VOTER_3.json
+python3 scripts/expert_panel_review.py validate --packet .rd-skills/expert-panel/REVIEW_ID/packet.json --audit .rd-skills/expert-panel/REVIEW_ID/inputs/skill-content-audit.json --ballot .rd-skills/expert-panel/REVIEW_ID/ballots/VOTER_1.json
+python3 scripts/expert_panel_review.py validate --packet .rd-skills/expert-panel/REVIEW_ID/packet.json --audit .rd-skills/expert-panel/REVIEW_ID/inputs/skill-content-audit.json --ballot .rd-skills/expert-panel/REVIEW_ID/ballots/VOTER_2.json
+python3 scripts/expert_panel_review.py validate --packet .rd-skills/expert-panel/REVIEW_ID/packet.json --audit .rd-skills/expert-panel/REVIEW_ID/inputs/skill-content-audit.json --ballot .rd-skills/expert-panel/REVIEW_ID/ballots/VOTER_3.json
+python3 scripts/expert_panel_review.py aggregate --packet .rd-skills/expert-panel/REVIEW_ID/packet.json --audit .rd-skills/expert-panel/REVIEW_ID/inputs/skill-content-audit.json --ballot .rd-skills/expert-panel/REVIEW_ID/ballots/VOTER_1.json --ballot .rd-skills/expert-panel/REVIEW_ID/ballots/VOTER_2.json --ballot .rd-skills/expert-panel/REVIEW_ID/ballots/VOTER_3.json --decided-on YYYY-MM-DD --record-dir .rd-skills/expert-panel/REVIEW_ID/panel
+python3 scripts/expert_panel_review.py attest --panel-kind semantic-disposition --review-id REVIEW_ID --decision .rd-skills/expert-panel/REVIEW_ID/panel/decision.json --audit .rd-skills/expert-panel/REVIEW_ID/inputs/skill-content-audit.json --out .rd-skills/expert-panel/REVIEW_ID/attestation.json
 ```
 
-Generated templates are intentionally unfilled and fail validation until an
-independent reviewer completes every target. The majority record preserves all
-three rationales. It never writes semantic disposition entries; in particular,
-a `rewrite` majority requires a source edit. This panel is authoring lifecycle
-evidence only and cannot satisfy either formal readability or professional-
-completeness attestation.
+`prepare` atomically creates the copied audit and exactly the three unfilled,
+create-once templates named by `VOTER_1`, `VOTER_2`, and `VOTER_3`; do not run
+`template` afterward. Each independent reviewer writes only its assigned
+manifest outside the repository. The task agent records that manifest's exact
+size and SHA-256 and uses `materialize-ballot` to create the canonical ballot.
+The majority record preserves all three rationales. It never writes semantic
+disposition entries; in particular, a `rewrite` majority requires a source
+edit. This panel is authoring lifecycle evidence only and cannot satisfy either
+formal readability or professional-completeness attestation.
 
 `config/skill-content-exceptions.yaml#semantic_disposition_application` is the
-schema-1 application binding. It names the canonical repository-relative
-`evals/expert-panel/<review-id>/panel/decision.json` path, the semantic decision
-kind, and the SHA-256 of the decision file's exact bytes. Validation first
-recomputes that decision from its bound packet and three stored ballots. It then
+schema-1 application binding. After compact selector finalization it binds
+`evals/expert-panel/semantic-disposition.json`, the semantic attestation kind,
+and the SHA-256 of the attestation's exact bytes. Until that real artifact and
+hash exist, the configured selector remains pending and cannot satisfy formal
+release. Compact validation authenticates the three-vote result and source
+binding without requiring runtime files from the tracked tree. It then
 requires every non-`rewrite` target's current `(axis, candidate_id)` disposition
 entry to match the majority exactly. A `rewrite` target stays incomplete while
 the old candidate exists; completion requires the old candidate and its entry
@@ -617,9 +707,8 @@ error as a release blocker and limitation; `--require-expert-content-review`
 then exits non-zero. The binding records provenance only; Root and Reference
 disposition entries remain the single source of truth for applied governance.
 
-The packet retains complete audit and aggregate source hashes as immutable
-review-time provenance. Currentness does not compare those aggregates after a
-decision is applied or unrelated document layout changes. Instead, validation
+The packet retains four closed source fingerprints: Root and Reference candidate
+manifests plus the two reachable-behavior detector contracts. Currentness
 rechecks both semantic detectors, the complete eligible candidate ID set,
 candidate identity and local text fingerprints, Root occurrence/context
 evidence, Reference group membership/content evidence, and every review target
@@ -630,6 +719,11 @@ group evidence still invalidates the round.
 Raw and detector-downgraded candidate counts remain review-time provenance;
 their churn does not invalidate a round when the detector and complete eligible
 candidate set and evidence remain unchanged.
+
+Historical Semantic schema-1 artifacts remain readable only for audit and
+strict reprojection. They cannot authorize currentness, application, promotion,
+carry, or Formal Release. Current Semantic evidence uses artifact schema 2 and
+compact storage schema 2; detector or candidate-binding drift fails closed.
 
 ## Layer Rules
 
@@ -721,11 +815,11 @@ Reference and Root semantic triage are reported independently from structural
 readiness. Triage is complete only when no candidate is unclassified and every
 configured disposition is valid and applied. `rewrite` counts as triaged but not
 resolved. Scoped strict blockers and incomplete triage enter the authoring gate.
-Top-level `content_readiness` schema 9 publishes Reference, Root, both expert
+Top-level `content_readiness` schema 10 publishes Reference, Root, both expert
 axes, and aggregate views. Readability and professional completeness remain
 independent disclosures and do not redefine the authoring gate. Formal release
-requires both axes to be current and the Root lifecycle to contain a current,
-classified release snapshot. Readability covers every current
+requires both axes and the exact Semantic application binding to be current.
+Readability covers every current
 `REVIEW_DENSITY`, `TIGHTEN_BODY`, and readability advisory target. Professional
 completeness covers all 189 non-Control packages. Neither panel can override an
 authoring blocker. The complete release check is
@@ -737,38 +831,17 @@ pass and the sole JSON authority to report `release_gate=release-ready`.
 complete ordered freshness run against current Root, Reference, coverage, and
 default release-review inputs. Productization validates that saved JSON's
 closed schema, internal semantics, blockers, gates, and expert bindings without
-rerunning the producer. Formal-release orchestration additionally requests
-`reports/professionalism-regression-report.md` as a release-only presentation
-projection. The Markdown is not a second readiness authority, and Core
-authoring does not refresh it.
+rerunning the producer. Formal-release orchestration writes schema-4
+professionalism/Core JSON and Markdown projections under
+`.rd-skills/formal-release/<captured-head>/reports/`. That ignored scene is
+bound to the captured `HEAD` and uploaded by CI; Markdown is not a readiness
+authority, and Core authoring refreshes only tracked ordinary JSON.
 
-For selector identity only, the canonical projection is: Current static
-evidence selectors are r26 Readability, r26 Semantic Disposition, r26 Root
-lifecycle, and r19 schema-3 Professional Completeness for all 189 non-Control
-packages. “Current” in that projection identifies the configured records, not
-their formal currentness. Readability r26 and full-fresh Professional
-Completeness r19 have complete decisions for their recorded inputs. Readability
-r26 is historical evidence with no recorded tracked tightening, detector false
-positive, or rewrite requirement under its bound Skill detector. That detector
-is now stale against the current detector, so r26 has `source_current=false`,
-status `panel-majority-stale`, remains storage-pending, and is not accepted for
-formal release. R19 is historical full-fresh evidence for all 189 packages with
-zero carried packages, corrections, or unresolved professional disagreements
-under its bound contract; that contract is now stale against the current
-Professional review contract. R19 remains storage-pending, is not accepted for
-formal release, and cannot authorize carry across the contract change. The
-selected Semantic Disposition
-application is `invalid` because its packet is stale against the current audit.
-Root lifecycle is `pending-changes`, with `snapshot_current=false` and no
-formal-release readiness. These static selectors do not prove that the final
+Canonical fixed-attestation paths, not Readability or Professional policy
+config, select Expert Panel evidence; the formal target remains all 189
+non-Control packages. Formal release requires a current Semantic application
+bound to the exact fixed-attestation bytes. Reuse all three compact attestations
+while their strict current validators pass; replace an axis only after source,
+detector, binding, or review-contract drift. Prior attestations remain auditable
+through Git history only. These fixed attestations do not prove that the final
 formal gates or same-commit remote workflow passed.
-
-After the final source audit, refresh the Semantic Disposition decision and
-application through its owning panel stage. After the final content tree
-stabilizes, record the Root lifecycle's classified formal snapshot. Check in
-the current evidence before rerunning the strict formal gate. Formal Release
-must create a new current schema-2 Readability review under the current Skill
-detector and a new schema-3 full-fresh Professional Completeness round for all
-189 current non-Control packages under the current review contract. Preserve
-r26 and r19 as immutable historical evidence; neither can replace its required
-new review, and r19 cannot authorize carry.

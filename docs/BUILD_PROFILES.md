@@ -9,7 +9,7 @@ non-Control.
 | --- | ---: | ---: | ---: | --- | --- |
 | `recommended` | 27 | 154 | 9 | 1 Control + 26 Professional | normal project or user installation |
 | `full` | 40 | 141 | 9 | recommended + 13 Domain | Domain discovery at the top level |
-| `dev` | 190 | 0 | 0 | 1 Control + 26 Professional + 150 Foundation + 13 Domain | ChangeForge authoring and debugging |
+| `dev` | 190 | 0 | 0 | 1 Control + 26 Professional + 150 Foundation + 13 Domain | rd-skills authoring and debugging |
 
 The current second-phase expansion adds 2 Professional and 6 Foundation Skills
 plus 22 References without changing Domain membership. `recommended` compiles the 141

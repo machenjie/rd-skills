@@ -30,9 +30,9 @@ Consume immutable gateway-owned end-to-end, hop-deadline, and retry ceilings. Be
 ## Anti-Patterns
 
 - Nested timeouts can exceed the caller deadline unless budgets flow downstream.
-- Prevent layered retries because they multiply dependency load.
-- Add jitter when concurrent callers can synchronize retries.
-- Stop further attempts while the circuit breaker is open.
+- Allow layered retries because they multiply dependency load.
+- Skip jitter when concurrent callers can synchronize retries.
+- Continue ordinary attempts while the circuit breaker is open.
 - A stale or empty fallback is user-visible behavior, not a neutral implementation detail.
 
 ## Execution Checklist

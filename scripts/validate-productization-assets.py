@@ -4,18 +4,22 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import importlib.util
 import json
+import re
 import sys
 from pathlib import Path
 
+import expert_panel_contracts as panel_contracts
 from validation_utils import (
     PROFESSIONAL_REVIEW_COST_FIELDS,
     PROFESSIONAL_REVIEW_COST_LIMITATIONS,
     PROFESSIONAL_REVIEW_COST_TEXT_FIELDS,
     PROFESSIONAL_REVIEW_FORMAL_ROUND_POLICY_FIELDS,
     PROFESSIONAL_REVIEW_FIXTURE_LIMITATIONS,
+    validate_expert_panel_release_manifest,
     validate_core_contracts,
 )
 
@@ -84,9 +88,6 @@ READABILITY_RELEASE_BLOCKER_CATEGORY = "readability-review-release-gate"
 PROFESSIONAL_COMPLETENESS_RELEASE_BLOCKER_CATEGORY = (
     "professional-completeness-review-release-gate"
 )
-ROOT_LIFECYCLE_RELEASE_BLOCKER_CATEGORY = (
-    "root-disposition-lifecycle-release-record-required"
-)
 CORE_PRINCIPLES_CONTRACT_SOURCE = "src/control-model/core-contracts.json"
 PROFESSIONALISM_REPORT_FIELDS = {
     "reports/professionalism-regression-report.json": {
@@ -112,6 +113,8 @@ PROFESSIONALISM_REPORT_FIELDS = {
         "summary",
     }
 }
+PROFESSIONALISM_REPORT_SCHEMA_VERSION = 4
+LEGACY_PROFESSIONALISM_REPORT_SCHEMA_VERSION = 3
 SKILL_REVIEW_STATES = {
     "BLOCK",
     "TIGHTEN_BODY",
@@ -263,23 +266,40 @@ PROFESSIONAL_ORDINARY_CRITERIA = {
     "output-verifiability",
 }
 PROFESSIONAL_UNRESOLVED_DISPOSITION = "unresolved-professional-disagreement"
-READABILITY_FINGERPRINT_FIELDS = {
-    "reference_content",
-    "root_content",
-    "ai_readability",
-    "skill_detector",
+PROFESSIONAL_SCHEMA3_DISPOSITION_FIELDS = {
+    "skill_id",
+    "package_material_binding",
+    "review_unit_binding",
+    "disposition",
+    "majority_disposition",
+    "domain_critical_defects",
+    "ordinary_criterion_disposition",
+    "ordinary_criterion_defects",
+    "reason_codes",
+    "rationales",
+    "review_dependencies",
+    "evidence_metrics",
+    "provenance",
+    "target_decision_fingerprint",
 }
+PROFESSIONAL_COMPACT_ORIGIN_FIELDS = {
+    "origin_review_id",
+    "origin_commit",
+    "origin_verdict_digest",
+}
+PROFESSIONAL_IDENTIFIER_PATTERN = re.compile(
+    r"^[a-z0-9](?:[a-z0-9-]{0,126}[a-z0-9])?$"
+)
+READABILITY_FINGERPRINT_FIELDS = set(
+    panel_contracts.READABILITY_SOURCE_FINGERPRINT_KEYS
+)
 LEGACY_READABILITY_FINGERPRINT_FIELDS = {
     "reference_content",
     "root_content",
     "ai_readability",
 }
 PROFESSIONAL_COMPLETENESS_FINGERPRINT_FIELDS = {"professional_packages"}
-PROFESSIONAL_COMPLETENESS_V3_FINGERPRINT_FIELDS = {
-    "professional_packages",
-    "professional_review_bindings",
-    "professional_review_contract",
-}
+PROFESSIONAL_COMPLETENESS_V3_FINGERPRINT_FIELDS: set[str] = set()
 READABILITY_STATUSES = {
     "missing-evidence",
     "panel-majority-stale",
@@ -368,7 +388,11 @@ def _axis_common_errors(
         )
     fingerprints = axis.get("source_fingerprints")
     current_fingerprints = axis.get("current_source_fingerprints")
-    expected_current_fields = current_fingerprint_fields or fingerprint_fields
+    expected_current_fields = (
+        fingerprint_fields
+        if current_fingerprint_fields is None
+        else current_fingerprint_fields
+    )
     if not isinstance(fingerprints, dict) or set(fingerprints) != fingerprint_fields:
         errors.append(
             f"static report {relative} {label}.source_fingerprints are malformed"
@@ -447,9 +471,7 @@ def _axis_common_errors(
             f"static report {relative} {label}.limitations must be a non-empty string list"
         )
     source_current = bool(
-        fingerprints
-        and current_fingerprints
-        and fingerprints == current_fingerprints
+        decision_complete and fingerprints == current_fingerprints
     )
     if axis.get("source_current") is not source_current:
         errors.append(
@@ -468,6 +490,20 @@ def _axis_common_errors(
         errors.append(
             f"static report {relative} {label} accepted_for_formal is not current"
         )
+    fixed_storage_noncurrent = bool(
+        not decision_complete
+        and axis.get("panel_artifact_schema_version") is None
+        and axis.get("panel_size") == 0
+        and all(
+            axis.get(field) is None
+            for field in ("panel_review_id", "attested_by", "attested_on")
+        )
+        and all(value is None for value in fingerprints.values())
+        and evidence == []
+        and axis.get("storage_current") is False
+        and axis.get("source_current") is False
+        and axis.get("accepted_for_formal") is False
+    )
     if status == "missing-evidence" and (
         decision_complete
         or axis.get("storage_current") is not False
@@ -478,16 +514,22 @@ def _axis_common_errors(
             f"static report {relative} {label} missing-evidence state is contradictory"
         )
     if status == "panel-majority-stale" and (
-        not decision_complete
-        or axis.get("source_current") is not False
-        or axis.get("accepted_for_formal") is not False
+        not fixed_storage_noncurrent
+        and (
+            not decision_complete
+            or axis.get("source_current") is not False
+            or axis.get("accepted_for_formal") is not False
+        )
     ):
         errors.append(f"static report {relative} {label} stale state is contradictory")
     if status == "panel-majority-pending-checkin" and (
-        not decision_complete
-        or axis.get("source_current") is not True
-        or axis.get("storage_current") is not False
-        or axis.get("accepted_for_formal") is not False
+        not fixed_storage_noncurrent
+        and (
+            not decision_complete
+            or axis.get("source_current") is not True
+            or axis.get("storage_current") is not False
+            or axis.get("accepted_for_formal") is not False
+        )
     ):
         errors.append(
             f"static report {relative} {label} pending-checkin state is contradictory"
@@ -877,26 +919,55 @@ def _professional_review_cost_ready(axis: object) -> bool:
     )
 
 
+PROFESSIONAL_REVIEW_COST_SENSITIVITY_FIELDS = {
+    "case_count",
+    "full_rereview_deduplicated_capsule_input_bytes_proxy",
+    "fresh_target_count",
+    "input_ratio_ppm",
+    "named_isolated_case",
+}
+LEGACY_PROFESSIONAL_REVIEW_COST_DIGEST_FIELDS = {
+    "professional_packages_fingerprint",
+    "catalog_fingerprint",
+    "material_catalog_fingerprint",
+    "full_projection_fingerprint",
+    "review_contract_fingerprint",
+    "cases_fingerprint",
+}
+
+
+def _normalized_professional_review_cost_sensitivity(
+    value: object,
+) -> tuple[dict | None, list[str]]:
+    if not isinstance(value, dict):
+        return None, ["routing-neutral sensitivity must be a mapping"]
+    fields = set(value)
+    if fields == PROFESSIONAL_REVIEW_COST_SENSITIVITY_FIELDS:
+        return copy.deepcopy(value), []
+    if fields != (
+        PROFESSIONAL_REVIEW_COST_SENSITIVITY_FIELDS
+        | LEGACY_PROFESSIONAL_REVIEW_COST_DIGEST_FIELDS
+    ):
+        return None, ["routing-neutral sensitivity fields are invalid"]
+    errors = []
+    for field in sorted(LEGACY_PROFESSIONAL_REVIEW_COST_DIGEST_FIELDS):
+        digest = value.get(field)
+        if not isinstance(digest, str) or not _is_sha256(digest):
+            errors.append(f"legacy {field} must be lowercase sha256")
+    return (
+        {field: copy.deepcopy(value[field]) for field in PROFESSIONAL_REVIEW_COST_SENSITIVITY_FIELDS},
+        errors,
+    )
+
+
 def _professional_review_cost_fixture_errors(
     relative: str, fixture: object, *, root: Path = ROOT
 ) -> list[str]:
     label = "professional_review_cost_fixtures"
-    errors: list[str] = []
-    expected_fields = {
-        "schema_version",
-        "status",
-        "unchanged",
-        "routing_neutral_isolated_material_binding_sensitivity",
-        "representative_routing_adjacency_mutation",
-        "review_contract_change",
-        "thresholds",
-        "limitations",
-    }
-    if not isinstance(fixture, dict) or set(fixture) != expected_fields:
-        return [
-            f"static report {relative} {label} fields do not match schema 1"
-        ]
-    if fixture.get("schema_version") != 1 or fixture.get("status") != "pass":
+    errors = _professional_review_cost_fixture_envelope_errors(relative, fixture)
+    if errors or not isinstance(fixture, dict):
+        return errors
+    if fixture.get("status") != "pass":
         errors.append(
             f"static report {relative} {label} must be a passing schema-1 fixture"
         )
@@ -915,45 +986,80 @@ def _professional_review_cost_fixture_errors(
         contract_errors = validate_core_contracts(contracts)
         if contract_errors:
             raise ValueError("; ".join(contract_errors))
-        authority = contracts["final_goal_contract"][
+        authority_thresholds = contracts["final_goal_contract"][
             "professional_review_cost_fixtures"
-        ]
-        locked_catalog = authority["locked_current_catalog"]
-        authority_thresholds = authority["thresholds"]
+        ]["thresholds"]
     except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
         return [
             f"static report {relative} cannot load Final Goal review-cost "
             f"authority: {exc}"
         ]
-    sensitivity = fixture.get(
-        "routing_neutral_isolated_material_binding_sensitivity"
+
+    sensitivity, sensitivity_errors = _normalized_professional_review_cost_sensitivity(
+        fixture.get("routing_neutral_isolated_material_binding_sensitivity")
     )
-    if sensitivity != locked_catalog:
-        errors.append(
-            f"static report {relative} {label} routing-neutral sensitivity "
-            "does not match the locked current catalog"
-        )
-    elif isinstance(sensitivity, dict):
-        case_count = sensitivity["case_count"]
-        fresh = sensitivity["fresh_target_count"]
-        ratio = sensitivity["input_ratio_ppm"]
-        named = sensitivity["named_isolated_case"]
-        full_bytes = sensitivity[
+    errors.extend(
+        f"static report {relative} {label} {error}"
+        for error in sensitivity_errors
+    )
+    if sensitivity is not None:
+        case_count = sensitivity.get("case_count")
+        full_bytes = sensitivity.get(
             "full_rereview_deduplicated_capsule_input_bytes_proxy"
-        ]
-        if (
-            fresh["mean_milli"] != fresh["sum"] * 1000 // case_count
-            or ratio["mean"] != ratio["sum"] // case_count
-            or named["fresh_target_count"]
-            + named["carried_forward_target_count"]
-            != case_count
-            or named["input_ratio_ppm"]
-            != named["canonical_capsule_input_bytes_proxy"]
-            * 1_000_000
-            // full_bytes
-        ):
+        )
+        fresh = sensitivity.get("fresh_target_count")
+        ratio = sensitivity.get("input_ratio_ppm")
+        named = sensitivity.get("named_isolated_case")
+        valid = bool(
+            type(case_count) is int
+            and case_count == 189
+            and type(full_bytes) is int
+            and full_bytes > 0
+            and isinstance(fresh, dict)
+            and set(fresh) == {"min", "sum", "mean_milli", "p95", "max"}
+            and all(type(item) is int and item >= 0 for item in fresh.values())
+            and fresh["mean_milli"] == fresh["sum"] * 1000 // case_count
+            and fresh["min"] <= fresh["p95"] <= fresh["max"]
+            and fresh["max"] <= authority_thresholds["maximum_fresh_target_count"]
+            and fresh["sum"]
+            <= authority_thresholds["maximum_mean_fresh_target_count"] * case_count
+            and isinstance(ratio, dict)
+            and set(ratio) == {"min", "sum", "mean", "p95", "max"}
+            and all(type(item) is int and item >= 0 for item in ratio.values())
+            and ratio["mean"] == ratio["sum"] // case_count
+            and ratio["min"] <= ratio["p95"] <= ratio["max"]
+            and ratio["max"] <= authority_thresholds["maximum_input_ratio_ppm"]
+            and ratio["sum"]
+            <= authority_thresholds["maximum_mean_input_ratio_ppm"] * case_count
+            and isinstance(named, dict)
+            and set(named)
+            == {
+                "skill_id",
+                "fresh_target_count",
+                "carried_forward_target_count",
+                "canonical_capsule_input_bytes_proxy",
+                "input_ratio_ppm",
+            }
+            and named["skill_id"] == "acceptance-criteria-builder"
+            and all(
+                type(named[field]) is int and named[field] >= 0
+                for field in (
+                    "fresh_target_count",
+                    "carried_forward_target_count",
+                    "canonical_capsule_input_bytes_proxy",
+                    "input_ratio_ppm",
+                )
+            )
+            and named["fresh_target_count"] + named["carried_forward_target_count"]
+            == case_count
+            and named["canonical_capsule_input_bytes_proxy"] > 0
+            and named["input_ratio_ppm"]
+            == named["canonical_capsule_input_bytes_proxy"] * 1_000_000 // full_bytes
+        )
+        if not valid:
             errors.append(
-                f"static report {relative} {label} sensitivity arithmetic is stale"
+                f"static report {relative} {label} measured sensitivity "
+                "arithmetic, inventory, or thresholds are invalid"
             )
     if fixture.get("representative_routing_adjacency_mutation") != {
         "skill_id": "acceptance-criteria-builder",
@@ -975,27 +1081,10 @@ def _professional_review_cost_fixture_errors(
             f"static report {relative} {label}.review_contract_change must force "
             "a full rereview"
         )
-    thresholds = fixture.get("thresholds")
-    if thresholds != authority_thresholds:
+    if fixture.get("thresholds") != authority_thresholds:
         errors.append(
             f"static report {relative} {label}.thresholds disagree with Final Goal"
         )
-    elif isinstance(sensitivity, dict):
-        if (
-            sensitivity["fresh_target_count"]["max"]
-            > thresholds["maximum_fresh_target_count"]
-            or sensitivity["fresh_target_count"]["sum"]
-            > thresholds["maximum_mean_fresh_target_count"]
-            * sensitivity["case_count"]
-            or sensitivity["input_ratio_ppm"]["max"]
-            > thresholds["maximum_input_ratio_ppm"]
-            or sensitivity["input_ratio_ppm"]["sum"]
-            > thresholds["maximum_mean_input_ratio_ppm"]
-            * sensitivity["case_count"]
-        ):
-            errors.append(
-                f"static report {relative} {label} exceeds Final Goal thresholds"
-            )
     if fixture.get("limitations") != PROFESSIONAL_REVIEW_FIXTURE_LIMITATIONS:
         errors.append(
             f"static report {relative} {label}.limitations are incomplete"
@@ -1031,6 +1120,13 @@ def _professional_review_cost_fixture_envelope_errors(
             f"static report {relative} {label}.status must be pass or "
             "formal-non-current"
         )
+    _normalized, sensitivity_errors = _normalized_professional_review_cost_sensitivity(
+        fixture.get("routing_neutral_isolated_material_binding_sensitivity")
+    )
+    errors.extend(
+        f"static report {relative} {label} {error}"
+        for error in sensitivity_errors
+    )
     limitations = fixture.get("limitations")
     if not isinstance(limitations, list) or not limitations:
         errors.append(
@@ -1051,7 +1147,7 @@ def _expert_axis_envelope_errors(
 ) -> list[str]:
     if not isinstance(axis, dict) or set(axis) != expected_fields:
         return [
-            f"static report {relative} {label} fields do not match schema 9"
+            f"static report {relative} {label} fields do not match schema 10"
         ]
     errors: list[str] = []
     if axis.get("scope") != expected_scope:
@@ -1097,6 +1193,36 @@ def _expert_axis_current(axis: object) -> bool:
     )
 
 
+def _professional_fixed_attestation_lifecycle_valid(axis: object) -> bool:
+    if not isinstance(axis, dict):
+        return False
+    lifecycle = axis.get("round_lifecycle")
+    review_cost = axis.get("review_cost")
+    return bool(
+        isinstance(lifecycle, dict)
+        and set(lifecycle)
+        == {
+            "status",
+            "round_count",
+            "chain_depth",
+            "head_decision",
+            "current_decision_is_head",
+            "errors",
+            "limitations",
+        }
+        and lifecycle.get("status") == "fixed-attestation-current"
+        and lifecycle.get("round_count") == 1
+        and isinstance(review_cost, dict)
+        and lifecycle.get("chain_depth")
+        == review_cost.get("plan_lineage_depth")
+        and lifecycle.get("head_decision") is None
+        and lifecycle.get("current_decision_is_head") is True
+        and lifecycle.get("errors") == []
+        and lifecycle.get("limitations")
+        == [PROFESSIONAL_REVIEW_COST_LIMITATIONS[2]]
+    )
+
+
 def _professional_completeness_formal_ready(axis: object) -> bool:
     return bool(
         isinstance(axis, dict)
@@ -1117,9 +1243,13 @@ def _professional_completeness_formal_ready(axis: object) -> bool:
         and _professional_v3_evidence_ready(axis)
         and axis.get("review_contract_current") is True
         and axis.get("review_plan_current") is True
+        and axis.get("review_plan_fingerprint") is None
+        and axis.get("current_review_plan_fingerprint") is None
         and axis.get("review_binding_current") is True
         and axis.get("provenance_current") is True
+        and _professional_schema3_compact_authority_valid(axis)
         and axis.get("round_lifecycle_current") is True
+        and _professional_fixed_attestation_lifecycle_valid(axis)
         and axis.get("review_cost_current") is True
         and _professional_review_cost_ready(axis)
         and axis.get("required_target_count") == PROFESSIONAL_PACKAGE_COUNT
@@ -1135,24 +1265,53 @@ def _professional_completeness_formal_ready(axis: object) -> bool:
     )
 
 
-def _professional_schema3_artifact_reference(
-    value: object, *, kind: str
+def _professional_compact_provenance_valid(
+    item: dict, *, panel_review_id: object
 ) -> bool:
+    provenance = item.get("provenance")
+    if (
+        not isinstance(provenance, dict)
+        or set(provenance) != {"mode", "origin"}
+        or provenance.get("mode") not in {"fresh", "carried"}
+    ):
+        return False
+    origin = provenance.get("origin")
     return bool(
-        isinstance(value, dict)
-        and set(value) == {"path", "sha256", "kind", "axis", "review_id"}
-        and isinstance(value.get("path"), str)
-        and value["path"].strip()
-        and isinstance(value.get("sha256"), str)
-        and _is_sha256(value["sha256"])
-        and value.get("kind") == kind
-        and value.get("axis") == "professional-completeness"
-        and isinstance(value.get("review_id"), str)
-        and value["review_id"].strip()
+        isinstance(origin, dict)
+        and set(origin) == PROFESSIONAL_COMPACT_ORIGIN_FIELDS
+        and isinstance(origin.get("origin_review_id"), str)
+        and isinstance(panel_review_id, str)
+        and PROFESSIONAL_IDENTIFIER_PATTERN.fullmatch(
+            origin["origin_review_id"]
+        )
+        is not None
+        and PROFESSIONAL_IDENTIFIER_PATTERN.fullmatch(panel_review_id)
+        is not None
+        and isinstance(origin.get("origin_commit"), str)
+        and re.fullmatch(r"[0-9a-f]{40}", origin["origin_commit"])
+        is not None
+        and isinstance(origin.get("origin_verdict_digest"), str)
+        and _is_sha256(origin["origin_verdict_digest"])
+        and origin["origin_verdict_digest"]
+        == item.get("target_decision_fingerprint")
+        and (
+            (
+                provenance["mode"] == "fresh"
+                and origin["origin_review_id"] == panel_review_id
+            )
+            or (
+                provenance["mode"] == "carried"
+                and origin["origin_review_id"] != panel_review_id
+                and item.get("disposition")
+                == "accepted-current-professional-completeness"
+            )
+        )
     )
 
 
-def _professional_schema3_disposition_evidence_valid(item: dict) -> bool:
+def _professional_schema3_disposition_evidence_valid(
+    item: dict, *, panel_review_id: object
+) -> bool:
     metrics = item.get("evidence_metrics")
     if (
         not isinstance(metrics, dict)
@@ -1224,74 +1383,58 @@ def _professional_schema3_disposition_evidence_valid(item: dict) -> bool:
         or metrics["required_adjacency_candidate_count"] != len(required_ids)
     ):
         return False
-    provenance = item.get("provenance")
-    if not isinstance(provenance, dict):
+    return _professional_compact_provenance_valid(
+        item, panel_review_id=panel_review_id
+    )
+
+
+def _professional_schema3_compact_authority_valid(axis: object) -> bool:
+    if not isinstance(axis, dict):
         return False
-    if provenance.get("mode") == "fresh":
-        evidence = provenance.get("evidence")
-        if (
-            set(provenance) != {"mode", "origin_depth", "evidence"}
-            or provenance.get("origin_depth") != 0
-            or not isinstance(evidence, list)
-            or len(evidence) != 3
-        ):
-            return False
-        voters: list[str] = []
-        for row in evidence:
-            if (
-                not isinstance(row, dict)
-                or set(row)
-                != {
-                    "voter_id",
-                    "ballot",
-                    "capsule",
-                    "capsule_canonical_json_bytes_proxy",
-                }
-                or not isinstance(row.get("voter_id"), str)
-                or not row["voter_id"].strip()
-                or not _professional_schema3_artifact_reference(
-                    row.get("ballot"),
-                    kind="changeforge.professional-completeness-panel-ballot",
-                )
-                or not _professional_schema3_artifact_reference(
-                    row.get("capsule"),
-                    kind="changeforge.professional-completeness-review-capsule",
-                )
-                or type(row.get("capsule_canonical_json_bytes_proxy")) is not int
-                or row["capsule_canonical_json_bytes_proxy"] <= 0
-            ):
-                return False
-            voters.append(row["voter_id"])
-        return voters == sorted(set(voters))
-    if provenance.get("mode") == "carried-forward":
-        return bool(
-            set(provenance)
-            == {
-                "mode",
-                "origin_depth",
-                "origin_decision",
-                "origin_target_decision_fingerprint",
-                "origin_package_fingerprint",
-                "current_package_fingerprint",
-                "carry_basis",
-            }
-            and provenance.get("origin_depth") == 1
-            and _professional_schema3_artifact_reference(
-                provenance.get("origin_decision"),
-                kind="changeforge.professional-completeness-panel-decision",
+    dispositions = axis.get("professional_dispositions")
+    panel_review_id = axis.get("panel_review_id")
+    fresh = axis.get("fresh_target_count")
+    carried = axis.get("carried_forward_target_count")
+    if (
+        not isinstance(dispositions, list)
+        or len(dispositions) != PROFESSIONAL_PACKAGE_COUNT
+        or not _non_negative_int(fresh)
+        or not _non_negative_int(carried)
+        or fresh + carried != PROFESSIONAL_PACKAGE_COUNT
+        or not all(
+            isinstance(item, dict)
+            and set(item) == PROFESSIONAL_SCHEMA3_DISPOSITION_FIELDS
+            and isinstance(item.get("package_material_binding"), str)
+            and _is_sha256(item["package_material_binding"])
+            and isinstance(item.get("review_unit_binding"), str)
+            and _is_sha256(item["review_unit_binding"])
+            and isinstance(item.get("target_decision_fingerprint"), str)
+            and _is_sha256(item["target_decision_fingerprint"])
+            and _professional_schema3_disposition_evidence_valid(
+                item, panel_review_id=panel_review_id
             )
-            and isinstance(
-                provenance.get("origin_target_decision_fingerprint"), str
-            )
-            and _is_sha256(provenance["origin_target_decision_fingerprint"])
-            and isinstance(provenance.get("origin_package_fingerprint"), str)
-            and _is_sha256(provenance["origin_package_fingerprint"])
-            and provenance.get("current_package_fingerprint")
-            == item.get("package_fingerprint")
-            and provenance.get("carry_basis")
-            == "review-visible-binding-unchanged"
+            for item in dispositions
         )
-    return False
+    ):
+        return False
+    fresh_rows = [
+        item for item in dispositions if item["provenance"]["mode"] == "fresh"
+    ]
+    carried_rows = [
+        item for item in dispositions if item["provenance"]["mode"] == "carried"
+    ]
+    fresh_origin_commits = {
+        item["provenance"]["origin"]["origin_commit"] for item in fresh_rows
+    }
+    review_cost = axis.get("review_cost")
+    return bool(
+        len(fresh_rows) == fresh
+        and len(carried_rows) == carried
+        and len(fresh_origin_commits) == (1 if fresh_rows else 0)
+        and isinstance(review_cost, dict)
+        and review_cost.get("maximum_origin_depth")
+        == (1 if carried_rows else 0)
+    )
 
 
 def _readability_axis_errors(relative: str, axis: object) -> list[str]:
@@ -1610,7 +1753,7 @@ def _professional_completeness_axis_errors(relative: str, axis: object) -> list[
     shape_errors: list[str] = []
     if isinstance(axis, dict) and set(axis) != PROFESSIONAL_COMPLETENESS_REVIEW_FIELDS:
         shape_errors.append(
-            f"static report {relative} {label} fields do not match schema 9"
+            f"static report {relative} {label} fields do not match schema 10"
         )
     artifact_schema = (
         axis.get("panel_artifact_schema_version")
@@ -1717,30 +1860,50 @@ def _professional_completeness_axis_errors(relative: str, axis: object) -> list[
             f"static report {relative} {label} legacy or missing evidence carries "
             "schema-2/schema-3 summaries"
         )
+    lifecycle = axis.get("round_lifecycle")
+    fixed_attestation = _professional_fixed_attestation_lifecycle_valid(axis)
     dispositions = axis.get("professional_dispositions")
     if not isinstance(dispositions, list) or not all(
         isinstance(item, dict)
         and set(item)
-        == {
-            "skill_id",
-            "package_fingerprint",
-            "review_binding_fingerprint",
-            "disposition",
-            "majority_disposition",
-            "domain_critical_defects",
-            "ordinary_criterion_disposition",
-            "ordinary_criterion_defects",
-            "reason_codes",
-            "rationales",
-            "review_dependencies",
-            "evidence_metrics",
-            "provenance",
-            "target_decision_fingerprint",
-        }
+        == (
+            {
+                *PROFESSIONAL_SCHEMA3_DISPOSITION_FIELDS,
+            }
+            if artifact_schema == 3
+            else {
+                "skill_id",
+                "package_fingerprint",
+                "review_binding_fingerprint",
+                "disposition",
+                "majority_disposition",
+                "domain_critical_defects",
+                "ordinary_criterion_disposition",
+                "ordinary_criterion_defects",
+                "reason_codes",
+                "rationales",
+                "review_dependencies",
+                "evidence_metrics",
+                "provenance",
+                "target_decision_fingerprint",
+            }
+        )
         and isinstance(item.get("skill_id"), str)
         and bool(item["skill_id"].strip())
-        and isinstance(item.get("package_fingerprint"), str)
-        and _is_sha256(item["package_fingerprint"])
+        and (
+            (
+                artifact_schema == 3
+                and isinstance(item.get("package_material_binding"), str)
+                and _is_sha256(item["package_material_binding"])
+                and isinstance(item.get("review_unit_binding"), str)
+                and _is_sha256(item["review_unit_binding"])
+            )
+            or (
+                artifact_schema in {1, 2}
+                and isinstance(item.get("package_fingerprint"), str)
+                and _is_sha256(item["package_fingerprint"])
+            )
+        )
         and item.get("disposition")
         in {
             "accepted-current-professional-completeness",
@@ -1824,9 +1987,9 @@ def _professional_completeness_axis_errors(relative: str, axis: object) -> list[
         and (
             (
                 artifact_schema == 3
-                and isinstance(item.get("review_binding_fingerprint"), str)
-                and _is_sha256(item["review_binding_fingerprint"])
-                and _professional_schema3_disposition_evidence_valid(item)
+                and _professional_schema3_disposition_evidence_valid(
+                    item, panel_review_id=axis.get("panel_review_id")
+                )
                 and isinstance(item.get("target_decision_fingerprint"), str)
                 and _is_sha256(item["target_decision_fingerprint"])
             )
@@ -1852,6 +2015,11 @@ def _professional_completeness_axis_errors(relative: str, axis: object) -> list[
             f"static report {relative} {label}.professional_dispositions must be sorted and unique"
         )
     if artifact_schema == 3 and dispositions:
+        if not _professional_schema3_compact_authority_valid(axis):
+            errors.append(
+                f"static report {relative} {label} compact origin authority "
+                "is malformed or unstable"
+            )
         fresh_rows = [
             item
             for item in dispositions
@@ -1860,7 +2028,7 @@ def _professional_completeness_axis_errors(relative: str, axis: object) -> list[
         carried_rows = [
             item
             for item in dispositions
-            if item["provenance"]["mode"] == "carried-forward"
+            if item["provenance"]["mode"] == "carried"
         ]
         if len(fresh_rows) != axis.get("fresh_target_count") or len(
             carried_rows
@@ -1879,31 +2047,11 @@ def _professional_completeness_axis_errors(relative: str, axis: object) -> list[
                 f"static report {relative} {label}.evidence_summary does not "
                 "equal the disposition evidence-metric sum"
             )
-        capsule_sizes: dict[tuple[str, str], int] = {}
-        capsule_conflict = False
-        for item in fresh_rows:
-            for provenance_evidence in item["provenance"]["evidence"]:
-                capsule = provenance_evidence["capsule"]
-                key = (capsule["path"], capsule["sha256"])
-                size = provenance_evidence[
-                    "capsule_canonical_json_bytes_proxy"
-                ]
-                prior = capsule_sizes.get(key)
-                if prior is not None and prior != size:
-                    capsule_conflict = True
-                capsule_sizes[key] = size
         review_cost = axis.get("review_cost")
-        if capsule_conflict:
-            errors.append(
-                f"static report {relative} {label} fresh provenance carries "
-                "conflicting physical capsule byte claims"
-            )
+        expected_maximum_origin_depth = 1 if carried_rows else 0
         if isinstance(review_cost, dict) and review_cost.get(
             "maximum_origin_depth"
-        ) != max(
-            (item["provenance"]["origin_depth"] for item in dispositions),
-            default=0,
-        ):
+        ) != expected_maximum_origin_depth:
             errors.append(
                 f"static report {relative} {label} maximum origin depth is stale"
             )
@@ -1995,11 +2143,6 @@ def _professional_completeness_axis_errors(relative: str, axis: object) -> list[
         )
 
     current_fingerprints = axis.get("current_source_fingerprints")
-    expected_current_contract = (
-        current_fingerprints.get("professional_review_contract")
-        if isinstance(current_fingerprints, dict)
-        else None
-    )
     actual_contract = axis.get("review_contract_fingerprint")
     current_contract = axis.get("current_review_contract_fingerprint")
     actual_plan = axis.get("review_plan_fingerprint")
@@ -2017,28 +2160,15 @@ def _professional_completeness_axis_errors(relative: str, axis: object) -> list[
             errors.append(
                 f"static report {relative} {label}.{field} must be a boolean"
             )
-    if current_contract != expected_current_contract or (
-        current_contract is not None
-        and (not isinstance(current_contract, str) or not _is_sha256(current_contract))
-    ):
+    if not isinstance(current_contract, str) or not _is_sha256(current_contract):
         errors.append(
             f"static report {relative} {label}.current_review_contract_fingerprint "
-            "does not match current source fingerprints"
+            "must be lowercase sha256"
         )
     if artifact_schema == 3:
         if not isinstance(actual_contract, str) or not _is_sha256(actual_contract):
             errors.append(
                 f"static report {relative} {label}.review_contract_fingerprint "
-                "must be lowercase sha256 for schema 3"
-            )
-        if not isinstance(actual_plan, str) or not _is_sha256(actual_plan):
-            errors.append(
-                f"static report {relative} {label}.review_plan_fingerprint must "
-                "be lowercase sha256 for schema 3"
-            )
-        if not isinstance(current_plan, str) or not _is_sha256(current_plan):
-            errors.append(
-                f"static report {relative} {label}.current_review_plan_fingerprint "
                 "must be lowercase sha256 for schema 3"
             )
         if axis.get("review_contract_current") is not (
@@ -2048,10 +2178,57 @@ def _professional_completeness_axis_errors(relative: str, axis: object) -> list[
                 f"static report {relative} {label}.review_contract_current "
                 "disagrees with fingerprints"
             )
-        if axis.get("review_plan_current") is not (actual_plan == current_plan):
+        if actual_plan is not None or current_plan is not None:
             errors.append(
-                f"static report {relative} {label}.review_plan_current disagrees "
-                "with fingerprints"
+                f"static report {relative} {label} current schema 3 requires "
+                "paired-null review plan fingerprints"
+            )
+        expected_plan_current = bool(
+            fixed_attestation and actual_plan is None and current_plan is None
+        )
+        if axis.get("review_plan_current") is not expected_plan_current:
+            errors.append(
+                f"static report {relative} {label}.review_plan_current "
+                "disagrees with fixed attestation plan identity"
+            )
+
+        expected_binding_current = bool(
+            fixed_attestation
+            and axis.get("source_current") is True
+            and axis.get("storage_current") is True
+            and axis.get("review_contract_current") is True
+            and len(dispositions) == PROFESSIONAL_PACKAGE_COUNT
+            and all(
+                isinstance(item.get("package_material_binding"), str)
+                and _is_sha256(item["package_material_binding"])
+                and isinstance(item.get("review_unit_binding"), str)
+                and _is_sha256(item["review_unit_binding"])
+                for item in dispositions
+            )
+        )
+        if axis.get("review_binding_current") is not expected_binding_current:
+            errors.append(
+                f"static report {relative} {label}.review_binding_current "
+                "disagrees with compact material and review-unit bindings"
+            )
+        expected_provenance_current = bool(
+            expected_binding_current
+            and _professional_schema3_compact_authority_valid(axis)
+            and sum(
+                item["provenance"]["mode"] == "fresh"
+                for item in dispositions
+            )
+            == fresh
+            and sum(
+                item["provenance"]["mode"] == "carried"
+                for item in dispositions
+            )
+            == carried
+        )
+        if axis.get("provenance_current") is not expected_provenance_current:
+            errors.append(
+                f"static report {relative} {label}.provenance_current "
+                "disagrees with compact origins and partition"
             )
     elif (
         actual_contract is not None
@@ -2065,7 +2242,6 @@ def _professional_completeness_axis_errors(relative: str, axis: object) -> list[
             "schema-3 currentness or review-cost claims"
         )
 
-    lifecycle = axis.get("round_lifecycle")
     lifecycle_fields = {
         "status",
         "round_count",
@@ -2080,14 +2256,19 @@ def _professional_completeness_axis_errors(relative: str, axis: object) -> list[
             f"static report {relative} {label}.round_lifecycle fields are malformed"
         )
     else:
-        lifecycle_statuses = {
+        historical_lifecycle_statuses = {
             "no-schema3-rounds",
             "no-schema3-current-decision",
             "schema3-head-current",
             "schema3-head-not-selected",
             "schema3-round-lifecycle-invalid",
         }
-        if (
+        lifecycle_statuses = {
+            "fixed-attestation-current",
+        } if artifact_schema == 3 else historical_lifecycle_statuses | {
+            "fixed-attestation-current"
+        }
+        lifecycle_shape_valid = not (
             lifecycle.get("status") not in lifecycle_statuses
             or not _non_negative_int(lifecycle.get("round_count"))
             or not _non_negative_int(lifecycle.get("chain_depth"))
@@ -2106,15 +2287,23 @@ def _professional_completeness_axis_errors(relative: str, axis: object) -> list[
             )
             or lifecycle.get("limitations")
             != [PROFESSIONAL_REVIEW_COST_LIMITATIONS[2]]
+        )
+        fixed_lifecycle_valid = bool(
+            lifecycle_shape_valid
+            and _professional_fixed_attestation_lifecycle_valid(axis)
+        )
+        if not lifecycle_shape_valid or (
+            artifact_schema == 3 and not fixed_lifecycle_valid
+        ) or (
+            artifact_schema != 3
+            and lifecycle.get("status") == "fixed-attestation-current"
+            and not fixed_lifecycle_valid
         ):
             errors.append(
                 f"static report {relative} {label}.round_lifecycle is invalid"
             )
         expected_lifecycle_current = bool(
-            artifact_schema == 3
-            and lifecycle.get("status") == "schema3-head-current"
-            and lifecycle.get("current_decision_is_head") is True
-            and not lifecycle.get("errors")
+            artifact_schema == 3 and fixed_lifecycle_valid
         )
         if axis.get("round_lifecycle_current") is not expected_lifecycle_current:
             errors.append(
@@ -2240,9 +2429,12 @@ def _content_readiness_errors(
     relative: str, report: dict, *, root: Path = ROOT
 ) -> list[str]:
     errors: list[str] = []
-    if report.get("schema_version") != 3:
+    if report.get("schema_version") not in {
+        LEGACY_PROFESSIONALISM_REPORT_SCHEMA_VERSION,
+        PROFESSIONALISM_REPORT_SCHEMA_VERSION,
+    }:
         errors.append(
-            f"static report {relative} must use additive report schema_version 3"
+            f"static report {relative} must use report schema_version 3 or 4"
         )
     reference_summary = report.get("reference_content_summary")
     root_summary = report.get("root_content_summary")
@@ -2279,8 +2471,8 @@ def _content_readiness_errors(
     if not isinstance(readiness, dict):
         errors.append(f"static report {relative} must contain content_readiness")
         return errors
-    if readiness.get("schema_version") != 9:
-        errors.append(f"static report {relative} content_readiness.schema_version must equal 9")
+    if readiness.get("schema_version") != 10:
+        errors.append(f"static report {relative} content_readiness.schema_version must equal 10")
     expected_sections = {"schema_version", "reference", "root", "expert", "aggregate"}
     if set(readiness) != expected_sections:
         errors.append(
@@ -2303,7 +2495,7 @@ def _content_readiness_errors(
         if set(value) != fields:
             errors.append(
                 f"static report {relative} content_readiness.{name} fields do not "
-                "match schema 9"
+                "match schema 10"
             )
 
     errors.extend(
@@ -2401,155 +2593,6 @@ def _content_readiness_errors(
             errors.append(f"static report {relative} content_readiness.root basis is invalid")
         if root.get("source_fingerprint") != root_summary.get("source_fingerprint"):
             errors.append(f"static report {relative} Root source fingerprint mismatch")
-        lifecycle_status = root_summary.get("semantic_lifecycle_status")
-        if lifecycle_status not in {
-            "bootstrap-current",
-            "release-current",
-            "pending-changes",
-            "invalid",
-        }:
-            errors.append(
-                f"static report {relative} Root lifecycle status is invalid"
-            )
-        detector_fingerprint = root_summary.get(
-            "semantic_lifecycle_detector_fingerprint"
-        )
-        if not isinstance(detector_fingerprint, str) or not _is_sha256(
-            detector_fingerprint
-        ):
-            errors.append(
-                f"static report {relative} Root lifecycle detector fingerprint "
-                "must be lowercase sha256"
-            )
-        for field in (
-            "semantic_lifecycle_snapshot_current",
-            "semantic_lifecycle_formal_release_ready",
-            "semantic_lifecycle_bootstrap_refresh_chain_valid",
-        ):
-            if type(root_summary.get(field)) is not bool:
-                errors.append(
-                    f"static report {relative} root_content_summary.{field} "
-                    "must be a boolean"
-                )
-        refresh_count = root_summary.get(
-            "semantic_lifecycle_bootstrap_refresh_count"
-        )
-        refresh_delta = root_summary.get(
-            "semantic_lifecycle_bootstrap_refresh_latest_delta"
-        )
-        if type(refresh_count) is not int or refresh_count < 0:
-            errors.append(
-                f"static report {relative} Root bootstrap refresh count must be a "
-                "non-negative integer"
-            )
-        expected_delta_fields = {
-            "added_count",
-            "removed_count",
-            "prior_override_count",
-            "document_changed",
-            "detector_changed",
-            "candidate_changed",
-            "disposition_changed",
-        }
-        if refresh_count == 0:
-            if refresh_delta is not None:
-                errors.append(
-                    f"static report {relative} empty Root bootstrap refresh chain "
-                    "must have latest_delta=null"
-                )
-        elif not isinstance(refresh_delta, dict) or set(
-            refresh_delta
-        ) != expected_delta_fields:
-            errors.append(
-                f"static report {relative} Root bootstrap refresh latest delta "
-                "must match its closed schema"
-            )
-        else:
-            for field in ("added_count", "removed_count", "prior_override_count"):
-                if type(refresh_delta.get(field)) is not int or refresh_delta[field] < 0:
-                    errors.append(
-                        f"static report {relative} Root bootstrap refresh delta "
-                        f"{field} must be a non-negative integer"
-                    )
-            for field in (
-                "document_changed",
-                "detector_changed",
-                "candidate_changed",
-                "disposition_changed",
-            ):
-                if type(refresh_delta.get(field)) is not bool:
-                    errors.append(
-                        f"static report {relative} Root bootstrap refresh delta "
-                        f"{field} must be a boolean"
-                    )
-        comparison = root_summary.get("semantic_lifecycle_comparison")
-        age = root_summary.get("semantic_lifecycle_age")
-        if not isinstance(comparison, dict):
-            errors.append(
-                f"static report {relative} Root lifecycle comparison must be a mapping"
-            )
-            comparison = {}
-        expected_comparison_fields = {
-            "comparison_scope",
-            "added_count",
-            "removed_count",
-            "new_disposition_count",
-            "disposition_change_count",
-            "source_rewrite_count",
-            "source_replacement_count",
-            "detector_change_removal_count",
-            "detector_improvement_count",
-            "unclassified_count",
-            "added",
-            "removed",
-            "disposition_changes",
-            "disposition_change_details",
-            "source_rewrites",
-            "detector_change_removals",
-            "detector_improvements",
-            "unclassified",
-        }
-        if set(comparison) != expected_comparison_fields:
-            errors.append(
-                f"static report {relative} Root lifecycle comparison must match "
-                "its closed schema"
-            )
-        if not isinstance(age, dict) or set(age) != {
-            "known_age_count",
-            "unknown_age_count",
-            "max_age_days",
-        }:
-            errors.append(
-                f"static report {relative} Root lifecycle age must match its closed schema"
-            )
-            age = {}
-        if lifecycle_status == "bootstrap-current":
-            nullable_counts = (
-                "added_count",
-                "removed_count",
-                "new_disposition_count",
-                "disposition_change_count",
-                "source_rewrite_count",
-                "source_replacement_count",
-                "detector_change_removal_count",
-                "detector_improvement_count",
-                "unclassified_count",
-            )
-            if comparison.get("comparison_scope") != "bootstrap-no-prior-release" or any(
-                comparison.get(field) is not None for field in nullable_counts
-            ):
-                errors.append(
-                    f"static report {relative} bootstrap lifecycle must preserve null deltas"
-                )
-            if (
-                age.get("known_age_count") != 0
-                or age.get("unknown_age_count")
-                != root_summary.get("semantic_disposition_configured")
-                or age.get("max_age_days") is not None
-            ):
-                errors.append(
-                    f"static report {relative} bootstrap lifecycle age is not honest"
-                )
     readability_axis = expert.get("readability") if isinstance(expert, dict) else None
     completeness_axis = (
         expert.get("professional_completeness") if isinstance(expert, dict) else None
@@ -2587,6 +2630,10 @@ def _content_readiness_errors(
             allowed_statuses=PROFESSIONAL_COMPLETENESS_STATUSES,
         )
     )
+    errors.extend(_readability_axis_errors(relative, readability_axis))
+    errors.extend(
+        _professional_completeness_axis_errors(relative, completeness_axis)
+    )
     if isinstance(completeness_axis, dict) and type(
         completeness_axis.get("review_cost_current")
     ) is not bool:
@@ -2594,34 +2641,6 @@ def _content_readiness_errors(
             f"static report {relative} content_readiness.expert."
             "professional_completeness.review_cost_current must be a boolean"
         )
-    if isinstance(readability_axis, dict):
-        expected_readability_fingerprints = {
-            "reference_content": (
-                reference.get("source_fingerprint")
-                if isinstance(reference, dict)
-                else None
-            ),
-            "root_content": (
-                root.get("source_fingerprint") if isinstance(root, dict) else None
-            ),
-            "ai_readability": (
-                readability_summary.get("source_fingerprint")
-                if isinstance(readability_summary, dict)
-                else None
-            ),
-            "skill_detector": (
-                content_audit_summary.get("skill_detector_fingerprint")
-                if isinstance(content_audit_summary, dict)
-                else None
-            ),
-        }
-        if readability_axis.get(
-            "current_source_fingerprints"
-        ) != expected_readability_fingerprints:
-            errors.append(
-                f"static report {relative} current readability fingerprints do not "
-                "match Root, Reference, AI-readability, and Skill-detector summaries"
-            )
     if isinstance(readability_axis, dict) and isinstance(completeness_axis, dict):
         if readability_axis.get("attestation_config_fingerprint") != completeness_axis.get(
             "attestation_config_fingerprint"
@@ -2644,9 +2663,11 @@ def _content_readiness_errors(
                 reference.get("semantic_triage_complete") is True
                 and root.get("semantic_triage_complete") is True
             ),
-            "readability_review_current": _expert_axis_current(readability_axis),
-            "professional_completeness_review_current": _expert_axis_current(
-                completeness_axis
+            "readability_review_current": _readability_formal_ready(
+                readability_axis
+            ),
+            "professional_completeness_review_current": (
+                _professional_completeness_formal_ready(completeness_axis)
             ),
         }
         if aggregate != expected_aggregate:
@@ -2745,6 +2766,13 @@ def _professionalism_report_envelope_errors(
     expected_fields = PROFESSIONALISM_REPORT_FIELDS.get(relative)
     if expected_fields is None:
         return []
+    schema_version = report.get("schema_version")
+    if schema_version == PROFESSIONALISM_REPORT_SCHEMA_VERSION:
+        expected_fields = {*expected_fields, "expert_panel_release_manifest"}
+    elif schema_version != LEGACY_PROFESSIONALISM_REPORT_SCHEMA_VERSION:
+        return [
+            f"static report {relative} schema_version must be 3 or 4"
+        ]
     if set(report) != expected_fields:
         return [
             f"static report {relative} fields do not match the closed "
@@ -2761,6 +2789,18 @@ def _professionalism_report_envelope_errors(
             errors.append(f"static report {relative} strict must be a boolean")
         if not isinstance(report.get("summary"), dict):
             errors.append(f"static report {relative} summary must be a mapping")
+        if schema_version == PROFESSIONALISM_REPORT_SCHEMA_VERSION:
+            errors.extend(
+                f"static report {relative} {error}"
+                for error in validate_expert_panel_release_manifest(
+                    report.get("expert_panel_release_manifest"),
+                    require_current=(report.get("release_gate") == RELEASE_GATE_PASS),
+                )
+            )
+        elif report.get("release_gate") == RELEASE_GATE_PASS:
+            errors.append(
+                f"static report {relative} legacy schema 3 cannot claim formal release"
+            )
     else:
         release_claim = report.get("release_claim")
         if not isinstance(release_claim, str) or not release_claim.strip():
@@ -2807,36 +2847,39 @@ def _release_gate_errors(relative: str, report: dict) -> list[str]:
     readability_ready = bool(
         isinstance(aggregate, dict)
         and aggregate.get("readability_review_current") is True
-        and _expert_axis_current(readability)
+        and _readability_formal_ready(readability)
     )
     professional_completeness_ready = bool(
         isinstance(aggregate, dict)
         and aggregate.get("professional_completeness_review_current") is True
-        and _expert_axis_current(professional_completeness)
+        and _professional_completeness_formal_ready(professional_completeness)
         and isinstance(professional_completeness, dict)
         and professional_completeness.get("review_cost_current") is True
         and isinstance(report.get("professional_review_cost_fixtures"), dict)
         and report["professional_review_cost_fixtures"].get("status") == "pass"
     )
-    root_summary = report.get("root_content_summary")
-    lifecycle_ready = bool(
-        isinstance(root_summary, dict)
-        and root_summary.get("semantic_lifecycle_formal_release_ready") is True
+    manifest_ready = bool(
+        report.get("schema_version") == PROFESSIONALISM_REPORT_SCHEMA_VERSION
+        and not validate_expert_panel_release_manifest(
+            report.get("expert_panel_release_manifest"),
+            require_current=True,
+        )
     )
+    root_summary = report.get("root_content_summary")
     expected_gate = (
         RELEASE_GATE_PASS
         if report.get("authoring_gate") == AUTHORING_GATE_PASS
         and readability_ready
         and professional_completeness_ready
-        and lifecycle_ready
+        and manifest_ready
         and error_blocker_count == 0
         else RELEASE_GATE_FAIL
     )
     if release_gate != expected_gate:
         errors.append(
             f"static report {relative} release_gate does not match authoring, "
-            "readability review, professional-completeness review, and Root "
-            "lifecycle readiness"
+            "readability review, Professional Completeness review, and "
+            "current Semantic application readiness"
         )
     if release_gate == RELEASE_GATE_PASS and error_blocker_count:
         errors.append(
@@ -2872,18 +2915,6 @@ def _release_gate_errors(relative: str, report: dict) -> list[str]:
         errors.append(
             f"static report {relative} professional-completeness release blocker "
             f"count must equal {expected_completeness_blockers}"
-        )
-    lifecycle_release_blockers = [
-        blocker
-        for blocker in release_blockers
-        if isinstance(blocker, dict)
-        and blocker.get("category") == ROOT_LIFECYCLE_RELEASE_BLOCKER_CATEGORY
-    ]
-    expected_lifecycle_blockers = 0 if lifecycle_ready else 1
-    if len(lifecycle_release_blockers) != expected_lifecycle_blockers:
-        errors.append(
-            f"static report {relative} Root lifecycle release blocker count must equal "
-            f"{expected_lifecycle_blockers}"
         )
     if relative == "reports/professionalism-regression-report.json":
         summary = report.get("summary")

@@ -78,7 +78,7 @@ Every Foundation registry entry declares exactly one `delivery_scope`:
 
 - `product` solves a normal engineering decision, has at least one task-routable
   Professional owner, and may be compiled into normal profiles;
-- `authoring-only` is a durable ChangeForge authoring capability but is exposed
+- `authoring-only` is a durable rd-skills authoring capability but is exposed
   only as a top-level Skill in `dev`;
 - `dev-only` supports internal authoring, evaluation, or control-plane
   maintenance and is exposed only as a top-level Skill in `dev`.

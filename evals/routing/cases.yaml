@@ -596,7 +596,7 @@ cases:
     excluded_skills: [ios-ipados-platform-extension]
     expected: {path: direct, profile: task-agent, primary_skill: frontend-change-builder, layer3_skills: [state-management-design], review_skill: ai-code-review-refactor}
   - id: payment-security
-    main_execution: {producer: main-control-agent, task_id: payment-security, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:payment-security:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: payment-security, execution_level: L3, level_basis: {trigger_evaluations: [], l2_eligibility: [], obligations: ["default standard source-backed execution"], unresolved: [], edit_status: allowed}}
     prompt: Analyze payment money movement authorization and idempotency.
     domain_family: {domain: payment-trading-extension, family: money-ledger-settlement, variant: canonical}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [payment-trading-extension, repository-context-map], review_skill: architecture-impact-reviewer}

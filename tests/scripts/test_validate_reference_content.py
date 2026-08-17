@@ -6,15 +6,117 @@ import importlib.util
 import json
 import re
 import sys
+import tempfile
 import unittest
 from datetime import date
 from pathlib import Path
 from unittest import mock
 
+from . import expert_panel_source_test_support as source_support
+
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "validate-reference-content.py"
 _MISSING = object()
+PANEL = source_support.PANEL
+
+
+def _current_semantic_compact_fixture(auditor) -> tuple[dict, bytes]:
+    root_content = auditor._collect_root_content()
+    reference_content = auditor._collect_reference_content()
+    audit = auditor._semantic_application_audit_view(
+        root_content,
+        reference_content,
+    )
+    packet = PANEL.prepare_semantic_disposition_packet(
+        audit=PANEL._semantic_audit_for_axis_rereview(
+            audit,
+            ["root", "reference"],
+        ),
+        review_id="reference-content-current-semantic-fixture",
+        created_on="2026-08-13",
+    )
+    PANEL.validate_semantic_packet_current(packet, audit)
+    authorities = PANEL._semantic_candidate_authorities(packet)
+    dispositions = {
+        f"{axis}:{entry['candidate_id']}": entry["disposition"]
+        for axis in PANEL.SEMANTIC_AXES
+        for entry in audit[f"{axis}_content"]["semantic_advisories"][
+            "disposition_contract"
+        ]["entries"]
+    }
+    reviewers = [
+        {
+            "voter_id": f"reference-content-semantic-voter-{index}",
+            "agent_id": f"reference-content-semantic-agent-{index}",
+            "role": f"reference-content-semantic-role-{index}",
+            "expertise": ["semantic disposition governance"],
+            "independent_review": True,
+        }
+        for index in range(1, PANEL.PANEL_SIZE + 1)
+    ]
+    value = {
+        "schema_version": PANEL.panel_attestation.ATTESTATION_SCHEMA_VERSION,
+        "kind": PANEL.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_KIND,
+        "axis": PANEL.panel_attestation.SEMANTIC_DISPOSITION_AXIS,
+        "review_id": "reference-content-current-semantic-fixture",
+        "decided_on": "2026-08-13",
+        "source_fingerprints": copy.deepcopy(packet["source_fingerprints"]),
+        "review_contract_fingerprint": PANEL._canonical_json_sha256(
+            packet["panel_contract"]
+        ),
+        "reviewers": reviewers,
+        "findings": [
+            {
+                "target_id": target["target_id"],
+                "axis": target["axis"],
+                "candidate_binding_fingerprint": authorities[
+                    target["target_id"]
+                ]["candidate_binding_fingerprint"],
+                "votes": [
+                    {
+                        "voter_id": reviewer["voter_id"],
+                        "disposition": dispositions[target["target_id"]],
+                        "rationale": (
+                            "The current candidate retains its independently "
+                            "reviewed bounded disposition."
+                        ),
+                        "authority_or_condition": (
+                            "The current source owner retains authority."
+                        ),
+                        "decision_owner": "current-source-owner",
+                        "mitigation": (
+                            "Repeat review after source or contract drift."
+                        ),
+                        "review_after": None,
+                    }
+                    for reviewer in reviewers
+                ],
+                "result": {},
+            }
+            for target in packet["semantic_targets"]
+        ],
+        "summary": {},
+        "verdict": "",
+        "rationale": [
+            "Every current Semantic target received three complete votes."
+        ],
+    }
+    finalized = PANEL.panel_attestation.finalize_attestation(
+        value,
+        expected_path=(
+            PANEL.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_PATH
+        ),
+        expected_semantic_current_bindings=authorities,
+    )
+    raw = PANEL.panel_attestation.canonical_attestation_bytes(
+        finalized,
+        expected_path=(
+            PANEL.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_PATH
+        ),
+        expected_semantic_current_bindings=authorities,
+    )
+    return audit, raw
 
 
 def _registry_declaration(field: str) -> tuple[int, str]:
@@ -127,7 +229,12 @@ def _semantic(candidates=None) -> dict:
     }
     entries = [item["disposition_record"] for item in candidates if item.get("disposition_record")]
     return {
-        "schema_version": 5,
+        "schema_version": 7,
+        "detector_contract": {
+            "contract_version": "reference-semantic-detector-contract-v1",
+            "algorithm": "sha256-canonical-json-v1",
+            "value": _load_module()._load_auditor()._reference_semantic_detector_fingerprint(),
+        },
         "finding_families": list(families),
         "summary": {
             "raw_candidates": totals["raw"],
@@ -184,7 +291,6 @@ def _semantic(candidates=None) -> dict:
         "disposition_contract": {
             "schema_version": 2,
             "source": "config/skill-content-exceptions.yaml",
-            "evaluated_on": "2026-07-12",
             "configured_count": len(entries),
             "applied_count": len(entries),
             "entries": entries,
@@ -304,7 +410,7 @@ def _content(
         for conflict in item["effective_preface"].get("conflicts", [])
     ]
     content = {
-        "schema_version": 4,
+        "schema_version": 5,
         "preface_contract": {
             "schema_version": 3,
             "source_precedence": ["local", "reference-index", "parent-root"],
@@ -740,7 +846,7 @@ class ValidateReferenceContentTests(unittest.TestCase):
     def test_semantic_schema_is_a_default_hard_failure(self) -> None:
         for malformed, expected in (
             (None, "semantic_advisories must be a current mapping"),
-            ({}, "schema_version must equal 5"),
+            ({}, "schema_version must equal 7"),
             (
                 {**_semantic(), "finding_families": ["fixed_number_candidate"]},
                 "finding_families must exactly match",
@@ -750,7 +856,32 @@ class ValidateReferenceContentTests(unittest.TestCase):
             _counts, errors = self.module._evaluate(content, strict=False)
             self.assertTrue(any(expected in error for error in errors), errors)
 
-    def test_semantic_v5_rejects_every_legacy_or_unknown_field(self) -> None:
+    def test_semantic_v7_detector_contract_is_closed_and_current(self) -> None:
+        auditor = self.module._load_auditor()
+        semantic = auditor._collect_reference_semantic_advisories(
+            [], disposition_entries=[], evaluation_date=date(2026, 7, 12)
+        )
+        counts, errors = self.module._evaluate(
+            _content(semantic_advisories=semantic), strict=False
+        )
+        self.assertEqual([], errors)
+        self.assertEqual(0, counts["semantic_raw_candidates"])
+        for mutate in (
+            lambda value: value["detector_contract"].__setitem__("extra", True),
+            lambda value: value["detector_contract"].__setitem__("algorithm", "sha256"),
+            lambda value: value["detector_contract"].__setitem__("value", "0" * 64),
+        ):
+            malformed = copy.deepcopy(semantic)
+            mutate(malformed)
+            _counts, mutation_errors = self.module._evaluate(
+                _content(semantic_advisories=malformed), strict=False
+            )
+            self.assertTrue(
+                any("detector_contract" in item for item in mutation_errors),
+                mutation_errors,
+            )
+
+    def test_semantic_v7_rejects_every_legacy_or_unknown_field(self) -> None:
         auditor = self.module._load_auditor()
         document = {
             "path": "rule.md",
@@ -772,6 +903,9 @@ class ValidateReferenceContentTests(unittest.TestCase):
             lambda report: report["disposition_contract"].__setitem__(
                 "legacy_field", True
             ),
+            lambda report: report["disposition_contract"].__setitem__(
+                "evaluated_on", "2026-07-12"
+            ),
         )
         for mutate in mutations:
             malformed = copy.deepcopy(base)
@@ -791,7 +925,7 @@ class ValidateReferenceContentTests(unittest.TestCase):
         )
         self.assertTrue(any("unknown field" in item for item in errors), errors)
 
-    def test_semantic_v5_rejects_noncanonical_paths_after_id_recomputation(self) -> None:
+    def test_semantic_v6_rejects_noncanonical_paths_after_id_recomputation(self) -> None:
         auditor = self.module._load_auditor()
         semantic = auditor._collect_reference_semantic_advisories(
             [{
@@ -827,7 +961,7 @@ class ValidateReferenceContentTests(unittest.TestCase):
                 errors,
             )
 
-    def test_semantic_v5_rejects_unknown_absolute_downgrade_reason(self) -> None:
+    def test_semantic_v6_rejects_unknown_absolute_downgrade_reason(self) -> None:
         auditor = self.module._load_auditor()
         semantic = auditor._collect_reference_semantic_advisories(
             [{
@@ -869,7 +1003,7 @@ class ValidateReferenceContentTests(unittest.TestCase):
             errors,
         )
 
-    def test_semantic_v5_rejects_reverse_candidate_and_disposition_order(self) -> None:
+    def test_semantic_v6_rejects_reverse_candidate_and_disposition_order(self) -> None:
         auditor = self.module._load_auditor()
         documents = [
             {
@@ -927,7 +1061,7 @@ class ValidateReferenceContentTests(unittest.TestCase):
             disposition_errors,
         )
 
-    def test_semantic_v5_rejects_bool_for_every_count_and_index_field(self) -> None:
+    def test_semantic_v6_rejects_bool_for_every_count_and_index_field(self) -> None:
         def assert_rejected(report: dict, mutate, expected: str) -> None:
             malformed = copy.deepcopy(report)
             mutate(malformed)
@@ -1088,7 +1222,7 @@ class ValidateReferenceContentTests(unittest.TestCase):
         _counts, errors = self.module._evaluate(
             _content(semantic_advisories=semantic), strict=False
         )
-        self.assertTrue(any("schema_version must equal 5" in item for item in errors))
+        self.assertTrue(any("schema_version must equal 7" in item for item in errors))
         self.assertTrue(any("finding_families must exactly match" in item for item in errors))
         self.assertTrue(any("group_metrics does not match" in item for item in errors))
 
@@ -1199,6 +1333,13 @@ class ValidateReferenceContentTests(unittest.TestCase):
         self.assertEqual(1, counts["semantic_disposition_configured"])
         self.assertEqual(1, counts["semantic_disposition_applied"])
         self.assertEqual(1, counts["semantic_resolved_candidates"])
+
+        _counts, before_expiry_errors = self.module._evaluate(
+            _content(semantic_advisories=semantic),
+            strict=False,
+            evaluation_date=date(2026, 7, 31),
+        )
+        self.assertEqual([], before_expiry_errors)
 
         _counts, expired_errors = self.module._evaluate(
             _content(semantic_advisories=semantic),
@@ -1375,19 +1516,153 @@ class ValidateReferenceContentTests(unittest.TestCase):
                 self.assertEqual([], errors)
         self.assertEqual(before, after)
 
-        _root, _reference, application = (
+        _root, _reference, checked_in_application = (
             auditor._collect_semantic_content_with_application()
         )
+        checked_in = json.loads(
+            (
+                ROOT
+                / PANEL.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_PATH
+            ).read_text(encoding="utf-8")
+        )
+        self.assertEqual(2, checked_in["schema_version"])
+        self.assertEqual(206, len(checked_in["findings"]))
+        self.assertEqual(1, checked_in_application["schema_version"])
+        self.assertEqual("current", checked_in_application["status"])
+        self.assertIsNone(checked_in_application["error"])
+        self.assertEqual(206, checked_in_application["target_count"])
+        self.assertEqual(206, checked_in_application["applied_count"])
+        self.assertEqual(
+            0,
+            checked_in_application["completed_rewrite_count"],
+        )
+
+        audit, compact = _current_semantic_compact_fixture(auditor)
+        self.assertEqual(
+            206,
+            len(json.loads(compact)["findings"]),
+        )
+        with tempfile.TemporaryDirectory() as raw:
+            fixture_root = Path(raw)
+            fixed = (
+                fixture_root
+                / PANEL.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_PATH
+            )
+            fixed.parent.mkdir(parents=True)
+            fixed.write_bytes(compact)
+            with mock.patch.object(PANEL, "ROOT", fixture_root):
+                _root, _reference, application = (
+                    auditor._collect_semantic_content_with_application()
+                )
         self.assertEqual("current", application["status"])
         self.assertIsNone(application["error"])
-        decision = json.loads(
-            (ROOT / application["decision"]["path"]).read_text(encoding="utf-8")
-        )
-        expected_target_count = len(decision["semantic_decisions"])
-        self.assertEqual(expected_target_count, application["target_count"])
-        self.assertEqual(expected_target_count, application["applied_count"])
+        self.assertEqual(206, application["target_count"])
+        self.assertEqual(206, application["applied_count"])
         self.assertEqual(0, application["completed_rewrite_count"])
         self.assertEqual(before, hashes())
+
+    def test_android_intent_boundary_is_limited_to_untrusted_entry(self) -> None:
+        path = (
+            ROOT
+            / "src/domain-extensions/android-platform-extension/SKILL.md"
+        )
+        text = " ".join(path.read_text(encoding="utf-8").split())
+        self.assertIn(
+            "Treat an Intent as an external entry boundary only when its "
+            "input is externally supplied or untrusted, including input "
+            "delivered through a deep link or exported component. Prove safe "
+            "handling of that boundary by validating the payload, caller or "
+            "source identity, authorization, and task behavior as applicable.",
+            text,
+        )
+        self.assertNotIn(
+            "Treat every Intent, deep link, and exported component as an "
+            "external entry boundary",
+            text,
+        )
+
+    def test_dbus_controls_are_split_by_contract_kind(self) -> None:
+        path = (
+            ROOT
+            / "src/domain-extensions/linux-desktop-platform-extension/"
+            "references/dbus-portal-and-session-integration-contracts.md"
+        )
+        text = " ".join(path.read_text(encoding="utf-8").split())
+        for required in (
+            "For D-Bus methods, validate arguments and caller authorization",
+            "For D-Bus signals, validate payload and sender identity where "
+            "available, and define subscription lifetime",
+            "For D-Bus properties, define read/write authorization, value "
+            "validation, change-notification and cache behavior, and object "
+            "and session lifetime",
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, text)
+        self.assertNotIn(
+            "Treat every D-Bus method, signal, and property as an IPC "
+            "contract with input validation, authorization, timeout, "
+            "cancellation, disconnect, and retry rules",
+            text,
+        )
+
+    def test_powershell_mutation_and_repeat_proof_is_safely_scoped(self) -> None:
+        path = (
+            ROOT
+            / "src/foundation/capabilities/powershell-professional-usage/"
+            "references/remoting-provider-and-administration-contracts.md"
+        )
+        text = " ".join(path.read_text(encoding="utf-8").split())
+        for required in (
+            "Repeat-safety classification, desired-state predicate",
+            "Real provider changes require an explicitly authorized, "
+            "isolated, recoverable test provider",
+            "execute once from the authorized initial state, capture the "
+            "resulting state, then execute again from that post-first-run "
+            "state",
+            "a valid second-run result makes no unintended mutation and "
+            "retains passing post-state verification",
+            "For an intentionally non-idempotent operation, execute it once, "
+            "verify the exact effect and post-state, and prove rollback, "
+            "compensation, or reconciliation rather than invoking it again",
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, text)
+        self.assertNotIn(
+            "Run provider mutations against the real provider",
+            text,
+        )
+        self.assertNotIn(
+            "Execute administrative work twice from the same initial target "
+            "state",
+            text,
+        )
+
+    def test_swift_unowned_and_existential_probes_are_separated(self) -> None:
+        path = (
+            ROOT
+            / "src/foundation/capabilities/swift-professional-usage/"
+            "references/value-memory-and-type-contracts.md"
+        )
+        text = " ".join(path.read_text(encoding="utf-8").split())
+        for required in (
+            "choose `weak` for valid absence and `unowned` only when every "
+            "affected reachable access is protected by a live-referent "
+            "lifetime invariant",
+            "exercise invalid lifetime only in an isolated expected-crash "
+            "harness",
+            "For other `unowned` uses, prove the lifetime invariant and "
+            "teardown without deliberately dereferencing after deallocation",
+            "Separately store the protocol existential and cross an "
+            "associated-type boundary",
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, text)
+        self.assertNotIn(
+            "Store the protocol existential, cross an associated-type "
+            "boundary, and exercise the invalid lifetime of every `unowned` "
+            "access",
+            text,
+        )
 
     def test_authentication_security_jwt_verifier_source_contract(self) -> None:
         path = (

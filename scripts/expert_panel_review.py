@@ -12,12 +12,13 @@ import os
 import re
 import shutil
 import stat
+import subprocess
 import sys
 from datetime import date
 from functools import lru_cache
 from pathlib import Path, PurePosixPath
 from types import ModuleType
-from typing import Any
+from typing import Any, Callable
 
 try:
     from validation_utils import (
@@ -40,10 +41,22 @@ except ModuleNotFoundError:  # Support direct importlib loading in isolated test
     import professional_completeness_carry_forward as professional_carry
 
 try:
+    import expert_panel_contracts as panel_contracts
+except ModuleNotFoundError:  # Support direct importlib loading in isolated tests.
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import expert_panel_contracts as panel_contracts
+
+try:
     import expert_panel_manifest as reviewer_manifest
 except ModuleNotFoundError:  # Support direct importlib loading in isolated tests.
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import expert_panel_manifest as reviewer_manifest
+
+try:
+    import expert_panel_attestation as panel_attestation
+except ModuleNotFoundError:  # Support direct importlib loading in isolated tests.
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import expert_panel_attestation as panel_attestation
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -56,31 +69,25 @@ VALIDATION_MODES = {
 }
 DECISION_METHOD = "three-independent-experts-majority"
 PROFESSIONAL_COMPLETENESS_DECISION_METHOD = (
-    "per-skill-qualified-reviewer-pool-domain-critical-fail-closed"
+    panel_contracts.PROFESSIONAL_DECISION_METHOD
 )
 PROFESSIONAL_COMPLETENESS_INCREMENTAL_DECISION_METHOD = (
-    "exact-package-carry-forward-qualified-reviewer-pool-domain-critical-fail-closed"
+    panel_contracts.PROFESSIONAL_INCREMENTAL_DECISION_METHOD
 )
 PACKET_KIND = "changeforge.expert-panel-packet"
 BALLOT_KIND = "changeforge.expert-panel-ballot"
 DECISION_KIND = "changeforge.expert-panel-decision"
-PROFESSIONAL_COMPLETENESS_PACKET_KIND = (
-    "changeforge.professional-completeness-panel-packet"
-)
-PROFESSIONAL_COMPLETENESS_BALLOT_KIND = (
-    "changeforge.professional-completeness-panel-ballot"
-)
-PROFESSIONAL_COMPLETENESS_DECISION_KIND = (
-    "changeforge.professional-completeness-panel-decision"
-)
+PROFESSIONAL_COMPLETENESS_PACKET_KIND = panel_contracts.PROFESSIONAL_PACKET_KIND
+PROFESSIONAL_COMPLETENESS_BALLOT_KIND = panel_contracts.PROFESSIONAL_BALLOT_KIND
+PROFESSIONAL_COMPLETENESS_DECISION_KIND = panel_contracts.PROFESSIONAL_DECISION_KIND
 PROFESSIONAL_COMPLETENESS_CAPSULE_KIND = (
-    "changeforge.professional-completeness-review-capsule"
+    panel_contracts.PROFESSIONAL_REVIEW_CAPSULE_KIND
 )
 PROFESSIONAL_COMPLETENESS_DISCOVERY_CAPSULE_KIND = (
-    "changeforge.professional-completeness-discovery-capsule"
+    panel_contracts.PROFESSIONAL_DISCOVERY_CAPSULE_KIND
 )
 PROFESSIONAL_COMPLETENESS_CANDIDATE_REQUEST_KIND = (
-    "changeforge.professional-completeness-candidate-request"
+    panel_contracts.PROFESSIONAL_CANDIDATE_REQUEST_KIND
 )
 SEMANTIC_DISPOSITION_PACKET_KIND = "changeforge.semantic-disposition-panel-packet"
 SEMANTIC_DISPOSITION_BALLOT_KIND = "changeforge.semantic-disposition-panel-ballot"
@@ -100,9 +107,14 @@ PANEL_KINDS = {
 }
 SCHEMA_VERSION = 1
 READABILITY_SCHEMA_VERSION = 2
+SEMANTIC_DISPOSITION_SCHEMA_VERSION = 2
 PROFESSIONAL_COMPLETENESS_SCHEMA_VERSION = 2
-PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION = 3
-PROFESSIONAL_COMPLETENESS_MAX_PLAN_LINEAGE_DEPTH = 8
+PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION = (
+    panel_contracts.PROFESSIONAL_SCHEMA3_SCHEMA_VERSION
+)
+PROFESSIONAL_COMPLETENESS_MAX_PLAN_LINEAGE_DEPTH = (
+    panel_contracts.PROFESSIONAL_MAXIMUM_PLAN_LINEAGE_DEPTH
+)
 PROFESSIONAL_PACKAGE_COUNT = 189
 PROFESSIONAL_LEGACY_PACKAGE_COUNT = 162
 PROFESSIONAL_CURRENT_LAYER_COUNTS = {
@@ -115,9 +127,13 @@ PROFESSIONAL_LEGACY_LAYER_COUNTS = {
     "foundation": 133,
     "domain": 7,
 }
-PROFESSIONAL_ADJACENCY_TOP_K = 5
-PROFESSIONAL_ADJACENCY_PER_SIGNAL_TOP_K = 2
-PROFESSIONAL_ADJACENCY_MAX_REQUIRED_CANDIDATES_PER_TARGET = 57
+PROFESSIONAL_ADJACENCY_TOP_K = panel_contracts.PROFESSIONAL_ADJACENCY_TOP_K
+PROFESSIONAL_ADJACENCY_PER_SIGNAL_TOP_K = (
+    panel_contracts.PROFESSIONAL_ADJACENCY_PER_SIGNAL_TOP_K
+)
+PROFESSIONAL_ADJACENCY_MAX_REQUIRED_CANDIDATES_PER_TARGET = (
+    panel_contracts.PROFESSIONAL_ADJACENCY_MAX_REQUIRED_CANDIDATES_PER_TARGET
+)
 PROFESSIONAL_HISTORICAL_CAP50_REVIEW_ID = (
     "professional-completeness-panel-2026-07-24-r11"
 )
@@ -147,55 +163,49 @@ PROFESSIONAL_HISTORICAL_V1_PACKET_SHA256 = (
 PROFESSIONAL_HISTORICAL_V1_REVIEW_CONTRACT_FINGERPRINT = (
     "8b5b6a00e4f707e87f436b724cabead4a5426862a27b85adc8f1d7f597374a0a"
 )
-PROFESSIONAL_ADJACENCY_BASELINE_TARGET_COUNT = 162
-PROFESSIONAL_ADJACENCY_BASELINE_MAX_REQUIRED_CANDIDATES_TOTAL = 3500
-PROFESSIONAL_ADJACENCY_SELECTION_VERSION = "layered-required-candidates-v2"
-PROFESSIONAL_SOURCE_DECLARED_SELECTION_VERSION = (
-    "directional-decision-bearing-code-span-v1"
+PROFESSIONAL_HISTORICAL_V2_REVIEW_CONTRACT_FINGERPRINT = (
+    "725d3f2ca9f413b27a015c9aa36f4ae8099325266923555526b4d059c4d9f405"
 )
-PROFESSIONAL_ADJACENCY_ALGORITHM = "catalog-semantic-overlap-v3"
-PROFESSIONAL_ADJACENCY_MAX_DOCUMENT_FREQUENCY_PERCENT = 30
-PROFESSIONAL_ADJACENCY_SIGNAL_WEIGHTS = {
-    "trigger-overlap": 5,
-    "output-overlap": 4,
-    "responsibility-overlap": 2,
-    "reference-topic-overlap": 3,
-    "negative-route-conflict": 4,
-}
-PROFESSIONAL_ADJACENCY_LAYERED_SIGNALS = tuple(
-    sorted(
-        set(PROFESSIONAL_ADJACENCY_SIGNAL_WEIGHTS)
-        - {"negative-route-conflict"}
-    )
+PROFESSIONAL_ADJACENCY_BASELINE_TARGET_COUNT = (
+    panel_contracts.PROFESSIONAL_ADJACENCY_BASELINE_TARGET_COUNT
+)
+PROFESSIONAL_ADJACENCY_BASELINE_MAX_REQUIRED_CANDIDATES_TOTAL = (
+    panel_contracts.PROFESSIONAL_ADJACENCY_BASELINE_MAX_REQUIRED_CANDIDATES_TOTAL
+)
+PROFESSIONAL_ADJACENCY_SELECTION_VERSION = (
+    panel_contracts.PROFESSIONAL_ADJACENCY_SELECTION_VERSION
+)
+PROFESSIONAL_SOURCE_DECLARED_SELECTION_VERSION = (
+    panel_contracts.PROFESSIONAL_SOURCE_DECLARED_SELECTION_VERSION
+)
+PROFESSIONAL_ADJACENCY_ALGORITHM = (
+    panel_contracts.PROFESSIONAL_ADJACENCY_ALGORITHM
+)
+PROFESSIONAL_ADJACENCY_MAX_DOCUMENT_FREQUENCY_PERCENT = (
+    panel_contracts.PROFESSIONAL_ADJACENCY_MAX_DOCUMENT_FREQUENCY_PERCENT
+)
+PROFESSIONAL_ADJACENCY_SIGNAL_WEIGHTS = dict(
+    panel_contracts.PROFESSIONAL_ADJACENCY_SIGNAL_WEIGHTS
+)
+PROFESSIONAL_ADJACENCY_LAYERED_SIGNALS = (
+    panel_contracts.PROFESSIONAL_ADJACENCY_LAYERED_SIGNALS
 )
 PROFESSIONAL_ADJACENCY_REVIEW_ORIGINS = {
     "packet-required",
     "reviewer-added",
 }
-PROFESSIONAL_NEGATIVE_ROUTE_MATCH_VERSION = "phrase-aware-v1"
-PROFESSIONAL_NEGATIVE_ROUTE_MIN_OVERLAP_TOKENS = 2
-PROFESSIONAL_NEGATIVE_ROUTE_GENERIC_TOKENS = frozenset(
-    {
-        "actual",
-        "already",
-        "behavior",
-        "change",
-        "changes",
-        "decision",
-        "define",
-        "design",
-        "implementation",
-        "local",
-        "ordinary",
-        "ready",
-        "required",
-        "scope",
-        "select",
-        "specific",
-        "work",
-    }
+PROFESSIONAL_NEGATIVE_ROUTE_MATCH_VERSION = (
+    panel_contracts.PROFESSIONAL_NEGATIVE_ROUTE_MATCH_VERSION
 )
-PROFESSIONAL_ARCHITECTURE_EXPERTISE_TAG = "skill-reference-architecture"
+PROFESSIONAL_NEGATIVE_ROUTE_MIN_OVERLAP_TOKENS = (
+    panel_contracts.PROFESSIONAL_NEGATIVE_ROUTE_MIN_OVERLAP_TOKENS
+)
+PROFESSIONAL_NEGATIVE_ROUTE_GENERIC_TOKENS = (
+    panel_contracts.PROFESSIONAL_NEGATIVE_ROUTE_GENERIC_TOKENS
+)
+PROFESSIONAL_ARCHITECTURE_EXPERTISE_TAG = (
+    panel_contracts.PROFESSIONAL_ARCHITECTURE_EXPERTISE_TAG
+)
 VOTER_ID_PATTERN = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$")
 EXPERTISE_TAG_PATTERN = VOTER_ID_PATTERN
 CONTENT_DECISIONS = {
@@ -211,56 +221,29 @@ ACTIONABILITY_DECISIONS = {
     "detector-false-positive",
     "rewrite-required",
 }
-PROFESSIONAL_COMPLETENESS_DECISIONS = {
-    "accepted-current-professional-completeness",
-    "requires-professional-correction",
-}
-PROFESSIONAL_COMPLETENESS_CRITERIA = {
-    "professional-correctness": (
-        "Rules and decisions are professionally correct for the named capability."
-    ),
-    "material-omissions": (
-        "No material expert decision, failure mechanism, or operational obligation is missing."
-    ),
-    "failure-modes": "Triggered failure modes and recovery limits are covered.",
-    "boundary-conditions": "Material edge cases and authority boundaries are explicit.",
-    "verification-methods": "Claims and outputs have proportionate verification methods.",
-    "erroneous-rules": "No misleading, unsafe, obsolete, or internally conflicting rule remains.",
-    "adjacent-overlap-or-gap": (
-        "Adjacent Skills have neither material responsibility overlap nor an uncovered gap."
-    ),
-    "generic-knowledge-pollution": (
-        "The package excludes generic knowledge that does not justify context cost."
-    ),
-    "reference-high-risk-coverage": (
-        "Indexed References cover the high-risk decisions delegated by the root Skill."
-    ),
-    "output-verifiability": "The output contract produces reviewable, verifiable evidence.",
-}
-PROFESSIONAL_DOMAIN_CRITICAL_CRITERIA = {
-    "professional-correctness",
-    "erroneous-rules",
-    "material-omissions",
-    "failure-modes",
-    "boundary-conditions",
-    "verification-methods",
-}
-PROFESSIONAL_ORDINARY_CRITERIA = (
-    set(PROFESSIONAL_COMPLETENESS_CRITERIA)
-    - PROFESSIONAL_DOMAIN_CRITICAL_CRITERIA
+PROFESSIONAL_COMPLETENESS_DECISIONS = set(panel_contracts.PROFESSIONAL_DECISIONS)
+PROFESSIONAL_COMPLETENESS_CRITERIA = dict(panel_contracts.PROFESSIONAL_CRITERIA)
+PROFESSIONAL_DOMAIN_CRITICAL_CRITERIA = set(
+    panel_contracts.PROFESSIONAL_DOMAIN_CRITICAL_CRITERIA
 )
-PROFESSIONAL_CRITERION_VALUES = {"satisfied", "defect-found"}
-PROFESSIONAL_UNRESOLVED_DISPOSITION = "unresolved-professional-disagreement"
-PROFESSIONAL_FINAL_DISPOSITIONS = {
-    *PROFESSIONAL_COMPLETENESS_DECISIONS,
-    PROFESSIONAL_UNRESOLVED_DISPOSITION,
-}
-PROFESSIONAL_REVIEW_OUTCOMES = {"covered", "not-applicable", "defect-found"}
-PROFESSIONAL_ADJACENCY_DISPOSITIONS = {
-    "adjacent-no-gap",
-    "not-adjacent",
-    "gap-or-overlap-defect",
-}
+PROFESSIONAL_ORDINARY_CRITERIA = set(
+    panel_contracts.PROFESSIONAL_ORDINARY_CRITERIA
+)
+PROFESSIONAL_CRITERION_VALUES = set(
+    panel_contracts.PROFESSIONAL_CRITERION_VALUES
+)
+PROFESSIONAL_UNRESOLVED_DISPOSITION = (
+    panel_contracts.PROFESSIONAL_UNRESOLVED_DISPOSITION
+)
+PROFESSIONAL_FINAL_DISPOSITIONS = set(
+    panel_contracts.PROFESSIONAL_FINAL_DISPOSITIONS
+)
+PROFESSIONAL_REVIEW_OUTCOMES = set(
+    panel_contracts.PROFESSIONAL_REVIEW_OUTCOMES
+)
+PROFESSIONAL_ADJACENCY_DISPOSITIONS = set(
+    panel_contracts.PROFESSIONAL_ADJACENCY_DISPOSITIONS
+)
 SEMANTIC_DISPOSITIONS = {
     "rewrite",
     "valid-contextual-rule",
@@ -268,17 +251,12 @@ SEMANTIC_DISPOSITIONS = {
     "time-bounded-exception",
 }
 SEMANTIC_AXES = {"root", "reference"}
-SEMANTIC_SOURCE_FINGERPRINT_KEYS = {
-    "audit",
-    "root_source",
-    "root_detector",
-    "root_candidates",
-    "root_context",
-    "reference_source",
-    "reference_detector",
-    "reference_candidates",
-    "reference_groups",
-}
+SEMANTIC_SOURCE_FINGERPRINT_KEYS = set(
+    panel_contracts.SEMANTIC_DISPOSITION_SOURCE_FINGERPRINT_KEYS
+)
+SEMANTIC_LEGACY_SOURCE_FINGERPRINT_KEYS = set(
+    panel_contracts.SEMANTIC_DISPOSITION_LEGACY_SOURCE_FINGERPRINT_KEYS
+)
 REASON_CODES = {
     "accepted-current-density": {
         "bounded-density-preserves-professional-coverage",
@@ -316,23 +294,7 @@ ACTIONABILITY_REASON_CODES = {
     },
 }
 READABILITY_V2_REASON_CODES = {**REASON_CODES, **ACTIONABILITY_REASON_CODES}
-PROFESSIONAL_REASON_CODES = {
-    "accepted-current-professional-completeness": {
-        "all-professional-criteria-satisfied",
-    },
-    "requires-professional-correction": {
-        "adjacent-responsibility-gap",
-        "boundary-condition-gap",
-        "erroneous-professional-rule",
-        "failure-mode-gap",
-        "generic-knowledge-pollution",
-        "material-professional-omission",
-        "output-verification-gap",
-        "professional-correctness-defect",
-        "reference-high-risk-coverage-gap",
-        "verification-method-gap",
-    },
-}
+PROFESSIONAL_REASON_CODES = panel_attestation.PROFESSIONAL_REASON_CODES
 ALL_REASON_CODES = {
     **READABILITY_V2_REASON_CODES,
     **PROFESSIONAL_REASON_CODES,
@@ -516,9 +478,23 @@ PROFESSIONAL_PACKET_FIELDS = {
     "limitations",
 }
 PROFESSIONAL_V3_PACKET_FIELDS = {
-    *PROFESSIONAL_PACKET_FIELDS,
+    *(PROFESSIONAL_PACKET_FIELDS - {"source_fingerprints"}),
     "review_contract_fingerprint",
     "review_plan",
+}
+PROFESSIONAL_HISTORICAL_V3_PACKET_FIELDS = {
+    *PROFESSIONAL_V3_PACKET_FIELDS,
+    "source_fingerprints",
+}
+PROFESSIONAL_V3_PACKET_TARGET_FIELDS = {
+    "skill_id",
+    "layer",
+    "root",
+    "indexed_references",
+    "registry",
+    "required_expertise_tags",
+    "routing_adjacency",
+    "review_binding",
 }
 PROFESSIONAL_BALLOT_FIELDS = {
     "schema_version",
@@ -532,7 +508,7 @@ PROFESSIONAL_BALLOT_FIELDS = {
     "limitations",
 }
 PROFESSIONAL_V3_BALLOT_FIELDS = {
-    *PROFESSIONAL_BALLOT_FIELDS,
+    *(PROFESSIONAL_BALLOT_FIELDS - {"source_fingerprints"}),
     "review_contract_fingerprint",
     "capsule",
 }
@@ -542,7 +518,6 @@ PROFESSIONAL_V3_CAPSULE_FIELDS = {
     "review_id",
     "created_on",
     "packet_sha256",
-    "source_fingerprints",
     "review_contract_fingerprint",
     "voter_id",
     "discovery_capsule",
@@ -556,7 +531,6 @@ PROFESSIONAL_V3_DISCOVERY_CAPSULE_FIELDS = {
     "review_id",
     "created_on",
     "packet_sha256",
-    "source_fingerprints",
     "review_contract_fingerprint",
     "voter_id",
     "discovery_projection",
@@ -568,7 +542,6 @@ PROFESSIONAL_V3_CANDIDATE_REQUEST_FIELDS = {
     "review_id",
     "created_on",
     "packet_sha256",
-    "source_fingerprints",
     "review_contract_fingerprint",
     "voter_id",
     "discovery_capsule",
@@ -589,7 +562,6 @@ PROFESSIONAL_V3_DECISION_FIELDS = {
     "review_id",
     "decided_on",
     "decision_method",
-    "source_fingerprints",
     "review_contract_fingerprint",
     "panel_contract",
     "packet",
@@ -597,6 +569,10 @@ PROFESSIONAL_V3_DECISION_FIELDS = {
     "professional_decisions",
     "summary",
     "limitations",
+}
+PROFESSIONAL_HISTORICAL_V3_DECISION_FIELDS = {
+    *PROFESSIONAL_V3_DECISION_FIELDS,
+    "source_fingerprints",
 }
 PROFESSIONAL_V3_DECISION_VOTER_FIELDS = {
     *PROFESSIONAL_V2_VOTER_FIELDS,
@@ -617,8 +593,7 @@ PROFESSIONAL_V3_INPUT_BLOCK_FIELDS = {
 }
 PROFESSIONAL_V3_TARGET_DECISION_FIELDS = {
     "skill_id",
-    "package_fingerprint",
-    "review_binding_fingerprint",
+    "review_unit_binding",
     "qualification_coverage",
     "criterion_vote_counts",
     "domain_critical_defects",
@@ -768,7 +743,7 @@ SEMANTIC_TARGET_FIELDS = {
     "target_id",
     "axis",
     "carry_forward_mismatches",
-    "candidate_fingerprint",
+    "candidate_binding_fingerprint",
     "candidate",
 }
 SEMANTIC_PROVENANCE_FIELDS = {
@@ -784,7 +759,7 @@ SEMANTIC_PROVENANCE_FIELDS = {
     "stale_old_count",
     "stale_old_candidate_ids",
 }
-SEMANTIC_APPLICATION_FIELDS = {
+LEGACY_SEMANTIC_APPLICATION_FIELDS = {
     "schema_version",
     "kind",
     "review_id",
@@ -796,61 +771,14 @@ REGISTRY_SOURCES = (
     ("foundation", "src/registry/foundation-skills.yaml", "foundation_skills"),
     ("domain", "src/registry/domain-skills.yaml", "domain_skills"),
 )
-PROFESSIONAL_ADJACENCY_STOP_WORDS = frozenset(
-    {
-        "and",
-        "are",
-        "for",
-        "from",
-        "into",
-        "not",
-        "only",
-        "output",
-        "skill",
-        "task",
-        "that",
-        "the",
-        "this",
-        "when",
-        "with",
-    }
+PROFESSIONAL_ADJACENCY_STOP_WORDS = (
+    panel_contracts.PROFESSIONAL_ADJACENCY_STOP_WORDS
 )
-PROFESSIONAL_EVIDENCE_STOP_WORDS = PROFESSIONAL_ADJACENCY_STOP_WORDS | frozenset(
-    {
-        "anchor",
-        "bound",
-        "candidate",
-        "claim",
-        "complete",
-        "criterion",
-        "current",
-        "evidence",
-        "examined",
-        "explicit",
-        "explicitly",
-        "failure",
-        "lines",
-        "material",
-        "omission",
-        "package",
-        "professional",
-        "provides",
-        "review",
-        "reviewed",
-        "source",
-        "supports",
-    }
+PROFESSIONAL_EVIDENCE_STOP_WORDS = (
+    panel_contracts.PROFESSIONAL_EVIDENCE_STOP_WORDS
 )
 PROFESSIONAL_V3_GROUNDING_STOP_WORDS = (
-    PROFESSIONAL_EVIDENCE_STOP_WORDS
-    | frozenset(
-        {
-            "cited",
-            "documented",
-            "reviewer",
-            "satisfied",
-        }
-    )
+    panel_contracts.PROFESSIONAL_GROUNDING_STOP_WORDS
 )
 
 
@@ -1168,30 +1096,7 @@ def _evidence_tokens(value: object) -> set[str]:
 def _professional_v3_grounding_contract() -> dict[str, Any]:
     """Return the closed schema-3-only semantic source-grounding contract."""
 
-    return {
-        "algorithm": "schema3-contiguous-source-grounding-v1",
-        "coordinates": "anchor-local-lines-no-cross-line-or-anchor-phrases",
-        "lexical_adjacency": "raw-stream-no-generic-token-gap-bridging",
-        "nondefect_anchor_requirement": "one-exact-nongeneric-bigram",
-        "defect_anchor_requirement": (
-            "one-exact-nongeneric-bigram-or-three-distinct-grounded-unigrams"
-        ),
-        "adjacency_nondefect_requirement": (
-            "one-exact-nongeneric-bigram-from-each-side"
-        ),
-        "adjacency_defect_requirement": (
-            "nondefect-requirement-or-one-unigram-each-side-and-six-total"
-        ),
-        "uniform_template_guard": {
-            "ordinary_ngram_size": 5,
-            "short_claim_max_tokens": 10,
-            "short_claim_ngram_size": 4,
-            "minimum_uniform_claims": 4,
-            "minimum_uniform_share_percent": 80,
-            "maximum_grounded_bigrams_for_low_grounding": 1,
-            "shared_template_must_have_source_bigram": True,
-        },
-    }
+    return panel_contracts.professional_semantic_grounding_contract()
 
 
 def _professional_v3_token_sequence(value: object) -> tuple[str, ...]:
@@ -1533,6 +1438,8 @@ def _professional_raw_adjacency_basis(
 
 def _professional_catalog_adjacency_features(
     targets: list[dict[str, Any]],
+    *,
+    include_historical_alias: bool = False,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
     raw_bases = {
         target["skill_id"]: _professional_raw_adjacency_basis(target)
@@ -1587,10 +1494,11 @@ def _professional_catalog_adjacency_features(
             ),
             "exact_single_token_phrase_match": True,
         },
-        "document_frequencies_fingerprint": _canonical_json_sha256(
-            document_frequencies
-        ),
     }
+    if include_historical_alias:
+        contract["document_frequencies_fingerprint"] = (
+            _canonical_json_sha256(document_frequencies)
+        )
     return filtered, contract
 
 
@@ -1686,6 +1594,17 @@ def _professional_catalog_ranking(
     return [{**item, "rank": index} for index, item in enumerate(ranking, start=1)]
 
 
+def _professional_catalog_rankings(
+    *, bases: dict[str, dict[str, Any]]
+) -> dict[str, list[dict[str, Any]]]:
+    """Build every target-specific ordering in one catalog projection pass."""
+
+    return {
+        skill_id: _professional_catalog_ranking(skill_id, bases=bases)
+        for skill_id in sorted(bases)
+    }
+
+
 def _professional_adjacency_selection_contract(
     *,
     target_count: int | None = None,
@@ -1715,16 +1634,12 @@ def _professional_adjacency_selection_contract(
             "direction": "target-to-candidate",
             "materials": ["root", "indexed-references"],
             "identity": "exact-inline-code-span-skill-id",
-            "contexts": [
-                "imperative-route-or-handoff-sentence",
-                "routing-owner-risk-gate-verification-handoff-table-cell",
-            ],
-            "excluded": [
-                "frontmatter",
-                "fenced-code",
-                "example-history-background-sections",
-                "generated-layer3-delivery",
-            ],
+            "contexts": list(
+                panel_contracts.PROFESSIONAL_SOURCE_DECLARED_CONTEXTS
+            ),
+            "excluded": list(
+                panel_contracts.PROFESSIONAL_SOURCE_DECLARED_EXCLUDED_SURFACES
+            ),
             "unknown_or_self": "fail-closed",
         },
         "require_all_negative_route_conflicts": True,
@@ -1785,7 +1700,7 @@ def _professional_completeness_panel_contract(
         "decision_method": PROFESSIONAL_COMPLETENESS_DECISION_METHOD,
         "per_target_panel_size": PANEL_SIZE,
         "abstentions_allowed": False,
-        "minimum_winning_votes": 2,
+        "minimum_winning_votes": panel_contracts.PROFESSIONAL_MINIMUM_WINNING_VOTES,
         "independent_ballots": True,
         "required_target_count": target_count,
         "criteria_required_per_target": sorted(
@@ -1799,8 +1714,12 @@ def _professional_completeness_panel_contract(
             "fixed_pool_size": False,
         },
         "qualification_contract": {
-            "required_domain_experts_per_target": 2,
-            "required_architecture_experts_per_target": 1,
+            "required_domain_experts_per_target": (
+                panel_contracts.PROFESSIONAL_REQUIRED_DOMAIN_EXPERTS
+            ),
+            "required_architecture_experts_per_target": (
+                panel_contracts.PROFESSIONAL_REQUIRED_ARCHITECTURE_EXPERTS
+            ),
             "architecture_expertise_tag": (
                 PROFESSIONAL_ARCHITECTURE_EXPERTISE_TAG
             ),
@@ -1814,14 +1733,20 @@ def _professional_completeness_panel_contract(
         },
         "ordinary_criterion_contract": {
             "criteria": sorted(PROFESSIONAL_ORDINARY_CRITERIA),
-            "defect_votes_required": 2,
+            "defect_votes_required": (
+                panel_contracts.PROFESSIONAL_MINIMUM_WINNING_VOTES
+            ),
             "correction_disposition": "requires-professional-correction",
             "overall_ballot_majority_usage": "audit-only",
         },
         "evidence_contract": {
             "criterion_source_anchors_required": True,
-            "minimum_failure_modes_per_target": 2,
-            "minimum_omission_candidates_per_target": 2,
+            "minimum_failure_modes_per_target": (
+                panel_contracts.PROFESSIONAL_MINIMUM_EXAMINED_ITEMS
+            ),
+            "minimum_omission_candidates_per_target": (
+                panel_contracts.PROFESSIONAL_MINIMUM_EXAMINED_ITEMS
+            ),
             "adjacency_candidate_coverage_required": True,
             "proof_limits_required": True,
         },
@@ -1852,8 +1777,24 @@ def _professional_required_adjacency_candidates(
     *,
     registry_declared_skills: list[str],
     source_declared_skills: list[str],
+    overall_top_k: int | None = None,
+    per_signal_top_k: int | None = None,
 ) -> list[dict[str, Any]]:
     """Select a bounded layered review surface without hiding route conflicts."""
+
+    if overall_top_k is None:
+        overall_top_k = PROFESSIONAL_ADJACENCY_TOP_K
+    if per_signal_top_k is None:
+        per_signal_top_k = PROFESSIONAL_ADJACENCY_PER_SIGNAL_TOP_K
+    if (
+        type(overall_top_k) is not int
+        or overall_top_k < 0
+        or type(per_signal_top_k) is not int
+        or per_signal_top_k < 0
+    ):
+        raise PanelReviewError(
+            "professional adjacency selection thresholds are invalid"
+        )
 
     ranking_by_id = {row["skill_id"]: row for row in ranking}
     reasons: dict[str, set[str]] = {}
@@ -1870,7 +1811,7 @@ def _professional_required_adjacency_candidates(
     for skill_id in source_declared_skills:
         require(skill_id, "source-declared")
     for row in ranking:
-        if row["rank"] <= PROFESSIONAL_ADJACENCY_TOP_K:
+        if row["rank"] <= overall_top_k:
             require(row["skill_id"], "overall-top-k")
         if row["signals"]["negative-route-conflict"]["count"] > 0:
             require(row["skill_id"], "negative-route-conflict")
@@ -1887,7 +1828,7 @@ def _professional_required_adjacency_candidates(
                 row["skill_id"],
             )
         )
-        for row in positive[:PROFESSIONAL_ADJACENCY_PER_SIGNAL_TOP_K]:
+        for row in positive[:per_signal_top_k]:
             require(row["skill_id"], f"signal-top-k:{signal_name}")
 
     declared = set(registry_declared_skills) | set(source_declared_skills)
@@ -1920,7 +1861,11 @@ def _enforce_professional_adjacency_candidate_budget(
         )
 
 
-def _professional_package_targets(*, root: Path = ROOT) -> list[dict[str, Any]]:
+def _professional_package_targets(
+    *,
+    root: Path = ROOT,
+    historical_schema2: bool = False,
+) -> list[dict[str, Any]]:
     """Build the canonical 189-package completeness review surface."""
 
     registry_rows: list[tuple[str, str, dict[str, Any]]] = []
@@ -2051,15 +1996,22 @@ def _professional_package_targets(*, root: Path = ROOT) -> list[dict[str, Any]]:
             "indexed_references": references,
             "registry": {
                 "path": registry_relative,
-                "entry_fingerprint": _canonical_json_sha256(row),
                 "responsibility_contract": responsibility_contract,
             },
         }
+        if historical_schema2:
+            target["registry"]["entry_fingerprint"] = (
+                _canonical_json_sha256(row)
+            )
         targets.append(target)
     targets.sort(key=lambda item: item["skill_id"])
     adjacency_bases, document_frequency_filter = (
-        _professional_catalog_adjacency_features(targets)
+        _professional_catalog_adjacency_features(
+            targets,
+            include_historical_alias=historical_schema2,
+        )
     )
+    catalog_rankings = _professional_catalog_rankings(bases=adjacency_bases)
     for target in targets:
         name = target["skill_id"]
         registry_declared_skills = sorted(direct_relationships[name])
@@ -2067,7 +2019,7 @@ def _professional_package_targets(*, root: Path = ROOT) -> list[dict[str, Any]]:
             target,
             known_skill_ids=seen_names,
         )
-        ranking = _professional_catalog_ranking(name, bases=adjacency_bases)
+        ranking = catalog_rankings[name]
         required_candidates = _professional_required_adjacency_candidates(
             ranking,
             registry_declared_skills=registry_declared_skills,
@@ -2085,14 +2037,17 @@ def _professional_package_targets(*, root: Path = ROOT) -> list[dict[str, Any]]:
                 _professional_adjacency_selection_contract()
             ),
             "required_candidates": required_candidates,
-            "required_candidates_fingerprint": _canonical_json_sha256(
-                required_candidates
-            ),
             "full_catalog_count": len(ranking),
             "full_catalog_ranking": ranking,
-            "full_catalog_ranking_fingerprint": _canonical_json_sha256(ranking),
         }
-        target["package_fingerprint"] = _canonical_json_sha256(target)
+        if historical_schema2:
+            target["routing_adjacency"]["required_candidates_fingerprint"] = (
+                _canonical_json_sha256(required_candidates)
+            )
+            target["routing_adjacency"]["full_catalog_ranking_fingerprint"] = (
+                _canonical_json_sha256(ranking)
+            )
+            target["package_fingerprint"] = _canonical_json_sha256(target)
     _enforce_professional_adjacency_candidate_budget(targets)
     return targets
 
@@ -2107,7 +2062,10 @@ def prepare_professional_completeness_packet(
 
     _non_blank(review_id, label="review_id")
     _iso_date(created_on, label="created_on")
-    targets = _professional_package_targets(root=root)
+    targets = _professional_package_targets(
+        root=root,
+        historical_schema2=True,
+    )
     return {
         "schema_version": PROFESSIONAL_COMPLETENESS_SCHEMA_VERSION,
         "kind": PROFESSIONAL_COMPLETENESS_PACKET_KIND,
@@ -2344,7 +2302,17 @@ def _semantic_axis_diff(
                 "target_id": f"{axis}:{candidate_id}",
                 "axis": axis,
                 "carry_forward_mismatches": mismatches,
-                "candidate_fingerprint": _semantic_hash(evidence),
+                "candidate_binding_fingerprint": _semantic_hash(
+                    {
+                        "review_evidence": evidence,
+                        "local_semantic_context": (
+                            _semantic_candidate_current_binding(
+                                axis=axis,
+                                candidate=candidate,
+                            )
+                        ),
+                    }
+                ),
                 "candidate": evidence,
             }
         )
@@ -2373,80 +2341,161 @@ def _semantic_source_fingerprints(
     root_semantic: dict[str, Any],
     reference_semantic: dict[str, Any],
 ) -> dict[str, str]:
-    root_content = audit["root_content"]
-    reference_content = audit["reference_content"]
-    root_lifecycle = root_semantic.get("lifecycle")
-    reference_preface = reference_content.get("preface_contract")
-    if not isinstance(root_lifecycle, dict) or not isinstance(reference_preface, dict):
-        raise PanelReviewError(
-            "semantic disposition packet requires Root detector and Reference source evidence"
-        )
+    detector_contracts = {
+        "root": root_semantic.get("detector_contract"),
+        "reference": reference_semantic.get("detector_contract"),
+    }
+    expected_versions = {
+        "root": "root-semantic-detector-contract-v1",
+        "reference": "reference-semantic-detector-contract-v1",
+    }
+    for axis, contract in detector_contracts.items():
+        if not isinstance(contract, dict) or set(contract) != {
+            "contract_version",
+            "algorithm",
+            "value",
+        }:
+            raise PanelReviewError(
+                f"semantic disposition packet requires closed {axis} detector evidence"
+            )
+        if (
+            contract.get("contract_version") != expected_versions[axis]
+            or contract.get("algorithm") != "sha256-canonical-json-v1"
+        ):
+            raise PanelReviewError(
+                f"semantic disposition packet {axis} detector contract is invalid"
+            )
     root_candidates = root_semantic.get("candidates")
     reference_candidates = reference_semantic.get("candidates")
     if not isinstance(root_candidates, list) or not isinstance(
         reference_candidates, list
     ):
         raise PanelReviewError("semantic disposition candidates are unavailable")
-    reference_detector_contract = {
-        "audit_schema_version": audit.get("schema_version"),
-        "semantic_schema_version": reference_semantic.get("schema_version"),
-        "finding_families": reference_semantic.get("finding_families"),
-        "thresholds": audit.get("thresholds"),
-        "limitations": reference_semantic.get("limitations"),
-    }
-    root_context = [
-        {
-            "candidate_id": candidate.get("candidate_id"),
-            "occurrence_fingerprint": candidate.get("occurrence_fingerprint"),
-            "context_fingerprint": candidate.get("context_fingerprint"),
-            "occurrences": candidate.get("occurrences"),
-        }
-        for candidate in root_candidates
-    ]
-    reference_groups = [
-        {
-            "candidate_id": candidate.get("candidate_id"),
-            "finding": candidate.get("finding"),
-            "evidence_fingerprint": candidate.get("evidence_fingerprint"),
-            "content_fingerprint": candidate.get("content_fingerprint"),
-            "occurrences": candidate.get("occurrences"),
-        }
-        for candidate in reference_candidates
-        if candidate.get("evidence_fingerprint") is not None
-        or candidate.get("content_fingerprint") is not None
-    ]
+    manifests: dict[str, list[dict[str, Any]]] = {}
+    for axis, candidates in (
+        ("root", root_candidates),
+        ("reference", reference_candidates),
+    ):
+        eligible = [
+            candidate
+            for candidate in candidates
+            if axis == "root" or candidate.get("detector_status") == "candidate"
+        ]
+        rows = []
+        for candidate in eligible:
+            candidate_id = _lowercase_sha256(
+                candidate.get("candidate_id"),
+                label=f"semantic {axis} candidate_id",
+            )
+            rows.append(
+                {
+                    "target_id": f"{axis}:{candidate_id}",
+                    "current_binding": _semantic_candidate_current_binding(
+                        axis=axis, candidate=candidate
+                    ),
+                }
+            )
+        target_ids = [row["target_id"] for row in rows]
+        if len(target_ids) != len(set(target_ids)):
+            raise PanelReviewError(
+                f"semantic audit {axis} candidate IDs are duplicated"
+            )
+        manifests[axis] = sorted(rows, key=lambda row: row["target_id"])
     result = {
-        "audit": _semantic_hash(audit),
-        "root_source": _semantic_sha(
-            root_content.get("source_fingerprint"), label="root source fingerprint"
-        ),
-        "root_detector": _semantic_sha(
-            root_lifecycle.get("detector_fingerprint"),
+        "root_candidate_manifest": _semantic_hash(manifests["root"]),
+        "root_detector_contract": _semantic_sha(
+            detector_contracts["root"].get("value"),
             label="root detector fingerprint",
         ),
-        "root_candidates": _semantic_hash(
-            [
-                _semantic_candidate_review_evidence(axis="root", candidate=row)
-                for row in root_candidates
-            ]
+        "reference_candidate_manifest": _semantic_hash(
+            manifests["reference"]
         ),
-        "root_context": _semantic_hash(root_context),
-        "reference_source": _semantic_sha(
-            reference_preface.get("source_fingerprint"),
-            label="reference source fingerprint",
+        "reference_detector_contract": _semantic_sha(
+            detector_contracts["reference"].get("value"),
+            label="reference detector fingerprint",
         ),
-        "reference_detector": _semantic_hash(reference_detector_contract),
-        "reference_candidates": _semantic_hash(
-            [
-                _semantic_candidate_review_evidence(
-                    axis="reference", candidate=row
-                )
-                for row in reference_candidates
-            ]
-        ),
-        "reference_groups": _semantic_hash(reference_groups),
     }
     return dict(sorted(result.items()))
+
+
+def _semantic_source_fingerprint_selector_mode(
+    *,
+    selector_fingerprints: object,
+    current_fingerprints: object,
+    review_id: str,
+    review_contract_fingerprint: str,
+    target_count: int,
+    axis_counts: dict[str, int],
+) -> str | None:
+    """Prefer direct v1 evidence; otherwise admit one exact source-only bridge."""
+
+    expected_keys = set(
+        panel_contracts.SEMANTIC_DISPOSITION_SOURCE_FINGERPRINT_KEYS
+    )
+    detector_keys = {
+        "root_detector_contract", "reference_detector_contract"
+    }
+    if (
+        isinstance(selector_fingerprints, dict)
+        and set(selector_fingerprints) == detector_keys
+        and isinstance(current_fingerprints, dict)
+        and set(current_fingerprints) == expected_keys
+        and all(
+            selector_fingerprints[key] == current_fingerprints[key]
+            for key in detector_keys
+        )
+    ):
+        return "compact-v2"
+    if (
+        not isinstance(selector_fingerprints, dict)
+        or set(selector_fingerprints) != expected_keys
+        or not isinstance(current_fingerprints, dict)
+        or set(current_fingerprints) != expected_keys
+    ):
+        return None
+    if selector_fingerprints == current_fingerprints:
+        return "direct-v1"
+    rows = panel_contracts.semantic_detector_compatibility_rows()
+    if len(rows) != 1:
+        raise PanelReviewError(
+            "semantic detector compatibility contract must contain exactly one row"
+        )
+    row = rows[0]
+    if (
+        review_id == row.get("review_id")
+        and review_contract_fingerprint
+        == row.get("review_contract_fingerprint")
+        and target_count == row.get("target_count")
+        and axis_counts == row.get("axis_counts")
+        and selector_fingerprints == row.get("legacy_source_fingerprints")
+        and current_fingerprints == row.get("current_source_fingerprints")
+    ):
+        return "compatibility"
+    return None
+
+
+def _semantic_panel_contract(
+    *, root_target_count: int, reference_target_count: int
+) -> dict[str, Any]:
+    """Return the dynamic panel counts plus the closed Semantic contract."""
+
+    target_count = root_target_count + reference_target_count
+    return {
+        "decision_method": DECISION_METHOD,
+        "required_voters": PANEL_SIZE,
+        "abstentions_allowed": False,
+        "minimum_winning_votes": 2,
+        "independent_ballots": True,
+        "required_target_count": target_count,
+        "required_axis_target_counts": {
+            "root": root_target_count,
+            "reference": reference_target_count,
+        },
+        "allowed_dispositions": sorted(SEMANTIC_DISPOSITIONS),
+        "semantic_contract": (
+            panel_contracts.semantic_disposition_contract_projection()
+        ),
+    }
 
 
 def prepare_semantic_disposition_packet(
@@ -2470,7 +2519,7 @@ def prepare_semantic_disposition_packet(
         [*root_targets, *reference_targets], key=lambda item: item["target_id"]
     )
     return {
-        "schema_version": SCHEMA_VERSION,
+        "schema_version": SEMANTIC_DISPOSITION_SCHEMA_VERSION,
         "kind": SEMANTIC_DISPOSITION_PACKET_KIND,
         "review_id": review_id,
         "created_on": created_on,
@@ -2479,19 +2528,10 @@ def prepare_semantic_disposition_packet(
             root_semantic=root_semantic,
             reference_semantic=reference_semantic,
         ),
-        "panel_contract": {
-            "decision_method": DECISION_METHOD,
-            "required_voters": PANEL_SIZE,
-            "abstentions_allowed": False,
-            "minimum_winning_votes": 2,
-            "independent_ballots": True,
-            "required_target_count": len(targets),
-            "required_axis_target_counts": {
-                "root": len(root_targets),
-                "reference": len(reference_targets),
-            },
-            "allowed_dispositions": sorted(SEMANTIC_DISPOSITIONS),
-        },
+        "panel_contract": _semantic_panel_contract(
+            root_target_count=len(root_targets),
+            reference_target_count=len(reference_targets),
+        ),
         "rubric": {
             "exact_carry_forward": (
                 "Do not vote when the current stable candidate identity and all "
@@ -2563,6 +2603,37 @@ def _semantic_audit_for_axis_rereview(
     return result
 
 
+def _semantic_forced_prepare_packet(
+    *,
+    audit: dict[str, Any],
+    axes: list[str],
+    review_id: str,
+    created_on: str,
+) -> dict[str, Any]:
+    """Build one full-fresh Semantic packet without mutating its audit authority."""
+
+    if sorted(axes) != sorted(SEMANTIC_AXES) or len(axes) != len(
+        SEMANTIC_AXES
+    ):
+        raise PanelReviewError(
+            "Semantic prepare must force both root and reference exactly once"
+        )
+    review_view = _semantic_audit_for_axis_rereview(audit, axes)
+    packet = prepare_semantic_disposition_packet(
+        audit=review_view,
+        review_id=review_id,
+        created_on=created_on,
+    )
+    packet["limitations"].append(
+        "Full-fresh review was forced for semantic axes: root, reference."
+    )
+    # The packet candidates and detector bindings must remain current to the
+    # untouched clean-HEAD audit. Only its in-memory disposition entries were
+    # withheld to select all targets for review.
+    validate_semantic_packet_current(packet, audit)
+    return packet
+
+
 def prepare_semantic_ballot_template(
     *,
     packet: dict[str, Any],
@@ -2578,7 +2649,7 @@ def prepare_semantic_ballot_template(
     _validate_semantic_disposition_packet(packet)
     _lowercase_sha256(packet_sha256, label="packet_sha256")
     return {
-        "schema_version": SCHEMA_VERSION,
+        "schema_version": SEMANTIC_DISPOSITION_SCHEMA_VERSION,
         "kind": SEMANTIC_DISPOSITION_BALLOT_KIND,
         "review_id": packet["review_id"],
         "created_on": _iso_date(created_on, label="created_on"),
@@ -3737,9 +3808,12 @@ def _content_targets_from_evidence(audit: dict[str, Any]) -> list[dict[str, Any]
 
 
 def _current_readability_target_projection() -> tuple[
-    str, list[dict[str, Any]], list[dict[str, Any]]
+    dict[str, str],
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+    list[dict[str, Any]],
 ]:
-    """Re-run the authoritative detector over current canonical document parts."""
+    """Rebuild the complete current R target and detector projection."""
 
     auditor = _load_skill_content_auditor()
     source_documents = auditor._ai_readability_documents()
@@ -3749,16 +3823,16 @@ def _current_readability_target_projection() -> tuple[
         label="current skill content audit",
     )
     audit["ai_readability"] = current
-    source = current.get("source_fingerprint")
-    fingerprint = (
-        source.get("value") if isinstance(source, dict) else source
+    packet = prepare_packet(
+        audit=audit,
+        review_id="current-readability-projection",
+        created_on="2000-01-01",
     )
     return (
-        _lowercase_sha256(
-            fingerprint, label="current AI-readability source fingerprint"
-        ),
-        _content_targets_from_evidence(audit),
-        _readability_targets_from_evidence(current),
+        packet["source_fingerprints"],
+        packet["content_targets"],
+        packet["readability_targets"],
+        packet["actionability_targets"],
     )
 
 
@@ -3984,10 +4058,134 @@ def _root_body_fingerprints(audit: dict[str, Any]) -> dict[str, str]:
     return result
 
 
+def _readability_panel_contract(
+    *,
+    required_actionability_target_count: int,
+    actionability_score_threshold: int,
+    actionability_front_window_lines: int,
+) -> dict[str, Any]:
+    return {
+        "decision_method": DECISION_METHOD,
+        "required_voters": PANEL_SIZE,
+        "abstentions_allowed": False,
+        "minimum_winning_votes": 2,
+        "independent_ballots": True,
+        "required_actionability_target_count": (
+            required_actionability_target_count
+        ),
+        "actionability_score_threshold": actionability_score_threshold,
+        "actionability_front_window_lines": actionability_front_window_lines,
+        "allowed_actionability_dispositions": sorted(
+            ACTIONABILITY_DECISIONS
+        ),
+        "readability_document_decision_method": (
+            "finding-grounded-document-majority-v1"
+        ),
+        "readability_reviewer_derivation": "any-nested-tightening",
+        "content_source_binding_contract": CONTENT_SOURCE_BINDING_CONTRACT,
+        "readability_currentness_contract": (
+            panel_contracts.readability_currentness_contract_projection()
+        ),
+    }
+
+
+def readability_review_contract_fingerprint(
+    *,
+    required_actionability_target_count: int,
+    actionability_score_threshold: int,
+    actionability_front_window_lines: int,
+) -> str:
+    """Bind a compact Readability attestation to the current panel contract."""
+
+    return _canonical_json_sha256(
+        _readability_panel_contract(
+            required_actionability_target_count=(
+                required_actionability_target_count
+            ),
+            actionability_score_threshold=actionability_score_threshold,
+            actionability_front_window_lines=actionability_front_window_lines,
+        )
+    )
+
+
+def _readability_target_manifest_projection(
+    *,
+    content_targets: list[dict[str, Any]],
+    readability_targets: list[dict[str, Any]],
+    actionability_targets: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Return complete compact current bindings for every Readability target."""
+
+    bindings = _readability_target_authorities(
+        {
+            "content_targets": content_targets,
+            "readability_targets": readability_targets,
+            "actionability_targets": actionability_targets,
+        }
+    )
+    try:
+        return panel_attestation.readability_target_manifest_projection(
+            bindings
+        )
+    except panel_attestation.AttestationError as exc:
+        raise PanelReviewError(
+            "readability target authority manifest is invalid"
+        ) from exc
+
+
+def _readability_source_fingerprints(
+    *,
+    readability_contract: dict[str, Any],
+    content_targets: list[dict[str, Any]],
+    readability_targets: list[dict[str, Any]],
+    actionability_targets: list[dict[str, Any]],
+    actionability_score_threshold: int,
+    actionability_front_window_lines: int,
+) -> dict[str, str]:
+    """Hash only complete R target authority and the two detector contracts."""
+
+    try:
+        readability_detector = (
+            panel_contracts.readability_detector_contract_projection(
+                readability_contract
+            )
+        )
+        actionability_detector = (
+            panel_contracts.actionability_detector_contract_projection(
+                score_threshold=actionability_score_threshold,
+                front_window_lines=actionability_front_window_lines,
+            )
+        )
+    except ValueError as exc:
+        raise PanelReviewError(str(exc)) from exc
+    return _fingerprints(
+        {
+            "readability_target_manifest": (
+                panel_attestation.readability_target_manifest_fingerprint(
+                    _readability_target_authorities(
+                        {
+                            "content_targets": content_targets,
+                            "readability_targets": readability_targets,
+                            "actionability_targets": actionability_targets,
+                        }
+                    )
+                )
+            ),
+            "readability_detector_contract": _canonical_json_sha256(
+                readability_detector
+            ),
+            "actionability_detector_contract": _canonical_json_sha256(
+                actionability_detector
+            ),
+        },
+        label="source_fingerprints",
+        required=set(panel_contracts.READABILITY_SOURCE_FINGERPRINT_KEYS),
+    )
+
+
 def prepare_packet(
     *,
     audit: dict[str, Any],
-    readiness: dict[str, Any],
     review_id: str,
     created_on: str,
 ) -> dict[str, Any]:
@@ -3995,39 +4193,18 @@ def prepare_packet(
 
     _non_blank(review_id, label="review_id")
     _iso_date(created_on, label="created_on")
+    try:
+        actionability_authority = (
+            _load_professional_regression_validator()
+            ._readability_packet_actionability_projection(audit)
+        )
+    except ValueError as exc:
+        raise PanelReviewError(
+            f"current audit actionability projection is invalid: {exc}"
+        ) from exc
     readability = audit.get("ai_readability")
     if not isinstance(readability, dict):
         raise PanelReviewError("audit.ai_readability must be an object")
-    root = readiness.get("root_content_summary")
-    reference = readiness.get("reference_content_summary")
-    if not isinstance(root, dict) or not isinstance(reference, dict):
-        raise PanelReviewError("readiness Root and Reference summaries are required")
-    detector = audit.get("skill_detector")
-    detector_fingerprint = (
-        detector.get("detector_fingerprint", {}).get("value")
-        if isinstance(detector, dict)
-        and isinstance(detector.get("detector_fingerprint"), dict)
-        else None
-    )
-    fingerprints = _fingerprints(
-        {
-            "reference_content": reference.get("source_fingerprint"),
-            "root_content": root.get("source_fingerprint"),
-            "ai_readability": (
-                readability.get("source_fingerprint", {}).get("value")
-                if isinstance(readability.get("source_fingerprint"), dict)
-                else readability.get("source_fingerprint")
-            ),
-            "skill_detector": detector_fingerprint,
-        },
-        label="source_fingerprints",
-        required={
-            "reference_content",
-            "root_content",
-            "ai_readability",
-            "skill_detector",
-        },
-    )
 
     skills = audit.get("skills")
     if not isinstance(skills, list):
@@ -4120,8 +4297,39 @@ def prepare_packet(
         raise PanelReviewError(
             "weak front-loaded action summary does not match packet targets"
         )
+    projected_actionability = [
+        {
+            field: row[field]
+            for field in (
+                "target_id",
+                "skill_id",
+                "path",
+                "front_loaded_action_score",
+            )
+        }
+        for row in actionability_targets
+    ]
+    if (
+        projected_actionability != actionability_authority["required_targets"]
+        or len(actionability_targets)
+        != actionability_authority["weak_front_loaded_skills"]
+    ):
+        raise PanelReviewError(
+            "actionability targets do not match the current audit projection"
+        )
 
     readability_targets = _readability_targets_from_evidence(readability)
+    readability_contract = readability.get("contract")
+    if not isinstance(readability_contract, dict):
+        raise PanelReviewError("audit AI-readability detector contract is invalid")
+    fingerprints = _readability_source_fingerprints(
+        readability_contract=readability_contract,
+        content_targets=content_targets,
+        readability_targets=readability_targets,
+        actionability_targets=actionability_targets,
+        actionability_score_threshold=actionability_threshold,
+        actionability_front_window_lines=front_window_lines,
+    )
 
     return {
         "schema_version": READABILITY_SCHEMA_VERSION,
@@ -4129,26 +4337,11 @@ def prepare_packet(
         "review_id": review_id,
         "created_on": created_on,
         "source_fingerprints": fingerprints,
-        "panel_contract": {
-            "decision_method": DECISION_METHOD,
-            "required_voters": PANEL_SIZE,
-            "abstentions_allowed": False,
-            "minimum_winning_votes": 2,
-            "independent_ballots": True,
-            "required_actionability_target_count": len(actionability_targets),
-            "actionability_score_threshold": actionability_threshold,
-            "actionability_front_window_lines": front_window_lines,
-            "allowed_actionability_dispositions": sorted(
-                ACTIONABILITY_DECISIONS
-            ),
-            "readability_document_decision_method": (
-                "finding-grounded-document-majority-v1"
-            ),
-            "readability_reviewer_derivation": "any-nested-tightening",
-            "content_source_binding_contract": (
-                CONTENT_SOURCE_BINDING_CONTRACT
-            ),
-        },
+        "panel_contract": _readability_panel_contract(
+            required_actionability_target_count=len(actionability_targets),
+            actionability_score_threshold=actionability_threshold,
+            actionability_front_window_lines=front_window_lines,
+        ),
         "rubric": {
             "accept": (
                 "Accept only when the flagged text expresses one coherent decision, "
@@ -4198,8 +4391,25 @@ def _validate_readability_packet(
     _non_blank(packet.get("review_id"), label="packet.review_id")
     _iso_date(packet.get("created_on"), label="packet.created_on")
     fingerprint_fields = {"reference_content", "root_content", "ai_readability"}
+    readability_source_shape = None
     if schema_version == READABILITY_SCHEMA_VERSION:
-        fingerprint_fields.add("skill_detector")
+        try:
+            readability_source_shape = (
+                panel_attestation.readability_source_fingerprint_shape(
+                    packet.get("source_fingerprints")
+                )
+            )
+        except panel_attestation.AttestationError as exc:
+            raise PanelReviewError(str(exc)) from exc
+        if (
+            validation_mode == VALIDATION_MODE_CURRENT
+            and readability_source_shape != "current"
+        ):
+            raise PanelReviewError(
+                "schema-2 readability packet uses legacy source fingerprints; "
+                "migration is required"
+            )
+        fingerprint_fields = set(packet["source_fingerprints"])
     _fingerprints(
         packet.get("source_fingerprints"),
         label="packet.source_fingerprints",
@@ -4220,6 +4430,11 @@ def _validate_readability_packet(
         legacy_thin_content = (
             validation_mode == VALIDATION_MODE_HISTORICAL
             and binding_contract is None
+        )
+        legacy_currentness_contract = (
+            validation_mode == VALIDATION_MODE_HISTORICAL
+            and readability_source_shape == "legacy"
+            and contract.get("readability_currentness_contract") is None
         )
         if (
             validation_mode == VALIDATION_MODE_CURRENT
@@ -4259,6 +4474,10 @@ def _validate_readability_packet(
         if not legacy_thin_content:
             expected_contract["content_source_binding_contract"] = (
                 CONTENT_SOURCE_BINDING_CONTRACT
+            )
+        if not legacy_currentness_contract:
+            expected_contract["readability_currentness_contract"] = (
+                panel_contracts.readability_currentness_contract_projection()
             )
     else:
         legacy_thin_content = True
@@ -4562,12 +4781,17 @@ def _validate_readability_packet(
         schema_version == READABILITY_SCHEMA_VERSION
         and validation_mode == VALIDATION_MODE_CURRENT
     ):
-        current_fingerprint, current_content_targets, current_targets = (
+        (
+            current_fingerprints,
+            current_content_targets,
+            current_targets,
+            current_actionability_targets,
+        ) = (
             _current_readability_target_projection()
         )
-        if packet["source_fingerprints"]["ai_readability"] != current_fingerprint:
+        if packet["source_fingerprints"] != current_fingerprints:
             raise PanelReviewError(
-                "schema-2 readability packet AI-readability source is stale"
+                "schema-2 readability packet target or detector authority is stale"
             )
         if readability_targets != current_targets:
             raise PanelReviewError(
@@ -4576,6 +4800,10 @@ def _validate_readability_packet(
         if content_targets != current_content_targets:
             raise PanelReviewError(
                 "schema-2 content source bindings or inventory are stale"
+            )
+        if packet.get("actionability_targets") != current_actionability_targets:
+            raise PanelReviewError(
+                "schema-2 actionability source bindings or inventory are stale"
             )
 
     if schema_version == READABILITY_SCHEMA_VERSION:
@@ -4765,20 +4993,15 @@ def _validate_professional_completeness_packet_v1(packet: dict[str, Any]) -> Non
                 f"{label}.indexed_references must be path-sorted and unique"
             )
         registry = target.get("registry")
-        if not isinstance(registry, dict) or set(registry) != {
-            "path",
-            "entry_fingerprint",
-            "responsibility_contract",
-        }:
+        if not isinstance(registry, dict) or set(registry) not in (
+            {"path", "responsibility_contract"},
+            {"path", "entry_fingerprint", "responsibility_contract"},
+        ):
             raise PanelReviewError(f"{label}.registry fields are invalid")
         registry_path = _non_blank(
             registry.get("path"), label=f"{label}.registry.path"
         )
         _canonical_relative_path(registry_path, label=f"{label}.registry.path")
-        _lowercase_sha256(
-            registry.get("entry_fingerprint"),
-            label=f"{label}.registry.entry_fingerprint",
-        )
         responsibility = registry.get("responsibility_contract")
         if not isinstance(responsibility, dict) or set(responsibility) != responsibility_fields:
             raise PanelReviewError(f"{label}.registry.responsibility_contract is invalid")
@@ -4960,6 +5183,15 @@ def _validate_professional_completeness_packet_v2(
         target_count=target_count,
         include_selection_derivation=not legacy_selection,
     )
+    packet_selection = (
+        packet.get("panel_contract", {})
+        .get("adjacency_contract", {})
+        .get("required_candidate_selection")
+    )
+    if isinstance(packet_selection, _ProfessionalSchema3RegisteredSelection):
+        expected_contract["adjacency_contract"][
+            "required_candidate_selection"
+        ] = copy.deepcopy(packet_selection)
     if packet.get("panel_contract") != expected_contract:
         raise PanelReviewError(
             "professional completeness packet panel_contract is invalid"
@@ -5046,20 +5278,15 @@ def _validate_professional_completeness_packet_v2(
                 f"{label}.indexed_references must be path-sorted and unique"
             )
         registry = target.get("registry")
-        if not isinstance(registry, dict) or set(registry) != {
-            "path",
-            "entry_fingerprint",
-            "responsibility_contract",
-        }:
+        if not isinstance(registry, dict) or set(registry) not in (
+            {"path", "responsibility_contract"},
+            {"path", "entry_fingerprint", "responsibility_contract"},
+        ):
             raise PanelReviewError(f"{label}.registry fields are invalid")
         registry_path = _non_blank(
             registry.get("path"), label=f"{label}.registry.path"
         )
         _canonical_relative_path(registry_path, label=f"{label}.registry.path")
-        _lowercase_sha256(
-            registry.get("entry_fingerprint"),
-            label=f"{label}.registry.entry_fingerprint",
-        )
         responsibility = registry.get("responsibility_contract")
         if (
             not isinstance(responsibility, dict)
@@ -5090,9 +5317,22 @@ def _validate_professional_completeness_packet_v2(
             target.get("package_fingerprint"),
             label=f"{label}.package_fingerprint",
         )
-        without_fingerprint = dict(target)
-        without_fingerprint.pop("package_fingerprint")
-        if fingerprint != _canonical_json_sha256(without_fingerprint):
+        expected_fingerprint = (
+            _canonical_json_sha256(
+                professional_carry.professional_candidate_material_binding(
+                    target
+                )
+            )
+            if "entry_fingerprint" not in registry
+            else _canonical_json_sha256(
+                {
+                    key: value
+                    for key, value in target.items()
+                    if key != "package_fingerprint"
+                }
+            )
+        )
+        if fingerprint != expected_fingerprint:
             raise PanelReviewError(f"{label}.package_fingerprint is stale")
         skill_ids.append(skill_id)
     if skill_ids != sorted(set(skill_ids)):
@@ -5106,8 +5346,17 @@ def _validate_professional_completeness_packet_v2(
         )
 
     target_names = set(skill_ids)
+    historical_aliases = all(
+        "entry_fingerprint" in target["registry"] for target in targets
+    ) and all(
+        "required_candidates_fingerprint" in target["routing_adjacency"]
+        for target in targets
+    )
     bases, document_frequency_filter = (
-        _professional_catalog_adjacency_features(targets)
+        _professional_catalog_adjacency_features(
+            targets,
+            include_historical_alias=historical_aliases,
+        )
     )
     for index, target in enumerate(targets):
         label = f"professional_targets[{index}].routing_adjacency"
@@ -5127,11 +5376,16 @@ def _validate_professional_completeness_packet_v2(
             "source_declared_skills",
             "required_candidate_selection",
             "required_candidates",
-            "required_candidates_fingerprint",
             "full_catalog_count",
             "full_catalog_ranking",
-            "full_catalog_ranking_fingerprint",
         }
+        if historical_aliases:
+            expected_fields.update(
+                {
+                    "required_candidates_fingerprint",
+                    "full_catalog_ranking_fingerprint",
+                }
+            )
         if historical_v1_selection:
             expected_fields.remove("registry_declared_skills")
             expected_fields.remove("source_declared_skills")
@@ -5200,16 +5454,15 @@ def _validate_professional_completeness_packet_v2(
             raise PanelReviewError(
                 f"{label}.full_catalog_ranking is stale"
             )
-        if adjacency.get("full_catalog_ranking_fingerprint") != _canonical_json_sha256(
-            embedded_ranking
-        ):
+        if historical_aliases and adjacency.get(
+            "full_catalog_ranking_fingerprint"
+        ) != _canonical_json_sha256(embedded_ranking):
             raise PanelReviewError(
                 f"{label}.full_catalog_ranking_fingerprint is stale"
             )
-        selection_contract = _professional_adjacency_selection_contract(
-            target_count=target_count,
-            include_derivation=not legacy_selection,
-        )
+        selection_contract = expected_contract["adjacency_contract"][
+            "required_candidate_selection"
+        ]
         if adjacency.get("required_candidate_selection") != selection_contract:
             raise PanelReviewError(
                 f"{label}.required_candidate_selection is stale"
@@ -5218,15 +5471,17 @@ def _validate_professional_completeness_packet_v2(
             ranking,
             registry_declared_skills=registry_declared,
             source_declared_skills=source_declared,
+            overall_top_k=selection_contract.get("overall_top_k"),
+            per_signal_top_k=selection_contract.get("per_signal_top_k"),
         )
         candidates = adjacency.get("required_candidates")
         if candidates != expected_candidates:
             raise PanelReviewError(
                 f"{label}.required_candidates do not match canonical layered selection"
             )
-        if adjacency.get("required_candidates_fingerprint") != _canonical_json_sha256(
-            candidates
-        ):
+        if historical_aliases and adjacency.get(
+            "required_candidates_fingerprint"
+        ) != _canonical_json_sha256(candidates):
             raise PanelReviewError(
                 f"{label}.required_candidates_fingerprint is stale"
             )
@@ -5329,9 +5584,9 @@ def _validate_professional_completeness_packet(
 
 def _validate_semantic_disposition_packet(packet: dict[str, Any]) -> None:
     if set(packet) != SEMANTIC_PACKET_FIELDS:
-        raise PanelReviewError("semantic disposition packet fields do not match schema 1")
+        raise PanelReviewError("semantic disposition packet fields do not match schema 2")
     if (
-        packet.get("schema_version") != SCHEMA_VERSION
+        packet.get("schema_version") != SEMANTIC_DISPOSITION_SCHEMA_VERSION
         or packet.get("kind") != SEMANTIC_DISPOSITION_PACKET_KIND
     ):
         raise PanelReviewError("semantic disposition packet schema or kind is invalid")
@@ -5532,9 +5787,19 @@ def _validate_semantic_disposition_packet(packet: dict[str, Any]) -> None:
                 raise PanelReviewError(
                     f"{label}.candidate group requires complete multi-path membership"
                 )
-        expected_candidate_fingerprint = _semantic_hash(candidate)
-        if target.get("candidate_fingerprint") != expected_candidate_fingerprint:
-            raise PanelReviewError(f"{label}.candidate_fingerprint is stale")
+        expected_candidate_binding = _semantic_hash(
+            {
+                "review_evidence": candidate,
+                "local_semantic_context": (
+                    _semantic_candidate_current_binding(
+                        axis=str(target["axis"]),
+                        candidate=candidate,
+                    )
+                ),
+            }
+        )
+        if target.get("candidate_binding_fingerprint") != expected_candidate_binding:
+            raise PanelReviewError(f"{label}.candidate_binding_fingerprint is stale")
         target_ids.append(target_id)
         axis_candidate_ids[str(axis)].append(candidate_id)
     if target_ids != sorted(set(target_ids)):
@@ -5546,18 +5811,10 @@ def _validate_semantic_disposition_packet(packet: dict[str, Any]) -> None:
             )
 
     contract = packet.get("panel_contract")
-    expected_contract = {
-        "decision_method": DECISION_METHOD,
-        "required_voters": PANEL_SIZE,
-        "abstentions_allowed": False,
-        "minimum_winning_votes": 2,
-        "independent_ballots": True,
-        "required_target_count": len(targets),
-        "required_axis_target_counts": {
-            axis: len(axis_candidate_ids[axis]) for axis in sorted(SEMANTIC_AXES)
-        },
-        "allowed_dispositions": sorted(SEMANTIC_DISPOSITIONS),
-    }
+    expected_contract = _semantic_panel_contract(
+        root_target_count=len(axis_candidate_ids["root"]),
+        reference_target_count=len(axis_candidate_ids["reference"]),
+    )
     if contract != expected_contract:
         raise PanelReviewError("semantic disposition packet panel_contract is invalid")
     rubric = packet.get("rubric")
@@ -5602,21 +5859,7 @@ def _validate_semantic_packet_current(
         root_semantic=root_semantic,
         reference_semantic=reference_semantic,
     )
-    # Complete audit, aggregate source, and legacy full-candidate hashes are
-    # immutable review-time provenance. Applying the derived SSOT entries or
-    # changing unrelated document layout can change those aggregates without
-    # changing any reviewed semantic candidate. Legacy context/group aggregate
-    # hashes also include physical coordinates. Currentness instead binds both
-    # detectors and validates the complete eligible candidate collection,
-    # stable local context, and group membership/content item by item.
-    stable_fingerprint_keys = {
-        "root_detector",
-        "reference_detector",
-    }
-    if any(
-        packet["source_fingerprints"][key] != current_fingerprints[key]
-        for key in stable_fingerprint_keys
-    ):
+    if packet["source_fingerprints"] != current_fingerprints:
         raise PanelReviewError(
             "semantic disposition packet is stale against the current audit"
         )
@@ -6166,6 +6409,7 @@ def _professional_review_bindings(
 
 PROFESSIONAL_EVIDENCE_REVIEW_SOURCE_PATHS = (
     "scripts/audit-skill-content.py",
+    "scripts/expert_panel_attestation.py",
     "scripts/expert_panel_review.py",
     "scripts/professional_completeness_carry_forward.py",
     "scripts/validation_utils.py",
@@ -6173,10 +6417,10 @@ PROFESSIONAL_EVIDENCE_REVIEW_SOURCE_PATHS = (
 
 
 def _professional_evidence_review_contract_manifest() -> dict[str, object]:
-    """Return the versioned explicit repository source binding."""
+    """Return the legacy source manifest for diagnostic comparison only."""
 
     return professional_carry.versioned_explicit_source_manifest(
-        contract_version="professional-evidence-review-and-carry-v2",
+        contract_version="professional-evidence-review-and-carry-v3",
         source_paths=PROFESSIONAL_EVIDENCE_REVIEW_SOURCE_PATHS,
         repository_root=ROOT,
     )
@@ -6184,13 +6428,9 @@ def _professional_evidence_review_contract_manifest() -> dict[str, object]:
 
 @lru_cache(maxsize=1)
 def _professional_evidence_review_contract_fingerprint() -> str:
-    """Return the aggregate digest of the explicit review-contract sources."""
+    """Return the canonical explicit Professional semantic contract digest."""
 
-    return str(
-        _professional_evidence_review_contract_manifest()[
-            "aggregate_source_digest"
-        ]
-    )
+    return panel_contracts.professional_review_contract_fingerprint()
 
 
 def _professional_assertion_excerpt_sha256(
@@ -6616,7 +6856,10 @@ def _validate_professional_examined_items(
     anchors_by_id: dict[str, dict[str, Any]],
     materials_by_skill: dict[str, dict[str, dict[str, Any]]],
 ) -> tuple[bool, set[str]]:
-    if not isinstance(value, list) or len(value) < 2:
+    if (
+        not isinstance(value, list)
+        or len(value) < panel_contracts.PROFESSIONAL_MINIMUM_EXAMINED_ITEMS
+    ):
         raise PanelReviewError(f"{label} must contain at least two items")
     names: list[str] = []
     defect_found = False
@@ -6648,7 +6891,9 @@ def _validate_professional_examined_items(
             anchor_ids,
             anchors_by_id=anchors_by_id,
             materials_by_skill=materials_by_skill,
-            minimum=2,
+            minimum=(
+                panel_contracts.PROFESSIONAL_MINIMUM_EXAMINED_ITEM_OVERLAP_TOKENS
+            ),
             label=item_label,
         )
         names.append(name)
@@ -6905,7 +7150,9 @@ def _validate_professional_completeness_ballot_v2(
                     assertion_anchor_ids,
                     anchors_by_id=anchors_by_id,
                     materials_by_skill=vote_materials_by_skill,
-                    minimum=2,
+                    minimum=(
+                        panel_contracts.PROFESSIONAL_MINIMUM_ASSERTION_OVERLAP_TOKENS
+                    ),
                     label=f"{assertion_label}.claim",
                 )
                 criterion_claims.append(claim.casefold())
@@ -7069,7 +7316,9 @@ def _validate_professional_completeness_ballot_v2(
                 target_anchor_ids,
                 anchors_by_id=anchors_by_id,
                 materials_by_skill=vote_materials_by_skill,
-                minimum=1,
+                minimum=(
+                    panel_contracts.PROFESSIONAL_MINIMUM_ADJACENCY_SIDE_OVERLAP_TOKENS
+                ),
                 label=f"{candidate_label}.rationale target evidence",
             )
             _require_evidence_token_overlap(
@@ -7077,7 +7326,9 @@ def _validate_professional_completeness_ballot_v2(
                 candidate_anchor_ids,
                 anchors_by_id=anchors_by_id,
                 materials_by_skill=vote_materials_by_skill,
-                minimum=1,
+                minimum=(
+                    panel_contracts.PROFESSIONAL_MINIMUM_ADJACENCY_SIDE_OVERLAP_TOKENS
+                ),
                 label=f"{candidate_label}.rationale candidate evidence",
             )
             referenced_anchor_ids.update(target_anchor_ids)
@@ -7205,10 +7456,10 @@ def _validate_semantic_disposition_ballot(
     _validate_semantic_disposition_packet(packet)
     if set(ballot) != SEMANTIC_BALLOT_FIELDS:
         raise PanelReviewError(
-            "semantic disposition ballot fields do not match schema 1"
+            "semantic disposition ballot fields do not match schema 2"
         )
     if (
-        ballot.get("schema_version") != SCHEMA_VERSION
+        ballot.get("schema_version") != SEMANTIC_DISPOSITION_SCHEMA_VERSION
         or ballot.get("kind") != SEMANTIC_DISPOSITION_BALLOT_KIND
     ):
         raise PanelReviewError("semantic disposition ballot schema or kind is invalid")
@@ -8093,7 +8344,9 @@ def _aggregate_semantic_disposition_ballots(
                 "target_id": target_id,
                 "axis": target["axis"],
                 "candidate_id": target["candidate"]["candidate_id"],
-                "candidate_fingerprint": target["candidate_fingerprint"],
+                "candidate_binding_fingerprint": target[
+                    "candidate_binding_fingerprint"
+                ],
                 **_semantic_majority_decision(
                     [votes[target_id] for votes in votes_by_voter],
                     voter_ids=voter_ids,
@@ -8108,7 +8361,7 @@ def _aggregate_semantic_disposition_ballots(
         for disposition in sorted(SEMANTIC_DISPOSITIONS)
     }
     return {
-        "schema_version": SCHEMA_VERSION,
+        "schema_version": SEMANTIC_DISPOSITION_SCHEMA_VERSION,
         "kind": SEMANTIC_DISPOSITION_DECISION_KIND,
         "review_id": packet["review_id"],
         "decided_on": decided_on,
@@ -8399,6 +8652,10 @@ class _ProfessionalHistoricalV1Selection(dict):
             copy.deepcopy(dict(self), memo),
             expected_current=copy.deepcopy(self.expected_current, memo),
         )
+
+
+class _ProfessionalSchema3RegisteredSelection(dict):
+    """Mark a selector admitted only by the validated schema-3 bridge."""
 
 
 def _professional_v3_historical_cap50_packet(
@@ -8966,10 +9223,10 @@ def _validate_semantic_disposition_decision_record(
     }
     if set(record) != expected_fields:
         raise PanelReviewError(
-            "semantic disposition decision fields do not match schema 1"
+            "semantic disposition decision fields do not match schema 2"
         )
     if (
-        record.get("schema_version") != SCHEMA_VERSION
+        record.get("schema_version") != SEMANTIC_DISPOSITION_SCHEMA_VERSION
         or record.get("kind") != SEMANTIC_DISPOSITION_DECISION_KIND
     ):
         raise PanelReviewError("semantic disposition decision schema or kind is invalid")
@@ -9073,13 +9330,13 @@ def validate_decision_record(
     raise PanelReviewError("decision record kind is invalid")
 
 
-def validate_semantic_decision_application(
+def _validate_legacy_semantic_decision_application(
     application: object,
     audit: dict[str, Any],
 ) -> dict[str, Any]:
-    """Bind one validated semantic majority to its exact SSOT application."""
+    """Validate one pre-fixed-storage application selector during migration."""
 
-    if not isinstance(application, dict) or set(application) != SEMANTIC_APPLICATION_FIELDS:
+    if not isinstance(application, dict) or set(application) != LEGACY_SEMANTIC_APPLICATION_FIELDS:
         raise PanelReviewError(
             "semantic disposition application fields do not match schema 1"
         )
@@ -9098,8 +9355,6 @@ def validate_semantic_decision_application(
         raise PanelReviewError(
             "semantic application review_id must be one canonical identifier"
         )
-    if application.get("decision_kind") != SEMANTIC_DISPOSITION_DECISION_KIND:
-        raise PanelReviewError("semantic application decision_kind is invalid")
     decision_ref = application.get("decision")
     if not isinstance(decision_ref, dict) or set(decision_ref) != {"path", "sha256"}:
         raise PanelReviewError(
@@ -9111,6 +9366,215 @@ def validate_semantic_decision_application(
     decision_path = _canonical_relative_path(
         decision_value, label="semantic application decision path"
     )
+    if decision_value == panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_PATH:
+        if application.get("decision_kind") != (
+            panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_KIND
+        ):
+            raise PanelReviewError(
+                "semantic application fixed decision_kind is invalid"
+            )
+        try:
+            bound = reviewer_manifest.read_bound_regular_file(
+                ROOT / Path(decision_value),
+                max_bytes=panel_attestation.MAX_ATTESTATION_BYTES,
+                label="semantic application fixed attestation",
+            )
+            expected_sha256 = _lowercase_sha256(
+                decision_ref.get("sha256"),
+                label="semantic application decision sha256",
+            )
+            if bound.sha256 != expected_sha256:
+                raise PanelReviewError(
+                    "semantic application fixed attestation sha256 is stale"
+                )
+            root_semantic, reference_semantic = _semantic_audit_sections(audit)
+            semantics = {"root": root_semantic, "reference": reference_semantic}
+            current_bindings = {}
+            for axis, semantic in semantics.items():
+                candidates = semantic.get("candidates")
+                if not isinstance(candidates, list) or not all(
+                    isinstance(candidate, dict) for candidate in candidates
+                ):
+                    raise PanelReviewError(
+                        f"semantic application current {axis} candidates must be an array"
+                    )
+                eligible = [
+                    candidate
+                    for candidate in candidates
+                    if axis == "root"
+                    or candidate.get("detector_status") == "candidate"
+                ]
+                for candidate in eligible:
+                    target_id = f"{axis}:{candidate.get('candidate_id')}"
+                    if target_id in current_bindings:
+                        raise PanelReviewError(
+                            f"semantic application current {axis} IDs are duplicated"
+                        )
+                    current_bindings[target_id] = (
+                        panel_attestation.semantic_candidate_authority(
+                            axis=axis, candidate=candidate
+                        )
+                    )
+            compact = panel_attestation.parse_attestation_bytes(
+                bound.raw,
+                expected_path=decision_value,
+                expected_semantic_current_bindings=current_bindings,
+            )
+        except (
+            reviewer_manifest.ManifestError,
+            panel_attestation.AttestationError,
+        ) as exc:
+            raise PanelReviewError(
+                f"semantic application fixed attestation is invalid: {exc}"
+            ) from exc
+        if compact["review_id"] != review_id:
+            raise PanelReviewError(
+                "semantic application fixed review_id is stale"
+            )
+        axis_counts = {
+            axis: sum(
+                finding["axis"] == axis for finding in compact["findings"]
+            )
+            for axis in sorted(SEMANTIC_AXES)
+        }
+        expected_contract = {
+            "decision_method": DECISION_METHOD,
+            "required_voters": PANEL_SIZE,
+            "abstentions_allowed": False,
+            "minimum_winning_votes": 2,
+            "independent_ballots": True,
+            "required_target_count": len(compact["findings"]),
+            "required_axis_target_counts": axis_counts,
+            "allowed_dispositions": sorted(SEMANTIC_DISPOSITIONS),
+        }
+        if compact["review_contract_fingerprint"] != _canonical_json_sha256(
+            expected_contract
+        ):
+            raise PanelReviewError(
+                "semantic application fixed review contract is stale"
+            )
+        current_fingerprints = _semantic_source_fingerprints(
+            audit,
+            root_semantic=root_semantic,
+            reference_semantic=reference_semantic,
+        )
+        # Governance application changes the aggregate audit digest. Match the
+        # legacy currentness contract: detectors remain digest-bound while all
+        # other aggregate provenance is replaced by complete, per-candidate
+        # authoritative current bindings below.
+        if any(
+            compact["source_fingerprints"][key] != current_fingerprints[key]
+            for key in ("root_detector", "reference_detector")
+        ):
+            raise PanelReviewError(
+                "semantic fixed attestation is stale against the current audit"
+            )
+        applied_count = 0
+        completed_rewrite_count = 0
+        findings_by_axis = {
+            axis: {
+                finding["target_id"].split(":", 1)[1]: finding
+                for finding in compact["findings"]
+                if finding["axis"] == axis
+            }
+            for axis in sorted(SEMANTIC_AXES)
+        }
+        for axis in sorted(SEMANTIC_AXES):
+            semantic = semantics[axis]
+            candidates = semantic.get("candidates")
+            entries = semantic.get("disposition_contract", {}).get("entries")
+            if not isinstance(candidates, list) or not all(
+                isinstance(candidate, dict) for candidate in candidates
+            ):
+                raise PanelReviewError(
+                    f"semantic application current {axis} candidates must be an array"
+                )
+            if not isinstance(entries, list) or not all(
+                isinstance(entry, dict) for entry in entries
+            ):
+                raise PanelReviewError(
+                    f"semantic application current {axis} entries must be an array"
+                )
+            eligible = [
+                candidate
+                for candidate in candidates
+                if axis == "root"
+                or candidate.get("detector_status") == "candidate"
+            ]
+            candidates_by_id = {
+                str(candidate.get("candidate_id")): candidate
+                for candidate in eligible
+            }
+            entries_by_id = {
+                str(entry.get("candidate_id")): entry for entry in entries
+            }
+            if (
+                len(candidates_by_id) != len(eligible)
+                or len(entries_by_id) != len(entries)
+            ):
+                raise PanelReviewError(
+                    f"semantic application current {axis} IDs are missing or duplicated"
+                )
+            findings = findings_by_axis[axis]
+            rewrite_ids = {
+                candidate_id
+                for candidate_id, finding in findings.items()
+                if finding["result"]["winning_disposition"] == "rewrite"
+            }
+            if set(findings) != set(candidates_by_id) | rewrite_ids:
+                raise PanelReviewError(
+                    "semantic fixed attestation coverage is incomplete"
+                )
+            if set(entries_by_id) != set(candidates_by_id):
+                raise PanelReviewError(
+                    "semantic fixed attestation application entries are incomplete"
+                )
+            for candidate_id, finding in findings.items():
+                winner = finding["result"]["winning_disposition"]
+                candidate = candidates_by_id.get(candidate_id)
+                entry = entries_by_id.get(candidate_id)
+                if winner == "rewrite":
+                    if candidate is not None or entry is not None:
+                        raise PanelReviewError(
+                            "semantic fixed rewrite target remains current"
+                        )
+                    completed_rewrite_count += 1
+                    continue
+                if candidate is None or entry is None:
+                    raise PanelReviewError(
+                        "semantic fixed attestation application entry is missing"
+                    )
+                authority = current_bindings.get(f"{axis}:{candidate_id}")
+                if authority is None or finding[
+                    "candidate_binding_fingerprint"
+                ] != authority["candidate_binding_fingerprint"]:
+                    raise PanelReviewError(
+                        "semantic fixed attestation is stale against the current audit"
+                    )
+                if _semantic_entry_mismatches(
+                    axis=axis, candidate=candidate, entry=entry
+                ):
+                    raise PanelReviewError(
+                        "semantic fixed attestation application entry is stale"
+                    )
+                if entry.get("disposition") != winner:
+                    raise PanelReviewError(
+                        "semantic fixed attestation disposition mismatch"
+                    )
+                applied_count += 1
+        return {
+            "schema_version": SEMANTIC_DISPOSITION_APPLICATION_SCHEMA_VERSION,
+            "kind": SEMANTIC_DISPOSITION_APPLICATION_KIND,
+            "review_id": review_id,
+            "decision_kind": application["decision_kind"],
+            "decision": dict(decision_ref),
+            "status": "current",
+            "target_count": len(compact["findings"]),
+            "applied_count": applied_count,
+            "completed_rewrite_count": completed_rewrite_count,
+        }
+    if application.get("decision_kind") != SEMANTIC_DISPOSITION_DECISION_KIND:
+        raise PanelReviewError("semantic application decision_kind is invalid")
     expected_path = f"evals/expert-panel/{review_id}/panel/decision.json"
     if decision_value != expected_path or decision_path.suffix != ".json":
         raise PanelReviewError(
@@ -9226,6 +9690,138 @@ def validate_semantic_decision_application(
     }
 
 
+def validate_semantic_decision_application(
+    audit: dict[str, Any],
+) -> dict[str, Any]:
+    """Validate the canonical fixed Semantic attestation against current policy."""
+
+    fixed_relative = panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_PATH
+    fixed_path = ROOT / fixed_relative
+    try:
+        bound = reviewer_manifest.read_bound_regular_file(
+            fixed_path,
+            max_bytes=panel_attestation.MAX_ATTESTATION_BYTES,
+            label="semantic application fixed attestation",
+        )
+        selector = panel_attestation.parse_attestation_storage_selector_bytes(
+            bound.raw
+        )
+        review_id = _non_blank(
+            selector.get("review_id"),
+            label="semantic application fixed review_id",
+        )
+        decided_on = _iso_date(
+            selector.get("decided_on"),
+            label="semantic application fixed decided_on",
+        )
+        current_bindings, contract_fingerprint = (
+            _semantic_fixed_current_validation(
+                audit=audit,
+                attestation_selector=selector,
+            )
+        )
+        compact = panel_attestation.parse_attestation_bytes(
+            bound.raw,
+            expected_path=fixed_relative,
+            expected_review_contract_fingerprint=contract_fingerprint,
+            expected_semantic_current_bindings=current_bindings,
+        )
+    except (
+        reviewer_manifest.ManifestError,
+        panel_attestation.AttestationError,
+    ) as exc:
+        raise PanelReviewError(
+            f"semantic application fixed attestation is invalid: {exc}"
+        ) from exc
+
+    root_semantic, reference_semantic = _semantic_audit_sections(audit)
+    semantics = {"root": root_semantic, "reference": reference_semantic}
+    applied_count = 0
+    completed_rewrite_count = 0
+    for axis in sorted(SEMANTIC_AXES):
+        semantic = semantics[axis]
+        candidates = semantic.get("candidates")
+        contract = semantic.get("disposition_contract")
+        entries = contract.get("entries") if isinstance(contract, dict) else None
+        if not isinstance(candidates, list) or not all(
+            isinstance(candidate, dict) for candidate in candidates
+        ):
+            raise PanelReviewError(
+                f"semantic application current {axis} candidates must be an array"
+            )
+        if not isinstance(entries, list) or not all(
+            isinstance(entry, dict) for entry in entries
+        ):
+            raise PanelReviewError(
+                f"semantic application current {axis} entries must be an array"
+            )
+        eligible = [
+            candidate
+            for candidate in candidates
+            if axis == "root" or candidate.get("detector_status") == "candidate"
+        ]
+        candidates_by_id = {
+            str(candidate.get("candidate_id")): candidate
+            for candidate in eligible
+        }
+        entries_by_id = {
+            str(entry.get("candidate_id")): entry for entry in entries
+        }
+        if (
+            len(candidates_by_id) != len(eligible)
+            or len(entries_by_id) != len(entries)
+        ):
+            raise PanelReviewError(
+                f"semantic application current {axis} IDs are missing or duplicated"
+            )
+        for finding in compact["findings"]:
+            if finding["axis"] != axis:
+                continue
+            candidate_id = finding["target_id"].split(":", 1)[1]
+            winner = finding["result"]["winning_disposition"]
+            candidate = candidates_by_id.get(candidate_id)
+            entry = entries_by_id.get(candidate_id)
+            if winner == "rewrite":
+                if candidate is not None or entry is not None:
+                    raise PanelReviewError(
+                        "semantic fixed rewrite target remains current"
+                    )
+                completed_rewrite_count += 1
+                continue
+            if candidate is None or entry is None:
+                raise PanelReviewError(
+                    "semantic fixed attestation application entry is missing"
+                )
+            if _semantic_entry_mismatches(
+                axis=axis,
+                candidate=candidate,
+                entry=entry,
+            ):
+                raise PanelReviewError(
+                    "semantic fixed attestation application entry is stale"
+                )
+            if entry.get("disposition") != winner:
+                raise PanelReviewError(
+                    "semantic fixed attestation disposition mismatch"
+                )
+            applied_count += 1
+
+    return {
+        "schema_version": SEMANTIC_DISPOSITION_APPLICATION_SCHEMA_VERSION,
+        "kind": SEMANTIC_DISPOSITION_APPLICATION_KIND,
+        "review_id": compact["review_id"],
+        "decision_kind": panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_KIND,
+        "decision": {
+            "path": fixed_relative,
+            "sha256": bound.sha256,
+        },
+        "status": "current",
+        "target_count": len(compact["findings"]),
+        "applied_count": applied_count,
+        "completed_rewrite_count": completed_rewrite_count,
+    }
+
+
 def _professional_v3_panel_contract(
     *,
     target_count: int | None = None,
@@ -9304,6 +9900,7 @@ def _professional_v3_base_targets(
             )
         base = copy.deepcopy(target)
         base.pop("review_binding")
+        base.pop("package_fingerprint", None)
         base_targets.append(base)
     return base_targets
 
@@ -9339,24 +9936,51 @@ def _professional_v2_projection_from_v3(
         len(base_targets),
         validation_mode=validation_mode,
     )
+    panel_contract = _professional_completeness_panel_contract(
+        target_count=len(base_targets),
+        include_selection_derivation=not legacy_selection,
+    )
+    if validation_mode == VALIDATION_MODE_HISTORICAL:
+        historical_selection = (
+            packet.get("panel_contract", {})
+            .get("adjacency_contract", {})
+            .get("required_candidate_selection")
+        )
+        if not isinstance(historical_selection, dict):
+            raise PanelReviewError(
+                "historical schema-3 selection contract is invalid"
+            )
+        panel_contract["adjacency_contract"][
+            "required_candidate_selection"
+        ] = copy.deepcopy(historical_selection)
+    projected_targets = []
+    for target in base_targets:
+        projected = copy.deepcopy(target)
+        projected["package_fingerprint"] = (
+            _canonical_json_sha256(
+                professional_carry.professional_candidate_material_binding(
+                    projected
+                )
+            )
+            if "entry_fingerprint" not in projected["registry"]
+            else _canonical_json_sha256(projected)
+        )
+        projected_targets.append(projected)
     return {
         "schema_version": PROFESSIONAL_COMPLETENESS_SCHEMA_VERSION,
         "kind": PROFESSIONAL_COMPLETENESS_PACKET_KIND,
         "review_id": packet.get("review_id"),
         "created_on": packet.get("created_on"),
         "source_fingerprints": {
-            "professional_packages": _canonical_json_sha256(base_targets)
+            "professional_packages": _canonical_json_sha256(projected_targets)
         },
-        "panel_contract": _professional_completeness_panel_contract(
-            target_count=len(base_targets),
-            include_selection_derivation=not legacy_selection,
-        ),
+        "panel_contract": panel_contract,
         "rubric": {
             key: value
             for key, value in _professional_v3_rubric().items()
             if key != "source_grounding"
         },
-        "professional_targets": base_targets,
+        "professional_targets": projected_targets,
         "limitations": ["Schema-3 compatibility projection."],
     }
 
@@ -9372,21 +9996,6 @@ def _professional_v3_binding_state(
         review_contract_fingerprint=review_contract_fingerprint,
     )
     return bindings, snapshot
-
-
-def _professional_v3_source_fingerprints(
-    base_targets: list[dict[str, Any]],
-    *,
-    snapshot: dict[str, Any],
-    review_contract_fingerprint: str,
-) -> dict[str, str]:
-    return {
-        "professional_packages": _canonical_json_sha256(base_targets),
-        "professional_review_bindings": _canonical_json_sha256(
-            snapshot["targets"]
-        ),
-        "professional_review_contract": review_contract_fingerprint,
-    }
 
 
 def _artifact_reference_shape(
@@ -9442,6 +10051,34 @@ def _artifact_reference_shape(
             normalized, expected_kind=expected_kind, label=label
         )
     return normalized
+
+
+def _professional_attestation_reference_shape(
+    value: object, *, label: str
+) -> dict[str, str]:
+    expected_fields = {"path", "sha256", "kind", "axis", "review_id"}
+    if not isinstance(value, dict) or set(value) != expected_fields:
+        raise PanelReviewError(f"{label} fields are invalid")
+    if (
+        value.get("path")
+        != panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH
+        or value.get("kind")
+        != panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_KIND
+        or value.get("axis") != PROFESSIONAL_COMPLETENESS_ARTIFACT_AXIS
+    ):
+        raise PanelReviewError(f"{label} path, kind, or axis is invalid")
+    review_id = _non_blank(value.get("review_id"), label=f"{label}.review_id")
+    if VOTER_ID_PATTERN.fullmatch(review_id) is None:
+        raise PanelReviewError(f"{label}.review_id is invalid")
+    return {
+        "path": value["path"],
+        "sha256": _lowercase_sha256(
+            value.get("sha256"), label=f"{label}.sha256"
+        ),
+        "kind": value["kind"],
+        "axis": value["axis"],
+        "review_id": review_id,
+    }
 
 
 def _validate_professional_artifact_layout(
@@ -9501,12 +10138,16 @@ def _validate_professional_artifact_layout(
     if validation_root is None:
         layout_matches = parts[-len(expected_suffix) :] == expected_suffix
     else:
-        canonical_prefix = (
-            ["evals", "expert-panel"]
-            if validation_root.resolve() == ROOT.resolve()
-            else []
-        )
-        layout_matches = parts == [*canonical_prefix, *expected_suffix]
+        if validation_root.resolve() == ROOT.resolve():
+            layout_matches = any(
+                parts == [*prefix, *expected_suffix]
+                for prefix in (
+                    ["evals", "expert-panel"],
+                    [".rd-skills", "expert-panel"],
+                )
+            )
+        else:
+            layout_matches = parts == expected_suffix
     if not layout_matches:
         raise PanelReviewError(
             f"{label}.path does not match its canonical review round layout"
@@ -9546,25 +10187,31 @@ def _validate_professional_v3_review_plan_shape(
         )
     baseline = value.get("baseline")
     if baseline is not None:
-        if not isinstance(baseline, dict) or set(baseline) != {
-            "decision",
-            "packet",
-        }:
+        if not isinstance(baseline, dict) or set(baseline) not in (
+            {"decision", "packet"},
+            {"attestation"},
+        ):
             raise PanelReviewError("schema-3 review_plan baseline fields are invalid")
-        _artifact_reference_shape(
-            baseline.get("decision"),
-            label="schema-3 review_plan baseline decision",
-            require_review_id=True,
-            expected_kind=PROFESSIONAL_COMPLETENESS_DECISION_KIND,
-            expected_axis=PROFESSIONAL_COMPLETENESS_ARTIFACT_AXIS,
-        )
-        _artifact_reference_shape(
-            baseline.get("packet"),
-            label="schema-3 review_plan baseline packet",
-            require_review_id=True,
-            expected_kind=PROFESSIONAL_COMPLETENESS_PACKET_KIND,
-            expected_axis=PROFESSIONAL_COMPLETENESS_ARTIFACT_AXIS,
-        )
+        if "attestation" in baseline:
+            _professional_attestation_reference_shape(
+                baseline["attestation"],
+                label="schema-3 review_plan baseline attestation",
+            )
+        else:
+            _artifact_reference_shape(
+                baseline.get("decision"),
+                label="schema-3 review_plan baseline decision",
+                require_review_id=True,
+                expected_kind=PROFESSIONAL_COMPLETENESS_DECISION_KIND,
+                expected_axis=PROFESSIONAL_COMPLETENESS_ARTIFACT_AXIS,
+            )
+            _artifact_reference_shape(
+                baseline.get("packet"),
+                label="schema-3 review_plan baseline packet",
+                require_review_id=True,
+                expected_kind=PROFESSIONAL_COMPLETENESS_PACKET_KIND,
+                expected_axis=PROFESSIONAL_COMPLETENESS_ARTIFACT_AXIS,
+            )
     fresh = value.get("fresh_targets")
     carried = value.get("carried_targets")
     if not isinstance(fresh, list) or not isinstance(carried, list):
@@ -9596,12 +10243,19 @@ def _validate_professional_v3_review_plan_shape(
         fresh_ids.append(skill_id)
     carried_ids: list[str] = []
     for index, row in enumerate(carried):
-        if not isinstance(row, dict) or set(row) != {
+        legacy_origin = isinstance(row, dict) and set(row) == {
             "skill_id",
-            "review_binding_fingerprint",
+            "review_unit_binding",
             "origin_decision",
             "origin_target_decision_fingerprint",
-        }:
+        }
+        attested_origin = isinstance(row, dict) and set(row) == {
+            "skill_id",
+            "review_unit_binding",
+            "origin_attestation",
+            "origin_verdict_digest",
+        }
+        if not legacy_origin and not attested_origin:
             raise PanelReviewError(
                 f"schema-3 review_plan carried_targets[{index}] fields are invalid"
             )
@@ -9610,18 +10264,26 @@ def _validate_professional_v3_review_plan_shape(
             label=f"schema-3 review_plan carried_targets[{index}].skill_id",
         )
         _lowercase_sha256(
-            row.get("review_binding_fingerprint"),
+            row.get("review_unit_binding"),
             label=f"schema-3 carried target {skill_id} review binding",
         )
-        _artifact_reference_shape(
-            row.get("origin_decision"),
-            label=f"schema-3 carried target {skill_id} origin decision",
-            require_review_id=True,
-            expected_kind=PROFESSIONAL_COMPLETENESS_DECISION_KIND,
-            expected_axis=PROFESSIONAL_COMPLETENESS_ARTIFACT_AXIS,
-        )
+        if legacy_origin:
+            _artifact_reference_shape(
+                row.get("origin_decision"),
+                label=f"schema-3 carried target {skill_id} origin decision",
+                require_review_id=True,
+                expected_kind=PROFESSIONAL_COMPLETENESS_DECISION_KIND,
+                expected_axis=PROFESSIONAL_COMPLETENESS_ARTIFACT_AXIS,
+            )
+            origin_digest = row.get("origin_target_decision_fingerprint")
+        else:
+            _professional_attestation_reference_shape(
+                row.get("origin_attestation"),
+                label=f"schema-3 carried target {skill_id} origin attestation",
+            )
+            origin_digest = row.get("origin_verdict_digest")
         _lowercase_sha256(
-            row.get("origin_target_decision_fingerprint"),
+            origin_digest,
             label=f"schema-3 carried target {skill_id} origin fingerprint",
         )
         carried_ids.append(skill_id)
@@ -9706,10 +10368,13 @@ def _professional_v3_review_plan(
         }
     baseline = None
     if baseline_state is not None:
-        baseline = {
-            "decision": baseline_state["decision_ref"],
-            "packet": baseline_state["packet_ref"],
-        }
+        if "attestation_ref" in baseline_state:
+            baseline = {"attestation": baseline_state["attestation_ref"]}
+        else:
+            baseline = {
+                "decision": baseline_state["decision_ref"],
+                "packet": baseline_state["packet_ref"],
+            }
     fresh_targets = [
         {
             "skill_id": skill_id,
@@ -9722,18 +10387,32 @@ def _professional_v3_review_plan(
         if baseline_state is None:
             raise PanelReviewError("carry plan lacks a validated baseline")
         origin = baseline_state["origins"][skill_id]
-        carried_targets.append(
-            {
-                "skill_id": skill_id,
-                "review_binding_fingerprint": current_bindings[skill_id][
-                    "review_binding_fingerprint"
-                ],
-                "origin_decision": origin["decision_ref"],
-                "origin_target_decision_fingerprint": origin[
-                    "target_decision_fingerprint"
-                ],
-            }
-        )
+        if "attestation_ref" in baseline_state:
+            carried_targets.append(
+                {
+                    "skill_id": skill_id,
+                    "review_unit_binding": current_bindings[skill_id][
+                        "review_unit_binding"
+                    ],
+                    "origin_attestation": origin["attestation_ref"],
+                    "origin_verdict_digest": origin[
+                        "origin_verdict_digest"
+                    ],
+                }
+            )
+        else:
+            carried_targets.append(
+                {
+                    "skill_id": skill_id,
+                    "review_unit_binding": current_bindings[skill_id][
+                        "review_unit_binding"
+                    ],
+                    "origin_decision": origin["decision_ref"],
+                    "origin_target_decision_fingerprint": origin[
+                        "target_decision_fingerprint"
+                    ],
+                }
+            )
     plan: dict[str, Any] = {
         "algorithm": "exact-package-carry-forward-v1",
         "review_contract_fingerprint": review_contract_fingerprint,
@@ -9756,7 +10435,7 @@ def _professional_v3_review_plan(
 def _professional_v3_packet_limitations() -> list[str]:
     return [
         "Schema 3 carries only whole accepted packages through a bounded, recursively validated canonical plan lineage and direct last-fresh origin.",
-        "Carry eligibility is authoritative on the exact review-visible binding; raw package fingerprints may change only through excluded catalog-governance intermediates and are recorded as origin/current provenance.",
+        "Carry eligibility is authoritative on package_material_binding, review_unit_binding, and direct dependency material bindings; origin provenance records only origin_review_id, origin_commit, and origin_verdict_digest.",
         "A full-fresh checkpoint resets plan lineage depth after recomputing its immediate predecessor effective evidence and reset trigger; superseded history is not recursively re-proved.",
         "Review capsules and deterministic byte proxies do not prove actual host tokens, latency, reviewer identity, credentials, behavior, production accuracy, or installed user experience.",
         "This packet does not by itself satisfy any formal release gate, and a static artifact tree cannot prove that historical rounds were not deleted.",
@@ -9771,7 +10450,6 @@ def _professional_v3_full_rereview_input_projection(
     """Build the same deduplicated capsule input used by a full rereview."""
 
     return {
-        "source_fingerprints": packet["source_fingerprints"],
         "review_contract_fingerprint": packet[
             "review_contract_fingerprint"
         ],
@@ -9793,7 +10471,6 @@ def _professional_v3_capsule_input_projection(
     """Exclude reviewer/date/limitation administration from cost evidence."""
 
     return {
-        "source_fingerprints": capsule["source_fingerprints"],
         "review_contract_fingerprint": capsule[
             "review_contract_fingerprint"
         ],
@@ -9811,7 +10488,6 @@ def _professional_v3_input_block(value: dict[str, Any]) -> dict[str, Any]:
 
 def _professional_v3_effective_input_blocks(
     *,
-    source_fingerprints: dict[str, str],
     review_contract_fingerprint: str,
     discovery_projection: dict[str, Any],
     assigned_skill_ids: list[str],
@@ -9828,7 +10504,6 @@ def _professional_v3_effective_input_blocks(
     values: list[dict[str, Any]] = [
         {
             "block_kind": "review-binding",
-            "source_fingerprints": source_fingerprints,
             "review_contract_fingerprint": review_contract_fingerprint,
         }
     ]
@@ -9870,7 +10545,6 @@ def _professional_v3_effective_capsule_input_blocks(
     capsule: dict[str, Any],
 ) -> list[dict[str, Any]]:
     return _professional_v3_effective_input_blocks(
-        source_fingerprints=capsule["source_fingerprints"],
         review_contract_fingerprint=capsule[
             "review_contract_fingerprint"
         ],
@@ -9902,7 +10576,6 @@ def _professional_v3_full_rereview_input_blocks(
         bindings=effective_bindings,
     )
     return _professional_v3_effective_input_blocks(
-        source_fingerprints=packet["source_fingerprints"],
         review_contract_fingerprint=packet["review_contract_fingerprint"],
         discovery_projection=discovery,
         assigned_skill_ids=assigned,
@@ -9911,11 +10584,135 @@ def _professional_v3_full_rereview_input_blocks(
     )
 
 
+def _load_professional_attestation_baseline(
+    path: Path,
+    *,
+    current_bindings: dict[str, dict[str, Any]],
+    current_snapshot: dict[str, Any],
+    review_contract_fingerprint: str,
+    expected_attestation_sha256: str | None = None,
+) -> dict[str, Any]:
+    expected_path = (
+        ROOT / panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH
+    ).absolute()
+    if path.absolute() != expected_path:
+        raise PanelReviewError(
+            "Professional baseline attestation must use its canonical fixed path"
+        )
+    bound = reviewer_manifest.read_bound_regular_file(
+        path,
+        max_bytes=panel_attestation.MAX_ATTESTATION_BYTES,
+        label="Professional baseline attestation",
+    )
+    authenticated_sha256 = expected_attestation_sha256
+    if authenticated_sha256 is None:
+        head_blob = _git_output(
+            "show",
+            f"HEAD:{panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH}",
+        ).stdout
+        authenticated_sha256 = hashlib.sha256(head_blob).hexdigest()
+        if head_blob != bound.raw:
+            raise PanelReviewError(
+                "Professional baseline attestation differs from its HEAD authority"
+            )
+    if bound.sha256 != _lowercase_sha256(
+        authenticated_sha256,
+        label="Professional baseline authenticated sha256",
+    ):
+        raise PanelReviewError(
+            "Professional baseline attestation selector is stale"
+        )
+    try:
+        preliminary = (
+            panel_attestation.parse_attestation_storage_selector_bytes(
+                bound.raw
+            )
+        )
+    except panel_attestation.AttestationError as exc:
+        raise PanelReviewError(
+            "Professional baseline attestation selector is invalid"
+        ) from exc
+    raw_findings = preliminary.get("findings")
+    if not isinstance(raw_findings, list):
+        raise PanelReviewError(
+            "Professional baseline attestation findings are invalid"
+        )
+    authenticated_claims = _professional_authenticated_claims_from_findings(
+        raw_findings
+    )
+    attestation, eligible_ids = (
+        panel_attestation.parse_professional_baseline_bytes(
+            bound.raw,
+            expected_path=(
+                panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH
+            ),
+            expected_professional_current_bindings=(
+                _professional_attestation_bindings_from_state(
+                    current_bindings=current_bindings,
+                    authenticated_claims=authenticated_claims,
+                )
+            ),
+        )
+    )
+    reference = {
+        "path": panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH,
+        "sha256": bound.sha256,
+        "kind": panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_KIND,
+        "axis": PROFESSIONAL_COMPLETENESS_ARTIFACT_AXIS,
+        "review_id": attestation["review_id"],
+    }
+    findings = {row["skill_id"]: row for row in attestation["findings"]}
+    if (
+        set(findings) != set(current_bindings)
+    ):
+        raise PanelReviewError(
+            "Professional baseline attestation target coverage is stale"
+        )
+    eligible_rows = {
+        skill_id: findings[skill_id] for skill_id in sorted(eligible_ids)
+    }
+
+    prior_targets: dict[str, dict[str, Any]] = {}
+    dependencies: dict[str, dict[str, Any]] = {}
+    origins: dict[str, dict[str, Any]] = {}
+    for skill_id, row in eligible_rows.items():
+        prior_targets[skill_id] = copy.deepcopy(
+            current_snapshot["targets"][skill_id]
+        )
+        dependencies[skill_id] = copy.deepcopy(
+            row["result"]["review_dependencies"]
+        )
+        origins[skill_id] = {
+            "attestation_ref": reference,
+            "origin_verdict_digest": row["provenance"]["origin"][
+                "origin_verdict_digest"
+            ],
+            "finding": copy.deepcopy(row),
+        }
+    return {
+        "attestation_ref": reference,
+        "snapshot": {
+            "review_contract_fingerprint": attestation[
+                "review_contract_fingerprint"
+            ],
+            "targets": prior_targets,
+        },
+        "dependencies": dependencies,
+        "origins": origins,
+        "plan_lineage_depth": attestation["summary"]["review_cost"][
+            "plan_lineage_depth"
+        ],
+        "attestation": attestation,
+    }
+
+
 def prepare_professional_completeness_packet_v3(
     *,
     review_id: str,
     created_on: str,
     baseline_decision_path: Path | None = None,
+    baseline_attestation_path: Path | None = None,
+    baseline_attestation_sha256: str | None = None,
     root: Path = ROOT,
     validation_root: Path = ROOT,
 ) -> dict[str, Any]:
@@ -9935,6 +10732,18 @@ def prepare_professional_completeness_packet_v3(
     )
     invocation_cache = _professional_v3_invocation_cache()
     baseline_state = None
+    if baseline_decision_path is not None and baseline_attestation_path is not None:
+        raise PanelReviewError(
+            "schema-3 baseline decision and attestation are mutually exclusive"
+        )
+    if baseline_attestation_path is not None:
+        baseline_state = _load_professional_attestation_baseline(
+            baseline_attestation_path,
+            current_bindings=bindings,
+            current_snapshot=snapshot,
+            review_contract_fingerprint=review_contract_fingerprint,
+            expected_attestation_sha256=baseline_attestation_sha256,
+        )
     if baseline_decision_path is not None:
         baseline_ref = _artifact_reference(
             baseline_decision_path,
@@ -9966,11 +10775,6 @@ def prepare_professional_completeness_packet_v3(
         "kind": PROFESSIONAL_COMPLETENESS_PACKET_KIND,
         "review_id": review_id,
         "created_on": created_on,
-        "source_fingerprints": _professional_v3_source_fingerprints(
-            base_targets,
-            snapshot=snapshot,
-            review_contract_fingerprint=review_contract_fingerprint,
-        ),
         "review_contract_fingerprint": review_contract_fingerprint,
         "panel_contract": _professional_v3_panel_contract(),
         "rubric": _professional_v3_rubric(),
@@ -10004,7 +10808,19 @@ def _professional_v3_packet_state(
 ) -> dict[str, Any]:
     validation_mode = _closed_validation_mode(validation_mode)
     cache = invocation_cache or _professional_v3_invocation_cache()
-    if set(packet) != PROFESSIONAL_V3_PACKET_FIELDS:
+    packet_contract_hint = packet.get("review_contract_fingerprint")
+    historical_source_contracts = {
+        PROFESSIONAL_HISTORICAL_V2_REVIEW_CONTRACT_FINGERPRINT,
+        PROFESSIONAL_HISTORICAL_CAP50_REVIEW_CONTRACT_FINGERPRINT,
+        PROFESSIONAL_HISTORICAL_V1_REVIEW_CONTRACT_FINGERPRINT,
+    }
+    expected_packet_fields = (
+        PROFESSIONAL_HISTORICAL_V3_PACKET_FIELDS
+        if validation_mode == VALIDATION_MODE_HISTORICAL
+        and packet_contract_hint in historical_source_contracts
+        else PROFESSIONAL_V3_PACKET_FIELDS
+    )
+    if set(packet) != expected_packet_fields:
         raise PanelReviewError(
             "professional completeness packet fields do not match schema 3"
         )
@@ -10041,22 +10857,85 @@ def _professional_v3_packet_state(
         target_count,
         validation_mode=validation_mode,
     )
-    if packet.get("panel_contract") != _professional_v3_panel_contract(
-        target_count=target_count,
-        include_selection_derivation=not legacy_selection,
-    ):
-        raise PanelReviewError(
-            "professional completeness schema-3 panel contract is invalid"
+    registered_schema3_selection = False
+    if validation_mode == VALIDATION_MODE_CURRENT:
+        if not isinstance(raw_targets, list) or any(
+            not isinstance(target, dict)
+            or set(target) != PROFESSIONAL_V3_PACKET_TARGET_FIELDS
+            for target in raw_targets
+        ):
+            raise PanelReviewError(
+                "professional completeness schema-3 packet target fields are invalid"
+            )
+        if packet.get("panel_contract") != _professional_v3_panel_contract(
+            target_count=target_count,
+            include_selection_derivation=not legacy_selection,
+        ):
+            raise PanelReviewError(
+                "professional completeness schema-3 panel contract is invalid"
+            )
+    else:
+        current_registered_contract = (
+            panel_contracts.professional_review_contract_fingerprint()
         )
+        registered_contracts = {
+            current_registered_contract,
+            PROFESSIONAL_HISTORICAL_V2_REVIEW_CONTRACT_FINGERPRINT,
+            PROFESSIONAL_HISTORICAL_CAP50_REVIEW_CONTRACT_FINGERPRINT,
+            PROFESSIONAL_HISTORICAL_V1_REVIEW_CONTRACT_FINGERPRINT,
+        }
+        historical_panel_contract = packet.get("panel_contract")
+        if (
+            packet_contract_fingerprint not in registered_contracts
+            or not isinstance(historical_panel_contract, dict)
+            or historical_panel_contract.get("decision_method")
+            != PROFESSIONAL_COMPLETENESS_INCREMENTAL_DECISION_METHOD
+            or historical_panel_contract.get("required_target_count")
+            != target_count
+        ):
+            raise PanelReviewError(
+                "professional completeness historical panel contract is invalid"
+            )
+        historical_selection = historical_panel_contract.get(
+            "adjacency_contract", {}
+        ).get("required_candidate_selection")
+        if packet_contract_fingerprint in {
+            current_registered_contract,
+            PROFESSIONAL_HISTORICAL_V2_REVIEW_CONTRACT_FINGERPRINT,
+        }:
+            registered_schema3_selection = True
+            expected_historical_selection = (
+                _professional_adjacency_selection_contract(
+                    target_count=target_count,
+                    include_derivation=not legacy_selection,
+                )
+            )
+            if historical_selection != expected_historical_selection:
+                raise PanelReviewError(
+                    "professional completeness historical selection contract is invalid"
+                )
+        elif not isinstance(
+            historical_selection, _ProfessionalHistoricalV1Selection
+        ):
+            raise PanelReviewError(
+                "professional completeness exact legacy contract is not bound"
+            )
     projected = _professional_v2_projection_from_v3(
         packet,
         validation_mode=validation_mode,
     )
+    if registered_schema3_selection:
+        projected_selection = projected["panel_contract"][
+            "adjacency_contract"
+        ]["required_candidate_selection"]
+        projected["panel_contract"]["adjacency_contract"][
+            "required_candidate_selection"
+        ] = _ProfessionalSchema3RegisteredSelection(projected_selection)
     _validate_professional_completeness_packet_v2(
         projected,
         validation_mode=validation_mode,
     )
-    base_targets = projected["professional_targets"]
+    base_targets = _professional_v3_base_targets(raw_targets)
     bindings, snapshot = _professional_v3_binding_state(
         base_targets,
         review_contract_fingerprint=expected_contract_fingerprint,
@@ -10068,15 +10947,6 @@ def _professional_v3_packet_state(
             raise PanelReviewError(
                 f"professional completeness schema-3 review binding is stale: {skill_id}"
             )
-    expected_sources = _professional_v3_source_fingerprints(
-        base_targets,
-        snapshot=snapshot,
-        review_contract_fingerprint=expected_contract_fingerprint,
-    )
-    if packet.get("source_fingerprints") != expected_sources:
-        raise PanelReviewError(
-            "professional completeness schema-3 source fingerprints are stale"
-        )
     if packet.get("rubric") != _professional_v3_rubric():
         raise PanelReviewError("professional completeness schema-3 rubric is invalid")
     if packet.get("limitations") != _professional_v3_packet_limitations():
@@ -10094,70 +10964,93 @@ def _professional_v3_packet_state(
         baseline = plan["baseline"]
         has_carries = bool(plan["carried_targets"])
         if baseline is not None:
-            normalized = _artifact_reference_shape(
-                baseline["decision"],
-                label="schema-3 review_plan baseline decision",
-                require_review_id=True,
-                expected_kind=PROFESSIONAL_COMPLETENESS_DECISION_KIND,
-                expected_axis=PROFESSIONAL_COMPLETENESS_ARTIFACT_AXIS,
-            )
-            _validate_professional_artifact_layout(
-                normalized,
-                expected_kind=PROFESSIONAL_COMPLETENESS_DECISION_KIND,
-                label="schema-3 review_plan baseline decision",
-                validation_root=validation_root,
-            )
-            baseline_path = _canonical_artifact_path(
-                normalized["path"],
-                validation_root=validation_root,
-                label="schema-3 review_plan baseline decision.path",
-                forbidden_paths={
-                    *(forbidden_paths or set()),
-                    *({artifact_path} if artifact_path is not None else set()),
-                },
-            )
-            baseline_forbidden = {
-                *(forbidden_paths or set()),
-                *({artifact_path} if artifact_path is not None else set()),
-            }
-            _baseline_path, normalized, baseline_record = (
-                _professional_v3_cached_json_artifact(
-                    normalized,
-                    cache=cache,
-                    validation_root=validation_root,
-                    label="schema-3 review_plan immediate baseline decision",
+            if "attestation" in baseline:
+                reference = _professional_attestation_reference_shape(
+                    baseline["attestation"],
+                    label="schema-3 review_plan baseline attestation",
+                )
+                baseline_state = _load_professional_attestation_baseline(
+                    validation_root / reference["path"],
+                    current_bindings=bindings,
+                    current_snapshot=snapshot,
+                    review_contract_fingerprint=(
+                        expected_contract_fingerprint
+                    ),
+                    expected_attestation_sha256=reference["sha256"],
+                )
+                if baseline_state["attestation_ref"] != reference:
+                    raise PanelReviewError(
+                        "schema-3 review_plan baseline attestation reference is stale"
+                    )
+            else:
+                normalized = _artifact_reference_shape(
+                    baseline["decision"],
+                    label="schema-3 review_plan baseline decision",
+                    require_review_id=True,
                     expected_kind=PROFESSIONAL_COMPLETENESS_DECISION_KIND,
                     expected_axis=PROFESSIONAL_COMPLETENESS_ARTIFACT_AXIS,
-                    expected_review_id=normalized["review_id"],
+                )
+                _validate_professional_artifact_layout(
+                    normalized,
+                    expected_kind=PROFESSIONAL_COMPLETENESS_DECISION_KIND,
+                    label="schema-3 review_plan baseline decision",
+                    validation_root=validation_root,
+                )
+                baseline_path = _canonical_artifact_path(
+                    normalized["path"],
+                    validation_root=validation_root,
+                    label="schema-3 review_plan baseline decision.path",
+                    forbidden_paths={
+                        *(forbidden_paths or set()),
+                        *(
+                            {artifact_path}
+                            if artifact_path is not None
+                            else set()
+                        ),
+                    },
+                )
+                baseline_forbidden = {
+                    *(forbidden_paths or set()),
+                    *({artifact_path} if artifact_path is not None else set()),
+                }
+                _baseline_path, normalized, baseline_record = (
+                    _professional_v3_cached_json_artifact(
+                        normalized,
+                        cache=cache,
+                        validation_root=validation_root,
+                        label="schema-3 review_plan immediate baseline decision",
+                        expected_kind=PROFESSIONAL_COMPLETENESS_DECISION_KIND,
+                        expected_axis=PROFESSIONAL_COMPLETENESS_ARTIFACT_AXIS,
+                        expected_review_id=normalized["review_id"],
+                        forbidden_paths=baseline_forbidden,
+                    )
+                )
+                _professional_v3_decision_envelope(baseline_record)
+                if baseline_record["packet"] != baseline["packet"]:
+                    raise PanelReviewError(
+                        "schema-3 review_plan immediate baseline packet is stale"
+                    )
+                baseline_state = _load_professional_v3_baseline(
+                    baseline_path,
+                    validation_root=validation_root,
                     forbidden_paths=baseline_forbidden,
+                    invocation_cache=cache,
+                    decision_reference=normalized,
+                    validate_evidence=has_carries,
+                    allow_stale_contract_checkpoint=not has_carries,
+                    validation_mode=validation_mode,
+                    expected_review_contract_fingerprint=(
+                        expected_contract_fingerprint
+                    ),
                 )
-            )
-            _professional_v3_decision_envelope(baseline_record)
-            if baseline_record["packet"] != baseline["packet"]:
-                raise PanelReviewError(
-                    "schema-3 review_plan immediate baseline packet is stale"
-                )
-            baseline_state = _load_professional_v3_baseline(
-                baseline_path,
-                validation_root=validation_root,
-                forbidden_paths=baseline_forbidden,
-                invocation_cache=cache,
-                decision_reference=normalized,
-                validate_evidence=has_carries,
-                allow_stale_contract_checkpoint=not has_carries,
-                validation_mode=validation_mode,
-                expected_review_contract_fingerprint=(
-                    expected_contract_fingerprint
-                ),
-            )
-            if baseline_state["decision_ref"] != baseline["decision"]:
-                raise PanelReviewError(
-                    "schema-3 review_plan baseline decision reference is stale"
-                )
-            if baseline_state["packet_ref"] != baseline["packet"]:
-                raise PanelReviewError(
-                    "schema-3 review_plan baseline packet reference is stale"
-                )
+                if baseline_state["decision_ref"] != baseline["decision"]:
+                    raise PanelReviewError(
+                        "schema-3 review_plan baseline decision reference is stale"
+                    )
+                if baseline_state["packet_ref"] != baseline["packet"]:
+                    raise PanelReviewError(
+                        "schema-3 review_plan baseline packet reference is stale"
+                    )
         expected_plan = _professional_v3_review_plan(
             current_bindings=bindings,
             review_contract_fingerprint=expected_contract_fingerprint,
@@ -10173,7 +11066,6 @@ def _professional_v3_packet_state(
         "snapshot": snapshot,
         "plan": plan,
         "baseline_state": baseline_state,
-        "source_fingerprints": copy.deepcopy(expected_sources),
         "review_bindings": {
             target["skill_id"]: copy.deepcopy(target["review_binding"])
             for target in embedded_targets
@@ -10259,7 +11151,6 @@ def _professional_v3_state_binding_projection(
             "bindings",
             "snapshot",
             "plan",
-            "source_fingerprints",
             "review_bindings",
         )
     }
@@ -10442,6 +11333,7 @@ def _professional_v3_capsule_projection_from_packet(
         )
         return professional_carry.project_professional_review_capsule(
             bindings=effective_bindings,
+            review_targets=packet["professional_targets"],
             assigned_fresh_target_ids=assigned_skill_ids,
             reviewer_added_requests_by_target=(
                 reviewer_added_requests_by_target
@@ -10467,6 +11359,7 @@ def _professional_v3_discovery_projection_from_packet(
         )
         return professional_carry.project_professional_discovery_capsule(
             bindings=effective_bindings,
+            review_targets=packet["professional_targets"],
             assigned_fresh_target_ids=assigned_skill_ids,
         )
     except professional_carry.ProfessionalCarryForwardError as exc:
@@ -10524,8 +11417,6 @@ def _professional_v3_validate_artifact_envelope(
     _iso_date(value.get("created_on"), label=f"{label}.created_on")
     if value.get("packet_sha256") != packet_sha256:
         raise PanelReviewError(f"schema-3 {label} packet_sha256 is stale")
-    if value.get("source_fingerprints") != packet.get("source_fingerprints"):
-        raise PanelReviewError(f"schema-3 {label} source fingerprints are stale")
     if value.get("review_contract_fingerprint") != packet.get(
         "review_contract_fingerprint"
     ):
@@ -10589,7 +11480,6 @@ def prepare_professional_discovery_capsule_v3(
         "review_id": packet["review_id"],
         "created_on": created_on,
         "packet_sha256": packet_sha256,
-        "source_fingerprints": packet["source_fingerprints"],
         "review_contract_fingerprint": packet[
             "review_contract_fingerprint"
         ],
@@ -10781,7 +11671,6 @@ def _professional_v3_candidate_request_value(
         "review_id": packet["review_id"],
         "created_on": created_on,
         "packet_sha256": packet_sha256,
-        "source_fingerprints": packet["source_fingerprints"],
         "review_contract_fingerprint": packet["review_contract_fingerprint"],
         "voter_id": voter_id,
         "discovery_capsule": discovery_ref,
@@ -11044,7 +11933,6 @@ def _professional_v3_final_capsule_value(
         "review_id": packet["review_id"],
         "created_on": created_on,
         "packet_sha256": packet_sha256,
-        "source_fingerprints": packet["source_fingerprints"],
         "review_contract_fingerprint": packet["review_contract_fingerprint"],
         "voter_id": voter_id,
         "discovery_capsule": discovery_ref,
@@ -11516,7 +12404,7 @@ def prepare_professional_completeness_ballot_template_v3(
     template["schema_version"] = (
         PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION
     )
-    template["source_fingerprints"] = packet["source_fingerprints"]
+    template.pop("source_fingerprints")
     template["review_contract_fingerprint"] = packet[
         "review_contract_fingerprint"
     ]
@@ -11580,12 +12468,6 @@ def _validate_professional_completeness_ballot_v3(
     if ballot.get("packet_sha256") != packet_sha256:
         raise PanelReviewError(
             "professional completeness schema-3 ballot packet_sha256 is stale"
-        )
-    if ballot.get("source_fingerprints") != packet.get(
-        "source_fingerprints"
-    ):
-        raise PanelReviewError(
-            "professional completeness schema-3 ballot source fingerprints are stale"
         )
     if ballot.get("review_contract_fingerprint") != packet.get(
         "review_contract_fingerprint"
@@ -11873,9 +12755,8 @@ def _professional_v3_fresh_target_decision(
     ]
     row: dict[str, Any] = {
         "skill_id": skill_id,
-        "package_fingerprint": target["package_fingerprint"],
-        "review_binding_fingerprint": target["review_binding"][
-            "review_binding_fingerprint"
+        "review_unit_binding": target["review_binding"][
+            "review_unit_binding"
         ],
         "qualification_coverage": {
             "required_expertise_tags": target["required_expertise_tags"],
@@ -11928,13 +12809,13 @@ def _professional_v3_carried_target_decision(
     origin_row: dict[str, Any],
     origin_decision_ref: dict[str, str],
     current_bindings: dict[str, dict[str, Any]],
-    origin_candidate_fingerprints: dict[str, str],
+    origin_candidate_material_bindings: dict[str, str],
 ) -> dict[str, Any]:
     if origin_row.get("skill_id") != target["skill_id"]:
         raise PanelReviewError("schema-3 carry origin Skill is stale")
-    if origin_row.get("review_binding_fingerprint") != target[
+    if origin_row.get("review_unit_binding") != target[
         "review_binding"
-    ]["review_binding_fingerprint"]:
+    ]["review_unit_binding"]:
         raise PanelReviewError(
             f"schema-3 carry origin review binding is stale: {target['skill_id']}"
         )
@@ -11958,8 +12839,8 @@ def _professional_v3_carried_target_decision(
         current_candidate = current_bindings.get(candidate_id)
         if (
             current_candidate is None
-            or origin_candidate_fingerprints.get(candidate_id)
-            != current_candidate.get("candidate_material_fingerprint")
+            or origin_candidate_material_bindings.get(candidate_id)
+            != current_candidate.get("package_material_binding")
         ):
             raise PanelReviewError(
                 "schema-3 reviewer-added candidate material changed: "
@@ -11969,15 +12850,13 @@ def _professional_v3_carried_target_decision(
         key: copy.deepcopy(value)
         for key, value in origin_row.items()
         if key not in {
-            "package_fingerprint",
-            "review_binding_fingerprint",
+            "review_unit_binding",
             "provenance",
             "target_decision_fingerprint",
         }
     }
-    row["package_fingerprint"] = target["package_fingerprint"]
-    row["review_binding_fingerprint"] = target["review_binding"][
-        "review_binding_fingerprint"
+    row["review_unit_binding"] = target["review_binding"][
+        "review_unit_binding"
     ]
     row["provenance"] = {
         "mode": "carried-forward",
@@ -11986,20 +12865,88 @@ def _professional_v3_carried_target_decision(
         "origin_target_decision_fingerprint": origin_row[
             "target_decision_fingerprint"
         ],
-        "origin_package_fingerprint": origin_row[
-            "package_fingerprint"
-        ],
-        "current_package_fingerprint": target["package_fingerprint"],
         "carry_basis": "review-visible-binding-unchanged",
     }
     row["target_decision_fingerprint"] = _canonical_json_sha256(row)
     return row
 
 
+def _professional_attestation_origin_row(
+    finding: dict[str, Any]
+) -> dict[str, Any]:
+    """Project one authenticated compact finding into carry decision shape."""
+
+    origin = finding["provenance"]["origin"]
+    votes = finding["votes"]
+    majority = _majority_decision(
+        votes,
+        voter_ids=[vote["reviewer"] for vote in votes],
+    )
+    majority["vote_counts"] = {
+        decision: majority["vote_counts"].get(decision, 0)
+        for decision in sorted(PROFESSIONAL_COMPLETENESS_DECISIONS)
+    }
+    result = finding["result"]
+    majority_summary_fields = (
+        "winning_disposition",
+        "winning_votes",
+        "vote_counts",
+        "supporting_voters",
+        "dissenting_voters",
+    )
+    if any(
+        result.get(field) != majority[field]
+        for field in majority_summary_fields
+    ):
+        raise PanelReviewError(
+            "compact professional majority is stale: "
+            f"{finding['skill_id']}"
+        )
+    projected_result = copy.deepcopy(result)
+    projected_result.update(majority)
+    reviewer_added_reviews = [
+        {
+            "voter_id": vote["reviewer"],
+            "candidates": [
+                {
+                    "skill_id": candidate_id,
+                    "review_origin": "reviewer-added",
+                }
+                for candidate_id in vote["examined_adjacent_candidates"][
+                    "reviewer_added_candidate_ids"
+                ]
+            ],
+        }
+        for vote in finding["votes"]
+        if vote["examined_adjacent_candidates"][
+            "reviewer_added_candidate_ids"
+        ]
+    ]
+    return {
+        "skill_id": finding["skill_id"],
+        "review_unit_binding": finding["review_unit_binding"],
+        "reviewer_added_adjacency_reviews": reviewer_added_reviews,
+        **projected_result,
+        "provenance": {"mode": "fresh", "origin_depth": 0, "evidence": []},
+        "target_decision_fingerprint": origin["origin_verdict_digest"],
+    }
+
+
 def _professional_v3_decision_envelope(record: dict[str, Any]) -> str:
     """Validate the stable schema-3 envelope without applying current rules."""
 
-    if set(record) != PROFESSIONAL_V3_DECISION_FIELDS:
+    historical_source_contracts = {
+        PROFESSIONAL_HISTORICAL_V2_REVIEW_CONTRACT_FINGERPRINT,
+        PROFESSIONAL_HISTORICAL_CAP50_REVIEW_CONTRACT_FINGERPRINT,
+        PROFESSIONAL_HISTORICAL_V1_REVIEW_CONTRACT_FINGERPRINT,
+    }
+    expected_fields = (
+        PROFESSIONAL_HISTORICAL_V3_DECISION_FIELDS
+        if record.get("review_contract_fingerprint")
+        in historical_source_contracts
+        else PROFESSIONAL_V3_DECISION_FIELDS
+    )
+    if set(record) != expected_fields:
         raise PanelReviewError(
             "professional completeness decision fields do not match schema 3"
         )
@@ -12110,8 +13057,6 @@ def _professional_v3_load_packet_for_decision(
         cache["packet_states"][state_key] = state
     if packet["review_id"] != record["review_id"]:
         raise PanelReviewError("schema-3 decision packet review_id is stale")
-    if record.get("source_fingerprints") != packet["source_fingerprints"]:
-        raise PanelReviewError("schema-3 decision source fingerprints are stale")
     if record.get("review_contract_fingerprint") != packet[
         "review_contract_fingerprint"
     ]:
@@ -12181,13 +13126,9 @@ def _professional_v3_validate_decision_projection(
                 f"schema-3 decision target fingerprint is stale: {skill_id}"
             )
         target = targets[skill_id]
-        if row.get("package_fingerprint") != target["package_fingerprint"]:
-            raise PanelReviewError(
-                f"schema-3 decision target package is stale: {skill_id}"
-            )
-        if row.get("review_binding_fingerprint") != target[
+        if row.get("review_unit_binding") != target[
             "review_binding"
-        ]["review_binding_fingerprint"]:
+        ]["review_unit_binding"]:
             raise PanelReviewError(
                 f"schema-3 decision target binding is stale: {skill_id}"
             )
@@ -12318,34 +13259,33 @@ def _professional_v3_validate_decision_projection(
                 "origin_depth",
                 "origin_decision",
                 "origin_target_decision_fingerprint",
-                "origin_package_fingerprint",
-                "current_package_fingerprint",
                 "carry_basis",
             } or provenance.get("origin_depth") != 1 or skill_id not in plan_carried:
                 raise PanelReviewError(
                     f"schema-3 carried target provenance is stale: {skill_id}"
                 )
-            _artifact_reference_shape(
-                provenance.get("origin_decision"),
-                label=f"schema-3 carried target origin {skill_id}",
-                require_review_id=True,
-                expected_kind=PROFESSIONAL_COMPLETENESS_DECISION_KIND,
-                expected_axis=PROFESSIONAL_COMPLETENESS_ARTIFACT_AXIS,
-            )
+            origin_reference = provenance.get("origin_decision")
+            if (
+                isinstance(origin_reference, dict)
+                and origin_reference.get("kind")
+                == panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_KIND
+            ):
+                _professional_attestation_reference_shape(
+                    origin_reference,
+                    label=f"schema-3 carried target origin {skill_id}",
+                )
+            else:
+                _artifact_reference_shape(
+                    origin_reference,
+                    label=f"schema-3 carried target origin {skill_id}",
+                    require_review_id=True,
+                    expected_kind=PROFESSIONAL_COMPLETENESS_DECISION_KIND,
+                    expected_axis=PROFESSIONAL_COMPLETENESS_ARTIFACT_AXIS,
+                )
             _lowercase_sha256(
                 provenance.get("origin_target_decision_fingerprint"),
                 label=f"schema-3 carried target origin fingerprint {skill_id}",
             )
-            _lowercase_sha256(
-                provenance.get("origin_package_fingerprint"),
-                label=f"schema-3 carried target origin package {skill_id}",
-            )
-            if provenance.get("current_package_fingerprint") != row[
-                "package_fingerprint"
-            ]:
-                raise PanelReviewError(
-                    f"schema-3 carried target current package is stale: {skill_id}"
-                )
             if provenance.get("carry_basis") != (
                 "review-visible-binding-unchanged"
             ):
@@ -12643,6 +13583,7 @@ def _load_professional_v3_fresh_origin_target(
             {
                 "voter": ballot["voter"],
                 "vote": vote,
+                "capsule": _capsule,
                 "ballot_ref": ballot_ref,
                 "capsule_ref": capsule_ref,
                 "capsule_bytes_proxy": _professional_v3_cached_canonical_size(
@@ -12681,13 +13622,17 @@ def _load_professional_v3_fresh_origin_target(
         )
     result = {
         "decision_ref": origin_ref,
+        "decision": record,
+        "packet": packet,
+        "target": target,
+        "assignments": assignments,
         "target_row": recomputed,
         "target_decision_fingerprint": recomputed[
             "target_decision_fingerprint"
         ],
-        "reviewer_added_candidate_material_fingerprints": {
+        "reviewer_added_candidate_material_bindings": {
             candidate_id: state["bindings"][candidate_id][
-                "candidate_material_fingerprint"
+                "package_material_binding"
             ]
             for candidate_id in recomputed["review_dependencies"][
                 "reviewer_added_candidate_ids_union"
@@ -12987,7 +13932,6 @@ def _professional_v3_decision_record(
         "decision_method": (
             PROFESSIONAL_COMPLETENESS_INCREMENTAL_DECISION_METHOD
         ),
-        "source_fingerprints": packet["source_fingerprints"],
         "review_contract_fingerprint": packet[
             "review_contract_fingerprint"
         ],
@@ -13002,7 +13946,7 @@ def _professional_v3_decision_record(
         ),
         "limitations": [
             "Fresh evidence is derived only from validated target-scoped capsules; carried rows contain no new votes and point directly to a validated depth-zero fresh origin.",
-            "Carried provenance records both origin and current raw package fingerprints; exact review-visible binding equality is the carry authority.",
+            "Carried authority records package_material_binding, review_unit_binding, and direct dependency material bindings; origin provenance records only origin_review_id, origin_commit, and origin_verdict_digest.",
             "Canonical JSON byte and optional ratio values are deterministic input-size proxies, not actual tokens, reviewer effort, latency, identity, credentials, behavior, or production outcomes.",
             "Static professional review and simulated carry validation do not prove real-host startup, wall-clock performance, production accuracy, or installed user experience.",
         ],
@@ -13249,25 +14193,61 @@ def aggregate_professional_completeness_ballot_paths_v3(
     carried_rows: list[dict[str, Any]] = []
     for plan_row in state["plan"]["carried_targets"]:
         skill_id = plan_row["skill_id"]
-        origin = _load_professional_v3_fresh_origin_target(
-            origin_reference=plan_row["origin_decision"],
-            skill_id=skill_id,
-            expected_target_decision_fingerprint=plan_row[
-                "origin_target_decision_fingerprint"
-            ],
-            validation_root=validation_root,
-            forbidden_paths={*forbidden, canonical_packet_path},
-            invocation_cache=cache,
-            validation_mode=validation_mode,
-        )
+        if "origin_attestation" in plan_row:
+            baseline_state = state.get("baseline_state")
+            if (
+                not isinstance(baseline_state, dict)
+                or "attestation_ref" not in baseline_state
+            ):
+                raise PanelReviewError(
+                    "schema-3 carried attestation origin is unavailable"
+                )
+            origin_state = baseline_state["origins"].get(skill_id)
+            if (
+                not isinstance(origin_state, dict)
+                or origin_state.get("attestation_ref")
+                != plan_row["origin_attestation"]
+                or origin_state.get("origin_verdict_digest")
+                != plan_row["origin_verdict_digest"]
+            ):
+                raise PanelReviewError(
+                    f"schema-3 carried attestation origin is stale: {skill_id}"
+                )
+            finding = origin_state["finding"]
+            origin = {
+                "target_row": _professional_attestation_origin_row(finding),
+                "decision_ref": plan_row["origin_attestation"],
+                "reviewer_added_candidate_material_bindings": {
+                    candidate_id: baseline_state["attestation"][
+                        "dependency_material_catalog"
+                    ][candidate_id]
+                    for candidate_id in finding["dependency_ids"]
+                    if candidate_id
+                    in finding["result"]["review_dependencies"][
+                        "reviewer_added_candidate_ids_union"
+                    ]
+                },
+            }
+        else:
+            origin = _load_professional_v3_fresh_origin_target(
+                origin_reference=plan_row["origin_decision"],
+                skill_id=skill_id,
+                expected_target_decision_fingerprint=plan_row[
+                    "origin_target_decision_fingerprint"
+                ],
+                validation_root=validation_root,
+                forbidden_paths={*forbidden, canonical_packet_path},
+                invocation_cache=cache,
+                validation_mode=validation_mode,
+            )
         carried_rows.append(
             _professional_v3_carried_target_decision(
                 target=targets[skill_id],
                 origin_row=origin["target_row"],
                 origin_decision_ref=origin["decision_ref"],
                 current_bindings=state["bindings"],
-                origin_candidate_fingerprints=origin[
-                    "reviewer_added_candidate_material_fingerprints"
+                origin_candidate_material_bindings=origin[
+                    "reviewer_added_candidate_material_bindings"
                 ],
             )
         )
@@ -13359,12 +14339,6 @@ def _validate_professional_completeness_decision_record_v3(
         if packet["review_id"] != record["review_id"]:
             raise PanelReviewError(
                 "schema-3 decision packet review_id is stale"
-            )
-        if record.get("source_fingerprints") != packet[
-            "source_fingerprints"
-        ]:
-            raise PanelReviewError(
-                "schema-3 decision source fingerprints are stale"
             )
         if record.get("review_contract_fingerprint") != packet[
             "review_contract_fingerprint"
@@ -13543,7 +14517,17 @@ def _load_professional_v3_baseline(
                 forbidden_paths={*forbidden_paths, canonical_path},
             )
         )
-        if set(packet) != PROFESSIONAL_V3_PACKET_FIELDS:
+        expected_stale_packet_fields = (
+            PROFESSIONAL_HISTORICAL_V3_PACKET_FIELDS
+            if baseline_contract
+            in {
+                PROFESSIONAL_HISTORICAL_V2_REVIEW_CONTRACT_FINGERPRINT,
+                PROFESSIONAL_HISTORICAL_CAP50_REVIEW_CONTRACT_FINGERPRINT,
+                PROFESSIONAL_HISTORICAL_V1_REVIEW_CONTRACT_FINGERPRINT,
+            }
+            else PROFESSIONAL_V3_PACKET_FIELDS
+        )
+        if set(packet) != expected_stale_packet_fields:
             raise PanelReviewError(
                 "schema-3 stale-contract baseline packet fields are invalid"
             )
@@ -13576,21 +14560,6 @@ def _load_professional_v3_baseline(
         if record.get("packet") != packet_ref:
             raise PanelReviewError(
                 "schema-3 stale-contract decision packet reference is stale"
-            )
-        if record.get("source_fingerprints") != packet.get(
-            "source_fingerprints"
-        ):
-            raise PanelReviewError(
-                "schema-3 stale-contract decision source fingerprints differ"
-            )
-        sources = packet.get("source_fingerprints")
-        if (
-            not isinstance(sources, dict)
-            or sources.get("professional_review_contract")
-            != baseline_contract
-        ):
-            raise PanelReviewError(
-                "schema-3 stale-contract packet source contract is stale"
             )
         packet_plan = packet.get("review_plan")
         if (
@@ -13722,6 +14691,414 @@ def _cli_path(value: str) -> Path:
     return (candidate if candidate.is_absolute() else ROOT / candidate).absolute()
 
 
+def _ephemeral_review_path(review_id: str, *parts: str) -> Path:
+    """Return one canonical transient path below the named review run."""
+
+    relative = panel_attestation.ephemeral_run_path(
+        review_id, "/".join(parts)
+    )
+    return (ROOT / relative).absolute()
+
+
+def _semantic_runtime_layout(
+    review_id: str, *, voter_id: str | None = None
+) -> dict[str, Path]:
+    """Return the one canonical transient Semantic runtime layout."""
+
+    packet = _ephemeral_review_path(review_id, "packet.json")
+    run = packet.parent
+    layout = {
+        "run": run,
+        "packet": packet,
+        "audit": _ephemeral_review_path(
+            review_id, "inputs", "skill-content-audit.json"
+        ),
+        "ballots": _ephemeral_review_path(review_id, "ballots"),
+    }
+    if voter_id is not None:
+        if VOTER_ID_PATTERN.fullmatch(voter_id) is None:
+            raise PanelReviewError("Semantic runtime voter_id is invalid")
+        layout["template"] = _ephemeral_review_path(
+            review_id, "ballots", f"{voter_id}.template.json"
+        )
+        layout["ballot"] = _ephemeral_review_path(
+            review_id, "ballots", f"{voter_id}.json"
+        )
+    return layout
+
+
+def _semantic_prepare_reviewer_specs(
+    value: object,
+) -> list[tuple[str, str, str, str]]:
+    if not isinstance(value, list) or len(value) != PANEL_SIZE:
+        raise PanelReviewError(
+            "Semantic prepare requires exactly three --reviewer declarations"
+        )
+    reviewers: list[tuple[str, str, str, str]] = []
+    for index, row in enumerate(value):
+        if not isinstance(row, list) or len(row) != 4:
+            raise PanelReviewError(
+                f"Semantic prepare reviewer[{index}] is invalid"
+            )
+        voter_id, agent_id, role, expertise = row
+        if not isinstance(voter_id, str) or VOTER_ID_PATTERN.fullmatch(
+            voter_id
+        ) is None:
+            raise PanelReviewError(
+                f"Semantic prepare reviewer[{index}] voter_id is invalid"
+            )
+        reviewers.append(
+            (
+                voter_id,
+                _non_blank(agent_id, label=f"reviewer[{index}].agent_id"),
+                _non_blank(role, label=f"reviewer[{index}].role"),
+                _non_blank(expertise, label=f"reviewer[{index}].expertise"),
+            )
+        )
+    for field_index, label in (
+        (0, "voter"),
+        (1, "agent"),
+        (2, "role"),
+        (3, "expertise"),
+    ):
+        values = [row[field_index] for row in reviewers]
+        if len(set(values)) != PANEL_SIZE:
+            raise PanelReviewError(
+                f"Semantic prepare reviewer {label} identities must be distinct"
+            )
+    return reviewers
+
+
+def _semantic_prepare_audit_authority(
+    audit_argument: str,
+) -> tuple[bytes, dict[str, Any]]:
+    """Bind the canonical tracked audit to clean HEAD before any run write."""
+
+    relative = "reports/skill-content-audit.json"
+    expected = (ROOT / relative).absolute()
+    _require_exact_materialization_path_argument(
+        audit_argument,
+        expected,
+        label="Semantic prepare audit",
+    )
+    status = _git_output(
+        "status", "--porcelain=v1", "-z", "--untracked-files=all"
+    ).stdout
+    if status:
+        raise PanelReviewError("Semantic prepare requires a clean tracked tree")
+    tracked = _git_output(
+        "ls-files", "--error-unmatch", "--", relative, check=False
+    )
+    if tracked.returncode != 0:
+        raise PanelReviewError("Semantic prepare audit must be tracked")
+    head_raw = _git_output("show", f"HEAD:{relative}").stdout
+    bound = reviewer_manifest.read_bound_regular_file(
+        expected,
+        max_bytes=reviewer_manifest.MAX_MANIFEST_BYTES,
+        label="Semantic prepare audit",
+    )
+    if bound.raw != head_raw:
+        raise PanelReviewError(
+            "Semantic prepare audit must be byte-equal to clean HEAD"
+        )
+    audit = reviewer_manifest.parse_json_object_bytes(
+        bound.raw,
+        label="Semantic prepare audit",
+    )
+    return bound.raw, audit
+
+
+def _open_or_create_semantic_panel_directory() -> int:
+    """Open the trusted ignored panel root without following any component."""
+
+    flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+    flags |= getattr(os, "O_NOFOLLOW", 0)
+    flags |= getattr(os, "O_CLOEXEC", 0)
+    root = ROOT.resolve()
+    descriptor: int | None = None
+    try:
+        descriptor = os.open(root, flags)
+        for part in (".rd-skills", "expert-panel"):
+            try:
+                next_descriptor = os.open(part, flags, dir_fd=descriptor)
+            except FileNotFoundError:
+                try:
+                    os.mkdir(part, mode=0o755, dir_fd=descriptor)
+                    os.fsync(descriptor)
+                except FileExistsError:
+                    pass
+                next_descriptor = os.open(part, flags, dir_fd=descriptor)
+            os.close(descriptor)
+            descriptor = next_descriptor
+        return descriptor
+    except OSError as exc:
+        if descriptor is not None:
+            os.close(descriptor)
+        raise PanelReviewError(
+            "Semantic prepare panel root must not traverse a symlink"
+        ) from exc
+
+
+def _create_semantic_runtime(
+    *,
+    review_id: str,
+    audit_raw: bytes,
+    packet: dict[str, Any],
+    templates: list[dict[str, Any]],
+) -> dict[str, Path]:
+    """Create one complete Semantic run or remove every owned partial artifact."""
+
+    layout = _semantic_runtime_layout(review_id)
+    panel_fd: int | None = None
+    run_fd: int | None = None
+    child_fds: dict[str, int] = {}
+    run_identity: tuple[int, int] | None = None
+    child_identities: dict[str, tuple[int, int]] = {}
+    created_files: list[tuple[int, str, tuple[int, int]]] = []
+
+    directory_flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+    directory_flags |= getattr(os, "O_NOFOLLOW", 0)
+    directory_flags |= getattr(os, "O_CLOEXEC", 0)
+    file_flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    file_flags |= getattr(os, "O_NOFOLLOW", 0)
+    file_flags |= getattr(os, "O_CLOEXEC", 0)
+
+    def create_file(
+        directory_fd: int, name: str, raw: bytes, *, label: str
+    ) -> None:
+        descriptor: int | None = None
+        try:
+            descriptor = os.open(
+                name,
+                file_flags,
+                0o644,
+                dir_fd=directory_fd,
+            )
+            initial = os.fstat(descriptor)
+            identity = (initial.st_dev, initial.st_ino)
+            if not stat.S_ISREG(initial.st_mode) or initial.st_nlink != 1:
+                raise PanelReviewError(f"{label} is not a single-link regular file")
+            created_files.append((directory_fd, name, identity))
+            os.fchmod(descriptor, 0o644)
+            offset = 0
+            while offset < len(raw):
+                written = os.write(descriptor, raw[offset:])
+                if written <= 0:  # pragma: no cover - os.write raises.
+                    raise OSError("short write")
+                offset += written
+            os.fsync(descriptor)
+            final = os.fstat(descriptor)
+            if (
+                (final.st_dev, final.st_ino) != identity
+                or final.st_size != len(raw)
+                or final.st_nlink != 1
+            ):
+                raise PanelReviewError(f"{label} changed during durable write")
+            os.fsync(directory_fd)
+        except FileExistsError as exc:
+            raise PanelReviewError(f"{label} already exists") from exc
+        except PanelReviewError:
+            raise
+        except OSError as exc:
+            raise PanelReviewError(f"cannot write {label}: {exc}") from exc
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+
+    def remove_owned_file(
+        directory_fd: int, name: str, identity: tuple[int, int]
+    ) -> None:
+        current = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+        if (current.st_dev, current.st_ino) != identity:
+            raise PanelReviewError(
+                "Semantic prepare cleanup ownership changed"
+            )
+        os.unlink(name, dir_fd=directory_fd)
+        os.fsync(directory_fd)
+
+    def remove_owned_directory(
+        parent_fd: int, name: str, identity: tuple[int, int]
+    ) -> None:
+        current = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
+        if (current.st_dev, current.st_ino) != identity:
+            raise PanelReviewError(
+                "Semantic prepare cleanup directory ownership changed"
+            )
+        os.rmdir(name, dir_fd=parent_fd)
+        os.fsync(parent_fd)
+
+    try:
+        panel_fd = _open_or_create_semantic_panel_directory()
+        try:
+            os.mkdir(review_id, mode=0o755, dir_fd=panel_fd)
+        except FileExistsError as exc:
+            raise PanelReviewError(
+                "Semantic prepare canonical run already exists"
+            ) from exc
+        run_stat = os.stat(review_id, dir_fd=panel_fd, follow_symlinks=False)
+        run_identity = (run_stat.st_dev, run_stat.st_ino)
+        os.fsync(panel_fd)
+        run_fd = os.open(review_id, directory_flags, dir_fd=panel_fd)
+        if (os.fstat(run_fd).st_dev, os.fstat(run_fd).st_ino) != run_identity:
+            raise PanelReviewError("Semantic prepare run identity changed")
+
+        for name in ("inputs", "ballots"):
+            os.mkdir(name, mode=0o755, dir_fd=run_fd)
+            child_stat = os.stat(name, dir_fd=run_fd, follow_symlinks=False)
+            child_identities[name] = (child_stat.st_dev, child_stat.st_ino)
+            os.fsync(run_fd)
+            child_fds[name] = os.open(name, directory_flags, dir_fd=run_fd)
+
+        create_file(
+            child_fds["inputs"],
+            "skill-content-audit.json",
+            audit_raw,
+            label="Semantic prepare audit snapshot",
+        )
+        packet_raw = reviewer_manifest.canonical_ballot_bytes(
+            packet, compact=False
+        )
+        create_file(
+            run_fd,
+            "packet.json",
+            packet_raw,
+            label="Semantic prepare packet",
+        )
+        for template in templates:
+            voter_id = template["voter"]["voter_id"]
+            create_file(
+                child_fds["ballots"],
+                f"{voter_id}.template.json",
+                reviewer_manifest.canonical_ballot_bytes(
+                    template, compact=False
+                ),
+                label=f"Semantic prepare template {voter_id}",
+            )
+
+        stored_audit = reviewer_manifest.read_bound_regular_file(
+            layout["audit"],
+            max_bytes=reviewer_manifest.MAX_MANIFEST_BYTES,
+            label="prepared Semantic audit",
+        )
+        stored_packet = reviewer_manifest.read_bound_regular_file(
+            layout["packet"],
+            max_bytes=reviewer_manifest.MAX_MANIFEST_BYTES,
+            label="prepared Semantic packet",
+        )
+        if stored_audit.raw != audit_raw or stored_packet.raw != packet_raw:
+            raise PanelReviewError("Semantic prepare stored bytes are stale")
+        audit = reviewer_manifest.parse_json_object_bytes(
+            stored_audit.raw, label="prepared Semantic audit"
+        )
+        stored_packet_value = reviewer_manifest.parse_json_object_bytes(
+            stored_packet.raw, label="prepared Semantic packet"
+        )
+        validate_semantic_packet_current(stored_packet_value, audit)
+        for template in templates:
+            voter_id = template["voter"]["voter_id"]
+            template_path = _semantic_runtime_layout(
+                review_id, voter_id=voter_id
+            )["template"]
+            bound_template = reviewer_manifest.read_bound_regular_file(
+                template_path,
+                max_bytes=reviewer_manifest.MAX_MANIFEST_BYTES,
+                label=f"prepared Semantic template {voter_id}",
+            )
+            stored_template = reviewer_manifest.parse_json_object_bytes(
+                bound_template.raw,
+                label=f"prepared Semantic template {voter_id}",
+            )
+            validate_ballot_template(
+                stored_packet_value,
+                stored_template,
+                packet_sha256=stored_packet.sha256,
+            )
+        os.fsync(child_fds["inputs"])
+        os.fsync(child_fds["ballots"])
+        os.fsync(run_fd)
+        os.fsync(panel_fd)
+        return layout
+    except Exception as exc:
+        cleanup_errors: list[str] = []
+        for directory_fd, name, identity in reversed(created_files):
+            try:
+                remove_owned_file(directory_fd, name, identity)
+            except (OSError, PanelReviewError) as cleanup_exc:
+                cleanup_errors.append(str(cleanup_exc))
+        if run_fd is not None:
+            for name in ("ballots", "inputs"):
+                identity = child_identities.get(name)
+                if identity is None:
+                    continue
+                try:
+                    remove_owned_directory(run_fd, name, identity)
+                except (OSError, PanelReviewError) as cleanup_exc:
+                    cleanup_errors.append(str(cleanup_exc))
+        if panel_fd is not None and run_identity is not None:
+            try:
+                remove_owned_directory(panel_fd, review_id, run_identity)
+            except (OSError, PanelReviewError) as cleanup_exc:
+                cleanup_errors.append(str(cleanup_exc))
+        if cleanup_errors:
+            raise PanelReviewError(
+                f"{exc}; Semantic prepare rollback failed: "
+                + "; ".join(cleanup_errors)
+            ) from exc
+        if isinstance(exc, PanelReviewError):
+            raise
+        raise PanelReviewError(f"Semantic prepare failed: {exc}") from exc
+    finally:
+        for descriptor in child_fds.values():
+            os.close(descriptor)
+        if run_fd is not None:
+            os.close(run_fd)
+        if panel_fd is not None:
+            os.close(panel_fd)
+
+
+def _is_round_packet_path(path: Path) -> bool:
+    """Recognize current transient and immutable legacy packet layouts."""
+
+    if path.name != "packet.json":
+        return False
+    parent = path.parent.parent.absolute()
+    return parent in {
+        (ROOT / ".rd-skills" / "expert-panel").absolute(),
+        (ROOT / "evals" / "expert-panel").absolute(),
+    }
+
+
+def _is_ephemeral_round_path(path: Path) -> bool:
+    try:
+        relative = path.absolute().relative_to(ROOT.absolute()).as_posix()
+        panel_attestation.validate_ephemeral_run_path(relative)
+    except (ValueError, panel_attestation.AttestationError):
+        return False
+    return True
+
+
+def _require_same_ephemeral_run_path(
+    path: Path, *, review_id: str, label: str
+) -> Path:
+    """Reject writable paths outside the exact transient review run."""
+
+    try:
+        relative = path.absolute().relative_to(ROOT.absolute()).as_posix()
+        panel_attestation.validate_ephemeral_run_path(
+            relative, review_id=review_id
+        )
+    except (ValueError, panel_attestation.AttestationError) as exc:
+        raise PanelReviewError(
+            f"{label} must stay inside the canonical transient review run"
+        ) from exc
+    return _canonical_artifact_path(
+        relative,
+        validation_root=ROOT,
+        label=label,
+        must_exist=False,
+    )
+
+
 def _display_cli_path(path: Path) -> Path:
     try:
         return path.resolve().relative_to(ROOT.resolve())
@@ -13737,51 +15114,34 @@ def _require_schema3_cli_artifact_path(
     voter_id: str | None = None,
 ) -> Path:
     if kind == PROFESSIONAL_COMPLETENESS_PACKET_KIND:
-        expected = ROOT / "evals" / "expert-panel" / review_id / "packet.json"
+        expected = _ephemeral_review_path(review_id, "packet.json")
     elif kind == PROFESSIONAL_COMPLETENESS_DISCOVERY_CAPSULE_KIND:
         expected = (
-            ROOT
-            / "evals"
-            / "expert-panel"
-            / review_id
-            / "discovery-capsules"
-            / f"{voter_id}.json"
+            _ephemeral_review_path(
+                review_id, "discovery-capsules", f"{voter_id}.json"
+            )
         )
     elif kind == PROFESSIONAL_COMPLETENESS_CANDIDATE_REQUEST_KIND:
         expected = (
-            ROOT
-            / "evals"
-            / "expert-panel"
-            / review_id
-            / "candidate-requests"
-            / f"{voter_id}.json"
+            _ephemeral_review_path(
+                review_id, "candidate-requests", f"{voter_id}.json"
+            )
         )
     elif kind == PROFESSIONAL_COMPLETENESS_CAPSULE_KIND:
         expected = (
-            ROOT
-            / "evals"
-            / "expert-panel"
-            / review_id
-            / "capsules"
-            / f"{voter_id}.json"
+            _ephemeral_review_path(
+                review_id, "capsules", f"{voter_id}.json"
+            )
         )
     elif kind == PROFESSIONAL_COMPLETENESS_BALLOT_KIND:
         expected = (
-            ROOT
-            / "evals"
-            / "expert-panel"
-            / review_id
-            / "panel"
-            / f"{voter_id}.json"
+            _ephemeral_review_path(
+                review_id, "panel", f"{voter_id}.json"
+            )
         )
     elif kind == PROFESSIONAL_COMPLETENESS_DECISION_KIND:
         expected = (
-            ROOT
-            / "evals"
-            / "expert-panel"
-            / review_id
-            / "panel"
-            / "decision.json"
+            _ephemeral_review_path(review_id, "panel", "decision.json")
         )
     else:
         raise PanelReviewError("schema-3 CLI artifact kind is invalid")
@@ -13808,7 +15168,7 @@ def _require_readability_schema2_cli_packet_path(
         raise PanelReviewError(
             "readability schema-2 packet review_id is not canonical"
         )
-    expected = ROOT / "evals" / "expert-panel" / review_id / "packet.json"
+    expected = _ephemeral_review_path(review_id, "packet.json")
     if path.absolute() != expected.absolute():
         raise PanelReviewError(
             "readability schema-2 output must use canonical path: "
@@ -13870,6 +15230,7 @@ def _materialization_json_object(raw: bytes, *, label: str) -> dict[str, Any]:
 def _require_materialization_argument_bounds(args: argparse.Namespace) -> None:
     for name in (
         "packet",
+        "audit",
         "template",
         "template_sha256",
         "manifest",
@@ -13882,6 +15243,21 @@ def _require_materialization_argument_bounds(args: argparse.Namespace) -> None:
             raise PanelReviewError(
                 f"materialize-ballot --{name.replace('_', '-')} exceeds 4096 bytes"
             )
+
+
+def _require_exact_materialization_path_argument(
+    value: str,
+    expected: Path,
+    *,
+    label: str,
+) -> None:
+    allowed = {expected.as_posix()}
+    try:
+        allowed.add(expected.relative_to(ROOT).as_posix())
+    except ValueError:  # pragma: no cover - Semantic paths are repository-owned.
+        pass
+    if value not in allowed:
+        raise PanelReviewError(f"{label} must use its canonical path")
 
 
 def _canonical_materialization_template(
@@ -13934,10 +15310,7 @@ def _materialize_ballot(args: argparse.Namespace) -> tuple[Path, dict[str, Any]]
 
     _require_materialization_argument_bounds(args)
     packet_path = _cli_path(args.packet)
-    schema3_layout = (
-        packet_path.name == "packet.json"
-        and packet_path.parent.parent == ROOT / "evals" / "expert-panel"
-    )
+    schema3_layout = _is_round_packet_path(packet_path)
     packet_ref: dict[str, str] | None = None
     if schema3_layout:
         cache = _professional_v3_invocation_cache()
@@ -13961,22 +15334,102 @@ def _materialize_ballot(args: argparse.Namespace) -> tuple[Path, dict[str, Any]]
         and packet.get("schema_version")
         == PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION
     )
-    if not readability_schema2 and not professional_schema3:
+    semantic_schema2 = (
+        packet.get("kind") == SEMANTIC_DISPOSITION_PACKET_KIND
+        and packet.get("schema_version") == SEMANTIC_DISPOSITION_SCHEMA_VERSION
+    )
+    if not readability_schema2 and not professional_schema3 and not semantic_schema2:
         raise PanelReviewError(
-            "materialize-ballot accepts only Readability schema 2 or Professional Completeness schema 3"
+            "materialize-ballot accepts only Readability schema 2, Professional Completeness schema 3, or Semantic Disposition schema 2"
         )
     if professional_schema3 and not schema3_layout:
         raise PanelReviewError(
             "schema-3 materialize-ballot requires the canonical packet layout"
+    )
+    if semantic_schema2:
+        if not schema3_layout:
+            raise PanelReviewError(
+                "Semantic materialize-ballot requires the canonical transient packet layout"
+            )
+        semantic_layout = _semantic_runtime_layout(packet["review_id"])
+        expected_packet = semantic_layout["packet"]
+        _require_exact_materialization_path_argument(
+            args.packet,
+            expected_packet,
+            label="Semantic packet",
+        )
+        bound_packet = reviewer_manifest.read_bound_regular_file(
+            expected_packet,
+            max_bytes=reviewer_manifest.MAX_MANIFEST_BYTES,
+            label="Semantic packet",
+        )
+        packet = _materialization_json_object(
+            bound_packet.raw,
+            label="Semantic packet",
+        )
+        packet_ref = {"sha256": bound_packet.sha256}
+        if args.audit is None:
+            raise PanelReviewError(
+                "Semantic materialize-ballot requires --audit"
+            )
+        expected_audit = semantic_layout["audit"]
+        _require_exact_materialization_path_argument(
+            args.audit,
+            expected_audit,
+            label="Semantic audit",
+        )
+        bound_audit = reviewer_manifest.read_bound_regular_file(
+            expected_audit,
+            max_bytes=reviewer_manifest.MAX_MANIFEST_BYTES,
+            label="Semantic audit",
+        )
+        audit = _materialization_json_object(
+            bound_audit.raw,
+            label="Semantic audit",
+        )
+        validate_semantic_packet_current(packet, audit)
+    elif args.audit is not None:
+        raise PanelReviewError(
+            "materialize-ballot --audit is accepted only for Semantic Disposition"
         )
 
     template_path = _cli_path(args.template)
     output_path = _cli_path(args.out)
+    if semantic_schema2:
+        suffix = ".template.json"
+        if not template_path.name.endswith(suffix):
+            raise PanelReviewError(
+                "Semantic template filename must end with .template.json"
+            )
+        filename_voter_id = template_path.name[: -len(suffix)]
+        if VOTER_ID_PATTERN.fullmatch(filename_voter_id) is None:
+            raise PanelReviewError("Semantic template voter filename is invalid")
+        reviewer_layout = _semantic_runtime_layout(
+            packet["review_id"], voter_id=filename_voter_id
+        )
+        expected_template = reviewer_layout["template"]
+        expected_output = reviewer_layout["ballot"]
+        _require_exact_materialization_path_argument(
+            args.template,
+            expected_template,
+            label="Semantic template",
+        )
+        _require_exact_materialization_path_argument(
+            args.out,
+            expected_output,
+            label="Semantic output",
+        )
+        template_path = expected_template
+        output_path = expected_output
     bound_template = reviewer_manifest.bind_regular_file(
         template_path,
         expected_sha256=args.template_sha256,
         max_bytes=reviewer_manifest.MAX_MANIFEST_BYTES,
-        outside_root=(ROOT if readability_schema2 else None),
+        outside_root=(
+            ROOT
+            if readability_schema2 and not _is_ephemeral_round_path(packet_path)
+            else None
+        ),
         label="ballot template",
     )
     template = _materialization_json_object(
@@ -14003,14 +15456,28 @@ def _materialize_ballot(args: argparse.Namespace) -> tuple[Path, dict[str, Any]]
             raise PanelReviewError(
                 f"schema-2 output must be the distinct sibling {expected_output_name}"
             )
-        try:
-            output_path.resolve(strict=False).relative_to(ROOT.resolve())
-        except ValueError:
-            pass
+        if _is_ephemeral_round_path(packet_path):
+            _require_same_ephemeral_run_path(
+                template_path,
+                review_id=packet["review_id"],
+                label="schema-2 ballot template",
+            )
+            output_path = _require_same_ephemeral_run_path(
+                output_path,
+                review_id=packet["review_id"],
+                label="schema-2 ballot output",
+            )
         else:
-            raise PanelReviewError("schema-2 output must stay outside the repository")
+            try:
+                output_path.resolve(strict=False).relative_to(ROOT.resolve())
+            except ValueError:
+                pass
+            else:
+                raise PanelReviewError(
+                    "legacy schema-2 output must stay outside the repository"
+                )
         packet_sha256 = _sha256(packet_path)
-    else:
+    elif professional_schema3:
         if template_path.absolute() != output_path.absolute():
             raise PanelReviewError("schema-3 template and output paths must be identical")
         output_path = _require_schema3_cli_artifact_path(
@@ -14023,6 +15490,14 @@ def _materialize_ballot(args: argparse.Namespace) -> tuple[Path, dict[str, Any]]
             raise PanelReviewError("schema-3 bound template path is not canonical")
         if packet_ref is None:  # pragma: no cover - guarded by schema3_layout.
             raise PanelReviewError("schema-3 packet binding is missing")
+        packet_sha256 = packet_ref["sha256"]
+    else:
+        if voter_id != filename_voter_id:
+            raise PanelReviewError(
+                "Semantic template filename must equal voter_id"
+            )
+        if packet_ref is None:  # pragma: no cover - established above.
+            raise PanelReviewError("Semantic packet binding is missing")
         packet_sha256 = packet_ref["sha256"]
 
     validate_ballot_template(
@@ -14090,7 +15565,7 @@ def _materialize_ballot(args: argparse.Namespace) -> tuple[Path, dict[str, Any]]
         candidate,
         compact=professional_schema3,
     )
-    if readability_schema2:
+    if readability_schema2 or semantic_schema2:
         reviewer_manifest.create_ballot_once(
             bound_template,
             output_path,
@@ -14106,6 +15581,1733 @@ def _materialize_ballot(args: argparse.Namespace) -> tuple[Path, dict[str, Any]]
     return output_path, candidate
 
 
+def _bound_json_object(path: Path, *, label: str, max_bytes: int) -> tuple[
+    reviewer_manifest.BoundFile, dict[str, Any]
+]:
+    bound = reviewer_manifest.read_bound_regular_file(
+        path, max_bytes=max_bytes, label=label
+    )
+    try:
+        value = json.loads(bound.raw)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise PanelReviewError(f"{label} is not readable JSON: {path}") from exc
+    if not isinstance(value, dict):
+        raise PanelReviewError(f"{label} must be a JSON object: {path}")
+    return bound, value
+
+
+def _attestation_reviewers(record: dict[str, Any]) -> list[dict[str, Any]]:
+    return [
+        {
+            key: copy.deepcopy(voter[key])
+            for key in (
+                "voter_id",
+                "agent_id",
+                "role",
+                "expertise",
+                "independent_review",
+            )
+        }
+        for voter in record["voters"]
+    ]
+
+
+def _decision_packet_and_ballots(
+    record: dict[str, Any], *, decision_path: Path
+) -> tuple[Path, dict[str, Any], list[dict[str, Any]]]:
+    packet_ref = record.get("packet")
+    if not isinstance(packet_ref, dict) or set(packet_ref) < {"path", "sha256"}:
+        raise PanelReviewError("attestation decision packet reference is invalid")
+    packet_path = _canonical_artifact_path(
+        packet_ref["path"],
+        validation_root=ROOT,
+        label="attestation packet",
+    )
+    bound_packet, packet = _bound_json_object(
+        packet_path,
+        label="attestation packet",
+        max_bytes=reviewer_manifest.MAX_MANIFEST_BYTES,
+    )
+    if bound_packet.sha256 != packet_ref["sha256"]:
+        raise PanelReviewError("attestation packet digest is stale")
+    ballots: list[dict[str, Any]] = []
+    for voter in record.get("voters", []):
+        if "ballot" in voter:
+            ballot_reference = voter.get("ballot")
+            if not isinstance(ballot_reference, dict):
+                raise PanelReviewError("attestation ballot reference is invalid")
+            ballot_path = _canonical_artifact_path(
+                ballot_reference.get("path"),
+                validation_root=ROOT,
+                label="attestation ballot",
+            )
+            expected_ballot_sha = ballot_reference.get("sha256")
+        else:
+            ballot_name = voter.get("ballot_path")
+            if (
+                not isinstance(ballot_name, str)
+                or Path(ballot_name).name != ballot_name
+            ):
+                raise PanelReviewError("attestation ballot filename is invalid")
+            ballot_path = decision_path.parent / ballot_name
+            expected_ballot_sha = voter.get("ballot_sha256")
+        bound_ballot, ballot = _bound_json_object(
+            ballot_path,
+            label="attestation ballot",
+            max_bytes=reviewer_manifest.MAX_MANIFEST_BYTES,
+        )
+        if bound_ballot.sha256 != expected_ballot_sha:
+            raise PanelReviewError("attestation ballot digest is stale")
+        ballots.append(ballot)
+    return packet_path, packet, ballots
+
+
+def _readability_attestation_from_decision(
+    record: dict[str, Any],
+    *,
+    decision_path: Path,
+    audit: dict[str, Any],
+) -> dict[str, Any]:
+    validate_decision_record(record, record_path=decision_path)
+    packet_path, packet, ballots = _decision_packet_and_ballots(
+        record, decision_path=decision_path
+    )
+    current = prepare_packet(
+        audit=audit,
+        review_id=packet["review_id"],
+        created_on=packet["created_on"],
+    )
+    for field in (
+        "source_fingerprints",
+        "panel_contract",
+        "content_targets",
+        "readability_targets",
+        "actionability_targets",
+    ):
+        if packet.get(field) != current.get(field):
+            raise PanelReviewError(
+                f"readability decision {field} is incomplete or stale"
+            )
+    voter_ids = [reviewer["voter_id"] for reviewer in record["voters"]]
+    ballot_by_voter = {
+        ballot["voter"]["voter_id"]: ballot for ballot in ballots
+    }
+    if set(ballot_by_voter) != set(voter_ids):
+        raise PanelReviewError("readability ballot coverage is stale")
+    current_bindings = _readability_target_authorities(packet)
+    content_votes = {
+        voter_id: {
+            row["path"]: row
+            for row in ballot_by_voter[voter_id]["content_votes"]
+        }
+        for voter_id in voter_ids
+    }
+    finding_votes = {
+        voter_id: {
+            (document["document_id"], row["finding_id"]): row
+            for document in ballot_by_voter[voter_id]["readability_votes"]
+            for row in document["finding_reviews"]
+        }
+        for voter_id in voter_ids
+    }
+    action_votes = {
+        voter_id: {
+            row["target_id"]: row
+            for row in ballot_by_voter[voter_id]["actionability_votes"]
+        }
+        for voter_id in voter_ids
+    }
+    findings: list[dict[str, Any]] = []
+    for target in packet["content_targets"]:
+        authority = current_bindings["content"][target["path"]]
+        findings.append(
+            {
+                "category": "content",
+                "target_id": target["path"],
+                "source_fingerprint": authority["source_fingerprint"],
+                "review_binding_fingerprint": authority[
+                    "review_binding_fingerprint"
+                ],
+                "votes": [
+                    {
+                        "voter_id": voter_id,
+                        "disposition": content_votes[voter_id][target["path"]][
+                            "decision"
+                        ],
+                        "reason_code": content_votes[voter_id][target["path"]][
+                            "reason_code"
+                        ],
+                        "rationale": content_votes[voter_id][target["path"]][
+                            "rationale"
+                        ],
+                    }
+                    for voter_id in voter_ids
+                ],
+                "result": {},
+            }
+        )
+    for target in packet["readability_targets"]:
+        authority = current_bindings["readability"][target["document_id"]]
+        findings.append(
+            {
+                "category": "readability",
+                "target_id": target["document_id"],
+                "source_fingerprint": authority["source_fingerprint"],
+                "review_binding_fingerprint": authority[
+                    "review_binding_fingerprint"
+                ],
+                "finding_reviews": [
+                    {
+                        "finding_id": finding["finding_id"],
+                        "source_fingerprint": authority["findings"][
+                            finding["finding_id"]
+                        ]["source_fingerprint"],
+                        "review_binding_fingerprint": authority["findings"][
+                            finding["finding_id"]
+                        ]["review_binding_fingerprint"],
+                        "votes": [
+                            {
+                                "voter_id": voter_id,
+                                "disposition": finding_votes[voter_id][
+                                    (target["document_id"], finding["finding_id"])
+                                ]["decision"],
+                                "reason_code": finding_votes[voter_id][
+                                    (target["document_id"], finding["finding_id"])
+                                ]["reason_code"],
+                                "rationale": finding_votes[voter_id][
+                                    (target["document_id"], finding["finding_id"])
+                                ]["rationale"],
+                            }
+                            for voter_id in voter_ids
+                        ],
+                        "result": {},
+                    }
+                    for finding in sorted(
+                        target["findings"], key=lambda row: row["finding_id"]
+                    )
+                ],
+                "result": {},
+            }
+        )
+    for target in packet["actionability_targets"]:
+        authority = current_bindings["actionability"][target["target_id"]]
+        findings.append(
+            {
+                "category": "actionability",
+                "target_id": target["target_id"],
+                "source_fingerprint": authority["source_fingerprint"],
+                "review_binding_fingerprint": authority[
+                    "review_binding_fingerprint"
+                ],
+                "votes": [
+                    {
+                        "voter_id": voter_id,
+                        "disposition": action_votes[voter_id][target["target_id"]][
+                            "decision"
+                        ],
+                        "reason_code": action_votes[voter_id][target["target_id"]][
+                            "reason_code"
+                        ],
+                        "rationale": action_votes[voter_id][target["target_id"]][
+                            "rationale"
+                        ],
+                    }
+                    for voter_id in voter_ids
+                ],
+                "result": {},
+            }
+        )
+    value = {
+        "schema_version": panel_attestation.ATTESTATION_SCHEMA_VERSION,
+        "kind": panel_attestation.READABILITY_ATTESTATION_KIND,
+        "axis": panel_attestation.READABILITY_AXIS,
+        "review_id": record["review_id"],
+        "decided_on": record["decided_on"],
+        "source_fingerprints": copy.deepcopy(record["source_fingerprints"]),
+        "review_contract_fingerprint": _canonical_json_sha256(
+            packet["panel_contract"]
+        ),
+        "review_artifacts": {
+            "decision": {"sha256": _sha256(decision_path)},
+            "packet": {"sha256": record["packet"]["sha256"]},
+            "ballots": [
+                {
+                    "voter_id": voter["voter_id"],
+                    "sha256": voter["ballot_sha256"],
+                }
+                for voter in sorted(
+                    record["voters"], key=lambda row: row["voter_id"]
+                )
+            ],
+        },
+        "reviewers": _attestation_reviewers(record),
+        "findings": findings,
+        "summary": {},
+        "verdict": "",
+        "rationale": [
+            "Every current target received three independent decisions and a derived majority."
+        ],
+    }
+    finalized = panel_attestation.finalize_attestation(
+        value,
+        expected_path=panel_attestation.READABILITY_ATTESTATION_PATH,
+        expected_readability_current_bindings=current_bindings,
+    )
+    if finalized["verdict"] != "accepted-current-readability":
+        raise PanelReviewError("readability attestation is not release-complete")
+    return finalized
+
+
+def _readability_target_authorities(
+    packet: dict[str, Any],
+) -> dict[str, dict[str, dict[str, Any]]]:
+    """Bind compact Readability rows to the complete current schema-2 packet."""
+
+    result: dict[str, dict[str, dict[str, Any]]] = {
+        "content": {}, "readability": {}, "actionability": {},
+    }
+    for category, field in (
+        ("content", "content_targets"),
+        ("readability", "readability_targets"),
+        ("actionability", "actionability_targets"),
+    ):
+        targets = packet.get(field)
+        if not isinstance(targets, list):
+            raise PanelReviewError(
+                f"readability authority packet {field} is invalid"
+            )
+        for target in targets:
+            try:
+                authority = panel_attestation.readability_target_authority(
+                    category=category, target=target
+                )
+            except panel_attestation.AttestationError as exc:
+                raise PanelReviewError(
+                    f"readability authority packet {field} is invalid"
+                ) from exc
+            target_id = authority["target_id"]
+            if target_id in result[category]:
+                raise PanelReviewError(
+                    f"readability authority packet {field} is duplicated"
+                )
+            result[category][target_id] = authority
+    return result
+
+
+def _semantic_candidate_authorities(
+    packet: dict[str, Any],
+) -> dict[str, dict[str, Any]]:
+    return {
+        target["target_id"]: panel_attestation.semantic_candidate_authority(
+            axis=target["axis"], candidate=target["candidate"]
+        )
+        for target in packet["semantic_targets"]
+    }
+
+
+def _semantic_attestation_from_decision(
+    record: dict[str, Any],
+    *,
+    decision_path: Path,
+    audit: dict[str, Any],
+) -> dict[str, Any]:
+    validate_decision_record(record, record_path=decision_path)
+    _packet_path, packet, _ballots = _decision_packet_and_ballots(
+        record, decision_path=decision_path
+    )
+    validate_semantic_packet_current(packet, audit)
+    target_by_id = {row["target_id"]: row for row in packet["semantic_targets"]}
+    if set(target_by_id) != {
+        row["target_id"] for row in record["semantic_decisions"]
+    }:
+        raise PanelReviewError("semantic decision coverage is incomplete")
+    current_bindings = _semantic_candidate_authorities(packet)
+    findings = []
+    for decision in record["semantic_decisions"]:
+        target = target_by_id[decision["target_id"]]
+        authority = current_bindings[target["target_id"]]
+        if decision["candidate_binding_fingerprint"] != authority[
+            "candidate_binding_fingerprint"
+        ]:
+            raise PanelReviewError("semantic decision candidate binding is stale")
+        findings.append(
+            {
+                "target_id": target["target_id"],
+                "axis": target["axis"],
+                "candidate_binding_fingerprint": decision[
+                    "candidate_binding_fingerprint"
+                ],
+                "votes": copy.deepcopy(decision["ballot_rationales"]),
+                "result": {},
+            }
+        )
+    findings.sort(key=lambda row: row["target_id"])
+    value = {
+        "schema_version": panel_attestation.ATTESTATION_SCHEMA_VERSION,
+        "kind": panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_KIND,
+        "axis": panel_attestation.SEMANTIC_DISPOSITION_AXIS,
+        "review_id": record["review_id"],
+        "decided_on": record["decided_on"],
+        "source_fingerprints": copy.deepcopy(record["source_fingerprints"]),
+        "review_contract_fingerprint": _canonical_json_sha256(
+            packet["panel_contract"]
+        ),
+        "reviewers": _attestation_reviewers(record),
+        "findings": findings,
+        "summary": {},
+        "verdict": "",
+        "rationale": [
+            "Every current semantic candidate received three independent decisions and a majority."
+        ],
+    }
+    return panel_attestation.finalize_attestation(
+        value,
+        expected_path=panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_PATH,
+        expected_semantic_current_bindings=current_bindings,
+    )
+
+
+@lru_cache(maxsize=1)
+def _load_professional_regression_validator() -> ModuleType:
+    module_name = f"{__name__}_professional_regression_validator"
+    existing = sys.modules.get(module_name)
+    if isinstance(existing, ModuleType):
+        return existing
+    source = Path(__file__).resolve().with_name(
+        "validate-professionalism-regression.py"
+    )
+    spec = importlib.util.spec_from_file_location(module_name, source)
+    if spec is None or spec.loader is None:
+        raise PanelReviewError(
+            f"cannot load Professional regression validator: {source}"
+        )
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _compact_professional_reviewer(voter: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: copy.deepcopy(voter[key])
+        for key in (
+            "voter_id",
+            "agent_id",
+            "role",
+            "expertise",
+            "independent_review",
+            "expertise_tags",
+            "qualification_claims",
+        )
+    }
+
+
+def _compact_professional_vote_v2(
+    assignment: dict[str, Any], *, skill_id: str
+) -> dict[str, Any]:
+    """Project a fully validated schema-3 vote without source context."""
+
+    full_vote = copy.deepcopy(assignment["vote"])
+    if full_vote.get("skill_id") != skill_id:
+        raise PanelReviewError("professional compact vote target is stale")
+    scoped = _professional_v3_target_scoped_capsule_materials(
+        assignment["capsule"]
+    )
+    materials = scoped.get(skill_id)
+    if materials is None:
+        raise PanelReviewError("professional compact capsule target is stale")
+    _validate_professional_v3_semantic_grounding(
+        full_vote,
+        materials_by_skill=materials,
+        label=f"Professional compact projection {skill_id}",
+    )
+    voter = assignment["voter"]
+    voter_id = voter["voter_id"]
+    is_architecture = voter["expertise_tags"] == [
+        PROFESSIONAL_ARCHITECTURE_EXPERTISE_TAG
+    ]
+    failures = full_vote["examined_failure_modes"]
+    omissions = full_vote["examined_omission_candidates"]
+    adjacency = full_vote["examined_adjacent_candidates"]
+    proof_limits = full_vote["proof_limits"]
+    compact = {
+        "reviewer": voter_id,
+        "decision": full_vote["decision"],
+        "reason_code": full_vote["reason_code"],
+        "review_evidence_fingerprint": (
+            panel_attestation.professional_compact_vote_fingerprint(
+                {"voter": voter, "vote": full_vote}
+            )
+        ),
+        "criteria": {
+            "ordinary": {
+                criterion: full_vote["criteria"][criterion]["status"]
+                for criterion in sorted(PROFESSIONAL_ORDINARY_CRITERIA)
+            },
+            "domain_critical_defects": (
+                []
+                if is_architecture
+                else sorted(
+                    criterion
+                    for criterion in PROFESSIONAL_DOMAIN_CRITICAL_CRITERIA
+                    if full_vote["criteria"][criterion]["status"]
+                    == "defect-found"
+                )
+            ),
+        },
+        "examined_failure_modes": {
+            "count": len(failures),
+            "defect_count": sum(
+                item["outcome"] == "defect-found" for item in failures
+            ),
+            "digest": _canonical_json_sha256(failures),
+        },
+        "examined_omission_candidates": {
+            "count": len(omissions),
+            "defect_count": sum(
+                item["outcome"] == "defect-found" for item in omissions
+            ),
+            "digest": _canonical_json_sha256(omissions),
+        },
+        "examined_adjacent_candidates": {
+            "count": len(adjacency),
+            "required_count": sum(
+                item["review_origin"] == "packet-required"
+                for item in adjacency
+            ),
+            "reviewer_added_candidate_ids": sorted(
+                item["skill_id"]
+                for item in adjacency
+                if item["review_origin"] == "reviewer-added"
+            ),
+            "defect_count": sum(
+                item["disposition"] == "gap-or-overlap-defect"
+                for item in adjacency
+            ),
+            "digest": _canonical_json_sha256(adjacency),
+        },
+        "proof_limits": {
+            "count": len(proof_limits),
+            "digest": _canonical_json_sha256(proof_limits),
+            "bounded": [
+                item[
+                    : panel_contracts.PROFESSIONAL_COMPACT_PROOF_LIMIT_ITEM_MAXIMUM
+                ].rstrip()
+                for item in proof_limits[
+                    : panel_contracts.PROFESSIONAL_COMPACT_PROOF_LIMIT_ITEM_COUNT
+                ]
+            ],
+        },
+        "rationale": full_vote["rationale"][
+            : panel_contracts.PROFESSIONAL_COMPACT_RATIONALE_MAXIMUM
+        ].rstrip(),
+    }
+    return compact
+
+
+def _professional_authenticated_claims_from_findings(
+    findings: list[dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    """Extract claims only after the caller authenticates their owning input."""
+
+    if not isinstance(findings, list) or not findings:
+        raise PanelReviewError("Professional authenticated findings are invalid")
+    claims: dict[str, dict[str, Any]] = {}
+    for row in findings:
+        if not isinstance(row, dict) or not isinstance(row.get("skill_id"), str):
+            raise PanelReviewError("Professional authenticated finding is invalid")
+        votes = row.get("votes")
+        result = row.get("result")
+        provenance = row.get("provenance")
+        if (
+            not isinstance(votes, list)
+            or len(votes) != panel_contracts.PROFESSIONAL_PANEL_SIZE
+            or any(
+                not isinstance(vote, dict)
+                or not isinstance(vote.get("reviewer"), str)
+                for vote in votes
+            )
+            or not isinstance(result, dict)
+            or not isinstance(result.get("qualification_coverage"), dict)
+            or not isinstance(result.get("evidence_metrics"), dict)
+            or not isinstance(result.get("review_dependencies"), dict)
+            or not isinstance(
+                result["review_dependencies"].get(
+                    "reviewer_added_candidate_ids_union"
+                ),
+                list,
+            )
+            or not isinstance(provenance, dict)
+            or not isinstance(provenance.get("origin"), dict)
+        ):
+            raise PanelReviewError(
+                "Professional authenticated compact claims are invalid"
+            )
+        voter_ids = [vote["reviewer"] for vote in votes]
+        if voter_ids != sorted(set(voter_ids)):
+            raise PanelReviewError(
+                "Professional authenticated compact voters are invalid"
+            )
+        skill_id = row["skill_id"]
+        if skill_id in claims:
+            raise PanelReviewError(
+                "Professional authenticated finding identities are duplicated"
+            )
+        claims[skill_id] = {
+            "vote_authorities": {
+                vote["reviewer"]: copy.deepcopy(vote)
+                for vote in votes
+            },
+            "reviewer_partition": {
+                "domain_voters": copy.deepcopy(
+                    row["result"]["qualification_coverage"]["domain_voters"]
+                ),
+                "architecture_voter": row["result"][
+                    "qualification_coverage"
+                ]["architecture_voter"],
+            },
+            "evidence_metrics": copy.deepcopy(
+                row["result"]["evidence_metrics"]
+            ),
+            "reviewer_added_candidate_ids_union": copy.deepcopy(
+                row["result"]["review_dependencies"][
+                    "reviewer_added_candidate_ids_union"
+                ]
+            ),
+            "origin": copy.deepcopy(row["provenance"]["origin"]),
+        }
+    return claims
+
+
+def _professional_attestation_bindings_from_state(
+    *,
+    current_bindings: dict[str, dict[str, Any]],
+    authenticated_claims: dict[str, dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    try:
+        return professional_carry.professional_current_authority(
+            current_bindings,
+            authenticated_claims=authenticated_claims,
+        )
+    except professional_carry.ProfessionalCarryForwardError as exc:
+        raise PanelReviewError(
+            "Professional current authority is invalid"
+        ) from exc
+
+
+def _professional_attestation_current_bindings(
+    current_packet: dict[str, Any],
+    *,
+    authenticated_claims: dict[str, dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    bindings = professional_carry.professional_review_bindings(
+        current_packet["professional_targets"]
+    )
+    return _professional_attestation_bindings_from_state(
+        current_bindings=bindings,
+        authenticated_claims=authenticated_claims,
+    )
+
+
+def validate_professional_attestation_current(
+    value: dict[str, Any], *, current_packet: dict[str, Any],
+    authenticated_claims: dict[str, dict[str, Any]],
+    validation_root: Path | None = None,
+    expected_skill_ids: set[str] | None = None,
+) -> None:
+    """Rebind compact Professional conclusions to complete current authority."""
+
+    authorities = _professional_attestation_current_bindings(
+        current_packet, authenticated_claims=authenticated_claims
+    )
+    expected = set(authorities) if expected_skill_ids is None else expected_skill_ids
+    if not expected <= set(authorities):
+        raise PanelReviewError(
+            "Professional attestation target coverage is stale"
+        )
+    scoped_authorities = {
+        skill_id: authorities[skill_id] for skill_id in sorted(expected)
+    }
+
+    try:
+        panel_attestation.validate_attestation(
+            value,
+            expected_professional_current_bindings=scoped_authorities,
+            expected_review_contract_fingerprint=current_packet.get(
+                "review_contract_fingerprint",
+                value["review_contract_fingerprint"],
+            ),
+        )
+    except panel_attestation.AttestationError as exc:
+        raise PanelReviewError(
+            "Professional attestation exact current binding is stale"
+        ) from exc
+
+    targets = {
+        target["skill_id"]: target
+        for target in current_packet["professional_targets"]
+    }
+    findings = {row["skill_id"]: row for row in value["findings"]}
+    if (
+        not expected <= set(targets)
+        or len(findings) != len(value["findings"])
+        or set(findings) != expected
+    ):
+        raise PanelReviewError(
+            "Professional attestation target coverage is stale"
+        )
+
+
+def _professional_attestation_projection_from_decision(
+    record: dict[str, Any], *, decision_path: Path
+) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
+    cache = _professional_v3_invocation_cache()
+    validate_decision_record(
+        record,
+        record_path=decision_path,
+        validation_root=ROOT,
+    )
+    packet_path, packet, _ballots = _decision_packet_and_ballots(
+        record, decision_path=decision_path
+    )
+    if (
+        record.get("kind") != PROFESSIONAL_COMPLETENESS_DECISION_KIND
+        or record.get("schema_version")
+        != PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION
+    ):
+        raise PanelReviewError(
+            "professional attestation requires a schema-3 decision"
+        )
+    state = _professional_v3_packet_state(
+        packet,
+        validation_root=ROOT,
+        artifact_path=packet_path,
+        validate_baseline=True,
+        invocation_cache=cache,
+    )
+    head_commit = _git_output("rev-parse", "--verify", "HEAD").stdout.decode(
+        "ascii"
+    ).strip()
+    if re.fullmatch(r"[0-9a-f]{40}", head_commit) is None:
+        raise PanelReviewError("professional attestation origin commit is invalid")
+    targets = {
+        row["skill_id"]: row for row in packet["professional_targets"]
+    }
+    findings = []
+    dependency_material_catalog: dict[str, str] = {}
+    authenticated_claims: dict[str, dict[str, Any]] = {}
+    for row in record["professional_decisions"]:
+        skill_id = row["skill_id"]
+        provenance = row["provenance"]
+        origin_reference = (
+            _professional_artifact_reference(
+                decision_path,
+                validation_root=ROOT,
+                kind=PROFESSIONAL_COMPLETENESS_DECISION_KIND,
+                review_id=record["review_id"],
+            )
+            if provenance["mode"] == "fresh"
+            else provenance["origin_decision"]
+        )
+        expected_fingerprint = (
+            row["target_decision_fingerprint"]
+            if provenance["mode"] == "fresh"
+            else provenance["origin_target_decision_fingerprint"]
+        )
+        if (
+            provenance["mode"] != "fresh"
+            and isinstance(origin_reference, dict)
+            and origin_reference.get("kind")
+            == panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_KIND
+        ):
+            baseline_state = state.get("baseline_state")
+            origin_state = (
+                baseline_state.get("origins", {}).get(skill_id)
+                if isinstance(baseline_state, dict)
+                else None
+            )
+            if (
+                not isinstance(origin_state, dict)
+                or origin_state.get("origin_verdict_digest")
+                != expected_fingerprint
+            ):
+                raise PanelReviewError(
+                    f"professional attested origin is stale: {skill_id}"
+                )
+            origin_finding = origin_state["finding"]
+            carried = copy.deepcopy(origin_finding)
+            carried["provenance"]["mode"] = "carried"
+            authenticated_claims[skill_id] = (
+                _professional_authenticated_claims_from_findings(
+                    [origin_finding]
+                )[skill_id]
+            )
+            carried["result"] = {}
+            for dependency_id in carried["dependency_ids"]:
+                material_binding = state["bindings"][dependency_id][
+                    "package_material_binding"
+                ]
+                existing = dependency_material_catalog.get(dependency_id)
+                if existing is not None and existing != material_binding:
+                    raise PanelReviewError(
+                        "professional dependency catalog is inconsistent"
+                    )
+                dependency_material_catalog[dependency_id] = material_binding
+            findings.append(carried)
+            continue
+        origin = _load_professional_v3_fresh_origin_target(
+            origin_reference=origin_reference,
+            skill_id=skill_id,
+            expected_target_decision_fingerprint=expected_fingerprint,
+            validation_root=ROOT,
+            forbidden_paths=set(),
+            invocation_cache=cache,
+        )
+        origin_row = origin["target_row"]
+        origin_target = origin["target"]
+        current_binding = state["bindings"][skill_id]
+        target_material_fingerprint = current_binding[
+            "package_material_binding"
+        ]
+        dependency_ids = origin_row["review_dependencies"][
+            "dependency_candidate_ids"
+        ]
+        dependency_materials = {
+            candidate_id: state["bindings"][candidate_id][
+                "package_material_binding"
+            ]
+            for candidate_id in dependency_ids
+        }
+        compact_origin = {
+            "origin_review_id": origin["decision"]["review_id"],
+            "origin_commit": head_commit,
+            "origin_verdict_digest": expected_fingerprint,
+        }
+        compact_votes = [
+            _compact_professional_vote_v2(
+                assignment, skill_id=skill_id
+            )
+            for assignment in origin["assignments"]
+        ]
+        domain_voters = sorted(
+            assignment["voter"]["voter_id"]
+            for assignment in origin["assignments"]
+            if assignment["voter"]["expertise_tags"]
+            != [PROFESSIONAL_ARCHITECTURE_EXPERTISE_TAG]
+        )
+        architecture_voters = [
+            assignment["voter"]["voter_id"]
+            for assignment in origin["assignments"]
+            if assignment["voter"]["expertise_tags"]
+            == [PROFESSIONAL_ARCHITECTURE_EXPERTISE_TAG]
+        ]
+        if (
+            len(domain_voters)
+            != panel_contracts.PROFESSIONAL_REQUIRED_DOMAIN_EXPERTS
+            or len(architecture_voters)
+            != panel_contracts.PROFESSIONAL_REQUIRED_ARCHITECTURE_EXPERTS
+        ):
+            raise PanelReviewError(
+                f"professional compact reviewer partition is stale: {skill_id}"
+            )
+        authenticated_claims[skill_id] = {
+            "vote_authorities": {
+                vote["reviewer"]: copy.deepcopy(vote)
+                for vote in compact_votes
+            },
+            "reviewer_partition": {
+                "domain_voters": domain_voters,
+                "architecture_voter": architecture_voters[0],
+            },
+            "evidence_metrics": copy.deepcopy(
+                origin_row["evidence_metrics"]
+            ),
+            "reviewer_added_candidate_ids_union": copy.deepcopy(
+                origin_row["review_dependencies"][
+                    "reviewer_added_candidate_ids_union"
+                ]
+            ),
+            "origin": copy.deepcopy(compact_origin),
+        }
+        for candidate_id, material_binding in dependency_materials.items():
+            existing = dependency_material_catalog.get(candidate_id)
+            if existing is not None and existing != material_binding:
+                raise PanelReviewError(
+                    "professional dependency catalog is inconsistent"
+                )
+            dependency_material_catalog[candidate_id] = material_binding
+        findings.append(
+            {
+                "skill_id": skill_id,
+                "package_material_binding": target_material_fingerprint,
+                "review_unit_binding": row["review_unit_binding"],
+                "dependency_ids": sorted(dependency_materials),
+                "required_expertise_tags": copy.deepcopy(
+                    origin_target["required_expertise_tags"]
+                ),
+                "provenance": {
+                    "mode": (
+                        "fresh" if provenance["mode"] == "fresh" else "carried"
+                    ),
+                    "origin": compact_origin,
+                },
+                "votes": compact_votes,
+                "result": {},
+            }
+        )
+    try:
+        cost = _load_professional_regression_validator()._professional_schema3_review_cost(
+            record,
+            packet=packet,
+        )
+    except ValueError as exc:
+        raise PanelReviewError(
+            f"professional attestation review cost is invalid: {exc}"
+        ) from exc
+    cost_input = {
+        key: copy.deepcopy(cost[key])
+        for key in panel_attestation.PROFESSIONAL_REVIEW_COST_INPUT_FIELDS
+    }
+    value = {
+        "schema_version": panel_attestation.ATTESTATION_SCHEMA_VERSION,
+        "kind": panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_KIND,
+        "axis": panel_attestation.PROFESSIONAL_COMPLETENESS_AXIS,
+        "review_id": record["review_id"],
+        "decided_on": record["decided_on"],
+        "review_contract_fingerprint": record[
+            "review_contract_fingerprint"
+        ],
+        "dependency_material_catalog": dict(
+            sorted(dependency_material_catalog.items())
+        ),
+        "reviewers": [
+            _compact_professional_reviewer(voter)
+            for voter in record["voters"]
+        ],
+        "findings": findings,
+        "review_cost_input": cost_input,
+        "summary": {},
+        "verdict": "",
+        "rationale": [
+            "Every current package has complete effective evidence and a derived formal disposition."
+        ],
+    }
+    finalized = panel_attestation.finalize_attestation(
+        value,
+        expected_path=(
+            panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH
+        ),
+        expected_professional_current_bindings=(
+            _professional_attestation_current_bindings(
+                packet, authenticated_claims=authenticated_claims
+            )
+        ),
+    )
+    if finalized["verdict"] != (
+        "accepted-current-professional-completeness"
+    ):
+        raise PanelReviewError(
+            "professional attestation is not release-complete"
+        )
+    return finalized, authenticated_claims
+
+
+def _professional_attestation_from_decision(
+    record: dict[str, Any], *, decision_path: Path
+) -> dict[str, Any]:
+    """Return the compact projection while keeping authority out-of-band."""
+
+    return _professional_attestation_projection_from_decision(
+        record, decision_path=decision_path
+    )[0]
+
+
+def _attest(args: argparse.Namespace) -> tuple[Path, dict[str, Any]]:
+    decision_path = _require_same_ephemeral_run_path(
+        _cli_path(args.decision),
+        review_id=args.review_id,
+        label="attestation decision",
+    )
+    expected_decision = _ephemeral_review_path(
+        args.review_id, "panel", "decision.json"
+    )
+    if decision_path.absolute() != expected_decision.resolve(strict=False):
+        raise PanelReviewError(
+            "attestation decision must use the canonical transient panel path"
+        )
+    _bound_decision, record = _bound_json_object(
+        decision_path,
+        label="attestation decision",
+        max_bytes=reviewer_manifest.MAX_MANIFEST_BYTES,
+    )
+    if record.get("review_id") != args.review_id:
+        raise PanelReviewError("attestation decision review_id is stale")
+    readability_current_bindings = None
+    semantic_current_bindings = None
+    professional_current_bindings = None
+    professional_projection_head = None
+    if args.panel_kind == READABILITY_PANEL_KIND:
+        if not args.audit:
+            raise PanelReviewError("readability attestation requires --audit")
+        value = _readability_attestation_from_decision(
+            record,
+            decision_path=decision_path,
+            audit=_json_object(_cli_path(args.audit), label="content audit"),
+        )
+        _packet_path, readability_packet, _ballots = (
+            _decision_packet_and_ballots(record, decision_path=decision_path)
+        )
+        readability_current_bindings = _readability_target_authorities(
+            readability_packet
+        )
+    elif args.panel_kind == SEMANTIC_DISPOSITION_PANEL_KIND:
+        if not args.audit:
+            raise PanelReviewError("semantic attestation requires --audit")
+        value = _semantic_attestation_from_decision(
+            record,
+            decision_path=decision_path,
+            audit=_json_object(_cli_path(args.audit), label="content audit"),
+        )
+        _packet_path, semantic_packet, _ballots = _decision_packet_and_ballots(
+            record, decision_path=decision_path
+        )
+        semantic_current_bindings = _semantic_candidate_authorities(
+            semantic_packet
+        )
+    else:
+        if args.audit:
+            raise PanelReviewError("professional attestation rejects --audit")
+        professional_projection_head = (
+            _professional_attestation_clean_stable_head()
+        )
+        value, professional_claims = (
+            _professional_attestation_projection_from_decision(
+            record, decision_path=decision_path
+            )
+        )
+        _packet_path, professional_packet, _ballots = (
+            _decision_packet_and_ballots(record, decision_path=decision_path)
+        )
+        professional_current_bindings = (
+            _professional_attestation_current_bindings(
+                professional_packet,
+                authenticated_claims=professional_claims,
+            )
+        )
+    output = _require_same_ephemeral_run_path(
+        _cli_path(args.out),
+        review_id=args.review_id,
+        label="attestation output",
+    )
+    expected_output = _ephemeral_review_path(args.review_id, "attestation.json")
+    if output.absolute() != expected_output.resolve(strict=False):
+        raise PanelReviewError(
+            "attestation output must use the canonical transient run path"
+        )
+    payload = panel_attestation.canonical_attestation_bytes(
+        value,
+        expected_path=panel_attestation.ATTESTATION_PATHS[args.panel_kind],
+        expected_readability_current_bindings=readability_current_bindings,
+        expected_semantic_current_bindings=semantic_current_bindings,
+        expected_professional_current_bindings=professional_current_bindings,
+    )
+    if professional_projection_head is not None:
+        confirmed_head = _professional_attestation_clean_stable_head()
+        if confirmed_head != professional_projection_head:
+            raise PanelReviewError(
+                "professional attestation HEAD changed after projection"
+            )
+        fresh_origin_commits = {
+            row["provenance"]["origin"]["origin_commit"]
+            for row in value["findings"]
+            if row["provenance"]["mode"] == "fresh"
+        }
+        if fresh_origin_commits and fresh_origin_commits != {
+            professional_projection_head
+        }:
+            raise PanelReviewError(
+                "professional attestation fresh origin commit is stale"
+            )
+    _write_json(
+        output,
+        json.loads(payload),
+        compact=True,
+        create_only=True,
+        validation_root=ROOT,
+    )
+    bound_output = reviewer_manifest.read_bound_regular_file(
+        output,
+        expected_size=len(payload),
+        max_bytes=panel_attestation.MAX_ATTESTATION_BYTES,
+        label="attestation output",
+    )
+    if bound_output.raw != payload:
+        raise PanelReviewError("attestation output bytes are not canonical")
+    return output, value
+
+
+def _validate_semantic_attestation_current(
+    value: dict[str, Any], *, current_packet: dict[str, Any]
+) -> None:
+    expected = _semantic_candidate_authorities(current_packet)
+    try:
+        panel_attestation.validate_attestation(
+            value,
+            expected_semantic_current_bindings=expected,
+        )
+    except panel_attestation.AttestationError as exc:
+        raise PanelReviewError(
+            "semantic attestation exact current candidate coverage is stale"
+        ) from exc
+    for row in value["findings"]:
+        if (
+            len(row["votes"]) != PANEL_SIZE
+            or len(row["result"]["supporting_voters"]) < 2
+            or sum(row["result"]["vote_counts"].values()) != PANEL_SIZE
+        ):
+            raise PanelReviewError(
+                "semantic attestation majority evidence is incomplete"
+            )
+
+
+def _semantic_attestation_selector_target_coverage(
+    attestation_selector: dict[str, Any],
+) -> frozenset[tuple[str, str]]:
+    """Return only the untrusted target identities used to select authority."""
+
+    findings = attestation_selector.get("findings")
+    if not isinstance(findings, list) or not all(
+        isinstance(finding, dict) for finding in findings
+    ):
+        raise PanelReviewError(
+            "semantic attestation selector finding coverage is invalid"
+        )
+    identities: list[tuple[str, str]] = []
+    for finding in findings:
+        axis = finding.get("axis")
+        target_id = finding.get("target_id")
+        if (
+            axis not in SEMANTIC_AXES
+            or not isinstance(target_id, str)
+            or re.fullmatch(rf"{axis}:[0-9a-f]{{64}}", target_id) is None
+        ):
+            raise PanelReviewError(
+                "semantic attestation selector target identity is invalid"
+            )
+        identities.append((axis, target_id))
+    coverage = frozenset(identities)
+    if len(coverage) != len(identities):
+        raise PanelReviewError(
+            "semantic attestation selector target identities are duplicated"
+        )
+    return coverage
+
+
+def _semantic_current_packet_for_attestation_selector(
+    *,
+    audit: dict[str, Any],
+    review_id: str,
+    decided_on: str,
+    attestation_selector: dict[str, Any],
+) -> dict[str, Any]:
+    """Select one canonical ordinary or forced-axis Semantic authority."""
+
+    if not isinstance(attestation_selector, dict):
+        raise PanelReviewError("semantic attestation selector must be an object")
+    selector_coverage = _semantic_attestation_selector_target_coverage(
+        attestation_selector
+    )
+    matches: list[dict[str, Any]] = []
+    for axes in ((), ("root",), ("reference",), ("root", "reference")):
+        candidate_audit = _semantic_audit_for_axis_rereview(audit, list(axes))
+        packet = prepare_semantic_disposition_packet(
+            audit=candidate_audit,
+            review_id=review_id,
+            created_on=decided_on,
+        )
+        validate_semantic_packet_current(packet, audit)
+        packet_coverage = frozenset(
+            (target["axis"], target["target_id"])
+            for target in packet["semantic_targets"]
+        )
+        review_contract_fingerprint = _canonical_json_sha256(
+            packet["panel_contract"]
+        )
+        axis_counts = {
+            axis: packet["panel_contract"]["required_axis_target_counts"][axis]
+            for axis in sorted(SEMANTIC_AXES)
+        }
+        source_mode = _semantic_source_fingerprint_selector_mode(
+            selector_fingerprints=(
+                attestation_selector.get("detector_contract_fingerprints")
+                if attestation_selector.get("schema_version")
+                == panel_attestation.ATTESTATION_SCHEMA_VERSION
+                else attestation_selector.get("source_fingerprints")
+            ),
+            current_fingerprints=packet["source_fingerprints"],
+            review_id=review_id,
+            review_contract_fingerprint=review_contract_fingerprint,
+            target_count=packet["panel_contract"]["required_target_count"],
+            axis_counts=axis_counts,
+        )
+        if (
+            source_mode is not None
+            and attestation_selector.get("review_contract_fingerprint")
+            == review_contract_fingerprint
+            and selector_coverage == packet_coverage
+        ):
+            selected_packet = copy.deepcopy(packet)
+            if source_mode == "compatibility":
+                selected_packet["source_fingerprints"] = copy.deepcopy(
+                    attestation_selector["source_fingerprints"]
+                )
+            matches.append(selected_packet)
+    if len(matches) != 1:
+        raise PanelReviewError(
+            "semantic attestation selector must match exactly one current authority"
+        )
+    return matches[0]
+
+
+def _semantic_fixed_current_validation(
+    *,
+    audit: dict[str, Any],
+    attestation_selector: dict[str, Any],
+) -> tuple[dict[str, dict[str, Any]], str]:
+    """Resolve compact current authority, including reviewed removals.
+
+    A removed rewrite target has no current source object to recompute. Its sole
+    surviving authority is the candidate binding authenticated by the compact
+    attestation's immutable majority evidence. Every current non-rewrite target
+    still binds complete collector evidence, and exact coverage rejects any new
+    or unrelated missing candidate.
+    """
+
+    if (
+        not isinstance(attestation_selector, dict)
+        or attestation_selector.get("schema_version")
+        != panel_attestation.ATTESTATION_SCHEMA_VERSION
+        or attestation_selector.get("axis")
+        != SEMANTIC_DISPOSITION_PANEL_KIND
+    ):
+        raise PanelReviewError(
+            "semantic fixed attestation selector is not compact schema 2"
+        )
+    findings = attestation_selector.get("findings")
+    if not isinstance(findings, list) or not findings:
+        raise PanelReviewError(
+            "semantic fixed attestation findings are invalid"
+        )
+    root_semantic, reference_semantic = _semantic_audit_sections(audit)
+    current_fingerprints = _semantic_source_fingerprints(
+        audit,
+        root_semantic=root_semantic,
+        reference_semantic=reference_semantic,
+    )
+    detectors = attestation_selector.get("detector_contract_fingerprints")
+    detector_keys = {
+        "root_detector_contract", "reference_detector_contract"
+    }
+    if (
+        not isinstance(detectors, dict)
+        or set(detectors) != detector_keys
+        or any(
+            detectors[key] != current_fingerprints[key]
+            for key in detector_keys
+        )
+    ):
+        raise PanelReviewError(
+            "semantic fixed detector contract is stale"
+        )
+
+    current_authorities: dict[str, dict[str, Any]] = {}
+    current_candidates: dict[str, dict[str, Any]] = {}
+    disposition_entries: dict[str, dict[str, Any]] = {}
+    for axis, semantic in (
+        ("root", root_semantic),
+        ("reference", reference_semantic),
+    ):
+        candidates = semantic.get("candidates")
+        if not isinstance(candidates, list):
+            raise PanelReviewError(
+                f"semantic current {axis} candidates are invalid"
+            )
+        for candidate in candidates:
+            if axis == "reference" and candidate.get(
+                "detector_status"
+            ) != "candidate":
+                continue
+            candidate_id = candidate.get("candidate_id")
+            target_id = f"{axis}:{candidate_id}"
+            if target_id in current_authorities:
+                raise PanelReviewError(
+                    "semantic current candidate identities are duplicated"
+                )
+            current_authorities[target_id] = (
+                panel_attestation.semantic_candidate_authority(
+                    axis=axis,
+                    candidate=candidate,
+                )
+            )
+            current_candidates[target_id] = candidate
+        contract = semantic.get("disposition_contract")
+        entries = contract.get("entries") if isinstance(contract, dict) else None
+        if not isinstance(entries, list) or not all(
+            isinstance(entry, dict) for entry in entries
+        ):
+            raise PanelReviewError(
+                f"semantic current {axis} disposition entries are invalid"
+            )
+        for entry in entries:
+            candidate_id = entry.get("candidate_id")
+            target_id = f"{axis}:{candidate_id}"
+            if target_id in disposition_entries:
+                raise PanelReviewError(
+                    "semantic current disposition entries are duplicated"
+                )
+            disposition_entries[target_id] = entry
+
+    finding_ids: list[str] = []
+    finding_axes = {axis: 0 for axis in SEMANTIC_AXES}
+    missing_rewrite_authorities: dict[str, dict[str, Any]] = {}
+    for index, finding in enumerate(findings):
+        if not isinstance(finding, dict):
+            raise PanelReviewError(
+                f"semantic fixed finding[{index}] is invalid"
+            )
+        target_id = finding.get("target_id")
+        axis = finding.get("axis")
+        if (
+            axis not in SEMANTIC_AXES
+            or not isinstance(target_id, str)
+            or re.fullmatch(rf"{axis}:[0-9a-f]{{64}}", target_id) is None
+        ):
+            raise PanelReviewError(
+                "semantic fixed target identity is invalid"
+            )
+        finding_ids.append(target_id)
+        finding_axes[axis] += 1
+        votes = finding.get("votes")
+        vote_counts: dict[str, int] = {}
+        if isinstance(votes, list):
+            for vote in votes:
+                if isinstance(vote, dict) and isinstance(
+                    vote.get("disposition"), str
+                ):
+                    disposition = vote["disposition"]
+                    vote_counts[disposition] = vote_counts.get(disposition, 0) + 1
+        winners = [
+            disposition
+            for disposition, count in vote_counts.items()
+            if count >= 2
+        ]
+        if len(winners) != 1:
+            raise PanelReviewError(
+                "semantic fixed finding lacks one majority disposition"
+            )
+        winner = winners[0]
+        if target_id in current_authorities:
+            entry = disposition_entries.get(target_id)
+            if winner == "rewrite":
+                raise PanelReviewError(
+                    "semantic fixed rewrite target remains current"
+                )
+            if entry is None or _semantic_entry_mismatches(
+                axis=axis,
+                candidate=current_candidates[target_id],
+                entry=entry,
+            ):
+                raise PanelReviewError(
+                    "semantic attestation application entries are stale"
+                )
+            if entry.get("disposition") != winner:
+                raise PanelReviewError(
+                    "semantic fixed attestation disposition mismatch"
+                )
+            continue
+        binding = finding.get("candidate_binding_fingerprint")
+        if winner != "rewrite" or not isinstance(binding, str):
+            raise PanelReviewError(
+                "semantic fixed missing target lacks a rewrite majority"
+            )
+        if target_id in disposition_entries:
+            raise PanelReviewError(
+                "semantic fixed rewrite target remains current"
+            )
+        missing_rewrite_authorities[target_id] = {
+            "candidate_binding_fingerprint": binding,
+            "reviewed_rewrite": True,
+        }
+    if finding_ids != sorted(set(finding_ids)):
+        raise PanelReviewError(
+            "semantic fixed target identities are not canonical"
+        )
+    if set(current_authorities) - set(finding_ids):
+        raise PanelReviewError(
+            "semantic fixed attestation omits a current candidate"
+        )
+    if set(disposition_entries) != set(current_authorities):
+        raise PanelReviewError(
+            "semantic attestation application entries are stale"
+        )
+    authorities = {**current_authorities, **missing_rewrite_authorities}
+    if set(authorities) != set(finding_ids):
+        raise PanelReviewError(
+            "semantic fixed attestation coverage is incomplete"
+        )
+    contract_fingerprint = _canonical_json_sha256(
+        _semantic_panel_contract(
+            root_target_count=finding_axes["root"],
+            reference_target_count=finding_axes["reference"],
+        )
+    )
+    if attestation_selector.get(
+        "review_contract_fingerprint"
+    ) != contract_fingerprint:
+        raise PanelReviewError(
+            "semantic fixed review contract is stale"
+        )
+    return authorities, contract_fingerprint
+
+
+def _current_attestation_validation(
+    panel_kind: str,
+    *,
+    review_id: str,
+    decided_on: str,
+    attestation_selector: dict[str, Any],
+    promotion_decision_path: Path | None = None,
+    promotion_source_bytes: bytes | None = None,
+) -> tuple[
+    str,
+    dict[str, Any],
+    Callable[[dict[str, Any]], None],
+]:
+    if panel_kind == PROFESSIONAL_COMPLETENESS_PANEL_KIND:
+        if promotion_decision_path is not None:
+            if not isinstance(promotion_source_bytes, bytes):
+                raise PanelReviewError(
+                    "Professional promotion source bytes are required"
+                )
+            transient_decision = _ephemeral_review_path(
+                review_id, "panel", "decision.json"
+            )
+            supplied_decision = (
+                promotion_decision_path
+                if promotion_decision_path.is_absolute()
+                else ROOT / promotion_decision_path
+            ).absolute()
+            if supplied_decision != transient_decision.resolve(strict=False):
+                raise PanelReviewError(
+                    "Professional promotion decision authority is not canonical"
+                )
+            _bound_decision, decision_record = _bound_json_object(
+                transient_decision,
+                label="Professional promotion decision authority",
+                max_bytes=reviewer_manifest.MAX_MANIFEST_BYTES,
+            )
+            if decision_record.get("review_id") != review_id:
+                raise PanelReviewError(
+                    "Professional promotion decision review_id is stale"
+                )
+            generated, authenticated_claims = (
+                _professional_attestation_projection_from_decision(
+                decision_record, decision_path=transient_decision
+                )
+            )
+        else:
+            authenticated_claims = (
+                _professional_authenticated_claims_from_findings(
+                    attestation_selector.get("findings")
+                )
+            )
+        targets = _professional_package_targets(root=ROOT)
+        bindings, snapshot = _professional_v3_binding_state(
+            targets,
+            review_contract_fingerprint=(
+                _professional_evidence_review_contract_fingerprint()
+            ),
+        )
+        current_packet = {
+            "review_id": review_id,
+            "created_on": decided_on,
+            "professional_targets": [
+                {
+                    **target,
+                    "review_binding": snapshot["targets"][target["skill_id"]],
+                }
+                for target in targets
+            ],
+        }
+        current_authority = _professional_attestation_bindings_from_state(
+            current_bindings=bindings,
+            authenticated_claims=authenticated_claims,
+        )
+        if promotion_decision_path is not None:
+            generated_bytes = panel_attestation.canonical_attestation_bytes(
+                generated,
+                expected_path=(
+                    panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH
+                ),
+                expected_review_contract_fingerprint=(
+                    _professional_evidence_review_contract_fingerprint()
+                ),
+                expected_professional_current_bindings=current_authority,
+            )
+            if generated_bytes != promotion_source_bytes:
+                raise PanelReviewError(
+                    "Professional promotion attestation does not match its decision projection"
+                )
+
+        return panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH, {
+            "expected_review_contract_fingerprint": (
+                _professional_evidence_review_contract_fingerprint()
+            ),
+            "expected_professional_current_bindings": current_authority,
+        }, lambda _value: None
+    audit = _json_object(
+        ROOT / "reports" / "skill-content-audit.json",
+        label="current content audit",
+    )
+    if panel_kind == SEMANTIC_DISPOSITION_PANEL_KIND:
+        authorities, contract_fingerprint = (
+            _semantic_fixed_current_validation(
+                audit=audit,
+                attestation_selector=attestation_selector,
+            )
+        )
+        return panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_PATH, {
+            "expected_review_contract_fingerprint": contract_fingerprint,
+            "expected_semantic_current_bindings": authorities,
+        }, lambda value: None
+    generated_readability: dict[str, Any] | None = None
+    if promotion_decision_path is not None:
+        transient_decision = _ephemeral_review_path(
+            review_id, "panel", "decision.json"
+        )
+        supplied_decision = (
+            promotion_decision_path
+            if promotion_decision_path.is_absolute()
+            else ROOT / promotion_decision_path
+        ).absolute()
+        if supplied_decision != transient_decision.resolve(strict=False):
+            raise PanelReviewError(
+                "Readability promotion decision authority is not canonical"
+            )
+        _bound_decision, decision_record = _bound_json_object(
+            transient_decision,
+            label="Readability promotion decision authority",
+            max_bytes=reviewer_manifest.MAX_MANIFEST_BYTES,
+        )
+        if decision_record.get("review_id") != review_id:
+            raise PanelReviewError(
+                "Readability promotion decision review_id is stale"
+            )
+        generated_readability = _readability_attestation_from_decision(
+            decision_record,
+            decision_path=transient_decision,
+            audit=audit,
+        )
+    packet = prepare_packet(
+        audit=audit,
+        review_id=review_id,
+        created_on=decided_on,
+    )
+    readability_bindings = _readability_target_authorities(packet)
+    if generated_readability is not None:
+        generated_compact = json.loads(
+            panel_attestation.canonical_attestation_bytes(
+                generated_readability,
+                expected_path=(
+                    panel_attestation.READABILITY_ATTESTATION_PATH
+                ),
+                expected_source_fingerprints=packet[
+                    "source_fingerprints"
+                ],
+                expected_review_contract_fingerprint=(
+                    _canonical_json_sha256(packet["panel_contract"])
+                ),
+                expected_readability_current_bindings=(
+                    readability_bindings
+                ),
+            )
+        )
+        if generated_compact != attestation_selector:
+            raise PanelReviewError(
+                "Readability promotion attestation does not match its decision projection"
+            )
+    return panel_attestation.READABILITY_ATTESTATION_PATH, {
+        "expected_source_fingerprints": packet["source_fingerprints"],
+        "expected_review_contract_fingerprint": _canonical_json_sha256(
+            packet["panel_contract"]
+        ),
+        "expected_readability_current_bindings": readability_bindings,
+    }, lambda _value: None
+
+
+def _git_output(*arguments: str, check: bool = True) -> subprocess.CompletedProcess[bytes]:
+    try:
+        return subprocess.run(
+            ["git", "-C", str(ROOT), *arguments],
+            check=check,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise PanelReviewError("cannot establish Git promotion preconditions") from exc
+
+
+def _professional_attestation_clean_stable_head() -> str:
+    """Bind one Professional projection pass to one clean repository HEAD."""
+
+    before = _git_output("rev-parse", "--verify", "HEAD").stdout.decode(
+        "ascii"
+    ).strip()
+    if re.fullmatch(r"[0-9a-f]{40}", before) is None:
+        raise PanelReviewError("professional attestation HEAD is invalid")
+    status = _git_output(
+        "status", "--porcelain=v1", "-z", "--untracked-files=all"
+    ).stdout
+    if status:
+        raise PanelReviewError("professional attestation requires a clean tree")
+    after = _git_output("rev-parse", "--verify", "HEAD").stdout.decode(
+        "ascii"
+    ).strip()
+    if after != before:
+        raise PanelReviewError(
+            "professional attestation HEAD changed during validation"
+        )
+    return before
+
+
+def _require_clean_promotion_tree() -> None:
+    status = _git_output(
+        "status", "--porcelain=v1", "-z", "--untracked-files=all"
+    ).stdout
+    if status:
+        raise PanelReviewError(
+            "attestation promotion requires a clean tree outside its destination"
+        )
+
+
+def _promote_attestation(args: argparse.Namespace) -> Path:
+    source = _require_same_ephemeral_run_path(
+        _cli_path(args.source),
+        review_id=args.review_id,
+        label="attestation promotion source",
+    )
+    expected_source = _ephemeral_review_path(args.review_id, "attestation.json")
+    if source.absolute() != expected_source.resolve(strict=False):
+        raise PanelReviewError(
+            "attestation promotion source must use the canonical transient path"
+        )
+    bound_source = reviewer_manifest.read_bound_regular_file(
+        source,
+        max_bytes=panel_attestation.MAX_ATTESTATION_BYTES,
+        label="attestation promotion source",
+    )
+    try:
+        preliminary = (
+            panel_attestation.parse_attestation_storage_selector_bytes(
+                bound_source.raw
+            )
+        )
+    except panel_attestation.AttestationError as exc:
+        raise PanelReviewError(
+            "attestation promotion selector is invalid"
+        ) from exc
+    if preliminary["review_id"] != args.review_id:
+        raise PanelReviewError("attestation promotion review_id is stale")
+    fixed_relative, validation, _validate_current = _current_attestation_validation(
+        args.panel_kind,
+        review_id=args.review_id,
+        decided_on=preliminary["decided_on"],
+        attestation_selector=preliminary,
+        promotion_decision_path=(
+            _ephemeral_review_path(args.review_id, "panel", "decision.json")
+            if args.panel_kind
+            in {
+                READABILITY_PANEL_KIND,
+                PROFESSIONAL_COMPLETENESS_PANEL_KIND,
+            }
+            else None
+        ),
+        promotion_source_bytes=bound_source.raw,
+    )
+    if preliminary["axis"] != args.panel_kind:
+        raise PanelReviewError("attestation promotion panel kind is stale")
+
+    def validate_final(raw: bytes) -> object:
+        try:
+            value = panel_attestation.parse_attestation_bytes(
+                raw,
+                expected_path=fixed_relative,
+                **validation,
+            )
+        except panel_attestation.AttestationError as exc:
+            raise PanelReviewError(
+                "attestation promotion source is invalid or stale"
+            ) from exc
+        return value
+
+    validate_final(bound_source.raw)
+    destination = (ROOT / fixed_relative).absolute()
+    expected_existing = args.expected_existing_sha256
+    bound_existing: reviewer_manifest.BoundFile | None
+    if expected_existing == "absent":
+        try:
+            destination.lstat()
+        except FileNotFoundError:
+            pass
+        else:
+            raise PanelReviewError(
+                "attestation destination must be absent for creation CAS"
+            )
+        tracked = _git_output(
+            "ls-files", "--error-unmatch", "--", fixed_relative, check=False
+        )
+        if tracked.returncode == 0:
+            raise PanelReviewError(
+                "absent attestation destination is unexpectedly tracked"
+            )
+        bound_existing = None
+    else:
+        if re.fullmatch(r"[0-9a-f]{64}", expected_existing) is None:
+            raise PanelReviewError(
+                "expected-existing-sha256 must be absent or a lowercase SHA-256"
+            )
+        tracked = _git_output(
+            "ls-files", "--error-unmatch", "--", fixed_relative, check=False
+        )
+        if tracked.returncode != 0:
+            raise PanelReviewError(
+                "replacement attestation destination must be tracked"
+            )
+        bound_existing = reviewer_manifest.bind_regular_file(
+            destination,
+            expected_sha256=expected_existing,
+            max_bytes=panel_attestation.MAX_ATTESTATION_BYTES,
+            label="existing attestation destination",
+        )
+        head_raw = _git_output("show", f"HEAD:{fixed_relative}").stdout
+        if (
+            hashlib.sha256(head_raw).hexdigest() != expected_existing
+            or head_raw != bound_existing.raw
+        ):
+            raise PanelReviewError(
+                "replacement attestation destination must be HEAD-identical"
+            )
+    _require_clean_promotion_tree()
+    reviewer_manifest.promote_bound_file_atomically(
+        bound_source,
+        destination,
+        bound_existing=bound_existing,
+        max_bytes=panel_attestation.MAX_ATTESTATION_BYTES,
+        validate_final=validate_final,
+    )
+    return destination
+
+
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -14118,9 +17320,6 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             default=READABILITY_PANEL_KIND,
         )
         prepare.add_argument("--audit", default="reports/skill-content-audit.json")
-        prepare.add_argument(
-            "--readiness", default="reports/professionalism-regression-report.json"
-        )
         prepare.add_argument("--review-id", required=True)
         prepare.add_argument("--created-on", required=True)
         prepare.add_argument("--out", required=True)
@@ -14134,9 +17333,14 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             default=PROFESSIONAL_COMPLETENESS_SCHEMA_VERSION,
             help="Professional Completeness packet schema; other panel kinds reject this option.",
         )
-        prepare.add_argument(
+        baseline = prepare.add_mutually_exclusive_group()
+        baseline.add_argument(
             "--baseline-decision",
             help="Canonical schema-3 decision used for machine-derived carry planning.",
+        )
+        baseline.add_argument(
+            "--baseline-attestation",
+            help="Canonical fixed Professional attestation used for self-contained carry planning.",
         )
         prepare.add_argument(
             "--semantic-re-review-axis",
@@ -14148,6 +17352,18 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                 "back into review without modifying the canonical audit."
             ),
         )
+        if command == "prepare":
+            prepare.add_argument(
+                "--reviewer",
+                action="append",
+                nargs=4,
+                default=[],
+                metavar=("VOTER_ID", "AGENT_ID", "ROLE", "EXPERTISE"),
+                help=(
+                    "Declare one canonical Semantic reviewer template; exactly "
+                    "three distinct declarations are required for Semantic prepare."
+                ),
+            )
 
     template = subparsers.add_parser("template")
     template.add_argument("--packet", required=True)
@@ -14206,6 +17422,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
     materialize = subparsers.add_parser("materialize-ballot")
     materialize.add_argument("--packet", required=True)
+    materialize.add_argument("--audit")
     materialize.add_argument("--template", required=True)
     materialize.add_argument("--template-sha256", required=True)
     materialize.add_argument("--manifest", required=True, metavar="PATH|-")
@@ -14238,12 +17455,39 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
     decision = subparsers.add_parser("validate-decision")
     decision.add_argument("--decision", required=True)
+
+    attest = subparsers.add_parser("attest")
+    attest.add_argument("--panel-kind", choices=sorted(PANEL_KINDS), required=True)
+    attest.add_argument("--review-id", required=True)
+    attest.add_argument("--decision", required=True)
+    attest.add_argument("--out", required=True)
+    attest.add_argument("--audit")
+
+    promote = subparsers.add_parser("promote-attestation")
+    promote.add_argument("--panel-kind", choices=sorted(PANEL_KINDS), required=True)
+    promote.add_argument("--review-id", required=True)
+    promote.add_argument("--source", required=True)
+    promote.add_argument("--expected-existing-sha256", required=True)
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
     try:
+        if args.command == "attest":
+            output, value = _attest(args)
+            print(
+                "expert-panel-review: attestation="
+                f"{_display_cli_path(output)}; verdict={value['verdict']}"
+            )
+            return 0
+        if args.command == "promote-attestation":
+            output = _promote_attestation(args)
+            print(
+                "expert-panel-review: attestation-promoted="
+                f"{_display_cli_path(output)}"
+            )
+            return 0
         if args.command == "materialize-ballot":
             output, ballot = _materialize_ballot(args)
             print(
@@ -14254,6 +17498,10 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.command in {"prepare", "build-packet"}:
             if args.panel_kind == PROFESSIONAL_COMPLETENESS_PANEL_KIND:
+                if getattr(args, "reviewer", []):
+                    raise PanelReviewError(
+                        "--reviewer requires Semantic Disposition prepare"
+                    )
                 if (
                     args.schema_version
                     == PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION
@@ -14266,9 +17514,14 @@ def main(argv: list[str] | None = None) -> int:
                             if args.baseline_decision
                             else None
                         ),
+                        baseline_attestation_path=(
+                            _cli_path(args.baseline_attestation)
+                            if args.baseline_attestation
+                            else None
+                        ),
                     )
                 else:
-                    if args.baseline_decision:
+                    if args.baseline_decision or args.baseline_attestation:
                         raise PanelReviewError(
                             "--baseline-decision requires professional schema 3"
                         )
@@ -14279,31 +17532,89 @@ def main(argv: list[str] | None = None) -> int:
             elif args.panel_kind == SEMANTIC_DISPOSITION_PANEL_KIND:
                 if (
                     args.baseline_decision
+                    or args.baseline_attestation
                     or args.schema_version
                     != PROFESSIONAL_COMPLETENESS_SCHEMA_VERSION
                 ):
                     raise PanelReviewError(
                         "--baseline-decision requires professional-completeness"
                     )
-                audit = _json_object(Path(args.audit).resolve(), label="content audit")
-                audit = _semantic_audit_for_axis_rereview(
-                    audit, args.semantic_re_review_axis
-                )
-                packet = prepare_semantic_disposition_packet(
-                    audit=audit,
-                    review_id=args.review_id,
-                    created_on=args.created_on,
-                )
-                if args.semantic_re_review_axis:
-                    packet["limitations"].append(
-                        "Detector-change re-review was forced for semantic axes: "
-                        + ", ".join(sorted(set(args.semantic_re_review_axis)))
-                        + "."
+                if args.command == "prepare":
+                    semantic_layout = _semantic_runtime_layout(args.review_id)
+                    _require_exact_materialization_path_argument(
+                        args.out,
+                        semantic_layout["packet"],
+                        label="Semantic prepare packet",
                     )
+                    reviewers = _semantic_prepare_reviewer_specs(args.reviewer)
+                    audit_raw, audit = _semantic_prepare_audit_authority(
+                        args.audit
+                    )
+                    packet = _semantic_forced_prepare_packet(
+                        audit=audit,
+                        axes=args.semantic_re_review_axis,
+                        review_id=args.review_id,
+                        created_on=args.created_on,
+                    )
+                else:
+                    audit = _json_object(
+                        Path(args.audit).resolve(), label="content audit"
+                    )
+                    audit = _semantic_audit_for_axis_rereview(
+                        audit, args.semantic_re_review_axis
+                    )
+                    packet = prepare_semantic_disposition_packet(
+                        audit=audit,
+                        review_id=args.review_id,
+                        created_on=args.created_on,
+                    )
+                    if args.semantic_re_review_axis:
+                        packet["limitations"].append(
+                            "Detector-change re-review was forced for semantic axes: "
+                            + ", ".join(
+                                sorted(set(args.semantic_re_review_axis))
+                            )
+                            + "."
+                        )
+                if args.command == "prepare":
+                    packet_raw = reviewer_manifest.canonical_ballot_bytes(
+                        packet, compact=False
+                    )
+                    packet_sha256 = hashlib.sha256(packet_raw).hexdigest()
+                    templates = [
+                        prepare_semantic_ballot_template(
+                            packet=packet,
+                            packet_sha256=packet_sha256,
+                            voter_id=voter_id,
+                            agent_id=agent_id,
+                            role=role,
+                            expertise=[expertise],
+                            created_on=args.created_on,
+                        )
+                        for voter_id, agent_id, role, expertise in reviewers
+                    ]
+                    _create_semantic_runtime(
+                        review_id=args.review_id,
+                        audit_raw=audit_raw,
+                        packet=packet,
+                        templates=templates,
+                    )
+                    print(
+                        "expert-panel-review: prepared="
+                        f"{_display_cli_path(semantic_layout['run'])}; "
+                        f"semantic={len(packet['semantic_targets'])}; "
+                        f"templates={len(templates)}"
+                    )
+                    return 0
             else:
+                if getattr(args, "reviewer", []):
+                    raise PanelReviewError(
+                        "--reviewer requires Semantic Disposition prepare"
+                    )
                 if (
                     args.semantic_re_review_axis
                     or args.baseline_decision
+                    or args.baseline_attestation
                     or args.schema_version
                     != PROFESSIONAL_COMPLETENESS_SCHEMA_VERSION
                 ):
@@ -14312,14 +17623,11 @@ def main(argv: list[str] | None = None) -> int:
                     )
                 packet = prepare_packet(
                     audit=_json_object(ROOT / args.audit, label="content audit"),
-                    readiness=_json_object(
-                        ROOT / args.readiness, label="readiness report"
-                    ),
                     review_id=args.review_id,
                     created_on=args.created_on,
                 )
             output = _cli_path(args.out)
-            create_only = False
+            create_only = True
             if (
                 packet.get("schema_version")
                 == PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION
@@ -14347,6 +17655,21 @@ def main(argv: list[str] | None = None) -> int:
                         "readability schema-2 canonical packet already exists"
                     )
                 create_only = True
+            else:
+                expected_output = _ephemeral_review_path(
+                    packet["review_id"], "packet.json"
+                )
+                if output.absolute() != expected_output.absolute():
+                    raise PanelReviewError(
+                        "panel packet output must use its canonical transient run path"
+                    )
+                output = _require_same_ephemeral_run_path(
+                    output,
+                    review_id=packet["review_id"],
+                    label="panel packet output",
+                )
+                if output.exists():
+                    raise PanelReviewError("canonical transient packet already exists")
             _write_json(
                 output,
                 packet,
@@ -14506,11 +17829,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "template":
             packet_path = _cli_path(args.packet)
             cache = _professional_v3_invocation_cache()
-            canonical_schema3_packet = (
-                packet_path.name == "packet.json"
-                and packet_path.parent.parent
-                == ROOT / "evals" / "expert-panel"
-            )
+            canonical_schema3_packet = _is_round_packet_path(packet_path)
             if canonical_schema3_packet:
                 packet_path, packet_ref, packet = (
                     _professional_v3_bind_json_artifact_path(
@@ -14561,13 +17880,18 @@ def main(argv: list[str] | None = None) -> int:
                     raise PanelReviewError(
                         "schema-3 canonical ballot/template already exists"
                     )
+            else:
+                output = _require_same_ephemeral_run_path(
+                    output,
+                    review_id=packet["review_id"],
+                    label="ballot template output",
+                )
+                if output.exists():
+                    raise PanelReviewError("ballot template output already exists")
             _write_json(
                 output,
                 ballot,
-                create_only=(
-                    packet.get("schema_version")
-                    == PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION
-                ),
+                create_only=True,
                 validation_root=ROOT,
             )
             display_output = (
@@ -14583,11 +17907,7 @@ def main(argv: list[str] | None = None) -> int:
             packet_path = _cli_path(args.packet)
             ballot_path = _cli_path(args.ballot)
             cache = _professional_v3_invocation_cache()
-            if (
-                packet_path.name == "packet.json"
-                and packet_path.parent.parent
-                == ROOT / "evals" / "expert-panel"
-            ):
+            if _is_round_packet_path(packet_path):
                 packet_path, packet_ref, packet = (
                     _professional_v3_bind_json_artifact_path(
                         packet_path,
@@ -14657,11 +17977,7 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.command == "validate":
             packet_path = _cli_path(args.packet)
-            schema3_layout = (
-                packet_path.name == "packet.json"
-                and packet_path.parent.parent
-                == ROOT / "evals" / "expert-panel"
-            )
+            schema3_layout = _is_round_packet_path(packet_path)
             schema3_cache = _professional_v3_invocation_cache()
             if schema3_layout:
                 packet_path, schema3_packet_ref, packet = (
@@ -14822,11 +18138,7 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.command == "aggregate":
             packet_path = _cli_path(args.packet)
-            schema3_layout = (
-                packet_path.name == "packet.json"
-                and packet_path.parent.parent
-                == ROOT / "evals" / "expert-panel"
-            )
+            schema3_layout = _is_round_packet_path(packet_path)
             schema3_cache = _professional_v3_invocation_cache()
             if schema3_layout:
                 packet_path, schema3_packet_ref, packet = (
@@ -14918,16 +18230,25 @@ def main(argv: list[str] | None = None) -> int:
                 ballot_values=ballot_values,
                 decided_on=args.decided_on,
             )
-            record_dir = _cli_path(args.record_dir).resolve()
-            try:
-                record_dir.relative_to(ROOT.resolve())
-            except ValueError as exc:
-                raise PanelReviewError("record-dir must stay inside the repository") from exc
-            record_dir.mkdir(parents=True, exist_ok=False)
+            record_dir = _require_same_ephemeral_run_path(
+                _cli_path(args.record_dir),
+                review_id=packet["review_id"],
+                label="record-dir",
+            )
+            if record_dir.exists():
+                if not record_dir.is_dir() or record_dir.is_symlink():
+                    raise PanelReviewError("record-dir must be a real directory")
+                if any(record_dir.iterdir()):
+                    raise PanelReviewError("record-dir must not contain artifacts")
             stored_ballots: list[tuple[Path, dict[str, Any]]] = []
             for source, ballot_value in ballot_values:
                 destination = record_dir / f"{ballot_value['voter']['voter_id']}.json"
-                shutil.copyfile(source, destination)
+                _write_json(
+                    destination,
+                    ballot_value,
+                    create_only=True,
+                    validation_root=ROOT,
+                )
                 stored_ballots.append((destination, ballot_value))
             record = aggregate_ballots(
                 packet=packet,
@@ -14936,7 +18257,12 @@ def main(argv: list[str] | None = None) -> int:
                 decided_on=args.decided_on,
             )
             decision_path = record_dir / "decision.json"
-            _write_json(decision_path, record)
+            _write_json(
+                decision_path,
+                record,
+                create_only=True,
+                validation_root=ROOT,
+            )
             validate_decision_record(record, record_path=decision_path)
             if record["kind"] == PROFESSIONAL_COMPLETENESS_DECISION_KIND:
                 detail = (
@@ -14963,7 +18289,13 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(f"expert-panel-review: decision-valid={decision_path.relative_to(ROOT)}")
         return 0
-    except (OSError, PanelReviewError, reviewer_manifest.ManifestError) as exc:
+    except (
+        OSError,
+        PanelReviewError,
+        reviewer_manifest.ManifestError,
+        panel_attestation.AttestationError,
+        professional_carry.ProfessionalCarryForwardError,
+    ) as exc:
         print(f"expert-panel-review: error: {exc}")
         return 1
 

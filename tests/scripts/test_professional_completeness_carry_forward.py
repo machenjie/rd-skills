@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import copy
 import hashlib
-import importlib.util
 import json
 import linecache
 import sys
@@ -16,36 +15,32 @@ from functools import lru_cache
 from pathlib import Path
 from unittest import mock
 
+from . import expert_panel_source_test_support as source_support
+from . import professional_completeness_test_support as professional_support
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
+import expert_panel_contracts as CONTRACTS
 import professional_completeness_carry_forward as CARRY
 
 
-def _load_panel(module_name: str = "carry_forward_panel_tests"):
-    path = SCRIPTS / "expert_panel_review.py"
-    spec = importlib.util.spec_from_file_location(module_name, path)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
 
 
-PANEL = _load_panel()
+
+
+PANEL = source_support.PANEL
+_sha = professional_support._sha
+_material = professional_support._material
+_catalog = professional_support._catalog
+_live_packet = professional_support._live_packet
+_legacy_schema1_packet = professional_support._legacy_schema1_packet
 SKILL_IDS = ("a", "b", "c", "d")
 CONTRACT_FINGERPRINT = "a" * 64
 
 
-def _sha(value: object) -> str:
-    return hashlib.sha256(
-        json.dumps(
-            value, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-        ).encode("utf-8")
-    ).hexdigest()
 
 
 def _load_contract_fixture(path: Path, module_name: str, source: str):
@@ -58,106 +53,8 @@ def _load_contract_fixture(path: Path, module_name: str, source: str):
     return module
 
 
-def _material(skill_id: str, part: str, content: str) -> dict:
-    return {
-        "path": f"src/{skill_id}/{part}.md",
-        "sha256": hashlib.sha256(content.encode("utf-8")).hexdigest(),
-        "line_count": len(content.splitlines()),
-        "content": content,
-    }
 
 
-def _catalog(
-    *,
-    roots: dict[str, str] | None = None,
-    references: dict[str, str] | None = None,
-    registry_markers: dict[str, str] | None = None,
-    expertise: dict[str, list[str]] | None = None,
-    layers: dict[str, str] | None = None,
-    required: dict[str, list[str]] | None = None,
-    rankings: dict[str, list[str]] | None = None,
-    document_filter_marker: str = "baseline-filter",
-) -> list[dict]:
-    roots = roots or {}
-    references = references or {}
-    registry_markers = registry_markers or {}
-    expertise = expertise or {}
-    layers = layers or {}
-    required = required or {"b": ["d"], "c": ["a"]}
-    rankings = rankings or {}
-    targets = []
-    for skill_id in SKILL_IDS:
-        root_content = roots.get(
-            skill_id, f"# {skill_id}\n\nReview {skill_id} root behavior.\n"
-        )
-        reference_content = references.get(
-            skill_id,
-            f"# {skill_id} Reference\n\nVerify {skill_id} failure evidence.\n",
-        )
-        ranking_ids = rankings.get(
-            skill_id, sorted(set(SKILL_IDS) - {skill_id})
-        )
-        ranking = [
-            {
-                "skill_id": candidate_id,
-                "rank": rank,
-                "total_score": 0,
-                "signals": {},
-            }
-            for rank, candidate_id in enumerate(ranking_ids, start=1)
-        ]
-        ranking_by_id = {row["skill_id"]: row for row in ranking}
-        required_ids = sorted(required.get(skill_id, []))
-        required_candidates = [
-            {
-                **ranking_by_id[candidate_id],
-                "declared": False,
-                "selection_reasons": ["fixture-required"],
-            }
-            for candidate_id in required_ids
-        ]
-        responsibility = {
-            "marker": registry_markers.get(skill_id, "baseline-registry"),
-            "trigger_signals": [f"trigger {skill_id}"],
-            "output_contract": [f"output {skill_id}"],
-        }
-        registry_row = {
-            "name": skill_id,
-            "responsibility_contract": responsibility,
-        }
-        adjacency = {
-            "algorithm": "fixture-ranking-v1",
-            "document_frequency_filter": {
-                "catalog_wide_intermediate": document_filter_marker
-            },
-            "declared_skills": [],
-            "required_candidate_selection": {
-                "version": "fixture-selection-v1"
-            },
-            "required_candidates": required_candidates,
-            "required_candidates_fingerprint": _sha(required_candidates),
-            "full_catalog_count": len(ranking),
-            "full_catalog_ranking": ranking,
-            "full_catalog_ranking_fingerprint": _sha(ranking),
-        }
-        target = {
-            "skill_id": skill_id,
-            "layer": layers.get(skill_id, "foundation"),
-            "required_expertise_tags": expertise.get(skill_id, ["domain"]),
-            "root": _material(skill_id, "SKILL", root_content),
-            "indexed_references": [
-                _material(skill_id, "reference", reference_content)
-            ],
-            "registry": {
-                "path": "src/registry.yaml",
-                "entry_fingerprint": _sha(registry_row),
-                "responsibility_contract": responsibility,
-            },
-            "routing_adjacency": adjacency,
-        }
-        target["package_fingerprint"] = _sha(target)
-        targets.append(target)
-    return targets
 
 
 def _prior_artifacts(
@@ -273,92 +170,118 @@ def _prior_artifacts(
     return packet, ballots, decision
 
 
-@lru_cache(maxsize=1)
-def _live_packet() -> dict:
-    return PANEL.prepare_professional_completeness_packet(
-        review_id="carry-baseline",
-        created_on="2026-07-17",
-    )
 
 
-@lru_cache(maxsize=1)
-def _legacy_schema1_packet() -> dict:
-    current = _live_packet()
+
+
+def _historical_schema1_packet() -> dict:
+    packet = copy.deepcopy(_legacy_schema1_packet())
+    remaining = copy.deepcopy(PANEL.PROFESSIONAL_LEGACY_LAYER_COUNTS)
     targets = []
-    for current_target in current["professional_targets"]:
-        responsibility = copy.deepcopy(
-            current_target["registry"]["responsibility_contract"]
-        )
-        adjacent_skills = copy.deepcopy(
-            current_target["routing_adjacency"]["declared_skills"]
-        )
-        routing_basis = {
-            "skill_id": current_target["skill_id"],
-            "layer": current_target["layer"],
-            "role_support": responsibility["role_support"],
-            "trigger_signals": responsibility["trigger_signals"],
-            "anti_trigger_signals": responsibility["anti_trigger_signals"],
-            "output_contract": responsibility["output_contract"],
-            "adjacent_skills": adjacent_skills,
-        }
-        target = {
-            "skill_id": current_target["skill_id"],
-            "layer": current_target["layer"],
-            "root": {
-                "path": current_target["root"]["path"],
-                "sha256": current_target["root"]["sha256"],
-            },
-            "indexed_references": [
-                {"path": row["path"], "sha256": row["sha256"]}
-                for row in current_target["indexed_references"]
-            ],
-            "registry": {
-                "path": current_target["registry"]["path"],
-                "entry_fingerprint": current_target["registry"][
-                    "entry_fingerprint"
-                ],
-                "responsibility_contract": responsibility,
-            },
-            "routing_adjacency": {
-                "skills": adjacent_skills,
-                "fingerprint": _sha(routing_basis),
-            },
-        }
-        target["package_fingerprint"] = _sha(target)
-        targets.append(target)
-    return {
-        "schema_version": PANEL.SCHEMA_VERSION,
-        "kind": PANEL.PROFESSIONAL_COMPLETENESS_PACKET_KIND,
-        "review_id": "legacy-carry-baseline",
-        "created_on": "2026-07-17",
-        "source_fingerprints": {"professional_packages": _sha(targets)},
-        "panel_contract": {
-            "decision_method": PANEL.DECISION_METHOD,
-            "required_voters": PANEL.PANEL_SIZE,
-            "abstentions_allowed": False,
-            "minimum_winning_votes": 2,
-            "independent_ballots": True,
-            "required_target_count": PANEL.PROFESSIONAL_PACKAGE_COUNT,
-            "criteria_required_per_target": sorted(
-                PANEL.PROFESSIONAL_COMPLETENESS_CRITERIA
-            ),
-        },
-        "rubric": {
-            "accept": "Accept the complete legacy package.",
-            "correct": "Correct any legacy professional defect.",
-            "criteria": dict(
-                sorted(PANEL.PROFESSIONAL_COMPLETENESS_CRITERIA.items())
-            ),
-            "reason_codes": {
-                decision: sorted(PANEL.PROFESSIONAL_REASON_CODES[decision])
-                for decision in sorted(
-                    PANEL.PROFESSIONAL_COMPLETENESS_DECISIONS
-                )
-            },
-        },
-        "professional_targets": targets,
-        "limitations": ["Legacy static fixture."],
+    for target in packet["professional_targets"]:
+        layer = target["layer"]
+        if remaining[layer] > 0:
+            targets.append(target)
+            remaining[layer] -= 1
+    if remaining != {"professional": 0, "foundation": 0, "domain": 0}:
+        raise AssertionError(f"legacy fixture inventory is incomplete: {remaining}")
+    packet["review_id"] = "synthetic-legacy-schema-one"
+    packet["professional_targets"] = sorted(
+        targets, key=lambda target: target["skill_id"]
+    )
+    selected_ids = {
+        target["skill_id"] for target in packet["professional_targets"]
     }
+    for target in packet["professional_targets"]:
+        adjacency = target["routing_adjacency"]
+        adjacency["skills"] = [
+            skill_id
+            for skill_id in adjacency["skills"]
+            if skill_id in selected_ids
+        ]
+        responsibility = target["registry"]["responsibility_contract"]
+        adjacency["fingerprint"] = _sha(
+            {
+                "skill_id": target["skill_id"],
+                "layer": target["layer"],
+                "role_support": responsibility["role_support"],
+                "trigger_signals": responsibility["trigger_signals"],
+                "anti_trigger_signals": responsibility["anti_trigger_signals"],
+                "output_contract": responsibility["output_contract"],
+                "adjacent_skills": adjacency["skills"],
+            }
+        )
+        without_fingerprint = dict(target)
+        without_fingerprint.pop("package_fingerprint")
+        target["package_fingerprint"] = _sha(without_fingerprint)
+    packet["source_fingerprints"]["professional_packages"] = _sha(
+        packet["professional_targets"]
+    )
+    packet["panel_contract"]["required_target_count"] = len(targets)
+    return packet
+
+
+def _historical_schema3_adapter_fixture(*, cap50: bool) -> tuple[dict, dict, dict]:
+    packet = professional_support._bootstrap_packet()
+    if cap50:
+        review_id = PANEL.PROFESSIONAL_HISTORICAL_CAP50_REVIEW_ID
+        review_contract = (
+            PANEL.PROFESSIONAL_HISTORICAL_CAP50_REVIEW_CONTRACT_FINGERPRINT
+        )
+        packet_sha = PANEL.PROFESSIONAL_HISTORICAL_CAP50_PACKET_SHA256
+        target_count = PANEL.PROFESSIONAL_HISTORICAL_CAP50_TARGET_COUNT
+        include_derivation = False
+        maximum = (
+            PANEL.PROFESSIONAL_HISTORICAL_ADJACENCY_MAX_REQUIRED_CANDIDATES_PER_TARGET
+        )
+        remaining = copy.deepcopy(PANEL.PROFESSIONAL_LEGACY_LAYER_COUNTS)
+        targets = []
+        for target in packet["professional_targets"]:
+            layer = target["layer"]
+            if remaining[layer] > 0:
+                targets.append(target)
+                remaining[layer] -= 1
+    else:
+        review_id = PANEL.PROFESSIONAL_HISTORICAL_V1_REVIEW_ID
+        review_contract = PANEL.PROFESSIONAL_HISTORICAL_V1_REVIEW_CONTRACT_FINGERPRINT
+        packet_sha = PANEL.PROFESSIONAL_HISTORICAL_V1_PACKET_SHA256
+        target_count = PANEL.PROFESSIONAL_PACKAGE_COUNT
+        include_derivation = True
+        maximum = 52
+        targets = packet["professional_targets"]
+    if len(targets) != target_count:
+        raise AssertionError("historical adapter fixture target count is stale")
+    historical_selection = PANEL._professional_adjacency_selection_contract_v1(
+        target_count=target_count,
+        include_derivation=include_derivation,
+        maximum_required_candidates_per_target=maximum,
+    )
+    packet["review_id"] = review_id
+    packet["review_contract_fingerprint"] = review_contract
+    packet["professional_targets"] = copy.deepcopy(targets)
+    packet["panel_contract"] = PANEL._professional_v3_panel_contract(
+        target_count=target_count,
+        include_selection_derivation=include_derivation,
+    )
+    packet["panel_contract"]["adjacency_contract"][
+        "required_candidate_selection"
+    ] = copy.deepcopy(historical_selection)
+    for target in packet["professional_targets"]:
+        target["routing_adjacency"]["required_candidate_selection"] = copy.deepcopy(
+            historical_selection
+        )
+    packet_ref = {
+        "path": f"evals/expert-panel/{review_id}/packet.json",
+        "sha256": packet_sha,
+        "kind": PANEL.PROFESSIONAL_COMPLETENESS_PACKET_KIND,
+        "axis": PANEL.PROFESSIONAL_COMPLETENESS_ARTIFACT_AXIS,
+        "review_id": review_id,
+    }
+    decision = {
+        "review_id": review_id,
+        "review_contract_fingerprint": review_contract,
+    }
+    return decision, packet_ref, packet
 
 
 class ProfessionalCarryForwardTests(unittest.TestCase):
@@ -389,10 +312,13 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
         return CARRY.plan_exact_professional_carry_forward(**arguments)
 
     def _request(self, target_id: str, candidate_id: str) -> dict:
+        target = next(
+            row for row in self.targets if row["skill_id"] == target_id
+        )
         ranking = next(
             (
                 row
-                for row in self.bindings[target_id]["adjacency"][
+                for row in target["routing_adjacency"][
                     "full_catalog_ranking"
                 ]
                 if row["skill_id"] == candidate_id
@@ -405,7 +331,7 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
             },
         )
         fingerprint = self.bindings.get(candidate_id, {}).get(
-            "candidate_material_fingerprint", "f" * 64
+            "package_material_binding", "f" * 64
         )
         return {
             "skill_id": candidate_id,
@@ -439,6 +365,50 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
             contract_changed["reasons_by_target"]["a"],
         )
 
+    def test_semantic_contract_projection_is_the_only_contract_staleness_input(
+        self,
+    ) -> None:
+        current_contract = (
+            CONTRACTS.professional_review_contract_fingerprint()
+        )
+        current_snapshot = CARRY.professional_carry_snapshot(
+            self.bindings,
+            review_contract_fingerprint=current_contract,
+        )
+        unchanged = CARRY.plan_exact_professional_carry_forward(
+            current_bindings=self.bindings,
+            prior_snapshot=current_snapshot,
+            prior_decision_dependencies=self.dependencies,
+            review_contract_fingerprint=current_contract,
+        )
+
+        changed_projection = (
+            CONTRACTS.professional_schema3_contract_projection()
+        )
+        changed_projection["evidence"]["semantic_grounding"][
+            "uniform_template_guard"
+        ]["minimum_uniform_share_percent"] -= 1
+        changed_contract = (
+            CONTRACTS.professional_review_contract_fingerprint(
+                changed_projection
+            )
+        )
+        changed = CARRY.plan_exact_professional_carry_forward(
+            current_bindings=self.bindings,
+            prior_snapshot=current_snapshot,
+            prior_decision_dependencies=self.dependencies,
+            review_contract_fingerprint=changed_contract,
+        )
+
+        self.assertEqual([], unchanged["fresh_target_ids"])
+        self.assertEqual(list(SKILL_IDS), unchanged["carry_target_ids"])
+        self.assertNotEqual(current_contract, changed_contract)
+        self.assertEqual(list(SKILL_IDS), changed["fresh_target_ids"])
+        self.assertEqual(
+            ["review-contract-changed"],
+            changed["reasons_by_target"]["a"],
+        )
+
     def test_root_and_reference_changes_expand_to_required_candidate_once(self) -> None:
         root_plan = self._plan(
             _catalog(roots={"d": "# d\n\nChanged d root evidence.\n"})
@@ -462,11 +432,11 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
         cases = (
             (
                 _catalog(registry_markers={"d": "changed-registry"}),
-                "registry-responsibility-changed",
+                "target-material-changed",
             ),
             (
                 _catalog(expertise={"d": ["domain", "security"]}),
-                "required-expertise-changed",
+                "target-material-changed",
             ),
             (
                 _catalog(layers={"d": "domain"}),
@@ -483,20 +453,54 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
                     plan["reasons_by_target"]["b"],
                 )
 
-    def test_rank_or_required_list_change_does_not_recursively_spread(self) -> None:
+    def test_unselected_ranking_churn_does_not_reopen_target(self) -> None:
         rank_plan = self._plan(
             _catalog(rankings={"d": ["c", "b", "a"]})
         )
+
+        self.assertEqual([], rank_plan["fresh_target_ids"])
+        self.assertEqual(list(SKILL_IDS), rank_plan["carry_target_ids"])
+        self.assertEqual([], rank_plan["reasons_by_target"]["d"])
+
+    def test_required_list_change_reopens_only_target(self) -> None:
         required_plan = self._plan(
             _catalog(required={"b": ["d"], "c": ["a"], "d": ["a"]})
         )
-        for plan in (rank_plan, required_plan):
-            self.assertEqual(["d"], plan["fresh_target_ids"])
-            self.assertEqual(
-                ["adjacency-review-binding-changed"],
-                plan["reasons_by_target"]["d"],
-            )
-            self.assertEqual([], plan["reasons_by_target"]["b"])
+
+        self.assertEqual(["d"], required_plan["fresh_target_ids"])
+        self.assertEqual(
+            ["adjacency-review-binding-changed"],
+            required_plan["reasons_by_target"]["d"],
+        )
+        self.assertEqual([], required_plan["reasons_by_target"]["b"])
+
+    def test_target_binding_contains_only_local_selection_authority(self) -> None:
+        binding = self.bindings["b"]
+
+        self.assertEqual(
+            {
+                "required_candidate_ids",
+                "selection_contract_version",
+            },
+            set(binding["adjacency"]),
+        )
+        self.assertEqual(["d"], binding["adjacency"]["required_candidate_ids"])
+        self.assertEqual(
+            "fixture-selection-v1",
+            binding["adjacency"]["selection_contract_version"],
+        )
+        serialized = CARRY.canonical_json_bytes(
+            CARRY.professional_carry_snapshot(
+                self.bindings,
+                review_contract_fingerprint=CONTRACT_FINGERPRINT,
+            )["targets"]["b"]
+        )
+        for forbidden in (
+            b"required_candidates_fingerprint",
+            b"full_catalog_ranking",
+            b"full_catalog_ranking_fingerprint",
+        ):
+            self.assertNotIn(forbidden, serialized)
 
     def test_catalog_intermediate_filter_change_does_not_stale_all_targets(self) -> None:
         changed = CARRY.professional_review_bindings(
@@ -581,12 +585,14 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
         request = self._request("a", "b")
         capsule = CARRY.project_professional_review_capsule(
             bindings=self.bindings,
+            review_targets=self.targets,
             assigned_fresh_target_ids=["a"],
             reviewer_added_requests_by_target={"a": [request]},
         )
         validated = CARRY.validate_professional_review_capsule(
             capsule,
             bindings=self.bindings,
+            review_targets=self.targets,
             assigned_fresh_target_ids=["a"],
             reviewer_added_requests_by_target={"a": [request]},
         )
@@ -612,6 +618,7 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
     def test_discovery_capsule_has_required_material_and_complete_boundary_catalog(self) -> None:
         discovery = CARRY.project_professional_discovery_capsule(
             bindings=self.bindings,
+            review_targets=self.targets,
             assigned_fresh_target_ids=["b"],
         )
         self.assertIs(
@@ -619,6 +626,7 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
             CARRY.validate_professional_discovery_capsule(
                 discovery,
                 bindings=self.bindings,
+                review_targets=self.targets,
                 assigned_fresh_target_ids=["b"],
             ),
         )
@@ -634,6 +642,7 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
     def test_capsule_rejects_extra_missing_duplicate_and_stale_projection(self) -> None:
         expected_arguments = {
             "bindings": self.bindings,
+            "review_targets": self.targets,
             "assigned_fresh_target_ids": ["a"],
             "reviewer_added_requests_by_target": {
                 "a": [self._request("a", "b")]
@@ -685,6 +694,7 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
         extra = copy.deepcopy(capsule)
         extra_material = CARRY.project_professional_review_capsule(
             bindings=self.bindings,
+            review_targets=self.targets,
             assigned_fresh_target_ids=["d"],
         )["material_catalog"][0]
         extra["material_catalog"].append(extra_material)
@@ -704,6 +714,7 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
             ):
                 CARRY.project_professional_review_capsule(
                     bindings=self.bindings,
+                    review_targets=self.targets,
                     assigned_fresh_target_ids=["a"],
                     reviewer_added_requests_by_target={"a": added},
                 )
@@ -712,6 +723,7 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
         ):
             CARRY.project_professional_review_capsule(
                 bindings=self.bindings,
+                review_targets=self.targets,
                 assigned_fresh_target_ids=["b"],
                 reviewer_added_requests_by_target={
                     "b": [self._request("b", "d")]
@@ -747,16 +759,44 @@ class ProfessionalReviewContractFingerprintTests(unittest.TestCase):
     def tearDown(self) -> None:
         PANEL._professional_evidence_review_contract_fingerprint.cache_clear()
 
-    def test_review_contract_uses_versioned_explicit_source_manifest(self) -> None:
+    def test_review_contract_uses_canonical_semantic_projection(self) -> None:
+        projection = CONTRACTS.professional_schema3_contract_projection()
+        self.assertEqual(
+            "professional-completeness-schema3-review-carry-v3",
+            projection["contract_version"],
+        )
+        self.assertEqual(3, projection["artifact_contract"]["schema_version"])
+        self.assertEqual(3, projection["panel"]["exact_votes_per_target"])
+        self.assertEqual(
+            CONTRACTS.canonical_json_sha256(projection),
+            PANEL._professional_evidence_review_contract_fingerprint(),
+        )
+
+        encoded = CONTRACTS.canonical_json_bytes(projection)
+        for forbidden in (
+            b"scripts/",
+            b"source_paths",
+            b"created_on",
+            b"review_id",
+            b"selector",
+            b"report",
+            b"package_fingerprint",
+            b"required-candidate-material-fingerprints",
+            b"full-catalog-ranking-fingerprint",
+        ):
+            self.assertNotIn(forbidden, encoded)
+
+    def test_legacy_source_manifest_is_diagnostic_only(self) -> None:
         manifest = PANEL._professional_evidence_review_contract_manifest()
         self.assertEqual(
-            "professional-evidence-review-and-carry-v2",
+            "professional-evidence-review-and-carry-v3",
             manifest["contract_version"],
         )
         self.assertRegex(manifest["aggregate_source_digest"], r"^[0-9a-f]{64}$")
         self.assertEqual(
             [
                 "scripts/audit-skill-content.py",
+                "scripts/expert_panel_attestation.py",
                 "scripts/expert_panel_review.py",
                 "scripts/professional_completeness_carry_forward.py",
                 "scripts/validation_utils.py",
@@ -772,12 +812,15 @@ class ProfessionalReviewContractFingerprintTests(unittest.TestCase):
             CARRY.canonical_json_sha256(payload),
             manifest["aggregate_source_digest"],
         )
-        self.assertEqual(
+        self.assertNotEqual(
             manifest["aggregate_source_digest"],
             PANEL._professional_evidence_review_contract_fingerprint(),
         )
 
-    def test_contract_version_and_explicit_source_bytes_change_digest(self) -> None:
+    def test_non_contract_source_bytes_do_not_change_semantic_digest(self) -> None:
+        semantic_before = (
+            CONTRACTS.professional_review_contract_fingerprint()
+        )
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             source = root / "source.py"
@@ -787,32 +830,44 @@ class ProfessionalReviewContractFingerprintTests(unittest.TestCase):
                 source_paths=("source.py",),
                 repository_root=root,
             )
-            version_changed = CARRY.versioned_explicit_source_manifest(
-                contract_version="fixture-v2",
-                source_paths=("source.py",),
-                repository_root=root,
-            )
             source.write_text("VALUE = 2\n", encoding="utf-8")
             source_changed = CARRY.versioned_explicit_source_manifest(
                 contract_version="fixture-v1",
                 source_paths=("source.py",),
                 repository_root=root,
             )
-        self.assertNotEqual(
-            first["aggregate_source_digest"],
-            version_changed["aggregate_source_digest"],
-        )
+        semantic_after = CONTRACTS.professional_review_contract_fingerprint()
         self.assertNotEqual(
             first["aggregate_source_digest"],
             source_changed["aggregate_source_digest"],
         )
+        self.assertEqual(semantic_before, semantic_after)
+
+    def test_contract_version_and_semantic_projection_change_digest(self) -> None:
+        projection = CONTRACTS.professional_schema3_contract_projection()
+        original = CONTRACTS.professional_review_contract_fingerprint(
+            projection
+        )
+        changed_version = copy.deepcopy(projection)
+        changed_version["contract_version"] = "fixture-v2"
+        changed_rule = copy.deepcopy(projection)
+        changed_rule["panel"]["minimum_winning_votes"] = 3
+
+        self.assertNotEqual(
+            original,
+            CONTRACTS.professional_review_contract_fingerprint(
+                changed_version
+            ),
+        )
+        self.assertNotEqual(
+            original,
+            CONTRACTS.professional_review_contract_fingerprint(changed_rule),
+        )
+
+
 class ProfessionalPacketCompatibilityTests(unittest.TestCase):
     def test_schema1_inventory_count_is_a_strict_closed_integer_set(self) -> None:
-        historical_path = (
-            ROOT
-            / "evals/expert-panel/professional-completeness-panel-2026-07-16-r5/packet.json"
-        )
-        historical = json.loads(historical_path.read_text(encoding="utf-8"))
+        historical = _historical_schema1_packet()
         current = copy.deepcopy(_legacy_schema1_packet())
         PANEL._validate_professional_completeness_packet_v1(historical)
         PANEL._validate_professional_completeness_packet_v1(current)
@@ -916,7 +971,7 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
         self.assertEqual(189, len(bindings))
         self.assertEqual(before, after)
         self.assertEqual(
-            "d024412e5f5ece5dd5c21abdac8269564e81fca91b4e1bfab6fec860ccfeaa9c",
+            "275b8d53e3430460895e501fd9408492074c724e4ec5a19272947b0af55de482",
             hashlib.sha256(after).hexdigest(),
         )
         self.assertEqual(
@@ -947,20 +1002,43 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
             set(packet["professional_targets"][0]),
         )
 
-    def test_historical_cap50_adapter_is_exact_and_hash_preserving(self) -> None:
-        decision_path = (
-            ROOT
-            / "evals/expert-panel/"
-            / "professional-completeness-panel-2026-07-24-r11"
-            / "panel/decision.json"
+    def test_schema2_unregistered_selector_is_rejected_in_every_mode(self) -> None:
+        packet = copy.deepcopy(_live_packet())
+        selector = packet["panel_contract"]["adjacency_contract"][
+            "required_candidate_selection"
+        ]
+        selector["version"] = "unregistered-selection-mutation"
+        for target in packet["professional_targets"]:
+            target["routing_adjacency"]["required_candidate_selection"] = (
+                copy.deepcopy(selector)
+            )
+            without_fingerprint = copy.deepcopy(target)
+            without_fingerprint.pop("package_fingerprint")
+            target["package_fingerprint"] = _sha(without_fingerprint)
+        packet["source_fingerprints"]["professional_packages"] = _sha(
+            packet["professional_targets"]
         )
-        decision = json.loads(decision_path.read_text(encoding="utf-8"))
-        packet = json.loads(
-            (ROOT / decision["packet"]["path"]).read_text(encoding="utf-8")
+
+        for validation_mode in (
+            PANEL.VALIDATION_MODE_CURRENT,
+            PANEL.VALIDATION_MODE_HISTORICAL,
+        ):
+            with self.subTest(validation_mode=validation_mode), self.assertRaisesRegex(
+                PANEL.PanelReviewError,
+                "panel_contract",
+            ):
+                PANEL._validate_professional_completeness_packet_v2(
+                    packet,
+                    validation_mode=validation_mode,
+                )
+
+    def test_historical_cap50_adapter_is_exact_and_hash_preserving(self) -> None:
+        decision, packet_ref, packet = _historical_schema3_adapter_fixture(
+            cap50=True
         )
         adapted = PANEL._professional_v3_historical_cap50_packet(
             decision,
-            decision["packet"],
+            packet_ref,
             packet,
         )
         self.assertEqual(_sha(packet), _sha(adapted))
@@ -1016,15 +1094,15 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
         )
         for label, mutate in mutations:
             record_value = copy.deepcopy(decision)
-            packet_ref = copy.deepcopy(decision["packet"])
+            mutated_packet_ref = copy.deepcopy(packet_ref)
             packet_value = copy.deepcopy(packet)
-            mutate(record_value, packet_ref, packet_value)
+            mutate(record_value, mutated_packet_ref, packet_value)
             with self.subTest(label=label), self.assertRaises(
                 PANEL.PanelReviewError
             ):
                 PANEL._professional_v3_historical_cap50_packet(
                     record_value,
-                    packet_ref,
+                    mutated_packet_ref,
                     packet_value,
                 )
         with mock.patch.object(
@@ -1034,24 +1112,17 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
         ), self.assertRaises(PANEL.PanelReviewError):
             PANEL._professional_v3_historical_cap50_packet(
                 decision,
-                decision["packet"],
+                packet_ref,
                 packet,
             )
 
     def test_historical_r14_v1_adapter_is_exact_and_hash_preserving(self) -> None:
-        decision_path = (
-            ROOT
-            / "evals/expert-panel/"
-            / PANEL.PROFESSIONAL_HISTORICAL_V1_REVIEW_ID
-            / "panel/decision.json"
-        )
-        decision = json.loads(decision_path.read_text(encoding="utf-8"))
-        packet = json.loads(
-            (ROOT / decision["packet"]["path"]).read_text(encoding="utf-8")
+        decision, packet_ref, packet = _historical_schema3_adapter_fixture(
+            cap50=False
         )
         adapted = PANEL._professional_v3_historical_v1_packet(
             decision,
-            decision["packet"],
+            packet_ref,
             packet,
         )
         self.assertEqual(_sha(packet), _sha(adapted))
@@ -1106,35 +1177,50 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
         )
         for label, mutate in mutations:
             record_value = copy.deepcopy(decision)
-            packet_ref = copy.deepcopy(decision["packet"])
+            mutated_packet_ref = copy.deepcopy(packet_ref)
             packet_value = copy.deepcopy(packet)
-            mutate(record_value, packet_ref, packet_value)
+            mutate(record_value, mutated_packet_ref, packet_value)
             with self.subTest(label=label), self.assertRaises(
                 PANEL.PanelReviewError
             ):
                 PANEL._professional_v3_historical_v1_packet(
                     record_value,
-                    packet_ref,
+                    mutated_packet_ref,
                     packet_value,
                 )
 
-    def test_historical_r14_v1_decision_remains_auditable(self) -> None:
-        decision_path = (
-            ROOT
-            / "evals/expert-panel/"
-            / PANEL.PROFESSIONAL_HISTORICAL_V1_REVIEW_ID
-            / "panel/decision.json"
-        )
-        decision = json.loads(decision_path.read_text(encoding="utf-8"))
-        self.assertEqual(
-            decision,
-            PANEL._validate_professional_completeness_decision_record(
-                decision,
-                record_path=decision_path,
-                validation_root=ROOT,
-                validation_mode=PANEL.VALIDATION_MODE_HISTORICAL,
-            ),
-        )
+    def test_historical_schema3_decision_remains_auditable_for_carry(self) -> None:
+        with professional_support._synthetic_schema3_professional_decision() as fixture:
+            decision = fixture["decision"]
+            validation_root = fixture["validation_root"]
+            with mock.patch.object(
+                PANEL,
+                "_professional_evidence_review_contract_fingerprint",
+                return_value="0" * 64,
+            ), mock.patch.object(
+                PANEL, "PROFESSIONAL_ADJACENCY_TOP_K", 0
+            ), mock.patch.object(
+                PANEL, "PROFESSIONAL_ADJACENCY_PER_SIGNAL_TOP_K", 0
+            ):
+                self.assertEqual(
+                    decision,
+                    PANEL.validate_decision_record(
+                        decision,
+                        record_path=fixture["decision_path"],
+                        validation_root=validation_root,
+                        validation_mode="historical",
+                    ),
+                )
+
+            dependencies = CARRY.professional_prior_decision_dependencies(
+                prior_packet=fixture["packet"],
+                prior_ballots=[ballot for _path, ballot in fixture["ballots"]],
+                prior_decision=decision,
+            )
+            self.assertEqual(PANEL.PROFESSIONAL_PACKAGE_COUNT, len(dependencies))
+            self.assertTrue(
+                all(row["evidence_complete"] for row in dependencies.values())
+            )
 
     def test_schema1_legacy_packet_bytes_and_validator_remain_compatible(self) -> None:
         packet = copy.deepcopy(_legacy_schema1_packet())
@@ -1158,7 +1244,7 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
         )
         self.assertEqual(before, CARRY.canonical_json_bytes(packet))
         self.assertEqual(
-            "e184b31a1c060d48a2247c934b304ef260e38ef3d1c0c606aa6342915f02881e",
+            "5dadb34b1f828b7aceb368a323a031fefbcec29a14a6d096b60d38df9d856b90",
             hashlib.sha256(before).hexdigest(),
         )
 

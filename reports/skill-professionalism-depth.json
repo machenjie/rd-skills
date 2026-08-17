@@ -790,7 +790,7 @@
       "status": "pass",
       "decision_rule_count": 5,
       "gotcha_count": 3,
-      "line_count": 69
+      "line_count": 75
     },
     {
       "name": "change-intake-compiler",
@@ -808,9 +808,9 @@
       "path": "src/professional-skills/engineering-change-analysis/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 9,
+      "decision_rule_count": 6,
       "gotcha_count": 1,
-      "line_count": 80
+      "line_count": 75
     },
     {
       "name": "acceptance-criteria-builder",
@@ -828,9 +828,9 @@
       "path": "src/professional-skills/task-dag-planner/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 16,
-      "gotcha_count": 4,
-      "line_count": 96
+      "decision_rule_count": 24,
+      "gotcha_count": 2,
+      "line_count": 97
     },
     {
       "name": "high-risk-design-review",
@@ -948,9 +948,9 @@
       "path": "src/professional-skills/security-privacy-gate/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 4,
+      "decision_rule_count": 6,
       "gotcha_count": 2,
-      "line_count": 80
+      "line_count": 84
     },
     {
       "name": "reliability-observability-gate",
@@ -988,9 +988,9 @@
       "path": "src/professional-skills/ai-code-review-refactor/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 11,
-      "gotcha_count": 3,
-      "line_count": 97
+      "decision_rule_count": 8,
+      "gotcha_count": 2,
+      "line_count": 98
     },
     {
       "name": "change-documentation-gate",
@@ -2489,8 +2489,8 @@
       "total_score": 100,
       "status": "pass",
       "decision_rule_count": 8,
-      "gotcha_count": 5,
-      "line_count": 64
+      "gotcha_count": 6,
+      "line_count": 65
     },
     {
       "name": "nodejs-runtime-professional-usage",

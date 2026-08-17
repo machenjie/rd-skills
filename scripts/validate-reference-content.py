@@ -26,7 +26,7 @@ AUDIT_SCRIPT = ROOT / "scripts" / "audit-skill-content.py"
 TARGETED_LINE_LIMIT = 60
 MODE_CONTRACT_LINE_LIMIT = 80
 DECISION_ITEM_LIMIT = 15
-REFERENCE_CONTENT_SCHEMA_VERSION = 4
+REFERENCE_CONTENT_SCHEMA_VERSION = 5
 PREFACE_CONTRACT_SCHEMA_VERSION = 3
 PREFACE_SOURCE_PRECEDENCE = ("local", "reference-index", "parent-root")
 PREFACE_FIELDS = (
@@ -37,7 +37,11 @@ PREFACE_FIELDS = (
     "required_output",
 )
 PREFACE_STATUSES = {"resolved", "missing", "conflict", "invalid"}
-SEMANTIC_SCHEMA_VERSION = 5
+SEMANTIC_SCHEMA_VERSION = 7
+SEMANTIC_DETECTOR_CONTRACT_VERSION = (
+    "reference-semantic-detector-contract-v1"
+)
+SEMANTIC_DETECTOR_ALGORITHM = "sha256-canonical-json-v1"
 SEMANTIC_DISPOSITION_SCHEMA_VERSION = 2
 SEMANTIC_EXCEPTION_SOURCE = "config/skill-content-exceptions.yaml"
 SEMANTIC_FINDINGS = (
@@ -67,6 +71,7 @@ SEMANTIC_V4_COUNT_FIELDS = (
 SEMANTIC_OBJECT_FIELDS = frozenset(
     {
         "schema_version",
+        "detector_contract",
         "finding_families",
         "summary",
         "candidates",
@@ -106,7 +111,6 @@ SEMANTIC_CONTRACT_FIELDS = frozenset(
     {
         "schema_version",
         "source",
-        "evaluated_on",
         "configured_count",
         "applied_count",
         "entries",
@@ -191,10 +195,15 @@ def _load_auditor() -> ModuleType:
     return module
 
 
-def _fresh_reference_content() -> dict[str, Any]:
+def _fresh_reference_content(
+    *, evaluation_date: date | None = None
+) -> dict[str, Any]:
     """Collect current registries and Markdown without reading or writing reports."""
 
-    return _load_auditor()._collect_reference_content()
+    auditor = _load_auditor()
+    if evaluation_date is None:
+        return auditor._collect_reference_content()
+    return auditor._collect_reference_content(evaluation_date=evaluation_date)
 
 
 def _registry_scalar(value: str) -> str:
@@ -674,7 +683,7 @@ def _semantic_contract(
     *,
     evaluation_date: date | None = None,
 ) -> tuple[dict[str, int], list[str]]:
-    """Validate semantic schema v5 and recompute every governance fact."""
+    """Validate semantic schema v7 and recompute every governance fact."""
 
     counts = {
         "semantic_raw_candidates": 0,
@@ -700,6 +709,7 @@ def _semantic_contract(
     semantic = reference_content.get("semantic_advisories")
     if not isinstance(semantic, dict):
         return counts, ["semantic_advisories must be a current mapping"]
+    auditor = _load_auditor()
     if set(semantic) != SEMANTIC_OBJECT_FIELDS:
         errors.append(
             "semantic_advisories must contain exactly: "
@@ -709,6 +719,39 @@ def _semantic_contract(
         errors.append(
             f"semantic_advisories.schema_version must equal {SEMANTIC_SCHEMA_VERSION}"
         )
+    detector_contract = semantic.get("detector_contract")
+    if not isinstance(detector_contract, dict) or set(detector_contract) != {
+        "contract_version",
+        "algorithm",
+        "value",
+    }:
+        errors.append(
+            "semantic_advisories.detector_contract must contain exactly "
+            "algorithm, contract_version, and value"
+        )
+    else:
+        if (
+            detector_contract.get("contract_version")
+            != SEMANTIC_DETECTOR_CONTRACT_VERSION
+        ):
+            errors.append(
+                "semantic_advisories.detector_contract.contract_version is invalid"
+            )
+        if detector_contract.get("algorithm") != SEMANTIC_DETECTOR_ALGORITHM:
+            errors.append(
+                "semantic_advisories.detector_contract.algorithm is invalid"
+            )
+        value = detector_contract.get("value")
+        if not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{64}", value) is None:
+            errors.append(
+                "semantic_advisories.detector_contract.value must be lowercase SHA-256"
+            )
+        expected_detector = auditor._reference_semantic_detector_contract()
+        if detector_contract != expected_detector:
+            errors.append(
+                "semantic_advisories.detector_contract does not match current "
+                "reachable Reference detector behavior"
+            )
     if semantic.get("finding_families") != list(SEMANTIC_FINDINGS):
         errors.append(
             "semantic_advisories.finding_families must exactly match "
@@ -718,7 +761,6 @@ def _semantic_contract(
     if not isinstance(candidates, list):
         errors.append("semantic_advisories.candidates must be a list")
         candidates = []
-    auditor = _load_auditor()
     if candidates != sorted(candidates, key=auditor._semantic_candidate_sort_key):
         errors.append("semantic_advisories.candidates must be canonically sorted")
     seen_candidate_ids: set[str] = set()
@@ -1116,7 +1158,7 @@ def _semantic_contract(
         for finding, row in by_finding.items():
             if not isinstance(row, dict) or set(row) != set(SEMANTIC_V4_COUNT_FIELDS):
                 errors.append(
-                    f"semantic_advisories.summary.by_finding.{finding} fields must exactly match schema v5"
+                    f"semantic_advisories.summary.by_finding.{finding} fields must exactly match schema v7"
                 )
                 continue
             for field in SEMANTIC_V4_COUNT_FIELDS:
@@ -1137,7 +1179,7 @@ def _semantic_contract(
         for finding, row in reported_group_metrics.items():
             if not isinstance(row, dict) or set(row) != SEMANTIC_GROUP_METRIC_FIELDS:
                 errors.append(
-                    f"semantic_advisories.summary.group_metrics.{finding} fields must exactly match schema v5"
+                    f"semantic_advisories.summary.group_metrics.{finding} fields must exactly match schema v7"
                 )
                 continue
             for field in SEMANTIC_GROUP_METRIC_FIELDS:
@@ -1198,7 +1240,7 @@ def _semantic_contract(
         reported_strict
     ) != SEMANTIC_STRICT_UNRESOLVED_FIELDS:
         errors.append(
-            "semantic_advisories.summary.strict_unresolved fields must exactly match schema v5"
+            "semantic_advisories.summary.strict_unresolved fields must exactly match schema v7"
         )
     else:
         for field in SEMANTIC_STRICT_UNRESOLVED_FIELDS:
@@ -1209,14 +1251,18 @@ def _semantic_contract(
     if reported_strict != strict_unresolved:
         errors.append("semantic_advisories.summary.strict_unresolved does not match candidates")
 
-    evaluated_on = evaluation_date or date.today()
+    evaluated_on = (
+        _load_auditor()._effective_evaluation_date()
+        if evaluation_date is None
+        else evaluation_date
+    )
     contract = semantic.get("disposition_contract")
     if not isinstance(contract, dict):
         errors.append("semantic_advisories.disposition_contract must be a mapping")
         contract = {}
     elif set(contract) != SEMANTIC_CONTRACT_FIELDS:
         errors.append(
-            "semantic_advisories.disposition_contract fields must exactly match schema v5"
+            "semantic_advisories.disposition_contract fields must exactly match schema v7"
         )
     if contract.get("schema_version") != SEMANTIC_DISPOSITION_SCHEMA_VERSION:
         errors.append(
@@ -1241,15 +1287,6 @@ def _semantic_contract(
     ):
         errors.append(
             "semantic_advisories.limitations must be a non-empty list of non-blank strings"
-        )
-    report_date = contract.get("evaluated_on")
-    try:
-        parsed_report_date = date.fromisoformat(report_date)
-        if parsed_report_date.isoformat() != report_date or parsed_report_date > evaluated_on:
-            raise ValueError
-    except (TypeError, ValueError):
-        errors.append(
-            "semantic_advisories.disposition_contract.evaluated_on must be a non-future ISO date"
         )
     entries = contract.get("entries")
     if not isinstance(entries, list):
@@ -1650,10 +1687,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    reference_content = _fresh_reference_content()
+    effective_evaluation_date = _load_auditor()._effective_evaluation_date()
+    reference_content = _fresh_reference_content(
+        evaluation_date=effective_evaluation_date
+    )
     counts, errors = _evaluate(
         reference_content,
         strict=args.strict,
+        evaluation_date=effective_evaluation_date,
         validate_readability_sources=True,
     )
     for line in _format_counts(counts, strict=args.strict):

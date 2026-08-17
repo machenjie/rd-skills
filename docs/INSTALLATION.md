@@ -74,13 +74,13 @@ python3 installers/install.py \
 ```
 
 The installer rejects unmanaged artifacts whose names collide with incoming
-ChangeForge artifacts. Inspect every reported path before considering
+rd-skills artifacts. Inspect every reported path before considering
 `--force`. Use `--force` only when you have confirmed that replacing those
 specific unmanaged same-name artifacts is intended and have a separate
 recovery copy. It does not bypass source validation, path-overlap protection,
 unsupported scopes, or unsafe names.
 
-Optional install `--backup` copies only the ChangeForge-named incoming/previously
+Optional install `--backup` copies only the rd-skills-named incoming/previously
 managed paths, the install manifest, and bounded known legacy paths that already
 exist. It is stored under the Skill target's `.changeforge-backups/` directory.
 It is not a snapshot of the full host configuration.
@@ -111,12 +111,12 @@ python3 installers/upgrade.py \
   --agent codex --scope user --profile recommended
 ```
 
-Upgrade requires an existing ChangeForge install manifest. It automatically
+Upgrade requires an existing rd-skills install manifest. It automatically
 backs up the currently managed Skills, managed Profile files, manifest, and
 bounded known legacy paths before replacement when any exist. It removes only
 manifest-owned or bounded legacy artifacts and preserves unrelated content.
 
-ChangeForge has no automatic restore CLI. Install creates a backup only when
+rd-skills has no automatic restore CLI. Install creates a backup only when
 `--backup` was requested and matching content already exists; upgrade creates
 one when matching managed or legacy content exists. If a successful command
 prints a backup path, use it; the new manifest records the same path. If an
@@ -139,7 +139,7 @@ python3 installers/uninstall.py --agent codex --scope user --dry-run
 python3 installers/uninstall.py --agent codex --scope user
 ```
 
-Uninstall removes only files declared by the ChangeForge manifest plus bounded
+Uninstall removes only files declared by the rd-skills manifest plus bounded
 known legacy artifacts. It does not remove unrelated user content or restore a
 backup automatically.
 
@@ -175,7 +175,7 @@ the installed user experience.
 | --- | --- |
 | `missing built profile ...` | Run `python3 scripts/build.py --profile <profile>` with `<profile>` replaced by `recommended`, `full`, or `dev`, then repeat the dry run. |
 | Build directory is missing `.changeforge-build-manifest.json` or fails validation | Delete no target content. Re-run the build for the same profile so the generator recreates the directory and manifest; never hand-author the manifest. |
-| `no ChangeForge manifest found ...; run install first` during upgrade | Inspect the target. If this is a new target, use install. If artifacts predate the manifest, back them up, preview install, and resolve any named unmanaged conflicts explicitly. |
+| `no rd-skills manifest found ...; run install first` during upgrade | Inspect the target. If this is a new target, use install. If artifacts predate the manifest, back them up, preview install, and resolve any named unmanaged conflicts explicitly. |
 | Permission denied | Stop. Choose `user`/`project`, correct ownership through the host's approved process, or obtain authorization for Codex `admin`; do not use `--force` as a permission workaround. |
 | Unsupported scope | Use the host/scope matrix above. Only Codex supports `admin`; project installs require a project-root `--target`; OpenAI API uses zip output. |
 | Doctor reports missing/stale files or bindings | Preserve its output, rebuild the same profile, preview upgrade, run upgrade only if the manifest is present, then rerun doctor. If the manifest is absent, follow the missing-manifest row. |

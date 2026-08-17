@@ -1,4 +1,4 @@
-"""Shared manifest for ChangeForge code generation benchmarks."""
+"""Shared manifest for rd-skills code generation benchmarks."""
 
 from __future__ import annotations
 

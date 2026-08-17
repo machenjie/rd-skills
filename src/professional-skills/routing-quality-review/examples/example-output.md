@@ -1,6 +1,6 @@
 # Example Output
 
-# ChangeForge Routing Result
+# rd-skills Routing Result
 
 ## 1. Request Classification
 - Change type: bug fix, backend change, test generation

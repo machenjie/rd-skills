@@ -67,7 +67,6 @@ _PUBLIC_EXECUTION_PREAMBLE_TEMPLATES = (
     "engineering-brief-template.md",
     "task-dag-template.md",
     "implementation-handoff-template.md",
-    "review-handoff-template.md",
 )
 _PUBLIC_EXECUTION_PREAMBLE_PREFIXES = {
     "direct-task-template.md": (
@@ -103,7 +102,26 @@ _PUBLIC_EXECUTION_PREAMBLE_PREFIXES = {
         "of remaining unknowns. If the Brief is insufficient, a downstream artifact "
         "conflicts with it, or a protected decision must change, mark the task blocked "
         "and return through Main to analysis for an updated Brief and redispatch of "
-        "affected tasks."
+        "affected tasks. Complete one initial Analysis by closing observable Acceptance, "
+        "Owner/Placement/Invariant, Acceptance-proving Validation, executable task "
+        "dependencies, professional Skill boundaries, minimum sufficient Review "
+        "Boundaries, and critical gaps blocking the First Executable Slice. Task "
+        "completion or switch, ordinary implementation discovery, and an unreached "
+        "Review Boundary do not re-trigger Analysis. Delta Analysis is permitted only "
+        "when evidence invalidates Acceptance/Non-goals, Owner/Placement/Invariant, "
+        "contract/data semantics, dependency/rollback, material risk, or a scope blocker. "
+        "Reuse Core `delta_analysis`; do not change its invalidation triggers or "
+        "transitive scope. After Delta Analysis, the complete updated Engineering Brief "
+        "remains the only operational analysis authority. Then emit only this decision "
+        "projection: ```text Delta Impact: invalidated=[...]; affected={ brief:[...], "
+        "tasks:[...], dependencies:[...], skills:[...], reviews:[...] }; "
+        "unlisted=preserved ``` Each list is the exact proved affected set; `[]` means "
+        "proved no impact, while unknown requires a Proof Limit rather than `[]`. Preserve Skill assignments unless professional "
+        "domain, work type, or a material-risk trigger changes. If transitive impact is "
+        "not closed, record a Proof Limit and return blocked. Main consumes Delta Impact "
+        "without reinterpreting affected scope. Use full re-analysis only when foundational "
+        "goals or system assumptions are invalidated. Delta Impact never replaces, "
+        "summarizes, or weakens the Brief."
     ),
     "task-dag-template.md": (
         "# Task DAG Contract v2 Use only for at least two real tasks with an evidenced "
@@ -117,7 +135,16 @@ _PUBLIC_EXECUTION_PREAMBLE_PREFIXES = {
         "names the Brief-selected Task ID; its matching task node is a verbatim "
         "projection, and Main dispatches the Brief slice itself. If the Brief is "
         "insufficient or any projection conflicts with it, mark the DAG blocked and "
-        "return to analysis through Main for an updated Brief and redispatch."
+        "return to analysis through Main for an updated Brief and redispatch. Each Task "
+        "is one complete semantic change with one Primary Professional Skill. Keep "
+        "co-effective changes for one Acceptance together when they naturally validate "
+        "together. Split materially different professional domains into separate Tasks. "
+        "File, function, code layer, test, or edit step differences do not define Tasks. "
+        "Define minimum sufficient Review Boundaries. Related work is combined by "
+        "default. Concrete risk justifies an intermediate boundary. Combined review "
+        "preserves Primary Skills, required Review Skills, Specialists, and "
+        "professional-risk obligations. Review-side Layer 3 is selected independently "
+        "from review risk and is not copied from Task implementation Layer 3."
     ),
     "implementation-handoff-template.md": (
         "# Implementation Handoff Return this visible contract after the last material "
@@ -128,19 +155,14 @@ _PUBLIC_EXECUTION_PREAMBLE_PREFIXES = {
         "redefine Acceptance, Non-goals, Owner, Invariants, Placement, contract "
         "semantics, Rollback, or the Slice. If the assignment conflicts with the "
         "current Brief or needs one of those decisions to change, mark it blocked and "
-        "return to analysis through Main."
-    ),
-    "review-handoff-template.md": (
-        "# Review Handoff The review-agent receives one bounded target and does not "
-        "edit. Implementation review requires observable acceptance, the latest actual "
-        "diff, the declared changed-path set, current validation results, and the "
-        "Evidence Requirements. For Analyzed Work, this handoff is a derived projection "
-        "of the current Engineering Brief. Goal, Acceptance, Non-goals, Allowed Write "
-        "Scope, Owner, and review boundaries are copied from the Brief and dispatched "
-        "Slice; review evidence and findings cannot redefine them or any other "
-        "protected Brief decision. If the handoff conflicts with the current Brief or "
-        "a protected decision must change, mark it blocked and return to analysis "
-        "through Main."
+        "return to analysis through Main. This cross-Agent artifact is an Execution "
+        "Delta, not a second Task Contract. Transmit only Task ID and Status; Changed "
+        "Files; the actual diff or accessible diff reference; Commands; a structured "
+        "Validation Result; Freshness; relevant current Evidence; Unverified Scope; "
+        "and Residual Risk. Resolve Goal, Acceptance, Owner, Non-goals, and other "
+        "existing Authority at its source instead of copying them here. Keep raw "
+        "command logs as JIT-readable artifacts and include them only when a downstream "
+        "consumer explicitly requires them."
     ),
 }
 _PUBLIC_EXECUTION_PREAMBLE = (
@@ -153,12 +175,15 @@ _PUBLIC_EXECUTION_PREAMBLE = (
 
 ANALYZED_WORK_TEMPLATE_TERMS = {
     "engineering-brief-template.md": (
-        "only operational analysis authority",
+        "current Engineering Brief is the only operational analysis authority",
         "Specialist results are analysis input only",
         "First Executable Slice is a complete Task Contract v2",
         "Main dispatches it verbatim",
         "DAG planner never reselects it",
         "return through Main to analysis",
+        "one initial Analysis",
+        "Delta Impact never replaces, summarizes, or weakens the Brief",
+        "Preserve Skill assignments",
     ),
     "direct-task-template.md": (
         "outside the Analyzed Work authority path",
@@ -169,6 +194,8 @@ ANALYZED_WORK_TEMPLATE_TERMS = {
         "must not select or replace the First Executable Slice",
         "matching task node is a verbatim projection",
         "return to analysis through Main",
+        "one complete semantic change with one Primary Professional Skill",
+        "minimum sufficient Review Boundaries",
     ),
     "implementation-handoff-template.md": (
         "derived projection of the current Engineering Brief",
@@ -177,7 +204,6 @@ ANALYZED_WORK_TEMPLATE_TERMS = {
     ),
     "review-handoff-template.md": (
         "derived projection of the current Engineering Brief",
-        "Goal, Acceptance, Non-goals, Allowed Write Scope",
         "findings cannot redefine",
         "return to analysis through Main",
     ),
@@ -191,7 +217,7 @@ PROFESSIONAL_AUTHORITY_TERMS = {
         "derived Task DAG or handoff",
     ),
     "engineering-change-analysis/references/implementation-preparation.md": (
-        "only operational analysis authority",
+        "current Engineering Brief is the only operational analysis authority",
         "Specialist analysis are inputs",
         "complete Task Contract v2",
         "planner does not reselect the First Executable Slice",
@@ -504,39 +530,6 @@ def _validate_analyzed_work_authority_templates(
                 "engineering-brief-template.md: protected decision list is "
                 f"missing {decision!r}"
             )
-
-    review_text = texts.get("review-handoff-template.md", "")
-    review_surface = _contract_surface(
-        review_text,
-        container="fenced-markdown",
-        context="review-handoff-template.md",
-        errors=errors,
-    )
-    boundary_fields = ["Goal", "Acceptance", "Non-goals", "Allowed Write Scope"]
-    if review_surface:
-        owner_position = review_surface.find("## Owner")
-        positions: list[int] = []
-        for field in boundary_fields:
-            marker = f"{field}:"
-            if review_surface.count(marker) != 1:
-                errors.append(
-                    "review-handoff-template.md: current Brief projection must "
-                    f"contain exactly one {marker!r}"
-                )
-                continue
-            position = review_surface.find(marker)
-            positions.append(position)
-            if owner_position < 0 or position > owner_position:
-                errors.append(
-                    "review-handoff-template.md: current Brief projection fields "
-                    "must precede Owner"
-                )
-        if len(positions) == len(boundary_fields) and positions != sorted(positions):
-            errors.append(
-                "review-handoff-template.md: current Brief projection fields must "
-                "preserve Goal, Acceptance, Non-goals, Allowed Write Scope order"
-            )
-
 
 def _validate_professional_authority_projections(errors: list[str]) -> None:
     for relative, terms in PROFESSIONAL_AUTHORITY_TERMS.items():

@@ -5,7 +5,7 @@ request. Run commands from the repository root.
 
 ## Prepare
 
-ChangeForge requires Python 3.11 or newer. Install its declared dependencies:
+rd-skills requires Python 3.11 or newer. Install its declared dependencies:
 
 ```bash
 python3 --version

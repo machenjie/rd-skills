@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build, install, and inspect a hookless ChangeForge profile."""
+"""Build, install, and inspect a hookless rd-skills profile."""
 
 from __future__ import annotations
 
@@ -89,7 +89,7 @@ def run_plan(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="One-command hookless ChangeForge setup.")
+    parser = argparse.ArgumentParser(description="One-command hookless rd-skills setup.")
     parser.add_argument("--agent", choices=AGENTS, required=True)
     parser.add_argument("--scope", choices=SCOPES)
     parser.add_argument("--target", type=Path)

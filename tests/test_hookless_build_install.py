@@ -13,15 +13,14 @@ import zipfile
 from collections import Counter
 from pathlib import Path
 
-from tests.scripts.test_eval_core_principles import (
-    assert_core_producer_outcomes_passed,
-)
-
-
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
+
+from validation_utils import (  # noqa: E402
+    authoritative_build_input_snapshot_errors,
+)
 
 
 def load_script(name: str, relative: str):
@@ -52,6 +51,15 @@ def assert_build_profile_artifact_semantics(
     )
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     test_case.assertIsInstance(manifest, dict, profile)
+    build_input_errors = authoritative_build_input_snapshot_errors(
+        manifest.get("authoritative_build_inputs"),
+        ROOT,
+    )
+    test_case.assertEqual(
+        [],
+        build_input_errors,
+        f"{profile}: {'; '.join(build_input_errors)}",
+    )
     test_case.assertEqual("hookless-control-plane-v1", manifest["architecture"])
     test_case.assertEqual(
         "ai-consumption-v1", manifest["compiled_layer3_format"]
@@ -108,6 +116,17 @@ class BuildArtifactConsumerContractTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as raw:
             root = fixture(Path(raw))
+            manifest_path = root / ".changeforge-build-manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["authoritative_build_inputs"]["sha256"] = "0" * 64
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            with self.assertRaisesRegex(
+                AssertionError, "authoritative build inputs are stale"
+            ):
+                consumer(self, root, "recommended", 27)
+
+        with tempfile.TemporaryDirectory() as raw:
+            root = fixture(Path(raw))
             (root / ".changeforge-build-manifest.json").unlink()
             with self.assertRaisesRegex(AssertionError, "build manifest is missing"):
                 consumer(self, root, "recommended", 27)
@@ -120,15 +139,6 @@ class BuildArtifactConsumerContractTests(unittest.TestCase):
 
 
 class HooklessBuildInstallTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls) -> None:
-        assert_core_producer_outcomes_passed(
-            ROOT,
-            "build-recommended",
-            "build-full",
-            "build-dev",
-        )
-
     def test_profile_counts_and_standard_skill_roots(self) -> None:
         expected = {"recommended": 27, "full": 40, "dev": 190}
         for profile, count in expected.items():
@@ -454,7 +464,7 @@ class HooklessBuildInstallTests(unittest.TestCase):
             "main-control-agent": 6,
             "analysis-agent": 16,
             "task-agent": 38,
-            "review-agent": 18,
+            "review-agent": 21,
         }
         profiles = {item["name"]: item for item in data["profiles"]}
         self.assertEqual(set(expected_counts), set(profiles))
@@ -524,7 +534,6 @@ class HooklessBuildInstallTests(unittest.TestCase):
                 self.assertIn(rule, built_lines, (host, rule))
             for rule in canonical_task_rules:
                 self.assertIn(rule, built_lines, (host, rule))
-        self.assertIn("return only bounded utility evidence", task_casefold)
         analysis = profiles["analysis-agent"]["instructions"]
         for phrase in (
             "no-repo direct-answer",

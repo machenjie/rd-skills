@@ -151,8 +151,8 @@ class TaskDagDecompositionContractTests(unittest.TestCase):
         }
         layer3_rule = (
             "Inspect `task-dag-decomposition` candidate-graph evidence for "
-            "proposed nodes, edges, blockers, critical path, collisions, "
-            "uncertainty, and proof limits."
+            "nodes, edges, blockers, critical path, collisions, uncertainty, "
+            "and proof limits."
         )
         self.assertEqual(
             [layer3_rule],
@@ -169,13 +169,12 @@ class TaskDagDecompositionContractTests(unittest.TestCase):
             r"first executable slice|\bfes\b",
         )
         self.assertIn(
-            "Accept or reject each proposed node and edge with an "
-            "evidence-backed reason before constructing the graph.",
+            "Accept or reject each node and edge with an evidence-backed "
+            "reason before construction.",
             planner_rules,
         )
         self.assertTrue(
             {
-                "Require the current accepted Engineering Brief.",
                 "Preserve its First Executable Slice verbatim.",
                 "Never select the First Executable Slice.",
                 "Never replace the First Executable Slice.",

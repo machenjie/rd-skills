@@ -27,6 +27,11 @@ audit-only. The current contract, machine-derived plan, bindings, provenance,
 unique unforked chain head, storage closure, and recomputed review-cost evidence
 must all be current. An all-carry round has zero fresh reviewers, ballots,
 capsule-chain artifacts, and canonical input bytes.
+The current contract stores one package-material binding and one review-unit
+binding per target, deduplicates dependency materials in one compact catalog,
+and stores only dependency IDs per finding. Legacy source/package/review-binding
+aliases and earlier schema-3 contract fingerprints are audit-only; a contract
+change requires a full-fresh 189-Skill review.
 
 ## Required Design
 

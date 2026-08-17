@@ -56,45 +56,44 @@ This flow has one local Full Regression and one formal pass on a successful cand
 A repair invalidates only evidence affected by that repair. The final complete
 passes still run once after the last material edit.
 
-For selector identity only, the canonical projection is: Current static
-evidence selectors are r26 Readability, r26 Semantic Disposition, r26 Root
-lifecycle, and r19 schema-3 Professional Completeness for all 189 non-Control
-packages. “Current” in that projection names the configured selector set; it
-does not attest the four surfaces' currentness. Readability r26 and full-fresh
-Professional Completeness r19 have complete decisions for their recorded
-inputs. Readability r26 is historical evidence with no recorded tracked
-tightening, detector false positive, or rewrite requirement under its bound
-Skill detector, but that detector is now stale against the current detector. R26 has
-`source_current=false`, status `panel-majority-stale`, remains storage-pending,
-and is not accepted for formal release. R19 is historical full-fresh evidence
-with no professional correction or unresolved professional disagreement under
-its bound contract, but that contract is now stale against the current
-Professional review contract. R19 remains storage-pending, is not accepted for
-formal release, and cannot authorize carry across the contract change. The
-Semantic Disposition application is `invalid` because its packet is stale
-against the current audit. Root lifecycle is
-`pending-changes`, with `snapshot_current=false` and no formal-release
-readiness. These static selectors do not prove that the final formal gates or
-same-commit remote workflow passed.
+The post-migration tracked Expert Panel inventory must be exactly
+`evals/expert-panel/readability.json`,
+`evals/expert-panel/semantic-disposition.json`, and
+`evals/expert-panel/professional-completeness.json`. Each fixed path contains one
+current compact attestation, is at most 4 MiB, and is replaced rather than
+appended. Full packets, templates, ballots, capsules, and decisions remain only
+under ignored `.rd-skills/expert-panel/<run-id>/` or an optional CI/Release
+artifact. Git history audits replaced attestations; do not retain dated, `rN`,
+or last-N copies in the tracked tree.
 
-The later owning refresh stages are [Semantic Disposition](#semantic-disposition)
-after the final audit and [Root lifecycle](#root-lifecycle) after the final
-content tree stabilizes. Formal Release requires a new current schema-2
-Readability review under the current Skill detector and a new schema-3
-full-fresh Professional Completeness round for all 189 current non-Control
-packages under the current review contract. Preserve r26 and r19 as immutable
-historical evidence; neither can satisfy its required new review, and r19
-cannot authorize carry. Until those stages complete, the professionalism JSON
-correctly reports `release_gate=release-not-ready`.
+Canonical fixed-attestation paths, not Readability or Professional policy
+config, select Expert Panel evidence; the formal target remains all 189
+non-Control packages. Formal release requires a current Semantic Disposition
+application bound to the exact fixed-attestation bytes. Reuse each current
+attestation while its strict current validator passes; create and promote a
+replacement only after its source, detector, binding, or review contract
+becomes stale. These fixed attestations do not prove that the final formal gates or
+same-commit remote workflow passed.
 
 `reports/professionalism-regression-report.json` is the sole machine-readable
 professionalism readiness authority. Its only producer is
 `scripts/validate-professionalism-regression.py`, which the Core Principles
 orchestrator runs and freshness-checks in dependency order. The formal-release
-Core run also requests `reports/professionalism-regression-report.md` as a
-release-only presentation projection. That Markdown is not an input or a
-second authority, and the authoring gate does not refresh it. Productization
-validates the saved JSON semantically without rerunning the producer.
+Core run writes the professionalism and Core schema-4 JSON outcomes plus their
+Markdown projections under
+`.rd-skills/formal-release/<captured-head>/reports/`. The ignored scene is bound
+to the captured input `HEAD` and contains exactly those four canonical files;
+it is not an input or a second tracked authority. The complete formal producer
+graph writes and reads intermediate reports only in the sibling
+`producer-reports/` staging directory. Authoring refreshes only the tracked
+ordinary JSON, and Productization validates that saved JSON semantically
+without rerunning the producer.
+On a formal Core run that JSON also owns the downstream
+`expert_panel_release_manifest`. It binds the release commit to external
+SHA-256 and byte size, review ID, verdict, axis, and canonical path for exactly
+the three fixed attestations; it creates no fourth tracked file and is excluded
+from all panel currentness fingerprints. The remote workflow independently
+compares the manifest commit with the release object ID.
 
 ## Conditional Evidence Refresh
 
@@ -102,33 +101,13 @@ Use this section only after a formal diagnostic identifies a stale surface.
 The commands below are usage notation. Replace every placeholder before
 execution; they are not copy-paste shell blocks.
 
-### Root lifecycle
-
-When only an authoring bootstrap snapshot is stale:
-
-```text
-python3 scripts/audit-skill-content.py --gate authoring --refresh-root-disposition-bootstrap REVIEWER RATIONALE
-```
-
-This never satisfies formal release.
-
-When the formal Root lifecycle is stale or has an unclassified comparison:
-
-```text
-python3 scripts/audit-skill-content.py --gate formal-release --record-root-disposition-release RELEASE_ID --released-on YYYY-MM-DD [review arguments required by the diagnosed comparison]
-```
-
-The recorder derives fingerprints and lineage. Stop on rejected review,
-concurrent source/configuration drift, or an unclassified change. Never
-hand-edit the managed lifecycle block.
-
 ### Semantic Disposition
 
 Create a Semantic Disposition review only when its application binding is stale
 or the formal diagnostic reopens a semantic target:
 
 ```text
-python3 scripts/expert_panel_review.py build-packet --panel-kind semantic-disposition --audit FRESH_AUDIT.json --review-id REVIEW_ID --created-on YYYY-MM-DD --out evals/expert-panel/REVIEW_ID/packet.json
+python3 scripts/expert_panel_review.py prepare --panel-kind semantic-disposition --audit reports/skill-content-audit.json --review-id REVIEW_ID --created-on YYYY-MM-DD --semantic-re-review-axis root --semantic-re-review-axis reference --reviewer VOTER_1 AGENT_1 ROLE_1 EXPERTISE_1 --reviewer VOTER_2 AGENT_2 ROLE_2 EXPERTISE_2 --reviewer VOTER_3 AGENT_3 ROLE_3 EXPERTISE_3 --out .rd-skills/expert-panel/REVIEW_ID/packet.json
 ```
 
 ### Readability
@@ -137,16 +116,16 @@ Create a Readability review only when source, detector, target, or selected
 panel currentness fails:
 
 ```text
-python3 scripts/expert_panel_review.py prepare --panel-kind readability --review-id READABILITY_ID --created-on YYYY-MM-DD --out evals/expert-panel/READABILITY_ID/packet.json
+python3 scripts/expert_panel_review.py prepare --panel-kind readability --review-id READABILITY_ID --created-on YYYY-MM-DD --out .rd-skills/expert-panel/READABILITY_ID/packet.json
 ```
 
 ### Professional Completeness
 
-Create a schema-3 round only when package, binding, review-contract, selected
-decision, lineage, or storage currentness fails:
+Create a schema-3 review only when package, binding, review-contract, provenance,
+or current-attestation storage fails:
 
 ```text
-python3 scripts/expert_panel_review.py prepare --panel-kind professional-completeness --schema-version 3 --review-id COMPLETENESS_ID --created-on YYYY-MM-DD --baseline-decision evals/expert-panel/PRIOR_COMPLETENESS_ID/panel/decision.json --out evals/expert-panel/COMPLETENESS_ID/packet.json
+python3 scripts/expert_panel_review.py prepare --panel-kind professional-completeness --schema-version 3 --review-id COMPLETENESS_ID --created-on YYYY-MM-DD --out .rd-skills/expert-panel/COMPLETENESS_ID/packet.json
 ```
 
 Use the machine-derived plan. Changed packages and affected dependencies receive
@@ -155,10 +134,36 @@ origins. An all-carry Professional Completeness round creates no fresh reviewer
 artifacts: zero fresh reviewers, ballots, capsules, and input bytes. Maintainers
 do not select or override dispositions.
 
-Reviewer manifests and unfilled templates remain outside the repository.
+The current schema-3 contract uses one package-material binding and one review
+unit per packet target, one shared dependency-material catalog in compact
+storage, and dependency IDs in each finding. It rejects legacy
+source/package/review-binding aliases. A Professional review-contract change
+invalidates every package; earlier schema-3 contracts are audit-only and require
+a new full-fresh round before release or carry.
+The fixed Professional compact schema-2 bytes additionally use the physical
+`professional-string-catalog-v1` codec: routing identity remains literal and
+all other repeated string values are canonical catalog references. This does
+not change reviewer-visible authority or the review-contract fingerprint.
+Validation expands the codec through the shared attestation owner before
+semantic currentness checks and rejects bare current schema-2 or alternative
+catalog encodings. Promotion must reproduce the exact encoded source bytes from
+the authenticated decision before compare-and-swap.
+Generate the Professional attestation only on one clean stable commit `C`.
+Fresh `origin_commit` records that projection commit after the decision and
+current package/review/dependency bindings validate; it does not claim when
+reviewers executed or when the decision file was created. Run exact promotion
+validation on the same `C`. The later fixed-artifact commit `P` retains origin
+`C`; currentness and Formal Release do not rewrite it or require `C == P`.
+
+For exact carry, add `--baseline-attestation
+evals/expert-panel/professional-completeness.json`; the current attestation is
+self-contained and no predecessor decision path is required. Reviewer manifests
+and unfilled templates remain outside the repository.
 Materialize ballots only through the bounded command and transport contract in
 [Skill content governance](SKILL_CONTENT_GOVERNANCE.md#targeted-references).
-Never overwrite an accepted ballot or predecessor.
+After validating the runtime decision, build and promote one replacement
+attestation. Promotion writes only the panel kind's fixed path and requires the
+expected current SHA-256, or `absent` for the first tracked attestation.
 
 ## Stop And Recovery
 

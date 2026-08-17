@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Upgrade a ChangeForge installation to a built hookless profile."""
+"""Upgrade an rd-skills installation to a built hookless profile."""
 
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ from changeforge_install import (
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Upgrade installed ChangeForge artifacts.")
+    parser = argparse.ArgumentParser(description="Upgrade installed rd-skills artifacts.")
     parser.add_argument("--agent", choices=AGENTS, required=True)
     parser.add_argument("--scope", choices=SCOPES, required=True)
     parser.add_argument("--target", type=Path)
@@ -58,7 +58,7 @@ def main() -> int:
         validate_built_source(args.agent, args.profile, source, source_profiles)
         old = read_manifest(targets.skills)
         if old is None:
-            raise InstallError(f"no ChangeForge manifest found in {targets.skills}; run install first")
+            raise InstallError(f"no rd-skills manifest found in {targets.skills}; run install first")
         old_skills = managed_skill_names(old)
         old_profiles = managed_profile_files(old)
         old_profiles |= legacy_managed_profile_files(args.agent, args.scope, args.target)

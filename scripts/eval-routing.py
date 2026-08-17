@@ -25,6 +25,7 @@ from validation_utils import (
     fail_many,
     load_yaml_file,
     professional_automatic_routing_policy_fingerprint,
+    report_output_paths,
     validate_main_execution,
 )
 
@@ -649,11 +650,16 @@ def evaluate_routes(
     }
 
 
-def main(argv: list[str] | None = None) -> int:
+def _args(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Evaluate hookless Skill routing.")
     parser.add_argument("--candidate-output-dir", type=Path)
     parser.add_argument("--release-projection", action="store_true")
-    args = parser.parse_args(argv)
+    parser.add_argument("--reports-dir", type=Path, default=REPORT_JSON.parent)
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _args(argv)
     try:
         report = evaluate_routes()
     except ValidationProblem as exc:
@@ -678,12 +684,16 @@ def main(argv: list[str] | None = None) -> int:
                         "captured candidate routes differ from current deterministic outputs"
                     )
     report["status"] = "pass" if not errors else "fail"
-    REPORT_JSON.write_text(
+    report_json, report_markdown = report_output_paths(
+        args.reports_dir, REPORT_JSON.name, REPORT_MD.name
+    )
+    args.reports_dir.mkdir(parents=True, exist_ok=True)
+    report_json.write_text(
         json.dumps(report, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
     if args.release_projection:
-        REPORT_MD.write_text(_render_markdown(report), encoding="utf-8")
+        report_markdown.write_text(_render_markdown(report), encoding="utf-8")
     if errors:
         return fail_many("eval-routing", errors)
     print(f"eval-routing: {report['passed_count']} hookless routing case(s) passed.")

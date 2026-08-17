@@ -25,6 +25,14 @@ from validation_utils import load_yaml_file
 
 REGISTRY_PATH = ROOT / "src" / "registry" / "professional-skills.yaml"
 ORACLE_PATH = ROOT / "scripts" / "deterministic_route_oracle.py"
+ROUTER_PATH = (
+    ROOT
+    / "src"
+    / "control-skills"
+    / "engineering-control-plane"
+    / "references"
+    / "professional-skill-router.md"
+)
 EVAL_ROUTING_SPEC = importlib.util.spec_from_file_location(
     "eval_routing",
     ROOT / "scripts" / "eval-routing.py",
@@ -82,7 +90,7 @@ EXPECTED_POLICY = {
     }
 }
 PROTECTED_ROWS_SHA256 = (
-    "0ae6a8110bdb4662cf5d2d758cae76b56fd63cff604b95b5f672706bda3d737d"
+    "cb2e2b5d9439fc9e60220c0740ea03faa59a8b44a68128b298a324411773794a"
 )
 T2E_ECA_DOMAIN_ADDITIONS = {
     "ai-product-extension",
@@ -130,6 +138,87 @@ RETAINED63_CONTROLS = {
     "external-integration-analysis",
     "production-release-decision",
     "production-rollout-fallback",
+}
+
+LOCKED_ROUTING_FIXTURES = {
+    "repository-tooling-direct": {
+        "prompt": "Implement an accepted repository-owned generator source change.",
+        "excluded_skills": ["incident-response-coordinator"],
+        "expected": {
+            "path": "direct",
+            "profile": "task-agent",
+            "primary_skill": "repository-tooling-change-builder",
+            "layer3_skills": [
+                "build-tool-professional-usage",
+                "targeted-validation-selection",
+            ],
+            "review_skill": "ai-code-review-refactor",
+        },
+    },
+    "wave1a-dependency-package-mechanics-negative": {
+        "prompt": (
+            "Analyze whether to install a new package for a capability gap using "
+            "only provenance metadata and version-pinning mechanics; no "
+            "reachability, remediation, accepted-risk, incompatible-license, "
+            "provenance-trust, signature-failure, malicious-package, install-hook, "
+            "or SBOM-exception decision exists."
+        ),
+        "excluded_skills": [
+            "technology-stack-selection",
+            "dependency-vulnerability-scanning",
+        ],
+        "expected": {
+            "path": "analyzed",
+            "profile": "analysis-agent",
+            "primary_skill": "engineering-change-analysis",
+            "layer3_skills": ["package-dependency-management"],
+            "review_skill": "architecture-impact-reviewer",
+        },
+    },
+    "wave1a-dependency-lockfile-negative": {
+        "prompt": (
+            "Implement an accepted repository tooling lockfile version refresh "
+            "only; no vulnerability, license, provenance, malicious-package, "
+            "install-time, SBOM exception, or package-risk acceptance changes."
+        ),
+        "excluded_skills": ["dependency-vulnerability-scanning"],
+        "expected": {
+            "path": "direct",
+            "profile": "task-agent",
+            "primary_skill": "repository-tooling-change-builder",
+            "layer3_skills": [],
+            "review_skill": "ai-code-review-refactor",
+        },
+    },
+    "wave1a-dependency-advisory-keyword-negative": {
+        "prompt": (
+            "Explain a vulnerability advisory keyword without inspecting a "
+            "dependency graph, changing a package, or accepting dependency risk."
+        ),
+        "excluded_skills": ["dependency-vulnerability-scanning"],
+        "expected": {
+            "path": "analyzed",
+            "profile": "analysis-agent",
+            "primary_skill": "engineering-change-analysis",
+            "layer3_skills": ["repository-context-map"],
+            "review_skill": "architecture-impact-reviewer",
+        },
+    },
+    "wave1a-sandbox-dev-only-negative": {
+        "prompt": (
+            "Analyze whether to run a local command whose target and mutation "
+            "surface are unresolved; this product route must not inject the "
+            "dev-only agent tool permission sandbox companion."
+        ),
+        "excluded_skills": ["agent-tool-permission-sandbox"],
+        "expected": {
+            "path": "analyzed",
+            "profile": "analysis-agent",
+            "primary_skill": "engineering-change-analysis",
+            "layer3_skills": ["repository-context-map"],
+            "review_skill": "architecture-impact-reviewer",
+        },
+    },
 }
 
 
@@ -207,42 +296,13 @@ def _test_task_id(prompt: str) -> str:
 
 def _test_main_execution(prompt: str) -> dict[str, object]:
     task_id = _test_task_id(prompt)
-    return {
-        "producer": "main-control-agent",
-        "task_id": task_id,
-        "execution_level": "L4",
-        "level_basis": {
-            "trigger_evaluations": [
-                {
-                    "id": "public-api-event-schema-compatibility",
-                    "status": "matched",
-                    "evidence_kind": "analysis_handoff",
-                    "source_anchor": f"task:{task_id}:routing-api",
-                    "plausible_critical": False,
-                }
-            ],
-            "l2_eligibility": [],
-            "obligations": ["high-risk pre-implementation evidence"],
-            "unresolved": [],
-            "edit_status": "allowed",
-        },
-    }
-
-
-def _terminal_action_ambiguity_main(prompt: str) -> dict[str, object]:
-    task_id = _test_task_id(prompt)
     contract = VALIDATION.CORE_CONTRACTS["execution_level_contract"]
-    target = "unknown-critical-boundary"
     trigger_evaluations = {
         row["id"]: {
-            "status": "unknown" if row["id"] == target else "not_matched",
+            "status": "not_matched",
             "evidence_kind": "analysis_handoff",
-            "source_anchor": (
-                f"task:{task_id}:terminal-task-action-ambiguity"
-                if row["id"] == target
-                else f"task:{task_id}:trigger:{row['id']}"
-            ),
-            "plausible_critical": row["id"] == target,
+            "source_anchor": f"task:{task_id}:trigger:{row['id']}",
+            "plausible_critical": False,
         }
         for row in contract["trigger_registry"]
     }
@@ -251,6 +311,44 @@ def _terminal_action_ambiguity_main(prompt: str) -> dict[str, object]:
             "status": "false",
             "evidence_kind": "analysis_handoff",
             "source_anchor": f"task:{task_id}:l2:{row['id']}",
+        }
+        for row in contract["l2_eligibility"]
+    }
+    computed = VALIDATION.compute_execution_level(
+        requested="unspecified",
+        trigger_evaluations=trigger_evaluations,
+        l2_evaluations=l2_evaluations,
+    )
+    return {
+        "producer": "main-control-agent",
+        "task_id": task_id,
+        "execution_level": computed["effective_level"],
+        "level_basis": computed["level_basis"],
+    }
+
+
+def _terminal_action_ambiguity_main(prompt: str) -> dict[str, object]:
+    task_id = _test_task_id(prompt)
+    contract = VALIDATION.CORE_CONTRACTS["execution_level_contract"]
+    proof_limit = "no-unresolved-owner-placement-verification-or-rollback-gap"
+    trigger_evaluations = {
+        row["id"]: {
+            "status": "not_matched",
+            "evidence_kind": "analysis_handoff",
+            "source_anchor": f"task:{task_id}:trigger:{row['id']}",
+            "plausible_critical": False,
+        }
+        for row in contract["trigger_registry"]
+    }
+    l2_evaluations = {
+        row["id"]: {
+            "status": "unknown" if row["id"] == proof_limit else "false",
+            "evidence_kind": "analysis_handoff",
+            "source_anchor": (
+                f"task:{task_id}:terminal-task-action-ambiguity-proof-limit"
+                if row["id"] == proof_limit
+                else f"task:{task_id}:l2:{row['id']}"
+            ),
         }
         for row in contract["l2_eligibility"]
     }
@@ -788,10 +886,10 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
                 "families": ["test-validation"],
                 "domains": [],
                 "owners": [quality_owner],
-                "critical_candidates": ["critical-unknown"],
-                "selected": "critical-unknown",
+                "ordinary_candidates": ["ordinary-ambiguity"],
+                "selected": "ordinary-ambiguity",
                 "route": critical_route,
-                "critical_main": True,
+                "proof_limit_main": True,
                 "selected_domains": [],
             },
             "critical-ambiguity:migration-plan-referent": {
@@ -802,10 +900,10 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
                 "families": ["test-validation"],
                 "domains": [],
                 "owners": [quality_owner],
-                "critical_candidates": ["critical-unknown"],
-                "selected": "critical-unknown",
+                "ordinary_candidates": ["ordinary-ambiguity"],
+                "selected": "ordinary-ambiguity",
                 "route": critical_route,
-                "critical_main": True,
+                "proof_limit_main": True,
                 "selected_domains": [],
             },
             "critical-ambiguity:noun-before-test-order": {
@@ -816,10 +914,10 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
                 "families": ["test-validation"],
                 "domains": [],
                 "owners": [quality_owner],
-                "critical_candidates": ["critical-unknown"],
-                "selected": "critical-unknown",
+                "ordinary_candidates": ["ordinary-ambiguity"],
+                "selected": "ordinary-ambiguity",
                 "route": critical_route,
-                "critical_main": True,
+                "proof_limit_main": True,
                 "selected_domains": [],
             },
             "critical-ambiguity:terminal-for": {
@@ -830,10 +928,10 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
                 "families": ["test-validation"],
                 "domains": [],
                 "owners": [quality_owner],
-                "critical_candidates": ["critical-unknown"],
-                "selected": "critical-unknown",
+                "ordinary_candidates": ["ordinary-ambiguity"],
+                "selected": "ordinary-ambiguity",
                 "route": critical_route,
-                "critical_main": True,
+                "proof_limit_main": True,
                 "selected_domains": [],
             },
             "critical-ambiguity:terminal-for-article": {
@@ -846,10 +944,10 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
                 "families": ["test-validation"],
                 "domains": [],
                 "owners": [quality_owner],
-                "critical_candidates": ["critical-unknown"],
-                "selected": "critical-unknown",
+                "ordinary_candidates": ["ordinary-ambiguity"],
+                "selected": "ordinary-ambiguity",
                 "route": critical_route,
-                "critical_main": True,
+                "proof_limit_main": True,
                 "selected_domains": [],
             },
             "critical-ambiguity:terminal-proving": {
@@ -860,10 +958,10 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
                 "families": ["test-validation"],
                 "domains": [],
                 "owners": [quality_owner],
-                "critical_candidates": ["critical-unknown"],
-                "selected": "critical-unknown",
+                "ordinary_candidates": ["ordinary-ambiguity"],
+                "selected": "ordinary-ambiguity",
                 "route": critical_route,
-                "critical_main": True,
+                "proof_limit_main": True,
                 "selected_domains": [],
             },
             "product-plus-tests:backend": {
@@ -1011,23 +1109,23 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
                 "route": case["route"],
                 "proof": proof,
             }
-            if case.get("critical_main") is True:
+            if case.get("proof_limit_main") is True:
                 supplied_main = case["main_execution"]
                 decision = observed["route_decision"]
                 route_result = decision["route_result"]
-                actual["critical_candidates"] = [
+                actual["ordinary_candidates"] = [
                     item["candidate_id"]
                     for item in raw_candidates
-                    if item["candidate_id"] == "critical-unknown"
+                    if item["candidate_id"] == "ordinary-ambiguity"
                 ]
-                expected["critical_candidates"] = case[
-                    "critical_candidates"
+                expected["ordinary_candidates"] = case[
+                    "ordinary_candidates"
                 ]
-                actual["critical_source"] = (
-                    "critical-source:terminal-task-action-ambiguity"
+                actual["proof_limit_source"] = (
+                    "proof-limit:terminal-task-action-ambiguity"
                     in trace["selected_candidate"].get("evidence", [])
                 )
-                expected["critical_source"] = True
+                expected["proof_limit_source"] = True
                 actual["main_provenance_bytes"] = json.dumps(
                     decision["main_execution_provenance"],
                     sort_keys=True,
@@ -1042,15 +1140,17 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
                 expected["execution_level"] = supplied_main["execution_level"]
                 actual["level_basis"] = route_result["level_basis"]
                 expected["level_basis"] = supplied_main["level_basis"]
-                actual["critical_level_contract"] = {
+                actual["proof_limit_level_contract"] = {
                     "execution_level": route_result["execution_level"],
                     "unresolved": route_result["level_basis"]["unresolved"],
                     "edit_status": route_result["level_basis"]["edit_status"],
                 }
-                expected["critical_level_contract"] = {
-                    "execution_level": "L4",
-                    "unresolved": ["unknown-critical-boundary"],
-                    "edit_status": "blocked",
+                expected["proof_limit_level_contract"] = {
+                    "execution_level": "L3",
+                    "unresolved": [
+                        "no-unresolved-owner-placement-verification-or-rollback-gap"
+                    ],
+                    "edit_status": "allowed",
                 }
             layer3_contract = case.get("layer3_contract")
             if isinstance(layer3_contract, dict):
@@ -1096,47 +1196,43 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
     ) -> None:
         prompt = "Add regression tests for the accepted backend change."
         base = _terminal_action_ambiguity_main(prompt)
-        target_id = "unknown-critical-boundary"
+        target_id = "no-unresolved-owner-placement-verification-or-rollback-gap"
 
-        def trigger(
+        def l2_row(
             value: dict[str, object],
             identifier: str,
         ) -> dict[str, object]:
             return next(
                 row
-                for row in value["level_basis"]["trigger_evaluations"]
+                for row in value["level_basis"]["l2_eligibility"]
                 if row["id"] == identifier
             )
 
         mutations: dict[str, dict[str, object]] = {}
 
         candidate = copy.deepcopy(base)
-        trigger(candidate, target_id)["status"] = "matched"
-        mutations["target-status-matched"] = candidate
+        l2_row(candidate, target_id)["status"] = "true"
+        mutations["target-status-true"] = candidate
 
         candidate = copy.deepcopy(base)
-        trigger(candidate, target_id)["status"] = "not_matched"
-        mutations["target-status-not-matched"] = candidate
+        l2_row(candidate, target_id)["status"] = "false"
+        mutations["target-status-false"] = candidate
 
         candidate = copy.deepcopy(base)
-        trigger(candidate, target_id)["source_anchor"] = ""
+        l2_row(candidate, target_id)["source_anchor"] = ""
         mutations["target-source-blank"] = candidate
 
         candidate = copy.deepcopy(base)
-        trigger(candidate, target_id).pop("source_anchor")
+        l2_row(candidate, target_id).pop("source_anchor")
         mutations["target-source-removed"] = candidate
 
         candidate = copy.deepcopy(base)
-        trigger(candidate, target_id)["plausible_critical"] = False
-        mutations["target-plausible-critical-false"] = candidate
-
-        candidate = copy.deepcopy(base)
-        candidate["level_basis"]["trigger_evaluations"] = [
+        candidate["level_basis"]["l2_eligibility"] = [
             row
-            for row in candidate["level_basis"]["trigger_evaluations"]
+            for row in candidate["level_basis"]["l2_eligibility"]
             if row["id"] != target_id
         ]
-        mutations["target-trigger-missing"] = candidate
+        mutations["target-l2-missing"] = candidate
 
         candidate = copy.deepcopy(base)
         candidate["level_basis"]["trigger_evaluations"].pop(0)
@@ -1161,22 +1257,22 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
         mutations["unresolved-target-removed"] = candidate
 
         candidate = copy.deepcopy(base)
-        candidate["level_basis"]["edit_status"] = "allowed"
-        mutations["edit-status-allowed"] = candidate
+        candidate["level_basis"]["edit_status"] = "blocked"
+        mutations["edit-status-blocked"] = candidate
 
         candidate = copy.deepcopy(base)
-        candidate["execution_level"] = "L3"
-        mutations["execution-level-l3"] = candidate
+        candidate["execution_level"] = "L4"
+        mutations["execution-level-l4"] = candidate
 
         candidate = copy.deepcopy(base)
-        candidate["level_basis"]["obligations"].remove(
+        candidate["level_basis"]["obligations"].append(
             "high-risk pre-implementation evidence"
         )
-        mutations["high-risk-obligation-removed"] = candidate
+        mutations["invented-high-risk-obligation"] = candidate
 
         expected_message = (
-            "terminal task-action ambiguity requires Main-provided blocked "
-            "critical-unknown provenance"
+            "terminal task-action ambiguity requires Main-provided L3 "
+            "Proof Limit provenance"
         )
         mismatches: list[str] = []
         for label, main_execution in mutations.items():
@@ -1635,7 +1731,7 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
             "layer3_skills": ["regression-testing"],
             "review_skill": "ai-code-review-refactor",
         }
-        critical_route = {
+        ambiguity_route = {
             "path": "analyzed",
             "profile": "analysis-agent",
             "primary_skill": "engineering-change-analysis",
@@ -1650,9 +1746,7 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
             "review_skill": "ai-code-review-refactor",
         }
         quality_owner = "implementation-owner:quality-test-gate"
-        critical_source = (
-            "critical-source:terminal-task-action-ambiguity"
-        )
+        proof_limit_source = "proof-limit:terminal-task-action-ambiguity"
         mismatches: list[str] = []
         parser = getattr(
             ORACLE,
@@ -1853,18 +1947,20 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
                 ],
                 "quality_owner_present": quality_owner in raw_ids,
                 "critical_present": "critical-unknown" in raw_ids,
+                "ordinary_present": "ordinary-ambiguity" in raw_ids,
                 "selected": trace["selected_candidate"]["candidate_id"],
-                "critical_source": critical_source
+                "proof_limit_source": proof_limit_source
                 in trace["selected_candidate"].get("evidence", []),
                 "route": _projected_route(observed),
             }
             expected = {
                 "families": ["test-validation"],
                 "quality_owner_present": True,
-                "critical_present": True,
-                "selected": "critical-unknown",
-                "critical_source": True,
-                "route": critical_route,
+                "critical_present": False,
+                "ordinary_present": True,
+                "selected": "ordinary-ambiguity",
+                "proof_limit_source": True,
+                "route": ambiguity_route,
             }
             if label == "old-canonical":
                 route_result = observed["route_decision"][
@@ -2032,6 +2128,681 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
 
         if mismatches:
             self.fail("\n".join(mismatches))
+
+    def test_repository_owner_filter_conserves_independent_changed_actions(
+        self,
+    ) -> None:
+        cases = (
+            (
+                "Implement an accepted repository CLI path registration for "
+                "the same user. Implement a separate backend service behavior "
+                "change.",
+                "Implement a separate backend service behavior change. Implement "
+                "an accepted repository CLI path registration for the same user.",
+            ),
+            (
+                "Update accepted repository CLI help text only. Write a separate "
+                "backend file for runtime service behavior.",
+                "Write a separate backend file for runtime service behavior. "
+                "Update accepted repository CLI help text only.",
+            ),
+        )
+        for pair_index, prompts in enumerate(cases):
+            observed = []
+            for source_order, prompt in enumerate(prompts):
+                with self.subTest(
+                    pair=pair_index,
+                    source_order=source_order,
+                ):
+                    result = _route(prompt)
+                    projected = _projected_route(result)
+                    observed.append(projected)
+                    self.assertEqual("analyzed", projected["path"])
+                    self.assertEqual(
+                        "engineering-change-analysis",
+                        projected["primary_skill"],
+                    )
+                    self.assertEqual(
+                        "implementation-owner-conflict",
+                        result["winner_trace"]["selected_candidate"][
+                            "candidate_id"
+                        ],
+                    )
+                    self.assertEqual(
+                        {
+                            "backend:backend-change-builder",
+                            "repository-tooling:repository-tooling-change-builder",
+                        },
+                        set(
+                            result["winner_trace"]["selected_candidate"][
+                                "evidence"
+                            ]
+                        ),
+                    )
+            self.assertEqual(observed[0], observed[1])
+
+    def test_nominal_add_dir_modifiers_remain_action_local(self) -> None:
+        prompt = (
+            "Implement repository CLI registration of ~/.copilot/skills as the "
+            "--add-dir path for the same OS user; the bounded local resource is "
+            "non-sensitive and unprivileged, authority remains unchanged."
+        )
+        normalized = " ".join(prompt.casefold().split())
+        typed = ORACLE._routing_boundary_fact_snapshots(
+            normalized,
+            parsed=ORACLE._parse_normalized_task_request(normalized),
+        )
+        self.assertEqual(1, len(typed))
+        facts = typed[0]
+        self.assertTrue(facts.repository_owner)
+        self.assertEqual("register", facts.path_mutation)
+        self.assertEqual("changed", facts.filesystem_behavior)
+        self.assertEqual("same_principal", facts.writer_identity)
+        self.assertEqual("same_trust", facts.writer_trust)
+        self.assertEqual("absent", facts.sensitive_asset)
+        self.assertEqual("absent", facts.privileged_consumption)
+        self.assertEqual("unchanged", facts.authority_delta)
+
+        observed = _projected_route(_route(prompt))
+        self.assertEqual(
+            "repository-tooling-change-builder",
+            observed["primary_skill"],
+        )
+        self.assertIn(
+            "filesystem-process-safety",
+            observed["layer3_skills"],
+        )
+        self.assertNotEqual("security-privacy-gate", observed["review_skill"])
+
+        cross_clause = (
+            "Implement repository CLI registration. "
+            "A separate note names ~/.copilot/skills as an --add-dir path for a "
+            "non-sensitive unprivileged resource with unchanged authority."
+        )
+        cross_normalized = " ".join(cross_clause.casefold().split())
+        cross_typed = ORACLE._routing_boundary_fact_snapshots(
+            cross_normalized,
+            parsed=ORACLE._parse_normalized_task_request(cross_normalized),
+        )
+        self.assertEqual(1, len(cross_typed))
+        self.assertTrue(cross_typed[0].repository_owner)
+        self.assertEqual("none", cross_typed[0].path_mutation)
+        self.assertNotEqual("same_principal", cross_typed[0].writer_identity)
+        self.assertNotEqual("absent", cross_typed[0].sensitive_asset)
+
+    def test_clause_local_coordinated_negation_denies_each_security_sink(
+        self,
+    ) -> None:
+        prompt = (
+            "Analyze a proved reachable repository path controlled by a "
+            "less-trusted writer where no sensitive data or privileged "
+            "consumption is involved."
+        )
+        normalized = " ".join(prompt.casefold().split())
+        typed = ORACLE._routing_boundary_fact_snapshots(
+            normalized,
+            parsed=ORACLE._parse_normalized_task_request(normalized),
+        )
+        self.assertEqual(1, len(typed))
+        self.assertEqual("less_trusted", typed[0].writer_trust)
+        self.assertEqual("proved", typed[0].reachable_path)
+        self.assertEqual("absent", typed[0].sensitive_asset)
+        self.assertEqual("absent", typed[0].privileged_consumption)
+
+        observed = _projected_route(_route(prompt))
+        self.assertEqual("analyzed", observed["path"])
+        self.assertEqual("engineering-change-analysis", observed["primary_skill"])
+        self.assertNotEqual("security-privacy-gate", observed["review_skill"])
+
+        positive = prompt.replace(
+            "where no sensitive data or privileged consumption is involved",
+            "where a privileged consumer is involved",
+        )
+        self.assertEqual(
+            "security-privacy-gate",
+            _projected_route(_route(positive))["primary_skill"],
+        )
+
+        cross_sentence = (
+            "Analyze a proved reachable repository path controlled by a "
+            "less-trusted writer that reaches a privileged service. No sensitive "
+            "data or privileged consumption is involved in a separate "
+            "documentation action."
+        )
+        cross_observed = _projected_route(_route(cross_sentence))
+        self.assertEqual(
+            "security-privacy-gate",
+            cross_observed["primary_skill"],
+        )
+
+    def test_filesystem_selector_has_exact_security_review_bindings(self) -> None:
+        selector_id = "dynamic-foundation:filesystem-process-safety"
+        owners = {
+            "backend": "backend-change-builder",
+            "repository-tooling": "repository-tooling-change-builder",
+            "installed-client": "installed-client-change-builder",
+        }
+        expected_bindings = {
+            (
+                f"implementation-owner:{primary}",
+                None,
+                family,
+                primary,
+                review,
+            )
+            for family, primary in owners.items()
+            for review in (
+                "ai-code-review-refactor",
+                "security-privacy-gate",
+            )
+        }
+        self.assertEqual(
+            expected_bindings,
+            set(ORACLE._DYNAMIC_FOUNDATION_OWNER_BINDINGS[selector_id]),
+        )
+
+        prompts = {
+            "backend": (
+                "Implement an accepted backend service behavior to atomically "
+                "replace a local settings file controlled by a less-trusted "
+                "writer before a privileged service consumes it through a proved "
+                "reachable permission boundary."
+            ),
+            "repository-tooling": (
+                "Implement an accepted repository CLI behavior to atomically "
+                "replace a local settings file controlled by a less-trusted "
+                "writer before a privileged service consumes it through a proved "
+                "reachable permission boundary."
+            ),
+            "installed-client": (
+                "Implement an accepted Android installed-client behavior to "
+                "atomically replace a local settings file controlled by a "
+                "less-trusted writer before a privileged service consumes it "
+                "through a proved reachable permission boundary."
+            ),
+        }
+        for family, prompt in prompts.items():
+            with self.subTest(family=family):
+                normalized = " ".join(prompt.casefold().split())
+                facts = ORACLE._routing_boundary_fact_snapshots(
+                    normalized,
+                    parsed=ORACLE._parse_normalized_task_request(normalized),
+                )
+                self.assertEqual(1, len(facts))
+                self.assertEqual("changed", facts[0].filesystem_behavior)
+                self.assertTrue(ORACLE._security_boundary_is_proved(facts[0]))
+
+                result = _route(prompt)
+                projected = _projected_route(result)
+                self.assertEqual(owners[family], projected["primary_skill"])
+                self.assertEqual(
+                    ["filesystem-process-safety"],
+                    projected["layer3_skills"],
+                )
+                self.assertEqual(
+                    "security-privacy-gate",
+                    projected["review_skill"],
+                )
+                source_rows = result["winner_trace"]["selected_candidate"][
+                    "source_foundation_candidates"
+                ]
+                self.assertEqual(
+                    None,
+                    result["winner_trace"]["selected_candidate"]["rule_id"],
+                )
+                self.assertEqual(1, len(source_rows))
+                self.assertEqual(selector_id, source_rows[0]["candidate_id"])
+                self.assertEqual(
+                    {
+                        "primary_skill": owners[family],
+                        "review_skill": "security-privacy-gate",
+                    },
+                    source_rows[0]["owner_binding"],
+                )
+
+        safe = _projected_route(
+            _route(
+                "Implement the accepted maintenance utility to atomically swap "
+                "its bounded local settings file for the same user; rollback is "
+                "available, no sensitive data or elevated consumer is involved, "
+                "and authority stays unchanged."
+            )
+        )
+        self.assertEqual(
+            "repository-tooling-change-builder",
+            safe["primary_skill"],
+        )
+        self.assertEqual("ai-code-review-refactor", safe["review_skill"])
+
+        boundary_without_filesystem = _projected_route(
+            _route(
+                "Implement an accepted repository CLI change that restricts an "
+                "existing proved reachable permission boundary for a less-trusted "
+                "writer before privileged consumption; authority is reduced."
+            )
+        )
+        self.assertEqual(
+            "security-privacy-gate",
+            boundary_without_filesystem["review_skill"],
+        )
+        self.assertNotIn(
+            "filesystem-process-safety",
+            boundary_without_filesystem["layer3_skills"],
+        )
+
+        disconnected = _projected_route(
+            _route(
+                "Implement an accepted backend service behavior consumed by a "
+                "privileged service. A separate local settings file has a "
+                "less-trusted writer and a proved reachable path."
+            )
+        )
+        self.assertEqual("backend-change-builder", disconnected["primary_skill"])
+        self.assertEqual("ai-code-review-refactor", disconnected["review_skill"])
+
+        authority = ORACLE.oracle_admission_authority()
+        filesystem_record = next(
+            record
+            for record in authority.foundation_selectors
+            if record.selector_id == selector_id
+        )
+        undeclared = {
+            "candidate_id": "implementation-owner:frontend-change-builder",
+            "rule_id": None,
+            "routing_family": "frontend",
+            "primary_skill": "frontend-change-builder",
+            "review_skill": "security-privacy-gate",
+            "evidence": ["browser-component-surface"],
+        }
+        self.assertFalse(
+            ORACLE._foundation_route_binding_declared(
+                undeclared,
+                [filesystem_record],
+            )
+        )
+
+        mutated = copy.deepcopy(ORACLE._DYNAMIC_FOUNDATION_OWNER_BINDINGS)
+        mutated[selector_id] = (
+            *mutated[selector_id],
+            (
+                "implementation-owner:frontend-change-builder",
+                None,
+                "frontend",
+                "frontend-change-builder",
+                "security-privacy-gate",
+            ),
+        )
+        with patch.object(
+            ORACLE,
+            "_DYNAMIC_FOUNDATION_OWNER_BINDINGS",
+            mutated,
+        ), self.assertRaises(ORACLE.RoutingIntegrityError):
+            ORACLE.oracle_admission_authority()
+
+    def test_repository_path_permission_priority_and_security_anti_trigger(self) -> None:
+        repository_cases = {
+            "same-principal-add-dir-paraphrase-a": (
+                "Implement the accepted repository CLI so --add-dir registers a "
+                "user-owned non-sensitive skills directory for the current OS "
+                "account; no lower-trust writer or privilege elevation exists and "
+                "authority remains unchanged.",
+                "register",
+                "changed",
+                True,
+            ),
+            "same-principal-add-dir-paraphrase-b": (
+                "Change the internal CLI to add a bounded local plugin directory "
+                "owned by this same user; it is non-sensitive, unprivileged, "
+                "reversible, and cannot be written by a less-trusted principal.",
+                "register",
+                "changed",
+                True,
+            ),
+            "atomic-local-replacement-paraphrase": (
+                "Implement the accepted maintenance utility to atomically swap its "
+                "bounded local settings file for the same user; rollback is "
+                "available, no sensitive data or elevated consumer is involved, "
+                "and authority stays unchanged.",
+                "replace",
+                "changed",
+                True,
+            ),
+            "permission-help-copy-only": (
+                "Update accepted repository CLI help text describing a permission "
+                "flag; no path, filesystem, authority, security, or privacy "
+                "behavior changes.",
+                "none",
+                "unchanged",
+                False,
+            ),
+        }
+        snapshots = getattr(
+            ORACLE,
+            "_routing_boundary_fact_snapshots",
+            None,
+        )
+        self.assertTrue(
+            callable(snapshots),
+            "clause-local typed routing boundary snapshots are missing",
+        )
+        for label, (
+            prompt,
+            expected_mutation,
+            expected_filesystem,
+            expect_filesystem_lens,
+        ) in repository_cases.items():
+            with self.subTest(label=label):
+                observed = _projected_route(_route(prompt))
+                self.assertEqual(
+                    "repository-tooling-change-builder",
+                    observed["primary_skill"],
+                )
+                self.assertEqual(
+                    expect_filesystem_lens,
+                    "filesystem-process-safety" in observed["layer3_skills"],
+                )
+                self.assertNotEqual("security-privacy-gate", observed["primary_skill"])
+                self.assertNotEqual("security-privacy-gate", observed["review_skill"])
+                typed = snapshots(
+                    " ".join(prompt.casefold().split()),
+                    parsed=ORACLE._parse_normalized_task_request(
+                        " ".join(prompt.casefold().split())
+                    ),
+                )
+                self.assertEqual(
+                    len(typed),
+                    len({item.action_id for item in typed}),
+                )
+                for item in typed:
+                    self.assertTrue(dataclasses.is_dataclass(item))
+                    self.assertTrue(type(item).__dataclass_params__.frozen)
+                    self.assertEqual(
+                        (
+                            "action_id",
+                            "clause_id",
+                            "repository_owner",
+                            "filesystem_behavior",
+                            "path_mutation",
+                            "writer_identity",
+                            "writer_trust",
+                            "sensitive_asset",
+                            "privileged_consumption",
+                            "authority_delta",
+                            "reachable_path",
+                            "evidence_ids",
+                        ),
+                        tuple(
+                            field.name
+                            for field in dataclasses.fields(item)
+                        ),
+                    )
+                    self.assertIn(
+                        item.filesystem_behavior,
+                        {"changed", "unchanged", "adjacent", "ambiguous"},
+                    )
+                    self.assertIn(
+                        item.path_mutation,
+                        {
+                            "create",
+                            "register",
+                            "replace",
+                            "resolve",
+                            "contain",
+                            "protect",
+                            "cleanup",
+                            "none",
+                            "unknown",
+                        },
+                    )
+                    self.assertEqual(
+                        len(item.evidence_ids),
+                        len(set(item.evidence_ids)),
+                    )
+                matching = [
+                    item
+                    for item in typed
+                    if item.repository_owner
+                    and item.path_mutation == expected_mutation
+                ]
+                self.assertEqual(1, len(matching))
+                self.assertEqual(
+                    expected_filesystem,
+                    matching[0].filesystem_behavior,
+                )
+                if label == "atomic-local-replacement-paraphrase":
+                    self.assertEqual(
+                        "absent",
+                        matching[0].privileged_consumption,
+                    )
+
+        generic_non_boundary = _projected_route(
+            _route(
+                "Analyze repository security and privacy permission terminology; "
+                "controls prove no reachable trust, privilege, credential, secret, "
+                "or data-recipient boundary changes."
+            )
+        )
+        self.assertEqual(
+            "engineering-change-analysis",
+            generic_non_boundary["primary_skill"],
+        )
+        self.assertNotEqual(
+            "security-privacy-gate",
+            generic_non_boundary["review_skill"],
+        )
+
+        cross_clause = _projected_route(
+            _route(
+                "Implement an accepted repository CLI path registration for the "
+                "same user with no sensitive data or privilege elevation. A "
+                "separate cache has a less-trusted writer."
+            )
+        )
+        self.assertEqual(
+            "repository-tooling-change-builder",
+            cross_clause["primary_skill"],
+        )
+        self.assertNotEqual("security-privacy-gate", cross_clause["review_skill"])
+
+        unknown = _projected_route(
+            _route(
+                "Analyze a repository CLI path-registration proposal where writer "
+                "identity is unknown and no concrete privileged or sensitive "
+                "consumption path is identified."
+            )
+        )
+        self.assertEqual("analyzed", unknown["path"])
+        self.assertEqual("engineering-change-analysis", unknown["primary_skill"])
+        self.assertEqual(["repository-context-map"], unknown["layer3_skills"])
+
+        material = _projected_route(
+            _route(
+                "Analyze a repository path where a proven less-trusted writer can "
+                "replace content that a privileged service consumes, creating a "
+                "reachable authorization boundary."
+            )
+        )
+        self.assertEqual("security-privacy-gate", material["primary_skill"])
+
+        hardening_prompt = (
+            "Implement an accepted repository CLI change that restricts an existing "
+            "reachable permission boundary for a less-trusted writer before "
+            "privileged consumption; authority is reduced."
+        )
+        hardening_main = _test_main_execution(hardening_prompt)
+        hardening = _projected_route(
+            ORACLE.route_with_trace(
+                hardening_prompt,
+                main_execution=hardening_main,
+            )
+        )
+        self.assertEqual("L3", hardening_main["execution_level"])
+        self.assertEqual(
+            "repository-tooling-change-builder",
+            hardening["primary_skill"],
+        )
+        self.assertEqual("security-privacy-gate", hardening["review_skill"])
+
+        positive = (
+            "Analyze a proven less-trusted writer reaching a privileged service."
+        )
+        self.assertEqual(
+            "security-privacy-gate",
+            _projected_route(_route(positive))["primary_skill"],
+        )
+        positive_mutations = (
+            positive.replace("less-trusted", "same-trust"),
+            positive.replace("privileged", "unprivileged"),
+            positive.replace("reaching", "denied from reaching"),
+        )
+        for prompt in positive_mutations:
+            with self.subTest(mutation=prompt):
+                observed = _projected_route(_route(prompt))
+                self.assertNotEqual(
+                    "security-privacy-gate",
+                    observed["primary_skill"],
+                )
+                self.assertNotEqual(
+                    "security-privacy-gate",
+                    observed["review_skill"],
+                )
+
+        payment_prompt = (
+            "Analyze payment ledger settlement where reconciliation proves "
+            "accounting conservation."
+        )
+        payment_main = _test_main_execution(payment_prompt)
+        payment = _projected_route(
+            ORACLE.route_with_trace(payment_prompt, main_execution=payment_main)
+        )
+        self.assertEqual("L3", payment_main["execution_level"])
+        self.assertEqual("engineering-change-analysis", payment["primary_skill"])
+        self.assertEqual(
+            ["payment-trading-extension", "repository-context-map"],
+            payment["layer3_skills"],
+        )
+
+    def test_router_registry_oracle_and_fixture_identity_are_locked(self) -> None:
+        router_rows = []
+        for line in ROUTER_PATH.read_text(encoding="utf-8").splitlines():
+            if not line.startswith("|") or line.startswith("|---"):
+                continue
+            cells = tuple(cell.strip() for cell in line.strip("|").split("|"))
+            if len(cells) == 5 and cells[0] != "Signal":
+                router_rows.append(cells)
+
+        security_rows = [
+            row
+            for row in router_rows
+            if row[2] == "security-privacy-gate"
+            and "proved reachable" in row[0]
+        ]
+        payment_rows = [
+            row
+            for row in router_rows
+            if row[0].startswith("payment, ledger, balance")
+        ]
+        self.assertEqual(1, len(security_rows))
+        self.assertEqual(1, len(payment_rows))
+        self.assertEqual(
+            (
+                "analysis-agent",
+                "engineering-change-analysis",
+                "payment-trading-extension, repository-context-map",
+                "architecture-impact-reviewer",
+            ),
+            payment_rows[0][1:],
+        )
+
+        security_registry = next(
+            row
+            for row in _registry()["professional_skills"]
+            if row["name"] == "security-privacy-gate"
+        )
+        proved_trigger = " ".join(security_registry["trigger_signals"])
+        self.assertIn("proved", proved_trigger)
+        self.assertIn("reachable", proved_trigger)
+
+        document = load_yaml_file(ROOT / "evals" / "routing" / "cases.yaml")
+        self.assertEqual(233, len(document["cases"]))
+        fixtures = {row["id"]: row for row in document["cases"]}
+        for case_id, locked in LOCKED_ROUTING_FIXTURES.items():
+            with self.subTest(fixture=case_id):
+                actual = fixtures[case_id]
+                self.assertEqual(case_id, actual["main_execution"]["task_id"])
+                self.assertEqual(locked["prompt"], actual["prompt"])
+                self.assertEqual(
+                    locked["excluded_skills"],
+                    actual["excluded_skills"],
+                )
+                self.assertEqual(locked["expected"], actual["expected"])
+                self.assertEqual(
+                    locked["expected"],
+                    _projected_route(
+                        ORACLE.route_with_trace(
+                            actual["prompt"],
+                            main_execution=copy.deepcopy(
+                                actual["main_execution"]
+                            ),
+                        )
+                    ),
+                )
+
+        payment_fixture = fixtures["payment-security"]
+        self.assertEqual(
+            payment_rows[0][2],
+            payment_fixture["expected"]["primary_skill"],
+        )
+        self.assertEqual(
+            payment_rows[0][3].split(", "),
+            payment_fixture["expected"]["layer3_skills"],
+        )
+        self.assertEqual(
+            payment_rows[0][4],
+            payment_fixture["expected"]["review_skill"],
+        )
+        self.assertEqual(
+            payment_fixture["expected"],
+            _projected_route(
+                ORACLE.route_with_trace(
+                    payment_fixture["prompt"],
+                    main_execution=copy.deepcopy(
+                        payment_fixture["main_execution"]
+                    ),
+                )
+            ),
+        )
+
+        router_mutation = list(payment_rows[0])
+        router_mutation[2] = "security-privacy-gate"
+        self.assertNotEqual(tuple(router_mutation), payment_rows[0])
+        registry_mutation = copy.deepcopy(security_registry)
+        registry_mutation["trigger_signals"] = [
+            trigger.replace("reachable", "possible")
+            for trigger in registry_mutation["trigger_signals"]
+        ]
+        self.assertNotIn(
+            "reachable",
+            " ".join(registry_mutation["trigger_signals"]),
+        )
+
+        positive = (
+            "Analyze a proved reachable permission boundary where a less-trusted "
+            "writer controls content consumed by a privileged service."
+        )
+        self.assertEqual(
+            "security-privacy-gate",
+            _projected_route(_route(positive))["primary_skill"],
+        )
+        predicate = getattr(ORACLE, "_security_boundary_is_proved", None)
+        self.assertTrue(callable(predicate))
+        with patch.object(
+            ORACLE,
+            "_security_boundary_is_proved",
+            return_value=False,
+        ):
+            mutated = _projected_route(_route(positive))
+        self.assertNotEqual("security-privacy-gate", mutated["primary_skill"])
 
     def test_unchanged_adjacent_surface_is_clause_local_for_all_families(self) -> None:
         cases = {
@@ -4352,8 +5123,9 @@ class ImplementationOwnerRouteTests(unittest.TestCase):
         self,
     ) -> None:
         one_risk = _route(
-            "Implement an accepted backend service tenant authorization "
-            "behavior change."
+            "Implement an accepted backend service change across a proved reachable "
+            "authorization boundary where a less-trusted tenant writer feeds a "
+            "privileged service."
         )
         self.assertEqual(
             "backend-change-builder",
@@ -4364,8 +5136,9 @@ class ImplementationOwnerRouteTests(unittest.TestCase):
             _projected_route(one_risk)["review_skill"],
         )
         two_risks = _route(
-            "Implement an accepted backend service tenant authorization "
-            "behavior change with a material production rollout decision."
+            "Implement an accepted backend service change across a proved reachable "
+            "authorization boundary where a less-trusted tenant writer feeds a "
+            "privileged service with a material production rollout decision."
         )
         self.assertEqual("analyzed", _projected_route(two_risks)["path"])
         self.assertEqual(

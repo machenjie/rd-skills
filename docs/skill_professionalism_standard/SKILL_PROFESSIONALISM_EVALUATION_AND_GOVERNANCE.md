@@ -14,7 +14,7 @@ Primary goal: make professional depth measurable, regressions visible, and relea
 
 ## 1. Purpose
 
-This standard defines how ChangeForge should evaluate and govern skill professionalism.
+This standard defines how rd-skills should evaluate and govern skill professionalism.
 
 It separates four evaluation surfaces:
 
@@ -57,11 +57,13 @@ reports/skill-content-audit.json
 `reports/professionalism-regression-report.json` is the sole machine-readable
 professionalism readiness authority. Its only producer is
 `scripts/validate-professionalism-regression.py`; Core Principles owns the
-complete ordered freshness run. A formal-release Core run additionally emits
-`reports/professionalism-regression-report.md` as a release-only presentation
-projection. The Markdown is not a second authority, Core authoring does not
-refresh it, and productization validates the saved JSON semantically without
-rerunning the producer.
+complete ordered freshness run. Core authoring refreshes the tracked ordinary
+JSON, while a formal-release Core run writes schema-4 professionalism/Core JSON
+and Markdown projections under
+`.rd-skills/formal-release/<captured-head>/reports/`. The ignored formal scene
+is bound to the captured `HEAD`; Markdown is not a second authority, and
+productization validates the tracked ordinary JSON without rerunning the
+producer.
 
 The unique complete formal entrypoint is
 `python3 scripts/eval-core-principles.py --gate formal-release`. Core runs the
@@ -90,7 +92,7 @@ Release reports keep content readiness as separate evidence surfaces:
 | Root structure | `root_content_summary.structural_strict_ready`, basis `root-strict-v5` | governed Foundation, Professional, and Domain root budgets plus Foundation decision density |
 | Semantic triage | scoped `semantic_triage_complete` fields | every candidate classified or dispositioned; rewrite may remain unresolved |
 | Readability review | `content_readiness.expert.readability` | three independent ballots, current Root/Reference/readability fingerprints, and zero tracked tightening |
-| Professional completeness | `content_readiness.expert.professional_completeness` | schema-3 exact carry; fresh Skills receive two qualified domain votes plus one architecture vote, carried Skills bind direct fresh origins, all 189 effective packages have zero corrections/disagreements, and contract/plan/chain/storage/cost are current |
+| Professional completeness | `content_readiness.expert.professional_completeness` | schema-3 exact carry; fresh Skills receive two qualified domain votes plus one architecture vote, carried Skills bind authenticated direct fresh origins, all 189 effective packages have zero corrections/disagreements, and contract/plan/provenance/storage/cost are current |
 | Aggregate | `content_readiness.aggregate` | independent structural, triage, readability, and professional-completeness axes |
 
 Reference and Root structural or triage failure blocks the authoring gate.
@@ -100,51 +102,34 @@ not prove real-host
 accuracy, wall-clock performance, provider behavior, or installed user
 experience.
 
-For selector identity only, the canonical projection is: Current static
-evidence selectors are r26 Readability, r26 Semantic Disposition, r26 Root
-lifecycle, and r19 schema-3 Professional Completeness for all 189 non-Control
-packages. “Current” in that projection identifies configured records, not
-formal currentness. Readability r26 and full-fresh Professional Completeness
-r19 have complete decisions for their recorded inputs. Readability remains
-historical evidence with no recorded tracked tightening, detector false
-positive, or rewrite requirement under its bound Skill detector. That detector
-is now stale against the current detector, so r26 has `source_current=false`,
-status `panel-majority-stale`, remains storage-pending, and is not accepted for
-formal release. R19 is historical full-fresh evidence that accepted all 189
-packages with no carry, correction, or unresolved professional disagreement
-under its bound contract. That contract is now stale against the current
-Professional review contract; r19 remains storage-pending, is not accepted for
-formal release, and cannot authorize carry across the contract change. The
-Semantic Disposition
-application is `invalid`
-because its packet is stale against the current audit. Root lifecycle is
-`pending-changes`, its snapshot is not current, and it is not
-formal-release-ready. These static selectors do not prove that the final formal
-gates or same-commit remote workflow passed.
+The tracked Expert Panel inventory is exactly
+`evals/expert-panel/readability.json`,
+`evals/expert-panel/semantic-disposition.json`, and
+`evals/expert-panel/professional-completeness.json`. Each is one current compact
+attestation, is replaced rather than appended, and must be tracked,
+`HEAD`-equal, and clean. Full packets, templates, ballots, capsules, and
+decisions remain only under ignored `.rd-skills/expert-panel/<run-id>/` or an
+optional CI/Release artifact. Canonical fixed-attestation paths, not Readability
+or Professional policy config, select Expert Panel evidence; the formal target
+remains all 189 non-Control packages. Formal release requires a current
+Semantic application bound to the exact fixed-attestation bytes. These fixed
+attestations do not prove that the final formal gates or same-commit remote
+workflow passed. Replace an attestation only after source, detector, binding,
+or contract drift; Git history is the audit trail for prior attestations.
 
-The release operator later refreshes Semantic Disposition after the final
-audit, records the Root lifecycle snapshot after the final content tree
-stabilizes, creates a new current schema-2 Readability review under the current
-Skill detector, creates a new schema-3 full-fresh Professional Completeness
-round for all 189 current non-Control packages under the current review
-contract, checks in the current evidence, and reruns the Core formal gate.
-Preserve r26 and r19 as immutable historical evidence; neither can satisfy its
-required new review, and r19 cannot authorize carry.
-
-`content_readiness` schema 9 requires the producer to regenerate the strict
+`content_readiness` schema 10 requires the producer to regenerate the strict
 report from fresh Root, Reference, coverage, and default release-review inputs.
 Core Principles enforces that freshness during its declared producer run;
 productization checks the resulting JSON's closed semantics without creating a
 second producer path. The release-review config uses two schema-5 attestations.
-Each points to a separate
-kind-specific packet, three unique no-abstention ballots, and a majority
-decision record. The default config and every declared artifact must match
-current bytes and the tracked `HEAD` blob.
+Each points to its kind-specific compact attestation, which authenticates three
+unique no-abstention votes and their majority decision without tracked runtime
+files. The default config and all three fixed attestations must match current
+bytes and their tracked `HEAD` blobs.
 
 Do not cite removed or unimplemented readiness aliases as release evidence.
 Machine consumers use `professionalism-regression-report.json`; the optional
-`professionalism-regression-report.md` exists only as the formal-release human
-projection.
+formal Markdown exists only in the ignored head-scoped release evidence scene.
 
 Recommended naming split:
 
@@ -709,7 +694,7 @@ release-review-required depth warnings have explicit accepted release review dec
 professional benchmarks pass
 professionalism regression passes
 readability review is schema-2 panel-majority-current with zero tracked tightening, unresolved detector false positives, or actionability rewrite requirements
-professional completeness is schema-3 panel-majority-current for all 189 effective packages; fresh packages have source-bound two-domain-plus-one-architecture evidence, carried packages bind direct fresh origins, the contract/plan/bindings/provenance/round chain/storage/cost are current, and correction/unresolved counts are zero
+professional completeness is schema-3 panel-majority-current for all 189 effective packages; fresh packages have source-bound two-domain-plus-one-architecture evidence, carried packages bind authenticated direct fresh origins, the contract/plan/bindings/provenance/storage/cost are current, and correction/unresolved counts are zero
 efficiency edits did not reduce professional depth
 release report separates professionalism, activation, context efficiency, and benchmark scores
 ```

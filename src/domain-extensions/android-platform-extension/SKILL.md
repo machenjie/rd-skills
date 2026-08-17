@@ -28,7 +28,7 @@ This focused Layer 3 Domain Skill modifies `installed-client-change-builder` for
 ## Professional Decision Rules
 
 - Distinguish configuration recreation, process death, task removal, and user back; assign each state to transient, restorable, or durable ownership.
-- Treat every Intent, deep link, and exported component as an external entry boundary with explicit validation, identity, and task behavior.
+- Treat an Intent as an external entry boundary only when its input is externally supplied or untrusted, including input delivered through a deep link or exported component. Prove safe handling of that boundary by validating the payload, caller or source identity, authorization, and task behavior as applicable.
 - Model runtime permissions and notification access as revocable state, including denial, later revocation, and recovery.
 - Choose foreground service, persistent work, or no background execution from urgency, user visibility, persistence, and current platform limits.
 - Bind local data and Android Keystore use to account scope, backup, migration, invalidation, logout, and recovery behavior.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Package built ChangeForge Skills for hosted agent surfaces."""
+"""Package built rd-skills Skills for hosted agent surfaces."""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ class PackageError(Exception):
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Package ChangeForge skills as zip bundles.")
+    parser = argparse.ArgumentParser(description="Package rd-skills skills as zip bundles.")
     parser.add_argument(
         "--profile",
         choices=PROFILES,

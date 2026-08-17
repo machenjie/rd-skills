@@ -1,11 +1,11 @@
-# ChangeForge
+# rd-skills
 
-ChangeForge is an engineering control plane for AI coding agents. It routes one
+rd-skills is an engineering control plane for AI coding agents. It routes one
 task to one Professional Skill, separates analysis, implementation, and review,
 loads focused guidance only when needed, and requires current evidence before
 completion.
 
-This repository authors and validates ChangeForge Skills and Agent Profiles.
+This repository authors and validates rd-skills Skills and Agent Profiles.
 Install built artifacts from `dist/`; never install `src/` directly.
 
 ## Start

@@ -97,6 +97,62 @@ def _rendered_report(*, status: str = "pass") -> dict:
             {"id": "validation-task-no-edit"},
         ],
         "aggregate": {"max_main": {"tokens": 1000}},
+        "transferred_context": {
+            "source_scope": {
+                "trajectory_fixture": "evals/agent-light-trajectories/cases.yaml",
+                "lightweight_long_task_selector": (
+                    "reports/hookless-control-plane-eval.json"
+                    "#/cases/*/metrics/required_progress_for_multi_agent"
+                ),
+            },
+            "semantic_baseline": {
+                "source": "reports/hookless-control-plane-eval.json#/orchestration_fixtures",
+                "retained_semantic_equality": True,
+            },
+            "gross_tokens": 10,
+            "non_compressible_tokens": 10,
+            "compressible_tokens": 0,
+            "compressible_ratio": 0.0,
+            "before_gross_tokens": 47302,
+            "after_gross_tokens": 10,
+            "realized_reduction_tokens": 47292,
+            "realized_reduction_ratio": round(47292 / 47302, 6),
+            "long_task_selector_join_count": 2,
+            "long_task_rows": [
+                {
+                    "id": "isolated-write-parallel-contract",
+                    "required_progress_for_multi_agent": True,
+                    "gross_tokens": 10,
+                    "non_compressible_tokens": 10,
+                    "compressible_tokens": 0,
+                    "compressible_ratio": 0.0,
+                    "before_gross_tokens": 20,
+                    "after_gross_tokens": 10,
+                    "realized_reduction_tokens": 10,
+                    "realized_reduction_ratio": 0.5,
+                },
+                {
+                    "id": "shared-workspace-serial-write",
+                    "required_progress_for_multi_agent": True,
+                    "gross_tokens": 10,
+                    "non_compressible_tokens": 10,
+                    "compressible_tokens": 0,
+                    "compressible_ratio": 0.0,
+                    "before_gross_tokens": 20,
+                    "after_gross_tokens": 10,
+                    "realized_reduction_tokens": 10,
+                    "realized_reduction_ratio": 0.5,
+                },
+            ],
+            "conservative_long_task_ratio": 0.5,
+            "context_compaction_decision": {
+                "classification": "continue",
+                "observed_conservative_ratio": 0.5,
+                "minimum_realized_reduction_ratio": 0.25,
+                "target_realized_reduction_ratio": 0.30,
+            },
+            "proof_limits": ["Deterministic transfer projection only."],
+        },
         "errors": [],
     }
 
@@ -110,7 +166,9 @@ class ContextControlPlaneEvaluationTests(unittest.TestCase):
         self,
         source: str | None,
         rendered: str | None = None,
-        control_prompt: str | None = None,
+        *,
+        write_rendered: bool = True,
+        dependencies: list[str] | None = None,
     ) -> tuple[int, str, dict | None, bool]:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
@@ -118,22 +176,37 @@ class ContextControlPlaneEvaluationTests(unittest.TestCase):
             rendered_path = root / "rendered-context-budget.json"
             report_json = root / "context-control-plane-eval.json"
             report_md = root / "context-control-plane-eval.md"
+            core_contracts = root / "core-contracts.json"
             if source is not None:
                 source_path.write_text(source, encoding="utf-8")
             if rendered is None:
                 rendered = json.dumps(_rendered_report())
-            rendered_path.write_text(rendered, encoding="utf-8")
-            prompt_path = self.module.CONTROL_PROMPT
-            if control_prompt is not None:
-                prompt_path = root / "main-control-agent.md"
-                prompt_path.write_text(control_prompt, encoding="utf-8")
+            if write_rendered:
+                rendered_path.write_text(rendered, encoding="utf-8")
+            core_contracts.write_text(
+                json.dumps(
+                    {
+                        "principle_acceptance_contract": {
+                            "producers": [
+                                {
+                                    "id": "eval-context-control",
+                                    "depends_on": dependencies
+                                    if dependencies is not None
+                                    else ["eval-agent-lightweight", "eval-rendered-context"],
+                                }
+                            ]
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
             stderr = io.StringIO()
             with (
                 mock.patch.object(self.module, "SOURCE_REPORT", source_path),
                 mock.patch.object(self.module, "RENDERED_CONTEXT_REPORT", rendered_path),
                 mock.patch.object(self.module, "REPORT_JSON", report_json),
                 mock.patch.object(self.module, "REPORT_MD", report_md),
-                mock.patch.object(self.module, "CONTROL_PROMPT", prompt_path),
+                mock.patch.object(self.module, "CORE_CONTRACTS", core_contracts),
                 mock.patch.object(
                     subprocess,
                     "run",
@@ -141,7 +214,7 @@ class ContextControlPlaneEvaluationTests(unittest.TestCase):
                 ),
                 contextlib.redirect_stderr(stderr),
             ):
-                result = self.module.main()
+                result = self.module.main([])
             report = json.loads(report_json.read_text(encoding="utf-8")) if report_json.exists() else None
             return result, stderr.getvalue(), report, report_md.exists()
 
@@ -151,7 +224,48 @@ class ContextControlPlaneEvaluationTests(unittest.TestCase):
         self.assertEqual(0, result, stderr)
         self.assertEqual("pass", report["status"])
         self.assertEqual("deterministic-fixtures", report["evidence_scope"])
-        self.assertTrue(markdown_exists)
+        self.assertEqual(
+            "continue",
+            report["context_compaction_decision"]["classification"],
+        )
+        self.assertEqual("pass", report["status"])
+        self.assertFalse(markdown_exists)
+
+    def test_copies_producer_summary_and_decision_without_recomputing(self) -> None:
+        rendered = _rendered_report()
+        transfer = rendered["transferred_context"]
+        producer_decision = {
+            **transfer["context_compaction_decision"],
+            "producer_owned_marker": "copied-not-recomputed",
+        }
+        transfer["context_compaction_decision"] = producer_decision
+
+        result, stderr, report, markdown_exists = self._invoke(
+            json.dumps(_source_report()),
+            json.dumps(rendered),
+        )
+
+        self.assertEqual(0, result, stderr)
+        self.assertEqual(producer_decision, report["context_compaction_decision"])
+        self.assertEqual(
+            transfer["semantic_baseline"],
+            report["transferred_context_summary"]["semantic_baseline"],
+        )
+        self.assertFalse(markdown_exists)
+
+    def test_rendered_context_rejects_unproven_long_task_join(self) -> None:
+        rendered = _rendered_report()
+        rendered["transferred_context"]["long_task_rows"] = []
+
+        result, stderr, report, markdown_exists = self._invoke(
+            json.dumps(_source_report()),
+            json.dumps(rendered),
+        )
+
+        self.assertEqual(1, result)
+        self.assertIn("long-task rows do not match", stderr)
+        self.assertIsNone(report)
+        self.assertFalse(markdown_exists)
 
     def test_missing_source_report_fails_without_writing_output(self) -> None:
         result, stderr, report, markdown_exists = self._invoke(None)
@@ -159,6 +273,17 @@ class ContextControlPlaneEvaluationTests(unittest.TestCase):
         self.assertEqual(1, result)
         self.assertIn("missing prerequisite report", stderr)
         self.assertIn("run scripts/eval-agent-lightweight.py first", stderr)
+        self.assertIsNone(report)
+        self.assertFalse(markdown_exists)
+
+    def test_missing_rendered_report_fails_without_writing_output(self) -> None:
+        result, stderr, report, markdown_exists = self._invoke(
+            json.dumps(_source_report()),
+            write_rendered=False,
+        )
+
+        self.assertEqual(1, result)
+        self.assertIn("missing rendered-context report", stderr)
         self.assertIsNone(report)
         self.assertFalse(markdown_exists)
 
@@ -202,6 +327,42 @@ class ContextControlPlaneEvaluationTests(unittest.TestCase):
         self.assertIsNone(report)
         self.assertFalse(markdown_exists)
 
+    def test_malformed_rendered_context_report_is_rejected(self) -> None:
+        result, stderr, report, markdown_exists = self._invoke(
+            json.dumps(_source_report()),
+            "not-json",
+        )
+
+        self.assertEqual(1, result)
+        self.assertIn("malformed rendered-context report", stderr)
+        self.assertIsNone(report)
+        self.assertFalse(markdown_exists)
+
+    def test_missing_producer_decision_is_rejected(self) -> None:
+        rendered = _rendered_report()
+        rendered["transferred_context"].pop("context_compaction_decision")
+
+        result, stderr, report, markdown_exists = self._invoke(
+            json.dumps(_source_report()),
+            json.dumps(rendered),
+        )
+
+        self.assertEqual(1, result)
+        self.assertIn("context compaction decision is missing", stderr)
+        self.assertIsNone(report)
+        self.assertFalse(markdown_exists)
+
+    def test_declared_producer_dependency_is_required(self) -> None:
+        result, stderr, report, markdown_exists = self._invoke(
+            json.dumps(_source_report()),
+            dependencies=["eval-rendered-context"],
+        )
+
+        self.assertEqual(1, result)
+        self.assertIn("Core eval-context-control dependency", stderr)
+        self.assertIsNone(report)
+        self.assertFalse(markdown_exists)
+
     def test_stale_report_or_fixture_schema_is_rejected(self) -> None:
         stale_source = _source_report()
         stale_source["schema_version"] = 1
@@ -223,50 +384,6 @@ class ContextControlPlaneEvaluationTests(unittest.TestCase):
         self.assertIn("fixture_schema_version", stderr)
         self.assertIsNone(report)
         self.assertFalse(markdown_exists)
-
-    def test_current_parallelism_projection_is_required_from_core_contract(self) -> None:
-        original_prompt = self.module.CONTROL_PROMPT.read_text(encoding="utf-8")
-        prompt = original_prompt.replace(
-            "parallel read-only tasks",
-            "concurrent read-only tasks",
-            1,
-        )
-        self.assertNotEqual(original_prompt, prompt)
-
-        result, stderr, report, markdown_exists = self._invoke(
-            json.dumps(_source_report()),
-            control_prompt=prompt,
-        )
-
-        self.assertEqual(1, result)
-        expected_error = "control prompt does not declare current read-only parallelism"
-        self.assertEqual(
-            f"eval-context-control-plane: ERROR: {expected_error}\n",
-            stderr,
-        )
-        self.assertEqual("fail", report["status"])
-        self.assertEqual([expected_error], report["errors"])
-        self.assertTrue(markdown_exists)
-
-    def test_current_parallelism_projection_is_case_insensitive(self) -> None:
-        original_prompt = self.module.CONTROL_PROMPT.read_text(encoding="utf-8")
-        prompt = original_prompt.replace(
-            "parallel read-only tasks",
-            "PARALLEL READ-ONLY TASKS",
-            1,
-        )
-        self.assertNotEqual(original_prompt, prompt)
-
-        result, stderr, report, markdown_exists = self._invoke(
-            json.dumps(_source_report()),
-            control_prompt=prompt,
-        )
-
-        self.assertEqual(0, result, stderr)
-        self.assertEqual("pass", report["status"])
-        self.assertTrue(report["checks"]["current_read_only_parallelism_declared"])
-        self.assertTrue(markdown_exists)
-
 
 if __name__ == "__main__":
     unittest.main()

@@ -42,6 +42,25 @@ from validation_utils import (  # noqa: E402
 
 
 class BuildSafetyTests(unittest.TestCase):
+    @staticmethod
+    def _windows_translating_write_text(
+        path: Path,
+        data: str,
+        encoding: str | None = None,
+        errors: str | None = None,
+        newline: str | None = None,
+    ) -> int:
+        """Emulate Windows text-mode newline translation on any host."""
+
+        del newline
+        with path.open(
+            mode="w",
+            encoding=encoding,
+            errors=errors,
+            newline="\r\n",
+        ) as handle:
+            return handle.write(data)
+
     def _copy_source(self, root: Path) -> None:
         shutil.copytree(ROOT / "src", root / "src")
         (root / "scripts").mkdir()
@@ -151,6 +170,116 @@ class BuildSafetyTests(unittest.TestCase):
                             expected_counts[profile], len(manifest["top_level_skills"])
                         )
                         self.assertEqual(4, len(manifest["agent_profiles"]))
+
+    def test_agent_profiles_remain_lf_canonical_with_windows_text_translation(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            self._copy_source(root)
+
+            with (
+                self._layout(root) as dist,
+                mock.patch.object(
+                    Path,
+                    "write_text",
+                    self._windows_translating_write_text,
+                ),
+            ):
+                profiles = BUILD._load_agent_profiles()
+                enforcement = BUILD._load_host_enforcement()
+                by_name = {profile["name"]: profile for profile in profiles}
+                renderers = {
+                    "codex": BUILD._render_codex_profile,
+                    "claude": BUILD._render_claude_profile,
+                    "copilot": BUILD._render_copilot_profile,
+                }
+                suffixes = {
+                    "codex": ".toml",
+                    "claude": ".md",
+                    "copilot": ".agent.md",
+                }
+                expected_digests = BUILD._agent_profile_digests(
+                    profiles,
+                    enforcement,
+                )
+                manifest_roots = (
+                    dist / "universal/skills",
+                    *BUILD.AGENT_SKILL_ROOTS,
+                )
+                for build_profile in BUILD.PROFILES:
+                    with self.subTest(build_profile=build_profile):
+                        BUILD.build_profile(build_profile)
+                        observed_files = 0
+                        for platform, profile_root in BUILD.AGENT_PROFILE_OUTPUTS:
+                            for role, profile in by_name.items():
+                                raw = (
+                                    profile_root
+                                    / f"{role}{suffixes[platform]}"
+                                ).read_bytes()
+                                expected = renderers[platform](
+                                    profile,
+                                    enforcement,
+                                ).encode("utf-8")
+                                self.assertEqual(expected, raw)
+                                self.assertNotIn(b"\r", raw)
+                                self.assertEqual(
+                                    expected_digests[platform][role],
+                                    hashlib.sha256(raw).hexdigest(),
+                                )
+                                observed_files += 1
+                        self.assertEqual(28, observed_files)
+
+                        for skills_root in manifest_roots:
+                            manifest = BUILD.json.loads(
+                                (
+                                    skills_root
+                                    / build_profile
+                                    / BUILD.BUILD_MANIFEST_NAME
+                                ).read_bytes()
+                            )
+                            self.assertEqual(
+                                expected_digests,
+                                manifest["agent_profile_sha256"],
+                            )
+
+    def test_agent_profile_cr_fails_preflight_before_managed_output_mutation(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            self._copy_source(root)
+            dist = root / "dist"
+            sentinel = (
+                dist / "universal/skills/recommended/prior-output.txt"
+            )
+            sentinel.parent.mkdir(parents=True)
+            prior_output = b"prior-output\n"
+            sentinel.write_bytes(prior_output)
+            original_renderer = BUILD._render_codex_profile
+
+            def render_with_cr(
+                profile: dict[str, object],
+                enforcement: dict[str, object],
+            ) -> str:
+                return original_renderer(profile, enforcement).replace("\n", "\r\n")
+
+            with (
+                self._layout(root),
+                mock.patch.object(
+                    BUILD,
+                    "_render_codex_profile",
+                    side_effect=render_with_cr,
+                ),
+                self.assertRaisesRegex(
+                    BUILD.BuildError,
+                    "rendered Profile must use canonical LF bytes",
+                ),
+            ):
+                BUILD.build_profile("recommended")
+
+            self.assertTrue(sentinel.is_file())
+            self.assertEqual(prior_output, sentinel.read_bytes())
 
     def test_malicious_skill_name_and_noncanonical_path_fail_before_reset(self) -> None:
         self._assert_registry_failure_preserves_dist(

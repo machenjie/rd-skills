@@ -8,7 +8,7 @@ import shutil
 import sys
 import tempfile
 import unittest
-from contextlib import ExitStack
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from unittest import mock
 
@@ -64,6 +64,98 @@ def _context(*, scope: str = "packages", ids: list[str] | None = None) -> str:
         separators=(",", ":"),
         sort_keys=True,
     )
+
+
+def _historical_professional_schema1_header(panel) -> dict[str, object]:
+    """Return the bounded legacy header consumed by affected planning."""
+
+    accepted = {
+        "accepted-current-professional-completeness": 162,
+        "requires-professional-correction": 0,
+        "unresolved-professional-disagreement": 0,
+    }
+    empty = {key: 0 for key in accepted}
+    return {
+        "axis": panel.PROFESSIONAL_COMPLETENESS_PANEL_KIND,
+        "decided_on": "2026-08-01",
+        "findings": [],
+        "kind": (
+            panel.panel_attestation
+            .PROFESSIONAL_COMPLETENESS_ATTESTATION_KIND
+        ),
+        "rationale": "Bounded historical schema-1 affected-planning fixture.",
+        "review_contract_fingerprint": "a" * 64,
+        "review_cost_input": {},
+        "review_id": "historical-professional-schema1-fixture",
+        "reviewers": [],
+        "schema_version": 1,
+        "source_fingerprints": {
+            "professional_packages": "b" * 64,
+            "professional_review_bindings": "c" * 64,
+            "professional_review_contract": "d" * 64,
+        },
+        "summary": {
+            "evidence": {},
+            "ordinary_criterion_majority": {},
+            "overall_ballot_majority_audit": {},
+            "partition": {
+                "carried_target_count": 0,
+                "effective_target_count": 162,
+                "fresh_target_count": 162,
+            },
+            "professional_completeness": {
+                "carried": empty,
+                "effective": accepted,
+                "fresh": accepted,
+            },
+            "qualification": {},
+            "review_cost": {},
+        },
+        "verdict": "accepted-current-professional-completeness",
+    }
+
+
+@contextmanager
+def _historical_professional_schema1_file(
+    panel,
+    *,
+    value: dict[str, object] | None = None,
+):
+    """Bind affected planning to a canonical temporary legacy file."""
+
+    current_path = (
+        ROOT
+        / panel.panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH
+    )
+    historical = copy.deepcopy(
+        value if value is not None else _historical_professional_schema1_header(panel)
+    )
+    raw = (
+        json.dumps(historical, separators=(",", ":"), sort_keys=True) + "\n"
+    ).encode("utf-8")
+    with tempfile.TemporaryDirectory() as directory:
+        fixture_path = Path(directory) / "professional-schema1-baseline.json"
+        fixture_path.write_bytes(raw)
+        if fixture_path.resolve() == current_path.resolve():
+            raise AssertionError("historical fixture resolved to current fixed evidence")
+        read_bound_regular_file = (
+            panel.reviewer_manifest.read_bound_regular_file
+        )
+        with mock.patch.object(
+            panel.panel_attestation,
+            "PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH",
+            str(fixture_path),
+        ), mock.patch.object(
+            panel.reviewer_manifest,
+            "read_bound_regular_file",
+            wraps=read_bound_regular_file,
+        ) as read_bound:
+            yield historical, fixture_path, current_path
+        if read_bound.call_count != 1:
+            raise AssertionError("historical fixture was not read exactly once")
+        read_path = Path(read_bound.call_args.args[0])
+        if read_path.resolve() != fixture_path.resolve():
+            raise AssertionError("historical test read current fixed evidence")
 
 
 def _write_partial_reports(
@@ -133,6 +225,7 @@ def _write_partial_reports(
 
 class AffectedProfessionalismTests(unittest.TestCase):
     def test_real_eight_producer_chain_accepts_isolated_partial_evidence_once(self) -> None:
+        direct_package_id = "engineering-change-analysis"
         selected_ids = [
             "audit-skill-content",
             "eval-skill-professionalism",
@@ -143,7 +236,9 @@ class AffectedProfessionalismTests(unittest.TestCase):
             "eval-pressure-behavior",
             "validate-professionalism-regression",
         ]
-        context = json.loads(_context(scope="full"))
+        context = json.loads(
+            _context(ids=[direct_package_id])
+        )
         with tempfile.TemporaryDirectory() as raw:
             repository = Path(raw) / "repository"
             shutil.copytree(
@@ -152,6 +247,29 @@ class AffectedProfessionalismTests(unittest.TestCase):
                 ignore=shutil.ignore_patterns(
                     ".git", "dist", "__pycache__", ".pytest_cache"
                 ),
+            )
+            panel = EVALUATOR._load_evaluator(
+                EVALUATOR.EXPERT_PANEL_REVIEW,
+                "affected-professional-real-chain-expected-bindings",
+            )
+            expected_bindings = (
+                panel.professional_carry.professional_review_bindings(
+                    panel._professional_package_targets(root=repository)
+                )
+            )
+            expected_fresh = sorted(
+                {
+                    direct_package_id,
+                    *(
+                        skill_id
+                        for skill_id, binding in expected_bindings.items()
+                        if direct_package_id
+                        in binding["dependency_material_bindings"]
+                    ),
+                }
+            )
+            expected_carried = sorted(
+                set(expected_bindings) - set(expected_fresh)
             )
             contract = json.loads(
                 (repository / "src/control-model/core-contracts.json").read_text()
@@ -187,12 +305,34 @@ class AffectedProfessionalismTests(unittest.TestCase):
                     repository / "reports/professionalism-regression-report.json"
                 ).read_text()
             )
+            affected_reports = {
+                name: json.loads((repository / "reports" / name).read_text())
+                for name in (
+                    "skill-professionalism-eval.json",
+                    "skill-professionalism-depth.json",
+                    "professional-coverage-matrix.json",
+                )
+            }
             markdown_after = {
                 path.relative_to(repository).as_posix(): path.read_bytes()
                 for path in (repository / "reports").glob("*.md")
             }
         self.assertEqual("pass", result["status"], result)
         self.assertEqual(8, result["command_execution_count"])
+        professionalism = next(
+            row
+            for row in result["producers"]
+            if row["id"] == "eval-skill-professionalism"
+        )
+        self.assertEqual("pass", professionalism["status"])
+        self.assertEqual(0, professionalism["exit_code"])
+        self.assertEqual(
+            sorted(f"reports/{name}" for name in affected_reports),
+            sorted(report["path"] for report in professionalism["reports"]),
+        )
+        self.assertTrue(
+            all(report["fresh"] for report in professionalism["reports"])
+        )
         self.assertEqual(
             1,
             sum(
@@ -206,7 +346,39 @@ class AffectedProfessionalismTests(unittest.TestCase):
                 for row in result["outcomes"]
             )
         )
-        self.assertEqual("affected", regression["execution_scope"]["mode"])
+        execution_scopes = {
+            json.dumps(payload["execution_scope"], sort_keys=True)
+            for payload in affected_reports.values()
+        }
+        self.assertEqual(1, len(execution_scopes))
+        execution_scope = next(iter(affected_reports.values()))[
+            "execution_scope"
+        ]
+        self.assertEqual("affected", execution_scope["mode"])
+        self.assertEqual(
+            [direct_package_id],
+            execution_scope["direct_package_ids"],
+        )
+        self.assertEqual(expected_fresh, execution_scope["fresh_package_ids"])
+        self.assertEqual(
+            expected_carried,
+            execution_scope["carried_package_ids"],
+        )
+        self.assertEqual([], execution_scope["unevaluated_package_ids"])
+        self.assertEqual(
+            (56, 133, 0),
+            (
+                len(execution_scope["fresh_package_ids"]),
+                len(execution_scope["carried_package_ids"]),
+                len(execution_scope["unevaluated_package_ids"]),
+            ),
+        )
+        self.assertFalse(execution_scope["baseline_stale_no_carry"])
+        self.assertIn(
+            direct_package_id,
+            execution_scope["fresh_package_ids"],
+        )
+        self.assertEqual(execution_scope, regression["execution_scope"])
         self.assertEqual("affected-partial-json", regression["evidence_scope"])
         self.assertEqual(markdown_before, markdown_after)
 
@@ -230,7 +402,9 @@ class AffectedProfessionalismTests(unittest.TestCase):
             "exit_code": 0,
         }
         with (
-            mock.patch.object(CORE, "input_tree_digest", return_value={"tree": "x"}),
+            mock.patch.object(
+                CORE, "input_tree_digest", return_value={"tree": "x"}
+            ) as digest,
             mock.patch.object(
                 CORE,
                 "_run_producers",
@@ -248,6 +422,7 @@ class AffectedProfessionalismTests(unittest.TestCase):
                 affected_context=context,
             )
         self.assertEqual("pass", result["status"])
+        self.assertEqual(2, digest.call_count)
         passed = json.loads(
             run.call_args.kwargs["producer_environment"][
                 "CHANGEFORGE_AFFECTED_CONTEXT"
@@ -308,45 +483,282 @@ class AffectedProfessionalismTests(unittest.TestCase):
             [entry["name"] for _kind, entry in affected_entries],
         )
 
-    def test_current_stale_baseline_evaluates_direct_and_exact_one_hop_without_carry(self) -> None:
+    def test_compact_schema1_baseline_selects_exact_affected_closure_without_carry(
+        self,
+    ) -> None:
         direct = "repository-tooling-change-builder"
         entries = EVALUATOR._load_entries()
-        with mock.patch.dict(
+        panel = EVALUATOR._load_evaluator(
+            EVALUATOR.EXPERT_PANEL_REVIEW,
+            "affected-professional-expected-bindings",
+        )
+        with _historical_professional_schema1_file(panel) as (
+            historical,
+            fixture_path,
+            current_path,
+        ), mock.patch.dict(
             os.environ,
             {EVALUATOR.AFFECTED_CONTEXT_ENV: _context(ids=[direct])},
             clear=True,
-        ):
-            execution_scope, selected_entries = EVALUATOR._execution_scope(
+        ), mock.patch.object(EVALUATOR, "_load_evaluator", return_value=panel):
+            scope, selected = EVALUATOR._execution_scope(
                 entries,
                 release_review_config=EVALUATOR.DEFAULT_RELEASE_REVIEW_CONFIG,
             )
-        panel = EVALUATOR._load_evaluator(
-            EVALUATOR.EXPERT_PANEL_REVIEW,
-            "affected_professional_expected_one_hop",
-        )
+            self.assertNotEqual(current_path.resolve(), fixture_path.resolve())
+            self.assertEqual(1, historical["schema_version"])
+            self.assertEqual(
+                "historical-professional-schema1-fixture",
+                historical["review_id"],
+            )
+            self.assertIn("source_fingerprints", historical)
+            self.assertEqual(str(fixture_path), scope["baseline_decision"])
         targets = panel._professional_package_targets(root=ROOT)
-        bindings = panel.professional_carry.professional_review_bindings(targets)
-        dependents = sorted(
-            skill_id
-            for skill_id, binding in bindings.items()
-            if direct
-            in {
-                row["skill_id"]
-                for row in binding["required_candidate_material_bindings"]
+        bindings, _snapshot = panel._professional_v3_binding_state(
+            targets,
+            review_contract_fingerprint=(
+                panel._professional_evidence_review_contract_fingerprint()
+            ),
+        )
+        expected_fresh = sorted(
+            {
+                direct,
+                *(
+                    skill_id
+                    for skill_id, binding in bindings.items()
+                    if direct in binding["dependency_material_bindings"]
+                ),
             }
         )
-        expected = sorted({direct, *dependents})
-        self.assertLess(len(expected), len(bindings))
-        self.assertTrue(execution_scope["baseline_stale_no_carry"])
-        self.assertEqual(expected, execution_scope["fresh_package_ids"])
-        self.assertEqual([], execution_scope["carried_package_ids"])
+        self.assertTrue(scope["baseline_stale_no_carry"])
+        self.assertEqual(expected_fresh, scope["fresh_package_ids"])
+        self.assertEqual([], scope["carried_package_ids"])
         self.assertEqual(
-            sorted(set(bindings) - set(expected)),
-            execution_scope["unevaluated_package_ids"],
+            sorted(set(bindings) - set(expected_fresh)),
+            scope["unevaluated_package_ids"],
         )
         self.assertEqual(
-            expected,
-            sorted(entry["name"] for _kind, entry in selected_entries),
+            expected_fresh,
+            sorted(entry["name"] for _kind, entry in selected),
+        )
+        self.assertIn(
+            direct,
+            bindings["data-middleware-change-builder"][
+                "dependency_material_bindings"
+            ],
+        )
+        self.assertEqual(
+            (27, 0, 162),
+            (
+                len(scope["fresh_package_ids"]),
+                len(scope["carried_package_ids"]),
+                len(scope["unevaluated_package_ids"]),
+            ),
+        )
+        self.assertEqual(
+            "baseline-stale-no-carry",
+            scope["reasons_by_package"][direct][0],
+        )
+
+    def test_compact_schema1_baseline_never_invokes_carry_packet_builder(self) -> None:
+        panel = EVALUATOR._load_evaluator(
+            EVALUATOR.EXPERT_PANEL_REVIEW,
+            "affected-professional-no-historical-carry",
+        )
+        with _historical_professional_schema1_file(panel) as (
+            _historical,
+            fixture_path,
+            current_path,
+        ), mock.patch.object(
+            panel,
+            "prepare_professional_completeness_packet_v3",
+            side_effect=AssertionError("historical baseline entered carry builder"),
+        ), mock.patch.object(EVALUATOR, "_load_evaluator", return_value=panel):
+            plan = EVALUATOR._affected_review_plan(
+                EVALUATOR.DEFAULT_RELEASE_REVIEW_CONFIG,
+                direct_package_ids=["repository-tooling-change-builder"],
+            )
+        self.assertNotEqual(current_path.resolve(), fixture_path.resolve())
+        self.assertTrue(plan["baseline_stale_no_carry"])
+        self.assertEqual([], plan["carry_target_ids"])
+
+    def test_unsupported_compact_schema3_baseline_fails_closed(self) -> None:
+        panel = EVALUATOR._load_evaluator(
+            EVALUATOR.EXPERT_PANEL_REVIEW,
+            "affected-professional-unsupported-storage-schema",
+        )
+        baseline = json.loads(
+            (
+                ROOT
+                / panel.panel_attestation
+                .PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH
+            ).read_text(encoding="utf-8")
+        )
+        for schema_version in (3, 0, 2.0, 1.0, "1", True, None):
+            with self.subTest(schema_version=schema_version):
+                unsupported = copy.deepcopy(baseline)
+                unsupported["schema_version"] = schema_version
+                with mock.patch.object(
+                    panel.reviewer_manifest,
+                    "parse_json_object_bytes",
+                    return_value=unsupported,
+                ), mock.patch.object(
+                    panel,
+                    "prepare_professional_completeness_packet_v3",
+                    side_effect=AssertionError(
+                        "unsupported schema entered current packet builder"
+                    ),
+                ) as prepare_packet, mock.patch.object(
+                    panel,
+                    "_professional_package_targets",
+                    side_effect=AssertionError(
+                        "unsupported schema entered package catalog builder"
+                    ),
+                ) as build_catalog, mock.patch.object(
+                    panel,
+                    "_professional_v3_binding_state",
+                    side_effect=AssertionError(
+                        "unsupported schema entered binding builder"
+                    ),
+                ) as build_bindings, mock.patch.object(
+                    EVALUATOR, "_load_evaluator", return_value=panel
+                ), mock.patch.object(
+                    panel.reviewer_manifest,
+                    "recheck_bound_file",
+                    side_effect=AssertionError(
+                        "unsupported schema entered historical byte recheck"
+                    ),
+                ) as recheck_bound, self.assertRaisesRegex(
+                    EVALUATOR.ValidationProblem,
+                    "unsupported compact storage schema_version",
+                ):
+                    EVALUATOR._affected_review_plan(
+                        EVALUATOR.DEFAULT_RELEASE_REVIEW_CONFIG,
+                        direct_package_ids=[
+                            "repository-tooling-change-builder"
+                        ],
+                    )
+                prepare_packet.assert_not_called()
+                build_catalog.assert_not_called()
+                build_bindings.assert_not_called()
+                recheck_bound.assert_not_called()
+
+    def test_historical_compact_baseline_requires_summary_mapping(self) -> None:
+        panel = EVALUATOR._load_evaluator(
+            EVALUATOR.EXPERT_PANEL_REVIEW,
+            "affected-professional-historical-summary",
+        )
+        baseline = _historical_professional_schema1_header(panel)
+        for label, mutation in (
+            ("missing", lambda value: value.pop("summary")),
+            ("non-mapping", lambda value: value.__setitem__("summary", [])),
+            (
+                "invalid-review-id",
+                lambda value: value.__setitem__("review_id", "not valid"),
+            ),
+        ):
+            with self.subTest(label=label):
+                malformed = copy.deepcopy(baseline)
+                mutation(malformed)
+                with _historical_professional_schema1_file(
+                    panel,
+                    value=malformed,
+                ) as (_historical, fixture_path, current_path), mock.patch.object(
+                    EVALUATOR, "_load_evaluator", return_value=panel
+                ), self.assertRaisesRegex(
+                    EVALUATOR.ValidationProblem,
+                    "historical Professional baseline is malformed",
+                ):
+                    EVALUATOR._affected_review_plan(
+                        EVALUATOR.DEFAULT_RELEASE_REVIEW_CONFIG,
+                        direct_package_ids=[
+                            "repository-tooling-change-builder"
+                        ],
+                    )
+                self.assertNotEqual(current_path.resolve(), fixture_path.resolve())
+
+    def test_malformed_historical_professional_baseline_still_fails_closed(
+        self,
+    ) -> None:
+        panel = EVALUATOR._load_evaluator(
+            EVALUATOR.EXPERT_PANEL_REVIEW,
+            "affected-professional-malformed-historical",
+        )
+        malformed = _historical_professional_schema1_header(panel)
+        malformed["axis"] = "semantic-disposition"
+        malformed["kind"] = (
+            panel.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_KIND
+        )
+        malformed["review_id"] = "wrong-axis"
+        with _historical_professional_schema1_file(
+            panel,
+            value=malformed,
+        ) as (_historical, fixture_path, current_path), mock.patch.object(
+            EVALUATOR, "_load_evaluator", return_value=panel
+        ), self.assertRaisesRegex(
+            EVALUATOR.ValidationProblem,
+            "historical Professional baseline is malformed",
+        ):
+            EVALUATOR._affected_review_plan(
+                EVALUATOR.DEFAULT_RELEASE_REVIEW_CONFIG,
+                direct_package_ids=["repository-tooling-change-builder"],
+            )
+        self.assertNotEqual(current_path.resolve(), fixture_path.resolve())
+
+    def test_stale_contract_evaluates_exact_one_hop_without_carry(self) -> None:
+        bindings = {
+            "dependent": {
+                "dependency_material_bindings": {"direct": "a" * 64}
+            },
+            "direct": {"dependency_material_bindings": {}},
+            "transitive": {
+                "dependency_material_bindings": {"dependent": "b" * 64}
+            },
+            "unaffected": {"dependency_material_bindings": {}},
+        }
+        panel = mock.Mock()
+        panel.panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH = (
+            "evals/expert-panel/professional-completeness.json"
+        )
+        panel.panel_attestation.ATTESTATION_SCHEMA_VERSION = 2
+        panel.prepare_professional_completeness_packet_v3.return_value = {
+            "professional_targets": [],
+            "review_plan": {
+                "baseline": {
+                    "attestation": {
+                        "path": "evals/expert-panel/professional-completeness.json"
+                    }
+                },
+                "fresh_targets": [
+                    {
+                        "skill_id": skill_id,
+                        "reason_codes": ["review-contract-changed"],
+                    }
+                    for skill_id in bindings
+                ],
+                "carried_targets": [],
+            },
+        }
+        panel._professional_v3_base_targets.return_value = []
+        panel.professional_carry.professional_review_bindings.return_value = bindings
+        panel.reviewer_manifest.parse_json_object_bytes.return_value = {
+            "schema_version": 2
+        }
+
+        with mock.patch.object(
+            EVALUATOR,
+            "load_yaml_file",
+            return_value={"reviewed_at": "2026-08-11"},
+        ), mock.patch.object(EVALUATOR, "_load_evaluator", return_value=panel):
+            plan = EVALUATOR._affected_review_plan(
+                Path("release.yaml"), direct_package_ids=["direct"]
+            )
+
+        self.assertTrue(plan["baseline_stale_no_carry"])
+        self.assertEqual(["dependent", "direct"], plan["fresh_target_ids"])
+        self.assertEqual([], plan["carry_target_ids"])
+        self.assertEqual(
+            ["transitive", "unaffected"], plan["unevaluated_target_ids"]
         )
 
     def test_current_full_impact_still_evaluates_all_189_without_stale_baseline_mode(self) -> None:
@@ -537,6 +949,46 @@ class AffectedProfessionalismTests(unittest.TestCase):
         self.assertEqual(execution_scope, report["execution_scope"])
         self.assertEqual("not-evaluated", report["release_gate"])
 
+    def test_affected_regression_does_not_require_git_storage_precheck(self) -> None:
+        context = _context(ids=["direct"])
+        with tempfile.TemporaryDirectory() as raw:
+            directory = Path(raw)
+            _write_partial_reports(
+                directory,
+                direct=["direct"],
+                fresh=["direct"],
+                carried=[],
+            )
+            coverage_evaluator = mock.Mock()
+            coverage_evaluator._load_entries.return_value = [
+                ("professional", {"name": "direct"}),
+            ]
+            with (
+                mock.patch.dict(
+                    os.environ,
+                    {REGRESSION.AFFECTED_CONTEXT_ENV: context},
+                    clear=False,
+                ),
+                mock.patch.object(
+                    REGRESSION,
+                    "_load_coverage_evaluator",
+                    return_value=coverage_evaluator,
+                ),
+                mock.patch.object(
+                    REGRESSION,
+                    "_validate_current_expert_panel_storage",
+                    side_effect=AssertionError(
+                        "affected archive must not inspect Git storage"
+                    ),
+                ) as validate_storage,
+            ):
+                code = REGRESSION.main(
+                    ["--reports-dir", str(directory), "--strict", "--report-only"]
+                )
+
+        self.assertEqual(0, code)
+        validate_storage.assert_not_called()
+
     def test_affected_regression_accepts_stale_baseline_without_carry_as_partial_only(self) -> None:
         context = _context(ids=["direct"])
         with tempfile.TemporaryDirectory() as raw:
@@ -684,32 +1136,18 @@ class AffectedProfessionalLifecycleTests(unittest.TestCase):
     _contract = _CORE_FIXTURES._contract
     _producer = _CORE_FIXTURES._producer
 
-    def test_affected_professional_lifecycle_path_executes_json_owner_once(self) -> None:
+    def test_affected_professional_lifecycle_paths_select_focused_tests_without_producers(self) -> None:
         canonical = json.loads(
             (ROOT / "src/control-model/core-contracts.json").read_text(
                 encoding="utf-8"
             )
         )
-        canonical_producers = {
-            row["id"]: row
-            for row in canonical["principle_acceptance_contract"]["producers"]
-        }
-        expected_closure = {
-            "audit-skill-content",
-            "eval-professional-benchmarks",
-            "eval-professional-samples",
-            "eval-pressure-behavior",
-            "eval-routing",
-            "eval-skill-professionalism",
-            "validate-professional-routing",
-            "validate-professionalism-regression",
-        }
         paths = (
             "scripts/expert_panel_review.py",
             "scripts/professional_completeness_carry_forward.py",
             "scripts/validate-professionalism-regression.py",
             "config/professionalism-release-review.yaml",
-            "evals/expert-panel/review/packet.json",
+            "evals/expert-panel/professional-completeness.json",
         )
         for path in paths:
             with self.subTest(path=path):
@@ -720,80 +1158,16 @@ class AffectedProfessionalLifecycleTests(unittest.TestCase):
                     head_sha="b" * 40,
                 )
                 selected_ids = selection["selected_producer_ids"]
+                self.assertEqual([], selection["changed_paths"][0]["direct_producer_ids"])
+                self.assertEqual([], selected_ids)
+                self.assertTrue(selection["selected_test_modules"])
                 self.assertEqual(
-                    ["validate-professionalism-regression"],
-                    selection["changed_paths"][0]["direct_producer_ids"],
+                    "soft-stale", selection["expert_panel_evidence"]["status"]
                 )
-                self.assertEqual(expected_closure, set(selected_ids))
-                self.assertEqual(len(selected_ids), len(set(selected_ids)))
+                self.assertEqual(
+                    [], selection["selected_test_modules_by_layer"]["release"]
+                )
                 self.assertNotIn("fallback", selection)
-
-                temporary, root = self._root()
-                self.addCleanup(temporary.cleanup)
-                json_report = root / "reports/professionalism-regression-report.json"
-                markdown_report = root / "reports/professionalism-regression-report.md"
-                json_report.write_text('{"schema_version":0}\n', encoding="utf-8")
-                markdown_report.write_text("release sentinel\n", encoding="utf-8")
-                producers = []
-                for producer_id in selected_ids:
-                    body = (
-                        "from pathlib import Path\n"
-                        "execution_log = Path('reports/executions.log')\n"
-                        "with execution_log.open('a', encoding='utf-8') as stream:\n"
-                        f"    stream.write({producer_id!r} + '\\n')\n"
-                    )
-                    reports: list[str] = []
-                    release_reports: list[str] = []
-                    if producer_id == "validate-professionalism-regression":
-                        body += (
-                            "Path('reports/professionalism-regression-report.json')"
-                            ".write_text('{\"schema_version\":3}\\n', encoding='utf-8')\n"
-                        )
-                        reports = ["reports/professionalism-regression-report.json"]
-                        release_reports = [
-                            "reports/professionalism-regression-report.md"
-                        ]
-                    script = self._script(root, producer_id, body)
-                    producers.append(
-                        self._producer(
-                            producer_id,
-                            script,
-                            depends_on=canonical_producers[producer_id]["depends_on"],
-                            reports=reports,
-                            release_reports=release_reports,
-                        )
-                    )
-                contract = self._contract(
-                    producers,
-                    [
-                        {
-                            "id": "professional-json-owner-executed",
-                            "producer": "validate-professionalism-regression",
-                            "predicates": [PROCESS_PASS],
-                        }
-                    ],
-                )
-
-                result = CORE.evaluate_affected(root, contract, selected_ids)
-
-                executions = (root / "reports/executions.log").read_text(
-                    encoding="utf-8"
-                ).splitlines()
-                self.assertEqual(expected_closure, set(executions))
-                self.assertTrue(
-                    all(executions.count(producer_id) == 1 for producer_id in expected_closure)
-                )
-                self.assertEqual(len(expected_closure), result["command_execution_count"])
-                professional = [
-                    row
-                    for row in result["producers"]
-                    if row["id"] == "validate-professionalism-regression"
-                ]
-                self.assertEqual(1, len(professional))
-                self.assertEqual("pass", professional[0]["status"])
-                self.assertEqual([], professional[0]["release_reports"])
-                self.assertEqual("release sentinel\n", markdown_report.read_text())
-                self.assertTrue(result["input_tree"]["unchanged"])
 
 
 

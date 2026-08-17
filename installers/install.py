@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install built hookless ChangeForge Skills and Agent Profiles."""
+"""Install built hookless rd-skills Skills and Agent Profiles."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ from changeforge_install import (
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Install built hookless ChangeForge artifacts.")
+    parser = argparse.ArgumentParser(description="Install built hookless rd-skills artifacts.")
     parser.add_argument("--agent", choices=AGENTS, required=True)
     parser.add_argument("--scope", choices=SCOPES)
     parser.add_argument("--target", type=Path, help="Project root, or explicit user/admin Skill directory.")
@@ -70,7 +70,7 @@ def main() -> int:
             conflicts.extend(find_unmanaged_conflicts(targets.profiles, profile_files, old_profiles))
         if conflicts and not args.force:
             raise InstallError(
-                "target contains unmanaged ChangeForge-named artifacts: "
+                "target contains unmanaged rd-skills-named artifacts: "
                 + ", ".join(sorted(set(conflicts)))
             )
         legacy_paths = legacy_residue_paths(args.agent, scope, args.target, targets.skills)

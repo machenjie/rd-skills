@@ -3,7 +3,6 @@ from __future__ import annotations
 import copy
 import functools
 import hashlib
-import importlib.util
 import json
 import sys
 import tempfile
@@ -12,58 +11,50 @@ from contextlib import contextmanager
 from pathlib import Path
 from unittest import mock
 
+from . import expert_panel_source_test_support as source_support
+from . import professional_completeness_test_support as professional_support
+from . import readability_review_test_support as readability_support
 
 ROOT = Path(__file__).resolve().parents[2]
+PANEL = source_support.PANEL
+AUDIT = source_support.AUDIT
+_load_module = source_support.load_panel
+_live_semantic_audit = source_support.live_semantic_audit
+_semantic_audit_with_synthetic_delta = (
+    source_support.semantic_audit_with_synthetic_delta
+)
+_write_json = source_support.write_json
+_synthetic_schema1_professional_decision = (
+    professional_support._synthetic_schema1_professional_decision
+)
+_current_schema2_readability_packet_fixture = readability_support.current_packet
+_synthetic_historical_schema2_readability_decision = (
+    readability_support.historical_decision
+)
+_synthetic_schema3_professional_decision = (
+    professional_support._synthetic_schema3_professional_decision
+)
+_professional_packet = professional_support._professional_packet
+_professional_ballot = professional_support._professional_ballot
+_fixture_evidence_lines = professional_support._fixture_evidence_lines
+_fixture_anchor = professional_support._fixture_anchor
+_fixture_anchor_tokens = professional_support._fixture_anchor_tokens
 
 
-def _load_module():
-    path = ROOT / "scripts/expert_panel_review.py"
-    spec = importlib.util.spec_from_file_location("expert_panel_review_tests", path)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
 
 
-PANEL = _load_module()
 
 
-def _load_audit_module():
-    path = ROOT / "scripts/audit-skill-content.py"
-    spec = importlib.util.spec_from_file_location("semantic_panel_audit_fixture", path)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
 
 
-AUDIT = _load_audit_module()
 
 
-@functools.lru_cache(maxsize=1)
-def _live_semantic_audit() -> dict:
-    result = AUDIT.audit()
-    return {
-        "schema_version": AUDIT.AUDIT_SCHEMA_VERSION,
-        "thresholds": AUDIT.THRESHOLDS,
-        "root_content": result["root_content"],
-        "reference_content": result["reference_content"],
-    }
 
 
-def _semantic_audit_with_synthetic_delta() -> dict:
-    """Create review targets without depending on the repository's live backlog."""
 
-    audit = copy.deepcopy(_live_semantic_audit())
-    for content_key in ("root_content", "reference_content"):
-        semantic = audit[content_key]["semantic_advisories"]
-        entries = semantic["disposition_contract"]["entries"]
-        if not entries:
-            raise AssertionError(f"{content_key} needs one disposition fixture entry")
-        semantic["disposition_contract"]["entries"] = entries[1:]
-    return audit
+
+
+
 
 
 def _packet() -> dict:
@@ -124,8 +115,6 @@ def _packet() -> dict:
     }
 
 
-def _write_json(path: Path, value: dict) -> None:
-    path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
 
 
 def _ballot(
@@ -176,16 +165,16 @@ def _ballot(
     }
 
 
-@functools.lru_cache(maxsize=1)
-def _professional_packet_cached() -> dict:
-    return PANEL.prepare_professional_completeness_packet(
-        review_id="professional-review-1",
-        created_on="2026-07-16",
-    )
 
 
-def _professional_packet() -> dict:
-    return copy.deepcopy(_professional_packet_cached())
+
+
+
+
+
+
+
+
 
 
 @functools.lru_cache(maxsize=1)
@@ -207,298 +196,12 @@ def _professional_domain_expertise_tags(packet: dict) -> list[str]:
     )
 
 
-def _fixture_evidence_lines(material: dict, count: int) -> list[tuple[int, list[str]]]:
-    rows = []
-    for line_number, line in enumerate(material["content"].splitlines(), start=1):
-        tokens = sorted(PANEL._evidence_tokens(line))
-        if (
-            PANEL._is_substantive_markdown_line(material["content"], line_number)
-            and len(tokens) >= 2
-        ):
-            rows.append((line_number, tokens))
-        if len(rows) == count:
-            return rows
-    raise AssertionError(f"fixture material lacks {count} substantive evidence lines")
 
 
-def _fixture_anchor(
-    *, skill_id: str, material: dict, anchor_id: str, line_number: int
-) -> dict:
-    return {
-        "anchor_id": anchor_id,
-        "skill_id": skill_id,
-        "path": material["path"],
-        "start_line": line_number,
-        "end_line": line_number,
-    }
 
 
-def _fixture_anchor_tokens(
-    anchor: dict, materials_by_skill: dict[str, dict[str, dict]]
-) -> list[str]:
-    material = materials_by_skill[anchor["skill_id"]][anchor["path"]]
-    line = material["content"].splitlines()[anchor["start_line"] - 1]
-    return sorted(PANEL._evidence_tokens(line))
 
 
-def _professional_ballot(
-    packet: dict,
-    packet_sha256: str,
-    *,
-    voter: int,
-    correction_skill: str | None = None,
-    correction_criterion: str = "professional-correctness",
-    skill_ids: list[str] | None = None,
-    reviewer_kind: str | None = None,
-) -> dict:
-    votes = []
-    materials_by_skill = PANEL._professional_materials_by_skill(packet)
-    targets_by_id = {
-        target["skill_id"]: target for target in packet["professional_targets"]
-    }
-    selected_skill_ids = (
-        {target["skill_id"] for target in packet["professional_targets"]}
-        if skill_ids is None
-        else set(skill_ids)
-    )
-    for target in packet["professional_targets"]:
-        if target["skill_id"] not in selected_skill_ids:
-            continue
-        correction = target["skill_id"] == correction_skill
-        criterion_names = sorted(PANEL.PROFESSIONAL_COMPLETENESS_CRITERIA)
-        root_lines = iter(_fixture_evidence_lines(target["root"], len(criterion_names)))
-        anchors = []
-        criterion_anchor_ids = {}
-        for criterion_index, criterion in enumerate(criterion_names):
-            material = target["root"]
-            line_number, _tokens = next(root_lines)
-            if (
-                criterion == "reference-high-risk-coverage"
-                and target["indexed_references"]
-            ):
-                material = target["indexed_references"][0]
-                line_number, _tokens = _fixture_evidence_lines(material, 1)[0]
-            anchor_id = f"criterion-{criterion_index:02d}"
-            anchors.append(
-                _fixture_anchor(
-                    skill_id=target["skill_id"],
-                    material=material,
-                    anchor_id=anchor_id,
-                    line_number=line_number,
-                )
-            )
-            criterion_anchor_ids[criterion] = anchor_id
-
-        adjacency_target_anchor_id = criterion_anchor_ids[
-            "adjacent-overlap-or-gap"
-        ]
-        for candidate_index, candidate in enumerate(
-            target["routing_adjacency"]["required_candidates"]
-        ):
-            candidate_target = targets_by_id[candidate["skill_id"]]
-            candidate_line, _tokens = _fixture_evidence_lines(
-                candidate_target["root"], 1
-            )[0]
-            anchors.append(
-                _fixture_anchor(
-                    skill_id=candidate["skill_id"],
-                    material=candidate_target["root"],
-                    anchor_id=f"candidate-{candidate_index:03d}",
-                    line_number=candidate_line,
-                )
-            )
-        anchors.sort(key=lambda row: row["anchor_id"])
-        anchors_by_id = {anchor["anchor_id"]: anchor for anchor in anchors}
-
-        criteria = {}
-        for criterion_index, criterion in enumerate(criterion_names):
-            anchor_id = criterion_anchor_ids[criterion]
-            tokens = _fixture_anchor_tokens(
-                anchors_by_id[anchor_id], materials_by_skill
-            )
-            assertion = {
-                "claim": (
-                    f"Criterion {criterion_index} binds {tokens[0]} and {tokens[1]} "
-                    "to one bounded professional decision."
-                ),
-                "evidence_anchor_ids": [anchor_id],
-                "source_excerpt_sha256": (
-                    PANEL._professional_assertion_excerpt_sha256(
-                        [anchor_id],
-                        anchors_by_id=anchors_by_id,
-                        materials_by_skill=materials_by_skill,
-                    )
-                ),
-            }
-            criteria[criterion] = {
-                "status": "satisfied",
-                "evidence_assertions": [assertion],
-            }
-        if correction:
-            criteria[correction_criterion]["status"] = "defect-found"
-
-        def examined_items(
-            *, item_field: str, anchor_names: list[str], kind: str
-        ) -> list[dict]:
-            items = []
-            for item_index, anchor_id in enumerate(anchor_names, start=1):
-                tokens = _fixture_anchor_tokens(
-                    anchors_by_id[anchor_id], materials_by_skill
-                )
-                items.append(
-                    {
-                        item_field: (
-                            f"{item_index:02d}-{kind}-{tokens[0]}-{tokens[1]}"
-                        ),
-                        "outcome": "covered",
-                        "evidence_anchor_ids": [anchor_id],
-                        "rationale": (
-                            f"The {tokens[0]} and {tokens[1]} rules bound this "
-                            f"examined {kind} decision path."
-                        ),
-                    }
-                )
-            return sorted(items, key=lambda item: item[item_field])
-
-        failure_modes = examined_items(
-            item_field="failure_mode",
-            anchor_names=[
-                criterion_anchor_ids["failure-modes"],
-                criterion_anchor_ids["boundary-conditions"],
-            ],
-            kind="failure-mode",
-        )
-        omission_candidates = examined_items(
-            item_field="omission_candidate",
-            anchor_names=[
-                criterion_anchor_ids["material-omissions"],
-                criterion_anchor_ids["verification-methods"],
-            ],
-            kind="omission-candidate",
-        )
-        if correction and correction_criterion == "failure-modes":
-            failure_modes[0]["outcome"] = "defect-found"
-        if correction and correction_criterion == "material-omissions":
-            omission_candidates[0]["outcome"] = "defect-found"
-
-        adjacency_reviews = []
-        target_tokens = _fixture_anchor_tokens(
-            anchors_by_id[adjacency_target_anchor_id], materials_by_skill
-        )
-        for candidate_index, candidate in enumerate(
-            target["routing_adjacency"]["required_candidates"]
-        ):
-            candidate_anchor_id = f"candidate-{candidate_index:03d}"
-            candidate_tokens = _fixture_anchor_tokens(
-                anchors_by_id[candidate_anchor_id], materials_by_skill
-            )
-            adjacency_reviews.append(
-                {
-                    "skill_id": candidate["skill_id"],
-                    "review_origin": "packet-required",
-                    "discovery_reason": None,
-                    "disposition": (
-                        "adjacent-no-gap"
-                        if candidate["declared"]
-                        else "not-adjacent"
-                    ),
-                    "target_anchor_ids": [adjacency_target_anchor_id],
-                    "candidate_anchor_ids": [candidate_anchor_id],
-                    "rationale": (
-                        f"The {target_tokens[0]} target boundary and "
-                        f"{candidate_tokens[0]} candidate boundary were compared "
-                        "for hidden responsibility gaps."
-                    ),
-                }
-            )
-        if correction and correction_criterion == "adjacent-overlap-or-gap":
-            adjacency_reviews[0]["disposition"] = "gap-or-overlap-defect"
-        votes.append(
-            {
-                "skill_id": target["skill_id"],
-                "decision": (
-                    "requires-professional-correction"
-                    if correction
-                    else "accepted-current-professional-completeness"
-                ),
-                "reason_code": (
-                    {
-                        "professional-correctness": "professional-correctness-defect",
-                        "erroneous-rules": "erroneous-professional-rule",
-                        "material-omissions": "material-professional-omission",
-                        "failure-modes": "failure-mode-gap",
-                        "boundary-conditions": "boundary-condition-gap",
-                        "verification-methods": "verification-method-gap",
-                        "adjacent-overlap-or-gap": "adjacent-responsibility-gap",
-                        "generic-knowledge-pollution": "generic-knowledge-pollution",
-                        "reference-high-risk-coverage": "reference-high-risk-coverage-gap",
-                        "output-verifiability": "output-verification-gap",
-                    }[correction_criterion]
-                    if correction
-                    else "all-professional-criteria-satisfied"
-                ),
-                "evidence_anchors": anchors,
-                "criteria": criteria,
-                "examined_failure_modes": failure_modes,
-                "examined_omission_candidates": omission_candidates,
-                "examined_adjacent_candidates": adjacency_reviews,
-                "proof_limits": [
-                    "Static source review cannot prove production runtime behavior."
-                ],
-                "rationale": (
-                    "This package contains a professional correctness defect requiring correction."
-                    if correction
-                    else "Every required professional completeness criterion is satisfied for this package."
-                ),
-            }
-        )
-    effective_reviewer_kind = reviewer_kind or (
-        "domain" if voter < 3 else "architecture"
-    )
-    expertise_tags = (
-        sorted(
-            {
-                tag
-                for target in packet["professional_targets"]
-                if target["skill_id"] in selected_skill_ids
-                for tag in target["required_expertise_tags"]
-            }
-        )
-        if effective_reviewer_kind == "domain"
-        else [PANEL.PROFESSIONAL_ARCHITECTURE_EXPERTISE_TAG]
-    )
-    return {
-        "schema_version": PANEL.PROFESSIONAL_COMPLETENESS_SCHEMA_VERSION,
-        "kind": PANEL.PROFESSIONAL_COMPLETENESS_BALLOT_KIND,
-        "review_id": packet["review_id"],
-        "created_on": "2026-07-16",
-        "packet_sha256": packet_sha256,
-        "source_fingerprints": packet["source_fingerprints"],
-        "voter": {
-            "voter_id": f"professional-expert-{voter}",
-            "agent_id": f"professional-agent-{voter}",
-            "role": f"senior-professional-role-{voter}",
-            "expertise": ["professional completeness review"],
-            "expertise_tags": expertise_tags,
-            "qualification_claims": [
-                {
-                    "expertise_tag": tag,
-                    "qualification_basis": (
-                        f"Reviewer declares bounded prior work in {tag} "
-                        "professional decision reviews."
-                    ),
-                    "proof_limit": (
-                        f"This static {tag} declaration cannot verify external "
-                        "identity credentials or experience."
-                    ),
-                }
-                for tag in expertise_tags
-            ],
-            "independent_review": True,
-        },
-        "professional_votes": votes,
-        "limitations": ["Static professional fixture vote."],
-    }
 
 
 def _add_reviewer_added_candidate(
@@ -600,11 +303,35 @@ def _semantic_packet() -> dict:
     )
 
 
-def _semantic_application() -> dict:
-    config = AUDIT.load_yaml_file(
-        ROOT / "config/skill-content-exceptions.yaml"
-    )
-    return copy.deepcopy(config["semantic_disposition_application"])
+def _historical_schema1_semantic_selector() -> dict:
+    """Return the immutable historical selector admitted by the v1 bridge."""
+
+    return {
+        "schema_version": 1,
+        "kind": PANEL.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_KIND,
+        "axis": PANEL.SEMANTIC_DISPOSITION_PANEL_KIND,
+        "review_id": "semantic-015be10a-final-prep",
+        "decided_on": "2026-08-11",
+        "source_fingerprints": {
+            "reference_candidate_manifest": (
+                "dd03e7b80fe661d9db293db3d725706cd44a43ef7820de90452e22120e67638b"
+            ),
+            "reference_detector_contract": (
+                "bb6182108495b202f41d3ca0d73cabe8e62f7433b54fe233d61fc4dcb7d4c06e"
+            ),
+            "root_candidate_manifest": (
+                "8af1bbe28abcec952f7e52704f377324778002e2343a108fa3e2d0533ec7c919"
+            ),
+            "root_detector_contract": (
+                "1ed220a953b74fd6d4e4594660999b53064177c885841ca744ca1dd06caf146d"
+            ),
+        },
+        "review_contract_fingerprint": (
+            "6f9618afabdc84a4e39a6cfe30b24b4b7b22f431f4d77a6337923af82f43069e"
+        ),
+        "target_count": 197,
+        "axis_counts": {"reference": 121, "root": 76},
+    }
 
 
 @contextmanager
@@ -714,48 +441,36 @@ def _current_semantic_application_fixture(
             )
             decision_path = panel_root / "decision.json"
             _write_json(decision_path, decision)
-            application = {
-                "schema_version": (
-                    PANEL.SEMANTIC_DISPOSITION_APPLICATION_SCHEMA_VERSION
-                ),
-                "kind": PANEL.SEMANTIC_DISPOSITION_APPLICATION_KIND,
-                "review_id": review_id,
-                "decision_kind": PANEL.SEMANTIC_DISPOSITION_DECISION_KIND,
-                "decision": {
-                    "path": (
-                        f"evals/expert-panel/{review_id}/panel/decision.json"
+            compact = PANEL._semantic_attestation_from_decision(
+                decision,
+                decision_path=decision_path,
+                audit=audit,
+            )
+            fixed = (
+                validation_root
+                / PANEL.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_PATH
+            )
+            fixed.parent.mkdir(parents=True, exist_ok=True)
+            fixed.write_bytes(
+                PANEL.panel_attestation.canonical_attestation_bytes(
+                    compact,
+                    expected_path=(
+                        PANEL.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_PATH
                     ),
-                    "sha256": hashlib.sha256(
-                        decision_path.read_bytes()
-                    ).hexdigest(),
-                },
-            }
+                    expected_review_contract_fingerprint=(
+                        PANEL._canonical_json_sha256(packet["panel_contract"])
+                    ),
+                    expected_semantic_current_bindings=(
+                        PANEL._semantic_candidate_authorities(packet)
+                    ),
+                )
+            )
             yield {
-                "application": application,
+                "attestation": compact,
                 "decision": decision,
                 "packet": packet,
                 "root": validation_root,
             }
-
-
-def _replace_semantic_application_source(source: str, application: dict) -> str:
-    start = source.index("semantic_disposition_application:\n")
-    end = source.index("\n# Approved dispositions below", start)
-    decision = application["decision"]
-    block = "\n".join(
-        (
-            "semantic_disposition_application:",
-            f"  schema_version: {application['schema_version']}",
-            f'  kind: "{application["kind"]}"',
-            f'  review_id: "{application["review_id"]}"',
-            f'  decision_kind: "{application["decision_kind"]}"',
-            "  decision:",
-            f'    path: "{decision["path"]}"',
-            f'    sha256: "{decision["sha256"]}"',
-            "",
-        )
-    )
-    return source[:start] + block + source[end:]
 
 
 def _semantic_ballot(
@@ -796,6 +511,154 @@ def _semantic_ballot(
 
 
 class ExpertPanelReviewTests(unittest.TestCase):
+    def test_professional_attest_requires_one_clean_stable_projection_head(
+        self,
+    ) -> None:
+        review_id = "professional-origin-projection-head"
+        decision_path = PANEL._ephemeral_review_path(
+            review_id, "panel", "decision.json"
+        )
+        output_path = PANEL._ephemeral_review_path(
+            review_id, "attestation.json"
+        )
+        args = mock.Mock(
+            decision=str(decision_path),
+            review_id=review_id,
+            panel_kind=PANEL.PROFESSIONAL_COMPLETENESS_PANEL_KIND,
+            audit=None,
+            out=str(output_path),
+        )
+        head_b = "b" * 40
+        head_c = "c" * 40
+
+        def projection(origin_commit: str = head_b) -> dict:
+            return {
+                "findings": [
+                    {
+                        "provenance": {
+                            "mode": "fresh",
+                            "origin": {"origin_commit": origin_commit},
+                        }
+                    }
+                ]
+            }
+
+        def git_result(stdout: bytes) -> mock.Mock:
+            return mock.Mock(stdout=stdout, returncode=0)
+
+        def invoke(
+            git_outputs: list[bytes],
+            *,
+            projected_origin: str = head_b,
+            writer: mock.Mock | None = None,
+        ) -> mock.Mock:
+            payload = b"{}\n"
+            writer = mock.Mock() if writer is None else writer
+            with mock.patch.object(
+                PANEL,
+                "_require_same_ephemeral_run_path",
+                side_effect=[decision_path, output_path],
+            ), mock.patch.object(
+                PANEL,
+                "_bound_json_object",
+                return_value=(mock.sentinel.bound, {"review_id": review_id}),
+            ), mock.patch.object(
+                PANEL,
+                "_professional_attestation_projection_from_decision",
+                return_value=(projection(projected_origin), {}),
+            ), mock.patch.object(
+                PANEL,
+                "_decision_packet_and_ballots",
+                return_value=(mock.sentinel.packet_path, {}, []),
+            ), mock.patch.object(
+                PANEL,
+                "_professional_attestation_current_bindings",
+                return_value={},
+            ), mock.patch.object(
+                PANEL.panel_attestation,
+                "canonical_attestation_bytes",
+                return_value=payload,
+            ), mock.patch.object(
+                PANEL, "_git_output", side_effect=[git_result(row) for row in git_outputs]
+            ), mock.patch.object(
+                PANEL, "_write_json", writer
+            ), mock.patch.object(
+                PANEL.reviewer_manifest,
+                "read_bound_regular_file",
+                return_value=mock.Mock(raw=payload),
+            ):
+                PANEL._attest(args)
+            return writer
+
+        clean_b = [
+            head_b.encode("ascii"),
+            b"",
+            head_b.encode("ascii"),
+        ]
+        writer = invoke(clean_b + clean_b)
+        writer.assert_called_once()
+
+        invalid_cases = (
+            (
+                "dirty before projection",
+                [head_b.encode("ascii"), b" M src/example.py\x00"],
+                head_b,
+                "clean tree",
+            ),
+            (
+                "dirty after projection",
+                clean_b
+                + [head_b.encode("ascii"), b"?? unexpected.txt\x00"],
+                head_b,
+                "clean tree",
+            ),
+            (
+                "head changes while captured",
+                [
+                    head_b.encode("ascii"),
+                    b"",
+                    head_c.encode("ascii"),
+                ],
+                head_b,
+                "HEAD changed",
+            ),
+            (
+                "head changes after projection",
+                clean_b
+                + [
+                    head_c.encode("ascii"),
+                    b"",
+                    head_c.encode("ascii"),
+                ],
+                head_b,
+                "HEAD changed",
+            ),
+            (
+                "fresh origin differs from projection head",
+                clean_b + clean_b,
+                head_c,
+                "origin commit",
+            ),
+        )
+        for label, outputs, projected_origin, error in invalid_cases:
+            writer = mock.Mock()
+            with self.subTest(label=label), self.assertRaisesRegex(
+                PANEL.PanelReviewError, error
+            ):
+                invoke(
+                    outputs,
+                    projected_origin=projected_origin,
+                    writer=writer,
+                )
+            writer.assert_not_called()
+
+    def test_current_artifact_version_domains_are_independent(self) -> None:
+        self.assertEqual(2, PANEL.READABILITY_SCHEMA_VERSION)
+        self.assertEqual(
+            3, PANEL.PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION
+        )
+        self.assertEqual(2, PANEL.SEMANTIC_DISPOSITION_SCHEMA_VERSION)
+
     def test_professional_adjacency_catalog_budget_is_derived_and_fingerprinted(
         self,
     ) -> None:
@@ -1302,11 +1165,7 @@ Route current work to `candidate-a`.
                 188,
                 len({candidate["skill_id"] for candidate in ranking}),
             )
-            self.assertEqual(
-                PANEL._canonical_json_sha256(ranking),
-                adjacency["full_catalog_ranking_fingerprint"],
-            )
-        self.assertEqual(3052, sum(required_counts.values()))
+            self.assertNotIn("full_catalog_ranking_fingerprint", adjacency)
         self.assertEqual(33, required_counts["implementation-structure-design"])
         self.assertEqual(52, required_counts["engineering-change-analysis"])
         self.assertLessEqual(max(required_counts.values()), 57)
@@ -1436,13 +1295,6 @@ Route current work to `candidate-a`.
             if before["required"][source_id] != after["required"][source_id]
         }
         self.assertEqual({}, required_changes)
-        self.assertEqual(
-            (3052, 3052),
-            (
-                sum(map(len, before["required"].values())),
-                sum(map(len, after["required"].values())),
-            ),
-        )
         self.assertEqual(
             (40, 40),
             (
@@ -2602,113 +2454,156 @@ Route current work to `candidate-a`.
                 PANEL.validate_ballot(packet, ballot, packet_sha256=digest)
 
     def test_historical_professional_schema_one_artifacts_remain_readable(self) -> None:
-        evidence = (
-            ROOT
-            / "evals/expert-panel/professional-completeness-panel-2026-07-16-r5"
-        )
-        packet_path = evidence / "packet.json"
-        packet = json.loads(packet_path.read_text(encoding="utf-8"))
-        PANEL.validate_packet(packet)
-        ballot_path = evidence / "panel/reviewer-a.json"
-        ballot = json.loads(ballot_path.read_text(encoding="utf-8"))
-        PANEL.validate_ballot(
-            packet,
-            ballot,
-            packet_sha256=hashlib.sha256(packet_path.read_bytes()).hexdigest(),
-        )
-        decision_path = evidence / "panel/decision.json"
-        decision = json.loads(decision_path.read_text(encoding="utf-8"))
-        PANEL.validate_decision_record(decision, record_path=decision_path)
+        with _synthetic_schema1_professional_decision() as fixture:
+            packet, packet_path, ballots, decision, decision_path = fixture
+            PANEL.validate_packet(packet)
+            digest = hashlib.sha256(packet_path.read_bytes()).hexdigest()
+            for _path, ballot in ballots:
+                PANEL.validate_ballot(
+                    packet,
+                    ballot,
+                    packet_sha256=digest,
+                )
+            self.assertEqual(
+                decision,
+                PANEL.validate_decision_record(
+                    decision, record_path=decision_path
+                ),
+            )
 
     def test_historical_mode_preserves_source_stale_schema_two_readability(self) -> None:
-        decision_path = (
-            ROOT
-            / "evals/expert-panel/readability-panel-2026-07-24-r12/panel/decision.json"
-        )
-        decision = json.loads(decision_path.read_text(encoding="utf-8"))
-
-        with self.assertRaisesRegex(
-            PANEL.PanelReviewError,
-            "schema-2 content source binding contract is missing or stale",
-        ):
-            PANEL.validate_decision_record(decision, record_path=decision_path)
-
-        self.assertEqual(
-            decision,
-            PANEL.validate_decision_record(
-                decision,
-                record_path=decision_path,
-                validation_mode="historical",
-            ),
-        )
-        for field, mutate in (
-            (
-                "packet",
-                lambda value: value["packet"].update({"sha256": "0" * 64}),
-            ),
-            (
-                "ballot",
-                lambda value: value["voters"][0].update(
-                    {"ballot_sha256": "0" * 64}
-                ),
-            ),
-            (
-                "majority",
-                lambda value: value["summary"]["readability"].update(
-                    {"accepted-current-readability": 0}
-                ),
-            ),
-        ):
-            tampered = copy.deepcopy(decision)
-            mutate(tampered)
-            with self.subTest(field=field), self.assertRaises(
-                PANEL.PanelReviewError
+        with _synthetic_historical_schema2_readability_decision() as fixture:
+            decision, decision_path = fixture
+            with self.assertRaisesRegex(
+                PANEL.PanelReviewError,
+                "schema-2 content source binding contract is missing or stale",
             ):
+                PANEL.validate_decision_record(decision, record_path=decision_path)
+
+            self.assertEqual(
+                decision,
                 PANEL.validate_decision_record(
-                    tampered,
+                    decision,
                     record_path=decision_path,
                     validation_mode="historical",
-                )
+                ),
+            )
+            for field, mutate in (
+                (
+                    "packet",
+                    lambda value: value["packet"].update({"sha256": "0" * 64}),
+                ),
+                (
+                    "ballot",
+                    lambda value: value["voters"][0].update(
+                        {"ballot_sha256": "0" * 64}
+                    ),
+                ),
+                (
+                    "majority",
+                    lambda value: value["summary"]["readability"].update(
+                        {"accepted-current-readability": 0}
+                    ),
+                ),
+            ):
+                tampered = copy.deepcopy(decision)
+                mutate(tampered)
+                with self.subTest(field=field), self.assertRaises(
+                    PANEL.PanelReviewError
+                ):
+                    PANEL.validate_decision_record(
+                        tampered,
+                        record_path=decision_path,
+                        validation_mode="historical",
+                    )
 
     def test_historical_mode_preserves_source_stale_schema_three_professional(
         self,
     ) -> None:
-        decision_path = (
-            ROOT
-            / "evals/expert-panel/professional-completeness-panel-2026-07-24-r11"
-            / "panel/decision.json"
-        )
-        decision = json.loads(decision_path.read_text(encoding="utf-8"))
+        with _synthetic_schema3_professional_decision() as fixture:
+            decision = fixture["decision"]
+            decision_path = fixture["decision_path"]
+            validation_root = fixture["validation_root"]
+            stale_contract = "0" * 64
+            self.assertNotEqual(
+                stale_contract,
+                decision["review_contract_fingerprint"],
+            )
+            with mock.patch.object(
+                PANEL,
+                "_professional_evidence_review_contract_fingerprint",
+                return_value=stale_contract,
+            ):
+                with self.assertRaisesRegex(
+                    PANEL.PanelReviewError,
+                    "review contract is stale",
+                ):
+                    PANEL.validate_decision_record(
+                        decision,
+                        record_path=decision_path,
+                        validation_root=validation_root,
+                    )
+                self.assertEqual(
+                    decision,
+                    PANEL.validate_decision_record(
+                        decision,
+                        record_path=decision_path,
+                        validation_root=validation_root,
+                        validation_mode="historical",
+                    ),
+                )
 
+            tampered_depth = copy.deepcopy(decision)
+            target = tampered_depth["professional_decisions"][0]
+            target["provenance"]["origin_depth"] = 1
+            without_fingerprint = dict(target)
+            without_fingerprint.pop("target_decision_fingerprint")
+            target["target_decision_fingerprint"] = (
+                PANEL._canonical_json_sha256(without_fingerprint)
+            )
+            _write_json(decision_path, tampered_depth)
+            with self.assertRaisesRegex(
+                PANEL.PanelReviewError,
+                "fresh target provenance is stale",
+            ):
+                PANEL.validate_decision_record(
+                    tampered_depth,
+                    record_path=decision_path,
+                    validation_root=validation_root,
+                    validation_mode="historical",
+                )
+
+            _write_json(decision_path, decision)
+            ballot_path, ballot = fixture["ballots"][0]
+            tampered_ballot = copy.deepcopy(ballot)
+            tampered_ballot["limitations"].append("Post-decision tamper.")
+            _write_json(ballot_path, tampered_ballot)
+            with self.assertRaisesRegex(
+                PANEL.PanelReviewError,
+                "decision does not match recomputed evidence",
+            ):
+                PANEL.validate_decision_record(
+                    decision,
+                    record_path=decision_path,
+                    validation_root=validation_root,
+                    validation_mode="historical",
+                )
+
+    def test_historical_current_registered_schema3_rejects_k_mutation_end_to_end(
+        self,
+    ) -> None:
         with self.assertRaisesRegex(
             PANEL.PanelReviewError,
-            "schema-3 decision review contract is stale",
+            "historical selection contract is invalid",
         ):
-            PANEL.validate_decision_record(decision, record_path=decision_path)
-
-        self.assertEqual(
-            decision,
-            PANEL.validate_decision_record(
-                decision,
-                record_path=decision_path,
-                validation_mode="historical",
-            ),
-        )
-        tampered = copy.deepcopy(decision)
-        tampered["professional_decisions"][0]["provenance"]["origin_depth"] = 1
-        with self.assertRaises(PANEL.PanelReviewError):
-            PANEL.validate_decision_record(
-                tampered,
-                record_path=decision_path,
-                validation_mode="historical",
-            )
+            with _synthetic_schema3_professional_decision(
+                mutate_registered_selection=True
+            ):
+                self.fail("mutated registered selector reached canonical packet state")
 
     def test_historical_mode_is_closed_and_axis_specific(self) -> None:
-        decision_path = (
-            ROOT
-            / "evals/expert-panel/readability-panel-2026-07-24-r12/panel/decision.json"
-        )
-        decision = json.loads(decision_path.read_text(encoding="utf-8"))
+        decision_path = ROOT / ".rd-skills/expert-panel/synthetic/decision.json"
+        decision = {"kind": PANEL.DECISION_KIND}
         with self.assertRaisesRegex(PANEL.PanelReviewError, "validation mode"):
             PANEL.validate_decision_record(
                 decision,
@@ -3387,7 +3282,7 @@ Route current work to `candidate-a`.
                 lambda packet: packet["semantic_targets"][0]["candidate"].__setitem__(
                     "preview", "stale altered candidate evidence"
                 ),
-                "candidate_fingerprint is stale",
+                "candidate_binding_fingerprint is stale",
             ),
         ):
             with self.subTest(label=label):
@@ -3409,6 +3304,328 @@ Route current work to `candidate-a`.
         with self.assertRaisesRegex(PANEL.PanelReviewError, "stale"):
             PANEL.validate_semantic_packet_current(packet, changed)
 
+    def test_semantic_source_fingerprints_are_closed_candidate_manifests_and_detector_contracts(
+        self,
+    ) -> None:
+        audit = copy.deepcopy(_live_semantic_audit())
+        audit["semantic_disposition_application"] = {
+            "schema_version": 1,
+            "kind": PANEL.SEMANTIC_DISPOSITION_APPLICATION_KIND,
+            "review_id": "semantic-current-first",
+            "decision_kind": (
+                PANEL.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_KIND
+            ),
+            "decision": {
+                "path": PANEL.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_PATH,
+                "sha256": "1" * 64,
+            },
+            "status": "current",
+            "target_count": 0,
+            "applied_count": 0,
+            "completed_rewrite_count": 0,
+        }
+
+        def fingerprints(value: dict) -> dict[str, str]:
+            root_semantic, reference_semantic = PANEL._semantic_audit_sections(value)
+            return PANEL._semantic_source_fingerprints(
+                value,
+                root_semantic=root_semantic,
+                reference_semantic=reference_semantic,
+            )
+
+        original = copy.deepcopy(audit)
+        baseline = fingerprints(audit)
+        self.assertEqual(original, audit)
+        self.assertEqual(
+            {
+                "reference_candidate_manifest",
+                "reference_detector_contract",
+                "root_candidate_manifest",
+                "root_detector_contract",
+            },
+            set(baseline),
+        )
+        selector_changed = copy.deepcopy(audit)
+        selector_changed["semantic_disposition_application"].update(
+            {
+                "kind": "changeforge.semantic-disposition-application-replacement",
+                "review_id": "semantic-current-second",
+                "decision_kind": "changeforge.semantic-disposition-attestation-replacement",
+                "status": "invalid",
+                "target_count": 3,
+                "applied_count": 2,
+                "completed_rewrite_count": 1,
+                "error": {
+                    "id": "selector-derived-error",
+                    "message": "Selector-derived application status changed.",
+                },
+            }
+        )
+        selector_changed["semantic_disposition_application"]["decision"] = {
+            "path": "evals/expert-panel/semantic-disposition-replacement.json",
+            "sha256": "2" * 64,
+        }
+        self.assertEqual(baseline, fingerprints(selector_changed))
+
+        config_changed = copy.deepcopy(audit)
+        config_changed["root_content"]["semantic_advisories"][
+            "disposition_contract"
+        ]["entries"][0]["reason"] += " Substantive authority changed."
+        config_changed["reference_content"]["semantic_advisories"][
+            "disposition_contract"
+        ]["entries"][0]["disposition"] = "false-positive"
+        config_changed["root_content"]["source_fingerprint"] = "6" * 64
+        config_changed["reference_content"]["preface_contract"][
+            "source_fingerprint"
+        ] = "7" * 64
+        config_changed["review_id"] = "untrusted-audit-report-selector"
+        config_changed["created_on"] = "2099-12-31"
+        self.assertEqual(baseline, fingerprints(config_changed))
+
+        root_candidate_changed = copy.deepcopy(audit)
+        root_candidate_changed["root_content"]["semantic_advisories"]["candidates"][0][
+            "fingerprint"
+        ] = "3" * 64
+        changed = fingerprints(root_candidate_changed)
+        self.assertNotEqual(
+            baseline["root_candidate_manifest"],
+            changed["root_candidate_manifest"],
+        )
+        self.assertEqual(
+            baseline["reference_candidate_manifest"],
+            changed["reference_candidate_manifest"],
+        )
+
+        reference_candidate_changed = copy.deepcopy(audit)
+        group = next(
+            candidate
+            for candidate in reference_candidate_changed["reference_content"][
+                "semantic_advisories"
+            ]["candidates"]
+            if candidate["path"] == "group"
+        )
+        group["content_fingerprint"] = "5" * 64
+        changed = fingerprints(reference_candidate_changed)
+        self.assertNotEqual(
+            baseline["reference_candidate_manifest"],
+            changed["reference_candidate_manifest"],
+        )
+
+        root_detector_changed = copy.deepcopy(audit)
+        root_detector_changed["root_content"]["semantic_advisories"][
+            "detector_contract"
+        ]["value"] = "4" * 64
+        changed = fingerprints(root_detector_changed)
+        self.assertNotEqual(
+            baseline["root_detector_contract"],
+            changed["root_detector_contract"],
+        )
+
+        reference_detector_changed = copy.deepcopy(audit)
+        reference_detector_changed["reference_content"]["semantic_advisories"][
+            "detector_contract"
+        ]["value"] = "5" * 64
+        changed = fingerprints(reference_detector_changed)
+        self.assertNotEqual(
+            baseline["reference_detector_contract"],
+            changed["reference_detector_contract"],
+        )
+
+        unrelated_threshold_changed = copy.deepcopy(audit)
+        unrelated_threshold_changed["thresholds"] = {
+            **unrelated_threshold_changed["thresholds"],
+            "semantic-fixture-threshold": 1,
+        }
+        self.assertEqual(baseline, fingerprints(unrelated_threshold_changed))
+
+    def test_semantic_forced_both_selector_resolves_all_current_targets_without_runtime_artifacts(
+        self,
+    ) -> None:
+        audit = copy.deepcopy(_live_semantic_audit())
+        forced = PANEL._semantic_audit_for_axis_rereview(
+            audit, ["root", "reference"]
+        )
+        packet = PANEL.prepare_semantic_disposition_packet(
+            audit=forced,
+            review_id="semantic-forced-both-current",
+            created_on="2026-08-11",
+        )
+        selector = {
+            "source_fingerprints": copy.deepcopy(packet["source_fingerprints"]),
+            "review_contract_fingerprint": PANEL._canonical_json_sha256(
+                packet["panel_contract"]
+            ),
+            "findings": [
+                {
+                    "axis": target["axis"],
+                    "target_id": target["target_id"],
+                }
+                for target in packet["semantic_targets"]
+            ],
+        }
+
+        selected = PANEL._semantic_current_packet_for_attestation_selector(
+            audit=audit,
+            review_id="semantic-forced-both-current",
+            decided_on="2026-08-11",
+            attestation_selector=selector,
+        )
+
+        self.assertEqual(206, len(selected["semantic_targets"]))
+        self.assertEqual(
+            {"root": 81, "reference": 125},
+            selected["panel_contract"]["required_axis_target_counts"],
+        )
+
+    def test_semantic_secure_prepare_forces_both_axes_against_original_audit(
+        self,
+    ) -> None:
+        audit = copy.deepcopy(_live_semantic_audit())
+        original = copy.deepcopy(audit)
+        packet = PANEL._semantic_forced_prepare_packet(
+            audit=audit,
+            axes=["root", "reference"],
+            review_id="semantic-secure-forced-both",
+            created_on="2026-08-13",
+        )
+
+        self.assertEqual(original, audit)
+        self.assertEqual(
+            {"root": 81, "reference": 125},
+            packet["panel_contract"]["required_axis_target_counts"],
+        )
+        PANEL.validate_semantic_packet_current(packet, original)
+
+        for axes in ([], ["root"], ["reference"], ["root", "root"]):
+            with self.subTest(axes=axes), self.assertRaisesRegex(
+                PANEL.PanelReviewError,
+                "both root and reference",
+            ):
+                PANEL._semantic_forced_prepare_packet(
+                    audit=audit,
+                    axes=axes,
+                    review_id="semantic-incomplete-force",
+                    created_on="2026-08-13",
+                )
+
+    def test_semantic_prepare_reviewer_specs_require_four_distinct_fields(
+        self,
+    ) -> None:
+        rows = [
+            [f"voter-{index}", f"agent-{index}", f"role-{index}", f"lens-{index}"]
+            for index in range(1, 4)
+        ]
+        self.assertEqual(3, len(PANEL._semantic_prepare_reviewer_specs(rows)))
+        for field_index in range(4):
+            duplicate = copy.deepcopy(rows)
+            duplicate[1][field_index] = duplicate[0][field_index]
+            with self.subTest(field_index=field_index), self.assertRaisesRegex(
+                PANEL.PanelReviewError,
+                "distinct",
+            ):
+                PANEL._semantic_prepare_reviewer_specs(duplicate)
+
+    def test_semantic_prepare_audit_authority_rejects_wrong_path_and_dirty_tree(
+        self,
+    ) -> None:
+        with self.assertRaisesRegex(
+            PANEL.PanelReviewError,
+            "canonical path",
+        ):
+            PANEL._semantic_prepare_audit_authority("audit.json")
+
+        completed = mock.Mock(stdout=b" M src/example\x00", returncode=0)
+        with mock.patch.object(PANEL, "_git_output", return_value=completed):
+            with self.assertRaisesRegex(
+                PANEL.PanelReviewError,
+                "clean tracked tree",
+            ):
+                PANEL._semantic_prepare_audit_authority(
+                    "reports/skill-content-audit.json"
+                )
+
+        clean = mock.Mock(stdout=b"", returncode=0)
+        untracked = mock.Mock(stdout=b"", returncode=1)
+        with mock.patch.object(
+            PANEL, "_git_output", side_effect=[clean, untracked]
+        ):
+            with self.assertRaisesRegex(
+                PANEL.PanelReviewError,
+                "must be tracked",
+            ):
+                PANEL._semantic_prepare_audit_authority(
+                    "reports/skill-content-audit.json"
+                )
+
+        tracked = mock.Mock(stdout=b"", returncode=0)
+        head = mock.Mock(stdout=b'{"schema_version": 10}\n', returncode=0)
+        bound = mock.Mock(raw=b'{"schema_version": 9}\n')
+        with mock.patch.object(
+            PANEL, "_git_output", side_effect=[clean, tracked, head]
+        ), mock.patch.object(
+            PANEL.reviewer_manifest,
+            "read_bound_regular_file",
+            return_value=bound,
+        ):
+            with self.assertRaisesRegex(
+                PANEL.PanelReviewError,
+                "byte-equal to clean HEAD",
+            ):
+                PANEL._semantic_prepare_audit_authority(
+                    "reports/skill-content-audit.json"
+                )
+
+    def test_semantic_runtime_is_atomic_create_once_with_three_templates(
+        self,
+    ) -> None:
+        audit = copy.deepcopy(_live_semantic_audit())
+        packet = PANEL._semantic_forced_prepare_packet(
+            audit=audit,
+            axes=["root", "reference"],
+            review_id="semantic-atomic-create-once",
+            created_on="2026-08-13",
+        )
+        packet_raw = PANEL.reviewer_manifest.canonical_ballot_bytes(
+            packet, compact=False
+        )
+        packet_sha256 = hashlib.sha256(packet_raw).hexdigest()
+        templates = [
+            PANEL.prepare_semantic_ballot_template(
+                packet=packet,
+                packet_sha256=packet_sha256,
+                voter_id=f"semantic-voter-{index}",
+                agent_id=f"semantic-agent-{index}",
+                role=f"semantic-role-{index}",
+                expertise=[f"semantic-expertise-{index}"],
+                created_on="2026-08-13",
+            )
+            for index in range(1, 4)
+        ]
+        audit_raw = json.dumps(
+            audit, indent=2, ensure_ascii=False, sort_keys=True
+        ).encode("utf-8") + b"\n"
+        with tempfile.TemporaryDirectory(dir=ROOT) as raw, mock.patch.object(
+            PANEL, "ROOT", Path(raw)
+        ):
+            layout = PANEL._create_semantic_runtime(
+                review_id=packet["review_id"],
+                audit_raw=audit_raw,
+                packet=packet,
+                templates=templates,
+            )
+            self.assertEqual(audit_raw, layout["audit"].read_bytes())
+            self.assertEqual(3, len(list(layout["ballots"].glob("*.template.json"))))
+            with self.assertRaisesRegex(
+                PANEL.PanelReviewError,
+                "canonical run already exists",
+            ):
+                PANEL._create_semantic_runtime(
+                    review_id=packet["review_id"],
+                    audit_raw=audit_raw,
+                    packet=packet,
+                    templates=templates,
+                )
+
     def test_semantic_currentness_ignores_applied_governance_only(self) -> None:
         packet = _semantic_packet()
         current = copy.deepcopy(_live_semantic_audit())
@@ -3427,10 +3644,6 @@ Route current work to `candidate-a`.
         root_candidate["governance_status"] = "resolved-by-current-entry"
         root_candidate["resolved"] = True
         root_candidate["unresolved"] = False
-        changed["root_content"]["semantic_advisories"]["lifecycle"]["status"] = (
-            "governance-only-test-state"
-        )
-
         reference_target = next(
             target
             for target in packet["semantic_targets"]
@@ -3479,8 +3692,8 @@ Route current work to `candidate-a`.
         current = copy.deepcopy(_live_semantic_audit())
 
         def change_detector(audit: dict) -> None:
-            audit["root_content"]["semantic_advisories"]["lifecycle"][
-                "detector_fingerprint"
+            audit["root_content"]["semantic_advisories"]["detector_contract"][
+                "value"
             ] = "0" * 64
 
         def change_candidate_set(audit: dict) -> None:
@@ -3582,9 +3795,7 @@ Route current work to `candidate-a`.
     def test_semantic_application_binds_exact_majority_to_current_entries(self) -> None:
         audit = copy.deepcopy(_live_semantic_audit())
         with _current_semantic_application_fixture(audit) as fixture:
-            result = PANEL.validate_semantic_decision_application(
-                fixture["application"], audit
-            )
+            result = PANEL.validate_semantic_decision_application(audit)
             self.assertEqual("current", result["status"])
             self.assertEqual(
                 len(fixture["decision"]["semantic_decisions"]),
@@ -3608,79 +3819,246 @@ Route current work to `candidate-a`.
             with self.assertRaisesRegex(
                 PANEL.PanelReviewError, "disposition mismatch"
             ):
+                PANEL.validate_semantic_decision_application(audit)
+
+    def test_historical_schema1_semantic_attestation_cannot_authorize_currentness(self) -> None:
+        config = AUDIT.load_yaml_file(
+            ROOT / "config/skill-content-exceptions.yaml"
+        )
+        self.assertNotIn("semantic_disposition_application", config)
+
+        with tempfile.TemporaryDirectory() as raw:
+            validation_root = Path(raw)
+            fixed = (
+                validation_root
+                / PANEL.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_PATH
+            )
+            fixed.parent.mkdir(parents=True)
+            _write_json(fixed, _historical_schema1_semantic_selector())
+            with mock.patch.object(PANEL, "ROOT", validation_root), self.assertRaisesRegex(
+                PANEL.PanelReviewError,
+                "compact schema 2",
+            ):
                 PANEL.validate_semantic_decision_application(
-                    fixture["application"], audit
+                    copy.deepcopy(_live_semantic_audit())
                 )
 
-    def test_checked_in_semantic_application_is_current(self) -> None:
-        application = _semantic_application()
-        result = PANEL.validate_semantic_decision_application(
-            application, copy.deepcopy(_live_semantic_audit())
+    def test_semantic_detector_v1_compatibility_is_one_exact_row(self) -> None:
+        historical = _historical_schema1_semantic_selector()
+        fixed = json.loads(
+            (
+                ROOT
+                / PANEL.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_PATH
+            ).read_text(encoding="utf-8")
         )
-        decision = json.loads(
-            (ROOT / application["decision"]["path"]).read_text(encoding="utf-8")
+        rows = PANEL.panel_contracts.semantic_detector_compatibility_rows()
+        self.assertEqual(1, len(rows))
+        row = rows[0]
+        expected_row = {
+            "compatibility_id": "semantic-015be10a-detector-contract-v1",
+            "review_id": "semantic-015be10a-final-prep",
+            "legacy_source_fingerprints": {
+                "reference_candidate_manifest": (
+                    "dd03e7b80fe661d9db293db3d725706cd44a43ef7820de90452e22120e67638b"
+                ),
+                "reference_detector_contract": (
+                    "bb6182108495b202f41d3ca0d73cabe8e62f7433b54fe233d61fc4dcb7d4c06e"
+                ),
+                "root_candidate_manifest": (
+                    "8af1bbe28abcec952f7e52704f377324778002e2343a108fa3e2d0533ec7c919"
+                ),
+                "root_detector_contract": (
+                    "1ed220a953b74fd6d4e4594660999b53064177c885841ca744ca1dd06caf146d"
+                ),
+            },
+            "current_source_fingerprints": {
+                "reference_candidate_manifest": (
+                    "dd03e7b80fe661d9db293db3d725706cd44a43ef7820de90452e22120e67638b"
+                ),
+                "reference_detector_contract": (
+                    "b30afbeafb68bb21ade261d0ada1698865ccef20327dac0fe8edca4138ed1fcb"
+                ),
+                "root_candidate_manifest": (
+                    "8af1bbe28abcec952f7e52704f377324778002e2343a108fa3e2d0533ec7c919"
+                ),
+                "root_detector_contract": (
+                    "1553aac6b6640674967a676ff192ea933bd788a27b197dd8d8f0619f895564f0"
+                ),
+            },
+            "legacy_detector_contracts": {
+                "root_detector_contract": (
+                    "1ed220a953b74fd6d4e4594660999b53064177c885841ca744ca1dd06caf146d"
+                ),
+                "reference_detector_contract": (
+                    "bb6182108495b202f41d3ca0d73cabe8e62f7433b54fe233d61fc4dcb7d4c06e"
+                ),
+            },
+            "current_detector_contracts": {
+                "root_detector_contract": (
+                    "1553aac6b6640674967a676ff192ea933bd788a27b197dd8d8f0619f895564f0"
+                ),
+                "reference_detector_contract": (
+                    "b30afbeafb68bb21ade261d0ada1698865ccef20327dac0fe8edca4138ed1fcb"
+                ),
+            },
+            "review_contract_fingerprint": (
+                "6f9618afabdc84a4e39a6cfe30b24b4b7b22f431f4d77a6337923af82f43069e"
+            ),
+            "target_count": 197,
+            "axis_counts": {"reference": 121, "root": 76},
+        }
+        self.assertEqual(expected_row, row)
+        current = copy.deepcopy(expected_row["current_source_fingerprints"])
+        mode = PANEL._semantic_source_fingerprint_selector_mode(
+            selector_fingerprints=historical["source_fingerprints"],
+            current_fingerprints=current,
+            review_id=historical["review_id"],
+            review_contract_fingerprint=historical[
+                "review_contract_fingerprint"
+            ],
+            target_count=historical["target_count"],
+            axis_counts=historical["axis_counts"],
         )
-        expected_target_count = len(decision["semantic_decisions"])
-        self.assertEqual("current", result["status"])
-        self.assertEqual(expected_target_count, result["target_count"])
-        self.assertEqual(expected_target_count, result["applied_count"])
-        self.assertEqual(0, result["completed_rewrite_count"])
+        self.assertEqual("compatibility", mode)
 
-    def test_semantic_application_rejects_decision_path_and_sha_tampering(self) -> None:
+        self.assertEqual(2, fixed["schema_version"])
+        self.assertEqual(
+            {"reference_detector_contract", "root_detector_contract"},
+            set(fixed["detector_contract_fingerprints"]),
+        )
+        live_audit = copy.deepcopy(_live_semantic_audit())
+        root_semantic, reference_semantic = PANEL._semantic_audit_sections(
+            live_audit
+        )
+        live_fingerprints = PANEL._semantic_source_fingerprints(
+            live_audit,
+            root_semantic=root_semantic,
+            reference_semantic=reference_semantic,
+        )
+        current_mode = PANEL._semantic_source_fingerprint_selector_mode(
+            selector_fingerprints=fixed["detector_contract_fingerprints"],
+            current_fingerprints=live_fingerprints,
+            review_id=fixed["review_id"],
+            review_contract_fingerprint=fixed[
+                "review_contract_fingerprint"
+            ],
+            target_count=len(fixed["findings"]),
+            axis_counts={
+                axis: sum(item["axis"] == axis for item in fixed["findings"])
+                for axis in sorted(PANEL.SEMANTIC_AXES)
+            },
+        )
+        self.assertEqual("compact-v2", current_mode)
+
+        direct = PANEL._semantic_source_fingerprint_selector_mode(
+            selector_fingerprints=current,
+            current_fingerprints=current,
+            review_id="future-direct-v1",
+            review_contract_fingerprint="0" * 64,
+            target_count=197,
+            axis_counts={"reference": 121, "root": 76},
+        )
+        self.assertEqual("direct-v1", direct)
+
+        mutations = []
+        arbitrary = copy.deepcopy(historical["source_fingerprints"])
+        arbitrary["root_detector_contract"] = "a" * 64
+        mutations.append(arbitrary)
+        mixed = copy.deepcopy(historical["source_fingerprints"])
+        mixed["root_detector_contract"] = current["root_detector_contract"]
+        mutations.append(mixed)
+        nibble = copy.deepcopy(historical["source_fingerprints"])
+        nibble["reference_detector_contract"] = (
+            nibble["reference_detector_contract"][:-1] + "0"
+        )
+        mutations.append(nibble)
+        legacy9 = {
+            key: "a" * 64
+            for key in PANEL.panel_contracts.SEMANTIC_DISPOSITION_LEGACY_SOURCE_FINGERPRINT_KEYS
+        }
+        mutations.append(legacy9)
+        for selector in mutations:
+            self.assertIsNone(
+                PANEL._semantic_source_fingerprint_selector_mode(
+                    selector_fingerprints=selector,
+                    current_fingerprints=current,
+                    review_id=historical["review_id"],
+                    review_contract_fingerprint=historical[
+                        "review_contract_fingerprint"
+                    ],
+                    target_count=historical["target_count"],
+                    axis_counts=historical["axis_counts"],
+                )
+            )
+
+        candidate_mismatch = copy.deepcopy(current)
+        candidate_mismatch["root_candidate_manifest"] = "f" * 64
+        self.assertIsNone(
+            PANEL._semantic_source_fingerprint_selector_mode(
+                selector_fingerprints=historical["source_fingerprints"],
+                current_fingerprints=candidate_mismatch,
+                review_id=historical["review_id"],
+                review_contract_fingerprint=historical[
+                    "review_contract_fingerprint"
+                ],
+                target_count=historical["target_count"],
+                axis_counts=historical["axis_counts"],
+            )
+        )
+
+        future = copy.deepcopy(current)
+        future["root_detector_contract"] = "f" * 64
+        self.assertIsNone(
+            PANEL._semantic_source_fingerprint_selector_mode(
+                selector_fingerprints=historical["source_fingerprints"],
+                current_fingerprints=future,
+                review_id=historical["review_id"],
+                review_contract_fingerprint=historical[
+                    "review_contract_fingerprint"
+                ],
+                target_count=historical["target_count"],
+                axis_counts=historical["axis_counts"],
+            )
+        )
+
+    def test_semantic_application_uses_only_the_safe_canonical_fixed_path(self) -> None:
         audit = copy.deepcopy(_live_semantic_audit())
-        application = _semantic_application()
-        tampered_sha = copy.deepcopy(application)
-        tampered_sha["decision"]["sha256"] = "0" * 64
-        with self.assertRaisesRegex(PANEL.PanelReviewError, "sha256 is stale"):
-            PANEL.validate_semantic_decision_application(tampered_sha, audit)
+        with tempfile.TemporaryDirectory() as raw:
+            validation_root = Path(raw)
+            with mock.patch.object(PANEL, "ROOT", validation_root):
+                with self.assertRaisesRegex(PANEL.PanelReviewError, "invalid"):
+                    PANEL.validate_semantic_decision_application(audit)
 
-        tampered_path = copy.deepcopy(application)
-        tampered_path["decision"]["path"] = (
-            "evals/expert-panel/semantic-disposition-panel-2026-07-16-r1/packet.json"
-        )
-        with self.assertRaisesRegex(PANEL.PanelReviewError, "canonical panel decision"):
-            PANEL.validate_semantic_decision_application(tampered_path, audit)
-
-        escaping_path = copy.deepcopy(application)
-        escaping_path["decision"]["path"] = "../decision.json"
-        with self.assertRaisesRegex(PANEL.PanelReviewError, "canonical repository-relative"):
-            PANEL.validate_semantic_decision_application(escaping_path, audit)
+            fixed = (
+                validation_root
+                / PANEL.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_PATH
+            )
+            fixed.parent.mkdir(parents=True)
+            fixed.symlink_to(validation_root / "outside.json")
+            with mock.patch.object(PANEL, "ROOT", validation_root):
+                with self.assertRaisesRegex(PANEL.PanelReviewError, "invalid"):
+                    PANEL.validate_semantic_decision_application(audit)
 
     def test_auditor_projects_one_stable_application_error_to_formal_gate_only(
         self,
     ) -> None:
         audit = copy.deepcopy(_live_semantic_audit())
         with _current_semantic_application_fixture(audit) as fixture:
-            current = PANEL.validate_semantic_decision_application(
-                fixture["application"], audit
-            )
+            current = PANEL.validate_semantic_decision_application(audit)
             self.assertEqual("current", current["status"])
             self.assertEqual(
                 len(fixture["decision"]["semantic_decisions"]),
                 current["target_count"],
             )
 
-            invalid_application = copy.deepcopy(fixture["application"])
-            invalid_application["decision"]["sha256"] = "0" * 64
-            source = (ROOT / "config/skill-content-exceptions.yaml").read_text(
-                encoding="utf-8"
+            fixed = (
+                fixture["root"]
+                / PANEL.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_PATH
             )
-            changed = _replace_semantic_application_source(
-                source, invalid_application
+            fixed.unlink()
+            root, reference, report = (
+                AUDIT._collect_semantic_content_with_application()
             )
-            with tempfile.TemporaryDirectory(
-                dir=AUDIT.ROOT / "config"
-            ) as raw_config_root:
-                config_root = Path(raw_config_root)
-                config_path = config_root / "skill-content-exceptions.yaml"
-                config_path.write_text(changed, encoding="utf-8")
-                with mock.patch.object(
-                    AUDIT, "SKILL_CONTENT_EXCEPTIONS_FILE", config_path
-                ):
-                    root, reference, report = (
-                        AUDIT._collect_semantic_content_with_application()
-                    )
-            self.assertFalse(config_root.exists())
             self.assertEqual("invalid", report["status"])
             self.assertEqual(
                 AUDIT.SEMANTIC_DISPOSITION_APPLICATION_ERROR_ID,
@@ -3716,7 +4094,7 @@ Route current work to `candidate-a`.
                 gate_status["formal_release"]["blockers"],
             )
 
-    def test_semantic_rewrite_application_requires_candidate_and_entry_removal(self) -> None:
+    def test_reviewed_rewrite_removal_is_self_contained_but_entry_retention_fails(self) -> None:
         audit = copy.deepcopy(_live_semantic_audit())
         candidate_id = audit["root_content"]["semantic_advisories"][
             "disposition_contract"
@@ -3731,9 +4109,7 @@ Route current work to `candidate-a`.
                 if row["target_id"] == target_id
             )
             with self.assertRaisesRegex(PANEL.PanelReviewError, "remains current"):
-                PANEL.validate_semantic_decision_application(
-                    fixture["application"], audit
-                )
+                PANEL.validate_semantic_decision_application(audit)
 
             semantic = audit[f"{target['axis']}_content"]["semantic_advisories"]
             original_entry = next(
@@ -3751,21 +4127,17 @@ Route current work to `candidate-a`.
                 for row in semantic["disposition_contract"]["entries"]
                 if row["candidate_id"] != target["candidate_id"]
             ]
-            result = PANEL.validate_semantic_decision_application(
-                fixture["application"], audit
-            )
-            self.assertEqual(1, result["completed_rewrite_count"])
+            PANEL.validate_semantic_decision_application(audit)
 
             semantic["disposition_contract"]["entries"].append(original_entry)
             semantic["disposition_contract"]["entries"].sort(
                 key=lambda row: row["candidate_id"]
             )
             with self.assertRaisesRegex(
-                PANEL.PanelReviewError, "retains a disposition entry"
+                PANEL.PanelReviewError,
+                "rewrite target remains current",
             ):
-                PANEL.validate_semantic_decision_application(
-                    fixture["application"], audit
-                )
+                PANEL.validate_semantic_decision_application(audit)
 
     def test_semantic_ballot_is_full_coverage_no_abstention_and_kind_specific(self) -> None:
         packet = _semantic_packet()
@@ -3794,7 +4166,7 @@ Route current work to `candidate-a`.
                 PANEL.validate_ballot(packet, abstain, packet_sha256=digest)
 
             stale = copy.deepcopy(ballot)
-            stale["source_fingerprints"]["root_context"] = "0" * 64
+            stale["source_fingerprints"]["root_candidate_manifest"] = "0" * 64
             with self.assertRaisesRegex(PANEL.PanelReviewError, "stale"):
                 PANEL.validate_ballot(packet, stale, packet_sha256=digest)
 

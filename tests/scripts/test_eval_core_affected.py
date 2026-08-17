@@ -392,10 +392,76 @@ class CoreAffectedTests(unittest.TestCase):
             [producer], [authoring, formal], formal_outcomes=[formal["id"]]
         )
 
-        report = EVALUATOR.evaluate_affected(root, contract, [producer["id"]])
+        with mock.patch.object(
+            EVALUATOR,
+            "input_tree_digest",
+            wraps=EVALUATOR.input_tree_digest,
+        ) as digest:
+            report = EVALUATOR.evaluate_affected(
+                root, contract, [producer["id"]]
+            )
 
         self.assertEqual("pass", report["status"])
         self.assertEqual([authoring["id"]], [row["id"] for row in report["outcomes"]])
+        self.assertEqual(2, digest.call_count)
+
+    def test_affected_source_mutation_is_deferred_and_fails_all_executed_producers(
+        self,
+    ) -> None:
+        temporary, root = self._root()
+        self.addCleanup(temporary.cleanup)
+        mutate = self._script(
+            root,
+            "affected-mutate",
+            "from pathlib import Path\n"
+            "Path('src/mutated.txt').write_text('changed')\n",
+        )
+        successor = self._script(
+            root,
+            "affected-successor",
+            "from pathlib import Path\n"
+            "Path('reports/successor-ran').write_text('yes')\n",
+        )
+        producers = [
+            self._producer("mutate", mutate),
+            self._producer("successor", successor, depends_on=["mutate"]),
+        ]
+        contract = self._contract(
+            producers,
+            [
+                {
+                    "id": "mutate-pass",
+                    "producer": "mutate",
+                    "predicates": [PROCESS_PASS],
+                },
+                {
+                    "id": "successor-pass",
+                    "producer": "successor",
+                    "predicates": [PROCESS_PASS],
+                },
+            ],
+        )
+
+        with mock.patch.object(
+            EVALUATOR,
+            "input_tree_digest",
+            wraps=EVALUATOR.input_tree_digest,
+        ) as digest:
+            report = EVALUATOR.evaluate_affected(
+                root,
+                contract,
+                [producer["id"] for producer in producers],
+            )
+
+        self.assertEqual(2, digest.call_count)
+        self.assertEqual("fail", report["status"])
+        self.assertEqual(2, report["command_execution_count"])
+        self.assertTrue((root / "reports/successor-ran").is_file())
+        self.assertFalse(report["input_tree"]["unchanged"])
+        for producer in report["producers"]:
+            self.assertEqual("fail", producer["status"])
+            self.assertFalse(producer["source_unchanged"])
+            self.assertIn("source-tree-mutated", producer["failure_reason_codes"])
 
     def test_affected_explain_never_executes_or_writes_reports(self) -> None:
         temporary, root = self._root()
@@ -503,7 +569,13 @@ class CoreAffectedTests(unittest.TestCase):
         expected = {
             "skill": {"audit-skill-content", "validate-reference-content"},
             "reference": {"audit-skill-content", "validate-reference-content"},
-            "docs": {"validate-docs-consistency"},
+            "docs": {
+                "build-recommended",
+                "build-full",
+                "build-dev",
+                "eval-rendered-context",
+                "validate-docs-consistency",
+            },
             "profile": {"validate-agent-profiles", "build-recommended"},
             "quickstart": set(),
             "codegen": set(),

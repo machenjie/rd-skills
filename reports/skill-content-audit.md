@@ -1750,7 +1750,7 @@ _none_
 
 ### 8.5 Semantic Advisories
 
-> These rows are deterministic governance candidates. Strict mode blocks the unresolved families named by the schema-v5 contract.
+> These rows are deterministic governance candidates. Strict mode blocks the unresolved families named by the schema-v6 contract.
 
 | Finding | Raw | Detector-down | Untriaged | Rewrite | Resolved | Unresolved | P0/P1/P2 unresolved |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
@@ -1764,7 +1764,7 @@ _none_
 | `exact_normalized_duplicate_block` | 0 | 0 | 0 |
 | `templated_block_candidate` | 5 | 30 | 578 |
 
-Semantic disposition contract: schema=2; source=`config/skill-content-exceptions.yaml`; evaluated_on=2026-08-09; configured=124; applied=124; errors=0.
+Semantic disposition contract: schema=2; source=`config/skill-content-exceptions.yaml`; configured=124; applied=124; errors=0.
 
 > Group candidate IDs use the literal scope 'group'; evidence.fingerprint must match sorted path/owner membership and evidence.content_fingerprint must match the sorted path/owner/normalized-body multiset.
 

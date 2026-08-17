@@ -5,6 +5,7 @@ import importlib.util
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -60,6 +61,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
         cls.adaptive_testing_cases = document["adaptive_testing_cases"]
         cls.review_discipline_cases = document["review_discipline_cases"]
         cls.task_focus_cases = document["task_focus_cases"]
+        cls.orchestration_cases = document["orchestration_cases"]
         cls.completion_state_cases = document["completion_state_cases"]
         cls.external_read_cases = document["external_read_cases"]
         cls.professional, cls.layer3 = EVAL._skill_registries()
@@ -557,6 +559,672 @@ class LightweightUtilityContractTests(unittest.TestCase):
         self.assertEqual(
             {"finding", "same-pattern", "repair", "review-level", "cost"},
             {result["scenario"] for result in results},
+        )
+
+    def test_orchestration_dedup_structural_positive_and_negative_controls(self) -> None:
+        results, errors = EVAL._orchestration_fixture_results(
+            self.orchestration_cases
+        )
+        self.assertEqual([], errors)
+        self.assertTrue(all(result["matches_expected"] for result in results))
+        result_by_id = {result["id"]: result for result in results}
+        semantic_mutations = {
+            "duplicate-same-scope-analysis": "analysis-decision-invalidation",
+            "review-every-edit-task": "review-boundary-frequency",
+            "skip-final-review-boundary": "completion-current-evidence",
+            "extra-final-review-after-covering-rereview": "obligation-subsumption",
+            "rerun-valid-validation-without-invalidation": "validation-evidence-reuse",
+            "reuse-validation-after-material-edit": "review-validation-binding",
+            "repair-without-fresh-validation": "review-validation-binding",
+            "repair-without-rereview": "completion-current-evidence",
+        }
+        for case_id, expected_error in semantic_mutations.items():
+            with self.subTest(semantic_mutation=case_id):
+                result = result_by_id[case_id]
+                self.assertFalse(result["actual_valid"])
+                self.assertTrue(result["matches_expected"])
+                self.assertTrue(
+                    any(expected_error in error for error in result["errors"]),
+                    result["errors"],
+                )
+        fixture_by_id = {case["id"]: case for case in self.orchestration_cases}
+        self.assertTrue(any(
+            "finding-identity" in error
+            for error in EVAL._orchestration_case_errors(
+                fixture_by_id["dedup-reject-reused-finding-id-after-repair"]
+            )
+        ))
+        self.assertEqual(
+            [],
+            EVAL._orchestration_case_errors(
+                fixture_by_id["dedup-terminal-blocked-review"]
+            ),
+        )
+        blocked_scope_probes = [
+            ("reviewed_scope", []),
+            ("unreviewed_scope", []),
+            ("reviewed_scope", [None]),
+            ("unreviewed_scope", [None]),
+            ("reviewed_scope", [""]),
+            ("unreviewed_scope", [""]),
+            ("reviewed_scope", ["   "]),
+            ("unreviewed_scope", ["   "]),
+            ("reviewed_scope", [1]),
+            ("unreviewed_scope", [1]),
+        ]
+        for case_id, expected_error in (
+            ("dedup-terminal-blocked-review", "review-blocked-scope"),
+            ("dedup-fail-fast-blocked-scope", "review-fail-fast"),
+        ):
+            self.assertEqual(
+                [], EVAL._orchestration_case_errors(fixture_by_id[case_id])
+            )
+            for field, value in blocked_scope_probes:
+                malformed_scope = copy.deepcopy(fixture_by_id[case_id])
+                malformed_scope["events"][-1][field] = value
+                with self.subTest(case=case_id, field=field, value=value):
+                    self.assertTrue(any(
+                        expected_error in error
+                        for error in EVAL._orchestration_case_errors(malformed_scope)
+                    ))
+        self.assertTrue(any(
+            "orchestration-terminal" in error
+            for error in EVAL._orchestration_case_errors(
+                fixture_by_id["dedup-reject-complete-after-blocked-review"]
+            )
+        ))
+
+        valid = {
+            "id": "combined-multi-task",
+            "tasks": [
+                {"id": "A", "primary_skill": "backend-change-builder", "layer3_skills": [], "review_skills": ["ai-code-review-refactor"]},
+                {"id": "B", "primary_skill": "data-middleware-change-builder", "layer3_skills": [], "review_skills": ["quality-test-gate"]},
+                {"id": "C", "primary_skill": "security-privacy-gate", "layer3_skills": [], "review_skills": ["security-privacy-gate"]},
+            ],
+            "review_boundary": {
+                "effective_level": "L3",
+                "primary_review_skill": "ai-code-review-refactor",
+                "required_review_skills": [
+                    "ai-code-review-refactor",
+                    "quality-test-gate",
+                    "security-privacy-gate",
+                ],
+                "specialist_obligations": ["security"],
+                "covered_task_ids": ["A", "B", "C"],
+                "required_changed_scope": ["A", "B", "C"],
+                "professional_risk_dimensions": ["correctness", "data", "security"],
+                "required_validation_evidence_binding": {
+                    "generation": "current",
+                    "coverage": "covered-task-ids",
+                },
+            },
+            "events": [
+                {"action": "analysis", "analysis_kind": "initial"},
+                {"action": "edit", "task_id": "A", "generation": 1},
+                {"action": "validate", "task_id": "A", "generation": 1, "evidence_id": "v-A"},
+                {"action": "edit", "task_id": "B", "generation": 1},
+                {"action": "validate", "task_id": "B", "generation": 1, "evidence_id": "v-B"},
+                {"action": "edit", "task_id": "C", "generation": 1},
+                {"action": "validate", "task_id": "C", "generation": 1, "evidence_id": "v-C"},
+                {
+                    "action": "review",
+                    "covered_task_ids": ["A", "B", "C"],
+                    "effective_level": "L3",
+                    "review_skills": [
+                        "ai-code-review-refactor",
+                        "quality-test-gate",
+                        "security-privacy-gate",
+                    ],
+                    "layer3_skills": [],
+                    "specialist_obligations": ["security"],
+                    "risk_dimensions": ["correctness", "data", "security"],
+                    "validation_evidence_ids": ["v-A", "v-B", "v-C"],
+                    "independent": True,
+                    "verdict": "pass",
+                },
+                {"action": "complete"},
+            ],
+        }
+        self.assertEqual([], EVAL._orchestration_case_errors(valid))
+
+        boundary_mutations = {
+            "effective_level": "L0",
+            "primary_review_skill": [],
+            "required_review_skills": [],
+            "specialist_obligations": "security",
+            "covered_task_ids": [],
+            "required_changed_scope": [],
+            "professional_risk_dimensions": "correctness",
+            "required_validation_evidence_binding": {
+                "generation": "previous",
+                "coverage": "covered-task-ids",
+            },
+        }
+        for field, invalid_value in boundary_mutations.items():
+            for operation in ("remove", "mutate"):
+                probe = copy.deepcopy(valid)
+                if operation == "remove":
+                    del probe["review_boundary"][field]
+                else:
+                    probe["review_boundary"][field] = invalid_value
+                with self.subTest(boundary_field=field, operation=operation):
+                    self.assertTrue(EVAL._orchestration_case_errors(probe))
+
+        for category in EVAL.FINDING_RELATION_MODEL["material_current_task_criteria"]:
+            unresolved = copy.deepcopy(valid)
+            unresolved["events"].insert(
+                -1,
+                {"action": "finding", "finding_id": f"F-{category}", "task_id": "C", "relation": "current-task", "category": category, "repair_required": True},
+            )
+            with self.subTest(material_finding=category):
+                self.assertTrue(any(
+                    "material-finding-repair" in error
+                    for error in EVAL._orchestration_case_errors(unresolved)
+                ))
+
+        scoped_repair = copy.deepcopy(next(
+            case for case in self.orchestration_cases
+            if case["id"] == "dedup-scoped-repair-subsumes-final"
+        ))
+        finding_event = next(
+            event for event in scoped_repair["events"]
+            if event["action"] == "finding"
+        )
+        repair_event = next(
+            event for event in scoped_repair["events"]
+            if event["action"] == "repair"
+        )
+        self.assertEqual(
+            {finding_event["finding_id"]: finding_event["relation"]},
+            repair_event["finding_relations"],
+        )
+        for relation, category in (
+            ("adjacent", "adjacent-issue"),
+            ("scope-blocker", "acceptance"),
+        ):
+            invalid_repair = copy.deepcopy(scoped_repair)
+            invalid_finding = next(
+                event for event in invalid_repair["events"]
+                if event["action"] == "finding"
+            )
+            invalid_repair_event = next(
+                event for event in invalid_repair["events"]
+                if event["action"] == "repair"
+            )
+            invalid_finding["relation"] = relation
+            invalid_finding["category"] = category
+            invalid_finding["repair_required"] = False
+            invalid_repair_event["finding_relations"] = {
+                invalid_finding["finding_id"]: relation
+            }
+            with self.subTest(repair_finding_relation=relation):
+                self.assertTrue(any(
+                    "repair-finding-relation" in error
+                    for error in EVAL._orchestration_case_errors(invalid_repair)
+                ))
+        for field in ("specialist_obligations", "risk_dimensions"):
+            missing_obligation = copy.deepcopy(scoped_repair)
+            missing_obligation["events"][-2][field] = []
+            with self.subTest(scoped_rereview=field):
+                self.assertTrue(any(
+                    "repair-review-obligation-preservation" in error
+                    for error in EVAL._orchestration_case_errors(missing_obligation)
+                ))
+
+        delta_case = copy.deepcopy(next(
+            case for case in self.orchestration_cases
+            if case["id"] == "dedup-protected-delta-preserves-skill"
+        ))
+        delta_event = next(
+            event for event in delta_case["events"]
+            if event.get("analysis_kind") == "delta"
+        )
+        self.assertEqual("preserved", delta_event["delta_impact"]["unlisted"])
+        self.assertEqual(
+            ["A", "B"], delta_event["delta_impact"]["affected"]["tasks"]
+        )
+
+        omitted = copy.deepcopy(delta_case)
+        next(
+            event for event in omitted["events"]
+            if event.get("analysis_kind") == "delta"
+        )["delta_impact"]["affected"]["tasks"] = ["A"]
+        self.assertTrue(any(
+            "delta-impact-exact" in error
+            for error in EVAL._orchestration_case_errors(omitted)
+        ))
+
+        for update, affected_field in (
+            ("affected-brief-sections", "brief"),
+            ("affected-tasks", "tasks"),
+            ("affected-dependencies", "dependencies"),
+            ("affected-review-boundaries", "reviews"),
+        ):
+            coupled_removal = copy.deepcopy(delta_case)
+            coupled_delta = next(
+                event for event in coupled_removal["events"]
+                if event.get("analysis_kind") == "delta"
+            )
+            coupled_delta["transitive_updates"].remove(update)
+            coupled_delta["delta_impact"]["affected"][affected_field] = []
+            with self.subTest(coupled_removal=update):
+                self.assertTrue(any(
+                    "delta-impact-exact" in error
+                    for error in EVAL._orchestration_case_errors(coupled_removal)
+                ))
+
+        rerouted = copy.deepcopy(delta_case)
+        rerouted_delta = next(
+            event for event in rerouted["events"]
+            if event.get("analysis_kind") == "delta"
+        )
+        rerouted_delta["work_type_changed"] = True
+        rerouted_delta["skill_assignments"]["B"] = (
+            "data-middleware-change-builder"
+        )
+        rerouted_delta["delta_impact"]["affected"]["skills"] = ["B"]
+        self.assertEqual([], EVAL._orchestration_case_errors(rerouted))
+
+        coupled_skill_removal = copy.deepcopy(rerouted)
+        coupled_skill_delta = next(
+            event for event in coupled_skill_removal["events"]
+            if event.get("analysis_kind") == "delta"
+        )
+        coupled_skill_delta["transitive_updates"].remove(
+            "affected-skill-assignments"
+        )
+        coupled_skill_delta["delta_impact"]["affected"]["skills"] = []
+        self.assertTrue(any(
+            "delta-impact-exact" in error
+            for error in EVAL._orchestration_case_errors(coupled_skill_removal)
+        ))
+
+        false_fanout = copy.deepcopy(delta_case)
+        next(task for task in false_fanout["tasks"] if task["id"] == "B")[
+            "dependencies"
+        ] = []
+        self.assertTrue(any(
+            "delta-impact-exact" in error
+            for error in EVAL._orchestration_case_errors(false_fanout)
+        ))
+
+        unproved_empty = copy.deepcopy(delta_case)
+        delta_index = next(
+            index for index, event in enumerate(unproved_empty["events"])
+            if event.get("analysis_kind") == "delta"
+        )
+        unproved_empty["events"] = [
+            event
+            for index, event in enumerate(unproved_empty["events"])
+            if not (
+                index < delta_index
+                and event.get("action") in {"edit", "validate"}
+            )
+        ]
+        next(
+            event for event in unproved_empty["events"]
+            if event.get("analysis_kind") == "delta"
+        )["delta_impact"]["affected"]["tasks"] = []
+        self.assertTrue(any(
+            "delta-impact-proof-limit" in error
+            for error in EVAL._orchestration_case_errors(unproved_empty)
+        ))
+
+        finding_index = next(
+            index for index, event in enumerate(scoped_repair["events"])
+            if event["action"] == "finding"
+        )
+        repair_index = next(
+            index for index, event in enumerate(scoped_repair["events"])
+            if event["action"] == "repair"
+        )
+        finding_probes = {
+            "material-finding-task-missing": ("task_id", None, "material-finding-task"),
+            "material-finding-task-unknown": ("task_id", "UNKNOWN", "material-finding-task"),
+            "finding-relation": ("relation", "unknown", "finding-relation"),
+            "finding-category": ("category", "unknown", "finding-category"),
+            "finding-identity": ("finding_id", None, "finding-identity"),
+        }
+        for name, (field, value, expected) in finding_probes.items():
+            probe = copy.deepcopy(scoped_repair)
+            if value is None:
+                probe["events"][finding_index].pop(field, None)
+            else:
+                probe["events"][finding_index][field] = value
+            with self.subTest(finding_probe=name):
+                self.assertTrue(any(
+                    expected in error for error in EVAL._orchestration_case_errors(probe)
+                ))
+
+        unknown_verdict = copy.deepcopy(valid)
+        unknown_verdict["events"][7]["verdict"] = "approved"
+        self.assertTrue(any(
+            "review-verdict" in error
+            for error in EVAL._orchestration_case_errors(unknown_verdict)
+        ))
+
+        unresolved_identity = copy.deepcopy(scoped_repair)
+        unresolved_identity["events"][repair_index]["resolved_finding_ids"] = []
+        self.assertTrue(any(
+            "repair-finding-identity" in error
+            for error in EVAL._orchestration_case_errors(unresolved_identity)
+        ))
+
+        for field in ("affected_specialist_obligations", "affected_risk_dimensions"):
+            underdeclared = copy.deepcopy(scoped_repair)
+            underdeclared["events"][repair_index][field] = []
+            with self.subTest(derived_repair_obligation=field):
+                self.assertTrue(any(
+                    "repair-review-obligation-binding" in error
+                    for error in EVAL._orchestration_case_errors(underdeclared)
+                ))
+
+        skill_probes = {
+            "task-skill-registry": lambda case: case["tasks"][0].update(primary_skill="unknown-skill"),
+            "task-skill-role": lambda case: case["tasks"][0].update(primary_skill="ai-code-review-refactor"),
+            "review-skill-routing": lambda case: case["tasks"][1].update(review_skills=["data-middleware-change-builder"]),
+            "task-layer3-registry": lambda case: case["tasks"][0].update(layer3_skills=["unknown-layer3"]),
+            "task-layer3-routing": lambda case: case["tasks"][0].update(layer3_skills=["targeted-validation-selection"]),
+        }
+        for expected, mutate in skill_probes.items():
+            probe = copy.deepcopy(valid)
+            mutate(probe)
+            with self.subTest(skill_probe=expected):
+                self.assertTrue(any(
+                    expected in error for error in EVAL._orchestration_case_errors(probe)
+                ))
+
+        merged_task_primary = copy.deepcopy(valid)
+        merged_task_primary["tasks"][0]["primary_skill"] = [
+            "backend-change-builder", "security-privacy-gate"
+        ]
+        self.assertTrue(any(
+            "task-primary-skill" in error
+            for error in EVAL._orchestration_case_errors(merged_task_primary)
+        ))
+
+        merged_review_primary = copy.deepcopy(valid)
+        merged_review_primary["review_boundary"]["primary_review_skill"] = [
+            "ai-code-review-refactor", "quality-test-gate"
+        ]
+        self.assertTrue(any(
+            "review-boundary-primary-skill" in error
+            for error in EVAL._orchestration_case_errors(merged_review_primary)
+        ))
+
+        too_many_layer3 = copy.deepcopy(valid)
+        too_many_layer3["tasks"][0]["layer3_skills"] = [
+            "minimal-correct-implementation", "regression-testing",
+            "logging-error-handling", "observability",
+        ]
+        self.assertTrue(any(
+            "task-layer3-routing" in error
+            for error in EVAL._orchestration_case_errors(too_many_layer3)
+        ))
+
+        missing_layer3 = copy.deepcopy(valid)
+        missing_layer3["tasks"][0]["layer3_skills"] = ["minimal-correct-implementation"]
+        self.assertTrue(any(
+            "review-layer3-preservation" in error
+            for error in EVAL._orchestration_case_errors(missing_layer3)
+        ))
+
+        altered_layer3 = copy.deepcopy(self.layer3)
+        altered_layer3["minimal-correct-implementation"] = copy.deepcopy(
+            altered_layer3["minimal-correct-implementation"]
+        )
+        altered_layer3["minimal-correct-implementation"]["role_support"] = [
+            "analysis-agent", "review-agent"
+        ]
+        unsupported_layer3 = copy.deepcopy(valid)
+        unsupported_layer3["tasks"][0]["layer3_skills"] = [
+            "minimal-correct-implementation"
+        ]
+        with patch.object(
+            EVAL,
+            "_skill_registries",
+            return_value=(self.professional, altered_layer3),
+        ):
+            self.assertTrue(any(
+                "task-layer3-role" in error
+                for error in EVAL._orchestration_case_errors(unsupported_layer3)
+            ))
+
+        manifests, _manifest_errors = EVAL._load_build_manifests()
+        undelivered = copy.deepcopy(manifests)
+        undelivered["recommended"] = copy.deepcopy(undelivered["recommended"])
+        undelivered["recommended"]["professional_skills"].remove("backend-change-builder")
+        with patch.object(EVAL, "_load_build_manifests", return_value=(undelivered, [])):
+            self.assertTrue(any(
+                "skill-built-delivery" in error
+                for error in EVAL._orchestration_case_errors(copy.deepcopy(valid))
+            ))
+
+        missing_skill = copy.deepcopy(valid)
+        missing_skill["events"][7]["review_skills"].remove("security-privacy-gate")
+        self.assertTrue(
+            any(
+                "review-skill-preservation" in error
+                for error in EVAL._orchestration_case_errors(missing_skill)
+            )
+        )
+
+    def test_orchestration_semantic_trace_is_bounded_reducer_state(self) -> None:
+        results, errors = EVAL._orchestration_fixture_results(
+            self.orchestration_cases
+        )
+        self.assertEqual([], errors)
+        by_id = {result["id"]: result for result in results}
+
+        combined = by_id["dedup-combined-multi-task"]["semantic_trace"]
+        self.assertEqual("analyzed", combined["work_kind"])
+        self.assertEqual(
+            {"count": 1, "kinds": ["initial"]}, combined["analysis"]
+        )
+        self.assertEqual(
+            ["A", "B", "C"],
+            [task["task_id"] for task in combined["task_dispatch"]],
+        )
+        self.assertTrue(
+            all(task["primary_skill"] for task in combined["task_dispatch"])
+        )
+        self.assertTrue(
+            all("layer3_skills" in task for task in combined["task_dispatch"])
+        )
+        self.assertEqual(3, combined["validation"]["fresh_count"])
+        self.assertEqual(3, combined["validation"]["reuse_count"])
+        self.assertEqual(0, combined["validation"]["rerun_count"])
+        self.assertEqual(1, combined["review"]["count"])
+        self.assertEqual("complete", combined["completion"]["state"])
+        self.assertTrue(combined["completion"]["current_evidence"])
+        self.assertEqual(
+            ["A", "B", "C"],
+            combined["completion"]["current_validation_task_ids"],
+        )
+        self.assertEqual(
+            ["A", "B", "C"],
+            combined["completion"]["current_review_task_ids"],
+        )
+        self.assertEqual("serialized-events", combined["parallel_isolation"])
+        self.assertEqual(
+            "deterministic-structural-fixture-only", combined["proof_limit"]
+        )
+
+        direct = by_id["dedup-direct-work-zero-analysis"]["semantic_trace"]
+        self.assertEqual("direct", direct["work_kind"])
+        self.assertEqual({"count": 0, "kinds": []}, direct["analysis"])
+        self.assertTrue(direct["completion"]["current_evidence"])
+
+        positive_ids = {
+            case["id"] for case in self.orchestration_cases if case["expected_valid"]
+        }
+        for case_id in positive_ids:
+            trace = by_id[case_id]["semantic_trace"]
+            with self.subTest(initial_analysis=case_id):
+                if trace["work_kind"] == "analyzed":
+                    self.assertEqual(1, trace["analysis"]["kinds"].count("initial"))
+
+        reuse = by_id["dedup-reuse-fresh-validation"]["semantic_trace"]
+        self.assertEqual(["v-A"], reuse["validation"]["reused_evidence_ids"])
+        self.assertEqual(0, reuse["validation"]["rerun_count"])
+
+        routed = by_id["duplicate-same-scope-analysis"]["semantic_trace"]
+        self.assertEqual(
+            ["minimal-correct-implementation"],
+            routed["task_dispatch"][0]["layer3_skills"],
+        )
+
+        repair = by_id["dedup-scoped-repair-subsumes-final"]["semantic_trace"]
+        self.assertEqual(
+            {
+                "repair_count": 1,
+                "affected_task_ids": ["C"],
+                "invalidated_claims": ["review:C", "validation:C"],
+                "fresh_validation_task_ids": ["C"],
+                "rereviewed_task_ids": ["C"],
+            },
+            repair["repair_flow"],
+        )
+        self.assertTrue(repair["completion"]["current_evidence"])
+        self.assertEqual(
+            ["A", "B", "C"],
+            [
+                item["task_id"]
+                for item in repair["completion"]["current_validation_evidence"]
+            ],
+        )
+        self.assertEqual(
+            ["A", "B", "C"],
+            [
+                item["task_id"]
+                for item in repair["completion"]["current_review_evidence"]
+            ],
+        )
+
+        justified_rerun = copy.deepcopy(
+            next(
+                case
+                for case in self.orchestration_cases
+                if case["id"] == "dedup-reject-mechanical-revalidation"
+            )
+        )
+        justified_rerun["id"] = "justified-validation-rerun"
+        review = next(
+            event for event in justified_rerun["events"] if event["action"] == "review"
+        )
+        review["reproduction_triggers"] = ["concrete-reviewer-doubt"]
+        reducer_errors, justified_trace = EVAL._orchestration_case_result(
+            justified_rerun
+        )
+        self.assertEqual([], reducer_errors)
+        self.assertEqual(1, justified_trace["validation"]["rerun_count"])
+        self.assertEqual(0, justified_trace["validation"]["reuse_count"])
+
+        forbidden_trace_fields = {
+            "prompt",
+            "brief",
+            "capsule",
+            "handoff",
+            "analysis_history",
+            "task_dag",
+        }
+        for result in results:
+            trace = result["semantic_trace"]
+            with self.subTest(bounded_trace=result["id"]):
+                self.assertTrue(trace)
+                self.assertTrue(forbidden_trace_fields.isdisjoint(trace))
+
+    def test_orchestration_direct_work_has_zero_analysis(self) -> None:
+        direct = copy.deepcopy(
+            next(
+                case
+                for case in self.orchestration_cases
+                if case["id"] == "dedup-reuse-fresh-validation"
+            )
+        )
+        direct["id"] = "direct-work-zero-analysis"
+        direct["events"] = [
+            event for event in direct["events"] if event["action"] != "analysis"
+        ]
+
+        errors, trace = EVAL._orchestration_case_result(direct)
+
+        self.assertEqual([], errors)
+        self.assertEqual("direct", trace["work_kind"])
+        self.assertEqual({"count": 0, "kinds": []}, trace["analysis"])
+
+    def test_orchestration_parallel_isolation_is_fixture_derived(self) -> None:
+        isolated = copy.deepcopy(
+            next(
+                case
+                for case in self.orchestration_cases
+                if case["id"] == "dedup-combined-multi-task"
+            )
+        )
+        isolated["id"] = "isolated-parallel-orchestration"
+        edits = [event for event in isolated["events"] if event["action"] == "edit"]
+        for event, workspace, scope in zip(
+            edits[:2],
+            ("workspace-a", "workspace-b"),
+            (["src/a/**"], ["src/b/**"]),
+        ):
+            event.update(
+                {
+                    "parallel_batch": "batch-1",
+                    "workspace": workspace,
+                    "workspace_isolation": "host-provided",
+                    "write_scope": scope,
+                }
+            )
+
+        errors, trace = EVAL._orchestration_case_result(isolated)
+        self.assertEqual([], errors)
+        self.assertEqual("isolated-parallel-events", trace["parallel_isolation"])
+
+        conflicting = copy.deepcopy(isolated)
+        conflicting["id"] = "conflicting-parallel-orchestration"
+        next(
+            event
+            for event in conflicting["events"]
+            if event.get("workspace") == "workspace-b"
+        )["workspace_isolation"] = "shared"
+        errors, _trace = EVAL._orchestration_case_result(conflicting)
+        self.assertTrue(
+            any("parallel-write-isolation" in error for error in errors), errors
+        )
+
+    def test_positive_orchestration_retained_semantics_equal_trace_projection(
+        self,
+    ) -> None:
+        results, errors = EVAL._orchestration_fixture_results(
+            self.orchestration_cases
+        )
+        self.assertEqual([], errors)
+        by_id = {result["id"]: result for result in results}
+        positives = [case for case in self.orchestration_cases if case["expected_valid"]]
+
+        for case in positives:
+            with self.subTest(case=case["id"]):
+                self.assertEqual(
+                    case["retained_semantics"],
+                    EVAL._retained_semantic_projection(
+                        by_id[case["id"]]["semantic_trace"]
+                    ),
+                )
+                self.assertTrue(
+                    by_id[case["id"]]["retained_semantic_equality"]
+                )
+
+        drifted = copy.deepcopy(positives[0])
+        drifted["id"] = "retained-semantic-baseline-drift"
+        drifted["retained_semantics"]["work_kind"] = "direct"
+        drifted_results, drifted_errors = EVAL._orchestration_fixture_results(
+            [drifted]
+        )
+        self.assertFalse(drifted_results[0]["retained_semantic_equality"])
+        self.assertTrue(
+            any("semantic-trace-retention" in error for error in drifted_errors),
+            drifted_errors,
         )
 
     def test_task_focus_negative_controls_reject_scope_and_review_drift(self) -> None:

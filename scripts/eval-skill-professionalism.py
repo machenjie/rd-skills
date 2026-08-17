@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Statically evaluate Hookless ChangeForge skills for AI execution quality.
+"""Statically evaluate Hookless rd-skills skills for AI execution quality.
 
 The evaluator checks source and registry contracts only.  It does not run an
 agent and therefore must not be cited as product-accuracy, latency, or adoption
@@ -342,30 +342,104 @@ def _affected_review_plan(
     config = load_yaml_file(release_review_config)
     if not isinstance(config, dict):
         raise ValidationProblem("release review config must be a mapping")
-    attestation = config.get("professional_completeness_review_attestation")
-    panel_record = (
-        attestation.get("panel_record") if isinstance(attestation, dict) else None
-    )
-    relative = panel_record.get("path") if isinstance(panel_record, dict) else None
     reviewed_at = config.get("reviewed_at")
-    if (
-        not isinstance(relative, str)
-        or not relative
-        or not isinstance(reviewed_at, str)
-        or not reviewed_at
-    ):
+    if not isinstance(reviewed_at, str) or not reviewed_at:
         raise ValidationProblem(
-            "release review config lacks the selected Professional decision"
+            "release review config lacks its review date"
         )
-    candidate = Path(relative)
-    if candidate.is_absolute() or ".." in candidate.parts or candidate.as_posix() != relative:
-        raise ValidationProblem("selected Professional decision path is not canonical")
     module = _load_evaluator(EXPERT_PANEL_REVIEW, "affected_professional_expert_panel")
+    candidate = ROOT / (
+        module.panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH
+    )
+    try:
+        bound = module.reviewer_manifest.read_bound_regular_file(
+            candidate,
+            max_bytes=module.panel_attestation.MAX_ATTESTATION_BYTES,
+            label="affected Professional fixed baseline",
+        )
+        baseline_header = module.reviewer_manifest.parse_json_object_bytes(
+            bound.raw,
+            label="affected Professional fixed baseline",
+        )
+    except (OSError, ValueError) as exc:
+        raise ValidationProblem(
+            f"affected Professional baseline is invalid: {exc}"
+        ) from exc
+    storage_schema = baseline_header.get("schema_version")
+    current_storage_schema = module.panel_attestation.ATTESTATION_SCHEMA_VERSION
+    if type(storage_schema) is not int:
+        raise ValidationProblem(
+            "affected Professional baseline has unsupported compact "
+            "storage schema_version"
+        )
+    if storage_schema != current_storage_schema:
+        if storage_schema != 1:
+            raise ValidationProblem(
+                "affected Professional baseline has unsupported compact "
+                "storage schema_version"
+            )
+        expected_kind = (
+            module.panel_attestation
+            .PROFESSIONAL_COMPLETENESS_ATTESTATION_KIND
+        )
+        if (
+            baseline_header.get("axis")
+            != module.PROFESSIONAL_COMPLETENESS_PANEL_KIND
+            or baseline_header.get("kind") != expected_kind
+            or not isinstance(baseline_header.get("review_id"), str)
+            or not baseline_header["review_id"]
+            or module.VOTER_ID_PATTERN.fullmatch(
+                baseline_header["review_id"]
+            )
+            is None
+            or not isinstance(baseline_header.get("decided_on"), str)
+            or not baseline_header["decided_on"]
+            or not isinstance(baseline_header.get("verdict"), str)
+            or not baseline_header["verdict"]
+            or not isinstance(baseline_header.get("findings"), list)
+            or not isinstance(baseline_header.get("summary"), dict)
+            or re.fullmatch(
+                r"[0-9a-f]{64}",
+                str(baseline_header.get("review_contract_fingerprint", "")),
+            )
+            is None
+        ):
+            raise ValidationProblem(
+                "affected historical Professional baseline is malformed"
+            )
+        try:
+            targets = module._professional_package_targets(root=ROOT)
+            bindings, _snapshot = module._professional_v3_binding_state(
+                targets,
+                review_contract_fingerprint=(
+                    module._professional_evidence_review_contract_fingerprint()
+                ),
+            )
+        except (AttributeError, TypeError, ValueError) as exc:
+            raise ValidationProblem(
+                f"affected Professional bindings are invalid: {exc}"
+            ) from exc
+        if module.reviewer_manifest.recheck_bound_file(
+            bound,
+            label="affected Professional fixed baseline",
+        ) != bound.raw:
+            raise ValidationProblem(
+                "affected historical Professional baseline changed during validation"
+            )
+        return _stale_baseline_no_carry_plan(
+            bindings=bindings,
+            direct_package_ids=direct_package_ids,
+            baseline_decision=(
+                module.panel_attestation
+                .PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH
+            ),
+        )
     try:
         packet = module.prepare_professional_completeness_packet_v3(
             review_id="affected-professionalism",
             created_on=reviewed_at,
-            baseline_decision_path=ROOT / candidate,
+            baseline_attestation_path=candidate,
+            baseline_attestation_sha256=bound.sha256,
             root=ROOT,
             validation_root=ROOT,
         )
@@ -376,9 +450,13 @@ def _affected_review_plan(
         raise ValidationProblem("affected Professional carry plan is missing")
     baseline = plan.get("baseline")
     baseline_decision = (
-        baseline.get("decision", {}).get("path")
+        (
+            baseline.get("attestation", {}).get("path")
+            if isinstance(baseline, dict)
+            and isinstance(baseline.get("attestation"), dict)
+            else baseline.get("decision", {}).get("path")
+        )
         if isinstance(baseline, dict)
-        and isinstance(baseline.get("decision"), dict)
         else None
     )
     fresh_target_ids = [
@@ -402,7 +480,10 @@ def _affected_review_plan(
             for skill_id in fresh_target_ids
         )
     )
-    if stale_contract_only:
+    direct_set = set(direct_package_ids)
+    bindings: dict[str, dict[str, Any]] | None = None
+    impacted_ids: set[str] = set()
+    if direct_set or stale_contract_only:
         try:
             targets = module._professional_v3_base_targets(
                 packet.get("professional_targets")
@@ -414,40 +495,36 @@ def _affected_review_plan(
             raise ValidationProblem(
                 f"affected Professional bindings are invalid: {exc}"
             ) from exc
-        unknown = sorted(set(direct_package_ids) - set(bindings))
+        unknown = sorted(direct_set - set(bindings))
         if unknown:
             raise ValidationProblem(
                 f"affected Professional direct packages are unknown: {unknown}"
             )
-        direct_set = set(direct_package_ids)
         dependent_ids = {
             skill_id
             for skill_id, binding in bindings.items()
-            if direct_set
-            & {
-                row["skill_id"]
-                for row in binding["required_candidate_material_bindings"]
-            }
+            if direct_set & set(binding["dependency_material_bindings"])
         }
-        selected = sorted(direct_set | dependent_ids)
-        reasons_by_target = {skill_id: [] for skill_id in bindings}
-        for skill_id in selected:
-            reasons_by_target[skill_id] = [
-                "baseline-stale-no-carry",
-                (
-                    "impact-direct-package"
-                    if skill_id in direct_set
-                    else "required-candidate-material-changed"
-                ),
-            ]
-        return {
-            "baseline_decision": baseline_decision,
-            "fresh_target_ids": selected,
-            "carry_target_ids": [],
-            "unevaluated_target_ids": sorted(set(bindings) - set(selected)),
-            "baseline_stale_no_carry": True,
-            "reasons_by_target": reasons_by_target,
-        }
+        impacted_ids = direct_set | dependent_ids
+
+    if stale_contract_only:
+        assert bindings is not None
+        return _stale_baseline_no_carry_plan(
+            bindings=bindings,
+            direct_package_ids=direct_package_ids,
+            baseline_decision=baseline_decision,
+        )
+    for skill_id in impacted_ids:
+        reason = (
+            "impact-direct-package"
+            if skill_id in direct_set
+            else "required-candidate-material-changed"
+        )
+        reasons_by_target[skill_id] = sorted(
+            set(reasons_by_target[skill_id]) | {reason}
+        )
+    fresh_target_ids = sorted(set(fresh_target_ids) | impacted_ids)
+    carry_target_ids = sorted(set(carry_target_ids) - impacted_ids)
     return {
         "baseline_decision": baseline_decision,
         "fresh_target_ids": fresh_target_ids,
@@ -455,6 +532,46 @@ def _affected_review_plan(
         "unevaluated_target_ids": [],
         "baseline_stale_no_carry": False,
         "reasons_by_target": reasons_by_target,
+    }
+
+
+def _stale_baseline_no_carry_plan(
+    *,
+    bindings: dict[str, dict[str, Any]],
+    direct_package_ids: list[str],
+    baseline_decision: str | None,
+) -> dict[str, Any]:
+    """Select only exact depth-zero affected packages without baseline carry."""
+
+    direct = set(direct_package_ids)
+    unknown = sorted(direct - set(bindings))
+    if unknown:
+        raise ValidationProblem(
+            f"affected Professional direct packages are unknown: {unknown}"
+        )
+    dependents = {
+        skill_id
+        for skill_id, binding in bindings.items()
+        if direct & set(binding["dependency_material_bindings"])
+    }
+    selected = sorted(direct | dependents)
+    reasons = {skill_id: [] for skill_id in bindings}
+    for skill_id in selected:
+        reasons[skill_id] = [
+            "baseline-stale-no-carry",
+            (
+                "impact-direct-package"
+                if skill_id in direct
+                else "required-candidate-material-changed"
+            ),
+        ]
+    return {
+        "baseline_decision": baseline_decision,
+        "fresh_target_ids": selected,
+        "carry_target_ids": [],
+        "unevaluated_target_ids": sorted(set(bindings) - set(selected)),
+        "baseline_stale_no_carry": True,
+        "reasons_by_target": reasons,
     }
 
 

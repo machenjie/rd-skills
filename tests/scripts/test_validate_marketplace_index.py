@@ -383,7 +383,7 @@ class ValidateMarketplaceIndexTests(unittest.TestCase):
             )
         )
         self.assertEqual(schema["properties"]["schema_version"]["const"], 3)
-        self.assertEqual(schema["title"], "ChangeForge Marketplace Index v3")
+        self.assertEqual(schema["title"], "rd-skills Marketplace Index v3")
         item = schema["$defs"]["item"]
         self.assertIn("profile_delivery", item["required"])
         self.assertIn("required_inputs_by_role", item["required"])

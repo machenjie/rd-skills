@@ -2,7 +2,7 @@
 
 This directory contains benchmark definitions for evaluating whether an
 agent can produce professional code on realistic product engineering tasks.
-The routing golden cases prove that ChangeForge selects the right skills;
+The routing golden cases prove that rd-skills selects the right skills;
 these code generation benchmarks define the implementation quality evidence
 expected after a real change is attempted.
 
@@ -73,7 +73,7 @@ python3 scripts/run-codegen-benchmarks.py --limit 3
 
 The definition validator checks that the benchmark set is complete, every
 required file exists, markdown files contain the required sections, and
-`expected-qualities.yaml` references real ChangeForge skills, capabilities,
+`expected-qualities.yaml` references real rd-skills skills, capabilities,
 domain extensions, and quality gates.
 
 The default `--limit` path selects assertion-backed cases first, validates the

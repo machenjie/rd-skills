@@ -21,10 +21,14 @@ from validation_utils import (
     EVIDENCE_LEDGER_MODEL,
     IMPLEMENTATION_DISCIPLINE_MODEL,
     REVIEW_DISCIPLINE_MODEL,
+    ExecutionLevelError,
     ValidationProblem,
+    classify_concrete_action_authority,
+    compute_execution_level,
     load_yaml_file,
     professional_review_skill_ids,
     reference_paths,
+    report_output_paths,
 )
 from fixture_capsule_contract import (
     FixtureCapsuleError,
@@ -34,6 +38,7 @@ from fixture_capsule_contract import (
     UTILITY_RETURN_REQUIRED_CLAIMS,
     completion_claim_errors as _core_completion_claim_errors,
     completion_transition_errors,
+    combined_review_completion_errors,
     evidence_ledger_errors,
     parse_layer3_reference_id,
     trace_execution_level_migration_errors,
@@ -510,6 +515,23 @@ REVIEW_KINDS = set(REVIEW_DISCIPLINE_MODEL["review_kinds"])
 REVIEW_VERDICTS = set(REVIEW_DISCIPLINE_MODEL["verdicts"])
 TASK_BOUNDARY_MODEL = CORE_CONTRACTS["task_contract"]["task_boundary"]
 FINDING_RELATION_MODEL = CORE_CONTRACTS["task_contract"]["finding_relations"]
+DELTA_IMPACT_FIELDS = ("brief", "tasks", "dependencies", "skills", "reviews")
+DELTA_BRIEF_SECTIONS_BY_INVALIDATION = {
+    "Acceptance-or-Non-goals": {"Acceptance and Non-goals"},
+    "Owner-or-Placement-or-Invariant": {
+        "Ownership and Invariants",
+        "Placement and Reuse",
+    },
+    "contract-or-data-semantics": {"Contract / Data / Failure Impact"},
+    "dependency-or-rollback": {"Risks and Rollback", "Task Dependencies"},
+    "material-risk": {"Risks and Rollback"},
+    "scope-blocker": {
+        "Acceptance and Non-goals",
+        "Ownership and Invariants",
+        "Placement and Reuse",
+        "Contract / Data / Failure Impact",
+    },
+}
 SAME_PATTERN_MODEL = CORE_CONTRACTS["task_contract"]["same_pattern_scan"]
 REVIEW_LEVEL_POLICY = REVIEW_DISCIPLINE_MODEL["effective_level_policy"]
 UTILITY_MODES = {"validation-only/no-edit", "diff-export/no-edit"}
@@ -3965,6 +3987,1446 @@ def _task_focus_fixture_results(
     return results, errors
 
 
+def _orchestration_parallel_isolation(
+    events: list[dict[str, Any]],
+) -> tuple[str, list[str]]:
+    """Derive orchestration write isolation from optional event scheduling facts."""
+
+    fact_fields = {
+        "parallel_batch",
+        "workspace",
+        "workspace_isolation",
+        "write_scope",
+    }
+    scheduled = [
+        event
+        for event in events
+        if isinstance(event, dict)
+        and event.get("action") in {"edit", "repair"}
+        and any(field in event for field in fact_fields)
+    ]
+    if not scheduled:
+        return "serialized-events", []
+
+    errors: list[str] = []
+    projected_dispatches: list[dict[str, Any]] = []
+    batch_counts: dict[str, int] = {}
+    for event in scheduled:
+        if not fact_fields <= set(event):
+            errors.append(
+                "parallel material events require batch, workspace, isolation, and write-scope facts"
+            )
+            continue
+        batch = event.get("parallel_batch")
+        if not isinstance(batch, str) or not batch:
+            errors.append("parallel material event batch must be non-empty text")
+            continue
+        batch_counts[batch] = batch_counts.get(batch, 0) + 1
+        projected_dispatches.append(
+            {
+                "action": "dispatch",
+                "parallel_batch": batch,
+                "workspace": event.get("workspace"),
+                "workspace_isolation": event.get("workspace_isolation"),
+                "write_scope": event.get("write_scope"),
+            }
+        )
+    if any(count < 2 for count in batch_counts.values()):
+        errors.append("parallel material event batch must contain at least two writes")
+    conflict, reduction = _parallel_metrics(projected_dispatches)
+    if conflict:
+        errors.append(
+            "parallel writes require distinct host-provided isolated workspaces and non-overlapping scopes"
+        )
+    return (
+        "isolated-parallel-events" if reduction > 0 and not errors else "invalid-parallel-events",
+        list(dict.fromkeys(errors)),
+    )
+
+
+def _retained_semantic_projection(trace: dict[str, Any]) -> dict[str, Any]:
+    """Select bounded control semantics for the independent retained fixture oracle."""
+
+    validation = trace.get("validation", {})
+    completion = trace.get("completion", {})
+    return {
+        "work_kind": trace.get("work_kind"),
+        "analysis": trace.get("analysis"),
+        "task_dispatch": trace.get("task_dispatch"),
+        "validation": {
+            "fresh_count": validation.get("fresh_count"),
+            "reuse_count": validation.get("reuse_count"),
+            "rerun_count": validation.get("rerun_count"),
+        },
+        "review_boundary": trace.get("review_boundary"),
+        "review": trace.get("review"),
+        "repair_flow": trace.get("repair_flow"),
+        "parallel_isolation": trace.get("parallel_isolation"),
+        "completion": {
+            "state": completion.get("state"),
+            "current_evidence": completion.get("current_evidence"),
+            "current_validation_task_ids": completion.get(
+                "current_validation_task_ids"
+            ),
+            "current_review_task_ids": completion.get("current_review_task_ids"),
+        },
+    }
+
+
+def _orchestration_case_result(
+    case: object,
+) -> tuple[list[str], dict[str, Any]]:
+    """Reduce ordered orchestration events into errors and a bounded semantic trace."""
+
+    if not isinstance(case, dict):
+        return ["orchestration case must be a mapping"], {}
+    case_id = str(case.get("id") or "<missing>")
+    errors: list[str] = []
+
+    def reject(code: str, message: str) -> None:
+        errors.append(f"{case_id}: [{code}] {message}")
+
+    def valid_scope_list(value: object) -> bool:
+        return (
+            isinstance(value, list)
+            and bool(value)
+            and all(isinstance(item, str) and bool(item.strip()) for item in value)
+        )
+
+    tasks = case.get("tasks")
+    boundary = case.get("review_boundary")
+    events = case.get("events")
+    if (
+        not isinstance(tasks, list)
+        or not tasks
+        or not isinstance(boundary, dict)
+        or not isinstance(events, list)
+        or not events
+    ):
+        reject(
+            "orchestration-shape",
+            "tasks, review_boundary, and events must be non-empty structural values",
+        )
+        return errors, {}
+
+    task_ids: list[str] = []
+    task_skills: dict[str, str] = {}
+    task_review_skills: dict[str, set[str]] = {}
+    task_layer3_skills: dict[str, set[str]] = {}
+    task_dependencies: dict[str, list[str]] = {}
+    professional, layer3_entries = _skill_registries()
+    manifests, manifest_errors = _load_build_manifests()
+    if manifest_errors:
+        reject("skill-built-delivery", "; ".join(manifest_errors))
+
+    def built_professional(skill: str) -> bool:
+        return bool(manifests) and all(
+            skill in manifest.get("professional_skills", [])
+            for manifest in manifests.values()
+        )
+
+    def built_layer3(primary: str, skill: str) -> bool:
+        return bool(manifests) and all(
+            skill in manifest.get("top_level_skills", [])
+            or skill
+            in manifest.get("compiled_layer3_references", {}).get(primary, [])
+            for manifest in manifests.values()
+        )
+
+    for index, task in enumerate(tasks):
+        if not isinstance(task, dict):
+            reject("task-semantic-boundary", f"task {index} must be a mapping")
+            continue
+        task_id = task.get("id")
+        primary_skill = task.get("primary_skill")
+        if not isinstance(task_id, str) or not task_id or task_id in task_ids:
+            reject("task-semantic-boundary", "Task IDs must be non-empty and unique")
+            continue
+        task_ids.append(task_id)
+        if not isinstance(primary_skill, str) or not primary_skill:
+            reject(
+                "task-primary-skill",
+                "each Task must retain exactly one Primary Professional Skill",
+            )
+            continue
+        task_skills[task_id] = primary_skill
+        primary_entry = professional.get(primary_skill)
+        if primary_entry is None:
+            reject("task-skill-registry", f"unknown Task Primary Skill {primary_skill!r}")
+        elif "task-agent" not in primary_entry.get("role_support", []):
+            reject(
+                "task-skill-role",
+                f"Task Primary Skill {primary_skill!r} does not support task-agent",
+            )
+        elif not built_professional(primary_skill):
+            reject(
+                "skill-built-delivery",
+                f"Task Primary Skill {primary_skill!r} is not delivered by every build",
+            )
+        split_reason = task.get("split_reason")
+        if split_reason in {"file", "function", "code-layer", "test", "edit-step"}:
+            reject(
+                "task-semantic-boundary",
+                "Task splitting cannot be based only on files, functions, layers, tests, or edit steps",
+            )
+        review_skills = task.get("review_skills", [])
+        if not isinstance(review_skills, list) or any(
+            not isinstance(skill, str) or not skill for skill in review_skills
+        ):
+            reject("review-skill-preservation", "task review_skills must be text values")
+            review_skills = []
+        task_review_skills[task_id] = set(review_skills)
+        for review_skill in review_skills:
+            review_entry = professional.get(review_skill)
+            if review_entry is None:
+                reject("review-skill-registry", f"unknown Review Skill {review_skill!r}")
+            elif "review-agent" not in review_entry.get("role_support", []):
+                reject(
+                    "review-skill-routing",
+                    f"Review Skill {review_skill!r} does not support review-agent",
+                )
+            elif not built_professional(review_skill):
+                reject(
+                    "skill-built-delivery",
+                    f"Review Skill {review_skill!r} is not delivered by every build",
+                )
+        layer3_skills = task.get("layer3_skills", [])
+        if (
+            not isinstance(layer3_skills, list)
+            or len(layer3_skills) > 3
+            or any(not isinstance(skill, str) or not skill for skill in layer3_skills)
+            or len(layer3_skills) != len(set(layer3_skills))
+        ):
+            reject(
+                "task-layer3-routing",
+                "each Task must select zero to three unique Layer 3 Skills",
+            )
+            layer3_skills = []
+        task_layer3_skills[task_id] = set(layer3_skills)
+        dependencies = task.get("dependencies", [])
+        if (
+            not isinstance(dependencies, list)
+            or any(not isinstance(item, str) or not item for item in dependencies)
+            or len(dependencies) != len(set(dependencies))
+        ):
+            reject(
+                "delta-impact-closure",
+                "Task dependencies must be a unique text list for Delta closure",
+            )
+            dependencies = []
+        task_dependencies[task_id] = list(dependencies)
+        candidates = set(primary_entry.get("layer3_candidates", [])) if primary_entry else set()
+        for layer3_skill in layer3_skills:
+            layer3_entry = layer3_entries.get(layer3_skill)
+            if layer3_entry is None:
+                reject("task-layer3-registry", f"unknown Layer 3 Skill {layer3_skill!r}")
+            elif layer3_skill not in candidates:
+                reject(
+                    "task-layer3-routing",
+                    f"Layer 3 Skill {layer3_skill!r} is not routed by {primary_skill!r}",
+                )
+            elif "task-agent" not in layer3_entry.get("role_support", []):
+                reject(
+                    "task-layer3-role",
+                    f"Layer 3 Skill {layer3_skill!r} does not support task-agent",
+                )
+            elif not built_layer3(primary_skill, layer3_skill):
+                reject(
+                    "skill-built-delivery",
+                    f"Layer 3 Skill {layer3_skill!r} is not delivered for {primary_skill!r}",
+                )
+
+    for task_id, dependencies in task_dependencies.items():
+        unknown = [dependency for dependency in dependencies if dependency not in task_ids]
+        if unknown or task_id in dependencies:
+            reject(
+                "delta-impact-closure",
+                f"Task {task_id!r} has unknown or self dependencies: {unknown}",
+            )
+
+    def transitive_task_impact(roots: list[str]) -> list[str]:
+        impacted = {task_id for task_id in roots if task_id in task_ids}
+        changed = True
+        while changed:
+            changed = False
+            for task_id in task_ids:
+                if task_id in impacted:
+                    continue
+                if any(
+                    dependency in impacted
+                    for dependency in task_dependencies.get(task_id, [])
+                ):
+                    impacted.add(task_id)
+                    changed = True
+        return [task_id for task_id in task_ids if task_id in impacted]
+
+    core_subsumption = REVIEW_DISCIPLINE_MODEL["obligation_subsumption"]
+    boundary_field_keys = tuple(
+        REVIEW_DISCIPLINE_MODEL["review_boundary_contract"][
+            "legacy_fixture_boundary_fields"
+        ]
+    )
+    required_boundary_fields = set(boundary_field_keys)
+    if set(boundary) != required_boundary_fields:
+        reject(
+            "review-boundary-shape",
+            "legacy Review Boundary fixture must retain its compatible eight-field contract",
+        )
+        return list(dict.fromkeys(errors)), {}
+    covered_task_ids = boundary.get("covered_task_ids")
+    required_review_skills = boundary.get("required_review_skills")
+    primary_review_skill = boundary.get("primary_review_skill")
+    required_specialists = boundary.get("specialist_obligations")
+    required_scope = boundary.get("required_changed_scope")
+    required_risks = boundary.get("professional_risk_dimensions")
+    required_validation_binding = boundary.get(
+        "required_validation_evidence_binding"
+    )
+    effective_level = boundary.get("effective_level")
+    for value, label in (
+        (covered_task_ids, "covered_task_ids"),
+        (required_review_skills, "required_review_skills"),
+        (required_specialists, "specialist_obligations"),
+        (required_risks, "professional_risk_dimensions"),
+    ):
+        if not isinstance(value, list) or any(
+            not isinstance(item, str) or not item for item in value
+        ) or len(value) != len(set(value)):
+            reject("review-boundary-shape", f"{label} must be a unique text list")
+    if (
+        not isinstance(required_scope, list)
+        or not required_scope
+        or any(not isinstance(item, str) or not item for item in required_scope)
+        or len(required_scope) != len(set(required_scope))
+    ):
+        reject(
+            "review-boundary-scope",
+            "Review Boundary required_changed_scope must be a non-empty unique text list",
+        )
+    if required_validation_binding != core_subsumption[
+        "required_validation_evidence_binding"
+    ]:
+        reject(
+            "review-boundary-validation-binding",
+            "Review Boundary must require the Core current-generation validation evidence binding",
+        )
+    if covered_task_ids != task_ids:
+        reject(
+            "review-boundary-coverage",
+            "Review Boundary Covered Task IDs must exactly cover the ordered Task set",
+        )
+    if effective_level not in {"L1", "L2", "L3", "L4", "L5"}:
+        reject("review-boundary-level", "Review Boundary Effective Level is invalid")
+    if (
+        not isinstance(primary_review_skill, str)
+        or not primary_review_skill
+        or primary_review_skill not in set(required_review_skills or [])
+    ):
+        reject(
+            "review-boundary-primary-skill",
+            "Review Boundary requires exactly one Primary Review Skill included in required Review Skills",
+        )
+    task_required_review_skills = set().union(*task_review_skills.values())
+    if task_required_review_skills and not task_required_review_skills <= set(
+        required_review_skills or []
+    ):
+        reject(
+            "review-skill-preservation",
+            "combined Review Boundary must preserve every task-required Review Skill",
+        )
+    for review_skill in required_review_skills or []:
+        review_entry = professional.get(review_skill)
+        if review_entry is None:
+            reject("review-skill-registry", f"unknown Review Skill {review_skill!r}")
+        elif "review-agent" not in review_entry.get("role_support", []):
+            reject(
+                "review-skill-routing",
+                f"Review Skill {review_skill!r} does not support review-agent",
+            )
+        elif not built_professional(review_skill):
+            reject(
+                "skill-built-delivery",
+                f"Review Skill {review_skill!r} is not delivered by every build",
+            )
+    required_layer3_skills = set().union(*task_layer3_skills.values())
+
+    parallel_isolation, parallel_errors = _orchestration_parallel_isolation(events)
+    for message in parallel_errors:
+        reject("parallel-write-isolation", message)
+
+    analysis_event_entries = [
+        (index, event)
+        for index, event in enumerate(events)
+        if event.get("action") == "analysis"
+    ]
+    analysis_events = [event for _index, event in analysis_event_entries]
+    initial_events = [
+        event for event in analysis_events if event.get("analysis_kind") == "initial"
+    ]
+    if analysis_events and len(initial_events) != 1:
+        reject(
+            "analysis-decision-invalidation",
+            "Analyzed Work requires exactly one complete initial Analysis",
+        )
+    initial_assignments = (
+        initial_events[0].get("skill_assignments") if initial_events else None
+    )
+    if initial_assignments is not None and initial_assignments != task_skills:
+        reject(
+            "analysis-skill-routing",
+            "initial Analysis Skill assignments must match each Task Primary Skill",
+        )
+    protected_decisions = set(
+        CORE_CONTRACTS["task_contract"]["analyzed_work_authority"]["decision_invalidation_triggers"]
+    )
+    allowed_updates = set(
+        CORE_CONTRACTS["task_contract"]["analyzed_work_authority"]["delta_analysis"]["updates"]
+    )
+    previous_assignments = dict(task_skills)
+    previous_analysis_index = -1
+    authoritative_brief_sections = CORE_CONTRACTS["task_contract"][
+        "analyzed_work_authority"
+    ]["authoritative_sections"]
+    for event_index, event in analysis_event_entries:
+        if event.get("analysis_kind") == "initial":
+            previous_analysis_index = event_index
+            continue
+        if event.get("analysis_kind") != "delta":
+            reject("analysis-decision-invalidation", "analysis_kind must be initial or delta")
+            continue
+        invalidated = event.get("invalidated_decisions")
+        updates = event.get("transitive_updates")
+        if (
+            event.get("protected_decision_invalidated") is not True
+            or not isinstance(invalidated, list)
+            or not invalidated
+            or not set(invalidated) <= protected_decisions
+        ):
+            reject(
+                "analysis-decision-invalidation",
+                "Delta Analysis requires a protected decision invalidation",
+            )
+        if (
+            not isinstance(updates, list)
+            or not updates
+            or not set(updates) <= allowed_updates
+            or event.get("analysis_scope") not in {"delta", "full"}
+            or (
+                event.get("analysis_scope") == "full"
+                and event.get("foundational_assumptions_invalidated") is not True
+            )
+        ):
+            reject(
+                "delta-analysis-scope",
+                "Delta Analysis must update only invalidated decisions and transitive impact",
+            )
+        routing_trigger = any(
+            event.get(field) is True
+            for field in (
+                "professional_domain_changed",
+                "work_type_changed",
+                "material_risk_trigger_changed",
+            )
+        )
+        prior_assignments = dict(previous_assignments)
+        assignments = event.get("skill_assignments", previous_assignments)
+        if not isinstance(assignments, dict) or set(assignments) != set(task_skills):
+            reject("analysis-skill-routing", "Delta Skill assignments must cover every Task")
+        elif not routing_trigger and assignments != previous_assignments:
+            reject(
+                "analysis-skill-routing",
+                "Skill assignments must be preserved when domain, work type, and material risk are unchanged",
+            )
+        else:
+            previous_assignments = dict(assignments)
+
+        source_task_ids: list[str] = []
+        for candidate in events[previous_analysis_index + 1 : event_index]:
+            if not isinstance(candidate, dict) or candidate.get("action") not in {
+                "edit",
+                "repair",
+                "finding",
+            }:
+                continue
+            task_id = candidate.get("task_id")
+            if task_id in task_ids and task_id not in source_task_ids:
+                source_task_ids.append(task_id)
+        previous_analysis_index = event_index
+        needs_task_closure = bool(
+            set(updates or [])
+            & {
+                "affected-tasks",
+                "affected-dependencies",
+                "affected-review-boundaries",
+            }
+        )
+        if needs_task_closure and not source_task_ids:
+            reject(
+                "delta-impact-proof-limit",
+                "unknown Delta impact cannot be mapped to []; record a Proof Limit and return blocked",
+            )
+        impacted_tasks = transitive_task_impact(source_task_ids)
+        impacted_dependencies = [
+            f"{dependency}->{task_id}"
+            for task_id in task_ids
+            for dependency in task_dependencies.get(task_id, [])
+            if dependency in impacted_tasks and task_id in impacted_tasks
+        ]
+        rerouted_tasks = [
+            task_id
+            for task_id in task_ids
+            if assignments.get(task_id) != prior_assignments.get(task_id)
+        ] if isinstance(assignments, dict) else []
+        impacted_review_skills = [
+            skill
+            for skill in required_review_skills or []
+            if any(skill in task_review_skills[task_id] for task_id in impacted_tasks)
+        ]
+        invalidated_sections = {
+            section
+            for decision in invalidated or []
+            for section in DELTA_BRIEF_SECTIONS_BY_INVALIDATION.get(decision, set())
+        }
+        mandatory_updates = {
+            update
+            for update, impacted in (
+                ("affected-brief-sections", invalidated_sections),
+                ("affected-tasks", impacted_tasks),
+                ("affected-dependencies", impacted_dependencies),
+                ("affected-skill-assignments", rerouted_tasks),
+                ("affected-review-boundaries", impacted_review_skills),
+            )
+            if impacted
+        }
+        missing_updates = sorted(mandatory_updates - set(updates or []))
+        if missing_updates:
+            reject(
+                "delta-impact-exact",
+                "Delta Analysis must declare every category proven affected by "
+                f"impact closure: {missing_updates}",
+            )
+        expected_delta_impact = {
+            "invalidated": invalidated,
+            "affected": {
+                "brief": [
+                    section
+                    for section in authoritative_brief_sections
+                    if section in invalidated_sections
+                ]
+                if "affected-brief-sections" in set(updates or [])
+                else [],
+                "tasks": impacted_tasks
+                if "affected-tasks" in set(updates or [])
+                else [],
+                "dependencies": impacted_dependencies
+                if "affected-dependencies" in set(updates or [])
+                else [],
+                "skills": rerouted_tasks
+                if "affected-skill-assignments" in set(updates or [])
+                else [],
+                "reviews": impacted_review_skills
+                if "affected-review-boundaries" in set(updates or [])
+                else [],
+            },
+            "unlisted": "preserved",
+        }
+        delta_impact = event.get("delta_impact")
+        delta_shape_valid = (
+            isinstance(delta_impact, dict)
+            and tuple(delta_impact) == ("invalidated", "affected", "unlisted")
+            and isinstance(delta_impact.get("affected"), dict)
+            and tuple(delta_impact["affected"]) == DELTA_IMPACT_FIELDS
+            and all(
+                isinstance(delta_impact["affected"].get(field), list)
+                and all(
+                    isinstance(item, str) and item
+                    for item in delta_impact["affected"].get(field, [])
+                )
+                and len(delta_impact["affected"].get(field, []))
+                == len(set(delta_impact["affected"].get(field, [])))
+                for field in DELTA_IMPACT_FIELDS
+            )
+        )
+        if not delta_shape_valid or delta_impact != expected_delta_impact:
+            reject(
+                "delta-impact-exact",
+                "Delta Impact must exactly project proven invalidated decisions and transitive affected sets; unlisted remains preserved",
+            )
+
+    latest_generation: dict[str, int] = {}
+    current_validation: set[str] = set()
+    current_review: set[str] = set()
+    current_validation_evidence: dict[str, str] = {}
+    current_review_evidence: dict[str, str] = {}
+    validation_evidence: dict[str, tuple[str, int]] = {}
+    fresh_validation_evidence_ids: list[str] = []
+    reused_validation_evidence_ids: list[str] = []
+    validation_rerun_count = 0
+    review_ids: set[str] = set()
+    review_actions: list[str] = []
+    invalidated_claims: set[str] = set()
+    covering_review_seen = False
+    covering_rereview_seen = False
+    repair_seen = False
+    pending_repair_findings: dict[str, tuple[str, set[str], set[str]]] = {}
+    finding_relations_by_id: dict[str, str] = {}
+    seen_finding_ids: set[str] = set()
+    repair_review_requirements: dict[str, tuple[set[str], set[str]]] = {}
+    repaired_task_ids: set[str] = set()
+    repair_invalidated_claims: set[str] = set()
+    repair_validated_task_ids: set[str] = set()
+    rereviewed_task_ids: set[str] = set()
+    repair_count = 0
+    terminal_seen = False
+    terminal_state = "in-progress"
+    allowed_reproduction = set(
+        REVIEW_DISCIPLINE_MODEL["validation_evidence_reuse"]["reproduction_triggers"]
+    )
+    material_categories = set(
+        FINDING_RELATION_MODEL["material_current_task_criteria"]
+    )
+    non_repair_categories = set(
+        FINDING_RELATION_MODEL["non_repair_categories"]
+    )
+    finding_relations = set(FINDING_RELATION_MODEL["values"])
+    finding_categories = material_categories | non_repair_categories
+    category_risk_terms = {
+        "acceptance": {"acceptance", "correctness"},
+        "correctness-or-invariant": {"correctness", "invariant"},
+        "regression": {"regression", "correctness"},
+        "security-or-reliability": {"security", "reliability"},
+        "material-code-health": {"code-health", "maintainability"},
+    }
+    level_rank = {level: index for index, level in enumerate(("L1", "L2", "L3", "L4", "L5"), 1)}
+
+    for index, event in enumerate(events):
+        if not isinstance(event, dict):
+            reject("orchestration-event", f"event {index} must be a mapping")
+            continue
+        action = event.get("action")
+        if terminal_seen:
+            reject("orchestration-terminal", "no orchestration event may follow completion or blocked")
+            continue
+        if action in {"edit", "repair"}:
+            task_id = event.get("task_id")
+            generation = event.get("generation")
+            if task_id not in task_ids or not isinstance(generation, int) or generation < 1:
+                reject("material-edit-validation", "material edits require a Task and generation")
+                continue
+            if generation <= latest_generation.get(task_id, 0):
+                reject("material-edit-validation", "material edit generations must increase")
+            latest_generation[task_id] = generation
+            current_validation.discard(task_id)
+            current_review.discard(task_id)
+            current_validation_evidence.pop(task_id, None)
+            current_review_evidence.pop(task_id, None)
+            invalidated_claims.update(
+                {f"validation:{task_id}", f"review:{task_id}"}
+            )
+            if action == "repair":
+                repair_seen = True
+                repair_count += 1
+                affected = event.get("affected_task_ids", [task_id])
+                expansion = event.get("impact_boundaries", [])
+                if not isinstance(affected, list) or not set(affected) <= set(task_ids):
+                    reject("repair-invalidation-scope", "repair affected_task_ids are invalid")
+                    affected = [task_id]
+                if expansion and set(affected) == {task_id}:
+                    reject(
+                        "repair-invalidation-scope",
+                        "boundary-crossing repair must expand affected evidence scope",
+                    )
+                for affected_task in affected:
+                    current_validation.discard(affected_task)
+                    current_review.discard(affected_task)
+                    current_validation_evidence.pop(affected_task, None)
+                    current_review_evidence.pop(affected_task, None)
+                    repaired_task_ids.add(affected_task)
+                expected_invalidated = {
+                    f"validation:{affected_task}" for affected_task in affected
+                } | {f"review:{affected_task}" for affected_task in affected}
+                repair_invalidated_claims.update(expected_invalidated)
+                declared_invalidated = event.get("invalidated_claims")
+                if declared_invalidated is not None and set(declared_invalidated) != expected_invalidated:
+                    reject(
+                        "repair-invalidation-scope",
+                        "repair must invalidate exactly intersecting and dependent Claims",
+                    )
+                invalidated_claims.update(expected_invalidated)
+                resolved_finding_ids = event.get("resolved_finding_ids")
+                if (
+                    not isinstance(resolved_finding_ids, list)
+                    or not resolved_finding_ids
+                    or len(resolved_finding_ids) != len(set(resolved_finding_ids))
+                    or any(
+                        finding_id not in pending_repair_findings
+                        for finding_id in resolved_finding_ids
+                    )
+                ):
+                    reject(
+                        "repair-finding-identity",
+                        "repair must name unique unresolved material Finding identities",
+                    )
+                    resolved_finding_ids = []
+                projected_relations = event.get("finding_relations")
+                expected_relations = {
+                    finding_id: finding_relations_by_id.get(finding_id)
+                    for finding_id in resolved_finding_ids
+                }
+                if (
+                    not isinstance(projected_relations, dict)
+                    or projected_relations != expected_relations
+                    or any(
+                        relation != "current-task"
+                        for relation in expected_relations.values()
+                    )
+                ):
+                    reject(
+                        "repair-finding-relation",
+                        "Repair must preserve Finding Relation and accepts only material current-task findings",
+                    )
+                derived_specialists: set[str] = set()
+                derived_risks: set[str] = set()
+                for finding_id in resolved_finding_ids:
+                    finding_task, finding_specialists, finding_risks = (
+                        pending_repair_findings[finding_id]
+                    )
+                    if finding_task not in affected:
+                        reject(
+                            "repair-finding-identity",
+                            "repair reach must include every resolved Finding Task",
+                        )
+                        continue
+                    derived_specialists.update(finding_specialists)
+                    derived_risks.update(finding_risks)
+                affected_specialists = event.get(
+                    "affected_specialist_obligations", []
+                )
+                affected_risks = event.get("affected_risk_dimensions", [])
+                if (
+                    not isinstance(affected_specialists, list)
+                    or not set(affected_specialists) <= set(required_specialists or [])
+                    or not derived_specialists <= set(affected_specialists)
+                    or not isinstance(affected_risks, list)
+                    or not set(affected_risks) <= set(required_risks or [])
+                    or not derived_risks <= set(affected_risks)
+                ):
+                    reject(
+                        "repair-review-obligation-binding",
+                        "repair must bind affected Specialist obligations and risk dimensions",
+                    )
+                else:
+                    requirements = (derived_specialists, derived_risks)
+                    for affected_task in affected:
+                        repair_review_requirements[affected_task] = requirements
+                for finding_id in resolved_finding_ids:
+                    pending_repair_findings.pop(finding_id, None)
+        elif action == "validate":
+            task_id = event.get("task_id")
+            generation = event.get("generation")
+            evidence_id = event.get("evidence_id", f"validation-{task_id}-{generation}")
+            valid_fresh_validation = (
+                task_id in task_ids
+                and generation == latest_generation.get(task_id)
+                and event.get("result", "passed") == "passed"
+                and event.get("fresh", True) is True
+                and event.get("scope_correct", True) is True
+                and event.get("trustworthy_oracle", True) is True
+            )
+            repeats_current_validation = (
+                valid_fresh_validation and task_id in current_validation
+            )
+            if repeats_current_validation:
+                validation_rerun_count += 1
+                reject(
+                    "validation-evidence-reuse",
+                    "current valid validation must be reused unless an invalidation or reproduction trigger requires rerun",
+                )
+            if not valid_fresh_validation:
+                reject(
+                    "material-edit-validation",
+                    "each final material edit requires fresh scoped trustworthy targeted validation",
+                )
+            else:
+                current_validation.add(task_id)
+                invalidated_claims.discard(f"validation:{task_id}")
+                if isinstance(evidence_id, str) and evidence_id:
+                    current_validation_evidence[task_id] = evidence_id
+                    fresh_validation_evidence_ids.append(evidence_id)
+                if task_id in repaired_task_ids:
+                    repair_validated_task_ids.add(task_id)
+            if (
+                not isinstance(evidence_id, str)
+                or not evidence_id
+                or evidence_id in validation_evidence
+            ):
+                reject("validation-evidence-id", "validation evidence IDs must be unique")
+            else:
+                validation_evidence[evidence_id] = (str(task_id), int(generation or 0))
+        elif action in {"review", "re-review"}:
+            event_tasks = event.get("covered_task_ids")
+            if not isinstance(event_tasks, list) or not event_tasks or not set(event_tasks) <= set(task_ids):
+                reject("review-boundary-coverage", "review must cover known Task IDs")
+                continue
+            event_task_set = set(event_tasks)
+            full_boundary = event_task_set == set(task_ids)
+            risk_trigger = event.get("risk_trigger")
+            if (
+                effective_level in {"L1", "L2", "L3", "L4"}
+                and not full_boundary
+                and not risk_trigger
+                and action != "re-review"
+            ):
+                reject(
+                    "review-boundary-frequency",
+                    "per-Task review plus final review is forbidden without a real intermediate risk boundary",
+                )
+            if full_boundary and covering_review_seen and not repair_seen:
+                reject(
+                    "obligation-subsumption",
+                    "a same-or-stronger covering review satisfies weaker equivalent review obligations",
+                )
+            if full_boundary:
+                covering_review_seen = True
+            if action == "re-review":
+                if not repair_seen:
+                    reject("repair-rereview", "re-review requires a preceding repair")
+                covering_rereview_seen = current_review | event_task_set == set(task_ids)
+                rereviewed_task_ids.update(event_task_set & repaired_task_ids)
+            elif covering_rereview_seen:
+                reject(
+                    "obligation-subsumption",
+                    "covering scoped re-review already satisfies the final review obligation",
+                )
+            event_level = event.get("effective_level")
+            if event_level not in level_rank or level_rank[event_level] < level_rank.get(effective_level, 99):
+                reject("review-depth", "review must meet or exceed the required Effective Level")
+            event_skills = set(event.get("review_skills", []))
+            expected_skills = (
+                set(required_review_skills or [])
+                if full_boundary
+                else set().union(*(task_review_skills[task] for task in event_task_set))
+            )
+            if not expected_skills <= event_skills:
+                reject(
+                    "review-skill-preservation",
+                    "combined or scoped review must preserve required Review Skills",
+                )
+            for review_skill in event_skills:
+                review_entry = professional.get(review_skill)
+                if review_entry is None:
+                    reject("review-skill-registry", f"unknown Review Skill {review_skill!r}")
+                elif "review-agent" not in review_entry.get("role_support", []):
+                    reject(
+                        "review-skill-routing",
+                        f"Review Skill {review_skill!r} does not support review-agent",
+                    )
+                elif not built_professional(review_skill):
+                    reject(
+                        "skill-built-delivery",
+                        f"Review Skill {review_skill!r} is not delivered by every build",
+                    )
+            raw_event_layer3 = event.get("layer3_skills", [])
+            if (
+                not isinstance(raw_event_layer3, list)
+                or len(raw_event_layer3) > 3
+                or any(
+                    not isinstance(skill, str) or not skill
+                    for skill in raw_event_layer3
+                )
+                or len(raw_event_layer3) != len(set(raw_event_layer3))
+            ):
+                reject(
+                    "review-layer3-routing",
+                    "each review must select zero to three unique Layer 3 Skills",
+                )
+                raw_event_layer3 = []
+            event_layer3 = set(raw_event_layer3)
+            expected_layer3 = set().union(
+                *(task_layer3_skills.get(task, set()) for task in event_task_set)
+            )
+            if not expected_layer3 <= event_layer3:
+                reject(
+                    "review-layer3-preservation",
+                    "combined or scoped review must preserve affected Layer 3 obligations",
+                )
+            review_candidates = set().union(
+                *(
+                    set(professional[skill].get("layer3_candidates", []))
+                    for skill in event_skills
+                    if skill in professional
+                )
+            )
+            for layer3_skill in event_layer3:
+                layer3_entry = layer3_entries.get(layer3_skill)
+                if layer3_entry is None:
+                    reject(
+                        "review-layer3-registry",
+                        f"unknown review Layer 3 Skill {layer3_skill!r}",
+                    )
+                elif layer3_skill not in review_candidates:
+                    reject(
+                        "review-layer3-routing",
+                        f"review Layer 3 Skill {layer3_skill!r} is not routed by an assigned Review Skill",
+                    )
+                elif "review-agent" not in layer3_entry.get("role_support", []):
+                    reject(
+                        "review-layer3-role",
+                        f"review Layer 3 Skill {layer3_skill!r} does not support review-agent",
+                    )
+                elif not any(
+                    built_layer3(skill, layer3_skill) for skill in event_skills
+                ):
+                    reject(
+                        "skill-built-delivery",
+                        f"review Layer 3 Skill {layer3_skill!r} is not delivered for an assigned Review Skill",
+                    )
+            event_specialists = set(event.get("specialist_obligations", []))
+            event_risks = set(event.get("risk_dimensions", []))
+            if full_boundary and (
+                not set(required_specialists or []) <= event_specialists
+                or not set(required_risks or []) <= event_risks
+            ):
+                reject(
+                    "review-obligation-coverage",
+                    "covering review must preserve Specialist obligations and risk dimensions",
+                )
+            if action == "re-review":
+                affected_requirements = [
+                    repair_review_requirements.get(task, (set(), set()))
+                    for task in event_task_set
+                ]
+                affected_specialists = set().union(
+                    *(item[0] for item in affected_requirements)
+                )
+                affected_risks = set().union(
+                    *(item[1] for item in affected_requirements)
+                )
+                if (
+                    not affected_specialists <= event_specialists
+                    or not affected_risks <= event_risks
+                ):
+                    reject(
+                        "repair-review-obligation-preservation",
+                        "scoped re-review must retain affected Specialist obligations and risk dimensions",
+                    )
+            reproduction = event.get("reproduction_triggers", [])
+            if not isinstance(reproduction, list) or not set(reproduction) <= allowed_reproduction:
+                reject("validation-evidence-reuse", "review reproduction trigger is invalid")
+            if event.get("reexecuted_validation", False) is True:
+                validation_rerun_count += 1
+                if not reproduction:
+                    reject(
+                        "validation-evidence-reuse",
+                        "independence alone does not justify mechanically repeating valid validation",
+                    )
+            supplied_validation = event.get("validation_evidence_ids")
+            if not isinstance(supplied_validation, list) or not supplied_validation:
+                reject(
+                    "review-validation-binding",
+                    "every review must bind current-generation validation evidence",
+                )
+            else:
+                if event.get("reexecuted_validation", False) is not True:
+                    reused_validation_evidence_ids.extend(
+                        evidence_id
+                        for evidence_id in supplied_validation
+                        if isinstance(evidence_id, str)
+                    )
+                bound_tasks = {
+                    validation_evidence[evidence_id][0]
+                    for evidence_id in supplied_validation
+                    if evidence_id in validation_evidence
+                    and validation_evidence[evidence_id][1]
+                    == latest_generation.get(validation_evidence[evidence_id][0])
+                    and validation_evidence[evidence_id][0] in current_validation
+                }
+                if (
+                    len(supplied_validation) != len(set(supplied_validation))
+                    or bound_tasks != event_task_set
+                ):
+                    reject(
+                        "review-validation-binding",
+                        "review validation evidence must uniquely cover each reviewed Task at its current generation",
+                    )
+            review_id = event.get("evidence_id", f"review-{index}")
+            if not isinstance(review_id, str) or not review_id or review_id in review_ids:
+                reject("review-evidence-id", "review evidence IDs must be unique")
+            else:
+                review_ids.add(review_id)
+            review_actions.append(action)
+            if event.get("independent") is not True:
+                reject("review-independence", "review evidence must be independent")
+            verdict = event.get("verdict")
+            if verdict not in REVIEW_VERDICTS:
+                reject("review-verdict", "review verdict must use the closed Core enum")
+            if verdict == "pass" and event.get("unreviewed_required_scope"):
+                reject(
+                    "review-pass-scope",
+                    "PASS requires complete required changed-scope review",
+                )
+            if verdict == "blocked":
+                if not valid_scope_list(event.get("reviewed_scope")) or not valid_scope_list(
+                    event.get("unreviewed_scope")
+                ):
+                    reject(
+                        "review-blocked-scope",
+                        "blocked Review must report non-empty text Reviewed and Unreviewed Scope",
+                    )
+                terminal_seen = True
+                terminal_state = "blocked"
+            elif verdict in {"pass", "findings"}:
+                current_review.update(event_task_set)
+                for task_id in event_task_set:
+                    invalidated_claims.discard(f"review:{task_id}")
+                    if isinstance(review_id, str) and review_id:
+                        current_review_evidence[task_id] = review_id
+        elif action == "finding":
+            finding_id = event.get("finding_id")
+            relation = event.get("relation")
+            category = event.get("category")
+            task_id = event.get("task_id")
+            repair_required = event.get("repair_required") is True
+            if relation not in finding_relations:
+                reject("finding-relation", "Finding relation must use the closed Core enum")
+            if category not in finding_categories:
+                reject("finding-category", "Finding category must use the closed Core enum")
+            finding_identity_valid = (
+                isinstance(finding_id, str)
+                and bool(finding_id)
+                and finding_id not in seen_finding_ids
+            )
+            if not finding_identity_valid:
+                reject(
+                    "finding-identity",
+                    "every Finding identity must be non-empty and unique across the trajectory",
+                )
+            else:
+                seen_finding_ids.add(finding_id)
+                if relation in finding_relations:
+                    finding_relations_by_id[finding_id] = relation
+            material = category in material_categories
+            if category in non_repair_categories:
+                material = False
+            if repair_required and (relation != "current-task" or not material):
+                reject(
+                    "material-finding-repair",
+                    "only material current-task findings create a Repair obligation",
+                )
+            if relation == "current-task" and material:
+                if task_id not in task_ids:
+                    reject(
+                        "material-finding-task",
+                        "a material current-task Finding must name an existing affected Task",
+                    )
+                if not repair_required:
+                    reject(
+                        "material-finding-repair",
+                        "a material current-task finding must declare the Repair obligation",
+                    )
+                if finding_identity_valid and task_id in task_ids:
+                    impact_dimensions = event.get("impact_dimensions", [])
+                    if (
+                        not isinstance(impact_dimensions, list)
+                        or any(
+                            not isinstance(item, str) or not item
+                            for item in impact_dimensions
+                        )
+                        or not set(impact_dimensions) <= set(required_risks or [])
+                    ):
+                        reject(
+                            "finding-impact",
+                            "Finding impact dimensions must be known boundary risk dimensions",
+                        )
+                        impact_dimensions = []
+                    terms = category_risk_terms.get(str(category), set())
+                    derived_risks = {
+                        risk
+                        for risk in required_risks or []
+                        if any(term in risk for term in terms)
+                    } | set(impact_dimensions)
+                    derived_specialists = {
+                        specialist
+                        for specialist in required_specialists or []
+                        if any(term in specialist for term in terms)
+                        or any(
+                            specialist in impact or impact in specialist
+                            for impact in impact_dimensions
+                        )
+                    }
+                    pending_repair_findings[finding_id] = (
+                        task_id,
+                        derived_specialists,
+                        derived_risks,
+                    )
+        elif action == "blocked":
+            if event.get("reason") not in FINDING_RELATION_MODEL["fail_fast"]["triggers"]:
+                reject("review-fail-fast", "blocked fail-fast reason is not fundamental")
+            if not valid_scope_list(event.get("reviewed_scope")) or not valid_scope_list(
+                event.get("unreviewed_scope")
+            ):
+                reject(
+                    "review-fail-fast",
+                    "blocked review must report non-empty text Reviewed and Unreviewed Scope",
+                )
+            terminal_seen = True
+            terminal_state = "blocked"
+        elif action == "complete":
+            if pending_repair_findings:
+                reject(
+                    "material-finding-repair",
+                    "completion is forbidden while a material current-task finding awaits Repair",
+                )
+            if set(latest_generation) != set(task_ids) or current_validation != set(task_ids):
+                reject(
+                    "completion-current-evidence",
+                    "completion requires current validation after every Task's latest material edit",
+                )
+            if current_review != set(task_ids):
+                reject(
+                    "completion-current-evidence",
+                    "completion requires current review coverage for every Task",
+                )
+            if invalidated_claims:
+                reject(
+                    "completion-current-evidence",
+                    "completion cannot rely on invalidated repair evidence",
+                )
+            terminal_seen = True
+            terminal_state = "complete"
+        elif action != "analysis":
+            reject("orchestration-event", f"unsupported orchestration action {action!r}")
+
+    if not terminal_seen:
+        reject("orchestration-terminal", "trajectory must end in complete or blocked")
+    current_evidence = (
+        terminal_state == "complete"
+        and set(latest_generation) == set(task_ids)
+        and current_validation == set(task_ids)
+        and current_review == set(task_ids)
+        and not invalidated_claims
+        and not pending_repair_findings
+    )
+    semantic_trace = {
+        "id": case_id,
+        "work_kind": "analyzed" if analysis_events else "direct",
+        "analysis": {
+            "count": len(analysis_events),
+            "kinds": [str(event.get("analysis_kind")) for event in analysis_events],
+        },
+        "task_dispatch": [
+            {
+                "task_id": task_id,
+                "primary_skill": task_skills.get(task_id),
+                "layer3_skills": sorted(task_layer3_skills.get(task_id, set())),
+            }
+            for task_id in task_ids
+        ],
+        "validation": {
+            "fresh_count": len(fresh_validation_evidence_ids),
+            "fresh_evidence_ids": fresh_validation_evidence_ids,
+            "reuse_count": len(reused_validation_evidence_ids),
+            "reused_evidence_ids": reused_validation_evidence_ids,
+            "rerun_count": validation_rerun_count,
+        },
+        "review_boundary": {
+            "covered_task_ids": list(covered_task_ids or []),
+            "effective_level": effective_level,
+            "required_review_skills": list(required_review_skills or []),
+            "required_changed_scope": list(required_scope or []),
+        },
+        "review": {
+            "count": len(review_actions),
+            "actions": review_actions,
+        },
+        "repair_flow": {
+            "repair_count": repair_count,
+            "affected_task_ids": sorted(repaired_task_ids),
+            "invalidated_claims": sorted(repair_invalidated_claims),
+            "fresh_validation_task_ids": sorted(repair_validated_task_ids),
+            "rereviewed_task_ids": sorted(rereviewed_task_ids),
+        },
+        "parallel_isolation": parallel_isolation,
+        "completion": {
+            "state": terminal_state,
+            "current_evidence": current_evidence,
+            "current_validation_task_ids": sorted(current_validation),
+            "current_review_task_ids": sorted(current_review),
+            "current_validation_evidence": [
+                {
+                    "task_id": task_id,
+                    "generation": latest_generation.get(task_id),
+                    "evidence_id": current_validation_evidence[task_id],
+                }
+                for task_id in sorted(current_validation_evidence)
+            ],
+            "current_review_evidence": [
+                {
+                    "task_id": task_id,
+                    "evidence_id": current_review_evidence[task_id],
+                }
+                for task_id in sorted(current_review_evidence)
+            ],
+            "invalidated_claims": sorted(invalidated_claims),
+        },
+        "proof_limit": "deterministic-structural-fixture-only",
+    }
+    return list(dict.fromkeys(errors)), semantic_trace
+
+
+def _orchestration_case_errors(case: object) -> list[str]:
+    """Compatibility projection for callers that only consume reducer errors."""
+
+    return _orchestration_case_result(case)[0]
+
+
+def _orchestration_fixture_results(
+    cases: object,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    if not isinstance(cases, list) or not cases:
+        return [], ["orchestration_cases must be a non-empty list"]
+    results: list[dict[str, Any]] = []
+    errors: list[str] = []
+    seen: set[str] = set()
+    for case in cases:
+        case_id = str(case.get("id") if isinstance(case, dict) else "")
+        if not case_id or case_id in seen:
+            errors.append(f"missing or duplicate orchestration case id: {case_id!r}")
+            continue
+        seen.add(case_id)
+        expected_valid = case.get("expected_valid")
+        expected_error = case.get("expected_error")
+        if not isinstance(expected_valid, bool) or (
+            expected_error is not None and not isinstance(expected_error, str)
+        ):
+            errors.append(f"{case_id}: orchestration expectation is invalid")
+            continue
+        case_errors, semantic_trace = _orchestration_case_result(case)
+        retained_semantic_equality: bool | None = None
+        if expected_valid:
+            retained_semantics = case.get("retained_semantics")
+            retained_semantic_equality = (
+                isinstance(retained_semantics, dict)
+                and retained_semantics
+                == _retained_semantic_projection(semantic_trace)
+            )
+            if not retained_semantic_equality:
+                case_errors.append(
+                    f"{case_id}: [semantic-trace-retention] retained semantics must equal the reducer trace projection"
+                )
+        actual_valid = not case_errors
+        matches_expected = actual_valid == expected_valid and (
+            expected_error is None
+            or any(expected_error in error for error in case_errors)
+        )
+        results.append(
+            {
+                "id": case_id,
+                "expected_valid": expected_valid,
+                "actual_valid": actual_valid,
+                "matches_expected": matches_expected,
+                "errors": case_errors,
+                "semantic_trace": semantic_trace,
+                "retained_semantic_equality": retained_semantic_equality,
+            }
+        )
+        if not matches_expected:
+            errors.append(
+                f"{case_id}: orchestration result does not match expectation: {case_errors}"
+            )
+    return results, errors
+
+
+def _combined_review_case_errors(case: object) -> list[str]:
+    """Validate routed Review assignments around the shared fixture contract."""
+
+    errors = combined_review_completion_errors(case)
+    if not isinstance(case, dict):
+        return errors
+    tasks = case.get("tasks")
+    boundary = case.get("review_boundary")
+    if not isinstance(tasks, list) or not isinstance(boundary, dict):
+        return errors
+    professional, layer3_entries = _skill_registries()
+    manifests, manifest_errors = _load_build_manifests()
+    errors.extend(f"[skill-built-delivery] {error}" for error in manifest_errors)
+
+    def reject(code: str, message: str) -> None:
+        errors.append(f"[{code}] {message}")
+
+    def built_professional(skill: str) -> bool:
+        return bool(manifests) and all(
+            skill in manifest.get("professional_skills", [])
+            for manifest in manifests.values()
+        )
+
+    def built_layer3(owner: str, skill: str) -> bool:
+        return bool(manifests) and all(
+            skill in manifest.get("top_level_skills", [])
+            or skill
+            in manifest.get("compiled_layer3_references", {}).get(owner, [])
+            for manifest in manifests.values()
+        )
+
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+        primary = task.get("primary_skill")
+        if not isinstance(primary, str) or not primary:
+            reject("task-primary-skill", "each Task requires exactly one Primary Skill")
+            continue
+        entry = professional.get(primary)
+        if entry is None:
+            reject("task-skill-registry", f"unknown Task Primary Skill {primary!r}")
+            continue
+        if "task-agent" not in entry.get("role_support", []):
+            reject("task-skill-role", f"Task Primary Skill {primary!r} does not support task-agent")
+        if not built_professional(primary):
+            reject("skill-built-delivery", f"Task Primary Skill {primary!r} is not delivered by every build")
+        allowed = set(entry.get("layer3_candidates", []))
+        for layer3 in task.get("implementation_layer3", []):
+            layer3_entry = layer3_entries.get(layer3)
+            if layer3_entry is None:
+                reject("task-layer3-registry", f"unknown implementation Layer 3 Skill {layer3!r}")
+            elif layer3 not in allowed:
+                reject("task-layer3-routing", f"implementation Layer 3 Skill {layer3!r} is not routed by {primary!r}")
+            elif "task-agent" not in layer3_entry.get("role_support", []):
+                reject("task-layer3-role", f"implementation Layer 3 Skill {layer3!r} does not support task-agent")
+            elif not built_layer3(primary, layer3):
+                reject("skill-built-delivery", f"implementation Layer 3 Skill {layer3!r} is not delivered for {primary!r}")
+
+    assignments = boundary.get("review_assignments", [])
+    if isinstance(assignments, list):
+        for assignment in assignments:
+            if not isinstance(assignment, dict):
+                continue
+            review_skill = assignment.get("review_skill")
+            if not isinstance(review_skill, str) or not review_skill:
+                reject("review-assignment-skill", "each assignment requires exactly one Review Skill")
+                continue
+            entry = professional.get(review_skill)
+            if entry is None:
+                reject("review-skill-registry", f"unknown Review Skill {review_skill!r}")
+                continue
+            if "review-agent" not in entry.get("role_support", []):
+                reject("review-skill-routing", f"Review Skill {review_skill!r} does not support review-agent")
+            if not built_professional(review_skill):
+                reject("skill-built-delivery", f"Review Skill {review_skill!r} is not delivered by every build")
+            allowed = set(entry.get("layer3_candidates", []))
+            for layer3 in assignment.get("layer3_skills", []):
+                layer3_entry = layer3_entries.get(layer3)
+                if layer3_entry is None:
+                    reject("review-layer3-registry", f"unknown review Layer 3 Skill {layer3!r}")
+                elif layer3 not in allowed:
+                    reject("review-layer3-routing", f"review Layer 3 Skill {layer3!r} is not routed by {review_skill!r}")
+                elif "review-agent" not in layer3_entry.get("role_support", []):
+                    reject("review-layer3-role", f"review Layer 3 Skill {layer3!r} does not support review-agent")
+                elif not built_layer3(review_skill, layer3):
+                    reject("skill-built-delivery", f"review Layer 3 Skill {layer3!r} is not delivered for {review_skill!r}")
+    return list(dict.fromkeys(errors))
+
+
+def _combined_review_fixture_results(
+    cases: object,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    if not isinstance(cases, list) or not cases:
+        return [], ["combined_review_cases must be a non-empty list"]
+    results: list[dict[str, Any]] = []
+    errors: list[str] = []
+    seen: set[str] = set()
+    by_id = {
+        case.get("id"): case
+        for case in cases
+        if isinstance(case, dict) and isinstance(case.get("id"), str)
+    }
+
+    def resolved_case(raw_case: dict[str, Any]) -> dict[str, Any]:
+        base_id = raw_case.get("base_case_id")
+        if base_id is None:
+            return raw_case
+        base = by_id.get(base_id)
+        if not isinstance(base, dict) or base.get("base_case_id") is not None:
+            raise ValueError("combined-review mutation base is missing or indirect")
+        resolved = copy.deepcopy(base)
+        resolved["id"] = raw_case["id"]
+        resolved["expected_valid"] = raw_case["expected_valid"]
+        resolved["expected_error"] = raw_case.get("expected_error")
+        mutation = raw_case.get("mutation")
+        if not isinstance(mutation, dict):
+            raise ValueError("combined-review derived fixture requires a mutation")
+        operation = mutation.get("operation")
+        path = mutation.get("path")
+        if not isinstance(path, list) or not path:
+            raise ValueError("combined-review mutation path must be non-empty")
+        target: Any = resolved
+        for part in path[:-1]:
+            target = target[part]
+        final = path[-1]
+        if operation == "replace":
+            target[final] = copy.deepcopy(mutation.get("value"))
+        elif operation == "remove":
+            if isinstance(target, list):
+                target.pop(final)
+            else:
+                del target[final]
+        elif operation == "swap":
+            other_path = mutation.get("other_path")
+            if not isinstance(other_path, list) or not other_path:
+                raise ValueError("combined-review swap needs other_path")
+            other_target: Any = resolved
+            for part in other_path[:-1]:
+                other_target = other_target[part]
+            other_final = other_path[-1]
+            target[final], other_target[other_final] = (
+                other_target[other_final],
+                target[final],
+            )
+        else:
+            raise ValueError("combined-review mutation operation is invalid")
+        return resolved
+
+    for raw_case in cases:
+        case = raw_case
+        case_id = str(case.get("id") if isinstance(case, dict) else "")
+        if not case_id or case_id in seen:
+            errors.append(f"missing or duplicate combined-review case id: {case_id!r}")
+            continue
+        seen.add(case_id)
+        expected_valid = case.get("expected_valid")
+        expected_error = case.get("expected_error")
+        if not isinstance(expected_valid, bool) or (
+            expected_error is not None and not isinstance(expected_error, str)
+        ):
+            errors.append(f"{case_id}: combined-review expectation is invalid")
+            continue
+        try:
+            assert isinstance(case, dict)
+            case = resolved_case(case)
+        except (AssertionError, KeyError, IndexError, TypeError, ValueError) as exc:
+            errors.append(f"{case_id}: combined-review mutation is invalid: {exc}")
+            continue
+        case_errors = _combined_review_case_errors(case)
+        actual_valid = not case_errors
+        matches_expected = actual_valid == expected_valid and (
+            expected_error is None
+            or any(expected_error in error for error in case_errors)
+        )
+        results.append(
+            {
+                "id": case_id,
+                "expected_valid": expected_valid,
+                "actual_valid": actual_valid,
+                "matches_expected": matches_expected,
+                "errors": case_errors,
+            }
+        )
+        if not matches_expected:
+            errors.append(
+                f"{case_id}: combined-review result does not match expectation: {case_errors}"
+            )
+    return results, errors
+
+
 def _implementation_internal_evidence_indexes(
     steps: list[dict[str, Any]],
 ) -> set[int]:
@@ -5005,16 +6467,25 @@ def _progress_anchor_error(
             and _meaningful_anchor_component(parts[1])
             and _meaningful_anchor_component(parts[2])
             and any(
-                prior.get("action") in REVIEW_ACTIONS | {"finding"}
-                and prior.get("evidence_id") == parts[1]
-                and prior.get("outcome") == parts[2]
+                prior.get("evidence_id") == parts[1]
+                and (
+                    (
+                        prior.get("action") in REVIEW_ACTIONS
+                        and prior.get("outcome") == parts[2]
+                    )
+                    or (
+                        prior.get("action") == "finding"
+                        and prior.get("relation") == parts[2]
+                        and prior.get("material") is True
+                    )
+                )
                 for prior in prior_steps
             )
         )
         if not matched:
             return (
                 f"{case_id}: review/close progress at step {index} must bind a "
-                "prior review evidence id and outcome"
+                "prior review evidence id and outcome or Finding Relation"
             )
     return None
 
@@ -5627,6 +7098,257 @@ def _external_read_fixture_results(
     return results, errors
 
 
+def _risk_calibration_fixture_results(
+    raw_cases: object,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Evaluate Level and concrete action authority from independent fixture axes."""
+
+    if not isinstance(raw_cases, list):
+        return [], ["risk calibration fixtures must be a list"]
+    execution = CORE_CONTRACTS["execution_level_contract"]
+    material_fields = execution["material_assessment_fields"]
+    material_statuses = set(execution["material_candidate_statuses"])
+    critical_fields = execution["critical_unknown_fields"]
+    professional_registry, layer3_registry = _skill_registries()
+    material_trigger_ids = {
+        row["id"]
+        for row in execution["trigger_registry"]
+        if row["floor"] == "L4"
+        and row["id"] not in {"formal-release-declared", "unknown-critical-boundary"}
+    }
+    case_fields = (
+        "id",
+        "task_id",
+        "professional_risk_signals",
+        "selected_primary_skill",
+        "selected_risk_lenses",
+        "decisions",
+    )
+    decision_fields = (
+        "candidate_l4_predicate",
+        "residual_material_impact",
+        "material_assessment",
+        "critical_unknown",
+        "l2_eligible",
+        "action_authority",
+        "expected",
+    )
+    expected_fields = (
+        "automatic_level",
+        "effective_level",
+        "edit_status",
+        "historical_max_floor",
+        "historical_max_effective",
+        "action_decision",
+    )
+    results: list[dict[str, Any]] = []
+    errors: list[str] = []
+    seen: set[str] = set()
+
+    for raw_case in raw_cases:
+        case_errors: list[str] = []
+        if not isinstance(raw_case, dict):
+            errors.append("risk calibration fixture must be a mapping")
+            continue
+        case_id = str(raw_case.get("id") or "")
+
+        def reject(code: str, message: str) -> None:
+            case_errors.append(f"{case_id or '<missing>'}: [{code}] {message}")
+
+        if not case_id or case_id in seen:
+            reject("risk-schema", "fixture id must be non-empty and unique")
+        seen.add(case_id)
+        if tuple(raw_case) != case_fields:
+            reject("risk-schema", "fixture fields or order are not canonical")
+        if not isinstance(raw_case.get("task_id"), str) or not raw_case["task_id"].strip():
+            reject("risk-schema", "task_id must be non-empty")
+        signals = raw_case.get("professional_risk_signals")
+        lenses = raw_case.get("selected_risk_lenses")
+        if (
+            not isinstance(signals, list)
+            or not signals
+            or any(not isinstance(item, str) or not item.strip() for item in signals)
+            or len(signals) != len(set(signals))
+        ):
+            reject("risk-schema", "professional risk signals must be unique non-empty text")
+        if (
+            not isinstance(lenses, list)
+            or any(not isinstance(item, str) or not item.strip() for item in lenses)
+            or len(lenses) != len(set(lenses))
+        ):
+            reject("risk-schema", "selected risk lenses must be unique text")
+        if not isinstance(raw_case.get("selected_primary_skill"), str) or not raw_case[
+            "selected_primary_skill"
+        ].strip():
+            reject("risk-schema", "selected primary Skill must be explicit")
+        elif raw_case["selected_primary_skill"] not in professional_registry:
+            reject(
+                "risk-route-metadata",
+                "selected primary Skill must be a registered Primary Skill; registry presence does not prove route correctness",
+            )
+        if isinstance(lenses, list):
+            for lens in lenses:
+                if isinstance(lens, str) and lens not in layer3_registry:
+                    reject(
+                        "risk-route-metadata",
+                        "selected risk lens must be a registered Foundation or Domain risk lens; registry presence does not prove route correctness",
+                    )
+        decisions = raw_case.get("decisions")
+        if not isinstance(decisions, list) or not decisions:
+            reject("risk-schema", "decisions must be a non-empty list")
+            decisions = []
+
+        prior_floor = "L1"
+        prior_effective = "L1"
+        phase_results: list[dict[str, object]] = []
+        for index, decision in enumerate(decisions):
+            if not isinstance(decision, dict) or tuple(decision) != decision_fields:
+                reject("risk-schema", f"decision {index} fields or order are invalid")
+                continue
+            candidate = decision["candidate_l4_predicate"]
+            residual_impact = decision["residual_material_impact"]
+            candidate_status = {
+                "material": "matched",
+                "non-material": "non_material",
+                "unknown": "unknown",
+                "not-applicable": "not_matched",
+            }.get(residual_impact)
+            assessment = decision["material_assessment"]
+            critical = decision["critical_unknown"]
+            if candidate not in material_trigger_ids:
+                reject("risk-predicate", f"decision {index} candidate L4 predicate is invalid")
+                continue
+            if candidate_status not in material_statuses:
+                reject("risk-residual", f"decision {index} candidate status is invalid")
+                continue
+            if candidate_status == "not_matched":
+                if assessment is not None:
+                    reject(
+                        "risk-assessment",
+                        f"decision {index} not_matched candidate must not have a material assessment",
+                    )
+                    continue
+            elif (
+                not isinstance(assessment, dict)
+                or list(assessment) != material_fields
+                or any(
+                    not isinstance(assessment[field], str) or not assessment[field].strip()
+                    for field in material_fields
+                )
+            ):
+                reject("risk-assessment", f"decision {index} material assessment is invalid")
+                continue
+            if critical is not None and (
+                candidate_status != "unknown"
+                or not isinstance(critical, dict)
+                or list(critical) != critical_fields
+                or any(
+                    not isinstance(critical[field], str) or not critical[field].strip()
+                    for field in critical_fields
+                )
+                or critical["candidate_l4_predicate"] != candidate
+            ):
+                reject("risk-critical-unknown", f"decision {index} critical unknown is invalid")
+                continue
+            if not isinstance(decision["l2_eligible"], bool):
+                reject("risk-l2", f"decision {index} l2_eligible must be boolean")
+                continue
+
+            triggers = {
+                row["id"]: {
+                    "status": "not_matched",
+                    "evidence_kind": "analysis_handoff",
+                    "source_anchor": f"fixture:{case_id}:decision-{index}:{row['id']}",
+                    "plausible_critical": False,
+                }
+                for row in execution["trigger_registry"]
+            }
+            triggers[candidate]["status"] = candidate_status
+            if candidate_status != "not_matched":
+                triggers[candidate]["material_assessment"] = assessment
+            if candidate_status == "unknown":
+                if critical is not None:
+                    unknown = triggers["unknown-critical-boundary"]
+                    unknown["status"] = "unknown"
+                    unknown["plausible_critical"] = True
+                    unknown["critical_unknown"] = critical
+            l2 = {
+                row["id"]: {
+                    "status": "true" if decision["l2_eligible"] else "false",
+                    "evidence_kind": "analysis_handoff",
+                    "source_anchor": f"fixture:{case_id}:decision-{index}:{row['id']}",
+                }
+                for row in execution["l2_eligibility"]
+            }
+            if candidate_status in {"matched", "unknown"}:
+                l2["no-material-high-risk-residual-impact"]["status"] = "false"
+            expected = decision["expected"]
+            if not isinstance(expected, dict) or tuple(expected) != expected_fields:
+                reject("risk-schema", f"decision {index} expected fields are invalid")
+                continue
+            try:
+                level = compute_execution_level(
+                    requested="unspecified",
+                    trigger_evaluations=triggers,
+                    l2_evaluations=l2,
+                    prior_historical_max_floor=prior_floor,
+                    prior_historical_max_effective=prior_effective,
+                )
+                action = classify_concrete_action_authority(decision["action_authority"])
+            except ExecutionLevelError as exc:
+                reject("risk-evaluation", f"decision {index} is invalid: {exc}")
+                continue
+            actual = {
+                "automatic_level": level["automatic_level"],
+                "effective_level": level["effective_level"],
+                "edit_status": level["edit_status"],
+                "historical_max_floor": level["next_historical_floor"],
+                "historical_max_effective": level["next_historical_effective"],
+                "action_decision": action["decision"],
+            }
+            if actual != expected:
+                reject(
+                    "risk-expectation",
+                    f"decision {index} expected {expected!r}, got {actual!r}",
+                )
+            phase_results.append(actual)
+            prior_floor = level["next_historical_floor"]
+            prior_effective = level["next_historical_effective"]
+        results.append(
+            {
+                "id": case_id,
+                "task_id": raw_case.get("task_id"),
+                "professional_risk_signals": signals,
+                "selected_primary_skill": raw_case.get("selected_primary_skill"),
+                "selected_risk_lenses": lenses,
+                "decisions": phase_results,
+                "matches_expected": not case_errors,
+                "errors": case_errors,
+            }
+        )
+        errors.extend(case_errors)
+
+    lower_security = [
+        result
+        for result in results
+        if "security" in (result["professional_risk_signals"] or [])
+        and any(
+            decision.get("effective_level") in {"L2", "L3"}
+            for decision in result["decisions"]
+        )
+    ]
+    security_skill_lower = [
+        result
+        for result in lower_security
+        if result["selected_primary_skill"] == "security-privacy-gate"
+    ]
+    if not lower_security:
+        errors.append("risk calibration lacks a security signal below L4")
+    if not security_skill_lower:
+        errors.append("risk calibration lacks Security Skill and Level independence")
+    return results, errors
+
+
 def _completion_fixture_errors(
     raw_cases: object,
     raw_trajectories: object = None,
@@ -5728,9 +7450,13 @@ def _write_reports(
     report: dict[str, Any],
     *,
     release_projection: bool = False,
+    reports_dir: Path = ROOT / "reports",
 ) -> None:
-    REPORT_JSON.parent.mkdir(parents=True, exist_ok=True)
-    REPORT_JSON.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    report_json, report_markdown = report_output_paths(
+        reports_dir, REPORT_JSON.name, REPORT_MD.name
+    )
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    report_json.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     lines = [
         "# Hookless Control Plane Evaluation",
         "",
@@ -5762,10 +7488,10 @@ def _write_reports(
     if report["errors"]:
         lines.extend(["## Errors", "", *[f"- {error}" for error in report["errors"]], ""])
     if release_projection:
-        REPORT_MD.write_text("\n".join(lines), encoding="utf-8")
+        report_markdown.write_text("\n".join(lines), encoding="utf-8")
 
 
-def main(argv: list[str] | None = None) -> int:
+def _args(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--no-write-report",
@@ -5773,7 +7499,12 @@ def main(argv: list[str] | None = None) -> int:
         help="validate fixtures without updating checked-in report artifacts",
     )
     parser.add_argument("--release-projection", action="store_true")
-    args = parser.parse_args(argv)
+    parser.add_argument("--reports-dir", type=Path, default=REPORT_JSON.parent)
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _args(argv)
     try:
         professional, layer3_entries = _skill_registries()
         document = _load_json(FIXTURES)
@@ -5799,8 +7530,17 @@ def main(argv: list[str] | None = None) -> int:
         task_focus_results, task_focus_errors = _task_focus_fixture_results(
             document.get("task_focus_cases")
         )
+        orchestration_results, orchestration_errors = _orchestration_fixture_results(
+            document.get("orchestration_cases")
+        )
+        combined_review_results, combined_review_errors = (
+            _combined_review_fixture_results(document.get("combined_review_cases"))
+        )
         external_read_results, external_read_errors = _external_read_fixture_results(
             document.get("external_read_cases")
+        )
+        risk_calibration_results, risk_calibration_errors = (
+            _risk_calibration_fixture_results(document.get("risk_calibration_cases"))
         )
         completion_results, completion_errors = _completion_fixture_errors(
             document.get("completion_state_cases"),
@@ -5815,7 +7555,10 @@ def main(argv: list[str] | None = None) -> int:
             *adaptive_errors,
             *review_discipline_errors,
             *task_focus_errors,
+            *orchestration_errors,
+            *combined_review_errors,
             *external_read_errors,
+            *risk_calibration_errors,
             *completion_errors,
         ]
         if len(raw_cases) != 13:
@@ -5841,10 +7584,20 @@ def main(argv: list[str] | None = None) -> int:
                 "task-focus fixture count must remain exactly 25, found "
                 f"{len(task_focus_results)}"
             )
+        if len(combined_review_results) != 15:
+            errors.append(
+                "combined-review fixture count must remain exactly 15, found "
+                f"{len(combined_review_results)}"
+            )
         if len(external_read_results) != 14:
             errors.append(
                 "external-read fixture count must remain exactly 14, found "
                 f"{len(external_read_results)}"
+            )
+        if len(risk_calibration_results) != 13:
+            errors.append(
+                "risk calibration fixture count must remain exactly 13, found "
+                f"{len(risk_calibration_results)}"
             )
         seen: set[str] = set()
         for fixture_group, group_cases in (
@@ -5911,8 +7664,24 @@ def main(argv: list[str] | None = None) -> int:
         "review_discipline_fixtures": review_discipline_results,
         "task_focus_fixture_count": len(task_focus_results),
         "task_focus_fixtures": task_focus_results,
+        "orchestration_fixture_count": len(orchestration_results),
+        "orchestration_fixtures": [
+            {
+                key: value
+                for key, value in result.items()
+                if key != "semantic_trace"
+            }
+            for result in orchestration_results
+        ],
+        "semantic_traces": [
+            result["semantic_trace"] for result in orchestration_results
+        ],
+        "combined_review_fixture_count": len(combined_review_results),
+        "combined_review_fixtures": combined_review_results,
         "external_read_fixture_count": len(external_read_results),
         "external_read_fixtures": external_read_results,
+        "risk_calibration_fixture_count": len(risk_calibration_results),
+        "risk_calibration_fixtures": risk_calibration_results,
         "cases": results,
         "parallelism_contract": {
             "current_read_only_parallelism": "declared-supported",
@@ -5931,6 +7700,7 @@ def main(argv: list[str] | None = None) -> int:
         _write_reports(
             report,
             release_projection=args.release_projection,
+            reports_dir=args.reports_dir,
         )
     if errors:
         for error in errors:
@@ -5945,7 +7715,10 @@ def main(argv: list[str] | None = None) -> int:
         f"{report['adaptive_testing_fixture_count']} adaptive-testing controls and "
         f"{report['review_discipline_fixture_count']} review-discipline controls and "
         f"{report['task_focus_fixture_count']} task-focus controls and "
+        f"{report['orchestration_fixture_count']} orchestration controls and "
+        f"{report['combined_review_fixture_count']} combined-review controls and "
         f"{report['external_read_fixture_count']} external-read controls and "
+        f"{report['risk_calibration_fixture_count']} risk-calibration controls and "
         f"{report['completion_state_fixture_count']} completion-state controls."
     )
     return 0

@@ -1,10 +1,10 @@
 # Migrating to the Hookless Architecture
 
-ChangeForge now installs only standard Skills, four static Agent Profiles where supported, and manifests. The product no longer relies on executable interception, an internal task context engine, private evidence storage, role-projection packages, internal task identities, digests, lifecycle protocols, or phase state.
+rd-skills now installs only standard Skills, four static Agent Profiles where supported, and manifests. The product no longer relies on executable interception, an internal task context engine, private evidence storage, role-projection packages, internal task identities, digests, lifecycle protocols, or phase state.
 
 ## Before Upgrade
 
-1. Record the currently installed ChangeForge profile and target.
+1. Record the currently installed rd-skills profile and target.
 2. Back up user-owned Skills and agent configuration if local policy requires it.
 3. Build the desired new profile.
 4. Preview the upgrade.
@@ -24,7 +24,7 @@ python3 installers/doctor.py \
   --agent codex --scope user --profile recommended
 ```
 
-The upgrader removes only known ChangeForge-managed legacy artifacts and manifest-owned files. Unrelated user Skills, agents, and configuration must remain. If doctor reports unknown residue, inspect it before deletion rather than widening cleanup rules.
+The upgrader removes only known legacy `ChangeForge`-named artifacts and manifest-owned files. Unrelated user Skills, agents, and configuration must remain. If doctor reports unknown residue, inspect it before deletion rather than widening cleanup rules.
 
 ## Behavioral Changes
 

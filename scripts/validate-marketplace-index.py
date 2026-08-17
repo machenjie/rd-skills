@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate hookless ChangeForge marketplace/discovery indexes."""
+"""Validate hookless rd-skills marketplace/discovery indexes."""
 
 from __future__ import annotations
 

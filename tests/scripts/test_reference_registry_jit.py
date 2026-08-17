@@ -55,7 +55,7 @@ def _foundation_readability_violations(
     violations = [
         (str(finding["band"]), int(finding["line"]))
         for finding in findings
-        if finding.get("band") in {"tighten", "hard-fail"}
+        if finding.get("severity") == "error" and "band" in finding
     ]
     violations.extend(
         ("compound", int(finding["line"]))
@@ -63,6 +63,14 @@ def _foundation_readability_violations(
         if finding["kind"] == "bullet-decisions"
     )
     return violations
+
+
+def _raw_readability_bands(markdown: str, context: str) -> set[str]:
+    return {
+        str(finding["band"])
+        for finding in ai_readability_findings(markdown, context)
+        if "band" in finding
+    }
 
 
 def _foundation_targeted_or_template_violations(
@@ -161,10 +169,16 @@ def _foundation_benchmark_pattern_violations(
 def _professional_reference_violations(
     markdown: str,
     context: str,
+    reference_type: str,
 ) -> list[tuple[str, int]]:
     violations = _foundation_readability_violations(markdown, context)
     line_count = len(markdown.splitlines())
-    if line_count > REFERENCE_VALIDATOR.TARGETED_LINE_LIMIT:
+    line_limit = (
+        REFERENCE_VALIDATOR.MODE_CONTRACT_LINE_LIMIT
+        if reference_type == "mode-contract"
+        else REFERENCE_VALIDATOR.TARGETED_LINE_LIMIT
+    )
+    if line_count > line_limit:
         violations.append(("line-budget", line_count))
     return violations
 
@@ -1317,6 +1331,10 @@ class ReferenceRegistryJitTest(unittest.TestCase):
         long_rule = "# Checklist\n\n- Preserve " + " ".join(
             f"word{index}" for index in range(33)
         ) + ".\n"
+        self.assertIn(
+            "tighten",
+            _raw_readability_bands(long_rule, "negative-tighten.md"),
+        )
         compound_rule = "# Checklist\n\n- Record the source. Verify the result.\n"
         over_line_budget = "\n".join(
             ["# Targeted", *(f"Line {index}" for index in range(60))]
@@ -1325,7 +1343,6 @@ class ReferenceRegistryJitTest(unittest.TestCase):
             f"- Verify case {index}." for index in range(16)
         )
         cases = {
-            "tighten": long_rule,
             "compound": compound_rule,
             "line-budget": over_line_budget,
             "decision-items": over_item_budget,
@@ -1427,12 +1444,15 @@ class ReferenceRegistryJitTest(unittest.TestCase):
         long_rule = "# Evidence\n\n- Preserve " + " ".join(
             f"word{index}" for index in range(33)
         ) + ".\n"
+        self.assertIn(
+            "tighten",
+            _raw_readability_bands(long_rule, "negative-evidence-tighten.md"),
+        )
         compound_rule = "# Evidence\n\n- Record the source. Verify the result.\n"
         over_line_budget = "\n".join(
             ["# Evidence", *(f"Line {index}" for index in range(60))]
         )
         cases = {
-            "tighten": long_rule,
             "compound": compound_rule,
             "line-budget": over_line_budget,
         }
@@ -1586,6 +1606,7 @@ class ReferenceRegistryJitTest(unittest.TestCase):
                     for kind, value in _professional_reference_violations(
                         markdown,
                         relative,
+                        contract["type"],
                     )
                 )
                 review_count += sum(
@@ -1602,12 +1623,15 @@ class ReferenceRegistryJitTest(unittest.TestCase):
         long_rule = "# Reference\n\n- Preserve " + " ".join(
             f"word{index}" for index in range(33)
         ) + ".\n"
+        self.assertIn(
+            "tighten",
+            _raw_readability_bands(long_rule, "negative-professional-tighten.md"),
+        )
         compound_rule = "# Reference\n\n- Record the source. Verify the result.\n"
         over_line_budget = "\n".join(
             ["# Reference", *(f"Line {index}" for index in range(60))]
         )
         cases = {
-            "tighten": long_rule,
             "compound": compound_rule,
             "line-budget": over_line_budget,
         }
@@ -1620,6 +1644,7 @@ class ReferenceRegistryJitTest(unittest.TestCase):
                         for kind, _value in _professional_reference_violations(
                             markdown,
                             f"negative-professional-{expected}.md",
+                            "targeted",
                         )
                     },
                 )
@@ -1634,6 +1659,47 @@ class ReferenceRegistryJitTest(unittest.TestCase):
                 for kind, _value in _professional_reference_violations(
                     at_line_limit,
                     "positive-professional-60-lines.md",
+                    "targeted",
+                )
+            },
+        )
+
+        over_targeted_limit = at_line_limit + "\nLine 59"
+        self.assertIn(
+            "line-budget",
+            {
+                kind
+                for kind, _value in _professional_reference_violations(
+                    over_targeted_limit,
+                    "negative-professional-61-lines.md",
+                    "targeted",
+                )
+            },
+        )
+
+        at_mode_contract_limit = "\n".join(
+            ["# Reference", *(f"Line {index}" for index in range(79))]
+        )
+        self.assertNotIn(
+            "line-budget",
+            {
+                kind
+                for kind, _value in _professional_reference_violations(
+                    at_mode_contract_limit,
+                    "positive-professional-mode-contract-80-lines.md",
+                    "mode-contract",
+                )
+            },
+        )
+        over_mode_contract_limit = at_mode_contract_limit + "\nLine 79"
+        self.assertIn(
+            "line-budget",
+            {
+                kind
+                for kind, _value in _professional_reference_violations(
+                    over_mode_contract_limit,
+                    "negative-professional-mode-contract-81-lines.md",
+                    "mode-contract",
                 )
             },
         )
@@ -1818,12 +1884,15 @@ class ReferenceRegistryJitTest(unittest.TestCase):
         long_rule = "# Benchmark\n\n- Preserve " + " ".join(
             f"word{index}" for index in range(33)
         ) + ".\n"
+        self.assertIn(
+            "tighten",
+            _raw_readability_bands(long_rule, "negative-benchmark-tighten.md"),
+        )
         compound_rule = "# Benchmark\n\n- Record the source. Verify the result.\n"
         over_line_budget = "\n".join(
             ["# Benchmark", *(f"Line {index}" for index in range(60))]
         )
         cases = {
-            "tighten": long_rule,
             "compound": compound_rule,
             "line-budget": over_line_budget,
         }
@@ -2145,16 +2214,10 @@ class ReferenceRegistryJitTest(unittest.TestCase):
             with self.subTest(reference_type=reference_type, finding="tighten"):
                 self.assertIn(
                     "tighten",
-                    {
-                        kind
-                        for kind, _value in (
-                            _foundation_targeted_or_template_violations(
-                                long_rule,
-                                f"negative-{reference_type}-tighten.md",
-                                reference_type,
-                            )
-                        )
-                    },
+                    _raw_readability_bands(
+                        long_rule,
+                        f"negative-{reference_type}-tighten.md",
+                    ),
                 )
             with self.subTest(reference_type=reference_type, finding="compound"):
                 self.assertIn(

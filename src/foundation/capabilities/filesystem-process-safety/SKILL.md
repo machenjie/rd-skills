@@ -23,13 +23,13 @@ Define portable application-runtime safety for local mutation and direct child p
 
 ## Inputs
 
-- supported platforms, filesystems, runtime APIs, path authority, link policy, replacement, durability, protection, and cleanup owner
+- supported platforms, filesystems, runtime APIs, path authority, who can write the path, whether any writer is less trusted, link policy, replacement, durability, protection, and cleanup owner
 - executable identity, argv, environment, working directory, stdio, deadline, cancellation, descendants, exit meaning, and effect reconciliation
 
 ## High-Value Rules
 
 - Define exclusive temporary creation in the destination directory, restrictive protection, documented same-filesystem commit, atomic visibility, and separate crash-durability proof.
-- Bind untrusted relative paths to a trusted directory with handle-relative or equivalent controls, rejecting disallowed absolute, parent, link, and reparse traversal because string-prefix checks do not establish authorization.
+- Classify path trust from writer identity, reachable impact, handle-relative confinement, and traversal exclusions; same-user writability or path difference alone does not establish a material boundary.
 - Apply mode, ACL, ownership, and inheritance at creation where supported; verify final protection because replacement APIs preserve metadata differently.
 - Execute a selected program directly with structured argv. Make lookup, environment, working directory, credential, and inherited-resource policy explicit; route shell semantics elsewhere.
 - Define stdin closure, separate stdout/stderr, encoding, bounds, redaction, and concurrent draining before waiting.
@@ -42,6 +42,7 @@ Define portable application-runtime safety for local mutation and direct child p
 - Cross-volume replacement fails or degrades to copy/delete, exposing partial state.
 - Check-then-open permits a link or reparse swap before mutation.
 - Create-then-tighten protection briefly exposes bytes under default access.
+- Treating every writable or replaceable path as attacker-controlled invents a trust boundary without writer evidence.
 - Waiting before draining both pipes can deadlock parent and child.
 - Killing only the direct child leaves descendants or effects running; timeout is not rollback.
 

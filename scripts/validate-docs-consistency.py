@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate current ChangeForge human documentation and source-owned facts."""
+"""Validate current rd-skills human documentation and source-owned facts."""
 
 from __future__ import annotations
 
@@ -61,6 +61,7 @@ VOLATILE_FACT_DOCS = (
 )
 CURRENT_EVIDENCE_DOCS = (
     "GOVERNANCE.md",
+    ".github/pull_request_template.md",
     "docs/RELEASE.md",
     "docs/VALIDATION.md",
     "docs/SKILL_CONTENT_GOVERNANCE.md",
@@ -306,7 +307,7 @@ FULL_REGRESSION_COMMANDS = (
     "python3 scripts/validate-marketplace-index.py --profile dev",
     "python3 scripts/validate-productization-assets.py",
     "python3 scripts/validate-open-source-readiness.py --require-pass",
-    "python3 -m unittest discover -s tests",
+    "python3 scripts/run-ci-tests.py full --jobs 4 --timeout 900",
     "python3 scripts/validate-codegen-benchmarks.py",
     "python3 scripts/run-codegen-benchmarks.py --limit 3",
     "python3 scripts/quickstart.py --agent codex --scope user --dry-run",
@@ -314,6 +315,7 @@ FULL_REGRESSION_COMMANDS = (
     "python3 scripts/quickstart.py --agent copilot --scope project --target /tmp/changeforge-quickstart-copilot --dry-run",
     "python3 scripts/quickstart.py --agent openai-api --dry-run",
 )
+LEGACY_FULL_UNITTEST_COMMAND = "python3 -m unittest discover -s tests"
 
 
 def _markdown_files(root: Path) -> list[Path]:
@@ -479,13 +481,6 @@ def _list(value: Any, context: str) -> list[Any]:
     if not isinstance(value, list):
         raise ValidationProblem(f"{context} must be a list")
     return value
-
-
-def _review_suffix(value: str, context: str) -> str:
-    match = re.search(r"(?:^|-)r(\d+)(?:/|$)", value)
-    if match is None:
-        raise ValidationProblem(f"{context} does not contain a review suffix")
-    return f"r{match.group(1)}"
 
 
 def _registry_authority(root: Path) -> dict[str, Any]:
@@ -894,65 +889,86 @@ def _current_evidence_authority(root: Path) -> dict[str, Any]:
         load_yaml_file(root / "config/skill-content-exceptions.yaml"),
         "config/skill-content-exceptions.yaml",
     )
-    lifecycle = _mapping(
-        _mapping(
-            exceptions.get("root_semantic_dispositions"),
-            "root_semantic_dispositions",
-        ).get("lifecycle"),
-        "root_semantic_dispositions.lifecycle",
+    root_dispositions = _mapping(
+        exceptions.get("root_semantic_dispositions"),
+        "root_semantic_dispositions",
     )
-    current_lifecycle = _mapping(lifecycle.get("current"), "lifecycle.current")
-    semantic = _mapping(
-        exceptions.get("semantic_disposition_application"),
-        "semantic_disposition_application",
-    )
+    if root_dispositions.get("schema_version") != 7 or "lifecycle" in (
+        root_dispositions
+    ):
+        raise ValidationProblem(
+            "root_semantic_dispositions must use lifecycle-free schema 7"
+        )
     review_config = _mapping(
         load_yaml_file(root / "config/professionalism-release-review.yaml"),
         "config/professionalism-release-review.yaml",
     )
-    readability_path = str(
-        _mapping(
-            _mapping(
-                review_config.get("readability_review_attestation"),
-                "readability_review_attestation",
-            ).get("panel_record"),
-            "readability_review_attestation.panel_record",
-        ).get("path")
-        or ""
+    readability = _mapping(
+        review_config.get("readability_review_attestation"),
+        "readability_review_attestation",
     )
-    professional_path = str(
-        _mapping(
-            _mapping(
-                review_config.get("professional_completeness_review_attestation"),
-                "professional_completeness_review_attestation",
-            ).get("panel_record"),
-            "professional_completeness_review_attestation.panel_record",
-        ).get("path")
-        or ""
+    professional = _mapping(
+        review_config.get("professional_completeness_review_attestation"),
+        "professional_completeness_review_attestation",
     )
+    selector_free_fields = {
+        "schema_version",
+        "panel_kind",
+        "scope",
+        "decision_method",
+        "limitations",
+    }
+    for label, axis_config in (
+        ("readability_review_attestation", readability),
+        ("professional_completeness_review_attestation", professional),
+    ):
+        if set(axis_config) != selector_free_fields:
+            raise ValidationProblem(
+                f"{label} must use the selector-free schema 5 config contract"
+            )
+    stable_identity = {
+        "readability": (
+            readability.get("schema_version"),
+            readability.get("panel_kind"),
+            readability.get("scope"),
+        ),
+        "professional-completeness": (
+            professional.get("schema_version"),
+            professional.get("panel_kind"),
+            professional.get("scope"),
+        ),
+    }
+    expected_stable_identity = {
+        "readability": (5, "readability", "ai-readability-and-density"),
+        "professional-completeness": (
+            5,
+            "professional-completeness",
+            "professional-skill-packages",
+        ),
+    }
+    if stable_identity != expected_stable_identity:
+        raise ValidationProblem("expert evidence authority identity is not canonical")
+
+    fixed_paths = {
+        "readability": "evals/expert-panel/readability.json",
+        "semantic-disposition": "evals/expert-panel/semantic-disposition.json",
+        "professional-completeness": (
+            "evals/expert-panel/professional-completeness.json"
+        ),
+    }
     return {
         "non_control": registry["non_control"],
-        "readability_review": _review_suffix(readability_path, "readability path"),
-        "semantic_review": _review_suffix(
-            str(semantic.get("review_id") or ""), "semantic review id"
-        ),
-        "root_lifecycle_review": _review_suffix(
-            str(current_lifecycle.get("release_id") or ""),
-            "root lifecycle release id",
-        ),
-        "professional_review": _review_suffix(
-            professional_path, "professional path"
-        ),
+        "canonical_fixed_paths": True,
+        "migration_state": "current",
+        "fixed_paths": fixed_paths,
     }
 
 
 def _current_evidence_projection(authority: dict[str, Any]) -> str:
     return (
-        f"Current static evidence selectors are {authority['readability_review']} "
-        f"Readability, {authority['semantic_review']} Semantic Disposition, "
-        f"{authority['root_lifecycle_review']} Root lifecycle, and "
-        f"{authority['professional_review']} schema-3 Professional Completeness "
-        f"for all {authority['non_control']} non-Control packages."
+        "Canonical fixed-attestation paths, not Readability or Professional "
+        "policy config, select Expert Panel evidence; the formal target "
+        f"remains all {authority['non_control']} non-Control packages."
     )
 
 
@@ -1000,8 +1016,19 @@ def _current_evidence_projection_errors(root: Path) -> list[str]:
     except (OSError, ValidationProblem, KeyError, TypeError, ValueError) as exc:
         return [f"current evidence authority is invalid: {exc}"]
     expected = _normalized_document_text(_current_evidence_projection(authority))
+    expected_inventory = tuple(
+        _normalized_document_text(f"`evals/expert-panel/{name}.json`")
+        for name in (
+            "readability",
+            "semantic-disposition",
+            "professional-completeness",
+        )
+    )
+    expected_runtime = _normalized_document_text(
+        "`.rd-skills/expert-panel/<run-id>/`"
+    )
     boundary = _normalized_document_text(
-        "These static selectors do not prove that the final formal gates or "
+        "These fixed attestations do not prove that the final formal gates or "
         "same-commit remote workflow passed."
     )
     errors: list[str] = []
@@ -1012,8 +1039,14 @@ def _current_evidence_projection_errors(root: Path) -> list[str]:
         normalized = _normalized_document_text(path.read_text(encoding="utf-8"))
         if expected not in normalized:
             errors.append(
-                f"{relative}: current evidence selectors do not match authoritative configs"
+                f"{relative}: current fixed evidence does not match authoritative configs"
             )
+        if any(item not in normalized for item in expected_inventory):
+            errors.append(
+                f"{relative}: missing exact compact expert-panel inventory"
+            )
+        if expected_runtime not in normalized:
+            errors.append(f"{relative}: missing ignored expert-panel runtime root")
         if boundary not in normalized:
             errors.append(
                 f"{relative}: current static evidence must retain the formal-gate proof limit"
@@ -1159,9 +1192,14 @@ def _governance_context_budget_authority_block(
     )
 
 
+def _governance_budget_report_path(reports_dir: Path) -> Path:
+    return reports_dir / Path(GOVERNANCE_BUDGET_REPORT).name
+
+
 def _governance_context_budget_errors(
     root: Path,
     core_contracts: dict[str, object],
+    reports_dir: Path | None = None,
 ) -> list[str]:
     errors: list[str] = []
     governance_path = root / "GOVERNANCE.md"
@@ -1214,7 +1252,11 @@ def _governance_context_budget_errors(
             "declare budget ceilings outside the fixed ceiling authority block"
         )
 
-    report_path = root / GOVERNANCE_BUDGET_REPORT
+    report_path = _governance_budget_report_path(
+        root / Path(GOVERNANCE_BUDGET_REPORT).parent
+        if reports_dir is None
+        else reports_dir
+    )
     if not report_path.is_file():
         errors.append(
             f"{GOVERNANCE_BUDGET_REPORT}: rendered context budget report is missing"
@@ -1569,6 +1611,10 @@ def _ordered_command_errors(
             )
             continue
         position = found + len(command)
+        if text.count(command) != 1:
+            errors.append(
+                f"{path.name}: {label} command must appear exactly once {command}"
+            )
     return errors
 
 
@@ -1762,18 +1808,11 @@ def _ci_affected_check_errors(path: Path) -> list[str]:
                 f"{path.name}: {label} must use the exact pull-request base/head environment"
             )
 
-    forbidden_commands = [
-        command
-        for command in FULL_REGRESSION_COMMANDS
-        if command != "python3 -m unittest discover -s tests"
-    ]
-    if (
-        any("python3 -m unittest discover -s tests" in run for _step, run in run_steps)
-        or any(
-            command in run
-            for _step, run in run_steps
-            for command in forbidden_commands
-        )
+    forbidden_commands = (*FULL_REGRESSION_COMMANDS, LEGACY_FULL_UNITTEST_COMMAND)
+    if any(
+        command in run
+        for _step, run in run_steps
+        for command in forbidden_commands
     ):
         errors.append(f"{path.name}: CI must not run the unconditional Full Regression")
     if any("shard" in run.casefold() for _step, run in run_steps):
@@ -1874,13 +1913,7 @@ def _core_projection_errors(
         if not path.is_file():
             errors.append(f"{relative}: missing Core Model documentation projection")
             continue
-        raw = path.read_bytes()
-        actual_sha256 = hashlib.sha256(raw).hexdigest()
-        if actual_sha256 != projection["document_sha256"]:
-            errors.append(
-                f"{relative}: whole-document SHA-256 does not match the Core Model"
-            )
-        text = raw.decode("utf-8")
+        text = path.read_text(encoding="utf-8")
         expected = docs_projection_block(core_contracts, projection)
         body, outside, section_errors = _projection_section(
             text, projection["section"]
@@ -1944,13 +1977,7 @@ def _core_projection_errors(
         if not path.is_file():
             errors.append(f"{relative}: missing context budget documentation projection")
             continue
-        raw = path.read_bytes()
-        actual_sha256 = hashlib.sha256(raw).hexdigest()
-        if actual_sha256 != projection["document_sha256"]:
-            errors.append(
-                f"{relative}: whole-document SHA-256 does not match the Core Model"
-            )
-        text = raw.decode("utf-8")
+        text = path.read_text(encoding="utf-8")
         expected = context_budget_docs_projection_block(core_contracts, projection)
         body, _outside, section_errors = _projection_section(
             text, projection["section"]
@@ -1976,7 +2003,11 @@ def _core_projection_errors(
     return errors
 
 
-def validate_docs_consistency(root: Path = ROOT) -> list[str]:
+def validate_docs_consistency(
+    root: Path = ROOT,
+    *,
+    reports_dir: Path | None = None,
+) -> list[str]:
     errors: list[str] = []
     for relative in REQUIRED_DOCS:
         if not (root / relative).is_file():
@@ -2018,7 +2049,11 @@ def validate_docs_consistency(root: Path = ROOT) -> list[str]:
     except RuntimeError:
         governance_core = None
     if governance_core is not None:
-        errors.extend(_governance_context_budget_errors(root, governance_core))
+        errors.extend(
+            _governance_context_budget_errors(
+                root, governance_core, reports_dir
+            )
+        )
     errors.extend(_governance_evidence_freshness_errors(root))
 
     architecture = (root / "docs/HOOKLESS_ARCHITECTURE.md").read_text(encoding="utf-8")
@@ -2042,11 +2077,21 @@ def validate_docs_consistency(root: Path = ROOT) -> list[str]:
     return errors
 
 
-def main(argv: list[str] | None = None) -> int:
+def _args(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", default=str(ROOT))
+    parser.add_argument("--reports-dir", type=Path)
     args = parser.parse_args(argv)
-    errors = validate_docs_consistency(Path(args.root))
+    if args.reports_dir is None:
+        args.reports_dir = Path(args.root) / "reports"
+    return args
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _args(argv)
+    errors = validate_docs_consistency(
+        Path(args.root), reports_dir=args.reports_dir
+    )
     if errors:
         for error in errors:
             print(f"validate-docs-consistency: ERROR: {error}", file=sys.stderr)

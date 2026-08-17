@@ -106038,22 +106038,14 @@
       "prompt": "Analyze payment money movement authorization and idempotency.",
       "route_decision": {
         "main_execution_provenance": {
-          "execution_level": "L4",
+          "execution_level": "L3",
           "level_basis": {
             "edit_status": "allowed",
             "l2_eligibility": [],
             "obligations": [
-              "high-risk pre-implementation evidence"
+              "default standard source-backed execution"
             ],
-            "trigger_evaluations": [
-              {
-                "evidence_kind": "analysis_handoff",
-                "id": "public-api-event-schema-compatibility",
-                "plausible_critical": false,
-                "source_anchor": "task:payment-security:routing-api",
-                "status": "matched"
-              }
-            ],
+            "trigger_evaluations": [],
             "unresolved": []
           },
           "producer": "main-control-agent",
@@ -106062,7 +106054,7 @@
         "path": "analyzed",
         "route_once": true,
         "route_result": {
-          "execution_level": "L4",
+          "execution_level": "L3",
           "layer3_skills": [
             "payment-trading-extension",
             "repository-context-map"
@@ -106071,17 +106063,9 @@
             "edit_status": "allowed",
             "l2_eligibility": [],
             "obligations": [
-              "high-risk pre-implementation evidence"
+              "default standard source-backed execution"
             ],
-            "trigger_evaluations": [
-              {
-                "evidence_kind": "analysis_handoff",
-                "id": "public-api-event-schema-compatibility",
-                "plausible_critical": false,
-                "source_anchor": "task:payment-security:routing-api",
-                "status": "matched"
-              }
-            ],
+            "trigger_evaluations": [],
             "unresolved": []
           },
           "primary_skill": "engineering-change-analysis",
@@ -123603,9 +123587,7 @@
               "review_regression": false,
               "support_foundations": [
                 "degradation-circuit-breaking",
-                "observability",
-                "permission-boundary-modeling",
-                "threat-modeling"
+                "observability"
               ]
             },
             "candidate_type": "converted-cohort",
@@ -123651,85 +123633,6 @@
               }
             ],
             "stage": "review"
-          },
-          {
-            "candidate_id": "generic-security-risk",
-            "candidate_layer3_context": {
-              "domain_requests": [],
-              "foundation_requests": [
-                "permission-boundary-modeling",
-                "threat-modeling"
-              ],
-              "kind": "fixed"
-            },
-            "candidate_type": "explicit-route",
-            "eligible_domain_layer3_skills": [],
-            "eligible_foundation_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "eligible_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "evidence": [
-              "authorization-permission-privacy-or-security",
-              "ssrf",
-              "url-fetch",
-              "foundation-selector:ssrf-url-fetch-analysis",
-              "tenant-isolation",
-              "propagated-boundary",
-              "foundation-selector:tenant-isolation-security"
-            ],
-            "layer3_overflow": false,
-            "layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "path": "analyzed",
-            "precedence": 5,
-            "precedence_class": "security-boundary",
-            "primary_skill": "security-privacy-gate",
-            "profile": "analysis-agent",
-            "reason": "lower-precedence-than-review-reliability-risk",
-            "reserved_domain_capacity": 0,
-            "review_skill": "security-privacy-gate",
-            "rule_id": "generic-security-risk",
-            "source_foundation_candidates": [
-              {
-                "candidate_id": "ssrf-url-fetch-analysis",
-                "evidence": [
-                  "ssrf",
-                  "url-fetch",
-                  "foundation-selector:ssrf-url-fetch-analysis"
-                ],
-                "foundations": [
-                  "threat-modeling",
-                  "web-security"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              },
-              {
-                "candidate_id": "tenant-isolation-security",
-                "evidence": [
-                  "tenant-isolation",
-                  "propagated-boundary",
-                  "foundation-selector:tenant-isolation-security"
-                ],
-                "foundations": [
-                  "permission-boundary-modeling",
-                  "tenant-isolation"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              }
-            ],
-            "stage": "risk"
           },
           {
             "candidate_id": "reliability-signal-analysis",
@@ -123881,10 +123784,7 @@
                 "observability",
                 "backup-recovery"
               ],
-              "support_foundations": [
-                "permission-boundary-modeling",
-                "threat-modeling"
-              ]
+              "support_foundations": []
             },
             "candidate_type": "converted-cohort",
             "eligible_domain_layer3_skills": [],
@@ -123966,9 +123866,7 @@
               "review_regression": false,
               "support_foundations": [
                 "degradation-circuit-breaking",
-                "observability",
-                "permission-boundary-modeling",
-                "threat-modeling"
+                "observability"
               ]
             },
             "candidate_type": "converted-cohort",
@@ -124013,84 +123911,6 @@
               }
             ],
             "stage": "review"
-          },
-          {
-            "candidate_id": "generic-security-risk",
-            "candidate_layer3_context": {
-              "domain_requests": [],
-              "foundation_requests": [
-                "permission-boundary-modeling",
-                "threat-modeling"
-              ],
-              "kind": "fixed"
-            },
-            "candidate_type": "explicit-route",
-            "eligible_domain_layer3_skills": [],
-            "eligible_foundation_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "eligible_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "evidence": [
-              "authorization-permission-privacy-or-security",
-              "ssrf",
-              "url-fetch",
-              "foundation-selector:ssrf-url-fetch-analysis",
-              "tenant-isolation",
-              "propagated-boundary",
-              "foundation-selector:tenant-isolation-security"
-            ],
-            "layer3_overflow": false,
-            "layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "path": "analyzed",
-            "precedence": 5,
-            "precedence_class": "security-boundary",
-            "primary_skill": "security-privacy-gate",
-            "profile": "analysis-agent",
-            "reserved_domain_capacity": 0,
-            "review_skill": "security-privacy-gate",
-            "rule_id": "generic-security-risk",
-            "source_foundation_candidates": [
-              {
-                "candidate_id": "ssrf-url-fetch-analysis",
-                "evidence": [
-                  "ssrf",
-                  "url-fetch",
-                  "foundation-selector:ssrf-url-fetch-analysis"
-                ],
-                "foundations": [
-                  "threat-modeling",
-                  "web-security"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              },
-              {
-                "candidate_id": "tenant-isolation-security",
-                "evidence": [
-                  "tenant-isolation",
-                  "propagated-boundary",
-                  "foundation-selector:tenant-isolation-security"
-                ],
-                "foundations": [
-                  "permission-boundary-modeling",
-                  "tenant-isolation"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              }
-            ],
-            "stage": "risk"
           },
           {
             "candidate_id": "reliability-signal-analysis",
@@ -124230,10 +124050,7 @@
               "observability",
               "backup-recovery"
             ],
-            "support_foundations": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ]
+            "support_foundations": []
           },
           "candidate_type": "converted-cohort",
           "eligible_domain_layer3_skills": [],
@@ -153757,87 +153574,7 @@
       },
       "winner_trace": {
         "candidate_coverage": "full",
-        "excluded_candidates": [
-          {
-            "candidate_id": "generic-security-risk",
-            "candidate_layer3_context": {
-              "domain_requests": [],
-              "foundation_requests": [
-                "permission-boundary-modeling",
-                "threat-modeling"
-              ],
-              "kind": "fixed"
-            },
-            "candidate_type": "explicit-route",
-            "eligible_domain_layer3_skills": [],
-            "eligible_foundation_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "eligible_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "evidence": [
-              "authorization-permission-privacy-or-security",
-              "ssrf",
-              "url-fetch",
-              "foundation-selector:ssrf-url-fetch-analysis",
-              "tenant-isolation",
-              "propagated-boundary",
-              "foundation-selector:tenant-isolation-security"
-            ],
-            "layer3_overflow": false,
-            "layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "path": "analyzed",
-            "precedence": 5,
-            "precedence_class": "security-boundary",
-            "primary_skill": "security-privacy-gate",
-            "profile": "analysis-agent",
-            "reason": "lower-precedence-than-review-generic",
-            "reserved_domain_capacity": 0,
-            "review_skill": "security-privacy-gate",
-            "rule_id": "generic-security-risk",
-            "source_foundation_candidates": [
-              {
-                "candidate_id": "ssrf-url-fetch-analysis",
-                "evidence": [
-                  "ssrf",
-                  "url-fetch",
-                  "foundation-selector:ssrf-url-fetch-analysis"
-                ],
-                "foundations": [
-                  "threat-modeling",
-                  "web-security"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              },
-              {
-                "candidate_id": "tenant-isolation-security",
-                "evidence": [
-                  "tenant-isolation",
-                  "propagated-boundary",
-                  "foundation-selector:tenant-isolation-security"
-                ],
-                "foundations": [
-                  "permission-boundary-modeling",
-                  "tenant-isolation"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              }
-            ],
-            "stage": "risk"
-          }
-        ],
+        "excluded_candidates": [],
         "match_evidence": [
           "actual-diff-review",
           "refactoring-change",
@@ -153854,10 +153591,7 @@
               "owner_internal_refactor": true,
               "repeat_failure": false,
               "review_regression": false,
-              "support_foundations": [
-                "permission-boundary-modeling",
-                "threat-modeling"
-              ]
+              "support_foundations": []
             },
             "candidate_type": "converted-cohort",
             "eligible_domain_layer3_skills": [],
@@ -153903,84 +153637,6 @@
               }
             ],
             "stage": "review"
-          },
-          {
-            "candidate_id": "generic-security-risk",
-            "candidate_layer3_context": {
-              "domain_requests": [],
-              "foundation_requests": [
-                "permission-boundary-modeling",
-                "threat-modeling"
-              ],
-              "kind": "fixed"
-            },
-            "candidate_type": "explicit-route",
-            "eligible_domain_layer3_skills": [],
-            "eligible_foundation_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "eligible_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "evidence": [
-              "authorization-permission-privacy-or-security",
-              "ssrf",
-              "url-fetch",
-              "foundation-selector:ssrf-url-fetch-analysis",
-              "tenant-isolation",
-              "propagated-boundary",
-              "foundation-selector:tenant-isolation-security"
-            ],
-            "layer3_overflow": false,
-            "layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "path": "analyzed",
-            "precedence": 5,
-            "precedence_class": "security-boundary",
-            "primary_skill": "security-privacy-gate",
-            "profile": "analysis-agent",
-            "reserved_domain_capacity": 0,
-            "review_skill": "security-privacy-gate",
-            "rule_id": "generic-security-risk",
-            "source_foundation_candidates": [
-              {
-                "candidate_id": "ssrf-url-fetch-analysis",
-                "evidence": [
-                  "ssrf",
-                  "url-fetch",
-                  "foundation-selector:ssrf-url-fetch-analysis"
-                ],
-                "foundations": [
-                  "threat-modeling",
-                  "web-security"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              },
-              {
-                "candidate_id": "tenant-isolation-security",
-                "evidence": [
-                  "tenant-isolation",
-                  "propagated-boundary",
-                  "foundation-selector:tenant-isolation-security"
-                ],
-                "foundations": [
-                  "permission-boundary-modeling",
-                  "tenant-isolation"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              }
-            ],
-            "stage": "risk"
           }
         ],
         "route_once": "proven",
@@ -153993,10 +153649,7 @@
             "owner_internal_refactor": true,
             "repeat_failure": false,
             "review_regression": false,
-            "support_foundations": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ]
+            "support_foundations": []
           },
           "candidate_type": "converted-cohort",
           "eligible_domain_layer3_skills": [],
@@ -154723,87 +154376,7 @@
       },
       "winner_trace": {
         "candidate_coverage": "full",
-        "excluded_candidates": [
-          {
-            "candidate_id": "generic-security-risk",
-            "candidate_layer3_context": {
-              "domain_requests": [],
-              "foundation_requests": [
-                "permission-boundary-modeling",
-                "threat-modeling"
-              ],
-              "kind": "fixed"
-            },
-            "candidate_type": "explicit-route",
-            "eligible_domain_layer3_skills": [],
-            "eligible_foundation_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "eligible_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "evidence": [
-              "authorization-permission-privacy-or-security",
-              "ssrf",
-              "url-fetch",
-              "foundation-selector:ssrf-url-fetch-analysis",
-              "tenant-isolation",
-              "propagated-boundary",
-              "foundation-selector:tenant-isolation-security"
-            ],
-            "layer3_overflow": false,
-            "layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "path": "analyzed",
-            "precedence": 5,
-            "precedence_class": "security-boundary",
-            "primary_skill": "security-privacy-gate",
-            "profile": "analysis-agent",
-            "reason": "lower-precedence-than-review-generic",
-            "reserved_domain_capacity": 0,
-            "review_skill": "security-privacy-gate",
-            "rule_id": "generic-security-risk",
-            "source_foundation_candidates": [
-              {
-                "candidate_id": "ssrf-url-fetch-analysis",
-                "evidence": [
-                  "ssrf",
-                  "url-fetch",
-                  "foundation-selector:ssrf-url-fetch-analysis"
-                ],
-                "foundations": [
-                  "threat-modeling",
-                  "web-security"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              },
-              {
-                "candidate_id": "tenant-isolation-security",
-                "evidence": [
-                  "tenant-isolation",
-                  "propagated-boundary",
-                  "foundation-selector:tenant-isolation-security"
-                ],
-                "foundations": [
-                  "permission-boundary-modeling",
-                  "tenant-isolation"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              }
-            ],
-            "stage": "risk"
-          }
-        ],
+        "excluded_candidates": [],
         "match_evidence": [
           "actual-diff-review",
           "refactoring-change",
@@ -154820,10 +154393,7 @@
               "owner_internal_refactor": true,
               "repeat_failure": false,
               "review_regression": false,
-              "support_foundations": [
-                "permission-boundary-modeling",
-                "threat-modeling"
-              ]
+              "support_foundations": []
             },
             "candidate_type": "converted-cohort",
             "eligible_domain_layer3_skills": [],
@@ -154869,84 +154439,6 @@
               }
             ],
             "stage": "review"
-          },
-          {
-            "candidate_id": "generic-security-risk",
-            "candidate_layer3_context": {
-              "domain_requests": [],
-              "foundation_requests": [
-                "permission-boundary-modeling",
-                "threat-modeling"
-              ],
-              "kind": "fixed"
-            },
-            "candidate_type": "explicit-route",
-            "eligible_domain_layer3_skills": [],
-            "eligible_foundation_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "eligible_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "evidence": [
-              "authorization-permission-privacy-or-security",
-              "ssrf",
-              "url-fetch",
-              "foundation-selector:ssrf-url-fetch-analysis",
-              "tenant-isolation",
-              "propagated-boundary",
-              "foundation-selector:tenant-isolation-security"
-            ],
-            "layer3_overflow": false,
-            "layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "path": "analyzed",
-            "precedence": 5,
-            "precedence_class": "security-boundary",
-            "primary_skill": "security-privacy-gate",
-            "profile": "analysis-agent",
-            "reserved_domain_capacity": 0,
-            "review_skill": "security-privacy-gate",
-            "rule_id": "generic-security-risk",
-            "source_foundation_candidates": [
-              {
-                "candidate_id": "ssrf-url-fetch-analysis",
-                "evidence": [
-                  "ssrf",
-                  "url-fetch",
-                  "foundation-selector:ssrf-url-fetch-analysis"
-                ],
-                "foundations": [
-                  "threat-modeling",
-                  "web-security"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              },
-              {
-                "candidate_id": "tenant-isolation-security",
-                "evidence": [
-                  "tenant-isolation",
-                  "propagated-boundary",
-                  "foundation-selector:tenant-isolation-security"
-                ],
-                "foundations": [
-                  "permission-boundary-modeling",
-                  "tenant-isolation"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              }
-            ],
-            "stage": "risk"
           }
         ],
         "route_once": "proven",
@@ -154959,10 +154451,7 @@
             "owner_internal_refactor": true,
             "repeat_failure": false,
             "review_regression": false,
-            "support_foundations": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ]
+            "support_foundations": []
           },
           "candidate_type": "converted-cohort",
           "eligible_domain_layer3_skills": [],
@@ -163764,87 +163253,7 @@
       },
       "winner_trace": {
         "candidate_coverage": "full",
-        "excluded_candidates": [
-          {
-            "candidate_id": "generic-security-risk",
-            "candidate_layer3_context": {
-              "domain_requests": [],
-              "foundation_requests": [
-                "permission-boundary-modeling",
-                "threat-modeling"
-              ],
-              "kind": "fixed"
-            },
-            "candidate_type": "explicit-route",
-            "eligible_domain_layer3_skills": [],
-            "eligible_foundation_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "eligible_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "evidence": [
-              "authorization-permission-privacy-or-security",
-              "ssrf",
-              "url-fetch",
-              "foundation-selector:ssrf-url-fetch-analysis",
-              "tenant-isolation",
-              "propagated-boundary",
-              "foundation-selector:tenant-isolation-security"
-            ],
-            "layer3_overflow": false,
-            "layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "path": "analyzed",
-            "precedence": 5,
-            "precedence_class": "security-boundary",
-            "primary_skill": "security-privacy-gate",
-            "profile": "analysis-agent",
-            "reason": "lower-precedence-than-review-generic",
-            "reserved_domain_capacity": 0,
-            "review_skill": "security-privacy-gate",
-            "rule_id": "generic-security-risk",
-            "source_foundation_candidates": [
-              {
-                "candidate_id": "ssrf-url-fetch-analysis",
-                "evidence": [
-                  "ssrf",
-                  "url-fetch",
-                  "foundation-selector:ssrf-url-fetch-analysis"
-                ],
-                "foundations": [
-                  "threat-modeling",
-                  "web-security"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              },
-              {
-                "candidate_id": "tenant-isolation-security",
-                "evidence": [
-                  "tenant-isolation",
-                  "propagated-boundary",
-                  "foundation-selector:tenant-isolation-security"
-                ],
-                "foundations": [
-                  "permission-boundary-modeling",
-                  "tenant-isolation"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              }
-            ],
-            "stage": "risk"
-          }
-        ],
+        "excluded_candidates": [],
         "match_evidence": [
           "review-regression-tests",
           "dynamic-helper:_build_route_candidates",
@@ -163860,10 +163269,7 @@
               "owner_internal_refactor": false,
               "repeat_failure": false,
               "review_regression": true,
-              "support_foundations": [
-                "permission-boundary-modeling",
-                "threat-modeling"
-              ]
+              "support_foundations": []
             },
             "candidate_type": "converted-cohort",
             "eligible_domain_layer3_skills": [],
@@ -163907,84 +163313,6 @@
               }
             ],
             "stage": "review"
-          },
-          {
-            "candidate_id": "generic-security-risk",
-            "candidate_layer3_context": {
-              "domain_requests": [],
-              "foundation_requests": [
-                "permission-boundary-modeling",
-                "threat-modeling"
-              ],
-              "kind": "fixed"
-            },
-            "candidate_type": "explicit-route",
-            "eligible_domain_layer3_skills": [],
-            "eligible_foundation_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "eligible_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "evidence": [
-              "authorization-permission-privacy-or-security",
-              "ssrf",
-              "url-fetch",
-              "foundation-selector:ssrf-url-fetch-analysis",
-              "tenant-isolation",
-              "propagated-boundary",
-              "foundation-selector:tenant-isolation-security"
-            ],
-            "layer3_overflow": false,
-            "layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "path": "analyzed",
-            "precedence": 5,
-            "precedence_class": "security-boundary",
-            "primary_skill": "security-privacy-gate",
-            "profile": "analysis-agent",
-            "reserved_domain_capacity": 0,
-            "review_skill": "security-privacy-gate",
-            "rule_id": "generic-security-risk",
-            "source_foundation_candidates": [
-              {
-                "candidate_id": "ssrf-url-fetch-analysis",
-                "evidence": [
-                  "ssrf",
-                  "url-fetch",
-                  "foundation-selector:ssrf-url-fetch-analysis"
-                ],
-                "foundations": [
-                  "threat-modeling",
-                  "web-security"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              },
-              {
-                "candidate_id": "tenant-isolation-security",
-                "evidence": [
-                  "tenant-isolation",
-                  "propagated-boundary",
-                  "foundation-selector:tenant-isolation-security"
-                ],
-                "foundations": [
-                  "permission-boundary-modeling",
-                  "tenant-isolation"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              }
-            ],
-            "stage": "risk"
           }
         ],
         "route_once": "proven",
@@ -163997,10 +163325,7 @@
             "owner_internal_refactor": false,
             "repeat_failure": false,
             "review_regression": true,
-            "support_foundations": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ]
+            "support_foundations": []
           },
           "candidate_type": "converted-cohort",
           "eligible_domain_layer3_skills": [],
@@ -171396,10 +170721,7 @@
               "owner_internal_refactor": false,
               "repeat_failure": false,
               "review_regression": false,
-              "support_foundations": [
-                "permission-boundary-modeling",
-                "threat-modeling"
-              ]
+              "support_foundations": []
             },
             "candidate_type": "converted-cohort",
             "eligible_domain_layer3_skills": [],
@@ -171444,85 +170766,6 @@
               }
             ],
             "stage": "review"
-          },
-          {
-            "candidate_id": "generic-security-risk",
-            "candidate_layer3_context": {
-              "domain_requests": [],
-              "foundation_requests": [
-                "permission-boundary-modeling",
-                "threat-modeling"
-              ],
-              "kind": "fixed"
-            },
-            "candidate_type": "explicit-route",
-            "eligible_domain_layer3_skills": [],
-            "eligible_foundation_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "eligible_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "evidence": [
-              "authorization-permission-privacy-or-security",
-              "ssrf",
-              "url-fetch",
-              "foundation-selector:ssrf-url-fetch-analysis",
-              "tenant-isolation",
-              "propagated-boundary",
-              "foundation-selector:tenant-isolation-security"
-            ],
-            "layer3_overflow": false,
-            "layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "path": "analyzed",
-            "precedence": 5,
-            "precedence_class": "security-boundary",
-            "primary_skill": "security-privacy-gate",
-            "profile": "analysis-agent",
-            "reason": "lower-precedence-than-review-logging-risk",
-            "reserved_domain_capacity": 0,
-            "review_skill": "security-privacy-gate",
-            "rule_id": "generic-security-risk",
-            "source_foundation_candidates": [
-              {
-                "candidate_id": "ssrf-url-fetch-analysis",
-                "evidence": [
-                  "ssrf",
-                  "url-fetch",
-                  "foundation-selector:ssrf-url-fetch-analysis"
-                ],
-                "foundations": [
-                  "threat-modeling",
-                  "web-security"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              },
-              {
-                "candidate_id": "tenant-isolation-security",
-                "evidence": [
-                  "tenant-isolation",
-                  "propagated-boundary",
-                  "foundation-selector:tenant-isolation-security"
-                ],
-                "foundations": [
-                  "permission-boundary-modeling",
-                  "tenant-isolation"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              }
-            ],
-            "stage": "risk"
           }
         ],
         "match_evidence": [
@@ -171552,10 +170795,7 @@
                 "logging-error-handling",
                 "secret-configuration-security"
               ],
-              "support_foundations": [
-                "permission-boundary-modeling",
-                "threat-modeling"
-              ]
+              "support_foundations": []
             },
             "candidate_type": "converted-cohort",
             "eligible_domain_layer3_skills": [],
@@ -171630,10 +170870,7 @@
               "owner_internal_refactor": false,
               "repeat_failure": false,
               "review_regression": false,
-              "support_foundations": [
-                "permission-boundary-modeling",
-                "threat-modeling"
-              ]
+              "support_foundations": []
             },
             "candidate_type": "converted-cohort",
             "eligible_domain_layer3_skills": [],
@@ -171677,84 +170914,6 @@
               }
             ],
             "stage": "review"
-          },
-          {
-            "candidate_id": "generic-security-risk",
-            "candidate_layer3_context": {
-              "domain_requests": [],
-              "foundation_requests": [
-                "permission-boundary-modeling",
-                "threat-modeling"
-              ],
-              "kind": "fixed"
-            },
-            "candidate_type": "explicit-route",
-            "eligible_domain_layer3_skills": [],
-            "eligible_foundation_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "eligible_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "evidence": [
-              "authorization-permission-privacy-or-security",
-              "ssrf",
-              "url-fetch",
-              "foundation-selector:ssrf-url-fetch-analysis",
-              "tenant-isolation",
-              "propagated-boundary",
-              "foundation-selector:tenant-isolation-security"
-            ],
-            "layer3_overflow": false,
-            "layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "path": "analyzed",
-            "precedence": 5,
-            "precedence_class": "security-boundary",
-            "primary_skill": "security-privacy-gate",
-            "profile": "analysis-agent",
-            "reserved_domain_capacity": 0,
-            "review_skill": "security-privacy-gate",
-            "rule_id": "generic-security-risk",
-            "source_foundation_candidates": [
-              {
-                "candidate_id": "ssrf-url-fetch-analysis",
-                "evidence": [
-                  "ssrf",
-                  "url-fetch",
-                  "foundation-selector:ssrf-url-fetch-analysis"
-                ],
-                "foundations": [
-                  "threat-modeling",
-                  "web-security"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              },
-              {
-                "candidate_id": "tenant-isolation-security",
-                "evidence": [
-                  "tenant-isolation",
-                  "propagated-boundary",
-                  "foundation-selector:tenant-isolation-security"
-                ],
-                "foundations": [
-                  "permission-boundary-modeling",
-                  "tenant-isolation"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              }
-            ],
-            "stage": "risk"
           }
         ],
         "route_once": "proven",
@@ -171775,10 +170934,7 @@
               "logging-error-handling",
               "secret-configuration-security"
             ],
-            "support_foundations": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ]
+            "support_foundations": []
           },
           "candidate_type": "converted-cohort",
           "eligible_domain_layer3_skills": [],
@@ -173911,9 +173067,7 @@
               "review_regression": false,
               "support_foundations": [
                 "release-rollback",
-                "version-compatibility",
-                "permission-boundary-modeling",
-                "threat-modeling"
+                "version-compatibility"
               ]
             },
             "candidate_type": "converted-cohort",
@@ -173959,85 +173113,6 @@
               }
             ],
             "stage": "review"
-          },
-          {
-            "candidate_id": "generic-security-risk",
-            "candidate_layer3_context": {
-              "domain_requests": [],
-              "foundation_requests": [
-                "permission-boundary-modeling",
-                "threat-modeling"
-              ],
-              "kind": "fixed"
-            },
-            "candidate_type": "explicit-route",
-            "eligible_domain_layer3_skills": [],
-            "eligible_foundation_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "eligible_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "evidence": [
-              "authorization-permission-privacy-or-security",
-              "ssrf",
-              "url-fetch",
-              "foundation-selector:ssrf-url-fetch-analysis",
-              "tenant-isolation",
-              "propagated-boundary",
-              "foundation-selector:tenant-isolation-security"
-            ],
-            "layer3_overflow": false,
-            "layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "path": "analyzed",
-            "precedence": 5,
-            "precedence_class": "security-boundary",
-            "primary_skill": "security-privacy-gate",
-            "profile": "analysis-agent",
-            "reason": "lower-precedence-than-review-release-risk",
-            "reserved_domain_capacity": 0,
-            "review_skill": "security-privacy-gate",
-            "rule_id": "generic-security-risk",
-            "source_foundation_candidates": [
-              {
-                "candidate_id": "ssrf-url-fetch-analysis",
-                "evidence": [
-                  "ssrf",
-                  "url-fetch",
-                  "foundation-selector:ssrf-url-fetch-analysis"
-                ],
-                "foundations": [
-                  "threat-modeling",
-                  "web-security"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              },
-              {
-                "candidate_id": "tenant-isolation-security",
-                "evidence": [
-                  "tenant-isolation",
-                  "propagated-boundary",
-                  "foundation-selector:tenant-isolation-security"
-                ],
-                "foundations": [
-                  "permission-boundary-modeling",
-                  "tenant-isolation"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              }
-            ],
-            "stage": "risk"
           },
           {
             "candidate_id": "production-release-decision",
@@ -174179,10 +173254,7 @@
                 "release-rollback",
                 "version-compatibility"
               ],
-              "support_foundations": [
-                "permission-boundary-modeling",
-                "threat-modeling"
-              ]
+              "support_foundations": []
             },
             "candidate_type": "converted-cohort",
             "eligible_domain_layer3_skills": [],
@@ -174242,9 +173314,7 @@
               "review_regression": false,
               "support_foundations": [
                 "release-rollback",
-                "version-compatibility",
-                "permission-boundary-modeling",
-                "threat-modeling"
+                "version-compatibility"
               ]
             },
             "candidate_type": "converted-cohort",
@@ -174289,84 +173359,6 @@
               }
             ],
             "stage": "review"
-          },
-          {
-            "candidate_id": "generic-security-risk",
-            "candidate_layer3_context": {
-              "domain_requests": [],
-              "foundation_requests": [
-                "permission-boundary-modeling",
-                "threat-modeling"
-              ],
-              "kind": "fixed"
-            },
-            "candidate_type": "explicit-route",
-            "eligible_domain_layer3_skills": [],
-            "eligible_foundation_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "eligible_layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "evidence": [
-              "authorization-permission-privacy-or-security",
-              "ssrf",
-              "url-fetch",
-              "foundation-selector:ssrf-url-fetch-analysis",
-              "tenant-isolation",
-              "propagated-boundary",
-              "foundation-selector:tenant-isolation-security"
-            ],
-            "layer3_overflow": false,
-            "layer3_skills": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ],
-            "path": "analyzed",
-            "precedence": 5,
-            "precedence_class": "security-boundary",
-            "primary_skill": "security-privacy-gate",
-            "profile": "analysis-agent",
-            "reserved_domain_capacity": 0,
-            "review_skill": "security-privacy-gate",
-            "rule_id": "generic-security-risk",
-            "source_foundation_candidates": [
-              {
-                "candidate_id": "ssrf-url-fetch-analysis",
-                "evidence": [
-                  "ssrf",
-                  "url-fetch",
-                  "foundation-selector:ssrf-url-fetch-analysis"
-                ],
-                "foundations": [
-                  "threat-modeling",
-                  "web-security"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              },
-              {
-                "candidate_id": "tenant-isolation-security",
-                "evidence": [
-                  "tenant-isolation",
-                  "propagated-boundary",
-                  "foundation-selector:tenant-isolation-security"
-                ],
-                "foundations": [
-                  "permission-boundary-modeling",
-                  "tenant-isolation"
-                ],
-                "owner_binding": {
-                  "primary_skill": "security-privacy-gate",
-                  "review_skill": "security-privacy-gate"
-                }
-              }
-            ],
-            "stage": "risk"
           },
           {
             "candidate_id": "production-release-decision",
@@ -174500,10 +173492,7 @@
               "release-rollback",
               "version-compatibility"
             ],
-            "support_foundations": [
-              "permission-boundary-modeling",
-              "threat-modeling"
-            ]
+            "support_foundations": []
           },
           "candidate_type": "converted-cohort",
           "eligible_domain_layer3_skills": [],

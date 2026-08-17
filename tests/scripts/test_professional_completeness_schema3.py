@@ -13,25 +13,175 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from . import test_expert_panel_review as fixtures
+from . import expert_panel_source_test_support as source_support
+from . import professional_completeness_test_support as professional_support
 
 
-PANEL = fixtures.PANEL
+PANEL = source_support.PANEL
+_bootstrap_packet = professional_support._bootstrap_packet
+_materialize_empty_capsule_chain = (
+    professional_support._materialize_empty_capsule_chain
+)
+_ground_schema3_vote = professional_support._ground_schema3_vote
+_professional_ballot = professional_support._professional_ballot
+_anchor_phrase = professional_support._anchor_phrase
+_write_json = source_support.write_json
 R11_REVIEW_CONTRACT_FINGERPRINT = (
     "88a60c74fa8c47f9b9e5eed6a9caaf9381073057ee806b2dc2d0836709dccdde"
 )
 
 
-@functools.lru_cache(maxsize=1)
-def _bootstrap_packet_cached() -> dict:
-    return PANEL.prepare_professional_completeness_packet_v3(
-        review_id="schema3-unit-bootstrap",
-        created_on="2026-07-17",
-    )
+class ProfessionalSchema3ClosedFieldMigrationContractTests(unittest.TestCase):
+    def test_current_contract_and_packet_target_shape_are_v3_only(self) -> None:
+        packet = _bootstrap_packet()
+        target = packet["professional_targets"][0]
+        self.assertNotIn("source_fingerprints", packet)
+        self.assertEqual(
+            "professional-completeness-schema3-review-carry-v3",
+            PANEL.panel_contracts.PROFESSIONAL_SCHEMA3_CONTRACT_VERSION,
+        )
+        self.assertEqual(
+            {
+                "skill_id",
+                "layer",
+                "root",
+                "indexed_references",
+                "registry",
+                "required_expertise_tags",
+                "routing_adjacency",
+                "review_binding",
+            },
+            set(target),
+        )
+        self.assertEqual(
+            {
+                "skill_id",
+                "layer",
+                "package_material_binding",
+                "dependency_material_bindings",
+                "review_unit_binding",
+            },
+            set(target["review_binding"]),
+        )
+        forged = copy.deepcopy(packet)
+        forged["source_fingerprints"] = {}
+        with self.assertRaises(PANEL.PanelReviewError):
+            PANEL._professional_v3_packet_state(
+                forged,
+                validation_root=PANEL.ROOT,
+                artifact_path=None,
+                validate_baseline=False,
+            )
 
+    def test_current_packet_limitations_name_only_material_authority(
+        self,
+    ) -> None:
+        packet = _bootstrap_packet()
+        limitations = " ".join(packet["limitations"]).lower()
+        self.assertNotIn("package fingerprint", limitations)
+        self.assertNotIn("origin/current provenance", limitations)
+        for authority in (
+            "package_material_binding",
+            "review_unit_binding",
+            "direct dependency material bindings",
+            "origin_review_id",
+            "origin_commit",
+            "origin_verdict_digest",
+        ):
+            self.assertIn(authority, limitations)
+        validated = PANEL._professional_v3_packet_state(
+            copy.deepcopy(packet),
+            validation_root=PANEL.ROOT,
+            artifact_path=None,
+            validate_baseline=False,
+        )
+        self.assertEqual(
+            PANEL._professional_v2_projection_from_v3(packet),
+            PANEL._professional_v2_projection_from_v3(copy.deepcopy(packet)),
+        )
+        self.assertEqual(
+            sorted(
+                target["skill_id"]
+                for target in packet["professional_targets"]
+            ),
+            sorted(validated["bindings"]),
+        )
 
-def _bootstrap_packet() -> dict:
-    return copy.deepcopy(_bootstrap_packet_cached())
+    def test_current_decision_limitations_name_only_material_authority(
+        self,
+    ) -> None:
+        packet = {
+            "review_id": "schema3-decision-limitations",
+            "review_contract_fingerprint": "0" * 64,
+            "panel_contract": {},
+        }
+        with mock.patch.object(
+            PANEL,
+            "_professional_v3_summary_from_rows",
+            return_value={},
+        ), mock.patch.object(PANEL, "_professional_v3_decision_shape"):
+            decision = PANEL._professional_v3_decision_record(
+                packet=packet,
+                packet_ref={},
+                decided_on="2026-08-14",
+                decision_voters=[],
+                decisions=[],
+            )
+        limitations = " ".join(decision["limitations"]).lower()
+        self.assertNotIn("package fingerprint", limitations)
+        self.assertNotIn("raw package", limitations)
+        for authority in (
+            "package_material_binding",
+            "review_unit_binding",
+            "direct dependency material bindings",
+            "origin_review_id",
+            "origin_commit",
+            "origin_verdict_digest",
+        ):
+            self.assertIn(authority, limitations)
+
+    def test_current_decision_target_has_no_package_or_review_aliases(self) -> None:
+        with professional_support._synthetic_schema3_professional_decision() as fixture:
+            decision = fixture["decision"]
+            row = decision["professional_decisions"][0]
+            state = PANEL._professional_v3_packet_state(
+                fixture["packet"],
+                validation_root=fixture["validation_root"],
+                artifact_path=fixture["packet_path"],
+                validate_baseline=False,
+            )
+            def object_keys(value: object) -> set[str]:
+                if isinstance(value, dict):
+                    return set(value) | {
+                        key
+                        for child in value.values()
+                        for key in object_keys(child)
+                    }
+                if isinstance(value, list):
+                    return {
+                        key for child in value for key in object_keys(child)
+                    }
+                return set()
+
+            self.assertNotIn("origin_commit", object_keys(fixture["packet"]))
+            self.assertNotIn("origin_commit", object_keys(decision))
+        self.assertIn("review_unit_binding", row)
+        self.assertNotIn("package_fingerprint", row)
+        self.assertNotIn("review_binding_fingerprint", row)
+        forged = copy.deepcopy(decision)
+        forged["source_fingerprints"] = {}
+        with self.assertRaises(PANEL.PanelReviewError):
+            PANEL._professional_v3_decision_shape(forged)
+        for alias in ("package_fingerprint", "review_binding_fingerprint"):
+            with self.subTest(alias=alias):
+                forged = copy.deepcopy(decision)
+                forged["professional_decisions"][0][alias] = "0" * 64
+                with self.assertRaises(PANEL.PanelReviewError):
+                    PANEL._professional_v3_validate_decision_projection(
+                        record=forged,
+                        packet=fixture["packet"],
+                        state=state,
+                    )
 
 
 def _baseline_state(packet: dict, *, depth: int) -> dict:
@@ -59,10 +209,7 @@ def _baseline_state(packet: dict, *, depth: int) -> dict:
     dependencies = {}
     origins = {}
     for skill_id, binding in state["bindings"].items():
-        required = [
-            row["skill_id"]
-            for row in binding["required_candidate_material_bindings"]
-        ]
+        required = list(binding["dependency_material_bindings"])
         dependencies[skill_id] = {
             "skill_id": skill_id,
             "final_disposition": "accepted-current-professional-completeness",
@@ -88,74 +235,8 @@ def _baseline_state(packet: dict, *, depth: int) -> dict:
     }
 
 
-def _materialize_empty_capsule_chain(
-    *,
-    validation_root: Path,
-    packet: dict,
-    packet_sha256: str,
-    state: object,
-    voter_id: str,
-    skill_ids: list[str],
-) -> tuple[dict, Path, dict, Path, dict, Path]:
-    round_root = validation_root / packet["review_id"]
-    discovery = PANEL.prepare_professional_discovery_capsule_v3(
-        packet=packet,
-        packet_sha256=packet_sha256,
-        voter_id=voter_id,
-        assigned_skill_ids=skill_ids,
-        created_on="2026-07-17",
-        validation_root=validation_root,
-        validate_packet_plan=False,
-        packet_state=state,
-    )
-    discovery_path = round_root / "discovery-capsules" / f"{voter_id}.json"
-    discovery_path.parent.mkdir(parents=True, exist_ok=True)
-    fixtures._write_json(discovery_path, discovery)
-    request = PANEL.prepare_professional_candidate_request_v3(
-        packet=packet,
-        packet_sha256=packet_sha256,
-        discovery_capsule_path=discovery_path,
-        voter_id=voter_id,
-        reviewer_added_requests_by_target=None,
-        created_on="2026-07-17",
-        validation_root=validation_root,
-        validate_packet_plan=False,
-        packet_state=state,
-    )
-    request_path = round_root / "candidate-requests" / f"{voter_id}.json"
-    request_path.parent.mkdir(parents=True, exist_ok=True)
-    fixtures._write_json(request_path, request)
-    capsule = PANEL.prepare_professional_review_capsule_v3(
-        packet=packet,
-        packet_sha256=packet_sha256,
-        discovery_capsule_path=discovery_path,
-        candidate_request_path=request_path,
-        voter_id=voter_id,
-        created_on="2026-07-17",
-        validation_root=validation_root,
-        validate_packet_plan=False,
-        packet_state=state,
-    )
-    capsule_path = round_root / "capsules" / f"{voter_id}.json"
-    capsule_path.parent.mkdir(parents=True, exist_ok=True)
-    fixtures._write_json(capsule_path, capsule)
-    return discovery, discovery_path, request, request_path, capsule, capsule_path
 
 
-def _anchor_phrase(
-    anchor_id: str,
-    *,
-    vote: dict,
-    materials_by_skill: dict,
-) -> tuple[str, str]:
-    anchors = {row["anchor_id"]: row for row in vote["evidence_anchors"]}
-    sequences = PANEL._professional_v3_anchor_token_sequences(
-        anchor_id,
-        anchors_by_id=anchors,
-        materials_by_skill=materials_by_skill,
-    )
-    phrase = next(sequence[:2] for sequence in sequences if len(sequence) >= 2)
-    return phrase[0], phrase[1]
 
 
 def _anchor_unigrams(
@@ -208,104 +289,6 @@ def _assertion_source_bigrams(
     )
 
 
-def _ground_schema3_vote(vote: dict, materials_by_skill: dict) -> None:
-    """Make the generic schema-2 fixture satisfy the stricter schema-3 contract."""
-
-    anchors_by_id = {
-        anchor["anchor_id"]: anchor for anchor in vote["evidence_anchors"]
-    }
-    for anchor in vote["evidence_anchors"]:
-        if any(
-            len(sequence) >= 2
-            for sequence in PANEL._professional_v3_anchor_token_sequences(
-                anchor["anchor_id"],
-                anchors_by_id=anchors_by_id,
-                materials_by_skill=materials_by_skill,
-            )
-        ):
-            continue
-        line_count = len(
-            materials_by_skill[anchor["skill_id"]][anchor["path"]][
-                "content"
-            ].splitlines()
-        )
-        candidates = (
-            (max(1, anchor["start_line"] - 1), anchor["end_line"]),
-            (anchor["start_line"], min(line_count, anchor["end_line"] + 1)),
-        )
-        for start_line, end_line in candidates:
-            anchor["start_line"] = start_line
-            anchor["end_line"] = end_line
-            if any(
-                len(sequence) >= 2
-                for sequence in PANEL._professional_v3_anchor_token_sequences(
-                    anchor["anchor_id"],
-                    anchors_by_id=anchors_by_id,
-                    materials_by_skill=materials_by_skill,
-                )
-            ):
-                break
-        else:
-            raise AssertionError(
-                f"test fixture anchor lacks a contiguous grounding phrase: {anchor['anchor_id']}"
-            )
-
-    for criterion, result in vote["criteria"].items():
-        for assertion_index, assertion in enumerate(result["evidence_assertions"]):
-            phrases = [
-                _anchor_phrase(
-                    anchor_id,
-                    vote=vote,
-                    materials_by_skill=materials_by_skill,
-                )
-                for anchor_id in assertion["evidence_anchor_ids"]
-            ]
-            exact = " and ".join(" ".join(phrase) for phrase in phrases)
-            assertion["claim"] = (
-                f"{exact} supports numbered finding {assertion_index} for "
-                f"{criterion} under inspection."
-            )
-            assertion["source_excerpt_sha256"] = (
-                PANEL._professional_assertion_excerpt_sha256(
-                    assertion["evidence_anchor_ids"],
-                    anchors_by_id=anchors_by_id,
-                    materials_by_skill=materials_by_skill,
-                )
-            )
-    for collection, item_name in (
-        ("examined_failure_modes", "failure_mode"),
-        ("examined_omission_candidates", "omission_candidate"),
-    ):
-        for index, item in enumerate(vote[collection]):
-            phrases = [
-                _anchor_phrase(
-                    anchor_id,
-                    vote=vote,
-                    materials_by_skill=materials_by_skill,
-                )
-                for anchor_id in item["evidence_anchor_ids"]
-            ]
-            exact = " and ".join(" ".join(phrase) for phrase in phrases)
-            item["rationale"] = (
-                f"{exact} grounds this {item_name.replace('_', ' ')} outcome "
-                f"through examined path {index}."
-            )
-    for index, candidate in enumerate(vote["examined_adjacent_candidates"]):
-        target_phrase = _anchor_phrase(
-            candidate["target_anchor_ids"][0],
-            vote=vote,
-            materials_by_skill=materials_by_skill,
-        )
-        candidate_phrase = _anchor_phrase(
-            candidate["candidate_anchor_ids"][0],
-            vote=vote,
-            materials_by_skill=materials_by_skill,
-        )
-        candidate["rationale"] = (
-            f"{' '.join(target_phrase)} defines the target boundary while "
-            f"{' '.join(candidate_phrase)} defines the candidate boundary in "
-            f"adjacency comparison {index}."
-        )
 
 
 def _repository_source_replacement(
@@ -343,7 +326,6 @@ def _stale_contract_baseline_artifacts(
         "kind": PANEL.PROFESSIONAL_COMPLETENESS_PACKET_KIND,
         "review_id": review_id,
         "created_on": "2026-07-16",
-        "source_fingerprints": source_fingerprints,
         "review_contract_fingerprint": old_contract,
         "panel_contract": {},
         "rubric": {},
@@ -351,6 +333,8 @@ def _stale_contract_baseline_artifacts(
         "review_plan": {"review_contract_fingerprint": old_contract},
         "limitations": [],
     }
+    if old_contract == R11_REVIEW_CONTRACT_FINGERPRINT:
+        packet["source_fingerprints"] = source_fingerprints
     packet_path = validation_root / review_id / "packet.json"
     PANEL._write_json(packet_path, packet, compact=True)
     packet_ref = PANEL._professional_artifact_reference(
@@ -365,7 +349,6 @@ def _stale_contract_baseline_artifacts(
         "review_id": review_id,
         "decided_on": "2026-07-16",
         "decision_method": "superseded-contract-method",
-        "source_fingerprints": source_fingerprints,
         "review_contract_fingerprint": old_contract,
         "panel_contract": {},
         "packet": packet_ref,
@@ -374,23 +357,146 @@ def _stale_contract_baseline_artifacts(
         "summary": {},
         "limitations": [],
     }
+    if old_contract == R11_REVIEW_CONTRACT_FINGERPRINT:
+        decision["source_fingerprints"] = source_fingerprints
     decision_path = validation_root / review_id / "panel" / "decision.json"
     PANEL._write_json(decision_path, decision, compact=True)
     return decision_path, packet, decision
 
 
 class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
+    @staticmethod
+    def _compact_attestation_finding(
+        decisions: list[str],
+    ) -> dict:
+        accepted = "accepted-current-professional-completeness"
+        vote_rows = [
+            {
+                "reviewer": f"professional-expert-{index}",
+                "decision": decision,
+                "reason_code": (
+                    "all-professional-criteria-satisfied"
+                    if decision == accepted
+                    else "professional-correction-required"
+                ),
+                "rationale": f"Reviewer {index} rationale for {decision}.",
+                "examined_adjacent_candidates": {
+                    "reviewer_added_candidate_ids": [],
+                },
+            }
+            for index, decision in enumerate(decisions, start=1)
+        ]
+        majority = PANEL._majority_decision(
+            vote_rows,
+            voter_ids=[row["reviewer"] for row in vote_rows],
+        )
+        majority["vote_counts"] = {
+            decision: majority["vote_counts"].get(decision, 0)
+            for decision in sorted(
+                PANEL.PROFESSIONAL_COMPLETENESS_DECISIONS
+            )
+        }
+        return {
+            "skill_id": "sample-skill",
+            "review_unit_binding": "a" * 64,
+            "provenance": {
+                "origin": {"origin_verdict_digest": "b" * 64},
+            },
+            "votes": vote_rows,
+            "result": {
+                key: copy.deepcopy(majority[key])
+                for key in (
+                    "winning_disposition",
+                    "winning_votes",
+                    "vote_counts",
+                    "supporting_voters",
+                    "dissenting_voters",
+                )
+            },
+        }
+
+    def test_compact_attestation_origin_derives_two_of_three_rationales(
+        self,
+    ) -> None:
+        accepted = "accepted-current-professional-completeness"
+        finding = self._compact_attestation_finding(
+            [accepted, "requires-professional-correction", accepted]
+        )
+
+        projected = PANEL._professional_attestation_origin_row(finding)
+
+        self.assertEqual(
+            ["professional-expert-1", "professional-expert-3"],
+            projected["supporting_voters"],
+        )
+        self.assertEqual(2, projected["winning_votes"])
+        self.assertEqual(
+            [
+                {
+                    "voter_id": vote["reviewer"],
+                    "reason_code": vote["reason_code"],
+                    "rationale": vote["rationale"],
+                }
+                for vote in (finding["votes"][0], finding["votes"][2])
+            ],
+            projected["winning_rationales"],
+        )
+
+    def test_compact_attestation_origin_derives_three_of_three_rationales(
+        self,
+    ) -> None:
+        accepted = "accepted-current-professional-completeness"
+        finding = self._compact_attestation_finding([accepted] * 3)
+
+        projected = PANEL._professional_attestation_origin_row(finding)
+
+        self.assertEqual(3, projected["winning_votes"])
+        self.assertEqual(
+            [row["reviewer"] for row in finding["votes"]],
+            [row["voter_id"] for row in projected["winning_rationales"]],
+        )
+
+    def test_compact_attestation_origin_rejects_stored_majority_mismatch(
+        self,
+    ) -> None:
+        accepted = "accepted-current-professional-completeness"
+        original = self._compact_attestation_finding([accepted] * 3)
+        mismatches = {
+            "winning_disposition": "requires-professional-correction",
+            "winning_votes": 2,
+            "vote_counts": {accepted: 2},
+            "supporting_voters": [
+                "professional-expert-1",
+                "professional-expert-2",
+            ],
+            "dissenting_voters": ["professional-expert-3"],
+        }
+
+        for field, value in mismatches.items():
+            finding = copy.deepcopy(original)
+            finding["result"][field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(
+                PANEL.PanelReviewError,
+                "compact professional majority is stale",
+            ):
+                PANEL._professional_attestation_origin_row(finding)
+
     def test_shared_fixture_uses_current_unittest_package(self) -> None:
-        expected_module = f"{__package__}.test_expert_panel_review"
-        self.assertEqual(expected_module, fixtures.__name__)
-        self.assertIs(fixtures, sys.modules[expected_module])
-        self.assertIs(fixtures.PANEL, sys.modules[fixtures.PANEL.__name__])
+        isolated_name = f"{__name__}.isolated_expert_panel_review"
+        self.assertIs(PANEL, source_support.load_panel())
+        self.assertIs(PANEL, sys.modules[PANEL.__name__])
+        with source_support.isolated_source_module(
+            "scripts/expert_panel_review.py", isolated_name
+        ) as isolated:
+            self.assertIsNot(PANEL, isolated)
+            self.assertIs(isolated, sys.modules[isolated_name])
+        self.assertNotIn(isolated_name, sys.modules)
 
     def _semantic_grounding_fixture(self) -> tuple[dict, dict]:
         packet = _bootstrap_packet()
         projected = PANEL._professional_v2_projection_from_v3(packet)
         skill_id = projected["professional_targets"][0]["skill_id"]
-        ballot = fixtures._professional_ballot(
+        ballot = _professional_ballot(
             projected,
             "a" * 64,
             voter=1,
@@ -431,6 +537,518 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
                     f"wording{index} boundary{index}"
                 )
         return vote, materials
+
+    def test_fresh_attestation_origin_reference_includes_review_id(self) -> None:
+        review_id = "professional-fresh-attestation"
+
+        class OriginReferenceObserved(Exception):
+            pass
+
+        with tempfile.TemporaryDirectory() as raw:
+            validation_root = Path(raw)
+            decision_path = (
+                validation_root / review_id / "panel" / "decision.json"
+            )
+            decision_path.parent.mkdir(parents=True)
+            decision_path.write_text("{}\n", encoding="utf-8")
+            packet_path = validation_root / review_id / "packet.json"
+            packet = {
+                "professional_targets": [{"skill_id": "sample-skill"}],
+            }
+            record = {
+                "schema_version": (
+                    PANEL.PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION
+                ),
+                "kind": PANEL.PROFESSIONAL_COMPLETENESS_DECISION_KIND,
+                "review_id": review_id,
+                "professional_decisions": [
+                    {
+                        "skill_id": "sample-skill",
+                        "provenance": {"mode": "fresh"},
+                        "target_decision_fingerprint": "f" * 64,
+                    }
+                ],
+            }
+
+            def observe_origin_reference(**kwargs: object) -> None:
+                self.assertEqual(
+                    {
+                        "path": (
+                            f"{review_id}/panel/decision.json"
+                        ),
+                        "sha256": hashlib.sha256(
+                            decision_path.read_bytes()
+                        ).hexdigest(),
+                        "kind": (
+                            PANEL.PROFESSIONAL_COMPLETENESS_DECISION_KIND
+                        ),
+                        "axis": (
+                            PANEL.PROFESSIONAL_COMPLETENESS_ARTIFACT_AXIS
+                        ),
+                        "review_id": review_id,
+                    },
+                    kwargs["origin_reference"],
+                )
+                raise OriginReferenceObserved
+
+            with mock.patch.object(
+                PANEL, "ROOT", validation_root
+            ), mock.patch.object(
+                PANEL, "validate_decision_record", return_value=None
+            ), mock.patch.object(
+                PANEL,
+                "_decision_packet_and_ballots",
+                return_value=(packet_path, packet, []),
+            ), mock.patch.object(
+                PANEL, "_professional_v3_packet_state", return_value={}
+            ), mock.patch.object(
+                PANEL,
+                "_git_output",
+                return_value=types.SimpleNamespace(stdout=b"0" * 40),
+            ), mock.patch.object(
+                PANEL,
+                "_load_professional_v3_fresh_origin_target",
+                side_effect=observe_origin_reference,
+            ), self.assertRaises(OriginReferenceObserved):
+                PANEL._professional_attestation_from_decision(
+                    record,
+                    decision_path=decision_path,
+                )
+
+    def test_fresh_origin_reference_review_id_is_fail_closed(self) -> None:
+        review_id = "professional-origin-reference"
+        skill_id = "sample-skill"
+        with tempfile.TemporaryDirectory() as raw:
+            validation_root = Path(raw)
+            decision_path = (
+                validation_root / review_id / "panel" / "decision.json"
+            )
+            decision_path.parent.mkdir(parents=True)
+            decision_path.write_text("{}\n", encoding="utf-8")
+            decision_ref = PANEL._professional_artifact_reference(
+                decision_path,
+                validation_root=validation_root,
+                kind=PANEL.PROFESSIONAL_COMPLETENESS_DECISION_KIND,
+                review_id=review_id,
+            )
+
+            missing_review_id = copy.deepcopy(decision_ref)
+            missing_review_id.pop("review_id")
+            with self.assertRaisesRegex(
+                PANEL.PanelReviewError,
+                "schema-3 carry origin decision .* fields are invalid",
+            ):
+                PANEL._load_professional_v3_fresh_origin_target(
+                    origin_reference=missing_review_id,
+                    skill_id=skill_id,
+                    expected_target_decision_fingerprint="f" * 64,
+                    validation_root=validation_root,
+                    forbidden_paths=set(),
+                )
+
+            wrong_review_id = {
+                **decision_ref,
+                "review_id": f"{review_id}-wrong",
+            }
+            with self.assertRaisesRegex(
+                PANEL.PanelReviewError,
+                "does not match its canonical review round layout",
+            ):
+                PANEL._load_professional_v3_fresh_origin_target(
+                    origin_reference=wrong_review_id,
+                    skill_id=skill_id,
+                    expected_target_decision_fingerprint="f" * 64,
+                    validation_root=validation_root,
+                    forbidden_paths=set(),
+                )
+
+    def test_compact_fixed_baseline_aggregates_exact_mixed_carry_plan(
+        self,
+    ) -> None:
+        """Aggregate one real binding delta across authenticated dependencies."""
+
+        packet = _bootstrap_packet()
+        base_targets = []
+        for embedded_target in packet["professional_targets"]:
+            target = copy.deepcopy(embedded_target)
+            target.pop("review_binding")
+            base_targets.append(target)
+        review_contract = packet["review_contract_fingerprint"]
+        base_bindings, base_snapshot = PANEL._professional_v3_binding_state(
+            base_targets,
+            review_contract_fingerprint=review_contract,
+        )
+        pristine_attestation_bytes = (
+            professional_support._current_compact_professional_fixture_bytes(
+                base_targets,
+                review_contract_fingerprint=review_contract,
+            )
+        )
+        bindings, snapshot = base_bindings, base_snapshot
+        packet["review_id"] = "schema3-mixed-aggregate"
+        packet["professional_targets"] = [
+            {
+                **copy.deepcopy(target),
+                "review_binding": copy.deepcopy(
+                    snapshot["targets"][target["skill_id"]]
+                ),
+            }
+            for target in base_targets
+        ]
+
+        with tempfile.TemporaryDirectory() as raw:
+            validation_root = Path(raw)
+            fixed = (
+                validation_root
+                / PANEL.panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH
+            )
+            fixed.parent.mkdir(parents=True)
+            fixed.write_bytes(pristine_attestation_bytes)
+            with mock.patch.object(PANEL, "ROOT", validation_root):
+                unchanged_baseline = (
+                    PANEL._load_professional_attestation_baseline(
+                        fixed,
+                        current_bindings=base_bindings,
+                        current_snapshot=base_snapshot,
+                        review_contract_fingerprint=review_contract,
+                        expected_attestation_sha256=hashlib.sha256(
+                            pristine_attestation_bytes
+                        ).hexdigest(),
+                    )
+                )
+                all_ids = sorted(base_bindings)
+                self.assertEqual(
+                    all_ids,
+                    sorted(unchanged_baseline["snapshot"]["targets"]),
+                )
+                self.assertEqual(
+                    all_ids,
+                    sorted(unchanged_baseline["dependencies"]),
+                )
+                unchanged_plan = PANEL._professional_v3_review_plan(
+                    current_bindings=base_bindings,
+                    review_contract_fingerprint=review_contract,
+                    baseline_state=unchanged_baseline,
+                )
+                self.assertEqual([], unchanged_plan["fresh_targets"])
+                self.assertEqual(
+                    all_ids,
+                    [
+                        row["skill_id"]
+                        for row in unchanged_plan["carried_targets"]
+                    ],
+                )
+                self.assertEqual(
+                    {
+                        "total_target_count": len(all_ids),
+                        "fresh_target_count": 0,
+                        "carried_target_count": len(all_ids),
+                    },
+                    unchanged_plan["summary"],
+                )
+
+                reviewer_added_free_ids = sorted(
+                    skill_id
+                    for skill_id, dependency in unchanged_baseline[
+                        "dependencies"
+                    ].items()
+                    if not dependency[
+                        "reviewer_added_candidate_ids_union"
+                    ]
+                )
+                self.assertGreaterEqual(len(reviewer_added_free_ids), 56)
+                expected_carried_ids = set(reviewer_added_free_ids[:56])
+                expected_fresh_ids = set(all_ids) - expected_carried_ids
+                historical_storage = (
+                    PANEL.panel_attestation.parse_attestation_storage_selector_bytes(
+                        pristine_attestation_bytes
+                    )
+                )
+                historical_claims = (
+                    PANEL._professional_authenticated_claims_from_findings(
+                        historical_storage["findings"]
+                    )
+                )
+                base_authorities = (
+                    PANEL._professional_attestation_bindings_from_state(
+                        current_bindings=base_bindings,
+                        authenticated_claims=historical_claims,
+                    )
+                )
+                historical, _eligible = (
+                    PANEL.panel_attestation.parse_professional_baseline_bytes(
+                        pristine_attestation_bytes,
+                        expected_professional_current_bindings=(
+                            base_authorities
+                        ),
+                    )
+                )
+                stale_review_unit_bindings = {}
+                for finding in historical["findings"]:
+                    if finding["skill_id"] not in expected_fresh_ids:
+                        continue
+                    stale_binding = hashlib.sha256(
+                        (
+                            "stale-review-unit:"
+                            f"{finding['skill_id']}"
+                        ).encode("utf-8")
+                    ).hexdigest()
+                    finding["review_unit_binding"] = stale_binding
+                    stale_review_unit_bindings[
+                        finding["skill_id"]
+                    ] = stale_binding
+                historical_authorities = (
+                    PANEL._professional_attestation_bindings_from_state(
+                        current_bindings=base_bindings,
+                        authenticated_claims=historical_claims,
+                    )
+                )
+                for skill_id, stale_binding in (
+                    stale_review_unit_bindings.items()
+                ):
+                    historical_authorities[skill_id][
+                        "review_unit_binding"
+                    ] = stale_binding
+                historical = PANEL.panel_attestation.finalize_attestation(
+                    historical,
+                    expected_professional_current_bindings=(
+                        historical_authorities
+                    ),
+                )
+                fixed_attestation_bytes = (
+                    PANEL.panel_attestation.canonical_attestation_bytes(
+                        historical,
+                        expected_professional_current_bindings=(
+                            historical_authorities
+                        ),
+                    )
+                )
+                fixed.write_bytes(fixed_attestation_bytes)
+                self.assertEqual(133, len(expected_fresh_ids))
+                self.assertEqual(56, len(expected_carried_ids))
+                expected_reasons = {skill_id: [] for skill_id in all_ids}
+                for skill_id in expected_fresh_ids:
+                    expected_reasons[skill_id] = [
+                        "prior-evidence-missing",
+                        "target-not-in-prior-snapshot",
+                    ]
+
+                baseline = PANEL._load_professional_attestation_baseline(
+                    fixed,
+                    current_bindings=bindings,
+                    current_snapshot=snapshot,
+                    review_contract_fingerprint=review_contract,
+                    expected_attestation_sha256=hashlib.sha256(
+                        fixed_attestation_bytes
+                    ).hexdigest(),
+                )
+                packet["review_plan"] = PANEL._professional_v3_review_plan(
+                    current_bindings=bindings,
+                    review_contract_fingerprint=review_contract,
+                    baseline_state=baseline,
+                )
+                actual_fresh_ids = {
+                    row["skill_id"]
+                    for row in packet["review_plan"]["fresh_targets"]
+                }
+                actual_carried_ids = {
+                    row["skill_id"]
+                    for row in packet["review_plan"]["carried_targets"]
+                }
+                self.assertEqual(
+                    expected_fresh_ids,
+                    actual_fresh_ids,
+                )
+                self.assertEqual(
+                    expected_carried_ids,
+                    actual_carried_ids,
+                )
+                fresh_ids = sorted(actual_fresh_ids)
+                self.assertEqual(
+                    {
+                        "total_target_count": len(all_ids),
+                        "fresh_target_count": len(expected_fresh_ids),
+                        "carried_target_count": len(expected_carried_ids),
+                    },
+                    packet["review_plan"]["summary"],
+                )
+                actual_reasons = {
+                    skill_id: [] for skill_id in actual_carried_ids
+                }
+                actual_reasons.update(
+                    {
+                        row["skill_id"]: row["reason_codes"]
+                        for row in packet["review_plan"]["fresh_targets"]
+                    }
+                )
+                self.assertEqual(expected_reasons, actual_reasons)
+                PANEL._professional_v3_packet_state(
+                    packet,
+                    validation_root=validation_root,
+                    artifact_path=None,
+                    validate_baseline=True,
+                )
+                state = PANEL._professional_v3_packet_state(
+                    packet,
+                    validation_root=validation_root,
+                    artifact_path=None,
+                    validate_baseline=False,
+                )
+                round_root = (
+                    validation_root
+                    / ".rd-skills"
+                    / "expert-panel"
+                    / packet["review_id"]
+                )
+                packet_path = round_root / "packet.json"
+                packet_path.parent.mkdir(parents=True)
+                _write_json(packet_path, packet)
+                packet_sha256 = hashlib.sha256(
+                    packet_path.read_bytes()
+                ).hexdigest()
+                projected = PANEL._professional_v2_projection_from_v3(packet)
+                ballots = []
+                for voter in range(1, 4):
+                    voter_id = f"professional-expert-{voter}"
+                    (
+                        _discovery,
+                        _discovery_path,
+                        _request,
+                        _request_path,
+                        capsule,
+                        capsule_path,
+                    ) = _materialize_empty_capsule_chain(
+                        validation_root=validation_root,
+                        packet=packet,
+                        packet_sha256=packet_sha256,
+                        state=state,
+                        voter_id=voter_id,
+                        skill_ids=fresh_ids,
+                    )
+                    capsule_ref = PANEL._artifact_reference(
+                        capsule_path,
+                        validation_root=validation_root,
+                        kind=PANEL.PROFESSIONAL_COMPLETENESS_CAPSULE_KIND,
+                        axis=PANEL.PROFESSIONAL_COMPLETENESS_ARTIFACT_AXIS,
+                        review_id=packet["review_id"],
+                    )
+                    ballot = _professional_ballot(
+                        projected,
+                        packet_sha256,
+                        voter=voter,
+                        skill_ids=fresh_ids,
+                    )
+                    ballot["schema_version"] = (
+                        PANEL.PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION
+                    )
+                    ballot.pop("source_fingerprints")
+                    ballot["review_contract_fingerprint"] = review_contract
+                    ballot["capsule"] = capsule_ref
+                    scoped_materials = (
+                        PANEL._professional_v3_target_scoped_capsule_materials(
+                            capsule
+                        )
+                    )
+                    for vote in ballot["professional_votes"]:
+                        _ground_schema3_vote(
+                            vote,
+                            scoped_materials[vote["skill_id"]],
+                        )
+                    ballot_path = round_root / "panel" / f"{voter_id}.json"
+                    ballot_path.parent.mkdir(parents=True, exist_ok=True)
+                    _write_json(ballot_path, ballot)
+                    ballots.append((ballot_path, ballot))
+
+                decision = PANEL.aggregate_ballots(
+                    packet=packet,
+                    packet_path=packet_path,
+                    ballot_values=ballots,
+                    decided_on="2026-07-17",
+                    validation_root=validation_root,
+                )
+                decision_path = round_root / "panel" / "decision.json"
+                _write_json(decision_path, decision)
+                self.assertEqual(
+                    decision,
+                    PANEL.validate_decision_record(
+                        decision,
+                        record_path=decision_path,
+                        validation_root=validation_root,
+                    ),
+                )
+                rows = decision["professional_decisions"]
+                self.assertEqual(len(all_ids), len(rows))
+                self.assertEqual(
+                    {
+                        "fresh": len(expected_fresh_ids),
+                        "carried-forward": len(expected_carried_ids),
+                    },
+                    {
+                        mode: sum(
+                            row["provenance"]["mode"] == mode for row in rows
+                        )
+                        for mode in ("fresh", "carried-forward")
+                    },
+                )
+                plan_carries = {
+                    row["skill_id"]: row
+                    for row in packet["review_plan"]["carried_targets"]
+                }
+                carried = [
+                    row
+                    for row in rows
+                    if row["provenance"]["mode"] == "carried-forward"
+                ]
+                for row in carried:
+                    self.assertEqual(
+                        PANEL.PROFESSIONAL_V3_TARGET_DECISION_FIELDS,
+                        set(row),
+                    )
+                    row_without_fingerprint = copy.deepcopy(row)
+                    row_without_fingerprint.pop("target_decision_fingerprint")
+                    self.assertEqual(
+                        PANEL._canonical_json_sha256(row_without_fingerprint),
+                        row["target_decision_fingerprint"],
+                    )
+                    authority = plan_carries[row["skill_id"]]
+                    provenance = row["provenance"]
+                    self.assertEqual(1, provenance["origin_depth"])
+                    self.assertEqual(
+                        authority["origin_attestation"],
+                        provenance["origin_decision"],
+                    )
+                    self.assertEqual(
+                        authority["origin_verdict_digest"],
+                        provenance["origin_target_decision_fingerprint"],
+                    )
+                    self.assertEqual(
+                        "review-visible-binding-unchanged",
+                        provenance["carry_basis"],
+                    )
+                    self.assertEqual(
+                        authority["review_unit_binding"],
+                        row["review_unit_binding"],
+                    )
+
+                tampered_origin = PANEL._professional_attestation_origin_row(
+                    baseline["origins"][carried[0]["skill_id"]]["finding"]
+                )
+                tampered_origin["review_unit_binding"] = "0" * 64
+                with self.assertRaisesRegex(
+                    PANEL.PanelReviewError,
+                    "review binding",
+                ):
+                    PANEL._professional_v3_carried_target_decision(
+                        target=next(
+                            target
+                            for target in packet["professional_targets"]
+                            if target["skill_id"] == carried[0]["skill_id"]
+                        ),
+                        origin_row=tampered_origin,
+                        origin_decision_ref=baseline["attestation_ref"],
+                        current_bindings=bindings,
+                        origin_candidate_material_bindings={},
+                    )
 
     def test_schema3_semantic_grounding_positive_control(self) -> None:
         vote, materials = self._semantic_grounding_fixture()
@@ -843,7 +1461,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
                 review_id=packet["review_id"],
             )
             projected = PANEL._professional_v2_projection_from_v3(packet)
-            ballot = fixtures._professional_ballot(
+            ballot = _professional_ballot(
                 projected,
                 "a" * 64,
                 voter=1,
@@ -852,7 +1470,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
             ballot["schema_version"] = (
                 PANEL.PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION
             )
-            ballot["source_fingerprints"] = packet["source_fingerprints"]
+            ballot.pop("source_fingerprints")
             ballot["review_contract_fingerprint"] = packet[
                 "review_contract_fingerprint"
             ]
@@ -1122,9 +1740,9 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
             forged_carry["review_plan"]["carried_targets"] = [
                 {
                     "skill_id": moved["skill_id"],
-                    "review_binding_fingerprint": current_state["bindings"][
+                    "review_unit_binding": current_state["bindings"][
                         moved["skill_id"]
-                    ]["review_binding_fingerprint"],
+                    ]["review_unit_binding"],
                     "origin_decision": baseline["decision_ref"],
                     "origin_target_decision_fingerprint": "f" * 64,
                 }
@@ -1191,19 +1809,19 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raw:
             validation_root = Path(raw)
             packet_relative = (
-                f"evals/expert-panel/{review_id}/packet.json"
+                f".rd-skills/expert-panel/{review_id}/packet.json"
             )
             discovery_relative = (
-                f"evals/expert-panel/{review_id}/discovery-capsules/{voter_id}.json"
+                f".rd-skills/expert-panel/{review_id}/discovery-capsules/{voter_id}.json"
             )
             request_relative = (
-                f"evals/expert-panel/{review_id}/candidate-requests/{voter_id}.json"
+                f".rd-skills/expert-panel/{review_id}/candidate-requests/{voter_id}.json"
             )
             capsule_relative = (
-                f"evals/expert-panel/{review_id}/capsules/{voter_id}.json"
+                f".rd-skills/expert-panel/{review_id}/capsules/{voter_id}.json"
             )
             ballot_relative = (
-                f"evals/expert-panel/{review_id}/panel/{voter_id}.json"
+                f".rd-skills/expert-panel/{review_id}/panel/{voter_id}.json"
             )
             with mock.patch.object(PANEL, "ROOT", validation_root), mock.patch.object(
                 PANEL,
@@ -1344,7 +1962,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
                 capsule_path = validation_root / capsule_relative
                 capsule_value = json.loads(capsule_path.read_text(encoding="utf-8"))
                 projected = PANEL._professional_v2_projection_from_v3(packet)
-                completed = fixtures._professional_ballot(
+                completed = _professional_ballot(
                     projected,
                     packet_sha256,
                     voter=1,
@@ -1353,8 +1971,8 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
                 completed["schema_version"] = (
                     PANEL.PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION
                 )
+                completed.pop("source_fingerprints")
                 completed["created_on"] = template_value["created_on"]
-                completed["source_fingerprints"] = packet["source_fingerprints"]
                 completed["review_contract_fingerprint"] = packet[
                     "review_contract_fingerprint"
                 ]
@@ -1420,7 +2038,6 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
             "review_id": packet["review_id"],
             "created_on": "2026-07-17",
             "packet_sha256": "a" * 64,
-            "source_fingerprints": packet["source_fingerprints"],
             "review_contract_fingerprint": packet[
                 "review_contract_fingerprint"
             ],
@@ -1484,7 +2101,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
                 round_root / "discovery-capsules" / "domain-one.json"
             )
             discovery_path.parent.mkdir(parents=True)
-            fixtures._write_json(discovery_path, discovery)
+            _write_json(discovery_path, discovery)
             request = PANEL.prepare_professional_candidate_request_v3(
                 packet=packet,
                 packet_sha256="a" * 64,
@@ -1525,7 +2142,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
             )
             request_path = round_root / "candidate-requests" / "domain-one.json"
             request_path.parent.mkdir(parents=True)
-            fixtures._write_json(request_path, request)
+            _write_json(request_path, request)
             capsule = PANEL.prepare_professional_review_capsule_v3(
                 packet=packet,
                 packet_sha256="a" * 64,
@@ -1661,7 +2278,6 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
             bindings=state["bindings"],
         )
         capsule = {
-            "source_fingerprints": packet["source_fingerprints"],
             "review_contract_fingerprint": packet[
                 "review_contract_fingerprint"
             ],
@@ -1694,7 +2310,6 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
             bindings=state["bindings"],
         )
         local_capsule = {
-            "source_fingerprints": packet["source_fingerprints"],
             "review_contract_fingerprint": packet[
                 "review_contract_fingerprint"
             ],
@@ -1719,7 +2334,6 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
             bindings=state["bindings"],
         )
         local_blocks = PANEL._professional_v3_effective_input_blocks(
-            source_fingerprints=packet["source_fingerprints"],
             review_contract_fingerprint=packet[
                 "review_contract_fingerprint"
             ],
@@ -1915,7 +2529,6 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
                 bindings=state["bindings"],
             )
             blocks_by_voter[voter_id] = PANEL._professional_v3_effective_input_blocks(
-                source_fingerprints=packet["source_fingerprints"],
                 review_contract_fingerprint=packet[
                     "review_contract_fingerprint"
                 ],
@@ -2142,7 +2755,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
             validation_root = Path(raw)
             packet_path = validation_root / packet["review_id"] / "packet.json"
             packet_path.parent.mkdir(parents=True)
-            fixtures._write_json(packet_path, packet)
+            _write_json(packet_path, packet)
             with self.subTest(entry="streaming-aggregate"), self.assertRaisesRegex(
                 PANEL.PanelReviewError, "authoritative packet-derived state"
             ):
@@ -2236,7 +2849,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
                 validation_root / packet["review_id"] / "packet.json"
             )
             packet_path.parent.mkdir(parents=True)
-            fixtures._write_json(packet_path, changed_packet)
+            _write_json(packet_path, changed_packet)
             with self.subTest(entry="streaming-aggregate"), self.assertRaisesRegex(
                 PANEL.PanelReviewError, "belongs to another packet"
             ):
@@ -2271,7 +2884,6 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
             "decision_method": (
                 PANEL.PROFESSIONAL_COMPLETENESS_INCREMENTAL_DECISION_METHOD
             ),
-            "source_fingerprints": packet["source_fingerprints"],
             "review_contract_fingerprint": packet[
                 "review_contract_fingerprint"
             ],
@@ -2410,7 +3022,6 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
             "decision_method": (
                 PANEL.PROFESSIONAL_COMPLETENESS_INCREMENTAL_DECISION_METHOD
             ),
-            "source_fingerprints": packet["source_fingerprints"],
             "review_contract_fingerprint": packet[
                 "review_contract_fingerprint"
             ],
@@ -2530,7 +3141,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
             round_root = validation_root / packet["review_id"]
             packet_path = round_root / "packet.json"
             packet_path.parent.mkdir(parents=True)
-            fixtures._write_json(packet_path, packet)
+            _write_json(packet_path, packet)
             packet_sha256 = hashlib.sha256(packet_path.read_bytes()).hexdigest()
             packet_ref = PANEL._artifact_reference(
                 packet_path,
@@ -2568,7 +3179,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
                     review_id=packet["review_id"],
                 )
 
-                ballot = fixtures._professional_ballot(
+                ballot = _professional_ballot(
                     projected_packet,
                     packet_sha256,
                     voter=voter,
@@ -2577,7 +3188,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
                 ballot["schema_version"] = (
                     PANEL.PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION
                 )
-                ballot["source_fingerprints"] = packet["source_fingerprints"]
+                ballot.pop("source_fingerprints")
                 ballot["review_contract_fingerprint"] = packet[
                     "review_contract_fingerprint"
                 ]
@@ -2588,7 +3199,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
                 _ground_schema3_vote(ballot["professional_votes"][0], scoped)
                 ballot_path = round_root / "panel" / f"{voter_id}.json"
                 ballot_path.parent.mkdir(parents=True, exist_ok=True)
-                fixtures._write_json(ballot_path, ballot)
+                _write_json(ballot_path, ballot)
                 ballot_ref = PANEL._artifact_reference(
                     ballot_path,
                     validation_root=validation_root,
@@ -2648,7 +3259,6 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
                 "decision_method": (
                     PANEL.PROFESSIONAL_COMPLETENESS_INCREMENTAL_DECISION_METHOD
                 ),
-                "source_fingerprints": packet["source_fingerprints"],
                 "review_contract_fingerprint": packet[
                     "review_contract_fingerprint"
                 ],
@@ -2660,7 +3270,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
                 "limitations": ["Target-scoped origin cache-miss fixture."],
             }
             decision_path = round_root / "panel" / "decision.json"
-            fixtures._write_json(decision_path, record)
+            _write_json(decision_path, record)
             decision_ref = PANEL._artifact_reference(
                 decision_path,
                 validation_root=validation_root,
@@ -2708,7 +3318,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
                 f"{first} xylophone quasar nebula separates {second} while "
                 "retaining a current-fingerprint token salad."
             )
-            fixtures._write_json(weak_path, weak_ballot)
+            _write_json(weak_path, weak_ballot)
             weak_ballot_ref = PANEL._artifact_reference(
                 weak_path,
                 validation_root=validation_root,
@@ -2730,7 +3340,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
                 "voters": weak_voters,
                 "professional_decisions": [weak_stored],
             }
-            fixtures._write_json(decision_path, weak_record)
+            _write_json(decision_path, weak_record)
             weak_decision_ref = PANEL._artifact_reference(
                 decision_path,
                 validation_root=validation_root,
@@ -2837,9 +3447,8 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
         target = packet["professional_targets"][0]
         origin_row = {
             "skill_id": target["skill_id"],
-            "package_fingerprint": "a" * 64,
-            "review_binding_fingerprint": target["review_binding"][
-                "review_binding_fingerprint"
+            "review_unit_binding": target["review_binding"][
+                "review_unit_binding"
             ],
             "final_disposition": "accepted-current-professional-completeness",
             "review_dependencies": {
@@ -2859,28 +3468,26 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
             origin_row=origin_row,
             origin_decision_ref=origin_ref,
             current_bindings={},
-            origin_candidate_fingerprints={},
+            origin_candidate_material_bindings={},
         )
         self.assertEqual(
-            target["package_fingerprint"], carried["package_fingerprint"]
+            target["review_binding"]["review_unit_binding"],
+            carried["review_unit_binding"],
         )
-        self.assertEqual(
-            "a" * 64,
-            carried["provenance"]["origin_package_fingerprint"],
-        )
+        self.assertNotIn("package_fingerprint", carried)
         self.assertEqual(
             "review-visible-binding-unchanged",
             carried["provenance"]["carry_basis"],
         )
         changed = copy.deepcopy(target)
-        changed["review_binding"]["review_binding_fingerprint"] = "d" * 64
+        changed["review_binding"]["review_unit_binding"] = "d" * 64
         with self.assertRaisesRegex(PANEL.PanelReviewError, "review binding"):
             PANEL._professional_v3_carried_target_decision(
                 target=changed,
                 origin_row=origin_row,
                 origin_decision_ref=origin_ref,
                 current_bindings={},
-                origin_candidate_fingerprints={},
+                origin_candidate_material_bindings={},
             )
 
     def test_bound_path_cache_reads_once_and_rechecks_forbidden(self) -> None:
@@ -3022,7 +3629,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
                     expected_review_id="round",
                 )
 
-    def test_review_contract_tracks_schema3_acceptance_not_cache_body(self) -> None:
+    def test_review_contract_uses_repository_source_bytes_not_runtime_patches(self) -> None:
         def fingerprints_for_bodies(
             *, attribute: str, first_body: str, second_body: str
         ) -> tuple[str, str]:
@@ -3061,7 +3668,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
             first_body="return kwargs.get('ballot')",
             second_body="return {'changed': True}",
         )
-        self.assertNotEqual(*validator_fingerprints)
+        self.assertEqual(*validator_fingerprints)
 
         cache_fingerprints = fingerprints_for_bodies(
             attribute="_professional_v3_cached_json_artifact",
@@ -3075,7 +3682,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
             first_body="return None",
             second_body="return {'changed': True}",
         )
-        self.assertNotEqual(*lineage_fingerprints)
+        self.assertEqual(*lineage_fingerprints)
 
 
 if __name__ == "__main__":

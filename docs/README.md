@@ -1,6 +1,6 @@
-# ChangeForge Documentation
+# rd-skills Documentation
 
-Use this page as the map for both the installed ChangeForge product and its
+Use this page as the map for both the installed rd-skills product and its
 authoring repository. Installable artifacts come from `dist/`; `src/` is never
 an installation source.
 
