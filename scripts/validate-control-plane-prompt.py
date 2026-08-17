@@ -13,6 +13,7 @@ from validation_utils import (
     EVIDENCE_LEDGER_MODEL,
     PROMPT_CONTRACT_MODEL,
     REFERENCE_CONTRACT_MODEL,
+    REVIEW_DISCIPLINE_MODEL,
     TASK_CONTRACT_MODEL,
     ValidationProblem,
     completion_fail_closed_projection_terms,
@@ -71,16 +72,15 @@ PROMPT_TEMPLATE_BINDINGS = (
 )
 ANALYZED_WORK_PROMPT_TERMS = {
     "Analyzed Work": (
-        "current Engineering Brief is the only operational analysis authority",
-        "First Executable Slice is a complete Task Contract v2",
-        "dispatch its First Executable Slice verbatim",
-        "never regenerate or reinterpret",
-        "Specialist input takes effect only after Brief incorporation",
-        "DAGs/handoffs are derived",
-        "cannot redefine Brief decisions",
+        "current Engineering Brief: sole operational analysis authority",
+        "First Executable Slice: complete Task Contract v2",
+        "dispatch verbatim",
+        "never reinterpret",
+        "Specialists act only through Brief",
+        "DAGs/handoffs cannot redefine it",
         "blocked -> main-control-agent -> analysis-agent -> updated Engineering Brief",
         "redispatch affected tasks",
-        "Direct Task and non-implementation paths remain unchanged",
+        "Direct Task/non-implementation paths remain unchanged",
     ),
     "Scheduling and Context": (
         "current requested task > declared DAG work > current-task blockers > adjacent follow-up",
@@ -384,7 +384,10 @@ def _validate_host_mode_branches(text: str, errors: list[str]) -> None:
         return
 
     regions: dict[str, str] = {}
-    for branch_contract in PROMPT_CONTRACT_MODEL["host_mode_branches"]:
+    branch_contracts = REVIEW_DISCIPLINE_MODEL["generic_capability_contract"][
+        "prompt_branches"
+    ]
+    for branch_contract in branch_contracts:
         field = branch_contract["field"]
         next_field = branch_contract["next_field"]
         marker = f"`{field}`"
@@ -406,7 +409,7 @@ def _validate_host_mode_branches(text: str, errors: list[str]) -> None:
             continue
         regions[field] = section[start:end]
 
-    for branch_contract in PROMPT_CONTRACT_MODEL["host_mode_branches"]:
+    for branch_contract in branch_contracts:
         field = branch_contract["field"]
         expected_branches = branch_contract["branches"]
         region = regions.get(field)

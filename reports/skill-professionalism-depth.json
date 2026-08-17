@@ -900,7 +900,7 @@
       "status": "pass",
       "decision_rule_count": 4,
       "gotcha_count": 3,
-      "line_count": 70
+      "line_count": 72
     },
     {
       "name": "backend-change-builder",

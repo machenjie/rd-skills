@@ -55,6 +55,18 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
             self.helper.EXPECTED_PROFILE_COUNTS,
         )
 
+    def test_capability_fact_projection_reuses_canonical_build_renderer(self) -> None:
+        from tests.scripts.test_build_safety import BUILD as build
+
+        enforcement = self.helper.host_enforcement_for_agent("codex")
+        expected = build._render_decision_capability_facts(
+            build._normalized_decision_capabilities(enforcement)
+        )
+        self.assertEqual(
+            expected,
+            self.helper.canonical_profile_capability_facts(enforcement),
+        )
+
     def test_install_and_upgrade_preflight_rejects_overlap_without_mutation(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)

@@ -3,7 +3,9 @@
 Use this contract only for `validation-only/no-edit` or `diff-export/no-edit`.
 The task-agent loads no Professional Skill or Layer 3 guidance, does not use the
 Implementation Handoff, and must not edit, repair, access the network, fetch, or
-contact remotes. `No-edit Enforcement` must equal the injected `utility_no_edit` mode.
+contact remotes. Injected capability facts, not a host/tool/command name,
+decide whether the operation is supported. An unsupported required capability
+blocks the utility before operation.
 Capture a pre-operation workspace change set with one adjacent ordered check group, exactly
 one allowed operation, then the identical adjacent check group. Preserve user changes. A
 `changed` or `unavailable` check invalidates the Utility
@@ -29,8 +31,8 @@ Exactly `validation-only/no-edit` or `diff-export/no-edit`.
 
 ## No-edit Enforcement
 
-Exactly the injected `utility_no_edit` value. Current supported host projections use
-`prompt-enforced`; this is a behavioral contract, not a runtime write block.
+Record the injected no-edit enforcement capability state. This is a behavioral
+contract, not a runtime write block.
 
 ## Goal
 
@@ -51,12 +53,12 @@ it exists or mark the check unavailable. A dirty baseline is allowed and must re
 
 ## Commands Allowed
 
-Allow the named read-only pre/post workspace checks. Every Git diff check or operation must
-use only `git --no-pager diff` or `git --no-pager show` with both `--no-ext-diff` and
-`--no-textconv`; no other Git global option is allowed. The subcommand option allowlist
-forbids output, external-diff, and textconv-enabling options.
-Return output as supplied content or a host-native artifact, never a new workspace file;
-do not validate or review.
+Allow only capsule-named local/offline non-mutating pre/post checks through the
+workspace state observation capability. `diff-export/no-edit` additionally
+requires an exact change evidence export capability. The host adapter may name
+its native tool or command, but generic control logic must not depend on that
+identifier or spelling. Return output as supplied content or a host-native
+artifact, never a new workspace file; do not validate or review.
 For validation, additionally allow only capsule-named
 non-modifying checks; do not repair or review.
 

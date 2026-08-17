@@ -46,6 +46,9 @@ HOST_ENFORCEMENT_CAPABILITIES = {
     "isolated_workspace",
     "utility_no_edit",
 }
+GENERIC_CAPABILITY_CONTRACT = REVIEW_DISCIPLINE_MODEL["generic_capability_contract"]
+DECISION_CAPABILITY_FIELDS = tuple(GENERIC_CAPABILITY_CONTRACT["fields"])
+DECISION_CAPABILITY_STATES = set(GENERIC_CAPABILITY_CONTRACT["states"])
 HOST_MODE_VALUES = {
     contract["field"]: {branch["value"] for branch in contract["branches"]}
     for contract in PROMPT_CONTRACT_MODEL["host_mode_branches"]
@@ -64,6 +67,39 @@ OLD_NAMES = {
     "integration-worker", "pdd-freezer", "ddd-freezer", "sdd-contract-freezer",
     "tdd-behavior-freezer", "task-implementer", "phase-reviewer",
 }
+
+
+def _normalized_decision_capabilities(entry: dict[str, object]) -> dict[str, str]:
+    profile_supported = entry.get("profile_delivery") != "unsupported"
+    diff_supported = entry.get("diff_input_mode") != "unsupported"
+    validation_supported = entry.get("validation_mode") != "unsupported"
+    return {
+        "bounded-source-read": "supported" if profile_supported else "unsupported",
+        "workspace-mutation": "supported" if profile_supported else "unsupported",
+        "non-mutating-validation": "supported" if validation_supported else "unsupported",
+        "exact-change-evidence-read": "supported" if diff_supported else "unsupported",
+        "exact-change-evidence-export": "supported" if diff_supported else "unsupported",
+        "reviewer-accessible-change-reference": "supported" if diff_supported else "unsupported",
+        "workspace-state-observation": "supported" if diff_supported else "unsupported",
+    }
+
+
+def _render_decision_capability_facts(capabilities: dict[str, str]) -> str:
+    groups = {
+        state: [
+            field
+            for field in DECISION_CAPABILITY_FIELDS
+            if capabilities[field] == state
+        ]
+        for state in ("supported", "unsupported")
+    }
+    return (
+        "Current capability facts: supported "
+        + ("/".join(groups["supported"]) or "none")
+        + "; unsupported "
+        + ("/".join(groups["unsupported"]) or "none")
+        + "."
+    )
 OUTPUTS = (
     ("codex", ROOT / "dist" / "codex" / "project" / ".codex" / "agents", ".toml"),
     ("claude", ROOT / "dist" / "claude" / "project" / ".claude" / "agents", ".md"),
@@ -454,20 +490,8 @@ def _expected_built_instruction_surface(
         host_entry = hosts.get(platform)
         if not isinstance(host_entry, dict):
             return None
-        diff_input_mode = host_entry.get("diff_input_mode")
-        validation_mode = host_entry.get("validation_mode")
-        utility_no_edit = host_entry.get("utility_no_edit")
-        if any(
-            not isinstance(value, str)
-            for value in (diff_input_mode, validation_mode, utility_no_edit)
-        ):
-            return None
-        sections.append(
-            "Current host modes: "
-            f"diff_input_mode={diff_input_mode}; "
-            f"validation_mode={validation_mode}; "
-            f"utility_no_edit={utility_no_edit}."
-        )
+        capability_facts = _normalized_decision_capabilities(host_entry)
+        sections.append(_render_decision_capability_facts(capability_facts))
     elif name == "analysis-agent":
         host_entry = hosts.get(platform)
         if not isinstance(host_entry, dict):
@@ -615,13 +639,12 @@ def main(argv: list[str] | None = None) -> int:
         for capability in HOST_ENFORCEMENT_CAPABILITIES:
             if host_entry.get(capability) not in ENFORCEMENT_STATUSES:
                 errors.append(f"{host}: invalid {capability} enforcement")
-        diff_input_mode = host_entry.get("diff_input_mode")
-        validation_mode = host_entry.get("validation_mode")
-        utility_no_edit = host_entry.get("utility_no_edit")
-        if diff_input_mode not in HOST_MODE_VALUES["diff_input_mode"]:
+        if host_entry.get("diff_input_mode") not in HOST_MODE_VALUES["diff_input_mode"]:
             errors.append(f"{host}: invalid diff_input_mode")
-        if validation_mode not in HOST_MODE_VALUES["validation_mode"]:
+        if host_entry.get("validation_mode") not in HOST_MODE_VALUES["validation_mode"]:
             errors.append(f"{host}: invalid validation_mode")
+        if tuple(_normalized_decision_capabilities(host_entry)) != DECISION_CAPABILITY_FIELDS:
+            errors.append(f"{host}: normalized decision capabilities drift from Core")
         roles = host_entry.get("roles")
         if not isinstance(roles, dict) or set(roles) != set(ROLE_CONTRACT_MODEL):
             errors.append(f"{host}: enforcement roles must be the exact four profiles")
@@ -775,17 +798,10 @@ def main(argv: list[str] | None = None) -> int:
                     errors.append("copilot:review-agent must omit execute and use read/search")
             if name == "main-control-agent":
                 host_entry = hosts.get(platform, {})
-                diff_input_mode = host_entry.get("diff_input_mode")
-                validation_mode = host_entry.get("validation_mode")
-                utility_no_edit = host_entry.get("utility_no_edit")
-                expected_modes = (
-                    "Current host modes: "
-                    f"diff_input_mode={diff_input_mode}; "
-                    f"validation_mode={validation_mode}; "
-                    f"utility_no_edit={utility_no_edit}."
-                )
+                capability_facts = _normalized_decision_capabilities(host_entry)
+                expected_modes = _render_decision_capability_facts(capability_facts)
                 if expected_modes not in text:
-                    errors.append(f"{platform}:{name}: missing exact current host modes")
+                    errors.append(f"{platform}:{name}: missing exact capability facts")
             elif name == "analysis-agent":
                 expected_mode = (
                     hosts.get(platform, {})
@@ -811,15 +827,15 @@ def main(argv: list[str] | None = None) -> int:
             elif any(
                 marker in text
                 for marker in (
-                    "Current host modes:",
-                    "diff_input_mode=",
-                    "validation_mode=",
-                    "utility_no_edit=",
+                    "Current capability facts:",
+                    "bounded-source-read=",
+                    "workspace-mutation=",
+                    "exact-change-evidence-read=",
                     "Current external-read mode:",
                     "external_source_read=",
                 )
             ):
-                errors.append(f"{platform}:{name}: worker Profile must not receive host modes")
+                errors.append(f"{platform}:{name}: worker Profile must not receive control capability facts")
 
     if ENFORCEMENT_SOURCE.is_file():
         expected_digest = hashlib.sha256(ENFORCEMENT_SOURCE.read_bytes()).hexdigest()

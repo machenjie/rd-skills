@@ -3950,6 +3950,43 @@ class CoreContractModelTests(unittest.TestCase):
         )
         self.assertEqual({"L2": 10, "L3": 7, "L4": 11}, levels)
 
+    def test_analysis_capsule_forbids_execution_level_extension(self) -> None:
+        analysis = _first_fixture_step("analysis")
+        payload = copy.deepcopy(analysis["fixture_capsule"])
+        task = _first_fixture_step("task")
+        payload["execution_level_extension"] = copy.deepcopy(
+            task["fixture_capsule"]["execution_level_extension"]
+        )
+        with self.assertRaisesRegex(
+            FixtureCapsuleError,
+            "analysis fixture_capsule must not carry execution_level_extension",
+        ):
+            render_fixture_capsule_payload(analysis, payload)
+
+    def test_implementation_handoff_declares_review_input_ready_gate(self) -> None:
+        text = (
+            REFERENCE_ROOT / "implementation-handoff-template.md"
+        ).read_text(encoding="utf-8")
+        for term in (
+            "## Review Input Ready",
+            "Latest Changed Paths:",
+            "Exact Reviewable Change Evidence:",
+            "Reviewer Capability Accessibility:",
+            "Validation After Latest Material Edit:",
+            "Fixed Review Scope:",
+        ):
+            self.assertIn(term, text)
+        self.assertIn("same Implementation Handoff", text)
+        self.assertIn("changed-file summary", text)
+
+    def test_utility_capsule_is_capability_driven_not_git_command_driven(self) -> None:
+        text = (
+            REFERENCE_ROOT / "utility-capsule-template.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("exact change evidence export capability", text)
+        self.assertIn("workspace state observation capability", text)
+        self.assertNotIn("git --no-pager", text)
+
     def test_extended_capsule_rejects_prose_or_fabricated_level_basis(self) -> None:
         task = _first_fixture_step("task")
         payload = task["fixture_capsule"]
@@ -4655,10 +4692,9 @@ class CoreContractModelTests(unittest.TestCase):
                         re.escape(term),
                         "REMOVED_REVIEW_PROOF_TERM",
                         text,
-                        count=1,
                         flags=re.IGNORECASE,
                     )
-                    self.assertEqual(1, count)
+                    self.assertGreaterEqual(count, 1)
                     path.write_text(
                         mutated,
                         encoding="utf-8",

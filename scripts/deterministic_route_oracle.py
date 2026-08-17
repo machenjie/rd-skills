@@ -25,6 +25,7 @@ from validation_utils import (
     load_yaml_file,
     professional_automatic_routing_authority,
     professional_routing_authority,
+    validate_main_assignment,
     validate_main_execution,
     validate_route_decision,
 )
@@ -12729,6 +12730,9 @@ def _validated_brief_review_binding(
 ) -> str | None:
     """Return one private token for an exact accepted Brief159 authority."""
 
+    if "level_basis" not in main_execution:
+        return None
+
     trigger_evaluations = main_execution["level_basis"][
         "trigger_evaluations"
     ]
@@ -12830,9 +12834,9 @@ def _validated_brief_review_binding(
 def _validated_main_execution_copy(
     main_execution: object,
 ) -> dict[str, Any]:
-    """Fail closed on Main input before any routing work begins."""
+    """Fail closed on Main Analysis assignment or executable input."""
 
-    errors = validate_main_execution(main_execution)
+    errors = validate_main_assignment(main_execution)
     if errors:
         raise RoutingIntegrityError("; ".join(errors))
     try:
@@ -13092,7 +13096,12 @@ def _route_decision_envelope(
             for name in ordered
         ]
 
-    level_basis = copy.deepcopy(main_execution["level_basis"])
+    analysis_path = route_projection["path"] == "analyzed"
+    level_basis = (
+        None
+        if analysis_path
+        else copy.deepcopy(main_execution["level_basis"])
+    )
     return {
         "path": route_projection["path"],
         "route_result": {
@@ -13100,7 +13109,9 @@ def _route_decision_envelope(
             "primary_skill": primary_skill,
             "layer3_skills": selected_layer3,
             "review_skill": review_skill,
-            "execution_level": main_execution["execution_level"],
+            "execution_level": (
+                None if analysis_path else main_execution["execution_level"]
+            ),
             "level_basis": level_basis,
         },
         "selection_evidence": {
@@ -13122,7 +13133,9 @@ def _route_decision_envelope(
             ),
             "eligible_primary_count": 1,
         },
-        "main_execution_provenance": copy.deepcopy(main_execution),
+        "main_execution_provenance": (
+            None if analysis_path else copy.deepcopy(main_execution)
+        ),
         "route_once": True,
     }
 
@@ -18147,32 +18160,42 @@ def _route_impl(
         admission_authority=admission_authority,
         layer3_authority_by_primary=layer3_authority_by_primary,
     )
-    selected_candidate = cohort_selection["selected_candidate"]
-    if (
-        isinstance(selected_candidate, dict)
-        and selected_candidate.get("candidate_id") == "ordinary-ambiguity"
-        and "proof-limit:terminal-task-action-ambiguity"
-        in selected_candidate.get("evidence", [])
-    ):
-        _validate_terminal_action_ambiguity_main(validated_main)
     projected = _project_route_selection(
         project_selection,
         cohort_selection,
     )
+    analysis_fields = set(
+        CORE_CONTRACTS["route_decision_contract"][
+            "main_analysis_assignment_fields"
+        ]
+    )
+    is_analysis_assignment = set(validated_main) == analysis_fields
+    if projected["path"] != "analyzed" and is_analysis_assignment:
+        raise RoutingIntegrityError(
+            "executable route requires Main execution input"
+        )
     if len(winner_trace) != 1:
         raise RoutingIntegrityError(
             "route-once pipeline must project exactly one winner trace"
         )
     authority = professional_authority
+    decision_main = (
+        {
+            "producer": validated_main["producer"],
+            "task_id": validated_main["task_id"],
+        }
+        if projected["path"] == "analyzed"
+        else validated_main
+    )
     envelope = _route_decision_envelope(
         projected,
         winner_trace[0],
-        main_execution=validated_main,
+        main_execution=decision_main,
         routing_authority=authority,
     )
     decision_errors = validate_route_decision(
         envelope,
-        main_execution=validated_main,
+        main_execution=decision_main,
         routing_authority=authority,
     )
     if decision_errors:

@@ -593,6 +593,28 @@ def validated_built_profile_sha256(
     source = resolve_source_profile_dir(agent, scope, profile)
     source_profiles = resolve_source_profiles(agent, scope)
     build = validate_built_source(agent, profile, source, source_profiles)
+    module = _load_current_profile_renderer()
+    try:
+        source_digests = module._agent_profile_digests(
+            module._load_agent_profiles(), module._load_host_enforcement()
+        )
+    except Exception as exc:
+        raise InstallError(f"cannot render current authoritative Agent Profiles: {exc}") from exc
+    digests = build.get("agent_profile_sha256")
+    expected = digests.get(agent) if isinstance(digests, dict) else None
+    if not isinstance(expected, dict) or set(expected) != set(AGENT_PROFILE_NAMES):
+        raise InstallError("validated build has no complete Agent Profile digest map")
+    rendered = source_digests.get(agent)
+    if expected != rendered:
+        raise InstallError(
+            "validated build Agent Profile digests differ from the current source renderer"
+        )
+    return {str(role): str(digest) for role, digest in rendered.items()}
+
+
+def _load_current_profile_renderer() -> Any:
+    """Load the canonical build renderer without duplicating its capability rules."""
+
     build_script = ROOT / "scripts" / "build.py"
     spec = importlib.util.spec_from_file_location(
         "changeforge_doctor_source_renderer", build_script
@@ -607,24 +629,25 @@ def validated_built_profile_sha256(
         sys.path.insert(0, scripts_path)
     try:
         spec.loader.exec_module(module)
-        source_digests = module._agent_profile_digests(
-            module._load_agent_profiles(), module._load_host_enforcement()
-        )
     except Exception as exc:
         raise InstallError(f"cannot render current authoritative Agent Profiles: {exc}") from exc
     finally:
         if inserted_scripts_path:
             sys.path.remove(scripts_path)
-    digests = build.get("agent_profile_sha256")
-    expected = digests.get(agent) if isinstance(digests, dict) else None
-    if not isinstance(expected, dict) or set(expected) != set(AGENT_PROFILE_NAMES):
-        raise InstallError("validated build has no complete Agent Profile digest map")
-    rendered = source_digests.get(agent)
-    if expected != rendered:
+    return module
+
+
+def canonical_profile_capability_facts(enforcement: dict[str, Any]) -> str:
+    """Return the exact Main projection from the canonical build renderer."""
+
+    module = _load_current_profile_renderer()
+    try:
+        capabilities = module._normalized_decision_capabilities(enforcement)
+        return str(module._render_decision_capability_facts(capabilities))
+    except Exception as exc:
         raise InstallError(
-            "validated build Agent Profile digests differ from the current source renderer"
-        )
-    return {str(role): str(digest) for role, digest in rendered.items()}
+            f"cannot render current authoritative capability facts: {exc}"
+        ) from exc
 
 
 def validated_built_core_model(agent: str, scope: str, profile: str) -> dict[str, Any]:

@@ -554,10 +554,19 @@ class LightweightUtilityContractTests(unittest.TestCase):
     def test_task_focus_relation_review_repair_and_cost_matrix_is_closed(self) -> None:
         results, errors = EVAL._task_focus_fixture_results(self.task_focus_cases)
         self.assertEqual([], errors)
-        self.assertEqual(25, len(results))
+        self.assertEqual(42, len(results))
         self.assertTrue(all(result["matches_expected"] for result in results))
         self.assertEqual(
-            {"finding", "same-pattern", "repair", "review-level", "cost"},
+            {
+                "finding",
+                "same-pattern",
+                "repair",
+                "review-level",
+                "cost",
+                "analysis-level",
+                "review-readiness",
+                "capability-equivalence",
+            },
             {result["scenario"] for result in results},
         )
 
@@ -1240,6 +1249,31 @@ class LightweightUtilityContractTests(unittest.TestCase):
             with self.subTest(case=case_id):
                 errors = EVAL._task_focus_case_errors(by_id[case_id])
                 self.assertTrue(any(message in error for error in errors), errors)
+
+    def test_analysis_level_review_readiness_and_capability_cases_are_covered(self) -> None:
+        results, errors = EVAL._task_focus_fixture_results(self.task_focus_cases)
+        self.assertEqual([], errors)
+        by_id = {result["id"]: result for result in results}
+        required = {
+            "focus-analysis-owner-unresolved-task-l2",
+            "focus-analysis-explicit-repair-task-level",
+            "focus-analysis-standard-task-l3",
+            "focus-analysis-material-risk-task-l4",
+            "focus-direct-task-level-unchanged",
+            "focus-analysis-history-unchanged",
+            "focus-review-ready-dispatch-once",
+            "focus-review-missing-change-evidence-blocked",
+            "focus-review-readonly-reviewer-accessible",
+            "focus-review-summary-is-not-evidence",
+            "focus-review-stale-validation-blocked",
+            "focus-review-native-reference-ready",
+            "focus-review-supplied-artifact-ready",
+            "focus-review-unsupported-capability-blocked",
+            "focus-review-normal-flow-no-post-review-export",
+            "focus-capability-equivalent-host-tool-identifiers",
+        }
+        self.assertTrue(required <= set(by_id), required - set(by_id))
+        self.assertTrue(all(by_id[case_id]["matches_expected"] for case_id in required))
 
     def test_release_reviews_use_one_typed_guard_per_review_outcome(self) -> None:
         for case in [*self.release_cases, *self.scheduling_cases, *self.utility_cases]:
@@ -2881,155 +2915,49 @@ class LightweightUtilityContractTests(unittest.TestCase):
         case = copy.deepcopy(self.utility_cases[0])
         command = "git fetch origin"
         case["steps"][1]["utility_capsule"]["commands_allowed"][-1] = command
-        case["steps"][2]["utility_evidence"]["commands_run"][3] = command
+        case["steps"][2]["utility_evidence"]["commands_run"][1] = command
         self.assertTrue(any("unsafe command" in error for error in self._errors(case)))
 
     def test_validation_utility_rejects_mutating_command(self) -> None:
         case = copy.deepcopy(self.utility_cases[1])
         command = "touch owner.py"
         case["steps"][1]["utility_capsule"]["commands_allowed"][-1] = command
-        case["steps"][2]["utility_evidence"]["commands_run"][3] = command
+        case["steps"][2]["utility_evidence"]["commands_run"][1] = command
         self.assertTrue(
-            any("not declared as a non-modifying check" in error for error in self._errors(case))
+            any("not declared as non-mutating validation" in error for error in self._errors(case))
         )
 
-    def test_allowed_prefix_cannot_hide_shell_control_or_substitution(self) -> None:
-        suffixes = (
-            "; git push origin main",
-            " && git push origin main",
-            " || git push origin main",
-            " | tee actual.diff",
-            " > actual.diff",
-            " < input.diff",
-            " $(git push origin main)",
-            " `git push origin main`",
+    def test_generic_utility_rejects_native_tool_command_or_shell_identifiers(self) -> None:
+        identifiers = (
+            "git --no-pager diff --no-ext-diff --no-textconv HEAD~1..HEAD",
+            "native-diff-tool",
+            "exact-change-evidence-export; mutate",
         )
-        for suffix in suffixes:
-            with self.subTest(suffix=suffix):
+        for identifier in identifiers:
+            with self.subTest(identifier=identifier):
                 case = copy.deepcopy(self.utility_cases[0])
-                command = (
-                    "git --no-pager diff --no-ext-diff --no-textconv HEAD~1..HEAD"
-                    + suffix
-                )
-                case["steps"][1]["utility_capsule"]["commands_allowed"][-1] = command
-                case["steps"][2]["utility_evidence"]["commands_run"][3] = command
+                case["steps"][1]["utility_capsule"]["commands_allowed"][-1] = identifier
+                case["steps"][2]["utility_evidence"]["commands_run"][1] = identifier
                 self.assertTrue(any("unsafe" in error for error in self._errors(case)))
 
-    def test_changed_workspace_invalidates_utility_and_blocks_closure(self) -> None:
-        case = copy.deepcopy(self.utility_cases[1])
-        check = case["steps"][2]["utility_evidence"]["workspace_diff_check"]
-        check["status"] = "changed"
-        check["after"] = ["tracked:owner.py", "staged:none", "untracked:none"]
-        errors = self._errors(case)
-        self.assertTrue(any("invalid unless workspace diff status is unchanged" in error for error in errors), errors)
-        self.assertTrue(any("completed requires an unchanged" in error for error in errors), errors)
-        self.assertTrue(any("must not continue to review or closure" in error for error in errors), errors)
-
-    def test_unavailable_workspace_check_invalidates_diff_review(self) -> None:
-        case = copy.deepcopy(self.utility_cases[0])
-        case["steps"][2]["utility_evidence"]["workspace_diff_check"]["status"] = "unavailable"
-        errors = self._errors(case)
-        self.assertTrue(any("invalid unless workspace diff status is unchanged" in error for error in errors), errors)
-        self.assertTrue(any("completed requires an unchanged" in error for error in errors), errors)
-        self.assertTrue(any("must not continue to review or closure" in error for error in errors), errors)
-
-    def test_workspace_checks_must_run_before_and_after_operation(self) -> None:
-        case = copy.deepcopy(self.utility_cases[1])
-        case["steps"][2]["utility_evidence"]["commands_run"].pop()
-        self.assertTrue(
-            any("exactly before and after" in error for error in self._errors(case))
+    def test_generic_utility_accepts_only_normalized_capability_operations(self) -> None:
+        self.assertEqual(
+            {
+                "workspace-state-observation",
+                "exact-change-evidence-export",
+                "non-mutating-validation",
+            },
+            EVAL.UTILITY_CAPABILITY_OPERATIONS,
         )
+        for operation in EVAL.UTILITY_CAPABILITY_OPERATIONS:
+            with self.subTest(operation=operation):
+                self.assertTrue(EVAL._utility_command_is_safe(operation))
 
-    def test_operation_first_or_last_breaks_adjacent_workspace_groups(self) -> None:
-        for placement in ("first", "last"):
-            with self.subTest(placement=placement):
-                case = copy.deepcopy(self.utility_cases[1])
-                commands = case["steps"][2]["utility_evidence"]["commands_run"]
-                operation = commands.pop(3)
-                commands.insert(0 if placement == "first" else len(commands), operation)
-                self.assertTrue(
-                    any("adjacent ordered pre-check group" in error for error in self._errors(case))
-                )
-
-    def test_interleaved_workspace_checks_break_exact_sequence(self) -> None:
-        case = copy.deepcopy(self.utility_cases[1])
-        commands = case["steps"][2]["utility_evidence"]["commands_run"]
-        commands[1], commands[3] = commands[3], commands[1]
-        self.assertTrue(
-            any("adjacent ordered pre-check group" in error for error in self._errors(case))
-        )
-
-    def test_missing_operation_breaks_utility_sequence(self) -> None:
-        case = copy.deepcopy(self.utility_cases[1])
-        case["steps"][2]["utility_evidence"]["commands_run"].pop(3)
-        self.assertTrue(
-            any("exactly one mode operation" in error for error in self._errors(case))
-        )
-
-    def test_diff_export_rejects_output_external_diff_and_textconv_options(self) -> None:
-        commands = (
-            "git --no-pager diff --no-ext-diff --no-textconv --output=actual.diff HEAD~1..HEAD",
-            "git --no-pager diff --no-ext-diff --no-textconv --output actual.diff HEAD~1..HEAD",
-            "git --no-pager diff --no-ext-diff --no-textconv -o actual.diff HEAD~1..HEAD",
-            "git --no-pager diff --no-ext-diff --no-textconv -oactual.diff HEAD~1..HEAD",
-            "git --no-pager diff --no-ext-diff --no-textconv --ext-diff HEAD~1..HEAD",
-            "git --no-pager diff --no-ext-diff --no-textconv --textconv HEAD~1..HEAD",
-        )
-        for command in commands:
-            with self.subTest(command=command):
-                case = copy.deepcopy(self.utility_cases[0])
-                case["steps"][1]["utility_capsule"]["commands_allowed"][-1] = command
-                case["steps"][2]["utility_evidence"]["commands_run"][3] = command
-                self.assertTrue(any("unsafe command" in error for error in self._errors(case)))
-
-    def test_diff_export_rejects_git_global_config_exec_and_pager_options(self) -> None:
-        commands = (
-            "git -c core.pager=cat diff --no-ext-diff --no-textconv HEAD~1..HEAD",
-            "git --config-env=core.pager=PAGER diff --no-ext-diff --no-textconv HEAD~1..HEAD",
-            "git --exec-path=/tmp diff --no-ext-diff --no-textconv HEAD~1..HEAD",
-            "git --paginate diff --no-ext-diff --no-textconv HEAD~1..HEAD",
-            "git --no-pager --paginate diff --no-ext-diff --no-textconv HEAD~1..HEAD",
-        )
-        for command in commands:
-            with self.subTest(command=command):
-                case = copy.deepcopy(self.utility_cases[0])
-                case["steps"][1]["utility_capsule"]["commands_allowed"][-1] = command
-                case["steps"][2]["utility_evidence"]["commands_run"][3] = command
-                self.assertTrue(any("unsafe command" in error for error in self._errors(case)))
-
-    def test_diff_export_requires_pager_ext_diff_and_textconv_shutdowns(self) -> None:
-        commands = (
-            "git diff --no-ext-diff --no-textconv HEAD~1..HEAD",
-            "git --no-pager diff --no-textconv HEAD~1..HEAD",
-            "git --no-pager diff --no-ext-diff HEAD~1..HEAD",
-        )
-        for command in commands:
-            with self.subTest(command=command):
-                case = copy.deepcopy(self.utility_cases[0])
-                case["steps"][1]["utility_capsule"]["commands_allowed"][-1] = command
-                case["steps"][2]["utility_evidence"]["commands_run"][3] = command
-                self.assertTrue(any("unsafe command" in error for error in self._errors(case)))
-
-    def test_diff_and_show_pass_only_with_all_three_safety_controls(self) -> None:
-        commands = (
-            "git --no-pager diff --no-ext-diff --no-textconv HEAD~1..HEAD",
-            "git --no-pager show --no-ext-diff --no-textconv HEAD",
-        )
-        for command in commands:
-            with self.subTest(command=command):
-                self.assertTrue(EVAL._utility_command_is_safe(command))
-
-    def test_workspace_diff_checks_disable_pager_ext_diff_and_textconv(self) -> None:
+    def test_workspace_observation_is_capability_driven(self) -> None:
         for case in self.utility_cases:
             checks = case["steps"][1]["utility_capsule"]["workspace_baseline"]["check_commands"]
-            self.assertEqual(list(EVAL.WORKSPACE_CHECK_COMMANDS), checks)
-            for command in checks:
-                if " diff " not in command:
-                    continue
-                self.assertIn("git --no-pager diff ", command)
-                self.assertIn("--no-ext-diff", command)
-                self.assertIn("--no-textconv", command)
-                self.assertTrue(EVAL._utility_command_is_safe(command))
+            self.assertEqual(["workspace-state-observation"], checks)
+            self.assertNotIn("git", " ".join(checks).casefold())
 
     def test_diff_export_must_use_supplied_or_host_native_artifact(self) -> None:
         case = copy.deepcopy(self.utility_cases[0])

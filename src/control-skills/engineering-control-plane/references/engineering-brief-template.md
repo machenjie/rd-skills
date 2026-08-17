@@ -21,6 +21,13 @@ Slice. The First Executable Slice is a complete Task Contract v2, not an
 informal checklist. Main dispatches it verbatim and never regenerates or
 reinterprets it; the DAG planner never reselects it.
 
+The Analysis assignment and Engineering Brief itself have no Execution Level,
+apply no default L3, write no historical effective level, and do not
+participate in historical maxima. Compute the executable Task Level only after
+this Brief has identified the First Executable Slice, using the analysis
+handoff as evidence. The Level fields below belong only to that executable
+Slice.
+
 Return the First Executable Slice when current evidence proves it safe,
 verifiable, reversible, and independent of remaining unknowns. If the Brief is
 insufficient, a downstream artifact conflicts with it, or a protected decision

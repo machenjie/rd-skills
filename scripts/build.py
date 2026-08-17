@@ -109,6 +109,11 @@ HOST_ENFORCEMENT_CAPABILITIES = (
     "isolated_workspace",
     "utility_no_edit",
 )
+GENERIC_CAPABILITY_CONTRACT = CORE_CONTRACTS["review_discipline_contract"][
+    "generic_capability_contract"
+]
+DECISION_CAPABILITY_FIELDS = tuple(GENERIC_CAPABILITY_CONTRACT["fields"])
+DECISION_CAPABILITY_STATES = tuple(GENERIC_CAPABILITY_CONTRACT["states"])
 HOST_MODE_VALUES = {
     contract["field"]: tuple(branch["value"] for branch in contract["branches"])
     for contract in PROMPT_CONTRACT_MODEL["host_mode_branches"]
@@ -1076,6 +1081,10 @@ def _write_compact_control_projection(destination: Path, item: SkillItem) -> Non
         )
     except ValidationProblem as exc:
         raise BuildError(str(exc)) from exc
+    table = "\n".join(
+        re.sub(r"\s*\|\s*", "|", line) if line.startswith("|") else line
+        for line in table.splitlines()
+    )
     rendered = "\n".join(
         [
             "---",
@@ -1084,8 +1093,8 @@ def _write_compact_control_projection(destination: Path, item: SkillItem) -> Non
             "",
             "# Engineering Control Plane",
             "",
-            "Reference Contract v2 router; Prompt owns rules.",
-            "Without an Agent Profile, load [Prompt](references/main-control-agent.md).",
+            "Reference Contract v2; Prompt owns rules.",
+            "No Profile: load [Prompt](references/main-control-agent.md).",
             "",
             "## Targeted References",
             "",
@@ -1190,6 +1199,43 @@ def _load_agent_profiles() -> list[dict[str, Any]]:
     return normalized
 
 
+def _normalized_decision_capabilities(entry: dict[str, Any]) -> dict[str, str]:
+    """Project adapter metadata to generic capability facts."""
+
+    profile_supported = entry.get("profile_delivery") != "unsupported"
+    diff_supported = entry.get("diff_input_mode") != "unsupported"
+    validation_supported = entry.get("validation_mode") != "unsupported"
+    supported = "supported"
+    unsupported = "unsupported"
+    return {
+        "bounded-source-read": supported if profile_supported else unsupported,
+        "workspace-mutation": supported if profile_supported else unsupported,
+        "non-mutating-validation": supported if validation_supported else unsupported,
+        "exact-change-evidence-read": supported if diff_supported else unsupported,
+        "exact-change-evidence-export": supported if diff_supported else unsupported,
+        "reviewer-accessible-change-reference": supported if diff_supported else unsupported,
+        "workspace-state-observation": supported if diff_supported else unsupported,
+    }
+
+
+def _render_decision_capability_facts(capabilities: dict[str, str]) -> str:
+    groups = {
+        state: [
+            field
+            for field in DECISION_CAPABILITY_FIELDS
+            if capabilities[field] == state
+        ]
+        for state in DECISION_CAPABILITY_STATES
+    }
+    return (
+        "Current capability facts: supported "
+        + ("/".join(groups["supported"]) or "none")
+        + "; unsupported "
+        + ("/".join(groups["unsupported"]) or "none")
+        + "."
+    )
+
+
 def _load_host_enforcement() -> dict[str, Any]:
     if not HOST_ENFORCEMENT_SOURCE.is_file():
         raise BuildError(f"missing {HOST_ENFORCEMENT_SOURCE.relative_to(ROOT)}")
@@ -1226,6 +1272,8 @@ def _load_host_enforcement() -> dict[str, Any]:
             raise BuildError(f"{host}: invalid diff_input_mode")
         if validation_mode not in HOST_MODE_VALUES["validation_mode"]:
             raise BuildError(f"{host}: invalid validation_mode")
+        if tuple(_normalized_decision_capabilities(entry)) != DECISION_CAPABILITY_FIELDS:
+            raise BuildError(f"{host}: normalized decision capabilities drift from Core")
         if utility_no_edit not in ENFORCEMENT_STATUSES:
             raise BuildError(f"{host}: invalid utility_no_edit enforcement")
         roles = entry.get("roles")
@@ -1369,12 +1417,8 @@ def _profile_instructions(
     if host is not None and profile.get("name") == "main-control-agent":
         matrix = enforcement or _load_host_enforcement()
         host_entry = matrix["hosts"][host]
-        host_modes = (
-            "\n\nCurrent host modes: "
-            f"diff_input_mode={host_entry['diff_input_mode']}; "
-            f"validation_mode={host_entry['validation_mode']}; "
-            f"utility_no_edit={host_entry['utility_no_edit']}."
-        )
+        capability_facts = _normalized_decision_capabilities(host_entry)
+        host_modes = "\n\n" + _render_decision_capability_facts(capability_facts)
     elif host is not None and profile.get("name") == "analysis-agent":
         matrix = enforcement or _load_host_enforcement()
         mode = matrix["hosts"][host]["roles"]["analysis-agent"][

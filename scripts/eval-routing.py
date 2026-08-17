@@ -26,7 +26,7 @@ from validation_utils import (
     load_yaml_file,
     professional_automatic_routing_policy_fingerprint,
     report_output_paths,
-    validate_main_execution,
+    validate_main_assignment,
 )
 
 
@@ -447,7 +447,7 @@ def evaluate_routes(
             errors,
         )
         main_execution = case.get("main_execution")
-        main_errors = validate_main_execution(main_execution)
+        main_errors = validate_main_assignment(main_execution)
         if main_errors:
             errors.extend(
                 f"{case_id}: {error}"

@@ -20,6 +20,7 @@ from changeforge_install import (
     PROFILES,
     SCOPES,
     InstallError,
+    canonical_profile_capability_facts,
     host_enforcement_for_agent,
     legacy_residue_paths,
     managed_profile_files,
@@ -87,6 +88,13 @@ def _profile_projection_issues(
         "task-agent": "workspace-write",
         "review-agent": "read-only",
     }
+    expected_capability_facts = canonical_profile_capability_facts(enforcement)
+    legacy_mode_markers = (
+        "Current host modes:",
+        "diff_input_mode=",
+        "validation_mode=",
+        "utility_no_edit=",
+    )
     for role in AGENT_PROFILE_NAMES:
         path = profile_root / f"{role}{suffix}"
         raw = payloads.get(role)
@@ -98,27 +106,19 @@ def _profile_projection_issues(
             issues.append(f"installed Agent Profile is not UTF-8: {path.name}")
             continue
         expected_tools = enforcement["roles"][role]["rendered_tools"]
-        expected_modes = (
-            "Current host modes: "
-            f"diff_input_mode={enforcement['diff_input_mode']}; "
-            f"validation_mode={enforcement['validation_mode']}; "
-            f"utility_no_edit={enforcement['utility_no_edit']}."
-        )
         if "Declared tool boundary:" not in text:
             issues.append(f"{path.name}: missing declared tool boundary")
         if role == "main-control-agent":
-            if expected_modes not in text:
-                issues.append(f"{path.name}: missing exact current host modes")
-        elif any(
-            marker in text
-            for marker in (
-                "Current host modes:",
-                "diff_input_mode=",
-                "validation_mode=",
-                "utility_no_edit=",
-            )
+            if expected_capability_facts not in text:
+                issues.append(f"{path.name}: missing exact current capability facts")
+            if any(marker in text for marker in legacy_mode_markers):
+                issues.append(f"{path.name}: legacy host mode projection is forbidden")
+        elif "Current capability facts:" in text or any(
+            marker in text for marker in legacy_mode_markers
         ):
-            issues.append(f"{path.name}: worker Profile must not receive host modes")
+            issues.append(
+                f"{path.name}: worker Profile must not receive Main capability facts or legacy host modes"
+            )
         if agent == "codex":
             try:
                 payload = tomllib.loads(text)
@@ -128,8 +128,15 @@ def _profile_projection_issues(
             if payload.get("sandbox_mode") != expected_sandbox[role]:
                 issues.append(f"{path.name}: sandbox_mode is not the declared default")
             instructions = str(payload.get("developer_instructions") or "")
-            if role == "main-control-agent" and expected_modes not in instructions:
-                issues.append(f"{path.name}: parsed instructions omit current host modes")
+            if role == "main-control-agent":
+                if expected_capability_facts not in instructions:
+                    issues.append(
+                        f"{path.name}: parsed instructions omit current capability facts"
+                    )
+                if any(marker in instructions for marker in legacy_mode_markers):
+                    issues.append(
+                        f"{path.name}: parsed instructions contain legacy host modes"
+                    )
         elif agent == "claude":
             match = re.search(r"^tools:\s*(.*)$", text, re.MULTILINE)
             actual_tools = [item.strip() for item in match.group(1).split(",")] if match else []

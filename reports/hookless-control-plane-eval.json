@@ -1036,7 +1036,7 @@
       ]
     }
   ],
-  "task_focus_fixture_count": 25,
+  "task_focus_fixture_count": 42,
   "task_focus_fixtures": [
     {
       "id": "focus-current-diff-blocker",
@@ -1237,6 +1237,142 @@
     {
       "id": "focus-review-new-high-risk-returns-analysis",
       "scenario": "review-level",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-analysis-owner-unresolved-task-l2",
+      "scenario": "analysis-level",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-analysis-explicit-repair-task-level",
+      "scenario": "analysis-level",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-analysis-standard-task-l3",
+      "scenario": "analysis-level",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-analysis-material-risk-task-l4",
+      "scenario": "analysis-level",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-direct-task-level-unchanged",
+      "scenario": "analysis-level",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-analysis-history-unchanged",
+      "scenario": "analysis-level",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-ready-dispatch-once",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-missing-change-evidence-blocked",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-readonly-reviewer-accessible",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-summary-is-not-evidence",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-stale-validation-blocked",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-native-reference-ready",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-supplied-artifact-ready",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-unsupported-capability-blocked",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-normal-flow-no-post-review-export",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-legacy-one-pre-review-recovery",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-capability-equivalent-host-tool-identifiers",
+      "scenario": "capability-equivalence",
       "expected_valid": true,
       "actual_valid": true,
       "matches_expected": true,

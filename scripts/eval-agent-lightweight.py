@@ -8,7 +8,6 @@ import copy
 import hashlib
 import json
 import re
-import shlex
 import statistics
 import sys
 from pathlib import Path
@@ -539,45 +538,12 @@ UTILITY_CAPSULE_FIELDS = UTILITY_ASSIGNMENT_FIELDS
 UTILITY_EVIDENCE_FIELDS = UTILITY_RETURN_FIELDS
 UTILITY_ASSIGNMENT_STATUSES = {"in_progress"}
 UTILITY_RETURN_STATUSES = {"blocked", "partial", "completed"}
-FORBIDDEN_UTILITY_COMMAND_FRAGMENTS = (
-    "curl ",
-    "wget ",
-    "http://",
-    "https://",
-    "ssh ",
-    "git fetch",
-    "git pull",
-    "git push",
-    "git clone",
-    "git checkout",
-    "git switch",
-    "git reset",
-    "git clean",
-    "git add",
-    "git commit",
-    "rm ",
-    " >",
-)
-VALIDATION_COMMAND_PREFIXES = (
-    "python3 -m unittest ",
-    "python -m unittest ",
-    "pytest ",
-    "npm test",
-    "pnpm test",
-    "yarn test",
-    "go test ",
-    "cargo test",
-    "mvn test",
-    "gradle test",
-    "./gradlew test",
-    "make test",
-    "equivalent-non-modifying-check ",
-)
-WORKSPACE_CHECK_COMMANDS = (
-    "git status --porcelain=v1 --untracked-files=all",
-    "git --no-pager diff --no-ext-diff --no-textconv --binary HEAD",
-    "git --no-pager diff --no-ext-diff --no-textconv --cached --binary HEAD",
-)
+UTILITY_CAPABILITY_OPERATIONS = {
+    "workspace-state-observation",
+    "exact-change-evidence-export",
+    "non-mutating-validation",
+}
+WORKSPACE_CHECK_COMMANDS = ("workspace-state-observation",)
 
 
 def _canonical_ledger_shape_errors(ledger: object, *, context: str) -> list[str]:
@@ -659,31 +625,6 @@ PROGRESS_TO_PRODUCTIVE_RATIO_MAX = 0.75
 MULTI_AGENT_PROGRESS_MIN = 3
 MULTI_AGENT_PROGRESS_MAX = 5
 MAX_SILENT_STRUCTURAL_STEPS = 5
-FORBIDDEN_UTILITY_SHELL_SYNTAX_RE = re.compile(r"[\r\n;|&<>\x60$(){}]")
-GIT_DIFF_SHOW_ALLOWED_OPTIONS = {
-    "--binary",
-    "--cached",
-    "--check",
-    "--full-index",
-    "--name-only",
-    "--name-status",
-    "--no-color",
-    "--no-ext-diff",
-    "--no-textconv",
-    "--numstat",
-    "--patch",
-    "--shortstat",
-    "--staged",
-    "--stat",
-    "--summary",
-    "-p",
-}
-GIT_DIFF_SHOW_ALLOWED_OPTION_PATTERNS = (
-    re.compile(r"--abbrev=\d+\Z"),
-    re.compile(r"--color=never\Z"),
-    re.compile(r"--unified=\d+\Z"),
-    re.compile(r"-U\d+\Z"),
-)
 GENERIC_PROGRESS_EVIDENCE = {
     "a",
     "b",
@@ -3614,14 +3555,213 @@ def _task_focus_case_errors(case: object) -> list[str]:
     scenario = case.get("scenario")
     inputs = case.get("inputs")
     decision = case.get("decision")
-    if scenario not in {"finding", "same-pattern", "repair", "review-level", "cost"}:
+    if scenario not in {
+        "finding",
+        "same-pattern",
+        "repair",
+        "review-level",
+        "cost",
+        "analysis-level",
+        "review-readiness",
+        "capability-equivalence",
+    }:
         reject("focus-scenario", "task-focus scenario is not in the closed set")
         return errors
     if not isinstance(inputs, dict) or not isinstance(decision, dict):
         reject("focus-shape", "task-focus inputs and decision must be mappings")
         return errors
 
-    if scenario == "finding":
+    if scenario == "analysis-level":
+        if tuple(inputs) != (
+            "route_path",
+            "analysis_assignment_has_level",
+            "analysis_historical_max_before",
+            "analysis_historical_max_after",
+            "l2_all_true",
+            "material_risk",
+            "explicit_l5",
+        ) or tuple(decision) != (
+            "analysis_level",
+            "task_level",
+            "level_computation_point",
+        ):
+            reject("analysis-level-shape", "analysis-level fields are not canonical")
+            return errors
+        route_path = inputs["route_path"]
+        if route_path not in {"analyzed", "direct"}:
+            reject("analysis-level-path", "route_path must be analyzed or direct")
+            return errors
+        if any(
+            type(inputs[field]) is not bool
+            for field in (
+                "analysis_assignment_has_level",
+                "l2_all_true",
+                "material_risk",
+                "explicit_l5",
+            )
+        ):
+            reject("analysis-level-shape", "analysis-level predicates must be booleans")
+            return errors
+        before = inputs["analysis_historical_max_before"]
+        after = inputs["analysis_historical_max_after"]
+        if before not in {None, "L1", "L2", "L3", "L4", "L5"} or after not in {
+            None,
+            "L1",
+            "L2",
+            "L3",
+            "L4",
+            "L5",
+        }:
+            reject("analysis-level-history", "historical levels must be null or L1-L5")
+            return errors
+        if route_path == "analyzed":
+            if inputs["analysis_assignment_has_level"] or decision["analysis_level"] is not None:
+                reject("analysis-level-present", "Analysis must not carry an Execution Level")
+            if after != before:
+                reject("analysis-history", "Analysis must not change historical max")
+            expected_point = "first-executable-slice"
+        else:
+            if inputs["analysis_assignment_has_level"] or decision["analysis_level"] is not None:
+                reject("analysis-level-present", "Direct Task has no Analysis assignment")
+            expected_point = "direct-executable-task"
+        computed = (
+            "L5"
+            if inputs["explicit_l5"]
+            else "L4"
+            if inputs["material_risk"]
+            else "L2"
+            if inputs["l2_all_true"]
+            else "L3"
+        )
+        if before is not None and int(before[1:]) > int(computed[1:]):
+            computed = before
+        if decision["task_level"] != computed:
+            reject("task-level", "executable Task Level does not follow L2/L3/L4/L5 policy")
+        if decision["level_computation_point"] != expected_point:
+            reject("level-timing", "Execution Level must be computed at the executable Task")
+
+    elif scenario == "review-readiness":
+        if tuple(inputs) != (
+            "handoff_kind",
+            "latest_changed_paths",
+            "change_evidence_kind",
+            "reviewer_accessible",
+            "validation_generation",
+            "latest_material_edit_generation",
+            "review_scope_fixed",
+            "reviewer_mutation_capability",
+            "reviewer_execute_capability",
+            "exact_change_evidence_export",
+            "workspace_state_observation",
+            "post_review_change_export",
+        ) or tuple(decision) != (
+            "review_input_ready",
+            "review_dispatches",
+            "legacy_recovery_attempts",
+            "completion",
+        ):
+            reject("review-readiness-shape", "review-readiness fields are not canonical")
+            return errors
+        if inputs["handoff_kind"] not in {"normal", "legacy-incomplete"}:
+            reject("review-handoff-kind", "handoff kind is not canonical")
+            return errors
+        bool_fields = (
+            "latest_changed_paths",
+            "reviewer_accessible",
+            "review_scope_fixed",
+            "reviewer_mutation_capability",
+            "reviewer_execute_capability",
+            "post_review_change_export",
+        )
+        if any(type(inputs[field]) is not bool for field in bool_fields):
+            reject("review-readiness-shape", "review-readiness predicates must be booleans")
+            return errors
+        for field in ("exact_change_evidence_export", "workspace_state_observation"):
+            if inputs[field] not in {"supported", "unsupported"}:
+                reject("review-capability-state", "capability state must be supported or unsupported")
+        if not all(
+            isinstance(inputs[field], int) and inputs[field] >= 0
+            for field in ("validation_generation", "latest_material_edit_generation")
+        ):
+            reject("review-generation", "review generations must be non-negative integers")
+            return errors
+        exact_kinds = {
+            "exact-change-content",
+            "exact-before-after",
+            "reviewer-accessible-native-reference",
+            "equivalent-exact-artifact",
+        }
+        ready = (
+            inputs["latest_changed_paths"]
+            and inputs["change_evidence_kind"] in exact_kinds
+            and inputs["reviewer_accessible"]
+            and inputs["validation_generation"]
+            == inputs["latest_material_edit_generation"]
+            and inputs["review_scope_fixed"]
+        )
+        if inputs["reviewer_mutation_capability"]:
+            reject("reviewer-read-only", "reviewer must remain read-only")
+        expected_recovery = 0
+        if (
+            not ready
+            and inputs["handoff_kind"] == "legacy-incomplete"
+            and inputs["exact_change_evidence_export"] == "supported"
+            and inputs["workspace_state_observation"] == "supported"
+        ):
+            expected_recovery = 1
+        expected_dispatches = 1 if ready else 0
+        expected_completion = "ready-for-review" if ready else "blocked-before-review"
+        if decision["review_input_ready"] is not ready:
+            reject("review-readiness", "Review Input Ready is derived from all five preflight facts")
+        if decision["review_dispatches"] != expected_dispatches:
+            reject("review-dispatch", "missing Review Input Ready must dispatch zero reviewers")
+        if decision["legacy_recovery_attempts"] != expected_recovery:
+            reject("review-recovery", "only legacy incomplete handoff permits one pre-review recovery")
+        if decision["completion"] != expected_completion:
+            reject("review-completion", "completion must fail closed before Review")
+        if inputs["post_review_change_export"]:
+            reject("post-review-export", "change export after Review dispatch is forbidden")
+
+    elif scenario == "capability-equivalence":
+        if tuple(inputs) != ("adapters",) or tuple(decision) != ("results",):
+            reject("capability-equivalence-shape", "capability-equivalence fields are not canonical")
+            return errors
+        adapters = inputs["adapters"]
+        results_value = decision["results"]
+        if (
+            not isinstance(adapters, list)
+            or len(adapters) != 2
+            or not isinstance(results_value, list)
+            or len(results_value) != 2
+        ):
+            reject("capability-equivalence-shape", "exactly two adapters and decisions are required")
+            return errors
+        adapter_fields = ("host_identifier", "tool_identifier", "command_identifier", "capabilities")
+        result_fields = ("routing", "execution_level", "review_required", "completion")
+        if any(not isinstance(item, dict) or tuple(item) != adapter_fields for item in adapters):
+            reject("capability-adapter-shape", "adapter metadata fields are not canonical")
+            return errors
+        if any(not isinstance(item, dict) or tuple(item) != result_fields for item in results_value):
+            reject("capability-result-shape", "capability decision fields are not canonical")
+            return errors
+        if adapters[0]["capabilities"] != adapters[1]["capabilities"]:
+            reject("capability-state", "equivalence fixture requires equal capability facts")
+        if (
+            adapters[0]["host_identifier"] == adapters[1]["host_identifier"]
+            or adapters[0]["tool_identifier"] == adapters[1]["tool_identifier"]
+            or adapters[0]["command_identifier"] == adapters[1]["command_identifier"]
+        ):
+            reject("adapter-identity", "adapter identifiers must differ")
+        for capabilities in (adapter["capabilities"] for adapter in adapters):
+            if not isinstance(capabilities, dict) or any(
+                state not in {"supported", "unsupported"}
+                for state in capabilities.values()
+            ):
+                reject("capability-state", "capability facts must use the closed states")
+        if results_value[0] != results_value[1]:
+            reject("capability-decision", "equal capabilities must produce equal control decisions")
+
+    elif scenario == "finding":
         input_fields = (
             "introduced_by_diff",
             "violates_acceptance",
@@ -3923,7 +4063,7 @@ def _task_focus_case_errors(case: object) -> list[str]:
                 "new L4/L5 risk must return blocked through Main and analysis; reviewer cannot self-upgrade",
             )
 
-    else:
+    elif scenario == "cost":
         if tuple(inputs) != ("effective_levels",) or tuple(decision) != (
             "agent_count_increase",
             "review_round_increase",
@@ -5789,55 +5929,12 @@ def _utility_assignment_return_errors(
     return errors
 
 
-def _git_diff_show_options_are_safe(command: str) -> bool:
-    try:
-        tokens = shlex.split(command, posix=True)
-    except ValueError:
-        return False
-    if len(tokens) < 3 or tokens[:3] not in (
-        ["git", "--no-pager", "diff"],
-        ["git", "--no-pager", "show"],
-    ):
-        return False
-    required_safety_options = {"--no-ext-diff", "--no-textconv"}
-    seen_options: set[str] = set()
-    after_path_separator = False
-    for token in tokens[3:]:
-        if after_path_separator:
-            continue
-        if token == "--":
-            after_path_separator = True
-            continue
-        if not token.startswith("-"):
-            continue
-        if token in GIT_DIFF_SHOW_ALLOWED_OPTIONS:
-            seen_options.add(token)
-            continue
-        if any(pattern.fullmatch(token) for pattern in GIT_DIFF_SHOW_ALLOWED_OPTION_PATTERNS):
-            continue
-        return False
-    return required_safety_options <= seen_options
-
-
 def _utility_command_is_safe(command: str) -> bool:
-    folded = command.casefold()
-    shell_safe = (
-        FORBIDDEN_UTILITY_SHELL_SYNTAX_RE.search(command) is None
-        and not any(fragment in folded for fragment in FORBIDDEN_UTILITY_COMMAND_FRAGMENTS)
-    )
-    if not shell_safe:
-        return False
-    if folded.startswith(("git --no-pager diff ", "git --no-pager show ")):
-        return _git_diff_show_options_are_safe(command)
-    if folded.startswith("git ") and command not in WORKSPACE_CHECK_COMMANDS:
-        return False
-    return True
+    return command in UTILITY_CAPABILITY_OPERATIONS
 
 
 def _workspace_check_command(command: str) -> bool:
-    return command in WORKSPACE_CHECK_COMMANDS or command.startswith(
-        "equivalent-read-only-workspace-change-set "
-    )
+    return command in WORKSPACE_CHECK_COMMANDS
 
 
 def _utility_capsule_errors(
@@ -5926,32 +6023,18 @@ def _utility_capsule_errors(
             if _workspace_check_command(command):
                 continue
             operation_commands.append(command)
-            if mode == "diff-export/no-edit" and not command.startswith(
-                (
-                    "git --no-pager diff ",
-                    "git --no-pager show ",
-                    "equivalent-read-only-diff ",
-                )
-            ):
+            if mode == "diff-export/no-edit" and command != "exact-change-evidence-export":
                 errors.append(
-                    f"{case_id}: diff-export utility at step {index} allows non-diff command"
+                    f"{case_id}: diff-export utility at step {index} allows a non-export capability"
                 )
-            if mode == "validation-only/no-edit" and command.startswith(
-                (
-                    "git --no-pager diff ",
-                    "git --no-pager show ",
-                    "equivalent-read-only-diff ",
-                )
-            ):
+            if mode == "validation-only/no-edit" and command == "exact-change-evidence-export":
                 errors.append(
                     f"{case_id}: validation utility at step {index} allows diff export"
                 )
-            elif mode == "validation-only/no-edit" and not command.startswith(
-                VALIDATION_COMMAND_PREFIXES
-            ):
+            elif mode == "validation-only/no-edit" and command != "non-mutating-validation":
                 errors.append(
                     f"{case_id}: validation utility at step {index} allows a command "
-                    "not declared as a non-modifying check"
+                    "not declared as non-mutating validation"
                 )
         if len(operation_commands) != 1:
             errors.append(
@@ -6309,6 +6392,10 @@ def _utility_case_errors(case: dict[str, Any], steps: list[dict[str, Any]]) -> l
     if not isinstance(host_modes, dict):
         errors.append(f"{case_id}: utility case must declare host_modes")
         host_modes = {}
+    capability_facts = case.get("capability_facts")
+    if not isinstance(capability_facts, dict):
+        errors.append(f"{case_id}: utility case must declare capability_facts")
+        capability_facts = {}
     mode = capsule.get("mode")
     if host_modes.get("utility_no_edit") != UTILITY_NO_EDIT_ENFORCEMENT:
         errors.append(
@@ -6334,8 +6421,10 @@ def _utility_case_errors(case: dict[str, Any], steps: list[dict[str, Any]]) -> l
             "not continue to review or closure"
         )
     if mode == "diff-export/no-edit":
-        if host_modes.get("diff_input_mode") != "supplied-artifact":
-            errors.append(f"{case_id}: diff-export case requires supplied-artifact mode")
+        if capability_facts.get("exact-change-evidence-export") != "supported":
+            errors.append(f"{case_id}: diff-export requires exact-change-evidence-export")
+        if capability_facts.get("workspace-state-observation") != "supported":
+            errors.append(f"{case_id}: diff-export requires workspace-state-observation")
         if case.get("actual_diff_supplied") is not False:
             errors.append(f"{case_id}: diff-export case requires a missing supplied diff")
         if result.get("action") != "export-diff":
@@ -6371,8 +6460,8 @@ def _utility_case_errors(case: dict[str, Any], steps: list[dict[str, Any]]) -> l
                 f"{case_id}: returned diff artifact must precede review dispatch, read, and review"
             )
     elif mode == "validation-only/no-edit":
-        if host_modes.get("validation_mode") != "task-no-edit":
-            errors.append(f"{case_id}: validation utility requires task-no-edit mode")
+        if capability_facts.get("non-mutating-validation") != "supported":
+            errors.append(f"{case_id}: validation utility requires non-mutating-validation")
         if result.get("action") != "validate":
             errors.append(f"{case_id}: validation utility must return validation evidence")
         if any(
@@ -7579,9 +7668,9 @@ def main(argv: list[str] | None = None) -> int:
                 "review discipline fixture count must remain exactly 30, found "
                 f"{len(review_discipline_results)}"
             )
-        if len(task_focus_results) != 25:
+        if len(task_focus_results) != 42:
             errors.append(
-                "task-focus fixture count must remain exactly 25, found "
+                "task-focus fixture count must remain exactly 42, found "
                 f"{len(task_focus_results)}"
             )
         if len(combined_review_results) != 15:

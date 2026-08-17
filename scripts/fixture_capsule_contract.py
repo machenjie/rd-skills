@@ -218,6 +218,11 @@ UTILITY_RETURN_FIELDS = (
 )
 UTILITY_ASSIGNMENT_REQUIRED_CLAIMS = ("workspace baseline captured",)
 UTILITY_RETURN_REQUIRED_CLAIMS = ("workspace unchanged", "utility result delivered")
+UTILITY_CAPABILITY_OPERATIONS = {
+    "workspace-state-observation",
+    "exact-change-evidence-export",
+    "non-mutating-validation",
+}
 COMPLETION_CLAIM_FIELDS = (
     "request_kind",
     "status",
@@ -1480,6 +1485,8 @@ def _command(value: object, label: str) -> str:
     tokens = _lexical_tokens(normalized)
     if len(tokens) > 1 and len(set(tokens)) == 1:
         raise FixtureCapsuleError(f"{label} must not repeat one command token")
+    if normalized in UTILITY_CAPABILITY_OPERATIONS:
+        return normalized
     if not _is_command(normalized):
         raise FixtureCapsuleError(f"{label} must be a recognizable non-empty command")
     return normalized
@@ -2309,6 +2316,13 @@ def _validate_payload_shape(step: dict[str, Any], payload: dict[str, Any]) -> st
     contract_type = payload.get("contract_type")
     if contract_type not in TYPE_FIELDS:
         raise FixtureCapsuleError(f"unsupported contract_type {contract_type!r}")
+    if (
+        contract_type == "analysis"
+        and EXECUTION_LEVEL_EXTENSION_FIELD in payload
+    ):
+        raise FixtureCapsuleError(
+            "analysis fixture_capsule must not carry execution_level_extension"
+        )
     allowed_shapes = [TYPE_FIELDS[contract_type]]
     if contract_type in EXTENDED_TYPE_FIELDS:
         allowed_shapes.append(EXTENDED_TYPE_FIELDS[contract_type])
