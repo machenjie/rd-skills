@@ -218,7 +218,7 @@ class ReferenceRegistryJitTest(unittest.TestCase):
                     if finding["severity"] == "error"
                 )
 
-        self.assertEqual(525, contract_count)
+        self.assertEqual(527, contract_count)
         self.assertEqual(163, layer3_projection_count)
         self.assertEqual([], blockers)
 
@@ -275,7 +275,7 @@ class ReferenceRegistryJitTest(unittest.TestCase):
                         owner=entry["name"],
                     )
                 )
-        self.assertEqual(525, total)
+        self.assertEqual(527, total)
 
         original_counter = AUDIT.count_o200k_base_tokens
         AUDIT.count_o200k_base_tokens = lambda _text: 0
@@ -284,7 +284,7 @@ class ReferenceRegistryJitTest(unittest.TestCase):
         finally:
             AUDIT.count_o200k_base_tokens = original_counter
         summary = content["summary"]
-        self.assertEqual(525, summary["indexed_reference_entries"])
+        self.assertEqual(527, summary["indexed_reference_entries"])
         for field in (
             "missing_effective_reference_types",
             "missing_effective_load_when",
@@ -297,9 +297,9 @@ class ReferenceRegistryJitTest(unittest.TestCase):
 
         counts, errors = REFERENCE_VALIDATOR._effective_preface_contract(content)
         self.assertEqual([], errors)
-        self.assertEqual(525, counts["effective_reference_types"])
-        self.assertEqual(525, counts["effective_load_when"])
-        self.assertEqual(525, counts["effective_do_not_load_when"])
+        self.assertEqual(527, counts["effective_reference_types"])
+        self.assertEqual(527, counts["effective_load_when"])
+        self.assertEqual(527, counts["effective_do_not_load_when"])
 
         cache_checklist = next(
             item
@@ -324,6 +324,160 @@ class ReferenceRegistryJitTest(unittest.TestCase):
                 f"{registry_field}:", registry_lines[evidence["line"] - 1]
             )
             self.assertIn(evidence["value"], registry_lines[evidence["line"] - 1])
+
+    def test_frontend_visual_references_are_strictly_jit_and_owner_stable(
+        self,
+    ) -> None:
+        registry = load_yaml_file(ROOT / "src/registry/professional-skills.yaml")
+        frontend = next(
+            item
+            for item in registry["professional_skills"]
+            if item["name"] == "frontend-change-builder"
+        )
+        primary_fields = {
+            key: value
+            for key, value in frontend.items()
+            if key not in {"name", "reference_index"}
+        }
+        self.assertEqual(
+            {
+                "routing_mode": "automatic",
+                "routing_family": "frontend",
+                "required_expertise_tags": [
+                    "foundation-experience-design",
+                    "foundation-frontend-engineering",
+                    "foundation-quality-testing",
+                    "foundation-security-privacy",
+                    "specialty-lang-typescript",
+                ],
+                "path": "src/professional-skills/frontend-change-builder",
+                "role_support": ["task-agent"],
+                "trigger_signals": [
+                    "frontend component change",
+                    "browser behavior change",
+                ],
+                "anti_trigger_signals": [
+                    "backend only",
+                    "design exploration without implementation",
+                ],
+                "required_inputs": [
+                    "experience evidence",
+                    "interaction-state and API failure contracts",
+                    "design-system and accessibility constraints",
+                ],
+                "output_contract": [
+                    "changed interaction and state boundaries",
+                    "accessibility and failure-state evidence",
+                    "post-edit validation result",
+                    "residual UX risk",
+                ],
+                "escalation_signals": [
+                    "scope, authority, or material risk exceeds the selected task contract"
+                ],
+                "layer3_candidates": [
+                    "page-component-decomposition",
+                    "state-management-design",
+                    "frontend-testing",
+                    "form-validation-design",
+                    "interaction-state-modeling",
+                    "typescript-professional-usage",
+                    "frontend-api-integration",
+                    "routing-navigation-design",
+                    "accessibility-inclusive-design",
+                    "web-platform-professional-usage",
+                    "ai-product-extension",
+                    "configuration-runtime-policy",
+                    "dependency-vulnerability-scanning",
+                ],
+                "task_routable": True,
+            },
+            primary_fields,
+        )
+
+        contracts = {
+            contract["path"]: contract
+            for contract in reference_contracts(
+                frontend["reference_index"],
+                "frontend-change-builder.reference_index",
+                owner="frontend-change-builder",
+            )
+        }
+        expected = {
+            "references/visual-quality-and-redesign.md": {
+                "path": "references/visual-quality-and-redesign.md",
+                "type": "targeted",
+                "load_when": "The user explicitly requests visual polish or redesign, or hierarchy, typography, spacing, density, or composition is an acceptance target",
+                "do_not_load_when": "The frontend task is ordinary behavior work without a visual-quality acceptance target, or reference fidelity alone defines the visual goal",
+                "required_by": ["task-agent"],
+                "required_output": ["selected-approach", "residual-risk"],
+            },
+            "references/visual-reference-reconstruction.md": {
+                "path": "references/visual-reference-reconstruction.md",
+                "type": "targeted",
+                "load_when": "Screenshot, mockup, or reference-image implementation requires visual fidelity or matching the supplied reference",
+                "do_not_load_when": "No visual reference is supplied, or visual polish and redesign do not require matching one",
+                "required_by": ["task-agent"],
+                "required_output": [
+                    "proof-limit",
+                    "selected-approach",
+                    "validation-plan",
+                ],
+            },
+        }
+        self.assertEqual(
+            expected,
+            {path: contracts.get(path) for path in expected},
+        )
+        self.assertEqual(
+            {
+                "references/checklist.md",
+                "references/frontend-output-and-gates.md",
+                "references/index.md",
+                "references/solution-optimality.md",
+                *expected,
+            },
+            set(contracts),
+        )
+
+        index = (
+            ROOT
+            / "src/professional-skills/frontend-change-builder/references/index.md"
+        ).read_text(encoding="utf-8")
+        required_phrases = {
+            "references/visual-quality-and-redesign.md": (
+                "repository/source authority > behavior correctness > security/accessibility > performance > existing design system > explicit reference fidelity > visual-quality heuristic",
+                "generic ai visual patterns to diagnostic evidence",
+                "without converting them into binding rules",
+                "inspect the current page, components, and design system",
+                "check hierarchy, typography, spacing, density, composition, geometry, color, motion, and media",
+                "prefer local repairs",
+                "check whole-page visual consistency",
+                "existing components and tokens without bypassing or duplicating",
+                "unnecessary dependencies or abstractions and valueless dom/css complexity",
+            ),
+            "references/visual-reference-reconstruction.md": (
+                "repository/source authority > behavior correctness > security/accessibility > performance > existing design system > explicit reference fidelity > visual-quality heuristic",
+                "treat the supplied reference as visual evidence",
+                "decompose it into page regions and component boundaries",
+                "map the result to existing repository tokens, components, and design-system rules",
+                "compare the final implementation with the reference",
+                "interaction, responsive behavior, accessibility, and runtime behavior",
+                "existing components and tokens without bypassing or duplicating",
+                "unnecessary dependencies or abstractions and valueless dom/css complexity",
+            ),
+        }
+        for reference_path, phrases in required_phrases.items():
+            with self.subTest(reference_path=reference_path):
+                path = ROOT / frontend["path"] / reference_path
+                markdown = path.read_text(encoding="utf-8")
+                self.assertLessEqual(
+                    len(markdown.splitlines()),
+                    REFERENCE_VALIDATOR.TARGETED_LINE_LIMIT,
+                )
+                folded = markdown.casefold()
+                for phrase in phrases:
+                    self.assertIn(phrase, folded)
+                self.assertEqual(1, index.count(f"`{reference_path}`"))
 
     def test_cache_design_contract_renders_structured_jit_instructions(self) -> None:
         registry = load_yaml_file(ROOT / "src/registry/foundation-skills.yaml")
@@ -1614,7 +1768,7 @@ class ReferenceRegistryJitTest(unittest.TestCase):
                     for finding in ai_readability_findings(markdown, relative)
                 )
 
-        self.assertEqual(93, len(checked))
+        self.assertEqual(95, len(checked))
         self.assertEqual(len(checked), len(set(checked)))
         self.assertLessEqual(review_count, 102)
         self.assertEqual([], violations)

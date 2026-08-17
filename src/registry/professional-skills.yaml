@@ -435,6 +435,18 @@ professional_skills:
         do_not_load_when: "Copy/style changes do not affect runtime behavior, or current design-system/repository evidence already fixes the bounded implementation"
         required_by: ["task-agent"]
         required_output: ["selected-approach", "residual-risk"]
+      - path: "references/visual-quality-and-redesign.md"
+        type: targeted
+        load_when: "The user explicitly requests visual polish or redesign, or hierarchy, typography, spacing, density, or composition is an acceptance target"
+        do_not_load_when: "The frontend task is ordinary behavior work without a visual-quality acceptance target, or reference fidelity alone defines the visual goal"
+        required_by: ["task-agent"]
+        required_output: ["selected-approach", "residual-risk"]
+      - path: "references/visual-reference-reconstruction.md"
+        type: targeted
+        load_when: "Screenshot, mockup, or reference-image implementation requires visual fidelity or matching the supplied reference"
+        do_not_load_when: "No visual reference is supplied, or visual polish and redesign do not require matching one"
+        required_by: ["task-agent"]
+        required_output: ["proof-limit", "selected-approach", "validation-plan"]
     layer3_candidates: ["page-component-decomposition", "state-management-design", "frontend-testing", "form-validation-design", "interaction-state-modeling", "typescript-professional-usage", "frontend-api-integration", "routing-navigation-design", "accessibility-inclusive-design", "web-platform-professional-usage", "ai-product-extension", "configuration-runtime-policy", "dependency-vulnerability-scanning"]
     task_routable: true
   - name: backend-change-builder

@@ -24,7 +24,7 @@ Layer 3 copies. The build manifest records every Foundation scope, the compiled
 Foundation and Domain sets, each routing-only entry, the authoritative companion
 or top-level path, and `compiled_layer3_format: ai-consumption-v1`.
 The source Layer 3 catalog contains 163 entries.
-The Reference inventory contains 525 registry-indexed Markdown files and 526
+The Reference inventory contains 527 registry-indexed Markdown files and 528
 physical Markdown files. Exactly 1 physical Reference is unindexed: the
 Foundation authoring template Reference.
 
