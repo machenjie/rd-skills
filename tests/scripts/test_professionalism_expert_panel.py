@@ -725,6 +725,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
         messages = (
             "semantic fixed missing target lacks a rewrite majority",
             "semantic fixed attestation omits a current candidate",
+            "semantic fixed detector contract is stale",
         )
         for message in messages:
             drift = REGRESSION.expert_panel.PanelReviewError(message)
@@ -1748,10 +1749,28 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
         )
         self.assertEqual(
             {
+                "reference_detector_contract": (
+                    "b30afbeafb68bb21ade261d0ada1698865ccef20327dac0fe8edca4138ed1fcb"
+                ),
+                "root_detector_contract": (
+                    "31dd5e2a1444dede44127228211d0226ffb7681bed3ba13cf4e41a9d87b11b79"
+                ),
+            },
+            value["detector_contract_fingerprints"],
+        )
+        self.assertEqual(
+            {
+                "reference_detector_contract": (
+                    "b30afbeafb68bb21ade261d0ada1698865ccef20327dac0fe8edca4138ed1fcb"
+                ),
+                "root_detector_contract": (
+                    "7e45706770e42dbe3f83fda946be11724d348a8d2898c45bef255b3cbdb6dcac"
+                ),
+            },
+            {
                 key: current_fingerprints[key]
                 for key in sorted(detector_keys)
             },
-            value["detector_contract_fingerprints"],
         )
 
         configured = {
@@ -1810,7 +1829,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
 
         with self.assertRaisesRegex(
             PANEL.PanelReviewError,
-            "semantic fixed attestation disposition mismatch",
+            "semantic fixed detector contract is stale",
         ):
             PANEL.validate_semantic_decision_application(live_audit)
 

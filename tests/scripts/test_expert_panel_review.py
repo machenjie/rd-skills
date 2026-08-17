@@ -3926,6 +3926,17 @@ Route current work to `candidate-a`.
             {"reference_detector_contract", "root_detector_contract"},
             set(fixed["detector_contract_fingerprints"]),
         )
+        self.assertEqual(
+            {
+                "reference_detector_contract": (
+                    "b30afbeafb68bb21ade261d0ada1698865ccef20327dac0fe8edca4138ed1fcb"
+                ),
+                "root_detector_contract": (
+                    "31dd5e2a1444dede44127228211d0226ffb7681bed3ba13cf4e41a9d87b11b79"
+                ),
+            },
+            fixed["detector_contract_fingerprints"],
+        )
         live_audit = copy.deepcopy(_live_semantic_audit())
         root_semantic, reference_semantic = PANEL._semantic_audit_sections(
             live_audit
@@ -3934,6 +3945,23 @@ Route current work to `candidate-a`.
             live_audit,
             root_semantic=root_semantic,
             reference_semantic=reference_semantic,
+        )
+        self.assertEqual(
+            {
+                "reference_detector_contract": (
+                    "b30afbeafb68bb21ade261d0ada1698865ccef20327dac0fe8edca4138ed1fcb"
+                ),
+                "root_detector_contract": (
+                    "7e45706770e42dbe3f83fda946be11724d348a8d2898c45bef255b3cbdb6dcac"
+                ),
+            },
+            {
+                key: live_fingerprints[key]
+                for key in (
+                    "reference_detector_contract",
+                    "root_detector_contract",
+                )
+            },
         )
         current_mode = PANEL._semantic_source_fingerprint_selector_mode(
             selector_fingerprints=fixed["detector_contract_fingerprints"],
@@ -3948,7 +3976,7 @@ Route current work to `candidate-a`.
                 for axis in sorted(PANEL.SEMANTIC_AXES)
             },
         )
-        self.assertEqual("compact-v2", current_mode)
+        self.assertIsNone(current_mode)
 
         direct = PANEL._semantic_source_fingerprint_selector_mode(
             selector_fingerprints=current,

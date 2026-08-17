@@ -814,17 +814,17 @@
   ],
   "command_execution_count": 33,
   "contract_errors": [],
-  "contract_sha256": "69627d48cbb4234b687c9e44a8b3b9c784973e9c97f826d1225a62ed721c57cb",
+  "contract_sha256": "cd375c2d373546848dc89549897ba0a3d092987c180e93706cb62e6927eabebf",
   "contract_source": "src/control-model/core-contracts.json",
   "formal_principles_status": "blocked",
   "input_tree": {
     "post": {
-      "file_count": 2520,
-      "sha256": "b81dde5f769600c00aa36d58e3bf0a3fc7dcbc85b953149a0cbb704c2baedf54"
+      "file_count": 2533,
+      "sha256": "7ffe863efc8915bf26f960e49afe1fd46cf28b144820f434a522237b9c7b211f"
     },
     "pre": {
-      "file_count": 2520,
-      "sha256": "b81dde5f769600c00aa36d58e3bf0a3fc7dcbc85b953149a0cbb704c2baedf54"
+      "file_count": 2533,
+      "sha256": "7ffe863efc8915bf26f960e49afe1fd46cf28b144820f434a522237b9c7b211f"
     },
     "unchanged": true
   },

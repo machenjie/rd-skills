@@ -1817,8 +1817,8 @@
       "id": "component-0027",
       "kind": "dispatch_capsule",
       "path": "fixture:review-supplied-artifact-missing-diff:step:1:canonical-capsule",
-      "sha256": "5bc02a9b76e910f7c368f643f5494114efe6be2666c3ee27df0ca6716047263b",
-      "tokens": 336
+      "sha256": "8aabbf10ea37e46359dfa14e13193d608aadb52daa2eabbc784091fba2f975df",
+      "tokens": 334
     },
     {
       "id": "component-0028",
@@ -1915,8 +1915,8 @@
       "id": "component-0041",
       "kind": "dispatch_capsule",
       "path": "fixture:validation-task-no-edit:step:1:canonical-capsule",
-      "sha256": "883c36f05344e7d3dd574064c9d2b088c24239726e9fcec922d7da7a2984e56b",
-      "tokens": 313
+      "sha256": "8793672f2b2fd83665a91020dcc8a2bf4d9e90b2bf6a6fbeb7478f273fce58aa",
+      "tokens": 311
     },
     {
       "id": "component-0042",
@@ -2972,21 +2972,21 @@
       "id": "component-0192",
       "kind": "rendered_main_profile",
       "path": "dist/claude/project/.claude/agents/main-control-agent.md",
-      "sha256": "56674ee36633f56f8589b064102743e0426eca1187eeca9809106c339879cc6f",
+      "sha256": "82e7b17d6fa09b35ef504a3f61f94bf3bbd8f897afa0e5251a1c82b2532925c5",
       "tokens": 1544
     },
     {
       "id": "component-0193",
       "kind": "rendered_main_profile",
       "path": "dist/codex/project/.codex/agents/main-control-agent.toml",
-      "sha256": "0a0508e8d525ce5711f2538318c49f4d88559f247fe87e7cb820748cce25b7e3",
+      "sha256": "ce31e83ec3a77d647249f8ac256c462a1b908e77057b6969cea0d843faa75dca",
       "tokens": 1551
     },
     {
       "id": "component-0194",
       "kind": "rendered_main_profile",
       "path": "dist/copilot/project/.github/agents/main-control-agent.agent.md",
-      "sha256": "840ffb1030232bd8b05adc0953903f677570215c87a70dbab9cd919de21c6264",
+      "sha256": "7529a4fa629bd954a6d7a1d1a3174d9921aa584454dad2a154427d2388b1a9f6",
       "tokens": 1558
     },
     {
@@ -3203,63 +3203,63 @@
       "id": "component-0225",
       "kind": "worker_profile",
       "path": "dist/claude/project/.claude/agents/analysis-agent.md",
-      "sha256": "a14ad6e246e55ef4d56a061e585fb38b66459a74fa016646e2e0ba64cbd1103b",
+      "sha256": "61d71c1ac076dc7ab796b01c7f3cb2cc9c60ccf11987b54651103c6ba890af45",
       "tokens": 624
     },
     {
       "id": "component-0226",
       "kind": "worker_profile",
       "path": "dist/claude/project/.claude/agents/review-agent.md",
-      "sha256": "198901e64fd2230639aca20f122e4c7b30b0997aa0c1ca4339caef4e1836be24",
+      "sha256": "69e62de3ca932db95935a4915546c3be55dca3c4b8941cea30070d52b40b5e01",
       "tokens": 789
     },
     {
       "id": "component-0227",
       "kind": "worker_profile",
       "path": "dist/claude/project/.claude/agents/task-agent.md",
-      "sha256": "18353706508f72079b2bc1250ebe70a474392d5048f446129b5e5fd9c81c7820",
+      "sha256": "8c90b37f54c53cb9bfa7064f4c5284192fec70b96ae471a44593566cc827982d",
       "tokens": 908
     },
     {
       "id": "component-0228",
       "kind": "worker_profile",
       "path": "dist/codex/project/.codex/agents/analysis-agent.toml",
-      "sha256": "f4aed16dce11c860826d5dfff6f13cb938355e7a2cc53808846b4c986bb20fa4",
+      "sha256": "72848b8e1cb81cef823d129515aace19f649c642c9ff7749ca5b14fb9aec6115",
       "tokens": 619
     },
     {
       "id": "component-0229",
       "kind": "worker_profile",
       "path": "dist/codex/project/.codex/agents/review-agent.toml",
-      "sha256": "b64e54279e903334f725452b33768be2e7246a0cc4f1676232af75e2526a9c2f",
+      "sha256": "092edf081a7350f4fbff7831a57d63d509c70f2b3bf23fe65bb3626ace662f38",
       "tokens": 792
     },
     {
       "id": "component-0230",
       "kind": "worker_profile",
       "path": "dist/codex/project/.codex/agents/task-agent.toml",
-      "sha256": "e485e8058dd92090fc7797c321446e747a11ca1845dfa7b2c4c4f9575bda8d59",
+      "sha256": "4525e5fe743f131baf8a39be3647ca3ae813de6ea63205ef1d590ce21e9a3a58",
       "tokens": 905
     },
     {
       "id": "component-0231",
       "kind": "worker_profile",
       "path": "dist/copilot/project/.github/agents/analysis-agent.agent.md",
-      "sha256": "cf71a2b999fffda7fc8e23ee4cd5707bcb7cb0ba05865546b392a8d35668a3db",
+      "sha256": "531f4111447efe3c829438c6e6f10e2bd9ed6e02d999af1277ef57c33b118965",
       "tokens": 620
     },
     {
       "id": "component-0232",
       "kind": "worker_profile",
       "path": "dist/copilot/project/.github/agents/review-agent.agent.md",
-      "sha256": "1e7f9e5fa93ff0ca5909e38c81b489d8732fdc93ea4b5e746c7e29d939eb8d47",
+      "sha256": "c2d3218a34b8d9a8c5f3432502d8881ca422d8c89b650812328f5570d01845b4",
       "tokens": 793
     },
     {
       "id": "component-0233",
       "kind": "worker_profile",
       "path": "dist/copilot/project/.github/agents/task-agent.agent.md",
-      "sha256": "35ea37b7dcefbc35c784cfeaa0ad14d796446d40ace199d9ea84927999ace072",
+      "sha256": "b2a81d216df2c7134e792039c7c57125f7fe81b9715c03764756dc1900d7a7d4",
       "tokens": 912
     }
   ],
@@ -16498,8 +16498,8 @@
           "minimum_release_margin_tokens": 0,
           "evolution_target": 2500,
           "token_budget": 2500,
-          "total_tokens": 1240,
-          "sum_component_tokens": 1241,
+          "total_tokens": 1238,
+          "sum_component_tokens": 1239,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_token_budget": true,
@@ -16516,8 +16516,8 @@
           "loaded_layer3_reference_logical_ids": [],
           "professional_references": [],
           "capsule_contract_version": "changeforge.fixture-capsule.v2",
-          "canonical_capsule_sha256": "5bc02a9b76e910f7c368f643f5494114efe6be2666c3ee27df0ca6716047263b",
-          "canonical_capsule_tokens": 336,
+          "canonical_capsule_sha256": "8aabbf10ea37e46359dfa14e13193d608aadb52daa2eabbc784091fba2f975df",
+          "canonical_capsule_tokens": 334,
           "component_ids": [
             "component-0230",
             "component-0027"
@@ -16532,8 +16532,8 @@
           "minimum_release_margin_tokens": 0,
           "evolution_target": 2500,
           "token_budget": 2500,
-          "total_tokens": 1240,
-          "sum_component_tokens": 1241,
+          "total_tokens": 1238,
+          "sum_component_tokens": 1239,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_token_budget": true,
@@ -16550,8 +16550,8 @@
           "loaded_layer3_reference_logical_ids": [],
           "professional_references": [],
           "capsule_contract_version": "changeforge.fixture-capsule.v2",
-          "canonical_capsule_sha256": "5bc02a9b76e910f7c368f643f5494114efe6be2666c3ee27df0ca6716047263b",
-          "canonical_capsule_tokens": 336,
+          "canonical_capsule_sha256": "8aabbf10ea37e46359dfa14e13193d608aadb52daa2eabbc784091fba2f975df",
+          "canonical_capsule_tokens": 334,
           "component_ids": [
             "component-0230",
             "component-0027"
@@ -16566,8 +16566,8 @@
           "minimum_release_margin_tokens": 0,
           "evolution_target": 2500,
           "token_budget": 2500,
-          "total_tokens": 1240,
-          "sum_component_tokens": 1241,
+          "total_tokens": 1238,
+          "sum_component_tokens": 1239,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_token_budget": true,
@@ -16584,8 +16584,8 @@
           "loaded_layer3_reference_logical_ids": [],
           "professional_references": [],
           "capsule_contract_version": "changeforge.fixture-capsule.v2",
-          "canonical_capsule_sha256": "5bc02a9b76e910f7c368f643f5494114efe6be2666c3ee27df0ca6716047263b",
-          "canonical_capsule_tokens": 336,
+          "canonical_capsule_sha256": "8aabbf10ea37e46359dfa14e13193d608aadb52daa2eabbc784091fba2f975df",
+          "canonical_capsule_tokens": 334,
           "component_ids": [
             "component-0230",
             "component-0027"
@@ -16600,8 +16600,8 @@
           "minimum_release_margin_tokens": 0,
           "evolution_target": 2500,
           "token_budget": 2500,
-          "total_tokens": 1243,
-          "sum_component_tokens": 1244,
+          "total_tokens": 1241,
+          "sum_component_tokens": 1242,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_token_budget": true,
@@ -16618,8 +16618,8 @@
           "loaded_layer3_reference_logical_ids": [],
           "professional_references": [],
           "capsule_contract_version": "changeforge.fixture-capsule.v2",
-          "canonical_capsule_sha256": "5bc02a9b76e910f7c368f643f5494114efe6be2666c3ee27df0ca6716047263b",
-          "canonical_capsule_tokens": 336,
+          "canonical_capsule_sha256": "8aabbf10ea37e46359dfa14e13193d608aadb52daa2eabbc784091fba2f975df",
+          "canonical_capsule_tokens": 334,
           "component_ids": [
             "component-0227",
             "component-0027"
@@ -16634,8 +16634,8 @@
           "minimum_release_margin_tokens": 0,
           "evolution_target": 2500,
           "token_budget": 2500,
-          "total_tokens": 1243,
-          "sum_component_tokens": 1244,
+          "total_tokens": 1241,
+          "sum_component_tokens": 1242,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_token_budget": true,
@@ -16652,8 +16652,8 @@
           "loaded_layer3_reference_logical_ids": [],
           "professional_references": [],
           "capsule_contract_version": "changeforge.fixture-capsule.v2",
-          "canonical_capsule_sha256": "5bc02a9b76e910f7c368f643f5494114efe6be2666c3ee27df0ca6716047263b",
-          "canonical_capsule_tokens": 336,
+          "canonical_capsule_sha256": "8aabbf10ea37e46359dfa14e13193d608aadb52daa2eabbc784091fba2f975df",
+          "canonical_capsule_tokens": 334,
           "component_ids": [
             "component-0227",
             "component-0027"
@@ -16668,8 +16668,8 @@
           "minimum_release_margin_tokens": 0,
           "evolution_target": 2500,
           "token_budget": 2500,
-          "total_tokens": 1243,
-          "sum_component_tokens": 1244,
+          "total_tokens": 1241,
+          "sum_component_tokens": 1242,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_token_budget": true,
@@ -16686,8 +16686,8 @@
           "loaded_layer3_reference_logical_ids": [],
           "professional_references": [],
           "capsule_contract_version": "changeforge.fixture-capsule.v2",
-          "canonical_capsule_sha256": "5bc02a9b76e910f7c368f643f5494114efe6be2666c3ee27df0ca6716047263b",
-          "canonical_capsule_tokens": 336,
+          "canonical_capsule_sha256": "8aabbf10ea37e46359dfa14e13193d608aadb52daa2eabbc784091fba2f975df",
+          "canonical_capsule_tokens": 334,
           "component_ids": [
             "component-0227",
             "component-0027"
@@ -16702,8 +16702,8 @@
           "minimum_release_margin_tokens": 0,
           "evolution_target": 2500,
           "token_budget": 2500,
-          "total_tokens": 1247,
-          "sum_component_tokens": 1248,
+          "total_tokens": 1245,
+          "sum_component_tokens": 1246,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_token_budget": true,
@@ -16720,8 +16720,8 @@
           "loaded_layer3_reference_logical_ids": [],
           "professional_references": [],
           "capsule_contract_version": "changeforge.fixture-capsule.v2",
-          "canonical_capsule_sha256": "5bc02a9b76e910f7c368f643f5494114efe6be2666c3ee27df0ca6716047263b",
-          "canonical_capsule_tokens": 336,
+          "canonical_capsule_sha256": "8aabbf10ea37e46359dfa14e13193d608aadb52daa2eabbc784091fba2f975df",
+          "canonical_capsule_tokens": 334,
           "component_ids": [
             "component-0233",
             "component-0027"
@@ -16736,8 +16736,8 @@
           "minimum_release_margin_tokens": 0,
           "evolution_target": 2500,
           "token_budget": 2500,
-          "total_tokens": 1247,
-          "sum_component_tokens": 1248,
+          "total_tokens": 1245,
+          "sum_component_tokens": 1246,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_token_budget": true,
@@ -16754,8 +16754,8 @@
           "loaded_layer3_reference_logical_ids": [],
           "professional_references": [],
           "capsule_contract_version": "changeforge.fixture-capsule.v2",
-          "canonical_capsule_sha256": "5bc02a9b76e910f7c368f643f5494114efe6be2666c3ee27df0ca6716047263b",
-          "canonical_capsule_tokens": 336,
+          "canonical_capsule_sha256": "8aabbf10ea37e46359dfa14e13193d608aadb52daa2eabbc784091fba2f975df",
+          "canonical_capsule_tokens": 334,
           "component_ids": [
             "component-0233",
             "component-0027"
@@ -16770,8 +16770,8 @@
           "minimum_release_margin_tokens": 0,
           "evolution_target": 2500,
           "token_budget": 2500,
-          "total_tokens": 1247,
-          "sum_component_tokens": 1248,
+          "total_tokens": 1245,
+          "sum_component_tokens": 1246,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_token_budget": true,
@@ -16788,8 +16788,8 @@
           "loaded_layer3_reference_logical_ids": [],
           "professional_references": [],
           "capsule_contract_version": "changeforge.fixture-capsule.v2",
-          "canonical_capsule_sha256": "5bc02a9b76e910f7c368f643f5494114efe6be2666c3ee27df0ca6716047263b",
-          "canonical_capsule_tokens": 336,
+          "canonical_capsule_sha256": "8aabbf10ea37e46359dfa14e13193d608aadb52daa2eabbc784091fba2f975df",
+          "canonical_capsule_tokens": 334,
           "component_ids": [
             "component-0233",
             "component-0027"
@@ -17153,8 +17153,8 @@
           "minimum_release_margin_tokens": 0,
           "evolution_target": 2500,
           "token_budget": 2500,
-          "total_tokens": 1217,
-          "sum_component_tokens": 1218,
+          "total_tokens": 1215,
+          "sum_component_tokens": 1216,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_token_budget": true,
@@ -17171,8 +17171,8 @@
           "loaded_layer3_reference_logical_ids": [],
           "professional_references": [],
           "capsule_contract_version": "changeforge.fixture-capsule.v2",
-          "canonical_capsule_sha256": "883c36f05344e7d3dd574064c9d2b088c24239726e9fcec922d7da7a2984e56b",
-          "canonical_capsule_tokens": 313,
+          "canonical_capsule_sha256": "8793672f2b2fd83665a91020dcc8a2bf4d9e90b2bf6a6fbeb7478f273fce58aa",
+          "canonical_capsule_tokens": 311,
           "component_ids": [
             "component-0230",
             "component-0041"
@@ -17187,8 +17187,8 @@
           "minimum_release_margin_tokens": 0,
           "evolution_target": 2500,
           "token_budget": 2500,
-          "total_tokens": 1217,
-          "sum_component_tokens": 1218,
+          "total_tokens": 1215,
+          "sum_component_tokens": 1216,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_token_budget": true,
@@ -17205,8 +17205,8 @@
           "loaded_layer3_reference_logical_ids": [],
           "professional_references": [],
           "capsule_contract_version": "changeforge.fixture-capsule.v2",
-          "canonical_capsule_sha256": "883c36f05344e7d3dd574064c9d2b088c24239726e9fcec922d7da7a2984e56b",
-          "canonical_capsule_tokens": 313,
+          "canonical_capsule_sha256": "8793672f2b2fd83665a91020dcc8a2bf4d9e90b2bf6a6fbeb7478f273fce58aa",
+          "canonical_capsule_tokens": 311,
           "component_ids": [
             "component-0230",
             "component-0041"
@@ -17221,8 +17221,8 @@
           "minimum_release_margin_tokens": 0,
           "evolution_target": 2500,
           "token_budget": 2500,
-          "total_tokens": 1217,
-          "sum_component_tokens": 1218,
+          "total_tokens": 1215,
+          "sum_component_tokens": 1216,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_token_budget": true,
@@ -17239,8 +17239,8 @@
           "loaded_layer3_reference_logical_ids": [],
           "professional_references": [],
           "capsule_contract_version": "changeforge.fixture-capsule.v2",
-          "canonical_capsule_sha256": "883c36f05344e7d3dd574064c9d2b088c24239726e9fcec922d7da7a2984e56b",
-          "canonical_capsule_tokens": 313,
+          "canonical_capsule_sha256": "8793672f2b2fd83665a91020dcc8a2bf4d9e90b2bf6a6fbeb7478f273fce58aa",
+          "canonical_capsule_tokens": 311,
           "component_ids": [
             "component-0230",
             "component-0041"
@@ -17255,8 +17255,8 @@
           "minimum_release_margin_tokens": 0,
           "evolution_target": 2500,
           "token_budget": 2500,
-          "total_tokens": 1220,
-          "sum_component_tokens": 1221,
+          "total_tokens": 1218,
+          "sum_component_tokens": 1219,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_token_budget": true,
@@ -17273,8 +17273,8 @@
           "loaded_layer3_reference_logical_ids": [],
           "professional_references": [],
           "capsule_contract_version": "changeforge.fixture-capsule.v2",
-          "canonical_capsule_sha256": "883c36f05344e7d3dd574064c9d2b088c24239726e9fcec922d7da7a2984e56b",
-          "canonical_capsule_tokens": 313,
+          "canonical_capsule_sha256": "8793672f2b2fd83665a91020dcc8a2bf4d9e90b2bf6a6fbeb7478f273fce58aa",
+          "canonical_capsule_tokens": 311,
           "component_ids": [
             "component-0227",
             "component-0041"
@@ -17289,8 +17289,8 @@
           "minimum_release_margin_tokens": 0,
           "evolution_target": 2500,
           "token_budget": 2500,
-          "total_tokens": 1220,
-          "sum_component_tokens": 1221,
+          "total_tokens": 1218,
+          "sum_component_tokens": 1219,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_token_budget": true,
@@ -17307,8 +17307,8 @@
           "loaded_layer3_reference_logical_ids": [],
           "professional_references": [],
           "capsule_contract_version": "changeforge.fixture-capsule.v2",
-          "canonical_capsule_sha256": "883c36f05344e7d3dd574064c9d2b088c24239726e9fcec922d7da7a2984e56b",
-          "canonical_capsule_tokens": 313,
+          "canonical_capsule_sha256": "8793672f2b2fd83665a91020dcc8a2bf4d9e90b2bf6a6fbeb7478f273fce58aa",
+          "canonical_capsule_tokens": 311,
           "component_ids": [
             "component-0227",
             "component-0041"
@@ -17323,8 +17323,8 @@
           "minimum_release_margin_tokens": 0,
           "evolution_target": 2500,
           "token_budget": 2500,
-          "total_tokens": 1220,
-          "sum_component_tokens": 1221,
+          "total_tokens": 1218,
+          "sum_component_tokens": 1219,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_token_budget": true,
@@ -17341,8 +17341,8 @@
           "loaded_layer3_reference_logical_ids": [],
           "professional_references": [],
           "capsule_contract_version": "changeforge.fixture-capsule.v2",
-          "canonical_capsule_sha256": "883c36f05344e7d3dd574064c9d2b088c24239726e9fcec922d7da7a2984e56b",
-          "canonical_capsule_tokens": 313,
+          "canonical_capsule_sha256": "8793672f2b2fd83665a91020dcc8a2bf4d9e90b2bf6a6fbeb7478f273fce58aa",
+          "canonical_capsule_tokens": 311,
           "component_ids": [
             "component-0227",
             "component-0041"
@@ -17357,8 +17357,8 @@
           "minimum_release_margin_tokens": 0,
           "evolution_target": 2500,
           "token_budget": 2500,
-          "total_tokens": 1224,
-          "sum_component_tokens": 1225,
+          "total_tokens": 1222,
+          "sum_component_tokens": 1223,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_token_budget": true,
@@ -17375,8 +17375,8 @@
           "loaded_layer3_reference_logical_ids": [],
           "professional_references": [],
           "capsule_contract_version": "changeforge.fixture-capsule.v2",
-          "canonical_capsule_sha256": "883c36f05344e7d3dd574064c9d2b088c24239726e9fcec922d7da7a2984e56b",
-          "canonical_capsule_tokens": 313,
+          "canonical_capsule_sha256": "8793672f2b2fd83665a91020dcc8a2bf4d9e90b2bf6a6fbeb7478f273fce58aa",
+          "canonical_capsule_tokens": 311,
           "component_ids": [
             "component-0233",
             "component-0041"
@@ -17391,8 +17391,8 @@
           "minimum_release_margin_tokens": 0,
           "evolution_target": 2500,
           "token_budget": 2500,
-          "total_tokens": 1224,
-          "sum_component_tokens": 1225,
+          "total_tokens": 1222,
+          "sum_component_tokens": 1223,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_token_budget": true,
@@ -17409,8 +17409,8 @@
           "loaded_layer3_reference_logical_ids": [],
           "professional_references": [],
           "capsule_contract_version": "changeforge.fixture-capsule.v2",
-          "canonical_capsule_sha256": "883c36f05344e7d3dd574064c9d2b088c24239726e9fcec922d7da7a2984e56b",
-          "canonical_capsule_tokens": 313,
+          "canonical_capsule_sha256": "8793672f2b2fd83665a91020dcc8a2bf4d9e90b2bf6a6fbeb7478f273fce58aa",
+          "canonical_capsule_tokens": 311,
           "component_ids": [
             "component-0233",
             "component-0041"
@@ -17425,8 +17425,8 @@
           "minimum_release_margin_tokens": 0,
           "evolution_target": 2500,
           "token_budget": 2500,
-          "total_tokens": 1224,
-          "sum_component_tokens": 1225,
+          "total_tokens": 1222,
+          "sum_component_tokens": 1223,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_token_budget": true,
@@ -17443,8 +17443,8 @@
           "loaded_layer3_reference_logical_ids": [],
           "professional_references": [],
           "capsule_contract_version": "changeforge.fixture-capsule.v2",
-          "canonical_capsule_sha256": "883c36f05344e7d3dd574064c9d2b088c24239726e9fcec922d7da7a2984e56b",
-          "canonical_capsule_tokens": 313,
+          "canonical_capsule_sha256": "8793672f2b2fd83665a91020dcc8a2bf4d9e90b2bf6a6fbeb7478f273fce58aa",
+          "canonical_capsule_tokens": 311,
           "component_ids": [
             "component-0233",
             "component-0041"
@@ -20457,17 +20457,17 @@
         "primary_skill": "architecture-impact-reviewer"
       },
       "utility": {
-        "tokens": 1247,
+        "tokens": 1245,
         "capacity_ceiling": 2500,
         "minimum_headroom_ratio": 0.0,
         "required_reserve_tokens": 0,
         "release_target": 2500,
         "minimum_release_margin_tokens": 0,
         "evolution_target": 2500,
-        "release_margin_tokens": 1253,
-        "evolution_margin_tokens": 1253,
-        "capacity_headroom_tokens": 1253,
-        "capacity_headroom_ratio": 0.5012,
+        "release_margin_tokens": 1255,
+        "evolution_margin_tokens": 1255,
+        "capacity_headroom_tokens": 1255,
+        "capacity_headroom_ratio": 0.502,
         "host": "copilot",
         "build_profile": "recommended",
         "step": 1,

@@ -1371,7 +1371,7 @@
       "errors": []
     },
     {
-      "id": "focus-capability-equivalent-host-tool-identifiers",
+      "id": "focus-capability-equivalent-adapter-metadata",
       "scenario": "capability-equivalence",
       "expected_valid": true,
       "actual_valid": true,
@@ -3722,8 +3722,8 @@
       "errors": []
     },
     {
-      "id": "external-read-websearch-official",
-      "operation": "WebSearch",
+      "id": "external-read-official-source",
+      "operation": "external-source-read",
       "external_read_triggered": true,
       "expected_valid": true,
       "actual_valid": true,
@@ -3731,8 +3731,8 @@
       "errors": []
     },
     {
-      "id": "external-read-webfetch-versioned",
-      "operation": "WebFetch",
+      "id": "external-read-versioned-source",
+      "operation": "external-source-read",
       "external_read_triggered": true,
       "expected_valid": true,
       "actual_valid": true,
@@ -3740,8 +3740,8 @@
       "errors": []
     },
     {
-      "id": "external-read-connector-readonly",
-      "operation": "ConnectorRead",
+      "id": "external-read-public-source",
+      "operation": "external-source-read",
       "external_read_triggered": true,
       "expected_valid": true,
       "actual_valid": true,
@@ -3750,7 +3750,7 @@
     },
     {
       "id": "external-read-prompt-injection-ignored",
-      "operation": "WebFetch",
+      "operation": "external-source-read",
       "external_read_triggered": true,
       "expected_valid": true,
       "actual_valid": true,
@@ -3759,7 +3759,7 @@
     },
     {
       "id": "external-read-task-agent-denied",
-      "operation": "WebSearch",
+      "operation": "external-source-read",
       "external_read_triggered": true,
       "expected_valid": false,
       "actual_valid": false,
@@ -3770,7 +3770,7 @@
     },
     {
       "id": "external-read-review-agent-denied",
-      "operation": "WebFetch",
+      "operation": "external-source-read",
       "external_read_triggered": true,
       "expected_valid": false,
       "actual_valid": false,
@@ -3781,7 +3781,7 @@
     },
     {
       "id": "external-read-private-query-denied",
-      "operation": "WebSearch",
+      "operation": "external-source-read",
       "external_read_triggered": true,
       "expected_valid": false,
       "actual_valid": false,
@@ -3792,7 +3792,7 @@
     },
     {
       "id": "external-read-raw-instruction-denied",
-      "operation": "WebFetch",
+      "operation": "external-source-read",
       "external_read_triggered": true,
       "expected_valid": false,
       "actual_valid": false,
@@ -3812,7 +3812,7 @@
     },
     {
       "id": "external-read-critical-gap-blocked",
-      "operation": "WebFetch",
+      "operation": "external-source-read",
       "external_read_triggered": true,
       "expected_valid": true,
       "actual_valid": true,

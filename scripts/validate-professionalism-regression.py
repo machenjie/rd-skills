@@ -6346,6 +6346,7 @@ def _expert_panel_currentness_drift(exc: Exception) -> bool:
             "semantic attestation application entries are stale",
             "semantic fixed missing target lacks a rewrite majority",
             "semantic fixed attestation omits a current candidate",
+            "semantic fixed detector contract is stale",
             "semantic fixed rewrite target remains current",
             "semantic fixed attestation disposition mismatch",
         }

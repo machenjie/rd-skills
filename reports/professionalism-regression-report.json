@@ -8,7 +8,7 @@
   "baseline_comparison": "not-numerically-comparable",
   "evidence_scope": "deterministic-fixtures",
   "content_audit_summary": {
-    "skill_detector_fingerprint": "f958d5367dc2db4aa0a1af68754976b76e340b22d6f758d3dc682745e2775807",
+    "skill_detector_fingerprint": "fed74a4251431872a253aaf5ff8dbbbfb447a935ba1d2b7c34157d0b77c9658a",
     "audit_gate_status": {
       "selected_gate": "authoring",
       "authoring": "pass",
@@ -18,7 +18,7 @@
       "status": "invalid",
       "error": {
         "id": "semantic-decision-application-invalid",
-        "message": "semantic fixed attestation disposition mismatch"
+        "message": "semantic fixed detector contract is stale"
       }
     },
     "content_review_density_candidates": 31,
@@ -56,7 +56,7 @@
     "source": "skill-content-audit.json#ai_readability",
     "readiness_scope": "agent-facing-ai-readability",
     "schema_version": 2,
-    "source_fingerprint": "631318e0d95c28275b1916af0f197c8ae58a171b9109e4a71fedcd104409f68a",
+    "source_fingerprint": "f0ecea248b4935ee8ccf28dada54ba96fc2d03ee75e22c9e9b632272cf7ed69f",
     "source_fingerprint_document_count": 917,
     "contract": {
       "bullet_decision_max": 1,
@@ -206,7 +206,7 @@
     "decision_item_limit": 15,
     "effective_preface_schema_version": 3,
     "strict_ready_basis": "reference-strict-v4",
-    "source_fingerprint": "58cc484755d3748a434be83c6719cb3e445ba79b533f2050ba0ef59ebef6fb61",
+    "source_fingerprint": "c4b04241429fbc8a4fb0b06739ad57eb51e11a28c8c72220be6ae004214b81df",
     "source_fingerprint_document_count": 890,
     "indexed_references": 527,
     "existing_indexed_references": 527,
@@ -271,7 +271,7 @@
     "source": "skill-content-audit.json#root_content",
     "readiness_scope": "agent-facing-root-content",
     "strict_ready_basis": "root-strict-v5",
-    "source_fingerprint": "5ac21237bc6687101a0ef3152c6ce5d37d60fd01b18b5ce79d8e0e6ebfc88e7d",
+    "source_fingerprint": "9241e764b1da6f3eb0f93817e59807a0def7f3811f890b61684fcd6b33a19b0b",
     "source_fingerprint_document_count": 381,
     "agent_facing_root_documents": 381,
     "foundation_compact_capabilities": 124,
@@ -329,7 +329,7 @@
     "schema_version": 10,
     "reference": {
       "scope": "reference-content",
-      "source_fingerprint": "58cc484755d3748a434be83c6719cb3e445ba79b533f2050ba0ef59ebef6fb61",
+      "source_fingerprint": "c4b04241429fbc8a4fb0b06739ad57eb51e11a28c8c72220be6ae004214b81df",
       "strict_ready_basis": "reference-strict-v4",
       "structural_strict_ready": true,
       "semantic_triage_complete": true,
@@ -337,7 +337,7 @@
     },
     "root": {
       "scope": "agent-facing-root-content",
-      "source_fingerprint": "5ac21237bc6687101a0ef3152c6ce5d37d60fd01b18b5ce79d8e0e6ebfc88e7d",
+      "source_fingerprint": "9241e764b1da6f3eb0f93817e59807a0def7f3811f890b61684fcd6b33a19b0b",
       "strict_ready_basis": "root-strict-v5",
       "structural_strict_ready": true,
       "semantic_triage_complete": true,
@@ -366,7 +366,7 @@
         "current_source_fingerprints": {
           "actionability_detector_contract": "5980b6a90aff04f345c4549c0522f4e493ea9d23f4b7d7aa334a51359aed575e",
           "readability_detector_contract": "f224da76c77a25ed73086603711647c0d728bbab7669870224a7031f3a6cca4f",
-          "readability_target_manifest": "46bf246a57aade8d91254232b4d68e86e28555ce3b12d23d383aa97cb352cb4b"
+          "readability_target_manifest": "f076258462ced2d9afce6f93a7021f2440b80c70c38932dbb65a09f94dc443c6"
         },
         "attested_by": null,
         "attested_on": null,
@@ -566,7 +566,7 @@
     {
       "category": "semantic-disposition-application-release-gate",
       "target": "skill-content-audit.json#semantic_disposition_application",
-      "message": "semantic-decision-application-invalid: semantic fixed attestation disposition mismatch",
+      "message": "semantic-decision-application-invalid: semantic fixed detector contract is stale",
       "severity": "error"
     },
     {
@@ -630,6 +630,6 @@
     "Root strict readiness is recomputed from fresh agent-facing Root source and blocks the authoring gate when its strict structural or semantic contract fails.",
     "AI-readability uses one three-reviewer full-coverage panel; Professional Completeness uses a separate per-Skill qualified reviewer pool with domain-critical fail-closed decisions. Neither axis can substitute for the other, and pending or stale evidence does not redefine the authoring gate.",
     "Coverage gates are recomputed from deterministic routing, captured benchmark, and captured pressure fixtures; they do not prove live-agent behavior.",
-    "Formal release remains blocked: semantic-decision-application-invalid: semantic fixed attestation disposition mismatch"
+    "Formal release remains blocked: semantic-decision-application-invalid: semantic fixed detector contract is stale"
   ]
 }

@@ -141,8 +141,8 @@ class ControlPromptProjectionTests(unittest.TestCase):
         scheduling = VALIDATOR.extract_section_body(text, "Scheduling and Context") or ""
 
         for term in (
-            "current Engineering Brief: sole operational analysis authority",
-            "First Executable Slice: complete Task Contract v2",
+            "current Engineering Brief: sole analysis authority",
+            "First Executable Slice: Task Contract v2",
             "dispatch verbatim",
             "never reinterpret",
             "blocked -> main-control-agent -> analysis-agent -> updated Engineering Brief",
@@ -151,10 +151,10 @@ class ControlPromptProjectionTests(unittest.TestCase):
             with self.subTest(term=term):
                 self.assertIn(term.casefold(), analyzed.casefold())
         self.assertIn(
-            "current requested task > declared DAG work > current-task blockers > adjacent follow-up",
+            "requested task > DAG > blockers > adjacent",
             scheduling,
         )
-        self.assertIn("Adjacent findings never preempt", scheduling)
+        self.assertIn("adjacent never preempts task/DAG", scheduling)
 
     def test_each_analyzed_work_authority_term_has_a_negative_control(self) -> None:
         text = VALIDATOR.PROMPT.read_text(encoding="utf-8")
