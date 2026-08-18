@@ -1,6 +1,6 @@
 ---
 name: engineering-control-plane
-description: Dispatch-only router; never implement or review.
+description: Dispatch-only.
 ---
 
 # Engineering Control Plane
@@ -14,7 +14,7 @@ A host without an Agent Profile loads `references/main-control-agent.md`.
 ## Decision Rules
 
 The prompt owns control rules: Direct Task, Analyzed Work, First Executable Slice,
-host modes, shared-workspace writes, review/repair, progress, and closure.
+normalized capability facts, shared-workspace writes, review/repair, progress, and closure.
 Do not restate; choose a named targeted Reference or template.
 
 ## Targeted References

@@ -154,12 +154,12 @@ class AgentProfileReadabilityTests(unittest.TestCase):
             "- Load engineering-control-plane only.\n"
             "- Never reload references/main-control-agent.md.\n"
             "- Dispatch only/no target-code access.\n"
-            "- No worker: business acceptance/placement/Brief/DAG authoring/implementation review.\n"
-            "- Host modes authoritative; absent/unrecognized unsupported."
+            "- No worker: business acceptance/placement, Brief/DAG authoring, implementation review.\n"
+            "- Capability facts authoritative; host/tool/command identifiers ignored; absent/unrecognized=unsupported."
         )
 
         self.assertEqual(expected, main["instructions"])
-        self.assertEqual(56, count_o200k_base_tokens(main["instructions"]))
+        self.assertEqual(64, count_o200k_base_tokens(main["instructions"]))
 
     def test_profile_rule_limits_are_core_driven_and_enforced(self) -> None:
         limits = VALIDATOR.PROFILE_CONTRACT_MODEL["instruction_rule_count"]
@@ -297,7 +297,7 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         )
         self.assertLessEqual(
             count_o200k_base_tokens(task_profile["instructions"]),
-            835,
+            854,
         )
         source_rules = task_profile["instructions"].splitlines()
         for rule in projection:
@@ -731,7 +731,10 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         self.assertIn("task-contract-status", output)
 
     def test_main_profile_rejects_prompt_owned_contract_copies(self) -> None:
-        anchor = "Host modes authoritative; absent/unrecognized unsupported."
+        anchor = (
+            "Capability facts authoritative; host/tool/command identifiers "
+            "ignored; absent/unrecognized=unsupported."
+        )
         copied_rules = (
             "Task Contract v2 starts assignments.",
             "Use a visible Evidence Ledger.",
@@ -777,13 +780,18 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         )
         for term in projection["terms"]:
             with self.subTest(term=term):
+                expected_error = (
+                    "exact canonical bullet"
+                    if term == "latest material edit"
+                    else "independent review evidence projection"
+                )
                 result, output = self._mutated_source_result(
                     "task-agent",
                     term,
                     "REMOVED_TASK_VALIDATION_PROOF_TERM",
                 )
                 self.assertEqual(1, result)
-                self.assertIn("independent review evidence projection", output)
+                self.assertIn(expected_error, output)
 
     def test_each_task_forbidden_storage_projection_is_required(self) -> None:
         for rule in VALIDATOR.EVIDENCE_LEDGER_MODEL["forbidden_storage"]:
@@ -838,16 +846,16 @@ class AgentProfileReadabilityTests(unittest.TestCase):
     def test_external_read_is_analysis_only_and_resident_rules_are_locked(self) -> None:
         source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
         profiles = {item["name"]: item for item in source["profiles"]}
-        self.assertIn("external-read", profiles["analysis-agent"]["tools"])
+        self.assertIn("external-source-read", profiles["analysis-agent"]["tools"])
         for role in ("main-control-agent", "task-agent", "review-agent"):
-            self.assertNotIn("external-read", profiles[role]["tools"])
+            self.assertNotIn("external-source-read", profiles[role]["tools"])
 
         analysis = profiles["analysis-agent"]["instructions"]
         for terms in (
-            ("material unresolved Claim", "local or current evidence", "Proof Limit"),
+            ("Material unresolved Claim", "local or current evidence", "Proof Limit"),
             ("untrusted evidence input", "normalized Claim", "Engineering Brief"),
             ("minimum public information", "repository-private source", "credential"),
-            ("external_source_read", "unsupported", "unknown-critical-boundary"),
+            ("external-source-read", "unsupported", "unknown-critical-boundary"),
         ):
             self.assertTrue(
                 any(all(term in rule for term in terms) for rule in analysis.splitlines()),
@@ -855,7 +863,7 @@ class AgentProfileReadabilityTests(unittest.TestCase):
             )
         for role in ("task-agent", "review-agent"):
             instructions = profiles[role]["instructions"]
-            self.assertIn("Leave external-read research", instructions)
+            self.assertIn("Leave external-source-read", instructions)
             self.assertIn("analysis-agent", instructions)
 
     def test_external_read_host_modes_and_native_tool_projection_are_exact(self) -> None:

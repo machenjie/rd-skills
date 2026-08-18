@@ -15,7 +15,7 @@ from deterministic_route_oracle import (
 from validation_utils import (
     ValidationProblem,
     load_yaml_file,
-    validate_main_execution,
+    validate_main_assignment,
 )
 
 
@@ -514,23 +514,34 @@ def _admission_route_integrity_errors(
         return ["winner_trace.selected_candidate must be a mapping"]
 
     errors: list[str] = []
-    if route_decision.get("main_execution_provenance") != main_execution:
-        errors.append(
-            "route_decision.main_execution_provenance must deep-equal "
-            "main_execution"
-        )
-    if route_result.get("execution_level") != main_execution.get(
-        "execution_level"
-    ):
-        errors.append(
-            "route_result.execution_level must equal "
-            "main_execution.execution_level"
-        )
-    if route_result.get("level_basis") != main_execution.get("level_basis"):
-        errors.append(
-            "route_result.level_basis must deep-equal "
-            "main_execution.level_basis"
-        )
+    analysis_path = route_decision.get("path") == "analyzed"
+    if analysis_path:
+        if route_decision.get("main_execution_provenance") is not None:
+            errors.append(
+                "analyzed route main_execution_provenance must be null"
+            )
+        if route_result.get("execution_level") is not None or route_result.get(
+            "level_basis"
+        ) is not None:
+            errors.append("analyzed route must not carry executable Level or Basis")
+    else:
+        if route_decision.get("main_execution_provenance") != main_execution:
+            errors.append(
+                "route_decision.main_execution_provenance must deep-equal "
+                "main_execution"
+            )
+        if route_result.get("execution_level") != main_execution.get(
+            "execution_level"
+        ):
+            errors.append(
+                "route_result.execution_level must equal "
+                "main_execution.execution_level"
+            )
+        if route_result.get("level_basis") != main_execution.get("level_basis"):
+            errors.append(
+                "route_result.level_basis must deep-equal "
+                "main_execution.level_basis"
+            )
     if route_decision.get("route_once") is not True:
         errors.append("route_decision.route_once must be true")
     if winner_trace.get("route_once") != "proven":
@@ -1687,7 +1698,7 @@ def evaluate_admission_evidence(
             errors.append(f"{context}: expected must be a mapping")
             continue
         main_execution = case.get("main_execution")
-        main_errors = validate_main_execution(main_execution)
+        main_errors = validate_main_assignment(main_execution)
         if main_errors:
             errors.extend(
                 f"{context}: {error}"
@@ -1836,7 +1847,7 @@ def _evaluate_route_evidence(
             continue
         ids.append(case_id)
         main_execution = case.get("main_execution")
-        main_errors = validate_main_execution(main_execution)
+        main_errors = validate_main_assignment(main_execution)
         if main_errors:
             errors.extend(
                 f"{context}: {error}"

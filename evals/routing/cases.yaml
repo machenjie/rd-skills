@@ -2,52 +2,52 @@
 schema_version: 1
 cases:
   - id: ambiguous-request
-    main_execution: {producer: main-control-agent, task_id: ambiguous-request, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:ambiguous-request:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: ambiguous-request}
     prompt: Clarify an ambiguous requested behavior before implementation.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: change-intake-compiler, layer3_skills: [requirement-clarification], review_skill: ai-code-review-refactor}
   - id: acceptance-gap
-    main_execution: {producer: main-control-agent, task_id: acceptance-gap, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:acceptance-gap:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: acceptance-gap}
     prompt: Define observable acceptance and failure behavior for this feature.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: acceptance-criteria-builder, layer3_skills: [acceptance-standard-definition], review_skill: ai-code-review-refactor}
   - id: unknown-owner
-    main_execution: {producer: main-control-agent, task_id: unknown-owner, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:unknown-owner:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: unknown-owner}
     prompt: Implement preparation before editing to migrate a Flutter shared installed client across concrete platform targets including Android; owner is unknown.
     domain_family: {domain: cross-platform-client-extension, family: shared-target-ownership, variant: canonical, evidence_id: family:shared-target-ownership:canonical}
     domain_transition: {domain: cross-platform-client-extension, family: shared-target-ownership, evidence_id: transition:shared-target-ownership}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [cross-platform-client-extension, android-platform-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: source-backed-question
-    main_execution: {producer: main-control-agent, task_id: source-backed-question, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:source-backed-question:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: source-backed-question}
     prompt: Using repository source evidence, explain which module owns a Flutter shared installed client for concrete platform targets including iOS.
     domain_family: {domain: cross-platform-client-extension, family: shared-target-ownership, variant: paraphrase}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [cross-platform-client-extension, ios-ipados-platform-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: failure-diagnosis
-    main_execution: {producer: main-control-agent, task_id: failure-diagnosis, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:failure-diagnosis:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: failure-diagnosis}
     prompt: Diagnose the root cause of a failing background worker from logs tests and source evidence.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [failure-diagnosis], review_skill: reliability-observability-gate}
   - id: multi-task-plan
-    main_execution: {producer: main-control-agent, task_id: multi-task-plan, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:multi-task-plan:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: multi-task-plan}
     prompt: Analyze an implementation request with multiple dependent tasks to migrate a Linux graphical desktop whose desktop session controls D-Bus; the Engineering Brief is not accepted.
     domain_family: {domain: linux-desktop-platform-extension, family: desktop-session-authority, variant: canonical, evidence_id: family:desktop-session-authority:canonical}
     domain_transition: {domain: linux-desktop-platform-extension, family: desktop-session-authority, evidence_id: transition:desktop-session-authority}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [linux-desktop-platform-extension], review_skill: ai-code-review-refactor}
   - id: accepted-brief-task-dag
-    main_execution: {producer: main-control-agent, task_id: accepted-brief-task-dag, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:accepted-brief-task-dag:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: accepted-brief-task-dag}
     prompt: Using the accepted Engineering Brief, produce the explicit Task DAG and review boundaries.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: task-dag-planner, layer3_skills: [task-dag-decomposition], review_skill: engineering-artifact-review}
   - id: high-risk-multi-task
-    main_execution: {producer: main-control-agent, task_id: high-risk-multi-task, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:high-risk-multi-task:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: high-risk-multi-task}
     prompt: Analyze release and rollback risk for high-risk multiple tasks after the architecture, module boundaries, and dependency graph are accepted and fixed.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [release-rollback], review_skill: high-risk-design-review}
   - id: domain-invariant
-    main_execution: {producer: main-control-agent, task_id: domain-invariant, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:domain-invariant:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: domain-invariant}
     prompt: Analyze a domain invariant and model the domain lifecycle transition.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: domain-impact-modeler, layer3_skills: [business-rule-extraction, state-machine-modeling], review_skill: architecture-impact-reviewer}
   - id: architecture-boundary
-    main_execution: {producer: main-control-agent, task_id: architecture-boundary, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:architecture-boundary:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: architecture-boundary}
     prompt: The established owner is PaymentsService. Analyze the unresolved owner-private implementation structure choice between reusing the existing helper and retaining a deliberately separate implementation.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: architecture-impact-reviewer, layer3_skills: [implementation-structure-design], review_skill: architecture-impact-reviewer}
   - id: structure-owner-internal-backend-placement
-    main_execution: {producer: main-control-agent, task_id: structure-owner-internal-backend-placement, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:structure-owner-internal-backend-placement:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: structure-owner-internal-backend-placement}
     prompt: Implement a backend cloud control plane source change to migrate cloud account authority under IAM while deciding whether an owner-private helper stays as a method, private class, or same-file function; module ownership, exports, and public API remain unchanged.
     domain_family: {domain: cloud-platform-extension, family: cloud-account-authority, variant: canonical, evidence_id: family:cloud-account-authority:canonical}
     domain_transition: {domain: cloud-platform-extension, family: cloud-account-authority, evidence_id: transition:cloud-account-authority}
@@ -68,15 +68,15 @@ cases:
     excluded_skills: [implementation-structure-design]
     expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [], review_skill: ai-code-review-refactor}
   - id: structure-named-generic-anaphora-ambiguous
-    main_execution: {producer: main-control-agent, task_id: structure-named-generic-anaphora-ambiguous, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:structure-named-generic-anaphora-ambiguous:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: structure-named-generic-anaphora-ambiguous}
     prompt: Implement the backend change with the alpha helper placement already selected as a same-file function and the owner-private helper placement fixed as a method; that placement is fixed as a same-file function.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: structure-passive-private-helper-move-not-request
-    main_execution: {producer: main-control-agent, task_id: structure-passive-private-helper-move-not-request, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:structure-passive-private-helper-move-not-request:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: structure-passive-private-helper-move-not-request}
     prompt: The private helper was moved inside the accepted owner.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: structure-fixed-helper-placement-declaration-not-request
-    main_execution: {producer: main-control-agent, task_id: structure-fixed-helper-placement-declaration-not-request, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:structure-fixed-helper-placement-declaration-not-request:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: structure-fixed-helper-placement-declaration-not-request}
     prompt: The helper placement is fixed as a function.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: structure-owner-private-runtime-selection-not-placement
@@ -101,11 +101,11 @@ cases:
     prompt: Implement an accepted repository-owned generator source change. The editable template, generator, derived artifact, committed policy, and freshness check are known. Move the owner-private generator method within the already selected same file.
     expected: {path: direct, profile: task-agent, primary_skill: repository-tooling-change-builder, layer3_skills: [build-tool-professional-usage, implementation-structure-design, targeted-validation-selection], review_skill: ai-code-review-refactor}
   - id: structure-placement-incompatible-destinations
-    main_execution: {producer: main-control-agent, task_id: structure-placement-incompatible-destinations, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:structure-placement-incompatible-destinations:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: structure-placement-incompatible-destinations}
     prompt: Implement an accepted backend service change. Move the owner-private alpha helper into the selected same file and place the owner-private alpha helper inside the selected private class.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: structure-placement-multiple-anaphora
-    main_execution: {producer: main-control-agent, task_id: structure-placement-multiple-anaphora, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:structure-placement-multiple-anaphora:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: structure-placement-multiple-anaphora}
     prompt: Implement an accepted backend service change. The owner-private alpha helper placement is fixed as a method and the owner-private beta helper placement is fixed as a same-file function. That placement is fixed as a same-file function.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: structure-actual-diff-private-move
@@ -113,7 +113,7 @@ cases:
     prompt: Review the actual diff where a duplicate owner-private helper was consolidated and a private class moved inside the same module with behavior preserved.
     expected: {path: direct, profile: review-agent, primary_skill: ai-code-review-refactor, layer3_skills: [implementation-structure-design, refactoring], review_skill: ai-code-review-refactor}
   - id: structure-domain-object-classification
-    main_execution: {producer: main-control-agent, task_id: structure-domain-object-classification, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:structure-domain-object-classification:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: structure-domain-object-classification}
     prompt: Analyze whether Order is an entity, Money is an immutable value with replacement semantics, and Order is the aggregate update and invariant entry point; identify lifecycle and writer authority.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: domain-impact-modeler, layer3_skills: [domain-object-identification], review_skill: architecture-impact-reviewer}
   - id: structure-real-pattern-force
@@ -122,7 +122,7 @@ cases:
     domain_family: {domain: cloud-platform-extension, family: cloud-account-authority, variant: paraphrase}
     expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [cloud-platform-extension, design-pattern-selection, concurrency-control], review_skill: ai-code-review-refactor}
   - id: structure-pattern-analysis
-    main_execution: {producer: main-control-agent, task_id: structure-pattern-analysis, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:structure-pattern-analysis:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: structure-pattern-analysis}
     prompt: Analyze whether backend provider variants have a current substitution contract, lifecycle, and extension force that justify a design pattern.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: architecture-impact-reviewer, layer3_skills: [design-pattern-selection], review_skill: architecture-impact-reviewer}
   - id: structure-known-generator-pattern
@@ -142,11 +142,11 @@ cases:
     prompt: Review the actual diff's complexity delete list and a new pass-through wrapper that has no current variation, lifecycle, protocol, or extension force.
     expected: {path: direct, profile: review-agent, primary_skill: ai-code-review-refactor, layer3_skills: [minimal-correct-implementation], review_skill: ai-code-review-refactor}
   - id: structure-minimal-analysis
-    main_execution: {producer: main-control-agent, task_id: structure-minimal-analysis, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:structure-minimal-analysis:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: structure-minimal-analysis}
     prompt: Analyze whether a new pass-through wrapper is needed for accepted behavior; it has no current variation, lifecycle, protocol, or extension force.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [minimal-correct-implementation], review_skill: architecture-impact-reviewer}
   - id: structure-minimal-backend
-    main_execution: {producer: main-control-agent, task_id: structure-minimal-backend, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:structure-minimal-backend:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: structure-minimal-backend}
     prompt: Analyze whether a new pass-through wrapper is needed for accepted behavior in a Windows packaged desktop application whose application identity controls a protocol handler; the wrapper has no current variation, lifecycle, protocol, or extension force.
     domain_family: {domain: windows-platform-extension, family: application-identity-authority, variant: canonical}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [windows-platform-extension, minimal-correct-implementation], review_skill: architecture-impact-reviewer}
@@ -155,7 +155,7 @@ cases:
     prompt: Implement an accepted repository-owned generator source change. The editable template, derived artifact, committed policy, and freshness check are known; decide whether a new pass-through wrapper is needed with no current variation, lifecycle, protocol, or extension force.
     expected: {path: direct, profile: task-agent, primary_skill: repository-tooling-change-builder, layer3_skills: [build-tool-professional-usage, minimal-correct-implementation, targeted-validation-selection], review_skill: ai-code-review-refactor}
   - id: structure-object-classification-method-placement
-    main_execution: {producer: main-control-agent, task_id: structure-object-classification-method-placement, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:structure-object-classification-method-placement:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: structure-object-classification-method-placement}
     prompt: Analyze how to migrate a Windows MSIX protocol handler whose application identity controls registration; identify domain object identity and writer authority.
     domain_family: {domain: windows-platform-extension, family: application-identity-authority, variant: paraphrase, evidence_id: family:application-identity-authority:paraphrase}
     domain_transition: {domain: windows-platform-extension, family: application-identity-authority, evidence_id: transition:application-identity-authority}
@@ -173,14 +173,14 @@ cases:
     excluded_skills: [module-boundary-design]
     expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [windows-platform-extension, implementation-structure-design], review_skill: ai-code-review-refactor}
   - id: structure-generated-authority-unknown
-    main_execution: {producer: main-control-agent, task_id: structure-generated-authority-unknown, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:structure-generated-authority-unknown:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: structure-generated-authority-unknown}
     prompt: Implement a repository-owned generator change to migrate a macOS installed application whose application lifecycle is controlled by AppKit, but it is unknown whether the template, generated file, or checked-in artifact is authoritative.
     domain_family: {domain: macos-platform-extension, family: platform-lifecycle-authority, variant: canonical, evidence_id: family:macos-platform-lifecycle:canonical}
     domain_transition: {domain: macos-platform-extension, family: platform-lifecycle-authority, evidence_id: transition:macos-platform-lifecycle}
     excluded_skills: [implementation-structure-design]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [macos-platform-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: structure-cross-module-public-edge
-    main_execution: {producer: main-control-agent, task_id: structure-cross-module-public-edge, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:structure-cross-module-public-edge:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: structure-cross-module-public-edge}
     prompt: Analyze a cross-module public export and dependency edge change; method and file placement inside each owner is already fixed.
     excluded_skills: [implementation-structure-design]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: architecture-impact-reviewer, layer3_skills: [module-boundary-design], review_skill: architecture-impact-reviewer}
@@ -190,13 +190,13 @@ cases:
     excluded_skills: [implementation-structure-design]
     expected: {path: direct, profile: review-agent, primary_skill: ai-code-review-refactor, layer3_skills: [refactoring], review_skill: ai-code-review-refactor}
   - id: structure-fixed-placement-refactor-analysis
-    main_execution: {producer: main-control-agent, task_id: structure-fixed-placement-refactor-analysis, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:structure-fixed-placement-refactor-analysis:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: structure-fixed-placement-refactor-analysis}
     prompt: Analyze a behavior-preserving move whose destination owner and final placement are already fixed, while a macOS installed application AppKit window lifecycle changes.
     domain_family: {domain: macos-platform-extension, family: platform-lifecycle-authority, variant: paraphrase}
     excluded_skills: [implementation-structure-design]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [macos-platform-extension, refactoring], review_skill: architecture-impact-reviewer}
   - id: structure-unresolved-placement-is-not-refactoring
-    main_execution: {producer: main-control-agent, task_id: structure-unresolved-placement-is-not-refactoring, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:structure-unresolved-placement-is-not-refactoring:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: structure-unresolved-placement-is-not-refactoring}
     prompt: Analyze a Linux graphical desktop desktop-session D-Bus behavior-preserving move whose destination owner and final placement are unresolved.
     domain_family: {domain: linux-desktop-platform-extension, family: desktop-session-authority, variant: paraphrase}
     excluded_skills: [refactoring]
@@ -207,7 +207,7 @@ cases:
     excluded_skills: [implementation-structure-design, module-boundary-design, refactoring]
     expected: {path: direct, profile: review-agent, primary_skill: ai-code-review-refactor, layer3_skills: [code-clarity-maintainability], review_skill: ai-code-review-refactor}
   - id: structure-dto-table-ui-not-domain
-    main_execution: {producer: main-control-agent, task_id: structure-dto-table-ui-not-domain, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:structure-dto-table-ui-not-domain:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: structure-dto-table-ui-not-domain}
     prompt: With an accepted Engineering Brief, analyze only DTO, relational table, and UI label mapping; there is no domain identity, lifecycle, aggregate, invariant, or writer-authority decision.
     excluded_skills: [domain-object-identification]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: data-api-contract-changer, layer3_skills: [model-boundary-mapping], review_skill: architecture-impact-reviewer}
@@ -222,12 +222,12 @@ cases:
     excluded_skills: [module-boundary-design]
     expected: {path: direct, profile: task-agent, primary_skill: change-documentation-gate, layer3_skills: [documentation-generation], review_skill: change-documentation-gate}
   - id: structure-documentation-with-runtime-architecture-change
-    main_execution: {producer: main-control-agent, task_id: structure-documentation-with-runtime-architecture-change, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:structure-documentation-with-runtime-architecture-change:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: structure-documentation-with-runtime-architecture-change}
     prompt: Update documentation wording for module ownership and dependency direction, and change runtime behavior and architecture.
     excluded_skills: [documentation-generation]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: architecture-impact-reviewer, layer3_skills: [module-boundary-design], review_skill: architecture-impact-reviewer}
   - id: structure-module-api-explicitly-unchanged
-    main_execution: {producer: main-control-agent, task_id: structure-module-api-explicitly-unchanged, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:structure-module-api-explicitly-unchanged:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: structure-module-api-explicitly-unchanged}
     prompt: Implement an owner-private backend helper placement. Module ownership remains unchanged and there is no public API change.
     excluded_skills: [module-boundary-design, api-contract-design]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
@@ -237,12 +237,12 @@ cases:
     excluded_skills: [implementation-structure-design]
     expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [filesystem-process-safety], review_skill: ai-code-review-refactor}
   - id: structure-sdk-contract-not-reuse
-    main_execution: {producer: main-control-agent, task_id: structure-sdk-contract-not-reuse, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:structure-sdk-contract-not-reuse:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: structure-sdk-contract-not-reuse}
     prompt: With an accepted Engineering Brief, analyze only a distributable SDK public contract and compatibility change; owner-private reuse placement is fixed.
     excluded_skills: [implementation-structure-design]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: data-api-contract-changer, layer3_skills: [sdk-library-contract-design], review_skill: architecture-impact-reviewer}
   - id: structure-package-supply-chain-not-reuse
-    main_execution: {producer: main-control-agent, task_id: structure-package-supply-chain-not-reuse, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:structure-package-supply-chain-not-reuse:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: structure-package-supply-chain-not-reuse}
     prompt: Analyze whether to install a new package because of a current capability gap, including version, license, vulnerability, and supply-chain ownership; local reuse placement is fixed.
     excluded_skills: [implementation-structure-design]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [package-dependency-management], review_skill: architecture-impact-reviewer}
@@ -259,12 +259,12 @@ cases:
     excluded_skills: [incident-response-coordinator]
     expected: {path: direct, profile: task-agent, primary_skill: repository-tooling-change-builder, layer3_skills: [build-tool-professional-usage, targeted-validation-selection], review_skill: ai-code-review-refactor}
   - id: incident-response-command
-    main_execution: {producer: main-control-agent, task_id: incident-response-command, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:incident-response-command:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: incident-response-command}
     prompt: Coordinate an active multi-responder incident with command, mitigation, communications, and handoff.
     excluded_skills: [repository-tooling-change-builder]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: incident-response-coordinator, layer3_skills: [failure-diagnosis, observability], review_skill: reliability-observability-gate}
   - id: backend-idempotency
-    main_execution: {producer: main-control-agent, task_id: backend-idempotency, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:backend-idempotency:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: backend-idempotency}
     prompt: Implement backend retry idempotency for duplicate job delivery.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [idempotency-retry-design], review_skill: ai-code-review-refactor}
   - id: frontend-direct
@@ -275,44 +275,44 @@ cases:
     excluded_skills: [architecture-impact-reviewer, cross-platform-client-extension]
     expected: {path: direct, profile: task-agent, primary_skill: frontend-change-builder, layer3_skills: [state-management-design], review_skill: ai-code-review-refactor}
   - id: experience-analysis
-    main_execution: {producer: main-control-agent, task_id: experience-analysis, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:experience-analysis:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: experience-analysis}
     prompt: Analyze a user flow with loading error focus and accessibility states.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: experience-impact-modeler, layer3_skills: [interaction-state-modeling], review_skill: ai-code-review-refactor}
   - id: experience-design-analysis
-    main_execution: {producer: main-control-agent, task_id: experience-design-analysis, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:experience-design-analysis:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: experience-design-analysis}
     prompt: Analyze a user flow's design tokens, components, spacing, and typography; no interaction state or transition decision is requested.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: experience-impact-modeler, layer3_skills: [design-system-rules], review_skill: ai-code-review-refactor}
   - id: experience-combined-analysis
-    main_execution: {producer: main-control-agent, task_id: experience-combined-analysis, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:experience-combined-analysis:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: experience-combined-analysis}
     prompt: Analyze a user flow's loading and error interaction states and transitions together with design tokens, components, spacing, and typography.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: experience-impact-modeler, layer3_skills: [interaction-state-modeling, design-system-rules], review_skill: ai-code-review-refactor}
   - id: experience-generic-negative
-    main_execution: {producer: main-control-agent, task_id: experience-generic-negative, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:experience-generic-negative:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: experience-generic-negative}
     prompt: Analyze a user flow.
     excluded_skills: [interaction-state-modeling, design-system-rules]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: public-api
-    main_execution: {producer: main-control-agent, task_id: public-api, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:public-api:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: public-api}
     prompt: Change a public API field with compatibility for old consumers.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [api-contract-design, version-compatibility], review_skill: architecture-impact-reviewer}
   - id: accepted-api-analysis
-    main_execution: {producer: main-control-agent, task_id: accepted-api-analysis, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:accepted-api-analysis:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: accepted-api-analysis}
     prompt: With an accepted Engineering Brief, analyze only the API compatibility artifact.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: data-api-contract-changer, layer3_skills: [version-compatibility], review_skill: architecture-impact-reviewer}
   - id: data-migration
-    main_execution: {producer: main-control-agent, task_id: data-migration, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:data-migration:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: data-migration}
     prompt: Plan a database migration with backfill coexistence and rollback.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [data-migration-design, transaction-consistency, release-rollback], review_skill: delivery-release-gate}
   - id: accepted-data-analysis
-    main_execution: {producer: main-control-agent, task_id: accepted-data-analysis, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:accepted-data-analysis:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: accepted-data-analysis}
     prompt: With an accepted Engineering Brief, analyze only the data consistency and recovery artifact.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: data-middleware-change-builder, layer3_skills: [transaction-consistency], review_skill: quality-test-gate}
   - id: integration
-    main_execution: {producer: main-control-agent, task_id: integration, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:integration:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: integration}
     prompt: Implement an external integration timeout and contract change.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [consumer-impact-analysis, failure-contract-design], review_skill: ai-code-review-refactor}
   - id: accepted-integration-analysis
-    main_execution: {producer: main-control-agent, task_id: accepted-integration-analysis, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:accepted-integration-analysis:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: accepted-integration-analysis}
     prompt: With an accepted Engineering Brief, analyze only the integration handoff artifact.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: integration-change-builder, layer3_skills: [contract-testing], review_skill: ai-code-review-refactor}
   - id: validation
@@ -323,11 +323,11 @@ cases:
     excluded_skills: [windows-platform-extension]
     expected: {path: direct, profile: task-agent, primary_skill: quality-test-gate, layer3_skills: [regression-testing], review_skill: ai-code-review-refactor}
   - id: security
-    main_execution: {producer: main-control-agent, task_id: security, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:security:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: security}
     prompt: Analyze tenant authorization and object permission security.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: security-privacy-gate, layer3_skills: [permission-boundary-modeling, threat-modeling], review_skill: security-privacy-gate}
   - id: security-ssrf-boundary
-    main_execution: {producer: main-control-agent, task_id: security-ssrf-boundary, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:security-ssrf-boundary:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: security-ssrf-boundary}
     prompt: Analyze an SSRF-prone server-side URL fetch boundary including canonicalization DNS redirects and private-network denial.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [threat-modeling, web-security], review_skill: security-privacy-gate}
   - id: reliability
@@ -335,7 +335,7 @@ cases:
     prompt: Review outage degradation SLO metrics and recovery behavior.
     expected: {path: direct, profile: review-agent, primary_skill: reliability-observability-gate, layer3_skills: [degradation-circuit-breaking, observability, backup-recovery], review_skill: reliability-observability-gate}
   - id: cache-stampede-reliability
-    main_execution: {producer: main-control-agent, task_id: cache-stampede-reliability, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:cache-stampede-reliability:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: cache-stampede-reliability}
     prompt: Analyze Redis cache stampede contention with single-flight refresh safe degradation and hot-key observability.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [concurrency-control, degradation-circuit-breaking, observability], review_skill: reliability-observability-gate}
   - id: logging
@@ -365,71 +365,71 @@ cases:
     prompt: Review an Engineering Brief and Task Plan before implementation begins.
     expected: {path: direct, profile: review-agent, primary_skill: engineering-artifact-review, layer3_skills: [], review_skill: engineering-artifact-review}
   - id: ai-rag-tool-authority
-    main_execution: {producer: main-control-agent, task_id: ai-rag-tool-authority, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:ai-rag-tool-authority:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: ai-rag-tool-authority}
     prompt: Analyze a RAG assistant where tenant-scoped retrieval enters model context and the agent may call a side-effecting tool with delegated authority.
     domain_family: {domain: ai-product-extension, family: retrieval-data, variant: canonical}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [ai-product-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: ai-retrieval-permission-paraphrase
-    main_execution: {producer: main-control-agent, task_id: ai-retrieval-permission-paraphrase, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:ai-retrieval-permission-paraphrase:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: ai-retrieval-permission-paraphrase}
     prompt: Review embedding retrieval where permission-scoped documents enter model context.
     domain_family: {domain: ai-product-extension, family: retrieval-data, variant: paraphrase}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [ai-product-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: ai-agent-tool-authority
-    main_execution: {producer: main-control-agent, task_id: ai-agent-tool-authority, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:ai-agent-tool-authority:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: ai-agent-tool-authority}
     prompt: Analyze an agent tool call that performs a side effect under delegated authority.
     domain_family: {domain: ai-product-extension, family: agent-model-authority, variant: canonical}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [ai-product-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: ai-model-decision-paraphrase
-    main_execution: {producer: main-control-agent, task_id: ai-model-decision-paraphrase, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:ai-model-decision-paraphrase:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: ai-model-decision-paraphrase}
     prompt: Analyze a model prediction used for a consequential eligibility approval under a safety policy.
     domain_family: {domain: ai-product-extension, family: agent-model-authority, variant: paraphrase}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [ai-product-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: ai-transition-search-to-prompt-context
-    main_execution: {producer: main-control-agent, task_id: ai-transition-search-to-prompt-context, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:ai-transition-search-to-prompt-context:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: ai-transition-search-to-prompt-context}
     prompt: Migrate ordinary search to a prompt workflow whose tenant permission controls model context.
     domain_transition: {domain: ai-product-extension, family: retrieval-data}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [ai-product-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: ai-rag-http-contrast-clause
-    main_execution: {producer: main-control-agent, task_id: ai-rag-http-contrast-clause, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:ai-rag-http-contrast-clause:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: ai-rag-http-contrast-clause}
     prompt: Analyze RAG retrieval whose tenant permission controls model context, while HTTP API behavior remains unchanged.
     domain_family: {domain: ai-product-extension, family: retrieval-data, variant: paraphrase}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [ai-product-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: ai-anti-static-search
-    main_execution: {producer: main-control-agent, task_id: ai-anti-static-search, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:ai-anti-static-search:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: ai-anti-static-search}
     prompt: Find the owner and blast radius of ordinary deterministic search ranking; model, prompt, embedding, retrieval, and agent-tool behavior are absent.
     domain_anti: ai-product-extension
     excluded_skills: [ai-product-extension]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: ai-anti-unchanged-rag-documentation
-    main_execution: {producer: main-control-agent, task_id: ai-anti-unchanged-rag-documentation, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:ai-anti-unchanged-rag-documentation:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: ai-anti-unchanged-rag-documentation}
     prompt: Update RAG tenant permission documentation and prompt copy; model behavior remains unchanged.
     domain_anti: ai-product-extension
     domain_anti_variant: unchanged-paraphrase
     excluded_skills: [ai-product-extension]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: ai-anti-database-model-evaluation
-    main_execution: {producer: main-control-agent, task_id: ai-anti-database-model-evaluation, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:ai-anti-database-model-evaluation:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: ai-anti-database-model-evaluation}
     prompt: Analyze a database model evaluation and schema approval for a relational table.
     domain_anti: ai-product-extension
     excluded_skills: [ai-product-extension]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: bigdata-cdc-stream-replay
-    main_execution: {producer: main-control-agent, task_id: bigdata-cdc-stream-replay, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:bigdata-cdc-stream-replay:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: bigdata-cdc-stream-replay}
     prompt: With an accepted Engineering Brief, analyze only a CDC stream cutover where backfill and live events overlap and downstream consumers may replay.
     domain_family: {domain: bigdata-product-extension, family: stream-cdc-replay, variant: canonical}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [bigdata-product-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: bigdata-stream-checkpoint-paraphrase
-    main_execution: {producer: main-control-agent, task_id: bigdata-stream-checkpoint-paraphrase, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:bigdata-stream-checkpoint-paraphrase:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: bigdata-stream-checkpoint-paraphrase}
     prompt: Analyze a stream replay whose checkpoint recovery may reorder downstream records.
     domain_family: {domain: bigdata-product-extension, family: stream-cdc-replay, variant: paraphrase}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [bigdata-product-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: bigdata-distributed-backfill-schema
-    main_execution: {producer: main-control-agent, task_id: bigdata-distributed-backfill-schema, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:bigdata-distributed-backfill-schema:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: bigdata-distributed-backfill-schema}
     prompt: Analyze a distributed backfill where schema evolution changes consumer compatibility.
     domain_family: {domain: bigdata-product-extension, family: distributed-batch-schema, variant: canonical}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [bigdata-product-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: bigdata-lake-reprocessing-paraphrase
-    main_execution: {producer: main-control-agent, task_id: bigdata-lake-reprocessing-paraphrase, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:bigdata-lake-reprocessing-paraphrase:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: bigdata-lake-reprocessing-paraphrase}
     prompt: Analyze a data lake batch pipeline whose partition ownership controls reprocessing.
     domain_family: {domain: bigdata-product-extension, family: distributed-batch-schema, variant: paraphrase}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [bigdata-product-extension, repository-context-map], review_skill: architecture-impact-reviewer}
@@ -439,91 +439,91 @@ cases:
     domain_transition: {domain: bigdata-product-extension, family: distributed-batch-schema}
     expected: {path: direct, profile: task-agent, primary_skill: data-middleware-change-builder, layer3_skills: [bigdata-product-extension], review_skill: ai-code-review-refactor}
   - id: bigdata-anti-single-database-table
-    main_execution: {producer: main-control-agent, task_id: bigdata-anti-single-database-table, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:bigdata-anti-single-database-table:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: bigdata-anti-single-database-table}
     prompt: With an accepted Engineering Brief, analyze only the data consistency and recovery artifact for a single large database table backfill; there is no distributed pipeline, replay, or downstream consumer boundary.
     domain_anti: bigdata-product-extension
     excluded_skills: [bigdata-product-extension]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: data-middleware-change-builder, layer3_skills: [transaction-consistency], review_skill: quality-test-gate}
   - id: bigdata-anti-single-table-without-pipeline
-    main_execution: {producer: main-control-agent, task_id: bigdata-anti-single-table-without-pipeline, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:bigdata-anti-single-table-without-pipeline:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: bigdata-anti-single-table-without-pipeline}
     prompt: Analyze an accepted Engineering Brief's data consistency and recovery artifact for one batch table without a distributed pipeline, replay, or downstream consumer boundary.
     domain_anti: bigdata-product-extension
     excluded_skills: [bigdata-product-extension]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: data-middleware-change-builder, layer3_skills: [transaction-consistency], review_skill: quality-test-gate}
   - id: bigdata-anti-unchanged-pipeline-documentation
-    main_execution: {producer: main-control-agent, task_id: bigdata-anti-unchanged-pipeline-documentation, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:bigdata-anti-unchanged-pipeline-documentation:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: bigdata-anti-unchanged-pipeline-documentation}
     prompt: Reword batch pipeline partition and stream checkpoint documentation; distributed data behavior remains unchanged.
     domain_anti: bigdata-product-extension
     domain_anti_variant: unchanged-paraphrase
     excluded_skills: [bigdata-product-extension]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: iot-firmware-actuator-rollout
-    main_execution: {producer: main-control-agent, task_id: iot-firmware-actuator-rollout, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:iot-firmware-actuator-rollout:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: iot-firmware-actuator-rollout}
     prompt: Analyze an OTA firmware rollout that changes actuator safe-state behavior and must recover after power loss.
     domain_family: {domain: iot-embedded-extension, family: firmware-update-recovery, variant: canonical}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [iot-embedded-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: iot-firmware-brownout-paraphrase
-    main_execution: {producer: main-control-agent, task_id: iot-firmware-brownout-paraphrase, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:iot-firmware-brownout-paraphrase:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: iot-firmware-brownout-paraphrase}
     prompt: Analyze firmware boot activation that needs rollback recovery after a brownout.
     domain_family: {domain: iot-embedded-extension, family: firmware-update-recovery, variant: paraphrase}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [iot-embedded-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: iot-device-physical-runtime
-    main_execution: {producer: main-control-agent, task_id: iot-device-physical-runtime, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:iot-device-physical-runtime:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: iot-device-physical-runtime}
     prompt: Analyze actuator safe-state timing after a sensor hardware failure.
     domain_family: {domain: iot-embedded-extension, family: device-physical-runtime, variant: canonical}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [iot-embedded-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: iot-edge-provisioning-paraphrase
-    main_execution: {producer: main-control-agent, task_id: iot-edge-provisioning-paraphrase, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:iot-edge-provisioning-paraphrase:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: iot-edge-provisioning-paraphrase}
     prompt: Analyze edge device provisioning where credential recovery changes connectivity under hardware limits.
     domain_family: {domain: iot-embedded-extension, family: device-physical-runtime, variant: paraphrase}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [iot-embedded-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: iot-transition-cloud-api-to-device-protocol
-    main_execution: {producer: main-control-agent, task_id: iot-transition-cloud-api-to-device-protocol, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:iot-transition-cloud-api-to-device-protocol:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: iot-transition-cloud-api-to-device-protocol}
     prompt: Migrate a cloud-only API into an edge device protocol whose timing boundary controls hardware safety.
     domain_transition: {domain: iot-embedded-extension, family: device-physical-runtime}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [iot-embedded-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: iot-anti-cloud-device-api
-    main_execution: {producer: main-control-agent, task_id: iot-anti-cloud-device-api, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:iot-anti-cloud-device-api:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: iot-anti-cloud-device-api}
     prompt: Change a public API field used by cloud-only device protocol documentation with compatibility for old consumers; no firmware or physical device behavior changes.
     domain_anti: iot-embedded-extension
     excluded_skills: [iot-embedded-extension]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [api-contract-design, version-compatibility], review_skill: architecture-impact-reviewer}
   - id: iot-anti-cloud-only-no-firmware-physical
-    main_execution: {producer: main-control-agent, task_id: iot-anti-cloud-only-no-firmware-physical, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:iot-anti-cloud-only-no-firmware-physical:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: iot-anti-cloud-only-no-firmware-physical}
     prompt: Analyze a cloud-only device protocol timing change for a public API with old consumers and no firmware or physical device behavior changes.
     domain_anti: iot-embedded-extension
     excluded_skills: [iot-embedded-extension]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [api-contract-design, version-compatibility], review_skill: architecture-impact-reviewer}
   - id: iot-anti-unchanged-protocol-documentation
-    main_execution: {producer: main-control-agent, task_id: iot-anti-unchanged-protocol-documentation, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:iot-anti-unchanged-protocol-documentation:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: iot-anti-unchanged-protocol-documentation}
     prompt: Revise device protocol timing documentation and firmware recovery copy; physical device behavior remains unchanged.
     domain_anti: iot-embedded-extension
     domain_anti_variant: unchanged-paraphrase
     excluded_skills: [iot-embedded-extension]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: iot-anti-cloud-network-protocol-timing
-    main_execution: {producer: main-control-agent, task_id: iot-anti-cloud-network-protocol-timing, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:iot-anti-cloud-network-protocol-timing:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: iot-anti-cloud-network-protocol-timing}
     prompt: Analyze cloud network protocol timing for a server API; no firmware or physical device behavior changes.
     domain_anti: iot-embedded-extension
     excluded_skills: [iot-embedded-extension]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: low-level-ffi-ownership
-    main_execution: {producer: main-control-agent, task_id: low-level-ffi-ownership, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:low-level-ffi-ownership:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: low-level-ffi-ownership}
     prompt: Implement an accepted local Rust-to-C FFI wrapper fix that preserves the public ABI, makes allocator ownership explicit, and contains callback unwinding with targeted tests.
     domain_family: {domain: low-level-systems-extension, family: abi-ffi-memory, variant: canonical}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [low-level-systems-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: low-level-native-memory-paraphrase
-    main_execution: {producer: main-control-agent, task_id: low-level-native-memory-paraphrase, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:low-level-native-memory-paraphrase:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: low-level-native-memory-paraphrase}
     prompt: Implement an accepted local native memory callback fix that makes lifetime ownership explicit.
     domain_family: {domain: low-level-systems-extension, family: abi-ffi-memory, variant: paraphrase}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [low-level-systems-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: low-level-kernel-driver
-    main_execution: {producer: main-control-agent, task_id: low-level-kernel-driver, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:low-level-kernel-driver:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: low-level-kernel-driver}
     prompt: Implement an accepted local kernel driver syscall change with explicit privilege and resource boundaries.
     domain_family: {domain: low-level-systems-extension, family: kernel-realtime-concurrency, variant: canonical}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [low-level-systems-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: low-level-realtime-paraphrase
-    main_execution: {producer: main-control-agent, task_id: low-level-realtime-paraphrase, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:low-level-realtime-paraphrase:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: low-level-realtime-paraphrase}
     prompt: Implement an accepted local real-time systems concurrency fix with deadline and lock-free reclamation proof.
     domain_family: {domain: low-level-systems-extension, family: kernel-realtime-concurrency, variant: paraphrase}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [low-level-systems-extension, repository-context-map], review_skill: architecture-impact-reviewer}
@@ -596,32 +596,32 @@ cases:
     excluded_skills: [ios-ipados-platform-extension]
     expected: {path: direct, profile: task-agent, primary_skill: frontend-change-builder, layer3_skills: [state-management-design], review_skill: ai-code-review-refactor}
   - id: payment-security
-    main_execution: {producer: main-control-agent, task_id: payment-security, execution_level: L3, level_basis: {trigger_evaluations: [], l2_eligibility: [], obligations: ["default standard source-backed execution"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: payment-security}
     prompt: Analyze payment money movement authorization and idempotency.
     domain_family: {domain: payment-trading-extension, family: money-ledger-settlement, variant: canonical}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [payment-trading-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: payment-ledger-settlement-paraphrase
-    main_execution: {producer: main-control-agent, task_id: payment-ledger-settlement-paraphrase, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:payment-ledger-settlement-paraphrase:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: payment-ledger-settlement-paraphrase}
     prompt: Analyze ledger balance settlement where reconciliation proves accounting conservation.
     domain_family: {domain: payment-trading-extension, family: money-ledger-settlement, variant: paraphrase}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [payment-trading-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: payment-trading-execution
-    main_execution: {producer: main-control-agent, task_id: payment-trading-execution, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:payment-trading-execution:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: payment-trading-execution}
     prompt: Analyze trading partial fill and cancel sequence under a market kill switch.
     domain_family: {domain: payment-trading-extension, family: trading-order-execution, variant: canonical}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [payment-trading-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: payment-venue-order-paraphrase
-    main_execution: {producer: main-control-agent, task_id: payment-venue-order-paraphrase, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:payment-venue-order-paraphrase:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: payment-venue-order-paraphrase}
     prompt: Analyze venue order execution where fill allocation and settlement can arrive out of sequence.
     domain_family: {domain: payment-trading-extension, family: trading-order-execution, variant: paraphrase}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [payment-trading-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: payment-transition-price-display-to-wallet-ledger
-    main_execution: {producer: main-control-agent, task_id: payment-transition-price-display-to-wallet-ledger, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:payment-transition-price-display-to-wallet-ledger:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: payment-transition-price-display-to-wallet-ledger}
     prompt: Migrate a price display into a payment wallet whose accounting and reconciliation control settlement.
     domain_transition: {domain: payment-trading-extension, family: money-ledger-settlement}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [payment-trading-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: payment-wallet-custody-accounting-conflict
-    main_execution: {producer: main-control-agent, task_id: payment-wallet-custody-accounting-conflict, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:payment-wallet-custody-accounting-conflict:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: payment-wallet-custody-accounting-conflict}
     prompt: Analyze a payment wallet custody recovery where funds settlement and accounting must reconcile.
     domain_family: {domain: payment-trading-extension, family: money-ledger-settlement, variant: paraphrase}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [payment-trading-extension, repository-context-map], review_skill: architecture-impact-reviewer}
@@ -652,27 +652,27 @@ cases:
     excluded_skills: [security-privacy-gate, payment-trading-extension]
     expected: {path: direct, profile: task-agent, primary_skill: frontend-change-builder, layer3_skills: [state-management-design], review_skill: ai-code-review-refactor}
   - id: web3-chain-custody-finality
-    main_execution: {producer: main-control-agent, task_id: web3-chain-custody-finality, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:web3-chain-custody-finality:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: web3-chain-custody-finality}
     prompt: Analyze a blockchain chain transaction where custody authority must survive a reorg before finality.
     domain_family: {domain: web3-product-extension, family: chain-custody-finality, variant: canonical}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [web3-product-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: web3-wallet-signing-paraphrase
-    main_execution: {producer: main-control-agent, task_id: web3-wallet-signing-paraphrase, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:web3-wallet-signing-paraphrase:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: web3-wallet-signing-paraphrase}
     prompt: Analyze on-chain signing for a wallet whose key isolation and recovery protect an asset during reorg.
     domain_family: {domain: web3-product-extension, family: chain-custody-finality, variant: paraphrase}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [web3-product-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: web3-chain-contract-finality
-    main_execution: {producer: main-control-agent, task_id: web3-chain-contract-finality, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:web3-chain-contract-finality:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: web3-chain-contract-finality}
     prompt: With an accepted Engineering Brief, analyze only the integration handoff for a smart-contract upgrade across a chain reorg with cross-domain replay.
     domain_family: {domain: web3-product-extension, family: contract-cross-chain, variant: canonical}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [web3-product-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: web3-bridge-proof-paraphrase
-    main_execution: {producer: main-control-agent, task_id: web3-bridge-proof-paraphrase, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:web3-bridge-proof-paraphrase:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: web3-bridge-proof-paraphrase}
     prompt: Analyze a cross-chain bridge upgrade whose proof and replay controls span a challenge window.
     domain_family: {domain: web3-product-extension, family: contract-cross-chain, variant: paraphrase}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [web3-product-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: web3-transition-api-signature-to-chain-custody
-    main_execution: {producer: main-control-agent, task_id: web3-transition-api-signature-to-chain-custody, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:web3-transition-api-signature-to-chain-custody:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: web3-transition-api-signature-to-chain-custody}
     prompt: Migrate an ordinary API signature key into chain custody where recovery authority controls wallet finality.
     domain_transition: {domain: web3-product-extension, family: chain-custody-finality}
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [web3-product-extension, repository-context-map], review_skill: architecture-impact-reviewer}
@@ -701,7 +701,7 @@ cases:
     excluded_skills: [security-privacy-gate]
     expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [], review_skill: ai-code-review-refactor}
   - id: security-credential-session-lifecycle-change
-    main_execution: {producer: main-control-agent, task_id: security-credential-session-lifecycle-change, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:security-credential-session-lifecycle-change:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: security-credential-session-lifecycle-change}
     prompt: Analyze a credential or session lifecycle behavior change that affects token issuance, transport, storage, renewal, privilege-change, rotation, revocation, logout, recovery, authorization, disclosure, or replay handling.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: security-privacy-gate, layer3_skills: [authentication-security], review_skill: security-privacy-gate}
   - id: security-anti-reliability-only
@@ -710,7 +710,7 @@ cases:
     excluded_skills: [security-privacy-gate]
     expected: {path: direct, profile: review-agent, primary_skill: reliability-observability-gate, layer3_skills: [degradation-circuit-breaking, observability, backup-recovery], review_skill: reliability-observability-gate}
   - id: security-anti-input-shape
-    main_execution: {producer: main-control-agent, task_id: security-anti-input-shape, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:security-anti-input-shape:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: security-anti-input-shape}
     prompt: With an accepted Engineering Brief, analyze an input shape change with no security sink.
     excluded_skills: [security-privacy-gate]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: data-api-contract-changer, layer3_skills: [api-contract-design], review_skill: architecture-impact-reviewer}
@@ -735,32 +735,32 @@ cases:
     excluded_skills: [reliability-observability-gate]
     expected: {path: direct, profile: review-agent, primary_skill: delivery-release-gate, layer3_skills: [release-rollback, version-compatibility], review_skill: delivery-release-gate}
   - id: reliability-anti-data-correctness
-    main_execution: {producer: main-control-agent, task_id: reliability-anti-data-correctness, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:reliability-anti-data-correctness:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: reliability-anti-data-correctness}
     prompt: With an accepted Engineering Brief, analyze only the data consistency and recovery artifact for data correctness only.
     excluded_skills: [reliability-observability-gate]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: data-middleware-change-builder, layer3_skills: [transaction-consistency], review_skill: quality-test-gate}
   - id: t2b-critical-backend-owner
-    main_execution: {producer: main-control-agent, task_id: t2b-critical-backend-owner, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2b-critical-backend-owner:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2b-critical-backend-owner}
     prompt: Implement a backend service change, but the owner is unknown.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: t2b-critical-backend-placement
-    main_execution: {producer: main-control-agent, task_id: t2b-critical-backend-placement, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2b-critical-backend-placement:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2b-critical-backend-placement}
     prompt: Implement a backend service change, but placement remains unresolved.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: t2b-critical-backend-acceptance
-    main_execution: {producer: main-control-agent, task_id: t2b-critical-backend-acceptance, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2b-critical-backend-acceptance:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2b-critical-backend-acceptance}
     prompt: Implement a backend service change, but acceptance is unknown.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: t2b-critical-backend-verification
-    main_execution: {producer: main-control-agent, task_id: t2b-critical-backend-verification, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2b-critical-backend-verification:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2b-critical-backend-verification}
     prompt: Implement a backend service change, but verification remains unknown.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: t2b-critical-backend-rollback
-    main_execution: {producer: main-control-agent, task_id: t2b-critical-backend-rollback, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2b-critical-backend-rollback:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2b-critical-backend-rollback}
     prompt: Implement a backend service change, but rollback is unknown.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: t2b-critical-backend-revert
-    main_execution: {producer: main-control-agent, task_id: t2b-critical-backend-revert, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2b-critical-backend-revert:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2b-critical-backend-revert}
     prompt: Implement a backend service change, but the revert plan is unknown.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: t2b-backend-resolved-direct
@@ -788,47 +788,47 @@ cases:
     prompt: Implement an accepted backend service change for an unknown display color while owner, authority, placement, acceptance, verification, and rollback are known.
     expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [], review_skill: ai-code-review-refactor}
   - id: t2b-preparation-backend-repair
-    main_execution: {producer: main-control-agent, task_id: t2b-preparation-backend-repair, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2b-preparation-backend-repair:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2b-preparation-backend-repair}
     prompt: Prepare a backend repair before editing.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: ai-code-review-refactor}
   - id: t2b-preparation-tenant-authorization
-    main_execution: {producer: main-control-agent, task_id: t2b-preparation-tenant-authorization, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2b-preparation-tenant-authorization:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2b-preparation-tenant-authorization}
     prompt: Prepare a tenant authorization implementation before editing.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [permission-boundary-modeling, threat-modeling], review_skill: security-privacy-gate}
   - id: t2b-dedicated-tenant-authorization-analysis
-    main_execution: {producer: main-control-agent, task_id: t2b-dedicated-tenant-authorization-analysis, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2b-dedicated-tenant-authorization-analysis:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2b-dedicated-tenant-authorization-analysis}
     prompt: Analyze tenant authorization security boundaries.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: security-privacy-gate, layer3_skills: [permission-boundary-modeling, threat-modeling], review_skill: security-privacy-gate}
   - id: t2b-preparation-payment
-    main_execution: {producer: main-control-agent, task_id: t2b-preparation-payment, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2b-preparation-payment:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2b-preparation-payment}
     prompt: Analyze a payment ledger implementation with accounting reconciliation before editing.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [payment-trading-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: t2b-dedicated-payment-analysis
-    main_execution: {producer: main-control-agent, task_id: t2b-dedicated-payment-analysis, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2b-dedicated-payment-analysis:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2b-dedicated-payment-analysis}
     prompt: Analyze payment ledger settlement with accounting reconciliation.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [payment-trading-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: t2b-preparation-ai
-    main_execution: {producer: main-control-agent, task_id: t2b-preparation-ai, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2b-preparation-ai:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2b-preparation-ai}
     prompt: Prepare implementation of AI prompt retrieval permission and model context before editing.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [ai-product-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: t2b-dedicated-ai-analysis
-    main_execution: {producer: main-control-agent, task_id: t2b-dedicated-ai-analysis, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2b-dedicated-ai-analysis:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2b-dedicated-ai-analysis}
     prompt: Analyze AI prompt retrieval permission and model context.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [ai-product-extension, repository-context-map], review_skill: architecture-impact-reviewer}
   - id: t2b-preparation-platform
-    main_execution: {producer: main-control-agent, task_id: t2b-preparation-platform, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2b-preparation-platform:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2b-preparation-platform}
     prompt: Analyze a Terraform implementation before editing.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [], review_skill: ai-code-review-refactor}
   - id: t2b-dedicated-platform-owner
-    main_execution: {producer: main-control-agent, task_id: t2b-dedicated-platform-owner, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2b-dedicated-platform-owner:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2b-dedicated-platform-owner}
     prompt: Analyze a Terraform infrastructure design.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: t2b-critical-preparation-tie
-    main_execution: {producer: main-control-agent, task_id: t2b-critical-preparation-tie, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2b-critical-preparation-tie:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2b-critical-preparation-tie}
     prompt: Prepare a backend implementation before editing; rollback is unknown.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: t2b-critical-preparation-tie-reversed
-    main_execution: {producer: main-control-agent, task_id: t2b-critical-preparation-tie-reversed, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2b-critical-preparation-tie-reversed:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2b-critical-preparation-tie-reversed}
     prompt: Rollback is unknown; prepare a backend implementation before editing.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: t2b-bare-backend-plan-not-preparation
@@ -884,19 +884,19 @@ cases:
     prompt: Review regression tests for an accepted backend repair; security and permission boundaries are explicitly unchanged.
     expected: {path: direct, profile: review-agent, primary_skill: ai-code-review-refactor, layer3_skills: [regression-testing], review_skill: ai-code-review-refactor}
   - id: t2c-preparation-security-risk
-    main_execution: {producer: main-control-agent, task_id: t2c-preparation-security-risk, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2c-preparation-security-risk:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2c-preparation-security-risk}
     prompt: Prepare a tenant authorization implementation with tenant isolation and trust-boundary risk before editing.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [permission-boundary-modeling, threat-modeling], review_skill: security-privacy-gate}
   - id: t2c-preparation-release-risk
-    main_execution: {producer: main-control-agent, task_id: t2c-preparation-release-risk, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2c-preparation-release-risk:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2c-preparation-release-risk}
     prompt: Prepare a production rollout implementation with release rollback risk before editing.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [release-rollback, version-compatibility], review_skill: delivery-release-gate}
   - id: t2c-preparation-logging-risk
-    main_execution: {producer: main-control-agent, task_id: t2c-preparation-logging-risk, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2c-preparation-logging-risk:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2c-preparation-logging-risk}
     prompt: Prepare a logging implementation for secret redaction before editing.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [], review_skill: logging-design-gate}
   - id: t2c-preparation-reliability-risk
-    main_execution: {producer: main-control-agent, task_id: t2c-preparation-reliability-risk, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2c-preparation-reliability-risk:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2c-preparation-reliability-risk}
     prompt: Prepare an SLO recovery implementation before editing.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [degradation-circuit-breaking, observability], review_skill: reliability-observability-gate}
   - id: t2c-repair-security-material-logging-none
@@ -932,43 +932,43 @@ cases:
     prompt: Review the actual diff where logging redaction is background context only but outage degradation and recovery may occur.
     expected: {path: direct, profile: review-agent, primary_skill: reliability-observability-gate, layer3_skills: [degradation-circuit-breaking, observability, backup-recovery], review_skill: reliability-observability-gate}
   - id: t2c-repair-conflict-security-release
-    main_execution: {producer: main-control-agent, task_id: t2c-repair-conflict-security-release, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2c-repair-conflict-security-release:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2c-repair-conflict-security-release}
     prompt: Review the actual diff where tenant authorization permission bypass may cross a trust boundary and a production rollout may require release rollback.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: t2c-repair-conflict-release-security
-    main_execution: {producer: main-control-agent, task_id: t2c-repair-conflict-release-security, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2c-repair-conflict-release-security:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2c-repair-conflict-release-security}
     prompt: Review the actual diff where a production rollout may require release rollback and tenant authorization permission bypass may cross a trust boundary.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: t2c-repair-conflict-logging-reliability
-    main_execution: {producer: main-control-agent, task_id: t2c-repair-conflict-logging-reliability, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2c-repair-conflict-logging-reliability:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2c-repair-conflict-logging-reliability}
     prompt: Review the actual diff where logging may expose a secret and requires redaction and outage degradation recovery may occur.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: t2c-repair-conflict-reliability-logging
-    main_execution: {producer: main-control-agent, task_id: t2c-repair-conflict-reliability-logging, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:t2c-repair-conflict-reliability-logging:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: t2c-repair-conflict-reliability-logging}
     prompt: Review the actual diff where outage degradation recovery may occur and logging may expose a secret and requires redaction.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: external-integration-consumer-only
-    main_execution: {producer: main-control-agent, task_id: external-integration-consumer-only, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:external-integration-consumer-only:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: external-integration-consumer-only}
     prompt: Analyze an external integration downstream consumer compatibility change; retryable versus terminal outcomes and timeout cancellation meaning remain unchanged.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [consumer-impact-analysis], review_skill: ai-code-review-refactor}
   - id: external-integration-failure-only
-    main_execution: {producer: main-control-agent, task_id: external-integration-failure-only, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:external-integration-failure-only:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: external-integration-failure-only}
     prompt: Analyze an external integration retryable versus terminal outcome and timeout cancellation meaning change; downstream consumer compatibility remains unchanged.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [failure-contract-design], review_skill: ai-code-review-refactor}
   - id: external-integration-consumer-reliability-conflict
-    main_execution: {producer: main-control-agent, task_id: external-integration-consumer-reliability-conflict, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:external-integration-consumer-reliability-conflict:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: external-integration-consumer-reliability-conflict}
     prompt: Analyze an external integration downstream consumer compatibility change; retry attempts and backoff budget mechanics change.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: external-integration-failure-reliability-conflict
-    main_execution: {producer: main-control-agent, task_id: external-integration-failure-reliability-conflict, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:external-integration-failure-reliability-conflict:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: external-integration-failure-reliability-conflict}
     prompt: Analyze an external integration timeout and cancellation meaning change; fallback and circuit-breaker mechanics change; downstream consumer compatibility remains unchanged.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: external-integration-combined-reliability-conflict
-    main_execution: {producer: main-control-agent, task_id: external-integration-combined-reliability-conflict, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:external-integration-combined-reliability-conflict:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: external-integration-combined-reliability-conflict}
     prompt: Analyze an external integration downstream consumer compatibility and retryable versus terminal outcome meaning change; degradation and recovery mechanics change.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: wave1a-stack-architecture-analysis
-    main_execution: {producer: main-control-agent, task_id: wave1a-stack-architecture-analysis, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:wave1a-stack-architecture-analysis:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: wave1a-stack-architecture-analysis}
     prompt: Analyze a material architecture change that commits the product to a new web framework, deployment platform, datastore, and managed service with migration, operational ownership, and exit costs.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: architecture-impact-reviewer, layer3_skills: [technology-stack-selection], review_skill: architecture-impact-reviewer}
   - id: wave1a-stack-accepted-brief-review
@@ -1008,7 +1008,7 @@ cases:
     prompt: Implement an accepted repository code generator runtime configuration policy change for a typed feature flag default, fail-fast validation, hot reload, owner expiry, cleanup, rollout, and rollback.
     expected: {path: direct, profile: task-agent, primary_skill: repository-tooling-change-builder, layer3_skills: [build-tool-professional-usage, targeted-validation-selection, configuration-runtime-policy], review_skill: ai-code-review-refactor}
   - id: wave1a-config-owner-unknown
-    main_execution: {producer: main-control-agent, task_id: wave1a-config-owner-unknown, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:wave1a-config-owner-unknown:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: wave1a-config-owner-unknown}
     prompt: Analyze an accepted runtime configuration policy change for a typed feature flag default, fail-fast validation, hot reload, owner expiry, cleanup, rollout, and rollback; the implementation owner is unknown.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map, configuration-runtime-policy], review_skill: architecture-impact-reviewer}
   - id: wave1a-dependency-frontend
@@ -1040,37 +1040,37 @@ cases:
     prompt: Implement an accepted repository code generator plugin dependency graph change requiring explicit package-risk acceptance with owner and expiry.
     expected: {path: direct, profile: task-agent, primary_skill: repository-tooling-change-builder, layer3_skills: [build-tool-professional-usage, targeted-validation-selection, dependency-vulnerability-scanning], review_skill: security-privacy-gate}
   - id: wave1a-stack-language-negative
-    main_execution: {producer: main-control-agent, task_id: wave1a-stack-language-negative, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:wave1a-stack-language-negative:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: wave1a-stack-language-negative}
     prompt: Analyze whether to change the programming language runtime while the framework, platform, datastore, and managed services remain fixed with no new technology-stack commitment.
     excluded_skills: [technology-stack-selection]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: wave1a-stack-fixed-negative
-    main_execution: {producer: main-control-agent, task_id: wave1a-stack-fixed-negative, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:wave1a-stack-fixed-negative:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: wave1a-stack-fixed-negative}
     prompt: Analyze whether the fixed approved technology stack meets a documented constraint; architecture and technology choices are fixed and no framework, platform, datastore, or managed-service change is proposed.
     excluded_skills: [technology-stack-selection]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: wave1a-stack-invalid-brief-negative
-    main_execution: {producer: main-control-agent, task_id: wave1a-stack-invalid-brief-negative, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:wave1a-stack-invalid-brief-negative:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: wave1a-stack-invalid-brief-negative}
     prompt: Review an alleged accepted Engineering Brief for a new framework commitment, but no current artifact binding or acceptance evidence is supplied.
     excluded_skills: [technology-stack-selection]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: wave1a-stack-unaccepted-brief-negative
-    main_execution: {producer: main-control-agent, task_id: wave1a-stack-unaccepted-brief-negative, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:wave1a-stack-unaccepted-brief-negative:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: wave1a-stack-unaccepted-brief-negative}
     prompt: Review an unaccepted draft Engineering Brief discussing a possible new framework and managed service commitment.
     excluded_skills: [technology-stack-selection]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: wave1a-stack-stale-brief-negative
-    main_execution: {producer: main-control-agent, task_id: wave1a-stack-stale-brief-negative, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:wave1a-stack-stale-brief-negative:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: wave1a-stack-stale-brief-negative}
     prompt: Review a stale superseded Engineering Brief that proposed a new datastore and managed service; currentness is not verified.
     excluded_skills: [technology-stack-selection]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: wave1a-config-generic-negative
-    main_execution: {producer: main-control-agent, task_id: wave1a-config-generic-negative, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:wave1a-config-generic-negative:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: wave1a-config-generic-negative}
     prompt: Explain generic configuration terminology without changing any runtime behavior, defaults, flags, modes, or implementation.
     excluded_skills: [configuration-runtime-policy]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: wave1a-config-build-only-negative
-    main_execution: {producer: main-control-agent, task_id: wave1a-config-build-only-negative, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:wave1a-config-build-only-negative:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: wave1a-config-build-only-negative}
     prompt: Implement an accepted repository build configuration change for CI compilation only; application runtime behavior, defaults, flags, modes, and reload semantics do not change.
     excluded_skills: [configuration-runtime-policy]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
@@ -1080,7 +1080,7 @@ cases:
     excluded_skills: [configuration-runtime-policy]
     expected: {path: direct, profile: task-agent, primary_skill: backend-change-builder, layer3_skills: [], review_skill: logging-design-gate}
   - id: wave1a-dependency-package-mechanics-negative
-    main_execution: {producer: main-control-agent, task_id: wave1a-dependency-package-mechanics-negative, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:wave1a-dependency-package-mechanics-negative:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: wave1a-dependency-package-mechanics-negative}
     prompt: Analyze whether to install a new package for a capability gap using only provenance metadata and version-pinning mechanics; no reachability, remediation, accepted-risk, incompatible-license, provenance-trust, signature-failure, malicious-package, install-hook, or SBOM-exception decision exists.
     excluded_skills: [technology-stack-selection, dependency-vulnerability-scanning]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [package-dependency-management], review_skill: architecture-impact-reviewer}
@@ -1090,12 +1090,12 @@ cases:
     excluded_skills: [dependency-vulnerability-scanning]
     expected: {path: direct, profile: task-agent, primary_skill: repository-tooling-change-builder, layer3_skills: [], review_skill: ai-code-review-refactor}
   - id: wave1a-dependency-advisory-keyword-negative
-    main_execution: {producer: main-control-agent, task_id: wave1a-dependency-advisory-keyword-negative, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:wave1a-dependency-advisory-keyword-negative:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: wave1a-dependency-advisory-keyword-negative}
     prompt: Explain a vulnerability advisory keyword without inspecting a dependency graph, changing a package, or accepting dependency risk.
     excluded_skills: [dependency-vulnerability-scanning]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}
   - id: wave1a-sandbox-dev-only-negative
-    main_execution: {producer: main-control-agent, task_id: wave1a-sandbox-dev-only-negative, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:wave1a-sandbox-dev-only-negative:routing-api", plausible_critical: false}], l2_eligibility: [], obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}
+    main_execution: {producer: main-control-agent, task_id: wave1a-sandbox-dev-only-negative}
     prompt: Analyze whether to run a local command whose target and mutation surface are unresolved; this product route must not inject the dev-only agent tool permission sandbox companion.
     excluded_skills: [agent-tool-permission-sandbox]
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [repository-context-map], review_skill: architecture-impact-reviewer}

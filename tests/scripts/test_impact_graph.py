@@ -96,6 +96,14 @@ PACKAGE_CATALOG = {
 
 
 IMPACT_004_SCRIPT_CASES = {
+    "installers/doctor.py": {
+        "rule_id": "installer-tooling",
+        "direct_producer_ids": ["validate-installation"],
+        "test_modules": [
+            "tests/test_hookless_build_install.py",
+            "tests/test_hookless_installer_safety.py",
+        ],
+    },
     "scripts/eval-context-control-plane.py": {
         "rule_id": "context-control-evaluator",
         "direct_producer_ids": ["eval-context-control"],

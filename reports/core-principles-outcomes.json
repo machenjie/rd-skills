@@ -235,15 +235,15 @@
             },
             {
               "id": "readability-review-current",
-              "status": "pass"
+              "status": "fail"
             },
             {
               "id": "professional-completeness-review-current",
-              "status": "pass"
+              "status": "fail"
             },
             {
               "id": "professional-review-cost-current",
-              "status": "pass"
+              "status": "fail"
             },
             {
               "id": "professionalism-formal-release-ready",
@@ -814,17 +814,17 @@
   ],
   "command_execution_count": 33,
   "contract_errors": [],
-  "contract_sha256": "e271fb1c85abbe0987fccb32eaa56253d608ac119536a2ea9bdc78e68e9b110b",
+  "contract_sha256": "cd375c2d373546848dc89549897ba0a3d092987c180e93706cb62e6927eabebf",
   "contract_source": "src/control-model/core-contracts.json",
   "formal_principles_status": "blocked",
   "input_tree": {
     "post": {
-      "file_count": 2492,
-      "sha256": "86b730f3930fbdda75d9f831961698d8a1f5cc1da2a9023b9e656a0229384680"
+      "file_count": 2533,
+      "sha256": "7ffe863efc8915bf26f960e49afe1fd46cf28b144820f434a522237b9c7b211f"
     },
     "pre": {
-      "file_count": 2492,
-      "sha256": "86b730f3930fbdda75d9f831961698d8a1f5cc1da2a9023b9e656a0229384680"
+      "file_count": 2533,
+      "sha256": "7ffe863efc8915bf26f960e49afe1fd46cf28b144820f434a522237b9c7b211f"
     },
     "unchanged": true
   },
@@ -1206,7 +1206,7 @@
         },
         {
           "actual_metadata": {
-            "length": 4,
+            "length": 7,
             "type": "string"
           },
           "expected": "pass",
@@ -1214,7 +1214,7 @@
           "pointer": "/gate_status/formal_release/status",
           "resolution_status": "resolved",
           "source": "reports/skill-content-audit.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -1226,11 +1226,11 @@
           "pointer": "/semantic_disposition_application/status",
           "resolution_status": "resolved",
           "source": "reports/skill-content-audit.json",
-          "status": "pass"
+          "status": "fail"
         }
       ],
       "producer": "audit-skill-content",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -3272,7 +3272,7 @@
           "pointer": "/content_readiness/aggregate/readability_review_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3283,7 +3283,7 @@
           "pointer": "/content_readiness/expert/readability/decision_complete",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3294,7 +3294,7 @@
           "pointer": "/content_readiness/expert/readability/storage_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3305,7 +3305,7 @@
           "pointer": "/content_readiness/expert/readability/source_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3316,51 +3316,51 @@
           "pointer": "/content_readiness/expert/readability/accepted_for_formal",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "type": "integer"
+            "type": "null"
           },
           "expected": 2,
           "operator": "equals",
           "pointer": "/content_readiness/expert/readability/panel_artifact_schema_version",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "type": "integer"
+            "type": "null"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/content_readiness/expert/readability/tracked_tightening_count",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "type": "integer"
+            "type": "null"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/content_readiness/expert/readability/detector_false_positive_count",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "type": "integer"
+            "type": "null"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/content_readiness/expert/readability/rewrite_required_count",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3375,7 +3375,7 @@
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -3406,7 +3406,7 @@
           "pointer": "/content_readiness/aggregate/professional_completeness_review_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3417,7 +3417,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/decision_complete",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3428,7 +3428,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/storage_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3439,7 +3439,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/source_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3450,11 +3450,11 @@
           "pointer": "/content_readiness/expert/professional_completeness/accepted_for_formal",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "length": 79,
+            "length": 61,
             "type": "string"
           },
           "expected": "exact-package-carry-forward-qualified-reviewer-pool-domain-critical-fail-closed",
@@ -3462,18 +3462,18 @@
           "pointer": "/content_readiness/expert/professional_completeness/decision_method",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "type": "integer"
+            "type": "null"
           },
           "expected": 3,
           "operator": "equals",
           "pointer": "/content_readiness/expert/professional_completeness/panel_artifact_schema_version",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3484,7 +3484,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/panel_size",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3495,7 +3495,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/evidence_contract_satisfied",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3506,7 +3506,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/review_contract_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3517,7 +3517,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/review_plan_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3528,7 +3528,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/review_binding_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3539,7 +3539,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/provenance_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3550,51 +3550,43 @@
           "pointer": "/content_readiness/expert/professional_completeness/round_lifecycle_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
-          "actual_metadata": {
-            "type": "integer"
-          },
+          "actual_metadata": null,
           "expected": 189,
           "operator": "equals",
           "pointer": "/content_readiness/expert/professional_completeness/qualification_summary/covered_target_count",
-          "resolution_status": "resolved",
+          "resolution_status": "pointer-error",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
-          "actual_metadata": {
-            "type": "integer"
-          },
+          "actual_metadata": null,
           "expected": 2,
           "operator": "equals",
           "pointer": "/content_readiness/expert/professional_completeness/qualification_summary/required_domain_experts_per_target",
-          "resolution_status": "resolved",
+          "resolution_status": "pointer-error",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
-          "actual_metadata": {
-            "type": "integer"
-          },
+          "actual_metadata": null,
           "expected": 1,
           "operator": "equals",
           "pointer": "/content_readiness/expert/professional_completeness/qualification_summary/required_architecture_experts_per_target",
-          "resolution_status": "resolved",
+          "resolution_status": "pointer-error",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
-          "actual_metadata": {
-            "type": "integer"
-          },
+          "actual_metadata": null,
           "expected": 5670,
           "operator": "equals",
           "pointer": "/content_readiness/expert/professional_completeness/evidence_summary/criterion_result_count",
-          "resolution_status": "resolved",
+          "resolution_status": "pointer-error",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3616,44 +3608,44 @@
           "pointer": "/content_readiness/expert/professional_completeness/applied_target_count",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "type": "integer"
+            "type": "null"
           },
           "expected": 189,
           "operator": "equals",
           "pointer": "/content_readiness/expert/professional_completeness/accepted_current_count",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "type": "integer"
+            "type": "null"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/content_readiness/expert/professional_completeness/correction_count",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
-            "type": "integer"
+            "type": "null"
           },
           "expected": 0,
           "operator": "equals",
           "pointer": "/content_readiness/expert/professional_completeness/unresolved_professional_disagreement_count",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -3677,14 +3669,14 @@
         },
         {
           "actual_metadata": {
-            "type": "integer"
+            "type": "null"
           },
           "expected": 3,
           "operator": "equals",
           "pointer": "/content_readiness/expert/professional_completeness/panel_artifact_schema_version",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3695,7 +3687,7 @@
           "pointer": "/content_readiness/expert/professional_completeness/panel_size",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3717,29 +3709,25 @@
           "pointer": "/content_readiness/expert/professional_completeness/review_cost_current",
           "resolution_status": "resolved",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
-          "actual_metadata": {
-            "type": "integer"
-          },
+          "actual_metadata": null,
           "expected": 567,
           "operator": "equals",
           "pointer": "/content_readiness/expert/professional_completeness/review_cost/effective_vote_count",
-          "resolution_status": "resolved",
+          "resolution_status": "pointer-error",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
-          "actual_metadata": {
-            "type": "integer"
-          },
+          "actual_metadata": null,
           "expected": 5670,
           "operator": "equals",
           "pointer": "/content_readiness/expert/professional_completeness/review_cost/effective_criterion_result_count",
-          "resolution_status": "resolved",
+          "resolution_status": "pointer-error",
           "source": "reports/professionalism-regression-report.json",
-          "status": "pass"
+          "status": "fail"
         },
         {
           "actual_metadata": {
@@ -3796,7 +3784,7 @@
         }
       ],
       "producer": "validate-professionalism-regression",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "capabilities": [
@@ -3843,7 +3831,7 @@
         },
         {
           "actual_metadata": {
-            "length": 13,
+            "length": 5,
             "type": "string"
           },
           "expected": "current",
@@ -3987,7 +3975,7 @@
   "principles": [
     {
       "authoring_status": "pass",
-      "formal_release_status": "pass",
+      "formal_release_status": "blocked",
       "id": "ai-first",
       "name": "AI First",
       "required_dimensions": [
@@ -4022,7 +4010,7 @@
           "content-audit-formal-release-current"
         ]
       },
-      "status": "pass"
+      "status": "partial"
     },
     {
       "authoring_status": "pass",
@@ -4151,7 +4139,7 @@
     },
     {
       "authoring_status": "pass",
-      "formal_release_status": "pass",
+      "formal_release_status": "blocked",
       "id": "professional-skill-injection",
       "name": "Professional Skill Injection",
       "required_dimensions": [
@@ -4180,7 +4168,7 @@
           "professional-completeness-review-current"
         ]
       },
-      "status": "pass"
+      "status": "partial"
     },
     {
       "authoring_status": "pass",

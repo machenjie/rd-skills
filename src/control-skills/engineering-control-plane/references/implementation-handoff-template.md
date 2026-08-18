@@ -13,7 +13,7 @@ to change, mark it blocked and return to analysis through Main.
 This cross-Agent artifact is an Execution Delta, not a second Task Contract.
 Transmit only Task ID and Status; Changed Files; the actual diff or accessible
 diff reference; Commands; a structured Validation Result; Freshness; relevant
-current Evidence; Unverified Scope; and Residual Risk. Resolve Goal, Acceptance,
+current Evidence; Review Input Ready; Unverified Scope; and Residual Risk. Resolve Goal, Acceptance,
 Owner, Non-goals, and other existing Authority at its source instead of copying
 them here. Keep raw command logs as JIT-readable artifacts and include them only
 when a downstream consumer explicitly requires them.
@@ -77,6 +77,23 @@ Use structured command, result, scope, freshness, and proof-limit values.
 
 Name the last material edit and the validation run after it. Any material edit
 invalidates older validation and review evidence.
+
+## Review Input Ready
+
+Latest Changed Paths:
+Exact Reviewable Change Evidence:
+Reviewer Capability Accessibility:
+Validation After Latest Material Edit:
+Fixed Review Scope:
+
+Normal implementation and repair must provide all five values in the same Implementation Handoff
+before review dispatch. Exact evidence is change
+content, an exact before/after representation, a reviewer-accessible native
+change reference, or an equivalent exact artifact. A changed-file summary,
+prose description, or implementer self-report is not evidence. If any value is
+missing, remain blocked before review and let the current producer complete the
+handoff; do not send a reviewer first. Only a legacy/incomplete handoff may use
+one bounded recovery before review.
 
 ## Evidence Ledger
 

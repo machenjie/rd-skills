@@ -90,7 +90,7 @@ EXPECTED_POLICY = {
     }
 }
 PROTECTED_ROWS_SHA256 = (
-    "cb2e2b5d9439fc9e60220c0740ea03faa59a8b44a68128b298a324411773794a"
+    "afb4d47d4c8b9d165c21cdd6d97db5cca4e458fba1c311312a25d0267181f81e"
 )
 T2E_ECA_DOMAIN_ADDITIONS = {
     "ai-product-extension",
@@ -329,39 +329,9 @@ def _test_main_execution(prompt: str) -> dict[str, object]:
 
 def _terminal_action_ambiguity_main(prompt: str) -> dict[str, object]:
     task_id = _test_task_id(prompt)
-    contract = VALIDATION.CORE_CONTRACTS["execution_level_contract"]
-    proof_limit = "no-unresolved-owner-placement-verification-or-rollback-gap"
-    trigger_evaluations = {
-        row["id"]: {
-            "status": "not_matched",
-            "evidence_kind": "analysis_handoff",
-            "source_anchor": f"task:{task_id}:trigger:{row['id']}",
-            "plausible_critical": False,
-        }
-        for row in contract["trigger_registry"]
-    }
-    l2_evaluations = {
-        row["id"]: {
-            "status": "unknown" if row["id"] == proof_limit else "false",
-            "evidence_kind": "analysis_handoff",
-            "source_anchor": (
-                f"task:{task_id}:terminal-task-action-ambiguity-proof-limit"
-                if row["id"] == proof_limit
-                else f"task:{task_id}:l2:{row['id']}"
-            ),
-        }
-        for row in contract["l2_eligibility"]
-    }
-    computed = VALIDATION.compute_execution_level(
-        requested="unspecified",
-        trigger_evaluations=trigger_evaluations,
-        l2_evaluations=l2_evaluations,
-    )
     return {
         "producer": "main-control-agent",
         "task_id": task_id,
-        "execution_level": computed["effective_level"],
-        "level_basis": computed["level_basis"],
     }
 
 
@@ -1126,32 +1096,19 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
                     in trace["selected_candidate"].get("evidence", [])
                 )
                 expected["proof_limit_source"] = True
-                actual["main_provenance_bytes"] = json.dumps(
-                    decision["main_execution_provenance"],
-                    sort_keys=True,
-                    separators=(",", ":"),
-                ).encode("utf-8")
-                expected["main_provenance_bytes"] = json.dumps(
-                    supplied_main,
-                    sort_keys=True,
-                    separators=(",", ":"),
-                ).encode("utf-8")
+                actual["analysis_assignment_keys"] = set(supplied_main)
+                expected["analysis_assignment_keys"] = {
+                    "producer",
+                    "task_id",
+                }
+                actual["main_provenance"] = decision[
+                    "main_execution_provenance"
+                ]
+                expected["main_provenance"] = None
                 actual["execution_level"] = route_result["execution_level"]
-                expected["execution_level"] = supplied_main["execution_level"]
+                expected["execution_level"] = None
                 actual["level_basis"] = route_result["level_basis"]
-                expected["level_basis"] = supplied_main["level_basis"]
-                actual["proof_limit_level_contract"] = {
-                    "execution_level": route_result["execution_level"],
-                    "unresolved": route_result["level_basis"]["unresolved"],
-                    "edit_status": route_result["level_basis"]["edit_status"],
-                }
-                expected["proof_limit_level_contract"] = {
-                    "execution_level": "L3",
-                    "unresolved": [
-                        "no-unresolved-owner-placement-verification-or-rollback-gap"
-                    ],
-                    "edit_status": "allowed",
-                }
+                expected["level_basis"] = None
             layer3_contract = case.get("layer3_contract")
             if isinstance(layer3_contract, dict):
                 if layer3_contract["scope"] == "selected-exact":
@@ -1195,119 +1152,37 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
         self,
     ) -> None:
         prompt = "Add regression tests for the accepted backend change."
-        base = _terminal_action_ambiguity_main(prompt)
-        target_id = "no-unresolved-owner-placement-verification-or-rollback-gap"
-
-        def l2_row(
-            value: dict[str, object],
-            identifier: str,
-        ) -> dict[str, object]:
-            return next(
-                row
-                for row in value["level_basis"]["l2_eligibility"]
-                if row["id"] == identifier
-            )
-
-        mutations: dict[str, dict[str, object]] = {}
-
-        candidate = copy.deepcopy(base)
-        l2_row(candidate, target_id)["status"] = "true"
-        mutations["target-status-true"] = candidate
-
-        candidate = copy.deepcopy(base)
-        l2_row(candidate, target_id)["status"] = "false"
-        mutations["target-status-false"] = candidate
-
-        candidate = copy.deepcopy(base)
-        l2_row(candidate, target_id)["source_anchor"] = ""
-        mutations["target-source-blank"] = candidate
-
-        candidate = copy.deepcopy(base)
-        l2_row(candidate, target_id).pop("source_anchor")
-        mutations["target-source-removed"] = candidate
-
-        candidate = copy.deepcopy(base)
-        candidate["level_basis"]["l2_eligibility"] = [
-            row
-            for row in candidate["level_basis"]["l2_eligibility"]
-            if row["id"] != target_id
-        ]
-        mutations["target-l2-missing"] = candidate
-
-        candidate = copy.deepcopy(base)
-        candidate["level_basis"]["trigger_evaluations"].pop(0)
-        mutations["non-target-trigger-missing"] = candidate
-
-        candidate = copy.deepcopy(base)
-        candidate["level_basis"]["l2_eligibility"].pop(0)
-        mutations["l2-row-missing"] = candidate
-
-        candidate = copy.deepcopy(base)
-        rows = candidate["level_basis"]["trigger_evaluations"]
-        rows[0], rows[1] = rows[1], rows[0]
-        mutations["trigger-order-swapped"] = candidate
-
-        candidate = copy.deepcopy(base)
-        rows = candidate["level_basis"]["l2_eligibility"]
-        rows[0], rows[1] = rows[1], rows[0]
-        mutations["l2-order-swapped"] = candidate
-
-        candidate = copy.deepcopy(base)
-        candidate["level_basis"]["unresolved"].remove(target_id)
-        mutations["unresolved-target-removed"] = candidate
-
-        candidate = copy.deepcopy(base)
-        candidate["level_basis"]["edit_status"] = "blocked"
-        mutations["edit-status-blocked"] = candidate
-
-        candidate = copy.deepcopy(base)
-        candidate["execution_level"] = "L4"
-        mutations["execution-level-l4"] = candidate
-
-        candidate = copy.deepcopy(base)
-        candidate["level_basis"]["obligations"].append(
-            "high-risk pre-implementation evidence"
-        )
-        mutations["invented-high-risk-obligation"] = candidate
-
-        expected_message = (
-            "terminal task-action ambiguity requires Main-provided L3 "
-            "Proof Limit provenance"
-        )
-        mismatches: list[str] = []
-        for label, main_execution in mutations.items():
-            with patch.object(
-                ORACLE,
-                "_route_decision_envelope",
-                wraps=ORACLE._route_decision_envelope,
-            ) as envelope:
-                try:
-                    ORACLE.route_with_trace(
-                        prompt,
-                        main_execution=main_execution,
-                    )
-                except ORACLE.RoutingIntegrityError as exc:
-                    if exc.code != "routing-integrity-failure":
-                        mismatches.append(
-                            f"[{label}] wrong-code={exc.code!r}"
-                        )
-                    if expected_message not in str(exc):
-                        mismatches.append(
-                            f"[{label}] missing-message="
-                            f"{expected_message!r}; actual={str(exc)!r}"
-                        )
-                    if envelope.call_count != 0:
-                        mismatches.append(
-                            f"[{label}] envelope-called-before-rejection"
-                        )
-                except Exception as exc:  # pragma: no cover - contract diagnostic
-                    mismatches.append(
-                        f"[{label}] wrong-error={type(exc).__name__}: {exc}"
-                    )
-                else:
-                    mismatches.append(f"[{label}] mutation-accepted")
-        if mismatches:
-            self.fail("\n".join(mismatches))
+        assignment = _terminal_action_ambiguity_main(prompt)
+        self.assertEqual({"producer", "task_id"}, set(assignment))
+        legacy_fabricated_level = _test_main_execution(prompt)
+        expected_route = {
+            "path": "analyzed",
+            "profile": "analysis-agent",
+            "primary_skill": "engineering-change-analysis",
+            "layer3_skills": ["repository-context-map"],
+            "review_skill": "architecture-impact-reviewer",
+        }
+        for label, main_execution in (
+            ("analysis-assignment", assignment),
+            ("legacy-fabricated-level", legacy_fabricated_level),
+        ):
+            with self.subTest(label=label):
+                observed = ORACLE.route_with_trace(
+                    prompt,
+                    main_execution=copy.deepcopy(main_execution),
+                )
+                decision = observed["route_decision"]
+                result = decision["route_result"]
+                self.assertEqual(expected_route, _projected_route(observed))
+                self.assertEqual(
+                    "ordinary-ambiguity",
+                    observed["winner_trace"]["selected_candidate"][
+                        "candidate_id"
+                    ],
+                )
+                self.assertIsNone(decision["main_execution_provenance"])
+                self.assertIsNone(result["execution_level"])
+                self.assertIsNone(result["level_basis"])
 
     def test_typed_task_action_parser_contract_and_fail_closed_issues(
         self,
@@ -1963,29 +1838,26 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
                 "route": ambiguity_route,
             }
             if label == "old-canonical":
-                route_result = observed["route_decision"][
-                    "route_result"
-                ]
+                decision = observed["route_decision"]
+                route_result = decision["route_result"]
+                actual["main_provenance_bytes"] = json.dumps(
+                    decision["main_execution_provenance"],
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode("utf-8")
+                expected["main_provenance_bytes"] = b"null"
                 actual["execution_level_bytes"] = json.dumps(
                     route_result["execution_level"],
                     sort_keys=True,
                     separators=(",", ":"),
                 ).encode("utf-8")
-                expected["execution_level_bytes"] = json.dumps(
-                    supplied_main["execution_level"],
-                    sort_keys=True,
-                    separators=(",", ":"),
-                ).encode("utf-8")
+                expected["execution_level_bytes"] = b"null"
                 actual["level_basis_bytes"] = json.dumps(
                     route_result["level_basis"],
                     sort_keys=True,
                     separators=(",", ":"),
                 ).encode("utf-8")
-                expected["level_basis_bytes"] = json.dumps(
-                    supplied_main["level_basis"],
-                    sort_keys=True,
-                    separators=(",", ":"),
-                ).encode("utf-8")
+                expected["level_basis_bytes"] = b"null"
             if actual != expected:
                 mismatches.append(
                     f"[critical:{label}] structural ambiguity mismatch; "

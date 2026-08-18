@@ -33,12 +33,18 @@ The deterministic corpus covers:
 - concurrency and consistency;
 - release and rollback.
 - paired positive and neighboring negative routes for all 13 Domain Skills;
-- prompt-enforced Utility no-edit with exact pre-check, operation, and identical
-  post-check sequencing plus mandatory `--no-pager`, `--no-ext-diff`, and
-  `--no-textconv` Git controls;
+- capability-driven Utility no-edit with exact pre-observation, operation, and
+  identical post-observation sequencing, including changed and unavailable
+  workspace-state failures;
+- adapter-owned native diff safeguards: the Codex projection statically requires
+  `--no-pager`, `--no-ext-diff`, and `--no-textconv`, while adapters without a
+  native diff mode declare no native command safeguards;
 - anchored progress for three-dispatch, complex/high-risk, and long work;
 - current shared-workspace serial writes; and
 - a conditional isolated-write parallel contract, not a current Host capability.
+
+These checks validate deterministic fixtures and static adapter configuration.
+They do not prove that a running host enforced its declared native controls.
 
 ## Professional Coverage Evidence
 

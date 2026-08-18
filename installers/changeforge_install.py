@@ -593,6 +593,28 @@ def validated_built_profile_sha256(
     source = resolve_source_profile_dir(agent, scope, profile)
     source_profiles = resolve_source_profiles(agent, scope)
     build = validate_built_source(agent, profile, source, source_profiles)
+    module = _load_current_profile_renderer()
+    try:
+        source_digests = module._agent_profile_digests(
+            module._load_agent_profiles(), module._load_host_enforcement()
+        )
+    except Exception as exc:
+        raise InstallError(f"cannot render current authoritative Agent Profiles: {exc}") from exc
+    digests = build.get("agent_profile_sha256")
+    expected = digests.get(agent) if isinstance(digests, dict) else None
+    if not isinstance(expected, dict) or set(expected) != set(AGENT_PROFILE_NAMES):
+        raise InstallError("validated build has no complete Agent Profile digest map")
+    rendered = source_digests.get(agent)
+    if expected != rendered:
+        raise InstallError(
+            "validated build Agent Profile digests differ from the current source renderer"
+        )
+    return {str(role): str(digest) for role, digest in rendered.items()}
+
+
+def _load_current_profile_renderer() -> Any:
+    """Load the canonical build renderer without duplicating its capability rules."""
+
     build_script = ROOT / "scripts" / "build.py"
     spec = importlib.util.spec_from_file_location(
         "changeforge_doctor_source_renderer", build_script
@@ -607,24 +629,25 @@ def validated_built_profile_sha256(
         sys.path.insert(0, scripts_path)
     try:
         spec.loader.exec_module(module)
-        source_digests = module._agent_profile_digests(
-            module._load_agent_profiles(), module._load_host_enforcement()
-        )
     except Exception as exc:
         raise InstallError(f"cannot render current authoritative Agent Profiles: {exc}") from exc
     finally:
         if inserted_scripts_path:
             sys.path.remove(scripts_path)
-    digests = build.get("agent_profile_sha256")
-    expected = digests.get(agent) if isinstance(digests, dict) else None
-    if not isinstance(expected, dict) or set(expected) != set(AGENT_PROFILE_NAMES):
-        raise InstallError("validated build has no complete Agent Profile digest map")
-    rendered = source_digests.get(agent)
-    if expected != rendered:
+    return module
+
+
+def canonical_profile_capability_facts(enforcement: dict[str, Any]) -> str:
+    """Return the exact Main projection from the canonical build renderer."""
+
+    module = _load_current_profile_renderer()
+    try:
+        capabilities = module._normalized_decision_capabilities(enforcement)
+        return str(module._render_decision_capability_facts(capabilities))
+    except Exception as exc:
         raise InstallError(
-            "validated build Agent Profile digests differ from the current source renderer"
-        )
-    return {str(role): str(digest) for role, digest in rendered.items()}
+            f"cannot render current authoritative capability facts: {exc}"
+        ) from exc
 
 
 def validated_built_core_model(agent: str, scope: str, profile: str) -> dict[str, Any]:
@@ -686,32 +709,6 @@ def read_core_contract_source() -> dict[str, Any]:
         raise InstallError(
             "authoritative core model must use changeforge.core_contracts schema 1"
         )
-    prompt = value.get("prompt_contract")
-    branches = prompt.get("host_mode_branches") if isinstance(prompt, dict) else None
-    if not isinstance(branches, list) or not branches:
-        raise InstallError("authoritative core model has no host-mode contracts")
-    fields: set[str] = set()
-    for contract in branches:
-        if not isinstance(contract, dict):
-            raise InstallError("authoritative core model has an invalid host-mode contract")
-        field = contract.get("field")
-        modes = contract.get("branches")
-        if not isinstance(field, str) or not field or field in fields:
-            raise InstallError("authoritative core model has duplicate host-mode fields")
-        if not isinstance(modes, list) or not modes:
-            raise InstallError(f"authoritative core model host mode {field!r} is empty")
-        values = [mode.get("value") for mode in modes if isinstance(mode, dict)]
-        if (
-            len(values) != len(modes)
-            or any(not isinstance(item, str) or not item for item in values)
-            or len(values) != len(set(values))
-        ):
-            raise InstallError(
-                f"authoritative core model host mode {field!r} has invalid values"
-            )
-        fields.add(field)
-    if fields != {"diff_input_mode", "validation_mode"}:
-        raise InstallError("authoritative core model host-mode fields are incomplete")
     return value
 
 
@@ -734,34 +731,35 @@ def validate_build_core_model(build: dict[str, Any]) -> dict[str, Any]:
     return expected
 
 
-def _host_mode_values() -> dict[str, set[str]]:
-    core = read_core_contract_source()
-    return {
-        contract["field"]: {branch["value"] for branch in contract["branches"]}
-        for contract in core["prompt_contract"]["host_mode_branches"]
-    }
-
-
 def read_host_enforcement_source() -> dict[str, Any]:
     value = load_json(HOST_ENFORCEMENT_SOURCE)
-    if value is None or value.get("schema_version") != 3:
-        raise InstallError("host enforcement source must use schema_version 3")
+    if value is None or value.get("schema_version") != 4:
+        raise InstallError("host enforcement source must use schema_version 4")
     statuses = value.get("status_values")
     if not isinstance(statuses, list) or set(statuses) != ENFORCEMENT_STATUSES:
         raise InstallError("host enforcement source has an invalid status enum")
     hosts = value.get("hosts")
     if not isinstance(hosts, dict) or set(hosts) != set(AGENTS):
         raise InstallError("host enforcement source must contain every supported agent")
+    expected_mode_values = {
+        "diff_input_mode": ["native", "supplied-artifact", "unsupported"],
+        "validation_mode": ["native-read-only", "task-no-edit", "unsupported"],
+    }
+    if value.get("mode_values") != expected_mode_values:
+        raise InstallError("host enforcement source has invalid adapter mode values")
     expected_host_fields = HOST_ENFORCEMENT_CAPABILITIES | {
         "diff_input_mode",
         "validation_mode",
+        "native_diff_safeguards",
         "roles",
     }
-    host_mode_values = _host_mode_values()
+    host_mode_values = {
+        field: set(values) for field, values in expected_mode_values.items()
+    }
     for agent in AGENTS:
         entry = hosts[agent]
         if not isinstance(entry, dict) or set(entry) != expected_host_fields:
-            raise InstallError(f"{agent}: host enforcement fields must match schema v3")
+            raise InstallError(f"{agent}: host enforcement fields must match schema v4")
         for capability in HOST_ENFORCEMENT_CAPABILITIES:
             if entry.get(capability) not in ENFORCEMENT_STATUSES:
                 raise InstallError(f"{agent}: invalid {capability} enforcement")
@@ -774,6 +772,13 @@ def read_host_enforcement_source() -> dict[str, Any]:
             raise InstallError(f"{agent}: invalid validation_mode")
         if utility_no_edit not in ENFORCEMENT_STATUSES:
             raise InstallError(f"{agent}: invalid utility_no_edit enforcement")
+        expected_safeguards = (
+            ["--no-pager", "--no-ext-diff", "--no-textconv"]
+            if diff_input_mode == "native"
+            else []
+        )
+        if entry.get("native_diff_safeguards") != expected_safeguards:
+            raise InstallError(f"{agent}: native diff safeguards do not match adapter mode")
         roles = entry.get("roles")
         if not isinstance(roles, dict) or set(roles) != set(AGENT_PROFILE_NAMES):
             raise InstallError(f"{agent}: enforcement roles must be the four static Profiles")

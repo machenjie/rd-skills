@@ -1308,10 +1308,7 @@ When failure remains possible, preserve the owned invariant before release.
         }
         control = descriptions["src/control-skills/engineering-control-plane/SKILL.md"]
         self.assertEqual("description", control["document_part"])
-        self.assertIn(
-            "unconditional_mechanism_candidate",
-            {item["finding"] for item in self._semantic(control)["candidates"]},
-        )
+        self.assertEqual([], self._semantic(control)["candidates"])
         yaml_description = self._document("Retry 3 times.", part="description")
         self.assertIn(
             "fixed_duration_threshold_status_candidate",

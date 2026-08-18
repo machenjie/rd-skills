@@ -120,6 +120,43 @@ def _compatibility_projection(decision: dict[str, object]) -> dict[str, object]:
 
 
 class RouteOracleInstrumentationTests(unittest.TestCase):
+    def test_analyzed_route_has_no_execution_level_or_history_provenance(self) -> None:
+        assignment = {
+            "producer": "main-control-agent",
+            "task_id": "analysis-owner-unresolved",
+        }
+        decision = ORACLE.route(
+            "Analyze the unresolved owner and placement before any implementation.",
+            main_execution=assignment,
+        )
+        self.assertEqual("analyzed", decision["path"])
+        self.assertEqual("analysis-agent", decision["route_result"]["start_profile"])
+        self.assertIsNone(decision["route_result"]["execution_level"])
+        self.assertIsNone(decision["route_result"]["level_basis"])
+        self.assertIsNone(decision["main_execution_provenance"])
+
+    def test_analyzed_route_discards_a_legacy_fabricated_level(self) -> None:
+        decision = ORACLE.route(
+            "Analyze the unresolved owner and placement before any implementation.",
+            main_execution=_main_execution("analysis-fabricated-l3"),
+        )
+        self.assertIsNone(decision["route_result"]["execution_level"])
+        self.assertIsNone(decision["route_result"]["level_basis"])
+        self.assertIsNone(decision["main_execution_provenance"])
+
+    def test_direct_route_still_requires_executable_level_input(self) -> None:
+        with self.assertRaisesRegex(
+            ORACLE.RoutingIntegrityError,
+            "executable route requires Main execution input",
+        ):
+            ORACLE.route(
+                "Implement the accepted bounded backend change in the known owner.",
+                main_execution={
+                    "producer": "main-control-agent",
+                    "task_id": "direct-without-level",
+                },
+            )
+
     def test_public_route_requires_main_execution_without_a_default(self) -> None:
         signature = inspect.signature(ORACLE.route)
         parameter = signature.parameters.get("main_execution")

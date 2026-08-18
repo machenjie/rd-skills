@@ -1,5 +1,5 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "source_summary": "Static configuration-level enforcement declared by each generated host projection. This matrix contains no host-execution observation.",
   "status_values": [
     "native-enforced",
@@ -7,6 +7,10 @@
     "prompt-enforced",
     "unsupported"
   ],
+  "mode_values": {
+    "diff_input_mode": ["native", "supplied-artifact", "unsupported"],
+    "validation_mode": ["native-read-only", "task-no-edit", "unsupported"]
+  },
   "hosts": {
     "codex": {
       "profile_delivery": "native-enforced",
@@ -17,6 +21,7 @@
       "diff_input_mode": "native",
       "validation_mode": "native-read-only",
       "utility_no_edit": "prompt-enforced",
+      "native_diff_safeguards": ["--no-pager", "--no-ext-diff", "--no-textconv"],
       "roles": {
         "main-control-agent": {
           "tool_allowlist": "prompt-enforced",
@@ -72,6 +77,7 @@
       "diff_input_mode": "supplied-artifact",
       "validation_mode": "task-no-edit",
       "utility_no_edit": "prompt-enforced",
+      "native_diff_safeguards": [],
       "roles": {
         "main-control-agent": {
           "tool_allowlist": "native-enforced",
@@ -120,6 +126,7 @@
       "diff_input_mode": "supplied-artifact",
       "validation_mode": "task-no-edit",
       "utility_no_edit": "prompt-enforced",
+      "native_diff_safeguards": [],
       "roles": {
         "main-control-agent": {
           "tool_allowlist": "native-enforced",
@@ -170,6 +177,7 @@
       "diff_input_mode": "unsupported",
       "validation_mode": "unsupported",
       "utility_no_edit": "unsupported",
+      "native_diff_safeguards": [],
       "roles": {
         "main-control-agent": {
           "tool_allowlist": "unsupported",
@@ -214,6 +222,7 @@
       "diff_input_mode": "unsupported",
       "validation_mode": "unsupported",
       "utility_no_edit": "unsupported",
+      "native_diff_safeguards": [],
       "roles": {
         "main-control-agent": {
           "tool_allowlist": "unsupported",

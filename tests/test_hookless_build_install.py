@@ -32,6 +32,9 @@ def load_script(name: str, relative: str):
     return module
 
 
+BUILD = load_script("hookless_build_install_build", "scripts/build.py")
+
+
 def assert_build_profile_artifact_semantics(
     test_case: unittest.TestCase,
     root: Path,
@@ -156,8 +159,8 @@ class HooklessBuildInstallTests(unittest.TestCase):
                 manifest["agent_profile_enforcement_source"]["path"],
             )
             self.assertEqual(
-                3,
-                manifest["agent_profile_enforcement_source"]["schema_version"],
+                    4,
+                    manifest["agent_profile_enforcement_source"]["schema_version"],
             )
             self.assertEqual(
                 {
@@ -179,18 +182,7 @@ class HooklessBuildInstallTests(unittest.TestCase):
             )
             for host, expected in enforcement_source["hosts"].items():
                 enforcement = manifest["agent_profile_enforcement"][host]
-                self.assertEqual(
-                    (
-                        expected["diff_input_mode"],
-                        expected["validation_mode"],
-                        expected["utility_no_edit"],
-                    ),
-                    (
-                        enforcement["diff_input_mode"],
-                        enforcement["validation_mode"],
-                        enforcement["utility_no_edit"],
-                    ),
-                )
+                self.assertEqual(expected, enforcement)
                 self.assertNotIn("diff_inspection", enforcement)
                 self.assertNotIn("validation_execution", enforcement)
             for obsolete in ("runtime_engine", "hidden_role_packs", "executable_interception"):
@@ -561,23 +553,35 @@ class HooklessBuildInstallTests(unittest.TestCase):
             "claude": ROOT / "dist/claude/project/.claude/agents",
             "copilot": ROOT / "dist/copilot/project/.github/agents",
         }
-        expected_modes = {
-            "codex": ("native", "native-read-only", "prompt-enforced", ".toml"),
-            "claude": ("supplied-artifact", "task-no-edit", "prompt-enforced", ".md"),
-            "copilot": ("supplied-artifact", "task-no-edit", "prompt-enforced", ".agent.md"),
+        expected_suffixes = {
+            "codex": ".toml",
+            "claude": ".md",
+            "copilot": ".agent.md",
         }
         for root in roots.values():
             self.assertEqual(4, len([path for path in root.iterdir() if path.is_file()]))
         for host, root in roots.items():
-            diff_mode, validation_mode, utility_no_edit, suffix = expected_modes[host]
+            suffix = expected_suffixes[host]
             main = (root / f"main-control-agent{suffix}").read_text()
+            capabilities = {
+                "bounded-source-read": "supported",
+                "workspace-mutation": "supported",
+                "non-mutating-validation": "supported",
+                "exact-change-evidence-read": "supported",
+                "exact-change-evidence-export": "supported",
+                "reviewer-accessible-change-reference": "supported",
+                "workspace-state-observation": "supported",
+            }
             self.assertIn(
-                f"Current host modes: diff_input_mode={diff_mode}; validation_mode={validation_mode}; utility_no_edit={utility_no_edit}.",
+                BUILD._render_decision_capability_facts(capabilities),
                 main,
             )
+            self.assertNotIn("Current host modes:", main)
+            self.assertNotIn("diff_input_mode=", main)
+            self.assertNotIn("validation_mode=", main)
             for name in ("analysis-agent", "task-agent", "review-agent"):
                 worker = (root / f"{name}{suffix}").read_text()
-                self.assertNotIn("Current host modes:", worker)
+                self.assertNotIn("Current capability facts:", worker)
         for path in (ROOT / "dist/codex/project/.codex/agents").glob("*.toml"):
             self.assertNotIn("permission_enforcement", path.read_text())
         copilot = ROOT / "dist/copilot/project/.github/agents"
@@ -873,6 +877,65 @@ class HooklessBuildInstallTests(unittest.TestCase):
                     "installed Agent Profile files do not match the validated build",
                     doctor.stdout,
                 )
+
+    def test_doctor_rejects_legacy_host_mode_marker_for_every_host(self) -> None:
+        layouts = {
+            "codex": Path(".codex/agents/main-control-agent.toml"),
+            "claude": Path(".claude/agents/main-control-agent.md"),
+            "copilot": Path(".github/agents/main-control-agent.agent.md"),
+        }
+        legacy = (
+            "Current host modes: diff_input_mode=native; "
+            "validation_mode=native-read-only; utility_no_edit=prompt-enforced."
+        )
+        for agent, relative in layouts.items():
+            with self.subTest(agent=agent), tempfile.TemporaryDirectory() as raw:
+                target = Path(raw) / "project"
+                install = subprocess.run(
+                    [
+                        sys.executable,
+                        "installers/install.py",
+                        "--agent",
+                        agent,
+                        "--scope",
+                        "project",
+                        "--profile",
+                        "recommended",
+                        "--target",
+                        str(target),
+                    ],
+                    cwd=ROOT,
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                )
+                self.assertEqual(0, install.returncode, install.stderr or install.stdout)
+                profile = target / relative
+                profile.write_text(
+                    profile.read_text(encoding="utf-8") + f"\n# {legacy}\n",
+                    encoding="utf-8",
+                )
+
+                doctor = subprocess.run(
+                    [
+                        sys.executable,
+                        "installers/doctor.py",
+                        "--agent",
+                        agent,
+                        "--scope",
+                        "project",
+                        "--profile",
+                        "recommended",
+                        "--target",
+                        str(target),
+                    ],
+                    cwd=ROOT,
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                )
+                self.assertNotEqual(0, doctor.returncode, doctor.stderr or doctor.stdout)
+                self.assertIn("legacy host mode projection is forbidden", doctor.stdout)
 
     def test_doctor_ignores_unrelated_user_profile(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

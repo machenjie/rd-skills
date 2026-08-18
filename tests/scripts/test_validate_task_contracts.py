@@ -1182,6 +1182,31 @@ class TaskContractTemplateTests(unittest.TestCase):
 
 
 class CoreContractModelTests(unittest.TestCase):
+    def test_generic_capability_contract_uses_only_injected_canonical_ids(self) -> None:
+        review = CORE_CONTRACTS["review_discipline_contract"]
+        capabilities = review["generic_capability_contract"]
+        fields = capabilities["fields"]
+        self.assertEqual(fields, capabilities["injected_fields"])
+        self.assertEqual(len(fields), len(set(fields)))
+        self.assertTrue(all("_" not in field for field in fields))
+        self.assertEqual(
+            [
+                "exact-change-evidence-read",
+                "reviewer-accessible-change-reference",
+                "non-mutating-validation",
+            ],
+            [branch["field"] for branch in capabilities["prompt_branches"]],
+        )
+        self.assertTrue(
+            set(branch["field"] for branch in capabilities["prompt_branches"])
+            <= set(fields)
+        )
+        self.assertNotIn(
+            "host_mode_branches",
+            CORE_CONTRACTS["prompt_contract"],
+        )
+        self.assertEqual([], validate_core_contracts(CORE_CONTRACTS))
+
     def test_analyzed_work_uses_the_engineering_brief_as_single_authority(self) -> None:
         contract = CORE_CONTRACTS["task_contract"]["analyzed_work_authority"]
         self.assertEqual("analyzed-work", contract["applies_to"])
@@ -1576,20 +1601,19 @@ class CoreContractModelTests(unittest.TestCase):
     def test_external_read_is_analysis_only_jit_untrusted_and_fail_safe(self) -> None:
         contract = CORE_CONTRACTS["external_read_contract"]
         self.assertEqual("analysis-agent", contract["exclusive_role"])
-        self.assertEqual("external-read", contract["tool"])
+        self.assertEqual("external-source-read", contract["capability_field"])
         self.assertEqual(
-            [
-                "native-enforced",
-                "sandbox-enforced",
-                "prompt-enforced",
-                "unsupported",
-            ],
-            contract["capability_modes"],
+            ["supported", "unsupported"],
+            contract["capability_states"],
         )
+        self.assertEqual("external-source-read", contract["operation"])
+        self.assertNotIn("tool", contract)
+        self.assertNotIn("capability_modes", contract)
+        self.assertNotIn("supported_operations", contract)
         self.assertFalse(contract["general_network_counts_as_supported"])
         self.assertEqual(
-            ["WebSearch", "WebFetch", "ConnectorRead"],
-            contract["ledger_projection"]["command_values"],
+            ["external-source-read"],
+            contract["ledger_projection"]["capability_values"],
         )
         self.assertEqual(
             "visible_evidence_contract",
@@ -1618,9 +1642,9 @@ class CoreContractModelTests(unittest.TestCase):
             "continue-when-existing-evidence-is-sufficient",
             contract["unsupported_behavior"],
         )
-        self.assertIn("external-read", CORE_CONTRACTS["roles"]["analysis-agent"]["tools"])
-        self.assertNotIn("external-read", CORE_CONTRACTS["roles"]["task-agent"]["tools"])
-        self.assertNotIn("external-read", CORE_CONTRACTS["roles"]["review-agent"]["tools"])
+        self.assertIn("external-source-read", CORE_CONTRACTS["roles"]["analysis-agent"]["tools"])
+        self.assertNotIn("external-source-read", CORE_CONTRACTS["roles"]["task-agent"]["tools"])
+        self.assertNotIn("external-source-read", CORE_CONTRACTS["roles"]["review-agent"]["tools"])
 
     def test_authority_scope_review_and_external_read_mutations_fail_closed(self) -> None:
         mutations: list[tuple[str, dict[str, object]]] = []
@@ -1678,7 +1702,7 @@ class CoreContractModelTests(unittest.TestCase):
         mutations.append(("general-network-supported", broad_network))
 
         task_external_read = copy.deepcopy(CORE_CONTRACTS)
-        task_external_read["roles"]["task-agent"]["tools"].append("external-read")
+        task_external_read["roles"]["task-agent"]["tools"].append("external-source-read")
         mutations.append(("task-agent-external-read", task_external_read))
 
         for label, mutation in mutations:
@@ -3950,6 +3974,43 @@ class CoreContractModelTests(unittest.TestCase):
         )
         self.assertEqual({"L2": 10, "L3": 7, "L4": 11}, levels)
 
+    def test_analysis_capsule_forbids_execution_level_extension(self) -> None:
+        analysis = _first_fixture_step("analysis")
+        payload = copy.deepcopy(analysis["fixture_capsule"])
+        task = _first_fixture_step("task")
+        payload["execution_level_extension"] = copy.deepcopy(
+            task["fixture_capsule"]["execution_level_extension"]
+        )
+        with self.assertRaisesRegex(
+            FixtureCapsuleError,
+            "analysis fixture_capsule must not carry execution_level_extension",
+        ):
+            render_fixture_capsule_payload(analysis, payload)
+
+    def test_implementation_handoff_declares_review_input_ready_gate(self) -> None:
+        text = (
+            REFERENCE_ROOT / "implementation-handoff-template.md"
+        ).read_text(encoding="utf-8")
+        for term in (
+            "## Review Input Ready",
+            "Latest Changed Paths:",
+            "Exact Reviewable Change Evidence:",
+            "Reviewer Capability Accessibility:",
+            "Validation After Latest Material Edit:",
+            "Fixed Review Scope:",
+        ):
+            self.assertIn(term, text)
+        self.assertIn("same Implementation Handoff", text)
+        self.assertIn("changed-file summary", text)
+
+    def test_utility_capsule_is_capability_driven_not_git_command_driven(self) -> None:
+        text = (
+            REFERENCE_ROOT / "utility-capsule-template.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("exact change evidence export capability", text)
+        self.assertIn("workspace state observation capability", text)
+        self.assertNotIn("git --no-pager", text)
+
     def test_extended_capsule_rejects_prose_or_fabricated_level_basis(self) -> None:
         task = _first_fixture_step("task")
         payload = task["fixture_capsule"]
@@ -4655,10 +4716,9 @@ class CoreContractModelTests(unittest.TestCase):
                         re.escape(term),
                         "REMOVED_REVIEW_PROOF_TERM",
                         text,
-                        count=1,
                         flags=re.IGNORECASE,
                     )
-                    self.assertEqual(1, count)
+                    self.assertGreaterEqual(count, 1)
                     path.write_text(
                         mutated,
                         encoding="utf-8",

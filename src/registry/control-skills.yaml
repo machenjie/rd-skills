@@ -15,8 +15,8 @@ control_skills:
     required_inputs:
       - user request
       - known scope and constraints
-      - host workspace isolation capability when parallel writes are considered
-      - host diff, validation, and utility no-edit enforcement modes
+      - current workspace isolation capability when parallel writes are considered
+      - current exact change evidence read and export, reviewer-accessible change reference, non-mutating validation, and workspace state observation capability facts
     output_contract:
       - selected Direct Task or Analyzed Work path
       - bounded profile and Skill assignments

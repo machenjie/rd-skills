@@ -1036,7 +1036,7 @@
       ]
     }
   ],
-  "task_focus_fixture_count": 25,
+  "task_focus_fixture_count": 42,
   "task_focus_fixtures": [
     {
       "id": "focus-current-diff-blocker",
@@ -1237,6 +1237,142 @@
     {
       "id": "focus-review-new-high-risk-returns-analysis",
       "scenario": "review-level",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-analysis-owner-unresolved-task-l2",
+      "scenario": "analysis-level",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-analysis-explicit-repair-task-level",
+      "scenario": "analysis-level",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-analysis-standard-task-l3",
+      "scenario": "analysis-level",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-analysis-material-risk-task-l4",
+      "scenario": "analysis-level",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-direct-task-level-unchanged",
+      "scenario": "analysis-level",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-analysis-history-unchanged",
+      "scenario": "analysis-level",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-ready-dispatch-once",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-missing-change-evidence-blocked",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-readonly-reviewer-accessible",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-summary-is-not-evidence",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-stale-validation-blocked",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-native-reference-ready",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-supplied-artifact-ready",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-unsupported-capability-blocked",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-normal-flow-no-post-review-export",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-legacy-one-pre-review-recovery",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-capability-equivalent-adapter-metadata",
+      "scenario": "capability-equivalence",
       "expected_valid": true,
       "actual_valid": true,
       "matches_expected": true,
@@ -3586,8 +3722,8 @@
       "errors": []
     },
     {
-      "id": "external-read-websearch-official",
-      "operation": "WebSearch",
+      "id": "external-read-official-source",
+      "operation": "external-source-read",
       "external_read_triggered": true,
       "expected_valid": true,
       "actual_valid": true,
@@ -3595,8 +3731,8 @@
       "errors": []
     },
     {
-      "id": "external-read-webfetch-versioned",
-      "operation": "WebFetch",
+      "id": "external-read-versioned-source",
+      "operation": "external-source-read",
       "external_read_triggered": true,
       "expected_valid": true,
       "actual_valid": true,
@@ -3604,8 +3740,8 @@
       "errors": []
     },
     {
-      "id": "external-read-connector-readonly",
-      "operation": "ConnectorRead",
+      "id": "external-read-public-source",
+      "operation": "external-source-read",
       "external_read_triggered": true,
       "expected_valid": true,
       "actual_valid": true,
@@ -3614,7 +3750,7 @@
     },
     {
       "id": "external-read-prompt-injection-ignored",
-      "operation": "WebFetch",
+      "operation": "external-source-read",
       "external_read_triggered": true,
       "expected_valid": true,
       "actual_valid": true,
@@ -3623,7 +3759,7 @@
     },
     {
       "id": "external-read-task-agent-denied",
-      "operation": "WebSearch",
+      "operation": "external-source-read",
       "external_read_triggered": true,
       "expected_valid": false,
       "actual_valid": false,
@@ -3634,7 +3770,7 @@
     },
     {
       "id": "external-read-review-agent-denied",
-      "operation": "WebFetch",
+      "operation": "external-source-read",
       "external_read_triggered": true,
       "expected_valid": false,
       "actual_valid": false,
@@ -3645,7 +3781,7 @@
     },
     {
       "id": "external-read-private-query-denied",
-      "operation": "WebSearch",
+      "operation": "external-source-read",
       "external_read_triggered": true,
       "expected_valid": false,
       "actual_valid": false,
@@ -3656,7 +3792,7 @@
     },
     {
       "id": "external-read-raw-instruction-denied",
-      "operation": "WebFetch",
+      "operation": "external-source-read",
       "external_read_triggered": true,
       "expected_valid": false,
       "actual_valid": false,
@@ -3676,7 +3812,7 @@
     },
     {
       "id": "external-read-critical-gap-blocked",
-      "operation": "WebFetch",
+      "operation": "external-source-read",
       "external_read_triggered": true,
       "expected_valid": true,
       "actual_valid": true,

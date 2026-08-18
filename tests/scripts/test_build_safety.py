@@ -560,15 +560,15 @@ class BuildSafetyTests(unittest.TestCase):
             BUILD._write_compact_control_projection(destination, item)
             text = (destination / "SKILL.md").read_text(encoding="utf-8")
 
-        self.assertIn("Reference Contract v2 router", text)
+        self.assertIn("Reference Contract v2; Prompt owns rules.", text)
         encoded = text.encode("utf-8")
         self.assertEqual(
-            "9ba20e27cae1f6362d0b5a1f3385597e32f26f6f7778bf7edcb084bccf1773c0",
+            "f67957d0f282d0ee3b91eb0fce7045c205cbaccfa558e84c33d51dacd4406c3d",
             hashlib.sha256(encoded).hexdigest(),
         )
-        self.assertEqual(1709, len(encoded))
+        self.assertEqual(1546, len(encoded))
         self.assertEqual(18, sum(bool(line.strip()) for line in text.splitlines()))
-        self.assertEqual(356, count_o200k_base_tokens(text))
+        self.assertEqual(342, count_o200k_base_tokens(text))
         for contract in contracts:
             with self.subTest(path=contract["path"]):
                 row = next(
@@ -576,11 +576,17 @@ class BuildSafetyTests(unittest.TestCase):
                     for line in text.splitlines()
                     if f"]({contract['path']})" in line
                 )
-                self.assertIn(f"| {contract['type']} |", row)
-                self.assertIn(f"| {contract['load_when']} |", row)
-                self.assertIn(f"| {contract['do_not_load_when']} |", row)
-                self.assertIn(f"| {', '.join(contract['required_by'])} |", row)
-                self.assertIn(f"| {', '.join(contract['required_output'])} |", row)
+                self.assertEqual(
+                    [
+                        f"[{Path(contract['path']).stem.removesuffix('-template').split('-')[-1]}]({contract['path']})",
+                        contract["type"],
+                        contract["load_when"],
+                        contract["do_not_load_when"],
+                        ", ".join(contract["required_by"]),
+                        ", ".join(contract["required_output"]),
+                    ],
+                    row.strip("|").split("|"),
+                )
 
     def test_host_enforcement_drives_safe_review_projection(self) -> None:
         matrix = BUILD._load_host_enforcement()
@@ -591,14 +597,36 @@ class BuildSafetyTests(unittest.TestCase):
             "prompt-enforced",
             matrix["hosts"]["codex"]["roles"]["main-control-agent"]["tool_allowlist"],
         )
-        self.assertEqual(3, matrix["schema_version"])
+        self.assertEqual(4, matrix["schema_version"])
         self.assertEqual(
-            ("native", "native-read-only", "prompt-enforced"),
-            (
-                matrix["hosts"]["codex"]["diff_input_mode"],
-                matrix["hosts"]["codex"]["validation_mode"],
-                matrix["hosts"]["codex"]["utility_no_edit"],
-            ),
+            {
+                "diff_input_mode": ["native", "supplied-artifact", "unsupported"],
+                "validation_mode": ["native-read-only", "task-no-edit", "unsupported"],
+            },
+            matrix["mode_values"],
+        )
+        self.assertEqual(
+            ["--no-pager", "--no-ext-diff", "--no-textconv"],
+            matrix["hosts"]["codex"]["native_diff_safeguards"],
+        )
+        for host in ("claude", "copilot", "cline", "openai-api"):
+            self.assertEqual([], matrix["hosts"][host]["native_diff_safeguards"])
+        self.assertEqual(
+            {capability: "supported" for capability in BUILD.DECISION_CAPABILITY_FIELDS},
+            BUILD._normalized_decision_capabilities(matrix["hosts"]["codex"]),
+        )
+        unknown_adapter = dict(matrix["hosts"]["codex"])
+        unknown_adapter.update(
+            {
+                "profile_delivery": "unknown-native-id",
+                "diff_input_mode": "unknown-native-id",
+                "validation_mode": "unknown-native-id",
+                "utility_no_edit": "unknown-native-id",
+            }
+        )
+        self.assertEqual(
+            {capability: "unsupported" for capability in BUILD.DECISION_CAPABILITY_FIELDS},
+            BUILD._normalized_decision_capabilities(unknown_adapter),
         )
         renderer_hosts = {
             BUILD._render_codex_profile: "codex",
@@ -607,20 +635,17 @@ class BuildSafetyTests(unittest.TestCase):
         }
         for renderer, host in renderer_hosts.items():
             host_contract = matrix["hosts"][host]
-            diff_mode = host_contract["diff_input_mode"]
-            validation_mode = host_contract["validation_mode"]
-            utility_no_edit = host_contract["utility_no_edit"]
+            capability_facts = BUILD._normalized_decision_capabilities(host_contract)
             rendered = renderer(profiles["main-control-agent"], matrix)
             self.assertIn(
-                f"Current host modes: diff_input_mode={diff_mode}; "
-                f"validation_mode={validation_mode}; utility_no_edit={utility_no_edit}.",
+                BUILD._render_decision_capability_facts(capability_facts),
                 rendered,
             )
-            self.assertEqual(1, rendered.count("Current host modes:"))
+            self.assertEqual(1, rendered.count("Current capability facts:"))
         claude = BUILD._render_claude_profile(profiles["review-agent"], matrix)
         copilot = BUILD._render_copilot_profile(profiles["review-agent"], matrix)
-        self.assertNotIn("Current host modes:", claude)
-        self.assertNotIn("Current host modes:", copilot)
+        self.assertNotIn("Current capability facts:", claude)
+        self.assertNotIn("Current capability facts:", copilot)
         self.assertIn("tools: Skill, Read, Grep, Glob", claude)
         self.assertNotIn("Bash", claude.split("---", 2)[1])
         self.assertIn('tools: ["read", "search"]', copilot)
@@ -628,11 +653,16 @@ class BuildSafetyTests(unittest.TestCase):
 
     def test_host_enforcement_rejects_stale_schema_and_unknown_modes(self) -> None:
         mutations = (
-            ('"schema_version": 3', '"schema_version": 2', "schema_version 3"),
+            ('"schema_version": 4', '"schema_version": 3', "schema_version 4"),
             (
                 '"diff_input_mode": "supplied-artifact"',
                 '"diff_input_mode": "stale-mode"',
                 "invalid diff_input_mode",
+            ),
+            (
+                '"native_diff_safeguards": ["--no-pager", "--no-ext-diff", "--no-textconv"]',
+                '"native_diff_safeguards": ["--no-pager", "--no-ext-diff"]',
+                "native diff safeguards",
             ),
         )
         for old, new, error in mutations:

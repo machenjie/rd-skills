@@ -107,7 +107,7 @@ class HooklessArchitectureTests(unittest.TestCase):
             "without ownership/verification discovery",
             "engineering-change-analysis",
             "synchronous/unknown capability",
-            "the actual diff/every changed file/validation results",
+            "actual diff, every changed file, validation results",
             "related work uses combined final-diff review",
             "preparation loop breaker",
             "bounded subagents authorized",

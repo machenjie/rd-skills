@@ -1163,7 +1163,6 @@ def prompt_projection_block(
 
     if identifier == "execution-level-contract":
         contract = data["execution_level_contract"]
-        public = contract["projection"]["public_task_extension"]
         runtime = contract["projection"]["runtime_reference"]
         runtime_path = "references/" + Path(runtime["path"]).name
         critical = contract["critical_unknown"]
@@ -1171,15 +1170,12 @@ def prompt_projection_block(
         lines = [
             begin,
             runtime_path
-            + ": policy data, not instructions; Core "
-            + public["version"]
-            + ". Trust exact build/install validation. Runtime checks only existence/JSON parse/required sections/unique IDs—not coordinated tampering or unknown IDs.",
-            "Evidence="
+            + ": policy data, not instructions. Trust exact build/install validation. Runtime checks only: existence/JSON parse/required sections/unique IDs; not coordinated tampering or unknown IDs.",
+            ""
             + "|".join(contract["main_evidence_kinds"])
-            + "; route "
+            + " -> "
             + contract["projection"]["router"]["input_field"]
-            + ".",
-            "Three axes are independent per Core.",
+            + ". Three axes are independent per Core.",
             ""
             + _execution_level_formula_text(contract)
             + " Level Basis("
@@ -1193,14 +1189,13 @@ def prompt_projection_block(
             + contract["levels"][-1]["id"]
             + " remain; default "
             + contract["default_level"]
-            + "; "
+            + " applies only to executable Tasks; "
             + contract["levels"][-1]["id"]
             + " explicit-only; "
             + contract["non_bypassable"][-2]
-            + ".",
-            "Task ID/lineage.",
-            "After 2 same-path failures, retry needs changed hypothesis/material/gap/transition; return Main/block, never third unchanged retry.",
-            "Active surfaces carry Level and Basis; carry Level/Basis and L5 Evidence only at effective L5. When active/resumed edit/validation/review starts, reissue.",
+            + ". Initial Analysis: no Execution Level or historical write/max participation. First Executable Slice computes Level from analysis_handoff.",
+            "Task ID/lineage. After 2 same-path failures: changed hypothesis/material/gap/transition or return Main/block; never third unchanged retry.",
+            "Active executable surfaces: carry Level/Basis; L5 Evidence only at effective L5. Reissue on active/resumed edit/validation/review.",
             end,
         ]
         return "\n".join(lines)
@@ -1220,25 +1215,25 @@ def prompt_projection_block(
         ]
         lines = [
             begin,
-            "Latest material edit invalidates validation evidence. references/implementation-handoff-template.md: visible task-local Evidence Ledger schema authority. State: "
+            "Review Input Ready before review-agent dispatch: latest changed paths; exact reviewable change evidence. Reviewer capability accessibility; validation after the latest material edit; fixed Review scope. Normal=same Implementation Handoff. Missing=>review dispatch=0; producer completes. Legacy/incomplete handoff: one bounded pre-review recovery. Review before Task before Review is forbidden.",
+            "Latest material edit invalidates validation evidence. references/implementation-handoff-template.md is visible task-local Evidence Ledger schema authority. State: "
             + ", ".join(evidence["states"])
-            + ". Owner identifies the evidence-producing agent: "
+            + ". Claims: "
             + proof["latest_material_edit_claim"]
             + ", "
             + proof["validation_claim"]
             + ".",
-            "Current review-agent evidence: "
+            "Current review-agent evidence: actual diff, every changed file, validation results; "
             + required_review_claims[0]
             + "; "
             + required_review_claims[2]
             + "|"
             + required_review_claims[3]
-            + ".",
-            required_review_claims[1]
-            + ": actual Task Capsule L4/L5 now/history|matched material L4/provisional critical unknown|high-risk actual Review assignment.",
-            "not-required: ordinary independent review; digest-only matching to both lower-risk authorities; Missing/inconsistent authority/binding fails closed; reissue. Send review-agent the actual diff/every changed file/validation results. Repair supersedes previous diff; fresh validation/re-review.",
+            + ". "
+            + required_review_claims[1]
+            + " for actual Task Capsule L4/L5 now/history|matched material L4/provisional critical unknown|high-risk actual Review assignment.",
+            "not-required: ordinary independent review; digest-only matching to both lower-risk authorities. Missing/inconsistent authority/binding fails closed; reissue. Repair requires fresh validation/re-review.",
             "No " + "/".join(forbidden) + ". review_discipline_contract: review_frequency_policy|validation_evidence_reuse|obligation_subsumption|repair_invalidation_policy; task_contract.finding_relations.",
-            "Review Boundary: shared Round ID. Assignments have ID/role/scope, one Review Skill, zero-three independent review Layer3. Specialists do not close/increment. Primary consumes results, emits sole artifact/Task projections. Scoped edits invalidate intersecting/dependent evidence.",
             end,
         ]
         return "\n".join(lines)
@@ -3536,7 +3531,7 @@ def validate_core_contracts(
         "edit",
         "execute",
         "execute-read-only",
-        "external-read",
+        "external-source-read",
     }
     for role_name in sorted(role_names):
         role = roles.get(role_name)
@@ -3562,9 +3557,9 @@ def validate_core_contracts(
             errors.append(f"roles.{role_name}: write tools and may_edit disagree")
         if bool(role["may_review"]) != ("execute-read-only" in tools):
             errors.append(f"roles.{role_name}: review tool and may_review disagree")
-        if ("external-read" in tools) != (role_name == "analysis-agent"):
+        if ("external-source-read" in tools) != (role_name == "analysis-agent"):
             errors.append(
-                "external-read must belong only to analysis-agent and be absent "
+                "external-source-read must belong only to analysis-agent and be absent "
                 "from main-control-agent, task-agent, and review-agent"
             )
         expected_sandbox = (
@@ -3579,21 +3574,14 @@ def validate_core_contracts(
 
     external_read = data["external_read_contract"]
     expected_external_read = {
-        "capability_field": "external_source_read",
+        "capability_field": "external-source-read",
+        "capability_states": ["supported", "unsupported"],
         "exclusive_role": "analysis-agent",
-        "tool": "external-read",
-        "capability_modes": [
-            "native-enforced",
-            "sandbox-enforced",
-            "prompt-enforced",
-            "unsupported",
-        ],
-        "supported_operations": ["WebSearch", "WebFetch", "ConnectorRead"],
-        "connector_requirement": "explicitly-authorized-and-proven-read-only",
+        "operation": "external-source-read",
         "general_network_counts_as_supported": False,
         "jit_policy": {
             "local_or_current_evidence_sufficient": "do-not-read-externally",
-            "material_unresolved_claim": "external-read",
+            "material_unresolved_claim": "external-source-read",
             "non_material_unknown": "record-proof-limit",
             "broad_or_untargeted_research": "forbidden",
         },
@@ -3602,17 +3590,11 @@ def validate_core_contracts(
             "version-specific-documentation",
             "version-date-or-lifecycle-source",
         ],
-        "forbidden_operations": [
-            "file-edit",
-            "general-shell-network",
-            "curl",
-            "wget",
-            "python-http",
-            "post",
-            "upload",
-            "submit",
+        "forbidden_capabilities": [
+            "workspace-mutation",
+            "unbounded-network-operation",
             "external-write",
-            "dependency-install",
+            "dependency-installation",
             "production-operation",
             "agent-dispatch",
             "implementation",
@@ -3652,7 +3634,7 @@ def validate_core_contracts(
         },
         "ledger_projection": {
             "schema_source": "visible_evidence_contract",
-            "command_values": ["WebSearch", "WebFetch", "ConnectorRead"],
+            "capability_values": ["external-source-read"],
             "artifact_value": "source-identifier-or-url",
             "schema_change": "forbidden",
         },
@@ -3976,6 +3958,8 @@ def validate_core_contracts(
         "schema_version",
         "applies_to",
         "profile_capability_id",
+        "review_input_readiness",
+        "generic_capability_contract",
         "trace_action",
         "event_fields",
         "diff_fields",
@@ -4028,6 +4012,107 @@ def validate_core_contracts(
             errors.append(
                 "review_discipline_contract.trace_action must be 'review-discipline'"
             )
+        readiness = review_discipline["review_input_readiness"]
+        if not isinstance(readiness, dict) or readiness.get(
+            "required_fields"
+        ) != [
+            "latest_changed_paths",
+            "exact_change_evidence",
+            "reviewer_capability_accessibility",
+            "validation_after_latest_material_edit",
+            "fixed_review_scope",
+        ] or readiness.get("review_dispatch_count_when_missing") != 0:
+            errors.append(
+                "review input readiness must fail before review dispatch when "
+                "any producer evidence is missing"
+            )
+        capability_contract = review_discipline["generic_capability_contract"]
+        capability_contract_fields = {
+            "fields",
+            "injected_fields",
+            "states",
+            "decision_inputs",
+            "ignored_adapter_metadata",
+            "equivalence_rule",
+            "prompt_branches",
+        }
+        if not exact_keys(
+            capability_contract,
+            capability_contract_fields,
+            "review_discipline_contract.generic_capability_contract",
+        ):
+            capability_contract = {}
+        if capability_contract.get(
+            "decision_inputs"
+        ) != "capability-state-only" or capability_contract.get(
+            "equivalence_rule"
+        ) != (
+            "equal-capability-state-produces-equal-routing-level-review-and-"
+            "completion-decisions"
+        ):
+            errors.append(
+                "generic control decisions must depend only on normalized "
+                "capability state"
+            )
+        elif capability_contract.get("fields") != [
+            "bounded-source-read",
+            "workspace-mutation",
+            "non-mutating-validation",
+            "exact-change-evidence-read",
+            "exact-change-evidence-export",
+            "reviewer-accessible-change-reference",
+            "workspace-state-observation",
+        ] or capability_contract.get("injected_fields") != capability_contract.get(
+            "fields"
+        ) or capability_contract.get("states") != ["supported", "unsupported"]:
+            errors.append("generic capability vocabulary must remain closed and ordered")
+        else:
+            capability_fields = capability_contract["fields"]
+            prompt_branches = capability_contract.get("prompt_branches")
+            expected_prompt_fields = [
+                "exact-change-evidence-read",
+                "reviewer-accessible-change-reference",
+                "non-mutating-validation",
+            ]
+            if not isinstance(prompt_branches, list) or [
+                branch.get("field") if isinstance(branch, dict) else None
+                for branch in prompt_branches
+            ] != expected_prompt_fields:
+                errors.append(
+                    "generic capability prompt branches must use the three canonical "
+                    "injected decision fields in order"
+                )
+            else:
+                for index, branch in enumerate(prompt_branches):
+                    if not exact_keys(
+                        branch,
+                        {"field", "next_field", "branches"},
+                        f"review_discipline_contract.generic_capability_contract."
+                        f"prompt_branches[{index}]",
+                    ):
+                        continue
+                    field = branch["field"]
+                    if field not in capability_fields:
+                        errors.append(
+                            f"generic capability prompt field {field!r} is not injected"
+                        )
+                    expected_next = (
+                        expected_prompt_fields[index + 1]
+                        if index + 1 < len(expected_prompt_fields)
+                        else None
+                    )
+                    if branch["next_field"] != expected_next:
+                        errors.append(
+                            "generic capability prompt branches must form one ordered chain"
+                        )
+                    modes = branch["branches"]
+                    if not isinstance(modes, list) or [
+                        mode.get("value") if isinstance(mode, dict) else None
+                        for mode in modes
+                    ] != ["supported", "unsupported"]:
+                        errors.append(
+                            f"generic capability prompt field {field!r} must use closed states"
+                        )
         expected_event_fields = [
             "actor",
             "action",
@@ -4945,7 +5030,9 @@ def validate_core_contracts(
         "selection_evidence_fields",
         "task_evidence_fields",
         "candidate_fields",
+        "main_analysis_assignment_fields",
         "main_execution_provenance_fields",
+        "execution_provenance_by_path",
         "maximum_layer3_skills",
         "main_execution_producer",
     }
@@ -4987,6 +5074,10 @@ def validate_core_contracts(
                 "eligible",
                 "evidence_ids",
                 "rejection_reasons",
+            ],
+            "main_analysis_assignment_fields": [
+                "producer",
+                "task_id",
             ],
             "main_execution_provenance_fields": [
                 "producer",
@@ -5033,6 +5124,24 @@ def validate_core_contracts(
             errors.append(
                 "route_decision_contract.main_execution_producer must remain "
                 "main-control-agent"
+            )
+        if route_decision["execution_provenance_by_path"] != {
+            "analyzed": {
+                "input": "main-analysis-assignment",
+                "execution_level": None,
+                "level_basis": None,
+                "main_execution_provenance": None,
+            },
+            "direct": {
+                "input": "main-execution",
+                "execution_level": "required",
+                "level_basis": "required",
+                "main_execution_provenance": "required",
+            },
+        }:
+            errors.append(
+                "route execution provenance must distinguish non-executable "
+                "Analysis from executable Direct work"
             )
 
     completion = data["completion_state"]
@@ -5212,6 +5321,7 @@ def validate_core_contracts(
         "requested_values",
         "dynamic_levels",
         "default_level",
+        "lifecycle",
         "decision_axes",
         "material_assessment_fields",
         "material_candidate_statuses",
@@ -5287,6 +5397,28 @@ def validate_core_contracts(
             errors.append("execution dynamic levels must remain exactly L2, L3, and L4")
         if execution["default_level"] != "L3":
             errors.append("execution default level must remain L3")
+        expected_lifecycle = {
+            "analysis_assignment_has_execution_level": False,
+            "analysis_default_level": False,
+            "analysis_writes_historical_effective_level": False,
+            "analysis_participates_in_historical_max": False,
+            "first_computation_point": "first-executable-slice-or-direct-executable-task",
+            "automatic_default_l3_applies_to": "executable-task-only",
+            "analyzed_work_sequence": [
+                "analysis-agent",
+                "engineering-brief",
+                "first-executable-slice",
+                "compute-execution-level",
+                "task-agent",
+            ],
+            "post_analysis_evidence_kind": "analysis_handoff",
+            "post_material_work_history_rule": "retain-confirmed-executable-task-maxima",
+        }
+        if execution["lifecycle"] != expected_lifecycle:
+            errors.append(
+                "execution lifecycle must compute Level only for the First "
+                "Executable Slice or a Direct executable Task"
+            )
 
         expected_axes = {
             "professional_risk_signal": {
@@ -6303,6 +6435,7 @@ def validate_core_contracts(
                 }
             elif file_name == "implementation-handoff-template.md":
                 expected_schema_fields = common | {
+                    "labeled_sections",
                     "ledger_required",
                     "freshness_projection_ids",
                     "forbidden_storage_projection_ids",
@@ -6466,7 +6599,25 @@ def validate_core_contracts(
             else:
                 if schema["ledger_required"] is not True:
                     errors.append(f"{context}.ledger_required must be true")
-                if file_name == "review-handoff-template.md":
+                if file_name == "implementation-handoff-template.md":
+                    labeled = schema["labeled_sections"]
+                    expected_labels = [
+                        "Latest Changed Paths",
+                        "Exact Reviewable Change Evidence",
+                        "Reviewer Capability Accessibility",
+                        "Validation After Latest Material Edit",
+                        "Fixed Review Scope",
+                    ]
+                    if (
+                        not isinstance(labeled, dict)
+                        or labeled.get("Review Input Ready") != expected_labels
+                        or set(labeled) != {"Review Input Ready"}
+                    ):
+                        errors.append(
+                            f"{context}.labeled_sections must project the exact "
+                            "Review Input Ready fields"
+                        )
+                elif file_name == "review-handoff-template.md":
                     labeled = schema["labeled_sections"]
                     if (
                         not isinstance(labeled, dict)
@@ -6798,9 +6949,7 @@ def validate_core_contracts(
                 }
                 expected_projections = {
                     prompt_target: {
-                        "Owner identifies the evidence-producing agent",
-                        latest_edit_claim,
-                        validation_claim,
+                        f"Claims: {latest_edit_claim}, {validation_claim}",
                         *base_review_terms,
                     },
                     "profile:task-agent": {
@@ -6992,10 +7141,9 @@ def validate_core_contracts(
         "task_contract_section",
         "completion_section",
         "evidence_section",
-        "host_mode_section",
+        "capability_section",
         "freshness_projection_ids_by_section",
         "forbidden_storage_projection_ids_by_section",
-        "host_mode_branches",
     }
     if exact_keys(prompt, prompt_fields, "prompt_contract"):
         assert isinstance(prompt, dict)
@@ -7059,7 +7207,7 @@ def validate_core_contracts(
             "task_contract_section",
             "completion_section",
             "evidence_section",
-            "host_mode_section",
+            "capability_section",
         ):
             if prompt[section_field] not in prompt_headings:
                 errors.append(f"prompt_contract.{section_field} is not an ordered heading")
@@ -7087,53 +7235,6 @@ def validate_core_contracts(
                     f"prompt_contract.{mapping_field}.{section}",
                 )
                 bind_projection_ids(bindings, ids, f"prompt:{section}")
-        branches = prompt["host_mode_branches"]
-        if not isinstance(branches, list) or not branches:
-            errors.append("prompt_contract.host_mode_branches must be a non-empty list")
-        else:
-            branch_fields: list[str] = []
-            for index, branch_contract in enumerate(branches):
-                branch_context = f"prompt_contract.host_mode_branches[{index}]"
-                if not exact_keys(
-                    branch_contract,
-                    {"field", "next_field", "branches"},
-                    branch_context,
-                ):
-                    continue
-                assert isinstance(branch_contract, dict)
-                field = branch_contract["field"]
-                if not isinstance(field, str) or not field:
-                    errors.append(f"{branch_context}.field must be non-empty text")
-                    continue
-                branch_fields.append(field)
-                mode_entries = branch_contract["branches"]
-                if not isinstance(mode_entries, list) or not mode_entries:
-                    errors.append(f"{branch_context}.branches must be non-empty")
-                    continue
-                values: list[str] = []
-                for mode_index, mode in enumerate(mode_entries):
-                    mode_context = f"{branch_context}.branches[{mode_index}]"
-                    if not exact_keys(mode, {"value", "required_terms"}, mode_context):
-                        continue
-                    assert isinstance(mode, dict)
-                    if not isinstance(mode["value"], str) or not mode["value"]:
-                        errors.append(f"{mode_context}.value must be non-empty text")
-                    else:
-                        values.append(mode["value"])
-                    string_list(mode["required_terms"], f"{mode_context}.required_terms")
-                if len(values) != len(set(values)):
-                    errors.append(f"{branch_context} branch values must be unique")
-            if len(branch_fields) != len(set(branch_fields)):
-                errors.append("prompt host-mode fields must be unique")
-            for index, branch_contract in enumerate(branches):
-                if not isinstance(branch_contract, dict):
-                    continue
-                next_field = branch_contract.get("next_field")
-                expected_next = branch_fields[index + 1] if index + 1 < len(branch_fields) else None
-                if next_field != expected_next:
-                    errors.append(
-                        f"prompt_contract.host_mode_branches[{index}].next_field is out of order"
-                    )
 
     profile_contract = data["profile_contract"]
     profile_fields = {
@@ -7711,6 +7812,48 @@ def validate_main_execution(
     return errors
 
 
+def validate_main_assignment(
+    main_assignment: object,
+    *,
+    route_contract: dict[str, object] | None = None,
+    execution_contract: dict[str, object] | None = None,
+) -> list[str]:
+    """Validate a non-executable Analysis assignment or executable Main input."""
+
+    route_model = (
+        ROUTE_DECISION_MODEL if route_contract is None else route_contract
+    )
+    if not isinstance(main_assignment, dict):
+        return ["main assignment input must be an object"]
+    analysis_fields = set(route_model["main_analysis_assignment_fields"])
+    if set(main_assignment) != analysis_fields:
+        return validate_main_execution(
+            main_assignment,
+            route_contract=route_model,
+            execution_contract=execution_contract,
+        )
+    errors: list[str] = []
+    if main_assignment.get("producer") != route_model["main_execution_producer"]:
+        errors.append("main analysis assignment producer must be main-control-agent")
+    task_id = main_assignment.get("task_id")
+    if not isinstance(task_id, str) or not task_id.strip():
+        errors.append("main analysis assignment task_id must be non-empty text")
+    try:
+        _canonical_execution_level_json_bytes(
+            main_assignment,
+            "main analysis assignment",
+        )
+    except (
+        RecursionError,
+        TypeError,
+        ValueError,
+        UnicodeError,
+        OverflowError,
+    ) as exc:
+        errors.append(f"main analysis assignment must be canonical JSON: {exc}")
+    return errors
+
+
 def validate_route_decision(
     envelope: object,
     *,
@@ -7776,11 +7919,6 @@ def validate_route_decision(
         model["envelope_fields"],
         "route decision envelope",
     )
-    main_object = exact_fields(
-        main_execution,
-        model["main_execution_provenance_fields"],
-        "main execution input",
-    )
     authority_object = exact_fields(
         routing_authority,
         [
@@ -7790,7 +7928,7 @@ def validate_route_decision(
         ],
         "routing authority",
     )
-    if envelope_object is None or main_object is None or authority_object is None:
+    if envelope_object is None or authority_object is None:
         return errors
     canonical_authority = professional_routing_authority()
     if authority_object != canonical_authority:
@@ -7804,6 +7942,20 @@ def validate_route_decision(
         errors.append(
             f"route decision envelope.path must be one of {model['path_values']}"
         )
+    analysis_path = path == "analyzed"
+    main_fields = (
+        model["main_analysis_assignment_fields"]
+        if analysis_path
+        else model["main_execution_provenance_fields"]
+    )
+    main_context = (
+        "main analysis assignment"
+        if analysis_path
+        else "main execution input"
+    )
+    main_object = exact_fields(main_execution, main_fields, main_context)
+    if main_object is None:
+        return errors
 
     result = exact_fields(
         envelope_object["route_result"],
@@ -7815,12 +7967,21 @@ def validate_route_decision(
         model["selection_evidence_fields"],
         "selection_evidence",
     )
-    provenance = exact_fields(
-        envelope_object["main_execution_provenance"],
-        model["main_execution_provenance_fields"],
-        "main execution provenance",
+    provenance = (
+        None
+        if analysis_path
+        else exact_fields(
+            envelope_object["main_execution_provenance"],
+            model["main_execution_provenance_fields"],
+            "main execution provenance",
+        )
     )
-    if result is None or selection is None or provenance is None:
+    if analysis_path and envelope_object["main_execution_provenance"] is not None:
+        errors.append(
+            "analyzed route main_execution_provenance must be null because "
+            "Analysis has no Execution Level"
+        )
+    if result is None or selection is None or (not analysis_path and provenance is None):
         return errors
 
     primary_by_profile = authority_model["primary_skills_by_profile"]
@@ -7894,23 +8055,30 @@ def validate_route_decision(
         row["id"] for row in EXECUTION_LEVEL_MODEL["levels"] if isinstance(row, dict)
     }
     expected_basis_fields = set(EXECUTION_LEVEL_MODEL["level_basis_fields"])
-    for context, value in (
-        ("route_result", result),
-        ("main execution provenance", provenance),
-        ("main execution input", main_object),
-    ):
-        execution_level = value["execution_level"]
-        if (
-            not isinstance(execution_level, str)
-            or execution_level not in known_levels
-        ):
-            errors.append(f"{context}.execution_level must be a known level")
-        basis = value["level_basis"]
-        if not isinstance(basis, dict) or set(basis) != expected_basis_fields:
+    if analysis_path:
+        if result["execution_level"] is not None or result["level_basis"] is not None:
             errors.append(
-                f"{context}.level_basis fields must be exactly "
-                f"{sorted(expected_basis_fields)}"
+                "analyzed route must not carry Execution Level or Level Basis"
             )
+    else:
+        assert provenance is not None
+        for context, value in (
+            ("route_result", result),
+            ("main execution provenance", provenance),
+            ("main execution input", main_object),
+        ):
+            execution_level = value["execution_level"]
+            if (
+                not isinstance(execution_level, str)
+                or execution_level not in known_levels
+            ):
+                errors.append(f"{context}.execution_level must be a known level")
+            basis = value["level_basis"]
+            if not isinstance(basis, dict) or set(basis) != expected_basis_fields:
+                errors.append(
+                    f"{context}.level_basis fields must be exactly "
+                    f"{sorted(expected_basis_fields)}"
+                )
     if main_object["producer"] != model["main_execution_producer"]:
         errors.append(
             "main execution input producer must be main-control-agent"
@@ -7920,42 +8088,49 @@ def validate_route_decision(
         or not main_object["task_id"].strip()
     ):
         errors.append("main execution input task_id must be non-empty text")
-    provenance_json = canonical_json_bytes(
-        provenance,
-        "main execution provenance",
+    provenance_json = (
+        None
+        if analysis_path
+        else canonical_json_bytes(
+            provenance,
+            "main execution provenance",
+        )
     )
     main_json = canonical_json_bytes(
         main_object,
         "main execution input",
     )
     if (
-        provenance_json is not None
+        not analysis_path
+        and provenance is not None
+        and provenance_json is not None
         and main_json is not None
         and provenance_json != main_json
     ):
         errors.append(
             "main execution provenance must equal the supplied Main execution input"
         )
-    route_basis_json = canonical_json_bytes(
-        result["level_basis"],
-        "route_result.level_basis",
-    )
-    main_basis_json = canonical_json_bytes(
-        main_object["level_basis"],
-        "main execution input.level_basis",
-    )
-    if (
-        result["execution_level"] != main_object["execution_level"]
-        or (
-            route_basis_json is not None
-            and main_basis_json is not None
-            and route_basis_json != main_basis_json
+    if not analysis_path:
+        route_basis_json = canonical_json_bytes(
+            result["level_basis"],
+            "route_result.level_basis",
         )
-    ):
-        errors.append(
-            "route_result execution_level and level_basis must equal the supplied "
-            "Main execution input"
+        main_basis_json = canonical_json_bytes(
+            main_object["level_basis"],
+            "main execution input.level_basis",
         )
+        if (
+            result["execution_level"] != main_object["execution_level"]
+            or (
+                route_basis_json is not None
+                and main_basis_json is not None
+                and route_basis_json != main_basis_json
+            )
+        ):
+            errors.append(
+                "route_result execution_level and level_basis must equal the supplied "
+                "Main execution input"
+            )
 
     raw_evidence = selection["task_evidence"]
     evidence_ids: set[str] = set()

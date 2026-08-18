@@ -930,7 +930,14 @@ class RenderedContextBudgetTests(unittest.TestCase):
         enforcement = copy.deepcopy(original)
         enforcement["utility_capsule"]["no_edit_enforcement"] = "host-enforced"
         mutations.append(
-            (enforcement, original_text.replace("prompt-enforced", "host-enforced", 1))
+            (
+                enforcement,
+                original_text.replace(
+                    "## No-edit Enforcement\n\nsupported\n\n",
+                    "## No-edit Enforcement\n\nhost-enforced\n\n",
+                    1,
+                ),
+            )
         )
 
         root = copy.deepcopy(original)

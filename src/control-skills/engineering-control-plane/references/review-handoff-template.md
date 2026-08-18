@@ -3,6 +3,10 @@
 The review-agent receives one bounded target and does not edit. Implementation
 review requires observable acceptance, the latest actual diff, the declared
 changed-path set, current validation results, and the Evidence Requirements.
+Main dispatches this assignment only after the producer's Review Input Ready
+gate proves exact change evidence is accessible to the reviewer, validation is
+later than the latest material edit, and Review scope is fixed. The reviewer
+never generates change evidence, repairs the handoff, or mutates the workspace.
 
 For Analyzed Work, this handoff is a derived projection of the current
 Engineering Brief. Protected Brief decisions stay resolvable at their Authority

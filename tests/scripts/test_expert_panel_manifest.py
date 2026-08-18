@@ -425,7 +425,7 @@ class ExpertPanelSemanticManifestTests(unittest.TestCase):
             MANIFEST.encode_manifest_records(legacy_header)
 
     def test_zero_target_semantic_manifest_roundtrips_and_validates_current(self) -> None:
-        audit = _json(ROOT / "reports" / "skill-content-audit.json")
+        audit = source_support.live_semantic_audit()
         packet = PANEL.prepare_semantic_disposition_packet(
             audit=audit,
             review_id="semantic-zero-manifest-review",

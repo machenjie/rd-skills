@@ -1479,10 +1479,10 @@
         "configuration-runtime-policy",
         "dependency-vulnerability-scanning"
       ],
-      "line_count": 70,
+      "line_count": 72,
       "decision_rule_count": 4,
       "gotcha_count": 3,
-      "reference_count": 4,
+      "reference_count": 6,
       "routing_coverage_count": 10,
       "benchmark_coverage_count": 2
     },

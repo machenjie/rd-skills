@@ -55,6 +55,8 @@ Expected interaction: `analysis-agent` reads the bounded source and returns an
 Engineering Brief with ownership, invariants, consumer/failure impact,
 acceptance-to-validation mapping, and the First Executable Slice. A Task DAG is
 used only when real dependencies, owners, or useful parallel work exist.
+The Analysis assignment and Brief have no Execution Level. The Level is computed
+only after the executable slice is known, using the analysis handoff as evidence.
 Implementation proceeds only within the accepted slice and receives independent
 diff review.
 
@@ -81,10 +83,11 @@ supplied artifact. If no acceptance document exists, replace that bullet with
 `- Acceptance: <observable criteria for this change>;` so the reviewer has an
 explicit contract instead of an invented file.
 
-Depending on host capability, `review-agent` consumes the native diff or a
-supplied actual-diff artifact. If neither is available, review is blocked or
-the host may use the bounded no-edit diff-export utility. The reviewer does not
-repair its own findings.
+Depending on normalized capability facts, `review-agent` consumes an accessible
+native change reference or a supplied exact artifact. Review is blocked before
+dispatch when the producer has not supplied exact evidence; only a legacy or
+incomplete handoff may use one bounded pre-review recovery. The reviewer does
+not repair findings or generate change artifacts.
 
 ## What You Should See
 
@@ -94,8 +97,9 @@ For implementation work, expect these observable stages:
    Professional Skill, and only named Layer 3 guidance.
 2. A bounded task contract or Engineering Brief with scope, acceptance,
    verification, non-goals, and stop conditions.
-3. Implementation evidence from the latest material edit, including the actual
-   changed files and targeted validation.
+3. A Review Input Ready implementation handoff from the latest material edit,
+   including changed paths, exact change evidence, reviewer accessibility,
+   fresh targeted validation, and fixed review scope.
 4. Independent review of the actual latest diff and all changed files.
 5. Repair plus fresh validation/re-review when a blocking finding exists.
 6. A visible closure handoff whose status is supported by current evidence.
@@ -117,8 +121,9 @@ Scope / Risk Escalation before editing outside the accepted scope.
 ## Final Handoff Contents
 
 An implementation handoff records status, task and owner, result, expected
-output, changed files, actual diff or host-native diff reference, commands,
-validation results, and last-edit/validation ordering. Its visible task-local
+output, changed files, exact change evidence or a reviewer-accessible native
+reference, commands, validation results, last-edit/validation ordering, and the
+five Review Input Ready facts. Its visible task-local
 Evidence Ledger identifies current `latest-material-edit` and
 `validation-passed` claims. Closure also reports independent review findings,
 unverified scope, residual risk, and the next step.
