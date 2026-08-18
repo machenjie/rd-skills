@@ -315,7 +315,31 @@ FULL_REGRESSION_COMMANDS = (
     "python3 scripts/quickstart.py --agent copilot --scope project --target /tmp/changeforge-quickstart-copilot --dry-run",
     "python3 scripts/quickstart.py --agent openai-api --dry-run",
 )
-LEGACY_FULL_UNITTEST_COMMAND = "python3 -m unittest discover -s tests"
+RETIRED_WORKFLOW_PATHS = (
+    ".github/workflows/ci.yml",
+    ".github/workflows/formal-release.yml",
+)
+RETIRED_WORKFLOW_CLAIM_DOCS = (
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    ".github/pull_request_template.md",
+    "GOVERNANCE.md",
+    "docs/RELEASE.md",
+    "docs/VALIDATION.md",
+    "docs/SKILL_CONTENT_GOVERNANCE.md",
+    "docs/skill_professionalism_standard/SKILL_PROFESSIONALISM_EVALUATION_AND_GOVERNANCE.md",
+)
+RETIRED_REMOTE_REQUIRED_CLAIMS = (
+    re.compile(r"\bPull-request CI\b", re.IGNORECASE),
+    re.compile(r"\bCI / pr-ci\b", re.IGNORECASE),
+    re.compile(r"unsharded `pr-ci` job", re.IGNORECASE),
+    re.compile(r"remote `Formal Release` workflow", re.IGNORECASE),
+    re.compile(r"same-commit remote workflow", re.IGNORECASE),
+    re.compile(r"remote formal evidence", re.IGNORECASE),
+    re.compile(r"\.github/workflows/formal-release\.yml", re.IGNORECASE),
+    re.compile(r"workflow verifies the manifest commit", re.IGNORECASE),
+    re.compile(r"uploaded by CI", re.IGNORECASE),
+)
 
 
 def _markdown_files(root: Path) -> list[Path]:
@@ -1028,8 +1052,8 @@ def _current_evidence_projection_errors(root: Path) -> list[str]:
         "`.rd-skills/expert-panel/<run-id>/`"
     )
     boundary = _normalized_document_text(
-        "These fixed attestations do not prove that the final formal gates or "
-        "same-commit remote workflow passed."
+        "These fixed attestations do not prove that the final local formal gate "
+        "passed."
     )
     errors: list[str] = []
     for relative in CURRENT_EVIDENCE_DOCS:
@@ -1618,208 +1642,25 @@ def _ordered_command_errors(
     return errors
 
 
-def _ci_affected_check_errors(path: Path) -> list[str]:
-    """Require one minimal pull-request-only affected CI check."""
+def _retired_workflow_contract_errors(root: Path) -> list[str]:
+    """Reject retired workflow files and stale remote-execution requirements."""
 
     errors: list[str] = []
-    try:
-        workflow = load_yaml_file(path)
-    except (OSError, UnicodeError, ValidationProblem) as exc:
-        return [f"{path.name}: invalid CI workflow YAML: {exc}"]
-    if not isinstance(workflow, dict):
-        return [f"{path.name}: CI workflow must be a top-level mapping"]
+    for relative in RETIRED_WORKFLOW_PATHS:
+        if (root / relative).exists():
+            errors.append(f"retired workflow must remain absent: {relative}")
 
-    # PyYAML's YAML 1.1 resolver treats the unquoted GitHub Actions key `on`
-    # as boolean true. The repository fallback parser retains it as a string;
-    # accept either semantic representation without adding another parser.
-    normalized_top_keys = {
-        "on" if key is True else key
-        for key in workflow
-    }
-    allowed_top_keys = {"name", "on", "permissions", "jobs"}
-    required_top_keys = {"name", "on", "jobs"}
-    if (
-        len(workflow) != len(normalized_top_keys)
-        or not required_top_keys.issubset(normalized_top_keys)
-        or not normalized_top_keys.issubset(allowed_top_keys)
-    ):
-        errors.append(f"{path.name}: CI must use the closed top-level workflow keys")
-
-    on_present = "on" in workflow or True in workflow
-    on_value = workflow.get("on") if "on" in workflow else workflow.get(True)
-    if isinstance(on_value, str):
-        trigger_names = {on_value}
-        pull_request_config: object = None
-    elif isinstance(on_value, list) and all(
-        isinstance(item, str) for item in on_value
-    ):
-        trigger_names = set(on_value)
-        pull_request_config = None
-    elif isinstance(on_value, dict) and all(
-        isinstance(item, str) for item in on_value
-    ):
-        trigger_names = set(on_value)
-        pull_request_config = on_value.get("pull_request")
-    else:
-        trigger_names = set()
-        pull_request_config = None
-    if not on_present or trigger_names != {"pull_request"}:
-        errors.append(f"{path.name}: ordinary CI must trigger on pull_request only")
-    if pull_request_config != {}:
-        errors.append(f"{path.name}: pull_request configuration must be empty")
-    if isinstance(pull_request_config, dict) and any(
-        key in pull_request_config for key in ("paths", "paths-ignore")
-    ):
-        errors.append(f"{path.name}: pull-request CI must not define path filters")
-
-    jobs = workflow.get("jobs")
-    if not isinstance(jobs, dict) or set(jobs) != {"pr-ci"}:
-        errors.append(f"{path.name}: CI must contain exactly the pr-ci job/check")
-        job: dict[str, Any] = {}
-    else:
-        candidate = jobs["pr-ci"]
-        job = candidate if isinstance(candidate, dict) else {}
-        if not job:
-            errors.append(f"{path.name}: pr-ci job must be a mapping")
-
-    strategy = job.get("strategy")
-    if "matrix" in job or (
-        isinstance(strategy, dict) and "matrix" in strategy
-    ):
-        errors.append(f"{path.name}: pull-request CI must not define a matrix")
-
-    permission_configs = []
-    if "permissions" in workflow:
-        permission_configs.append(workflow["permissions"])
-    if "permissions" in job:
-        permission_configs.append(job["permissions"])
-    if permission_configs != [{"contents": "read"}]:
-        errors.append(f"{path.name}: CI permissions must grant contents: read only")
-
-    expected_job_keys = {"runs-on", "env", "steps"}
-    if "permissions" in job:
-        expected_job_keys.add("permissions")
-    if (
-        set(job) != expected_job_keys
-        or job.get("runs-on") != "ubuntu-latest"
-        or job.get("env") != {"PYTHONDONTWRITEBYTECODE": "1"}
-    ):
-        errors.append(f"{path.name}: CI must use the closed pr-ci job keys")
-
-    affected_gate = (
-        "python3 scripts/eval-core-principles.py --gate affected "
-        '--base "$CI_BASE_SHA" --head "$CI_HEAD_SHA"'
-    )
-    affected_runner = "python3 scripts/run-ci-tests.py run"
-    no_write = "git diff --exit-code --no-ext-diff --no-textconv HEAD --"
-    install_run = (
-        'install_root="$(mktemp -d)"\n'
-        'git archive --format=tar HEAD | tar -xf - -C "$install_root"\n'
-        'python3 -m pip install --disable-pip-version-check "$install_root"'
-    )
-    expected_sha_env = {
-        "CI_BASE_SHA": "${{ github.event.pull_request.base.sha }}",
-        "CI_HEAD_SHA": "${{ github.event.pull_request.head.sha }}",
-    }
-    raw_steps = job.get("steps")
-    steps = (
-        [step for step in raw_steps if isinstance(step, dict)]
-        if isinstance(raw_steps, list)
-        else []
-    )
-    run_steps = [
-        (step, step["run"].strip())
-        for step in steps
-        if isinstance(step.get("run"), str)
-    ]
-    checkout_steps = [
-        step
-        for step in steps
-        if isinstance(step.get("uses"), str)
-        and step["uses"] == "actions/checkout@v4"
-    ]
-    setup_steps = [
-        step
-        for step in steps
-        if isinstance(step.get("uses"), str)
-        and step["uses"] == "actions/setup-python@v5"
-    ]
-    closed_sequence = (
-        len(steps) == 6
-        and len(raw_steps) == 6
-        and set(steps[0]) == {"uses", "with"}
-        and steps[0].get("uses") == "actions/checkout@v4"
-        and steps[0].get("with")
-        == {
-            "fetch-depth": 0,
-            "ref": "${{ github.event.pull_request.head.sha }}",
-        }
-        and set(steps[1]) == {"uses", "with"}
-        and steps[1].get("uses") == "actions/setup-python@v5"
-        and steps[1].get("with") == {"python-version": "3.11"}
-        and set(steps[2]) == {"name", "run"}
-        and steps[2].get("run") == install_run
-        and set(steps[3]) == {"name", "env", "run"}
-        and steps[3].get("run") == affected_gate
-        and steps[3].get("env") == expected_sha_env
-        and set(steps[4]) == {"name", "env", "run"}
-        and steps[4].get("run") == affected_runner
-        and steps[4].get("env") == expected_sha_env
-        and set(steps[5]) == {"name", "run"}
-        and steps[5].get("run") == no_write
-    )
-    if not closed_sequence:
-        errors.append(
-            f"{path.name}: CI must use the exact closed six-step order"
-        )
-    if len(checkout_steps) != 1:
-        errors.append(f"{path.name}: CI must contain exactly one checkout")
-    else:
-        checkout_with = checkout_steps[0].get("with")
-        if not isinstance(checkout_with, dict) or checkout_with.get("ref") != (
-            "${{ github.event.pull_request.head.sha }}"
-        ):
-            errors.append(
-                f"{path.name}: CI must contain exactly one pull-request head checkout"
-            )
-    if len(setup_steps) != 1:
-        errors.append(f"{path.name}: CI must contain exactly one Python setup")
-
-    install_token = "python3 -m pip install --disable-pip-version-check"
-    if sum(run.count(install_token) for _step, run in run_steps) != 1:
-        errors.append(f"{path.name}: CI must contain exactly one isolated install")
-
-    exact_commands = {
-        "affected producer gate": affected_gate,
-        "unsharded affected-test runner": affected_runner,
-        "tracked no-write check": no_write,
-    }
-    matched_steps: dict[str, list[dict[str, Any]]] = {}
-    for label, command in exact_commands.items():
-        matches = [step for step, run in run_steps if run == command]
-        matched_steps[label] = matches
-        if len(matches) != 1:
-            errors.append(f"{path.name}: CI must contain exactly one {label}")
-
-    for label in ("affected producer gate", "unsharded affected-test runner"):
-        matches = matched_steps[label]
-        if len(matches) != 1 or matches[0].get("env") != expected_sha_env:
-            errors.append(
-                f"{path.name}: {label} must use the exact pull-request base/head environment"
-            )
-
-    forbidden_commands = (*FULL_REGRESSION_COMMANDS, LEGACY_FULL_UNITTEST_COMMAND)
-    if any(
-        command in run
-        for _step, run in run_steps
-        for command in forbidden_commands
-    ):
-        errors.append(f"{path.name}: CI must not run the unconditional Full Regression")
-    if any("shard" in run.casefold() for _step, run in run_steps):
-        errors.append(f"{path.name}: affected-test execution must be unsharded")
+    for relative in RETIRED_WORKFLOW_CLAIM_DOCS:
+        path = root / relative
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8")
+        for claim in RETIRED_REMOTE_REQUIRED_CLAIMS:
+            if claim.search(text):
+                errors.append(
+                    f"{relative}: retired remote-execution claim {claim.pattern}"
+                )
     return errors
-
-
 def _validation_path_consistency_errors(root: Path) -> list[str]:
     errors: list[str] = []
     for relative in ("AGENTS.md", "docs/VALIDATION.md"):
@@ -1835,19 +1676,9 @@ def _validation_path_consistency_errors(root: Path) -> list[str]:
                 error.replace(path.name, relative, 1)
                 for error in _ordered_command_errors(path, commands, label)
             )
-    ci_path = root / ".github/workflows/ci.yml"
-    if not ci_path.is_file():
-        errors.append("missing pull-request affected CI owner: .github/workflows/ci.yml")
-    else:
-        errors.extend(
-            error.replace(ci_path.name, ".github/workflows/ci.yml", 1)
-            for error in _ci_affected_check_errors(ci_path)
-        )
-
     references = {
         "CONTRIBUTING.md": ("Development Affected", "docs/VALIDATION.md"),
         ".github/pull_request_template.md": (
-            "CI / pr-ci",
             "local Full Regression",
             "docs/VALIDATION.md",
         ),
@@ -2036,6 +1867,7 @@ def validate_docs_consistency(
     errors.extend(_navigation_errors(root))
     errors.extend(_required_content_errors(root))
     errors.extend(_validation_path_consistency_errors(root))
+    errors.extend(_retired_workflow_contract_errors(root))
     errors.extend(_volatile_fact_errors(root))
     errors.extend(_current_evidence_projection_errors(root))
     errors.extend(_slash_invocation_errors(root))

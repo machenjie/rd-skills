@@ -1655,6 +1655,66 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
         self.assertEqual("blocked", report["formal_principles_status"])
         self.assertEqual("partial", report["principles_status"])
 
+    def test_local_core_reports_exclude_retired_remote_release_gate(self) -> None:
+        expected_gates = [
+            "examples-validation",
+            "showcase-freshness",
+            "marketplace-catalog-freshness",
+            "marketplace-index-validation",
+            "productization-assets-validation",
+            "open-source-readiness",
+            "unit-tests",
+            "codegen-benchmark-validation",
+            "codegen-benchmark-sample-run",
+            "quickstart-dry-runs",
+        ]
+        remote_limitation = (
+            "Local Core evidence does not provide hosted CI, remote workflow "
+            "execution, remote artifact upload, remote tag or object binding, or "
+            "remote branch or check-state evidence; none is a required, pending, "
+            "or mandatory local gate."
+        )
+        self.assertEqual(
+            expected_gates,
+            EVALUATOR.UNCOVERED_MANDATORY_RELEASE_GATES,
+        )
+        self.assertIn(remote_limitation, EVALUATOR.EVIDENCE_LIMITATIONS)
+
+        temporary, root = self._root()
+        self.addCleanup(temporary.cleanup)
+        script = self._script(
+            root,
+            "local",
+            "from pathlib import Path\n"
+            "Path('reports/result.json').write_text('{\"schema_version\":1,\"status\":\"pass\"}\\n')\n",
+        )
+        outcome = {
+            "id": "local-pass",
+            "producer": "local",
+            "predicates": [
+                PROCESS_PASS,
+                REPORT_SCHEMA,
+                {
+                    "source": "reports/result.json",
+                    "pointer": "/status",
+                    "operator": "equals",
+                    "expected": "pass",
+                },
+            ],
+        }
+        ordinary = EVALUATOR.evaluate(
+            root,
+            self._contract(
+                [self._producer("local", script, reports=["reports/result.json"])],
+                [outcome],
+            ),
+        )
+        failure = EVALUATOR._invalid_report(root, None, ["fixture-invalid"])
+        for report in (ordinary, failure):
+            self.assertEqual(expected_gates, report["uncovered_mandatory_release_gates"])
+            self.assertEqual(EVALUATOR.EVIDENCE_LIMITATIONS, report["limitations"])
+            self.assertIn(remote_limitation, report["limitations"])
+
     def test_authoring_predicate_failure_is_fail(self) -> None:
         temporary, root = self._root()
         self.addCleanup(temporary.cleanup)

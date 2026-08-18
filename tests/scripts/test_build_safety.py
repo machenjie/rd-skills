@@ -648,7 +648,7 @@ class BuildSafetyTests(unittest.TestCase):
         self.assertNotIn("Current capability facts:", copilot)
         self.assertIn("tools: Skill, Read, Grep, Glob", claude)
         self.assertNotIn("Bash", claude.split("---", 2)[1])
-        self.assertIn('tools: ["read", "search"]', copilot)
+        self.assertIn('tools: ["read","search"]', copilot)
         self.assertNotIn('"execute"', copilot.split("---", 2)[1])
 
     def test_copilot_analysis_projects_only_bounded_web_read_tools(self) -> None:
@@ -665,7 +665,26 @@ class BuildSafetyTests(unittest.TestCase):
             matrix,
         )
         frontmatter = rendered.split("---", 2)[1]
-        self.assertIn('tools: ["read", "search", "web"]', frontmatter)
+        compact_tools_line = 'tools: ["read","search","web"]'
+        self.assertIn(compact_tools_line, frontmatter)
+        self.assertEqual(9, count_o200k_base_tokens(compact_tools_line))
+        expected_tools_lines = {
+            "main-control-agent": 'tools: ["agent"]',
+            "analysis-agent": compact_tools_line,
+            "task-agent": 'tools: ["read","search","edit","execute"]',
+            "review-agent": 'tools: ["read","search"]',
+        }
+        for role, expected_line in expected_tools_lines.items():
+            with self.subTest(role=role):
+                role_frontmatter = BUILD._render_copilot_profile(
+                    profiles[role], matrix
+                ).split("---", 2)[1]
+                tools_line = next(
+                    line
+                    for line in role_frontmatter.splitlines()
+                    if line.startswith("tools: ")
+                )
+                self.assertEqual(expected_line, tools_line)
         for forbidden in ("edit", "execute", "agent", "*", "mcp"):
             with self.subTest(forbidden=forbidden):
                 self.assertNotIn(f'"{forbidden}"', frontmatter)

@@ -1,8 +1,8 @@
 # Release
 
 Release only from authored source, current evidence, generated build output,
-package validation, simulated installation, and the remote `Formal Release`
-workflow for the same commit.
+package validation, simulated installation, and the local Core formal gate on
+the same clean commit.
 
 [Skill content governance](SKILL_CONTENT_GOVERNANCE.md#validation) owns Root,
 Semantic Disposition, Readability, and Professional Completeness evidence
@@ -48,10 +48,6 @@ python3 scripts/eval-core-principles.py --gate formal-release
    and return to step 1. Do not run a second unchanged attempt after two
    same-path failures.
 
-5. **Run remote evidence once.** Trigger the `Formal Release` workflow for the
-   exact locally validated commit or release tag. Package and publish only when
-   that workflow passes for the same object ID.
-
 This flow has one local Full Regression and one formal pass on a successful candidate.
 A repair invalidates only evidence affected by that repair. The final complete
 passes still run once after the last material edit.
@@ -72,8 +68,8 @@ non-Control packages. Formal release requires a current Semantic Disposition
 application bound to the exact fixed-attestation bytes. Reuse each current
 attestation while its strict current validator passes; create and promote a
 replacement only after its source, detector, binding, or review contract
-becomes stale. These fixed attestations do not prove that the final formal gates or
-same-commit remote workflow passed.
+becomes stale. These fixed attestations do not prove that the final local formal
+gate passed.
 
 `reports/professionalism-regression-report.json` is the sole machine-readable
 professionalism readiness authority. Its only producer is
@@ -92,8 +88,8 @@ On a formal Core run that JSON also owns the downstream
 `expert_panel_release_manifest`. It binds the release commit to external
 SHA-256 and byte size, review ID, verdict, axis, and canonical path for exactly
 the three fixed attestations; it creates no fourth tracked file and is excluded
-from all panel currentness fingerprints. The remote workflow independently
-compares the manifest commit with the release object ID.
+from all panel currentness fingerprints. Core compares the manifest commit with
+the captured input `HEAD`.
 
 ## Conditional Evidence Refresh
 
@@ -180,7 +176,7 @@ artifact recovery is documented in [Installation](INSTALLATION.md#upgrade).
 
 ## Package
 
-After local and remote formal evidence passes for the same commit:
+After local formal evidence passes for the same clean commit:
 
 ```bash
 python3 scripts/package.py --profile recommended
@@ -210,6 +206,8 @@ harness/negative controls, builds, package structure, and simulated
 installation. It does not prove real-host Profile startup, host enforcement,
 wall-clock performance, production accuracy, provider behavior, official
 marketplace publication, or installed user experience.
+The local formal gate also does not prove hosted GitHub execution, remote
+artifact upload, tag/object binding on a remote, or remote branch/check state.
 
 ## Release Checklist
 
@@ -224,6 +222,5 @@ marketplace publication, or installed user experience.
 - [ ] Readability has no tracked tightening, unresolved detector false positive,
       or rewrite requirement.
 - [ ] All three profiles build and package through their generated manifests.
-- [ ] The remote `Formal Release` workflow passed for the same object ID.
 - [ ] The handoff states evidence limits, skipped checks, Unverified scope, and
       Residual risk.

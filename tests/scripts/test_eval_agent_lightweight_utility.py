@@ -551,6 +551,266 @@ class LightweightUtilityContractTests(unittest.TestCase):
             disguised_edit_errors,
         )
 
+    def test_normal_review_rejects_missing_handoff_and_main_readiness_gate(
+        self,
+    ) -> None:
+        case = self._release_case("single-file-bug-fix")
+        case["steps"] = [
+            step
+            for step in case["steps"]
+            if step.get("action")
+            not in {"implementation-handoff", "review-input-ready"}
+        ]
+        for step in case["steps"]:
+            if step.get("action") == "dispatch" and step.get("profile") == "review-agent":
+                step.pop("review_input_binding", None)
+
+        errors = self._trajectory_errors(case)
+        self.assertTrue(
+            any("normal review requires one current Implementation Handoff" in error for error in errors),
+            errors,
+        )
+        self.assertTrue(
+            any("review dispatch requires one derived Main readiness gate" in error for error in errors),
+            errors,
+        )
+
+    def test_normal_review_input_binding_mutations_fail_closed(self) -> None:
+        def locate(case: dict) -> tuple[dict, dict, dict, dict]:
+            handoff = next(
+                step
+                for step in case["steps"]
+                if step.get("action") == EVAL.IMPLEMENTATION_HANDOFF_ACTION
+            )
+            gate = next(
+                step
+                for step in case["steps"]
+                if step.get("action") == EVAL.REVIEW_INPUT_READY_ACTION
+            )
+            dispatch = next(
+                step
+                for step in case["steps"]
+                if step.get("action") == "dispatch"
+                and step.get("profile") == "review-agent"
+            )
+            event = next(
+                step
+                for step in case["steps"]
+                if step.get("action") == EVAL.REVIEW_DISCIPLINE_ACTION
+            )
+            return handoff, gate, dispatch, event
+
+        mutations: dict[str, tuple[str, object]] = {
+            "missing-handoff": ("review-input-handoff", None),
+            "missing-gate": ("review-input-gate", None),
+            "missing-field": ("review-input-handoff-shape", None),
+            "wrong-field-order": ("review-input-handoff-shape", None),
+            "forbidden-evidence-kind": ("review-input-evidence-kind", None),
+            "unsupported-capability": ("review-input-capability", None),
+            "stale-validation": ("review-input-validation", None),
+            "duplicate-validation": ("review-input-validation", None),
+            "changed-path-mismatch": ("review-input-changed-paths", None),
+            "dispatch-artifact-mismatch": ("review-input-dispatch-binding", None),
+            "dispatch-generation-mismatch": ("review-input-dispatch-binding", None),
+            "reviewer-artifact-mismatch": ("review-input-reviewer-binding", None),
+            "gate-false-still-dispatches": ("review-input-dispatch-before-ready", None),
+            "post-review-recovery": ("review-input-post-review-recovery", None),
+            "task-review-task-review-recovery": ("review-input-recovery", None),
+        }
+        for mutation, (expected_code, _unused) in mutations.items():
+            with self.subTest(mutation=mutation):
+                case = self._release_case("single-file-bug-fix")
+                handoff, gate, dispatch, event = locate(case)
+                if mutation == "missing-handoff":
+                    case["steps"].remove(handoff)
+                elif mutation == "missing-gate":
+                    case["steps"].remove(gate)
+                elif mutation == "missing-field":
+                    handoff.pop("fixed_review_scope")
+                elif mutation == "wrong-field-order":
+                    reordered = {
+                        key: handoff[key]
+                        for key in (
+                            "actor",
+                            "action",
+                            "handoff_id",
+                            "task_id",
+                            "fixed_review_scope",
+                            "latest_changed_paths",
+                            "exact_change_evidence",
+                            "reviewer_capability_accessibility",
+                            "validation_after_latest_material_edit",
+                        )
+                    }
+                    handoff.clear()
+                    handoff.update(reordered)
+                elif mutation == "forbidden-evidence-kind":
+                    handoff["exact_change_evidence"]["kind"] = "changed-file-summary"
+                elif mutation == "unsupported-capability":
+                    handoff["reviewer_capability_accessibility"][
+                        "reviewer-accessible-change-reference"
+                    ] = "unsupported"
+                elif mutation == "stale-validation":
+                    handoff["validation_after_latest_material_edit"]["generation"] = 0
+                elif mutation == "duplicate-validation":
+                    validation = next(
+                        step
+                        for step in case["steps"]
+                        if step.get("actor") == "task-agent"
+                        and step.get("action") == "validate"
+                    )
+                    case["steps"].insert(
+                        case["steps"].index(handoff),
+                        {
+                            **copy.deepcopy(validation),
+                            "evidence_id": "duplicate-validation",
+                        },
+                    )
+                elif mutation == "changed-path-mismatch":
+                    handoff["latest_changed_paths"] = ["other.py"]
+                elif mutation == "dispatch-artifact-mismatch":
+                    dispatch["review_input_binding"]["artifact"] = "other.diff"
+                elif mutation == "dispatch-generation-mismatch":
+                    dispatch["review_input_binding"]["generation"] = 0
+                elif mutation == "reviewer-artifact-mismatch":
+                    event["diff"]["artifact"] = "other.diff"
+                elif mutation == "gate-false-still-dispatches":
+                    gate["ready"] = False
+                elif mutation == "post-review-recovery":
+                    case["steps"].insert(
+                        -1,
+                        {
+                            "actor": "task-agent",
+                            "action": "export-diff",
+                            "artifact_ref": "late-recovery.diff",
+                        },
+                    )
+                elif mutation == "task-review-task-review-recovery":
+                    review = next(
+                        step
+                        for step in case["steps"]
+                        if step.get("actor") == "review-agent"
+                        and step.get("action") == "review"
+                    )
+                    case["steps"][-1:-1] = [
+                        {
+                            "actor": "task-agent",
+                            "action": "export-diff",
+                            "artifact_ref": "late-recovery.diff",
+                        },
+                        copy.deepcopy(dispatch),
+                        copy.deepcopy(event),
+                        copy.deepcopy(review),
+                    ]
+                errors = self._trajectory_errors(case)
+                self.assertTrue(
+                    any(f"[{expected_code}]" in error for error in errors),
+                    errors,
+                )
+
+    def test_normal_review_rounds_bind_one_current_handoff_end_to_end(self) -> None:
+        normal_cases = [
+            *copy.deepcopy(self.release_cases),
+            *copy.deepcopy(self.scheduling_cases),
+        ]
+        handoffs: list[dict] = []
+        for case in normal_cases:
+            with self.subTest(case=case["id"]):
+                self.assertEqual([], self._trajectory_errors(case))
+            handoffs.extend(
+                step
+                for step in case["steps"]
+                if step.get("action") == EVAL.IMPLEMENTATION_HANDOFF_ACTION
+            )
+        self.assertEqual(11, len(handoffs))
+        self.assertTrue(
+            all(tuple(handoff) == EVAL.IMPLEMENTATION_HANDOFF_FIELDS for handoff in handoffs)
+        )
+        self.assertEqual(
+            tuple(EVAL.REVIEW_INPUT_READINESS_MODEL["required_fields"]),
+            EVAL.IMPLEMENTATION_HANDOFF_FIELDS[4:],
+        )
+
+        repair = self._release_case("repair-and-rereview")
+        repair_handoffs = [
+            step
+            for step in repair["steps"]
+            if step.get("action") == EVAL.IMPLEMENTATION_HANDOFF_ACTION
+        ]
+        self.assertEqual(
+            [1, 2],
+            [
+                handoff["exact_change_evidence"]["generation"]
+                for handoff in repair_handoffs
+            ],
+        )
+        self.assertEqual(2, len({handoff["handoff_id"] for handoff in repair_handoffs}))
+
+    def test_normal_review_rejects_every_unconsumed_late_handoff_gate_pair(
+        self,
+    ) -> None:
+        for insertion_action in (
+            "dispatch",
+            EVAL.REVIEW_DISCIPLINE_ACTION,
+            "review",
+        ):
+            with self.subTest(insertion_action=insertion_action):
+                case = self._release_case("single-file-bug-fix")
+                handoff = next(
+                    step
+                    for step in case["steps"]
+                    if step.get("action") == EVAL.IMPLEMENTATION_HANDOFF_ACTION
+                )
+                gate = next(
+                    step
+                    for step in case["steps"]
+                    if step.get("action") == EVAL.REVIEW_INPUT_READY_ACTION
+                )
+                if insertion_action == "dispatch":
+                    insertion_index = next(
+                        index
+                        for index, step in enumerate(case["steps"])
+                        if step.get("action") == "dispatch"
+                        and step.get("profile") == "review-agent"
+                    )
+                else:
+                    insertion_index = next(
+                        index
+                        for index, step in enumerate(case["steps"])
+                        if step.get("action") == insertion_action
+                        and step.get("actor") == "review-agent"
+                    )
+                case["steps"][insertion_index + 1 : insertion_index + 1] = [
+                    copy.deepcopy(handoff),
+                    copy.deepcopy(gate),
+                ]
+
+                errors = self._trajectory_errors(case)
+                self.assertTrue(
+                    any("[review-input-occurrence]" in error for error in errors),
+                    errors,
+                )
+
+    def test_supplied_artifact_and_legacy_utility_do_not_require_normal_handoff(
+        self,
+    ) -> None:
+        review_only = self._release_case("review-only")
+        supplied_utility = copy.deepcopy(
+            next(
+                case
+                for case in self.utility_cases
+                if case["id"] == "review-supplied-artifact-missing-diff"
+            )
+        )
+        self.assertFalse(
+            any(
+                step.get("action") == EVAL.IMPLEMENTATION_HANDOFF_ACTION
+                for step in review_only["steps"]
+            )
+        )
+        self.assertEqual([], self._trajectory_errors(review_only))
+        self.assertEqual([], self._errors(supplied_utility))
+
     def test_task_focus_relation_review_repair_and_cost_matrix_is_closed(self) -> None:
         results, errors = EVAL._task_focus_fixture_results(self.task_focus_cases)
         self.assertEqual([], errors)

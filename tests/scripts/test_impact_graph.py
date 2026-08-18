@@ -928,29 +928,33 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                 self.assertEqual([], result["selected_test_modules_by_layer"]["release"])
                 self.assertNotIn("fallback", result)
 
-    def test_formal_workflow_selects_its_minimal_static_contract_only(self) -> None:
-        result = self._resolve([("M", ".github/workflows/formal-release.yml")])
-        decision = result["changed_paths"][0]
-        self.assertEqual("rule", decision["classification"])
-        self.assertEqual("formal-release-workflow", decision["rule_id"])
-        self.assertEqual([], decision["direct_producer_ids"])
-        self.assertEqual(
-            ["tests/scripts/test_deterministic_report_contracts.py"],
-            decision["test_modules"],
-        )
-        grouped = result["selected_test_modules_by_layer"]
-        self.assertEqual([], grouped["contract"])
-        self.assertEqual(
-            ["tests/scripts/test_deterministic_report_contracts.py"],
-            grouped["governance"],
-        )
-        self.assertEqual([], grouped["release"])
-        self.assertEqual([], result["selected_producer_ids"])
-        self.assertNotIn("fallback", result)
+    def test_retired_workflow_paths_select_the_same_docs_guard(self) -> None:
+        for relative in (
+            ".github/workflows/ci.yml",
+            ".github/workflows/formal-release.yml",
+        ):
+            with self.subTest(relative=relative):
+                result = self._resolve([("M", relative)])
+                decision = result["changed_paths"][0]
+                self.assertEqual("rule", decision["classification"])
+                self.assertEqual("retired-workflow-guard", decision["rule_id"])
+                self.assertEqual(
+                    ["validate-docs-consistency"],
+                    decision["direct_producer_ids"],
+                )
+                self.assertEqual(
+                    ["tests/scripts/test_validate_docs_consistency.py"],
+                    decision["test_modules"],
+                )
+                self.assertEqual(
+                    [], result["selected_test_modules_by_layer"]["release"]
+                )
+                self.assertNotIn("fallback", result)
 
     def test_all_repository_control_paths_resolve_without_ambiguity_or_release_tests(self) -> None:
         paths = (
             ".github/pull_request_template.md",
+            ".github/workflows/ci.yml",
             ".github/workflows/formal-release.yml",
             "AGENTS.md",
             "CONTRIBUTING.md",
@@ -962,7 +966,7 @@ class ImpactGraphResolutionTests(unittest.TestCase):
             all(row["classification"] == "rule" for row in result["changed_paths"])
         )
         self.assertEqual(
-            {"repository-authority-docs", "formal-release-workflow"},
+            {"repository-authority-docs", "retired-workflow-guard"},
             {row["rule_id"] for row in result["changed_paths"]},
         )
         self.assertEqual(
@@ -1129,12 +1133,14 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                 ],
             ),
             ".github/workflows/ci.yml": (
-                "pr-ci-workflow",
-                [],
-                [
-                    "tests/scripts/test_deterministic_report_contracts.py",
-                    "tests/scripts/test_validate_docs_consistency.py",
-                ],
+                "retired-workflow-guard",
+                ["validate-docs-consistency"],
+                ["tests/scripts/test_validate_docs_consistency.py"],
+            ),
+            ".github/workflows/formal-release.yml": (
+                "retired-workflow-guard",
+                ["validate-docs-consistency"],
+                ["tests/scripts/test_validate_docs_consistency.py"],
             ),
         }
         legacy_broad_test_count = 8

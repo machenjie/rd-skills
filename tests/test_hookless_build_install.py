@@ -591,7 +591,7 @@ class HooklessBuildInstallTests(unittest.TestCase):
         copilot_analysis = (copilot / "analysis-agent.agent.md").read_text()
         copilot_analysis_frontmatter = copilot_analysis.split("---", 2)[1]
         self.assertIn(
-            'tools: ["read", "search", "web"]',
+            'tools: ["read","search","web"]',
             copilot_analysis_frontmatter,
         )
         self.assertIn(
@@ -759,8 +759,8 @@ class HooklessBuildInstallTests(unittest.TestCase):
             ),
             "copilot": (
                 Path(".github/agents/review-agent.agent.md"),
-                'tools: ["read", "search"]',
-                'tools: ["read", "search", "execute"]',
+                'tools: ["read","search"]',
+                'tools: ["read","search","execute"]',
                 "Copilot tools differ from the declared default",
             ),
         }

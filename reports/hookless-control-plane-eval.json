@@ -559,6 +559,10 @@
       "error_codes": [
         "guard-c-observable-acceptance",
         "guard-g-adaptive-testing",
+        "review-input-dispatch-binding",
+        "review-input-evidence-generation",
+        "review-input-gate-derived",
+        "review-input-validation",
         "review-kind",
         "review-old-diff",
         "review-repair-order",
@@ -577,6 +581,7 @@
       "expected_error": "repair-rereview-missing",
       "error_codes": [
         "repair-rereview-missing",
+        "review-input-occurrence",
         "review-old-diff"
       ],
       "gap": null
@@ -876,7 +881,8 @@
       "actual_valid": false,
       "matches_expected": true,
       "errors": [
-        "review-rejects-summary-for-diff: [review-diff] implementation review requires an actual diff, not a summary or inferred scope"
+        "review-rejects-summary-for-diff: [review-diff] implementation review requires an actual diff, not a summary or inferred scope",
+        "review-rejects-summary-for-diff: [review-input-reviewer-binding] reviewer diff artifact, generation, and changed files must match the Handoff and dispatch"
       ]
     },
     {
@@ -899,6 +905,10 @@
       "matches_expected": true,
       "errors": [
         "review-rejects-reviewer-edit: [reviewer-mutation] review-agent must never edit or repair; found 'edit' at step 2",
+        "review-rejects-reviewer-edit: [review-input-evidence-generation] exact change evidence must use the current material generation",
+        "review-rejects-reviewer-edit: [review-input-validation] Handoff validation must bind the unique passing validation after the latest material edit",
+        "review-rejects-reviewer-edit: [review-input-gate-derived] Main readiness must be derived from all five Handoff fields and capability facts",
+        "review-rejects-reviewer-edit: [review-input-dispatch-binding] review dispatch must bind the current Handoff artifact and generation",
         "review-rejects-reviewer-edit: [review-old-diff] review requires the actual latest diff generation after the latest modification",
         "review-rejects-reviewer-edit: [review-stale-validation] review requires fresh passing validation after the latest material edit"
       ]
@@ -913,6 +923,10 @@
         "review-rejects-reviewer-repair: [reviewer-mutation] review-agent must never edit or repair; found 'repair' at step 2",
         "review-rejects-reviewer-repair: [review-kind] actual material actions require repair review; review_kind='implementation' contradicts the derived requirement",
         "review-rejects-reviewer-repair: [review-kind] derived 'repair' review kind requires one of ['re-review']",
+        "review-rejects-reviewer-repair: [review-input-evidence-generation] exact change evidence must use the current material generation",
+        "review-rejects-reviewer-repair: [review-input-validation] Handoff validation must bind the unique passing validation after the latest material edit",
+        "review-rejects-reviewer-repair: [review-input-gate-derived] Main readiness must be derived from all five Handoff fields and capability facts",
+        "review-rejects-reviewer-repair: [review-input-dispatch-binding] review dispatch must bind the current Handoff artifact and generation",
         "review-rejects-reviewer-repair: [review-old-diff] review requires the actual latest diff generation after the latest modification",
         "review-rejects-reviewer-repair: [review-stale-validation] review requires fresh passing validation after the latest material edit",
         "review-rejects-reviewer-repair: [review-repair-order] repair requires fresh validation, latest actual diff, then fresh re-review"
@@ -936,6 +950,8 @@
       "actual_valid": false,
       "matches_expected": true,
       "errors": [
+        "review-rejects-stale-validation: [review-input-validation] Handoff validation must bind the unique passing validation after the latest material edit",
+        "review-rejects-stale-validation: [review-input-gate-derived] Main readiness must be derived from all five Handoff fields and capability facts",
         "review-rejects-stale-validation: [review-stale-validation] review requires fresh passing validation after the latest material edit"
       ]
     },
@@ -946,6 +962,7 @@
       "actual_valid": false,
       "matches_expected": true,
       "errors": [
+        "review-rejects-old-diff: [review-input-reviewer-binding] reviewer diff artifact, generation, and changed files must match the Handoff and dispatch",
         "review-rejects-old-diff: [review-old-diff] review requires the actual latest diff generation after the latest modification"
       ]
     },
@@ -967,6 +984,29 @@
       "actual_valid": false,
       "matches_expected": true,
       "errors": [
+        "review-rejects-repair-order: [review-input-dispatch] normal review requires exactly one review dispatch after the current Handoff gate",
+        "review-rejects-repair-order: [review-input-handoff] normal review requires one current Implementation Handoff after validation and before review dispatch",
+        "review-rejects-repair-order: [review-input-gate] review dispatch requires one derived Main readiness gate after the current Handoff",
+        "review-rejects-repair-order: [review-input-handoff-shape] Implementation Handoff must use the exact ordered review-input fields",
+        "review-rejects-repair-order: [review-input-handoff-shape] Implementation Handoff handoff_id must be non-empty",
+        "review-rejects-repair-order: [review-input-handoff-task] Implementation Handoff task_id must match the review assignment",
+        "review-rejects-repair-order: [review-input-changed-paths] Implementation Handoff latest_changed_paths must equal every path changed since the previous review",
+        "review-rejects-repair-order: [review-input-evidence-shape] exact_change_evidence must use kind, artifact, and generation in canonical order",
+        "review-rejects-repair-order: [review-input-evidence-kind] Implementation Handoff requires a Core-declared exact change evidence kind",
+        "review-rejects-repair-order: [review-input-evidence-artifact] exact change evidence requires a non-empty artifact or reference",
+        "review-rejects-repair-order: [review-input-evidence-generation] exact change evidence must use the current material generation",
+        "review-rejects-repair-order: [review-input-capability-shape] reviewer capability accessibility must use the three canonical capability facts",
+        "review-rejects-repair-order: [review-input-capability] review dispatch requires supported evidence read, accessible reference, and non-mutating validation capabilities",
+        "review-rejects-repair-order: [review-input-validation-shape] validation_after_latest_material_edit must use evidence_id, result, and generation in canonical order",
+        "review-rejects-repair-order: [review-input-validation] Handoff validation must bind the unique passing validation after the latest material edit",
+        "review-rejects-repair-order: [review-input-scope] fixed_review_scope must equal the current changed-path scope",
+        "review-rejects-repair-order: [review-input-order] normal review order is validation, Handoff, Main readiness gate, then review dispatch",
+        "review-rejects-repair-order: [review-input-gate-shape] Main readiness gate must use actor, action, handoff_id, and ready in canonical order",
+        "review-rejects-repair-order: [review-input-gate-derived] Main readiness must be derived from all five Handoff fields and capability facts",
+        "review-rejects-repair-order: [review-input-dispatch-before-ready] review dispatch is forbidden when the derived Main readiness gate is false",
+        "review-rejects-repair-order: [review-input-dispatch-binding] review dispatch must bind handoff_id, artifact, and generation in canonical order",
+        "review-rejects-repair-order: [review-input-dispatch-binding] review dispatch must bind the current Handoff artifact and generation",
+        "review-rejects-repair-order: [review-input-reviewer-binding] reviewer diff artifact, generation, and changed files must match the Handoff and dispatch",
         "review-rejects-repair-order: [review-stale-validation] review requires fresh passing validation after the latest material edit",
         "review-rejects-repair-order: [review-repair-order] repair requires fresh validation, latest actual diff, then fresh re-review"
       ]
@@ -4185,7 +4225,7 @@
         "review_after_final_edit": true,
         "repair_has_rereview": true,
         "implementation_discipline_event_count": 1,
-        "implementation_internal_evidence_event_count": 8,
+        "implementation_internal_evidence_event_count": 9,
         "review_discipline_event_count": 1,
         "progress_count": 0,
         "productive_action_count": 4,
@@ -4222,7 +4262,7 @@
         "review_after_final_edit": true,
         "repair_has_rereview": true,
         "implementation_discipline_event_count": 1,
-        "implementation_internal_evidence_event_count": 5,
+        "implementation_internal_evidence_event_count": 6,
         "review_discipline_event_count": 1,
         "progress_count": 3,
         "productive_action_count": 6,
@@ -4259,7 +4299,7 @@
         "review_after_final_edit": true,
         "repair_has_rereview": true,
         "implementation_discipline_event_count": 3,
-        "implementation_internal_evidence_event_count": 18,
+        "implementation_internal_evidence_event_count": 19,
         "review_discipline_event_count": 1,
         "progress_count": 3,
         "productive_action_count": 6,
@@ -4444,7 +4484,7 @@
         "review_after_final_edit": true,
         "repair_has_rereview": true,
         "implementation_discipline_event_count": 2,
-        "implementation_internal_evidence_event_count": 12,
+        "implementation_internal_evidence_event_count": 14,
         "review_discipline_event_count": 2,
         "progress_count": 4,
         "productive_action_count": 6,
@@ -4481,7 +4521,7 @@
         "review_after_final_edit": true,
         "repair_has_rereview": true,
         "implementation_discipline_event_count": 1,
-        "implementation_internal_evidence_event_count": 6,
+        "implementation_internal_evidence_event_count": 7,
         "review_discipline_event_count": 1,
         "progress_count": 3,
         "productive_action_count": 5,
@@ -4518,7 +4558,7 @@
         "review_after_final_edit": true,
         "repair_has_rereview": true,
         "implementation_discipline_event_count": 1,
-        "implementation_internal_evidence_event_count": 6,
+        "implementation_internal_evidence_event_count": 7,
         "review_discipline_event_count": 1,
         "progress_count": 3,
         "productive_action_count": 5,
@@ -4555,7 +4595,7 @@
         "review_after_final_edit": true,
         "repair_has_rereview": true,
         "implementation_discipline_event_count": 1,
-        "implementation_internal_evidence_event_count": 6,
+        "implementation_internal_evidence_event_count": 7,
         "review_discipline_event_count": 1,
         "progress_count": 3,
         "productive_action_count": 5,
@@ -4592,7 +4632,7 @@
         "review_after_final_edit": true,
         "repair_has_rereview": true,
         "implementation_discipline_event_count": 1,
-        "implementation_internal_evidence_event_count": 6,
+        "implementation_internal_evidence_event_count": 7,
         "review_discipline_event_count": 1,
         "progress_count": 3,
         "productive_action_count": 5,
@@ -4629,7 +4669,7 @@
         "review_after_final_edit": true,
         "repair_has_rereview": true,
         "implementation_discipline_event_count": 1,
-        "implementation_internal_evidence_event_count": 5,
+        "implementation_internal_evidence_event_count": 6,
         "review_discipline_event_count": 1,
         "progress_count": 3,
         "productive_action_count": 5,
@@ -4666,7 +4706,7 @@
         "review_after_final_edit": true,
         "repair_has_rereview": true,
         "implementation_discipline_event_count": 2,
-        "implementation_internal_evidence_event_count": 12,
+        "implementation_internal_evidence_event_count": 13,
         "review_discipline_event_count": 1,
         "progress_count": 3,
         "productive_action_count": 5,

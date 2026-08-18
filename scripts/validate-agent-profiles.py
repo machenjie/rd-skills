@@ -828,7 +828,11 @@ def main(argv: list[str] | None = None) -> int:
                     errors.append("claude:review-agent must omit Bash and use read-only artifact tools")
             if platform == "copilot" and name == "review-agent":
                 tools_line = next((line for line in text.splitlines() if line.startswith("tools: ")), "")
-                if '"execute"' in tools_line or tools_line != 'tools: ["read", "search"]':
+                expected_tools_line = "tools: " + json.dumps(
+                    hosts["copilot"]["roles"]["review-agent"]["rendered_tools"],
+                    separators=(",", ":"),
+                )
+                if '"execute"' in tools_line or tools_line != expected_tools_line:
                     errors.append("copilot:review-agent must omit execute and use read/search")
             if name == "main-control-agent":
                 host_entry = hosts.get(platform, {})

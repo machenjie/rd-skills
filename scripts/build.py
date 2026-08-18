@@ -1529,7 +1529,7 @@ def _render_copilot_profile(
 ) -> str:
     matrix = enforcement or _load_host_enforcement()
     tools = matrix["hosts"]["copilot"]["roles"][profile["name"]]["rendered_tools"]
-    rendered = ", ".join(json.dumps(tool) for tool in dict.fromkeys(tools))
+    rendered = json.dumps(list(dict.fromkeys(tools)), separators=(",", ":"))
     model_invocation = (
         "disable-model-invocation: true\n"
         if profile["name"] == "main-control-agent"
@@ -1541,7 +1541,7 @@ def _render_copilot_profile(
         f"description: {profile['description']}\n"
         f"{model_invocation}"
         "user-invocable: true\n"
-        f"tools: [{rendered}]\n"
+        f"tools: {rendered}\n"
         "---\n\n"
         f"{_profile_instructions(profile, 'copilot', matrix)}\n"
     )

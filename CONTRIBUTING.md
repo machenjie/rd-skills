@@ -56,16 +56,13 @@ python3 scripts/build.py --profile full
 
 Every committed Skill-system change must run [Development
 Affected](docs/VALIDATION.md#development-affected) for its selected base and
-head. Pull-request CI enforces the same affected producer and owner-test
-selection in one unsharded `pr-ci` job. Documentation-only changes remain in
-scope because the Core impact graph maps them to their owning documentation
-producer and tests.
+head. Documentation-only changes remain in scope because the Core impact graph
+maps them to their owning documentation producer and tests.
 
 Focused checks remain useful while changes are uncommitted. The [local Full
 Regression](docs/VALIDATION.md#local-full-regression) runs once before an
-integration handoff or release-candidate decision. Formal-release commands and
-the remote `Formal Release` workflow are additional independent release
-evidence; neither is part of pull-request CI.
+integration handoff or release-candidate decision. The local formal-release
+command is additional independent release evidence.
 
 ## Pull Request Checklist
 

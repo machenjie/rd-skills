@@ -113,8 +113,8 @@ optional CI/Release artifact. Canonical fixed-attestation paths, not Readability
 or Professional policy config, select Expert Panel evidence; the formal target
 remains all 189 non-Control packages. Formal release requires a current
 Semantic application bound to the exact fixed-attestation bytes. These fixed
-attestations do not prove that the final formal gates or same-commit remote
-workflow passed. Replace an attestation only after source, detector, binding,
+attestations do not prove that the final local formal gate passed. Replace an
+attestation only after source, detector, binding,
 or contract drift; Git history is the audit trail for prior attestations.
 
 `content_readiness` schema 10 requires the producer to regenerate the strict

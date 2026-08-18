@@ -42,10 +42,9 @@ projections under `.rd-skills/formal-release/<captured-head>/reports/` without
 changing the tracked projections. Its declared intermediate report graph writes
 and reads only the sibling head-scoped `producer-reports/` staging directory;
 the final `reports/` scene contains exactly the four canonical Core and
-professionalism artifacts. The remote `Formal Release` workflow
-validates and uploads that exact head-scoped scene and must pass for the same
-object ID as the locally validated final tree. Formal Release is independent
-from both Development Affected and local Full Regression.
+professionalism artifacts. Core validates that exact head-scoped scene and
+binds it to the captured input `HEAD`. Formal Release is independent from both
+Development Affected and local Full Regression.
 
 ## Local Full Regression
 
@@ -75,17 +74,8 @@ Core authoring is the canonical full deterministic producer owner. The
 remaining commands are artifact consumers or non-Core repository checks; they
 must not replay a Core-owned producer merely to count a second pass.
 
-Pull-request CI runs one minimal affected check. It does not run the local Full
-Regression above. Formal remote evidence comes from
-`.github/workflows/formal-release.yml`, triggered manually or by a `v*` tag;
-that independent workflow retains the Core formal gate and its aggregate
-expert-review outcome,
-repository execution set, and final generated-artifact diff check.
-
-Pull-request CI has one job with one checkout, Python setup, isolated dependency
-install, affected producer gate, affected-test runner, and tracked workspace
-no-write check. It does not run unconditional documentation,
-productization, code-generation, quickstart, or full-suite commands. The
+Development Affected runs only the selected affected producer and owner-test
+closure; it does not run the local Full Regression above. The
 [`impact_graph_contract`](../src/control-model/core-contracts.json) is the sole
 authority for changed-path classification, canonical producer dependency
 closure, owner-test selection, fail-closed outcomes, isolation, and build-profile
@@ -193,15 +183,14 @@ per-module duration are also bounded. Results are reported in module-path order,
 dispatch stops after the first observed non-pass, and no result cache is used.
 `--list-tests` emits the module/test-ID manifest and does not run any tests.
 
-This runner is the official unittest step in both local Full Regression and the
-remote Formal Release workflow. Core authoring and the unique Core formal gate
-retain their separate ordered ownership.
+This runner is the official unittest step in local Full Regression. Core
+authoring and the unique Core formal gate retain their separate ordered
+ownership.
 
 Affected producer execution uses only the selected commit's tracked files in a
 disposable tree, so selected builds and their consumers do not modify the caller
 workspace. Because `dist/` is ignored and has no checked-in artifact authority,
-pull-request CI does not claim a byte-freshness comparison for it. The final
-`git diff --exit-code` proves only that tracked caller files were not modified.
+Development Affected does not claim a byte-freshness comparison for it.
 Local Full Regression and Formal Release remain explicit independent paths.
 
 The Full Regression does not launch Core-owned producers a second time. Its
@@ -223,15 +212,11 @@ authority. Ordinary schema-4 validation treats current-tree status as
 `not-evaluated`: it validates the recorded pre/post/unchanged integrity,
 canonical contract hash, producer and artifact identities, predicates,
 outcomes, principles, and authorities without computing or comparing a current
-whole-tree digest. Pull-request CI does not refresh this global artifact.
+whole-tree digest. Development Affected does not refresh this global artifact.
 Formal `release_projection` evidence remains strict: it compares the captured
 input tree with the current final tree and stays bound to the clean captured
 `HEAD` in the ignored, head-scoped formal scene. Formal Release does not replace
 or consume the tracked ordinary producer reports.
-
-CI installs the project and declared dependencies from a `git archive` in a
-temporary directory. Packaging metadata such as `*.egg-info` must not appear
-in or be hidden from the validation checkout.
 
 ## Signal Ownership
 
@@ -313,7 +298,7 @@ non-Control packages. A current Semantic Disposition application binds the
 exact fixed-attestation bytes. Replace an attestation only when its strict
 current validator reports source, detector, binding, or contract drift, then
 rerun the Core formal gate. These fixed attestations do not prove that the final
-formal gates or same-commit remote workflow passed.
+local formal gate passed.
 
 Readability compact schema 2 uses the manifest-v2 digest as its sole source
 authority and one review-unit-binding-v3 digest per minimum target or finding
@@ -400,8 +385,7 @@ the selected base and head. Integration and release-candidate decisions require
 the local Full Regression on the same final material tree. Formal release
 additionally requires the single complete formal command above, current Root
 and expert-review evidence under [Skill content
-governance](SKILL_CONTENT_GOVERNANCE.md), clean tracked evidence, and the remote
-`Formal Release` workflow for the same object ID.
+governance](SKILL_CONTENT_GOVERNANCE.md), and clean tracked evidence.
 `authoring_gate=current-contract-pass` alone is not release readiness.
 
 Use [Release](RELEASE.md) for lifecycle ordering, package commands, stop and

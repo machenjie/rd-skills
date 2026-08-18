@@ -26,8 +26,8 @@ python3 scripts/eval-core-principles.py --gate affected --base <base> --head <he
 python3 scripts/run-ci-tests.py run --base <base> --head <head>
 ```
 
-Pull-request CI applies those two selectors in one unsharded `pr-ci` job. It is
-pull-request-only and does not run the full repository regression set.
+These two local selectors remain the complete Development Affected command
+surface; they do not run the full repository regression set.
 
 Run the local Full Regression once on the final material tree before an
 integration handoff or release-candidate decision. Core authoring is the single
@@ -55,8 +55,6 @@ python3 scripts/quickstart.py --agent openai-api --dry-run
 
 Formal Release is independent from Development Affected and local Full
 Regression. It requires the single Core command below on one clean final commit.
-The independent `.github/workflows/formal-release.yml` workflow is remote
-release evidence for that same object ID; it is not part of pull-request CI.
 
 ```bash
 python3 scripts/eval-core-principles.py --gate formal-release
@@ -75,13 +73,13 @@ attestations. The manifest is not a fourth tracked panel artifact and never
 feeds Readability, Semantic Disposition, or Professional Completeness
 fingerprints or currentness. Authoring reports only a non-blocking manifest
 state; formal release requires current, accepted, clean, `HEAD`-equal artifacts
-and the workflow verifies the manifest commit against the release object ID.
+and Core verifies that the manifest commit equals the captured input `HEAD`.
 Tracked Core and professionalism JSON reports are ordinary authoring
 projections only. Formal Core writes both schema-4 JSON outcomes and their
 Markdown projections to
 `.rd-skills/formal-release/<captured-head>/reports/`; that directory is ignored,
-bound to the captured input `HEAD`, validated and uploaded by the formal
-workflow, and contains exactly those four canonical files. Every declared
+bound to the captured input `HEAD`, validated locally, and contains exactly
+those four canonical files. Every declared
 intermediate report producer and consumer in the formal graph uses the sibling
 `.rd-skills/formal-release/<captured-head>/producer-reports/` staging directory;
 the formal run never reads or refreshes tracked `reports/` projections and must
@@ -95,8 +93,8 @@ experience. State those limits in every release handoff.
 
 If an affected selector or Full Regression command is intentionally replaced,
 update this command discipline, `docs/VALIDATION.md`, the owning Core impact
-graph, and the applicable workflow in the same change. Do not report success
-from a stale generated report.
+graph, and the applicable local command owner in the same change. Do not report
+success from a stale generated report.
 
 `scripts/audit-skill-content.py` is the single source collector for root Skill
 content and indexed/physical Reference content. The required strict
@@ -202,7 +200,7 @@ The Phase 2 inventory is the current and final inventory. Formal Release require
 each canonical fixed attestation to be current to its selected sources and
 review contracts, byte-equal to `HEAD`, and clean. Stale evidence cannot satisfy
 Formal Release and must be replaced in place after a fresh review. The
-final-tree Core formal gate and same-commit remote workflow must both pass.
+final-tree Core formal gate must pass.
 
 Use the four Profile boundaries defined in `src/agent-profiles/role-agents.json`. The main agent dispatches only; analysis reads and searches; task agents implement bounded work; review agents perform independent non-modifying review. Shared-workspace writes are serial unless the host supplies isolated workspaces and the tasks have no dependency or shared write surface.
 

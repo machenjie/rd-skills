@@ -814,17 +814,17 @@
   ],
   "command_execution_count": 33,
   "contract_errors": [],
-  "contract_sha256": "cd375c2d373546848dc89549897ba0a3d092987c180e93706cb62e6927eabebf",
+  "contract_sha256": "15bc3eee84dc78d4da6890529b5393a8646e7a622c7a8d28ec7047d0722589c2",
   "contract_source": "src/control-model/core-contracts.json",
   "formal_principles_status": "blocked",
   "input_tree": {
     "post": {
-      "file_count": 2533,
-      "sha256": "7ffe863efc8915bf26f960e49afe1fd46cf28b144820f434a522237b9c7b211f"
+      "file_count": 2531,
+      "sha256": "53a1ec52da681f9c52eefdacea940a09cecdc0801c17839bafbf132f5e228b15"
     },
     "pre": {
-      "file_count": 2533,
-      "sha256": "7ffe863efc8915bf26f960e49afe1fd46cf28b144820f434a522237b9c7b211f"
+      "file_count": 2531,
+      "sha256": "53a1ec52da681f9c52eefdacea940a09cecdc0801c17839bafbf132f5e228b15"
     },
     "unchanged": true
   },
@@ -832,7 +832,8 @@
   "limitations": [
     "Evidence is limited to static contracts, deterministic fixtures, code-generation definitions and harness or negative-control checks, builds, and simulated installation.",
     "This evaluation does not prove real-host Profile startup, wall-clock performance, production accuracy, or the installed user experience.",
-    "The formal Core Principles sub-gate is not the repository formal release gate and does not cover every mandatory release gate listed below."
+    "The formal Core Principles sub-gate is not the repository formal release gate and does not cover every mandatory release gate listed below.",
+    "Local Core evidence does not provide hosted CI, remote workflow execution, remote artifact upload, remote tag or object binding, or remote branch or check-state evidence; none is a required, pending, or mandatory local gate."
   ],
   "outcomes": [
     {
@@ -5006,7 +5007,6 @@
     "unit-tests",
     "codegen-benchmark-validation",
     "codegen-benchmark-sample-run",
-    "quickstart-dry-runs",
-    "remote-ci-current-commit"
+    "quickstart-dry-runs"
   ]
 }

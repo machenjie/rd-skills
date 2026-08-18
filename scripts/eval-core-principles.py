@@ -105,12 +105,12 @@ UNCOVERED_MANDATORY_RELEASE_GATES = [
     "codegen-benchmark-validation",
     "codegen-benchmark-sample-run",
     "quickstart-dry-runs",
-    "remote-ci-current-commit",
 ]
 EVIDENCE_LIMITATIONS = [
     "Evidence is limited to static contracts, deterministic fixtures, code-generation definitions and harness or negative-control checks, builds, and simulated installation.",
     "This evaluation does not prove real-host Profile startup, wall-clock performance, production accuracy, or the installed user experience.",
     "The formal Core Principles sub-gate is not the repository formal release gate and does not cover every mandatory release gate listed below.",
+    "Local Core evidence does not provide hosted CI, remote workflow execution, remote artifact upload, remote tag or object binding, or remote branch or check-state evidence; none is a required, pending, or mandatory local gate.",
 ]
 EXCLUDED_TREE_PREFIXES = (
     ".git/",

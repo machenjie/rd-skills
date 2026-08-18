@@ -30,7 +30,6 @@ Paste commands and results:
 Required for Skill-system changes:
 
 - [ ] Development Affected selected the expected producer/test closure for this base and head.
-- [ ] The single PR-only `CI / pr-ci` affected check passed for the current head.
 - [ ] If this is an integration handoff or release candidate, the local Full Regression in `docs/VALIDATION.md` ran once on the final material tree.
 - [ ] Generated artifacts required by the selected path are fresh and the working tree contains only intended changes.
 
@@ -43,7 +42,6 @@ Required only when this PR claims formal-release readiness:
 - [ ] Full packets, templates, ballots, capsules, and decisions remained only under ignored `.rd-skills/expert-panel/<run-id>/` or an optional CI/Release artifact.
 - [ ] Readability schema-2 review is current, covers all actionability targets, and has zero tracked tightening, unresolved detector false positives, or required rewrites.
 - [ ] Professional-completeness schema-3 review is current: exact carry uses authenticated direct fresh origins, fresh Skills receive two qualified domain votes plus one architecture vote, all 189 effective packages are accepted, correction/unresolved counts are zero, and contract/plan/bindings/provenance/storage/cost are current.
-- [ ] The `Formal Release` workflow passed for the current commit or tag.
 
 ## Evidence Scope and Review
 
@@ -60,7 +58,7 @@ Required only when this PR claims formal-release readiness:
 - Professional-completeness status, schema-3 contract/plan/binding fingerprints, fresh/carry partition, reviewer-pool size, authenticated direct-origin closure, input-byte proxy/ratio, 189/189 effective coverage, zero-correction/unresolved counts, and clean compact evidence:
 - Aggregate content readiness axes:
 
-Canonical fixed-attestation paths, not Readability or Professional policy config, select Expert Panel evidence; the formal target remains all 189 non-Control packages. These fixed attestations do not prove that the final formal gates or same-commit remote workflow passed.
+Canonical fixed-attestation paths, not Readability or Professional policy config, select Expert Panel evidence; the formal target remains all 189 non-Control packages. These fixed attestations do not prove that the final local formal gate passed.
 
 ## Release Notes
 

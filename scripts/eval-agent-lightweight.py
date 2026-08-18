@@ -79,16 +79,28 @@ PRODUCTIVE_ACTIONS = {
     "export-diff",
     "implementation-discipline",
 }
+IMPLEMENTATION_HANDOFF_ACTION = "implementation-handoff"
+REVIEW_INPUT_READY_ACTION = "review-input-ready"
 ADAPTIVE_TEST_EVIDENCE_ACTION = "adaptive-test-evidence"
 INTERNAL_EVIDENCE_ACTIONS = {
     "implementation-discipline",
+    IMPLEMENTATION_HANDOFF_ACTION,
+    REVIEW_INPUT_READY_ACTION,
     ADAPTIVE_TEST_EVIDENCE_ACTION,
     REVIEW_DISCIPLINE_MODEL["trace_action"],
 }
 WORKER_EVIDENCE_ACTIONS = PRODUCTIVE_ACTIONS | {"brief", "task_plan", "finding"}
 EDIT_ACTIONS = {"edit", "repair"}
 REVIEW_ACTIONS = {"review", "re-review"}
-MAIN_ACTIONS = {"classify", "dispatch", "progress", "escalate", "user_decision", "close"}
+MAIN_ACTIONS = {
+    "classify",
+    "dispatch",
+    "progress",
+    "escalate",
+    "user_decision",
+    "close",
+    REVIEW_INPUT_READY_ACTION,
+}
 PROGRESS_CHECKPOINT_TYPES = {
     "start/path",
     "dispatch/batch",
@@ -106,6 +118,7 @@ PROFILE_ACTIONS = {
         "validate",
         "export-diff",
         "implementation-discipline",
+        IMPLEMENTATION_HANDOFF_ACTION,
         "adaptive-test-evidence",
     },
     "review-agent": {
@@ -512,6 +525,36 @@ REVIEW_FORBIDDEN_EVIDENCE_SOURCES = set(
 )
 REVIEW_KINDS = set(REVIEW_DISCIPLINE_MODEL["review_kinds"])
 REVIEW_VERDICTS = set(REVIEW_DISCIPLINE_MODEL["verdicts"])
+REVIEW_INPUT_READINESS_MODEL = REVIEW_DISCIPLINE_MODEL["review_input_readiness"]
+REVIEW_INPUT_REQUIRED_FIELDS = tuple(
+    REVIEW_INPUT_READINESS_MODEL["required_fields"]
+)
+REVIEW_INPUT_EXACT_EVIDENCE_KINDS = set(
+    REVIEW_INPUT_READINESS_MODEL["exact_change_evidence_kinds"]
+)
+REVIEW_INPUT_FORBIDDEN_EVIDENCE_KINDS = set(
+    REVIEW_INPUT_READINESS_MODEL["forbidden_substitutes"]
+)
+IMPLEMENTATION_HANDOFF_FIELDS = (
+    "actor",
+    "action",
+    "handoff_id",
+    "task_id",
+    *REVIEW_INPUT_REQUIRED_FIELDS,
+)
+EXACT_CHANGE_EVIDENCE_FIELDS = ("kind", "artifact", "generation")
+REVIEWER_CAPABILITY_ACCESSIBILITY_FIELDS = (
+    "exact-change-evidence-read",
+    "reviewer-accessible-change-reference",
+    "non-mutating-validation",
+)
+VALIDATION_AFTER_LATEST_MATERIAL_EDIT_FIELDS = (
+    "evidence_id",
+    "result",
+    "generation",
+)
+REVIEW_INPUT_READY_FIELDS = ("actor", "action", "handoff_id", "ready")
+REVIEW_INPUT_BINDING_FIELDS = ("handoff_id", "artifact", "generation")
 GENERIC_CAPABILITY_FIELDS = tuple(
     REVIEW_DISCIPLINE_MODEL["generic_capability_contract"]["injected_fields"]
 )
@@ -2912,6 +2955,9 @@ def _review_discipline_errors(
     """Validate the lightweight typed review guard against observable trace order."""
 
     errors: list[str] = []
+    seen_handoff_ids: set[str] = set()
+    consumed_handoff_indices: set[int] = set()
+    consumed_gate_indices: set[int] = set()
 
     def reject(code: str, message: str) -> None:
         errors.append(_review_discipline_error(case_id, code, message))
@@ -3020,15 +3066,17 @@ def _review_discipline_errors(
                 f"{sorted(expected_actions)}",
             )
 
-        dispatch = next(
+        dispatch_pair = next(
             (
-                step
-                for step in reversed(steps[: event_index + 1])
+                (index, step)
+                for index, step in reversed(list(enumerate(steps[: event_index + 1])))
                 if step.get("action") == "dispatch"
                 and step.get("profile") == "review-agent"
             ),
             None,
         )
+        dispatch_index = dispatch_pair[0] if dispatch_pair is not None else -1
+        dispatch = dispatch_pair[1] if dispatch_pair is not None else None
         if isinstance(dispatch, dict):
             primary_skill = dispatch.get("primary_skill")
             if primary_skill not in REVIEW_SKILL_IDS:
@@ -3145,6 +3193,269 @@ def _review_discipline_errors(
             reject(
                 "review-changed-files",
                 "review must cover every file changed since the previous review",
+            )
+
+        if material_since_review:
+            round_dispatches = [
+                (index, step)
+                for index, step in enumerate(steps[:event_index])
+                if prior_review_index < index
+                and step.get("action") == "dispatch"
+                and step.get("profile") == "review-agent"
+            ]
+            if len(round_dispatches) != 1:
+                reject(
+                    "review-input-dispatch",
+                    "normal review requires exactly one review dispatch after the current Handoff gate",
+                )
+            else:
+                dispatch_index, dispatch = round_dispatches[0]
+
+            latest_material_index = material_since_review[-1][0]
+            handoffs = [
+                (index, step)
+                for index, step in enumerate(steps[:review_index])
+                if latest_material_index < index
+                and step.get("actor") == "task-agent"
+                and step.get("action") == IMPLEMENTATION_HANDOFF_ACTION
+            ]
+            gates = [
+                (index, step)
+                for index, step in enumerate(steps[:review_index])
+                if latest_material_index < index
+                and step.get("actor") == "main-control-agent"
+                and step.get("action") == REVIEW_INPUT_READY_ACTION
+            ]
+            if len(handoffs) != 1:
+                reject(
+                    "review-input-handoff",
+                    "normal review requires one current Implementation Handoff after validation and before review dispatch",
+                )
+            if len(gates) != 1:
+                reject(
+                    "review-input-gate",
+                    "review dispatch requires one derived Main readiness gate after the current Handoff",
+                )
+
+            handoff_index, handoff = handoffs[0] if len(handoffs) == 1 else (-1, {})
+            gate_index, gate = gates[0] if len(gates) == 1 else (-1, {})
+            if len(handoffs) == 1:
+                consumed_handoff_indices.add(handoff_index)
+            if len(gates) == 1:
+                consumed_gate_indices.add(gate_index)
+            handoff_ready = True
+            if tuple(handoff) != IMPLEMENTATION_HANDOFF_FIELDS:
+                reject(
+                    "review-input-handoff-shape",
+                    "Implementation Handoff must use the exact ordered review-input fields",
+                )
+                handoff_ready = False
+
+            handoff_id = handoff.get("handoff_id")
+            if not isinstance(handoff_id, str) or not handoff_id.strip():
+                reject(
+                    "review-input-handoff-shape",
+                    "Implementation Handoff handoff_id must be non-empty",
+                )
+                handoff_ready = False
+            elif handoff_id in seen_handoff_ids:
+                reject(
+                    "review-input-handoff-generation",
+                    "each implementation or repair generation requires a fresh handoff_id",
+                )
+                handoff_ready = False
+            else:
+                seen_handoff_ids.add(handoff_id)
+            if handoff.get("task_id") != task_id:
+                reject(
+                    "review-input-handoff-task",
+                    "Implementation Handoff task_id must match the review assignment",
+                )
+                handoff_ready = False
+
+            handoff_paths = handoff.get("latest_changed_paths")
+            if (
+                not isinstance(handoff_paths, list)
+                or not handoff_paths
+                or any(not isinstance(path, str) or not path for path in handoff_paths)
+                or len(handoff_paths) != len(set(handoff_paths))
+                or handoff_paths != expected_changed_files
+            ):
+                reject(
+                    "review-input-changed-paths",
+                    "Implementation Handoff latest_changed_paths must equal every path changed since the previous review",
+                )
+                handoff_ready = False
+
+            exact_evidence = handoff.get("exact_change_evidence")
+            if not isinstance(exact_evidence, dict) or tuple(exact_evidence) != EXACT_CHANGE_EVIDENCE_FIELDS:
+                reject(
+                    "review-input-evidence-shape",
+                    "exact_change_evidence must use kind, artifact, and generation in canonical order",
+                )
+                exact_evidence = {}
+                handoff_ready = False
+            evidence_kind = exact_evidence.get("kind")
+            if evidence_kind in REVIEW_INPUT_FORBIDDEN_EVIDENCE_KINDS:
+                reject(
+                    "review-input-evidence-kind",
+                    "changed-file summary, prose description, and implementer self-report are forbidden review evidence",
+                )
+                handoff_ready = False
+            elif evidence_kind not in REVIEW_INPUT_EXACT_EVIDENCE_KINDS:
+                reject(
+                    "review-input-evidence-kind",
+                    "Implementation Handoff requires a Core-declared exact change evidence kind",
+                )
+                handoff_ready = False
+            evidence_artifact = exact_evidence.get("artifact")
+            if not isinstance(evidence_artifact, str) or not evidence_artifact.strip():
+                reject(
+                    "review-input-evidence-artifact",
+                    "exact change evidence requires a non-empty artifact or reference",
+                )
+                handoff_ready = False
+            if exact_evidence.get("generation") != generation:
+                reject(
+                    "review-input-evidence-generation",
+                    "exact change evidence must use the current material generation",
+                )
+                handoff_ready = False
+
+            capability_access = handoff.get("reviewer_capability_accessibility")
+            if (
+                not isinstance(capability_access, dict)
+                or tuple(capability_access) != REVIEWER_CAPABILITY_ACCESSIBILITY_FIELDS
+            ):
+                reject(
+                    "review-input-capability-shape",
+                    "reviewer capability accessibility must use the three canonical capability facts",
+                )
+                capability_access = {}
+                handoff_ready = False
+            if any(
+                capability_access.get(field) != "supported"
+                for field in REVIEWER_CAPABILITY_ACCESSIBILITY_FIELDS
+            ):
+                reject(
+                    "review-input-capability",
+                    "review dispatch requires supported evidence read, accessible reference, and non-mutating validation capabilities",
+                )
+                handoff_ready = False
+
+            handoff_validation = handoff.get("validation_after_latest_material_edit")
+            if (
+                not isinstance(handoff_validation, dict)
+                or tuple(handoff_validation)
+                != VALIDATION_AFTER_LATEST_MATERIAL_EDIT_FIELDS
+            ):
+                reject(
+                    "review-input-validation-shape",
+                    "validation_after_latest_material_edit must use evidence_id, result, and generation in canonical order",
+                )
+                handoff_validation = {}
+                handoff_ready = False
+            handoff_evidence_id = handoff_validation.get("evidence_id")
+            round_validations = [
+                (index, step)
+                for index, step in enumerate(steps[:handoff_index])
+                if latest_material_index < index
+                and step.get("actor") == "task-agent"
+                and step.get("action") == "validate"
+            ]
+            matching_validation = (
+                round_validations[0][1] if len(round_validations) == 1 else {}
+            )
+            if (
+                not isinstance(handoff_evidence_id, str)
+                or not handoff_evidence_id.strip()
+                or handoff_validation.get("result") != "passed"
+                or handoff_validation.get("generation") != generation
+                or len(round_validations) != 1
+                or matching_validation.get("evidence_id") != handoff_evidence_id
+                or matching_validation.get("outcome") != "passed"
+                or handoff_evidence_id != validation.get("evidence_id")
+                or handoff_validation.get("result") != validation.get("result")
+                or handoff_validation.get("generation") != validation.get("generation")
+            ):
+                reject(
+                    "review-input-validation",
+                    "Handoff validation must bind the unique passing validation after the latest material edit",
+                )
+                handoff_ready = False
+
+            fixed_scope = handoff.get("fixed_review_scope")
+            if fixed_scope != expected_changed_files:
+                reject(
+                    "review-input-scope",
+                    "fixed_review_scope must equal the current changed-path scope",
+                )
+                handoff_ready = False
+
+            if handoff_index >= gate_index or gate_index >= dispatch_index:
+                reject(
+                    "review-input-order",
+                    "normal review order is validation, Handoff, Main readiness gate, then review dispatch",
+                )
+                handoff_ready = False
+
+            if tuple(gate) != REVIEW_INPUT_READY_FIELDS:
+                reject(
+                    "review-input-gate-shape",
+                    "Main readiness gate must use actor, action, handoff_id, and ready in canonical order",
+                )
+            if gate.get("handoff_id") != handoff_id:
+                reject(
+                    "review-input-gate-binding",
+                    "Main readiness gate must reference the current Handoff",
+                )
+            if gate.get("ready") is not handoff_ready:
+                reject(
+                    "review-input-gate-derived",
+                    "Main readiness must be derived from all five Handoff fields and capability facts",
+                )
+            if gate.get("ready") is not True:
+                reject(
+                    "review-input-dispatch-before-ready",
+                    "review dispatch is forbidden when the derived Main readiness gate is false",
+                )
+
+            review_input_binding = (
+                dispatch.get("review_input_binding")
+                if isinstance(dispatch, dict)
+                else None
+            )
+            if (
+                not isinstance(review_input_binding, dict)
+                or tuple(review_input_binding) != REVIEW_INPUT_BINDING_FIELDS
+            ):
+                reject(
+                    "review-input-dispatch-binding",
+                    "review dispatch must bind handoff_id, artifact, and generation in canonical order",
+                )
+                review_input_binding = {}
+            if (
+                review_input_binding.get("handoff_id") != handoff_id
+                or review_input_binding.get("artifact") != evidence_artifact
+                or review_input_binding.get("generation") != generation
+            ):
+                reject(
+                    "review-input-dispatch-binding",
+                    "review dispatch must bind the current Handoff artifact and generation",
+                )
+            if (
+                diff.get("artifact") != evidence_artifact
+                or diff.get("generation") != exact_evidence.get("generation")
+                or changed_files != handoff_paths
+            ):
+                reject(
+                    "review-input-reviewer-binding",
+                    "reviewer diff artifact, generation, and changed files must match the Handoff and dispatch",
+                )
+        elif prior_review_index >= 0:
+            reject(
+                "review-input-recovery",
+                "a second normal review without an intervening repair is forbidden evidence recovery",
             )
 
         verdict = event.get("verdict")
@@ -3299,6 +3610,39 @@ def _review_discipline_errors(
             "review-old-diff",
             "older review cannot cover a modification made after that review",
         )
+    first_review_index = review_actions[0][0] if review_actions else len(steps)
+    if any(
+        index > first_review_index
+        and step.get("actor") == "task-agent"
+        and step.get("action") == "export-diff"
+        for index, step in enumerate(steps)
+    ):
+        reject(
+            "review-input-post-review-recovery",
+            "normal post-review diff recovery and Task→Review→Task→Review are forbidden",
+        )
+    unconsumed_handoffs = [
+        index
+        for index, step in enumerate(steps)
+        if step.get("actor") == "task-agent"
+        and step.get("action") == IMPLEMENTATION_HANDOFF_ACTION
+        and index not in consumed_handoff_indices
+    ]
+    unconsumed_gates = [
+        index
+        for index, step in enumerate(steps)
+        if step.get("actor") == "main-control-agent"
+        and step.get("action") == REVIEW_INPUT_READY_ACTION
+        and index not in consumed_gate_indices
+    ]
+    if unconsumed_handoffs or unconsumed_gates:
+        reject(
+            "review-input-occurrence",
+            "every normal Implementation Handoff and Main readiness gate occurrence "
+            "must be uniquely consumed by its material generation before review dispatch; "
+            f"unconsumed_handoffs={unconsumed_handoffs}, "
+            f"unconsumed_gates={unconsumed_gates}",
+        )
     return list(dict.fromkeys(errors))
 
 
@@ -3363,7 +3707,48 @@ def _review_fixture_steps(case: dict[str, Any]) -> list[dict[str, Any]]:
         "action": "review",
         "changed_paths": ["owner.py"],
     }
-    steps = [edit, validation, event, review]
+    handoff_id = f"{case_id}:implementation-handoff:1"
+    handoff: dict[str, Any] = {
+        "actor": "task-agent",
+        "action": IMPLEMENTATION_HANDOFF_ACTION,
+        "handoff_id": handoff_id,
+        "task_id": case_id,
+        "latest_changed_paths": ["owner.py"],
+        "exact_change_evidence": {
+            "kind": "exact-change-content",
+            "artifact": "actual.diff",
+            "generation": 1,
+        },
+        "reviewer_capability_accessibility": {
+            "exact-change-evidence-read": "supported",
+            "reviewer-accessible-change-reference": "supported",
+            "non-mutating-validation": "supported",
+        },
+        "validation_after_latest_material_edit": {
+            "evidence_id": f"{case_id}-validation",
+            "result": "passed",
+            "generation": 1,
+        },
+        "fixed_review_scope": ["owner.py"],
+    }
+    gate: dict[str, Any] = {
+        "actor": "main-control-agent",
+        "action": REVIEW_INPUT_READY_ACTION,
+        "handoff_id": handoff_id,
+        "ready": True,
+    }
+    dispatch: dict[str, Any] = {
+        "actor": "main-control-agent",
+        "action": "dispatch",
+        "profile": "review-agent",
+        "primary_skill": "ai-code-review-refactor",
+        "review_input_binding": {
+            "handoff_id": handoff_id,
+            "artifact": "actual.diff",
+            "generation": 1,
+        },
+    }
+    steps = [edit, validation, handoff, gate, dispatch, event, review]
     mutation_kind = mutation.get("kind")
     if mutation_kind == "none":
         return steps
@@ -5595,6 +5980,15 @@ def _implementation_internal_evidence_indexes(
 
     internal: set[int] = set()
     for index, step in enumerate(steps):
+        if (
+            step.get("actor") == "task-agent"
+            and step.get("action") == IMPLEMENTATION_HANDOFF_ACTION
+        ) or (
+            step.get("actor") == "main-control-agent"
+            and step.get("action") == REVIEW_INPUT_READY_ACTION
+        ):
+            internal.add(index)
+            continue
         if (
             step.get("actor") == "review-agent"
             and step.get("action") == REVIEW_DISCIPLINE_ACTION

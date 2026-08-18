@@ -406,7 +406,7 @@ except that the canonical Professional Skill router permits 62 lines for its
 closed route table. Mode-contract References permit 80 lines, and Gate,
 Checklist, or Decision headings permit 15 items. Missing effective reference
 type, load condition, and do-not-load condition are also strict gates; literal
-local-only coverage remains reported separately. CI runs
+local-only coverage remains reported separately. Strict validation runs
 `validate-reference-content.py --strict`, and the command must not pass while
 any strict count is nonzero.
 The resolved effective Reference type selects the 60/80-line budget; the legacy
@@ -834,7 +834,7 @@ closed schema, internal semantics, blockers, gates, and expert bindings without
 rerunning the producer. Formal-release orchestration writes schema-4
 professionalism/Core JSON and Markdown projections under
 `.rd-skills/formal-release/<captured-head>/reports/`. That ignored scene is
-bound to the captured `HEAD` and uploaded by CI; Markdown is not a readiness
+bound to the captured `HEAD` and validated locally; Markdown is not a readiness
 authority, and Core authoring refreshes only tracked ordinary JSON.
 
 Canonical fixed-attestation paths, not Readability or Professional policy
@@ -844,4 +844,4 @@ bound to the exact fixed-attestation bytes. Reuse all three compact attestations
 while their strict current validators pass; replace an axis only after source,
 detector, binding, or review-contract drift. Prior attestations remain auditable
 through Git history only. These fixed attestations do not prove that the final
-formal gates or same-commit remote workflow passed.
+local formal gate passed.

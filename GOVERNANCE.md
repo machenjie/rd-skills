@@ -523,7 +523,7 @@ refresh current evidence.
   all 189 non-Control packages. The Root lifecycle is `pending-changes`, with no
   current snapshot and no formal-release readiness. The sole JSON authority
   therefore reports `release_gate=release-not-ready`. These fixed attestations do
-  not prove that the final formal gates or same-commit remote workflow passed.
+  not prove that the final local formal gate passed.
 - **Next owning stage:** After final content and audit stabilization, the
   Root lifecycle owner records the classified formal snapshot. Formal Release must
   create new Readability and Professional Completeness runtime reviews after
@@ -538,10 +538,10 @@ refresh current evidence.
   rerunning the producer. Formal Core instead writes the professionalism and
   Core schema-4 JSON outcomes plus their Markdown projections under
   `.rd-skills/formal-release/<captured-head>/reports/`. The ignored formal scene
-  is bound to the captured `HEAD`, uploaded by CI, and is not a second tracked
+  is bound to the captured `HEAD`, validated locally, and is not a second tracked
   readiness authority.
 - **Authoring/formal split:** These fixed attestations do not prove that the final
-  formal gates or same-commit remote workflow passed. Stale or tampered Root,
+  local formal gate passed. Stale or tampered Root,
   Semantic Disposition, Readability, or Professional Completeness evidence
   remains invalid and blocks formal release.
 - **Dependency:** RDS-001 through RDS-010, final content stabilization, the

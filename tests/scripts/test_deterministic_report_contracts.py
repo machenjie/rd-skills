@@ -1236,10 +1236,6 @@ class DeterministicReportContractTests(unittest.TestCase):
             "Development Affected selected the expected producer/test closure",
             pull_request_template,
         )
-        self.assertIn(
-            "The single PR-only `CI / pr-ci` affected check passed",
-            pull_request_template,
-        )
         self.assertIn("docs/VALIDATION.md", pull_request_template)
         self.assertNotIn(
             "python3 scripts/validate-reference-content.py",
@@ -1269,98 +1265,25 @@ class DeterministicReportContractTests(unittest.TestCase):
             for command in commands:
                 self.assertEqual(1, text.count(command), (relative, command))
 
-    def test_formal_workflow_delegates_professionalism_to_core_once(self) -> None:
-        workflow = (ROOT / ".github/workflows/formal-release.yml").read_text(
+    def test_retired_workflows_leave_local_formal_core_as_the_only_gate(self) -> None:
+        for relative in (
+            ".github/workflows/ci.yml",
+            ".github/workflows/formal-release.yml",
+        ):
+            self.assertFalse((ROOT / relative).exists(), relative)
+
+        formal_command = (
+            "python3 scripts/eval-core-principles.py --gate formal-release"
+        )
+        for relative in ("AGENTS.md", "docs/VALIDATION.md", "docs/RELEASE.md"):
+            text = (ROOT / relative).read_text(encoding="utf-8")
+            self.assertEqual(1, text.count(formal_command), relative)
+
+        evaluator = (ROOT / "scripts/eval-core-principles.py").read_text(
             encoding="utf-8"
         )
-        release_validation = workflow.split(
-            "      - name: Core Principles formal release outcome gate\n", 1
-        )[1]
-        commands = [
-            line.strip().removeprefix("run: ")
-            for line in release_validation.splitlines()
-            if line.strip().startswith("run: python3 scripts/")
-            or line.strip().startswith("python3 scripts/")
-            or line.strip().startswith("python3 -m unittest")
-            or line.strip() == "run: git diff --exit-code"
-        ]
-        self.assertEqual(17, len(commands), commands)
-        self.assertEqual(
-            1,
-            commands.count(
-                "python3 scripts/eval-core-principles.py --gate formal-release"
-            ),
-        )
-        official_full = (
-            "python3 scripts/run-ci-tests.py full --jobs 4 --timeout 900"
-        )
-        self.assertEqual(1, workflow.count(official_full))
-        self.assertEqual(1, commands.count(official_full))
-        self.assertNotIn("python3 -m unittest discover -s tests", workflow)
-        self.assertFalse(
-            any(
-                command.startswith(
-                    "python3 scripts/validate-professionalism-regression.py"
-                )
-                for command in commands
-            ),
-            commands,
-        )
-        self.assertIn(
-            ".rd-skills/formal-release/${RELEASE_COMMIT}/reports/"
-            "professionalism-regression-report.json",
-            release_validation,
-        )
-        self.assertIn("actions/upload-artifact@v4", release_validation)
-        self.assertIn("include-hidden-files: true", release_validation)
-        self.assertIn(
-            ".rd-skills/formal-release/${{ github.sha }}/reports/",
-            release_validation,
-        )
-
-    def test_formal_portability_unittest_selectors_all_resolve_without_execution(self) -> None:
-        workflow = (ROOT / ".github/workflows/formal-release.yml").read_text(
-            encoding="utf-8"
-        )
-        portability_step = workflow.split(
-            "      - name: Verify portable Professional and detector contracts\n",
-            1,
-        )[1].split("\n\n", 1)[0]
-        selectors = tuple(
-            line.strip()
-            for line in portability_step.splitlines()
-            if line.strip().startswith("tests.")
-        )
-        expected_selectors = (
-            "tests.scripts.test_professional_completeness_carry_forward.ProfessionalReviewContractFingerprintTests.test_review_contract_uses_canonical_semantic_projection",
-            "tests.scripts.test_professional_completeness_carry_forward.ProfessionalReviewContractFingerprintTests.test_contract_version_and_semantic_projection_change_digest",
-            "tests.scripts.test_audit_skill_content.AuditSkillContentDeterminismTests.test_root_detector_contract_binds_only_reachable_behavior",
-            "tests.scripts.test_audit_skill_content.AuditSkillContentDeterminismTests.test_reachable_detector_source_walker_fails_closed",
-            "tests.scripts.test_audit_skill_content.AuditSkillContentDeterminismTests.test_detector_fingerprint_is_independent_of_module_load_name",
-            "tests.scripts.test_audit_skill_content.AuditSkillContentDeterminismTests.test_reference_detector_contract_v1_is_reachable_and_schema7",
-            "tests.scripts.test_audit_skill_content.AuditSkillContentDeterminismTests.test_skill_detector_contract_is_deterministic_and_covers_report_fields",
-            "tests.scripts.test_audit_skill_content.AuditSkillContentDeterminismTests.test_skill_detector_fingerprint_binds_repository_source",
-            "tests.scripts.test_audit_skill_content.AuditSkillContentDeterminismTests.test_skill_detector_uses_versioned_explicit_source_manifest",
-            "tests.scripts.test_validate_reference_content.ValidateReferenceContentTests.test_semantic_v7_detector_contract_is_closed_and_current",
-            "tests.scripts.test_expert_panel_review.ExpertPanelReviewTests.test_semantic_detector_v1_compatibility_is_one_exact_row",
-        )
-        self.assertEqual(expected_selectors, selectors)
-        self.assertEqual(len(selectors), len(set(selectors)), selectors)
-        for selector in selectors:
-            with self.subTest(selector=selector):
-                suite = unittest.defaultTestLoader.loadTestsFromName(selector)
-                failures: list[str] = []
-
-                def collect(candidate: unittest.TestSuite) -> None:
-                    for test in candidate:
-                        if isinstance(test, unittest.TestSuite):
-                            collect(test)
-                        elif test.__class__.__name__ == "_FailedTest":
-                            failures.append(str(test))
-
-                collect(suite)
-                self.assertEqual([], failures)
-                self.assertEqual(1, suite.countTestCases())
+        self.assertIn('choices=("authoring", "formal-release", "affected")', evaluator)
+        self.assertIn('args.gate == "formal-release"', evaluator)
 
     def test_hookless_modules_own_their_checks_without_core_report_or_replay(
         self,
@@ -1419,21 +1342,6 @@ class DeterministicReportContractTests(unittest.TestCase):
         for label, source in bypasses.items():
             with self.subTest(bypass=label):
                 self.assertTrue(guard(label, source), label)
-
-    def test_ci_installs_project_from_isolated_source_copy(self) -> None:
-        text = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
-        self.assertNotIn(
-            "python3 -m pip install --disable-pip-version-check .", text
-        )
-        self.assertIn('install_root="$(mktemp -d)"', text)
-        self.assertIn(
-            'git archive --format=tar HEAD | tar -xf - -C "$install_root"',
-            text,
-        )
-        self.assertIn(
-            'python3 -m pip install --disable-pip-version-check "$install_root"',
-            text,
-        )
 
     def test_validation_gate_paths_exclude_individual_producer_commands(self) -> None:
         text = (ROOT / "docs/VALIDATION.md").read_text(encoding="utf-8")
