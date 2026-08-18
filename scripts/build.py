@@ -122,7 +122,7 @@ NATIVE_DIFF_SAFEGUARDS = ("--no-pager", "--no-ext-diff", "--no-textconv")
 EXTERNAL_READ_HOST_MODES = {
     "codex": "prompt-enforced",
     "claude": "native-enforced",
-    "copilot": "unsupported",
+    "copilot": "prompt-enforced",
     "cline": "unsupported",
     "openai-api": "unsupported",
 }
@@ -1351,6 +1351,14 @@ def _load_host_enforcement() -> dict[str, Any]:
     ]:
         raise BuildError(
             "claude:analysis-agent must expose only the native read and Web read tools"
+        )
+    if hosts["copilot"]["roles"]["analysis-agent"]["rendered_tools"] != [
+        "read",
+        "search",
+        "web",
+    ]:
+        raise BuildError(
+            "copilot:analysis-agent must expose only read, search, and web"
         )
     for host in ("claude", "copilot"):
         review = hosts[host]["roles"]["review-agent"]

@@ -588,6 +588,26 @@ class HooklessBuildInstallTests(unittest.TestCase):
         for name in ("analysis-agent", "task-agent", "review-agent"):
             self.assertNotIn("disable-model-invocation: true", (copilot / f"{name}.agent.md").read_text())
         self.assertEqual(4, len(list(copilot.glob("*.agent.md"))))
+        copilot_analysis = (copilot / "analysis-agent.agent.md").read_text()
+        copilot_analysis_frontmatter = copilot_analysis.split("---", 2)[1]
+        self.assertIn(
+            'tools: ["read", "search", "web"]',
+            copilot_analysis_frontmatter,
+        )
+        self.assertIn(
+            "Current external-read mode: external_source_read=prompt-enforced.",
+            copilot_analysis,
+        )
+        for forbidden in ("edit", "execute", "agent", "*", "mcp"):
+            with self.subTest(copilot_analysis_forbidden=forbidden):
+                self.assertNotIn(f'"{forbidden}"', copilot_analysis_frontmatter)
+        self.assertEqual(
+            (copilot / "analysis-agent.agent.md").read_bytes(),
+            (
+                ROOT
+                / "dist/copilot/user/.copilot/agents/analysis-agent.agent.md"
+            ).read_bytes(),
+        )
         for path in (ROOT / "dist/claude/project/.claude/agents").glob("*.md"):
             self.assertIn("Skill", path.read_text().splitlines()[3])
         self.assertFalse((ROOT / "dist/copilot/project/.github/copilot/agents").exists())

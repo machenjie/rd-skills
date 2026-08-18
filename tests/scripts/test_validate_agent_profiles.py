@@ -873,7 +873,7 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         expected = {
             "codex": "prompt-enforced",
             "claude": "native-enforced",
-            "copilot": "unsupported",
+            "copilot": "prompt-enforced",
             "cline": "unsupported",
             "openai-api": "unsupported",
         }
@@ -885,6 +885,12 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         self.assertEqual(
             ["Skill", "Read", "Grep", "Glob", "WebSearch", "WebFetch"],
             enforcement["hosts"]["claude"]["roles"]["analysis-agent"][
+                "rendered_tools"
+            ],
+        )
+        self.assertEqual(
+            ["read", "search", "web"],
+            enforcement["hosts"]["copilot"]["roles"]["analysis-agent"][
                 "rendered_tools"
             ],
         )
@@ -906,6 +912,25 @@ class AgentProfileReadabilityTests(unittest.TestCase):
                 result, output = self._mutated_enforcement_result(mutate)
                 self.assertEqual(1, result)
                 self.assertIn("external_source_read", output)
+
+    def test_copilot_analysis_tool_projection_drift_is_rejected(self) -> None:
+        mutations = (
+            ["read", "search"],
+            ["read", "search", "web", "execute"],
+            ["web", "read", "search"],
+        )
+        for rendered_tools in mutations:
+            with self.subTest(rendered_tools=rendered_tools):
+                result, output = self._mutated_enforcement_result(
+                    lambda data: data["hosts"]["copilot"]["roles"][
+                        "analysis-agent"
+                    ].__setitem__("rendered_tools", rendered_tools)
+                )
+                self.assertEqual(1, result)
+                self.assertIn(
+                    "copilot:analysis-agent must expose only read, search, and web",
+                    output,
+                )
 
     def test_external_read_mode_is_injected_only_into_analysis_profiles(self) -> None:
         source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))

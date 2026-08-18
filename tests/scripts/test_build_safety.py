@@ -651,6 +651,32 @@ class BuildSafetyTests(unittest.TestCase):
         self.assertIn('tools: ["read", "search"]', copilot)
         self.assertNotIn('"execute"', copilot.split("---", 2)[1])
 
+    def test_copilot_analysis_projects_only_bounded_web_read_tools(self) -> None:
+        matrix = BUILD._load_host_enforcement()
+        profiles = {
+            profile["name"]: profile for profile in BUILD._load_agent_profiles()
+        }
+        analysis = matrix["hosts"]["copilot"]["roles"]["analysis-agent"]
+
+        self.assertEqual(["read", "search", "web"], analysis["rendered_tools"])
+        self.assertEqual("prompt-enforced", analysis["external_source_read"])
+        rendered = BUILD._render_copilot_profile(
+            profiles["analysis-agent"],
+            matrix,
+        )
+        frontmatter = rendered.split("---", 2)[1]
+        self.assertIn('tools: ["read", "search", "web"]', frontmatter)
+        for forbidden in ("edit", "execute", "agent", "*", "mcp"):
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(f'"{forbidden}"', frontmatter)
+
+        for role in ("main-control-agent", "task-agent", "review-agent"):
+            with self.subTest(role=role):
+                self.assertNotIn(
+                    "web",
+                    matrix["hosts"]["copilot"]["roles"][role]["rendered_tools"],
+                )
+
     def test_host_enforcement_rejects_stale_schema_and_unknown_modes(self) -> None:
         mutations = (
             ('"schema_version": 4', '"schema_version": 3', "schema_version 4"),
@@ -663,6 +689,11 @@ class BuildSafetyTests(unittest.TestCase):
                 '"native_diff_safeguards": ["--no-pager", "--no-ext-diff", "--no-textconv"]',
                 '"native_diff_safeguards": ["--no-pager", "--no-ext-diff"]',
                 "native diff safeguards",
+            ),
+            (
+                '"rendered_tools": ["read", "search", "web"]',
+                '"rendered_tools": ["read", "search", "web", "execute"]',
+                "copilot:analysis-agent must expose only read, search, and web",
             ),
         )
         for old, new, error in mutations:

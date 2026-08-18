@@ -59,7 +59,7 @@ EXTERNAL_READ_MODEL = CORE_CONTRACTS["external_read_contract"]
 EXTERNAL_READ_HOST_MODES = {
     "codex": "prompt-enforced",
     "claude": "native-enforced",
-    "copilot": "unsupported",
+    "copilot": "prompt-enforced",
     "cline": "unsupported",
     "openai-api": "unsupported",
 }
@@ -722,6 +722,16 @@ def main(argv: list[str] | None = None) -> int:
     ]:
         errors.append(
             "claude:analysis-agent must expose only the native read and Web read tools"
+        )
+    copilot_analysis_tools = (
+        hosts.get("copilot", {})
+        .get("roles", {})
+        .get("analysis-agent", {})
+        .get("rendered_tools")
+    )
+    if copilot_analysis_tools != ["read", "search", "web"]:
+        errors.append(
+            "copilot:analysis-agent must expose only read, search, and web"
         )
     for host in ("claude", "copilot"):
         review = hosts.get(host, {}).get("roles", {}).get("review-agent", {})

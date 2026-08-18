@@ -140,10 +140,11 @@
           "tool_allowlist": "native-enforced",
           "workspace_write_protection": "native-enforced",
           "read_only_command_semantics": "unsupported",
-          "external_source_read": "unsupported",
-          "rendered_tools": ["read", "search"],
+          "external_source_read": "prompt-enforced",
+          "rendered_tools": ["read", "search", "web"],
           "limitations": [
-            "No explicitly read-only Web or Connector capability is proven by the current Copilot Profile projection; general network availability does not count."
+            "VS Code exposes its read-only Web search and fetch capability through the official web tool alias; minimum-public-information and prompt boundaries remain authoritative.",
+            "GitHub Copilot coding agent ignores unsupported tools and has no mapped Web capability, so cloud execution remains fail closed."
           ]
         },
         "task-agent": {
