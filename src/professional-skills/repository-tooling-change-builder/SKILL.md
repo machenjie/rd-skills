@@ -7,7 +7,7 @@ description: "Use `task-agent` for a bounded repository generator, plugin, harne
 
 ## Role
 
-Support `task-agent` in changing repository tooling while preserving authority, compatibility, deterministic behavior, cleanup, and proof.
+Support `task-agent` in changing bounded repository tooling with authority, compatibility, determinism, cleanup, and proof.
 
 ## When To Use
 
@@ -24,57 +24,37 @@ Support `task-agent` in changing repository tooling while preserving authority, 
 
 ## Required Inputs
 
-- accepted behavior, non-goals, edit scope, owner, minimum consumer, invocation, and tests
-- source/generated authority, inputs, outputs, toolchain, host versions, and bootstrap
-- file/process effects, compatibility, cleanup, rollback, and observable outcome signals
+- behavior, scope, owner, consumer, invocation, tests, and outcomes
+- source/generated authority, toolchain/host, effects, compatibility, cleanup, and rollback
 
 ## Professional Decision Rules
 
-- Inspect the owner, minimum consumer, tests, adjacent utilities, and reuse before adding structure.
-- Bind generated output to authoritative inputs, generator version, destination, drift check, sole editable source, and a non-circular clean-checkout bootstrap.
-- Bind plugins to supported host APIs and versions, including diagnostic identity, option schema, fix safety, rejection behavior, and real host integration.
-- Prove harness oracle and regression mechanism with positive and negative controls. Keep harness health distinct from changed-product correctness.
-- Preserve internal CLI argv, environment, working directory, stdio, exit, cancellation, rerun, and cleanup. Give multi-file output an explicit complete-or-recover contract.
-- Declare behavior-affecting files, tools, locale, clock, randomness, network, credentials, executables, and platform facts. Reject ambient workstation or cache state as proof.
-- Validate the mechanism through regeneration comparison, version-matched integration, negative controls, or CLI failure and cleanup paths.
-- Stay within the accepted owner; do not widen public APIs or refactor unrelated tooling for tests.
+- Keep the tooling decision within its owner, inputs, stops, and output contract.
 
 ## High-Value Gotchas
 
-- Generated output drifts because the editable authority or regeneration check is ambiguous.
-- A generator depends circularly on artifacts that only that generator can produce.
-- A crash or failed subprocess leaves partial output that later appears current.
-- Ambient tools, locale, time, network, credentials, or working directory make the result non-hermetic.
-- A plugin passes unit tests but fails against a supported host API or version.
-- A harness stays green after its target defect is reintroduced, creating false confidence.
+- Generated output can look correct while bootstrap order or source authority is wrong.
+- A subprocess can report success before output, cleanup, or child completion is durable.
+- A maintenance command can cross its intended workspace or mutate files on rerun.
 
 ## Execution Checklist
 
-1. Inspect owner, consumer, invocation, tests, generated surfaces, versions, and reuse.
-2. Map normal, invalid, interrupted, bootstrap, version-skew, rerun, and forbidden outcomes.
-3. Implement the smallest complete source and proving-test change under one batch method.
-4. Validate after the latest edit and inspect source plus generated diffs.
-5. Report skipped checks, cleanup, compatibility limits, and residual ownership.
-
-## Companion Boundary
-
-- Load `build-tool-professional-usage` when graph edges, generated authority, cache identity, or reproducibility changes.
-- Load `filesystem-process-safety` when local file commit, path containment, direct subprocess, timeout, cancellation, or cleanup changes.
-- Load `targeted-validation-selection` only after proof strategy exists and exact repository-defined commands or coverage remain unresolved.
+- **Task mode:** Map source authority, callers, generated outputs, side effects, and cleanup ownership.
+- Reuse the existing command, generator, harness, or process boundary when it owns the behavior.
+- Verify compatibility, deterministic output, atomic completion, and bounded rerun behavior.
+- Record skipped hosts, toolchains, consumers, and recovery paths as proof limits.
+- Minimal validation: run normal, invalid, boundary, rerun, and forbidden-effect tests.
 
 ## Stop / Escalation Conditions
 
-- Return a planning boundary for multiple owners, shared contracts, or ordered tasks.
-- Stop when authority, ownership, bootstrap, compatibility, oracle, partial-write recovery, or validation remains unresolved.
-- Stop build-only, product, docs-only, production, release, rollback, review, and control work at its boundary.
-- Do not perform or claim independent review.
+- Return multiple owners, shared contracts, or ordered tasks to planning.
+- Stop on unresolved authority, bootstrap, compatibility, oracle, recovery, or validation.
+- Keep other work at its owner; do not claim review.
 
 ## Output Contract
 
-- changed files, owner, consumer, reuse, placement, invocation, and compatibility
-- authority, bootstrap, plugin, harness, hermeticity, file/process, and failure decisions
-- fresh validation, negative controls, skipped checks, and final diff evidence
-- cleanup, rollback, proof limits, residual risk, and planning or release boundary
+- changed files, owner, consumer, reuse, placement, invocation, compatibility, authority, bootstrap, file/process, and failure decisions
+- validation, negative controls, skips, diff, cleanup/rollback, proof limits, residual risk, and boundary handoffs
 
 ## Targeted References
 

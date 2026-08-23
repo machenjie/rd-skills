@@ -1,5 +1,6 @@
 # Domain Object Identification Checklist
 
+- Record relationships, cardinality, optionality, reference direction, cross-aggregate identity references, and mappings to DTO, schema, table, event, provider, UI, and read-model surfaces.
 - List candidate entities, immutable value objects, aggregate roots, child entities, resources, policies, boundary models, and read models.
 - Record the selected classification and rejected alternatives.
 - Define entity identity and value equality, including no independent identity, normalization, immutability, and replacement semantics.

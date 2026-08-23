@@ -9,14 +9,15 @@ Direct Task is outside the Analyzed Work authority path. It keeps this
 template's existing field authority and does not create or derive authority
 from an Engineering Brief.
 
-Inspect within named owner, test, and consumer boundaries. If ownership or
-verification needs discovery, stop and route to Analyzed Work. Use `not
-applicable` for a field that has no Direct Task value.
+An unknown owner/module/system/verification boundary routes to Analyzed Work.
+Inside an already-known stable owner/test/consumer boundary, bounded
+confirmation may inspect only the named checks below. Use `not applicable` for
+a field that has no Direct Task value.
 
-The public Execution Level lines use Core public `execution-level/v1`. The integrity
+The public Execution Level lines use Core public `execution-level/v2`. The integrity
 fallback for missing, malformed, or duplicate public execution-level data is
 defined in [execution-level-contract.md](execution-level-contract.md).
-Legacy without v1 is completed/read only; active or resumed work, edit,
+Legacy v1 is completed/read only; active or resumed work, edit,
 validation, or review requires reissue.
 
 ```markdown
@@ -31,8 +32,8 @@ in_progress
 ## Execution Level
 
 <!-- BEGIN CHANGEFORGE CORE PUBLIC EXECUTION TEMPLATE: direct-task-template.md -->
-Level: requested=unspecified / L1 / L5; automatic=L2 / L3 / L4; default=L3; effective=L1 / L2 / L3 / L4 / L5; edit=allowed / blocked
-Basis: source=user_fact:<anchor> / analysis_handoff:<anchor>; triggers=["<matched or unknown trigger ID>"] / []; l2=["<false or unknown L2 predicate ID>"] / []; unresolved=[] / ["unknown-critical-boundary=>L4,edit=blocked"]
+Level: requested=unspecified / L1 / L2 / L3 / L4 / L5; automatic=L1 / L2 / L3 / L4 / L5; minimum=L1 / L2 / L3 / L4 / L5; default=L3; effective=L1 / L2 / L3 / L4 / L5; edit=allowed / blocked
+Basis: source=user_fact:<anchor> / analysis_handoff:<anchor>; triggers=["<matched or unknown trigger ID>"] / []; l1=["<false or unknown L1 predicate ID>"] / []; l2=["<false or unknown L2 predicate ID>"] / []; l5=["<false or unknown L5 predicate ID>"] / []; confirmation=not-required / pending / confirmed / rejected / explicit; unresolved=[] / ["unknown-critical-boundary=>L4,edit=blocked"]
 L5 Evidence: when=effective L5 only; requires=independent pre-implementation review / strong safety and applicability proof / declared-scope comprehensive negative and failure proof / exhaustive final review
 <!-- END CHANGEFORGE CORE PUBLIC EXECUTION TEMPLATE: direct-task-template.md -->
 
@@ -48,13 +49,29 @@ L5 Evidence: when=effective L5 only; requires=independent pre-implementation rev
 
 ## Inspection Boundary
 
-Name the already known owner, test, and consumer boundaries that inspection may
-confirm.
+Name the already known owner, test, and consumer boundaries. Direct bounded
+discovery requires a stable Primary Professional, Domain / Layer3 route,
+semantic scope, no unresolved user choice or material risk, and a bounded read
+boundary. Within the already-known owner boundary, inspection may confirm only:
+
+- exact owning symbol/file;
+- relevant existing test;
+- minimum local consumer;
+- local reuse candidate;
+- local validation command; and
+- placement within the already-known owner boundary.
+
+Prohibit repo-wide discovery, an unknown owner/module/system or external
+consumer graph, security/money/migration/domain-boundary discovery, Worker
+rerouting, and Worker selection of a new Skill, Domain, or Layer3.
 
 ## Inspection Stop Conditions
 
-Stop before editing and return to Analyzed Work when owner, placement, behavior,
-verification, rollback, material impact, or risk leaves the declared boundary.
+The only outcomes are: confirm and continue; route/risk invalidated -> stop
+before editing and return to Main for Analysis; user-owned choice discovered ->
+stop before editing and return to Main, which asks one minimum concrete
+question. A simpler discovery never lowers the current Level; higher risk
+requires Main to recompute it. Task and Review workers never reroute.
 
 ## Non-goals
 

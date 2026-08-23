@@ -16,19 +16,19 @@ Select one contained lifecycle transition that addresses affected key use and da
 
 | Boundary | Required decision | Failure signal |
 |---|---|---|
-| Compromise scope | Key/material versions, uses, principals, data, ciphertexts, exports, replicas, backups, and time window | The reported key alias alone defines the scope |
-| Containment | Disable/revoke use, isolate authority, preserve evidence, notify owners, and bound emergency access | Rotation proceeds while compromised use remains |
-| Replacement | Fresh material, consumer adoption, rewrap/re-encrypt need, validation, and old-key disposition | Revocation is called complete without data impact |
-| Destruction target | Exact key copies, provider objects, caches, exports, replicas, backups, and dependent ciphertext | One control-plane deletion implies universal erasure |
-| Safeguard | Authority, approval, hold, inventory, dry run, waiting/recovery window, and irreversibility | Destruction can strand required data |
-| Destruction proof | Provider evidence, residual copies, recovery denial, metadata retention, and stated limits | A successful request proves physical erasure |
-| Agility inventory | Algorithms, parameters, keys, certificates, formats, libraries, protocols, hardware, data, and consumers | Dependency discovery starts after deprecation |
-| Transition | Current policy, target support, dual-read/write needs, downgrade prevention, milestones, and retirement | Old and new formats coexist without closure |
+| Compromise scope | Key/material versions, uses, principals, data, ciphertexts, exports, replicas, backups, and time window | A key alias alone defines scope |
+| Containment | Disable/revoke use, isolate authority, preserve evidence, notify owners, and bound emergency access | Rotation leaves compromised use |
+| Replacement | Fresh material, adoption, rewrap/re-encrypt need, validation, and old-key disposition | Revocation ignores data impact |
+| Destruction target | Key copies, provider objects, caches, exports, replicas, backups, and dependent ciphertext | One control-plane deletion implies universal erasure |
+| Safeguard | Authority, approval, hold, inventory, dry run, recovery window, and irreversibility | Destruction strands required data |
+| Destruction proof | Provider evidence, residual copies, recovery denial, metadata retention, and limits | A successful request proves physical erasure |
+| Agility inventory | Algorithms, parameters, keys, certificates, formats, libraries, protocols, hardware, data, and consumers | Discovery starts after deprecation |
+| Transition | Current policy, target support, dual-read/write, downgrade prevention, milestones, and retirement | Old/new formats coexist without closure |
 
 ## Verification
 
-- Simulate compromise before/after use, rotation, export, backup, and consumer propagation.
-- Verify revoked material cannot perform changed operations while authorized retained data remains readable where required.
+- Simulate compromise across use, rotation, export, backup, and consumer propagation.
+- Verify revoked material cannot perform changed operations while required retained data remains readable.
 - Exercise deletion safeguards and prove the named recovery or irreversible outcome.
 - Migrate representative old/new artifacts and reject deprecated or downgraded paths at the defined milestone.
 
@@ -44,4 +44,10 @@ Official sources were accessed on 2026-07-26.
 
 ## Proof Limits
 
-Revocation does not erase copies or undo prior disclosure. Provider deletion evidence does not prove erasure outside its boundary. Crypto-agility guidance does not set organization policy or prove migration completeness, downgrade resistance, or compliance.
+Treat revocation as neither copy erasure nor reversal of prior disclosure. Bound provider deletion evidence to its provider boundary. Use crypto-agility guidance for transition options, not organizational policy, migration completeness, downgrade resistance, or compliance.
+
+## Failure And Validation Evidence
+
+- Destruction causes irreversible data loss.
+- Algorithm deprecation leaves an unknown consumer.
+- Rehearse recovery, compromise, revocation, destruction safeguards, re-protection, and deprecation migration.

@@ -17,31 +17,22 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: primary-Skill-select
 
 ## Skill Role
 
-Select privacy-safe, correlated signals that prove material impact and guide an accountable operator action.
+Own privacy-safe decision-bearing signals and actions for the named risk.
 
 ## High-Value Rules
 
-- Start from material user, system, invariant, security, compliance, or audit impact, then choose only signals that guide an operator decision.
-- Permit telemetry only with secret-free values, bounded labels, and approved protection for investigation identifiers.
-- Create root correlation or trace context at operation entry when absent, then propagate it across triggered boundaries needed to join the evidence.
-- Give alerts a condition, owner, severity, and response.
-- Define or adjust an SLI/SLO only for an existing objective or triggered risk, and prove its semantics.
+- Select signals from material impact.
+- Bound sensitive fields, cardinality, and sampling.
+- Propagate correlation only across evidence-bearing boundaries.
+- Bind every alert to an owner and response.
 
 ## Anti-Patterns
 
-- Unbounded labels can exhaust the metrics backend and destabilize alerts.
-- Correlation without privacy controls creates a cross-system data leak.
-- A signal that cannot change an operator action is noise, not release evidence.
-
-## Execution Checklist
-
-1. Name the material impact or invariant, failure mode, operator question, and signal gap.
-2. Select bounded fields, correlation, retention/access, and actionable signals.
-3. Verify signal emission, joins, label bounds, privacy, alert action, and SLI semantics.
+- Local success substituted for end-to-end signal and action evidence.
 
 ## Stop Conditions
 
-Escalate inaccurate SLI semantics, sensitive-data exposure, an unobservable critical flow, or an alert or dead-man signal with no owner and response.
+Stop when a critical path has no bounded signal or owned response.
 
 ## Output Contract
 

@@ -1,63 +1,52 @@
 ---
 name: cross-platform-client-extension
-description: Use when an installed-client change has a confirmed shared framework and concrete registered platform targets.
+description: Use for a source-confirmed shared installed client and concrete targets; skip framework-name-only, native-only, Web, backend, and release work.
 ---
 
 # cross-platform-client-extension
 
 ## Role
 
-This focused Layer 3 Domain Skill modifies `installed-client-change-builder` for `analysis-agent`, `task-agent`, and `review-agent`. It is never a standalone target or the primary Professional review owner. A `review-agent` must load it when the selected review Professional evaluates shared-client behavior. When task evidence confirms an affected concrete target, load its registered platform Domain.
+This focused Layer 3 Domain Skill modifies installed-client decisions for `analysis-agent`, `task-agent`, and `review-agent`; never standalone or primary. Review loads it for shared-client behavior; confirmed targets load their platform Domains.
 
 ## When To Use
 
-- Use when repository, build, release, or published-artifact evidence confirms a shared installed client and its concrete platform targets.
-- Use for shared/platform ownership, bridge or plugin compatibility, platform behavior differences, parity, or cross-platform regression decisions.
+- Use with a source-confirmed shared installed client and concrete platform targets.
+- Use for ownership, bridge/plugin, platform delta, parity, or cross-target regression.
 
 ## Do Not Use
 
-- Do not load from Flutter, React Native, Electron, Tauri, Qt, .NET MAUI, Kotlin Multiplatform, Compose Multiplatform, or another framework name alone.
-- Do not use for an unknown target, language-only work, a native-only platform change without a shared client, Web/PWA, backend, infrastructure, or release authorization.
+- Do not load from a framework name alone.
+- Exclude unknown-target, language-only, native-only, Web/PWA, backend, infrastructure, and release-authority work.
 
 ## Required Inputs
 
-- Record the framework and version, target and release matrix, build variants, published artifacts, and OS/version range.
-- Record shared and platform-specific owners, lifecycle and persistence behavior, bridge/FFI/plugin versions, parity claims, and per-target validation evidence.
+- Framework/version, target matrix, variants/artifacts, shared/platform owners, bridge versions, parity claims, and per-target evidence.
 
 ## Professional Decision Rules
 
-- Prove targets from repository, build targets, release configuration, or published artifacts without framework inference.
-- If targets remain unknown after that inspection, do not load this modifier and ask one bounded target question.
-- Keep confirmed targets in a cohesive executable slice when dependency order, shared/native ownership, write scope, validation, release, rollback, and integration risk stay cohesive.
-- Use `analysis-agent` splitting when those boundaries create separately executable work.
-- Assign shared, adapter, plugin, and native owners; keep platform lifecycle, persistence, permission, and packaging authority with the concrete platform Domain.
-- Version bridge, FFI, plugin, and generated interfaces; define payload, threading, cancellation, error, and backward-compatibility behavior.
-- Define behavior parity separately from UI parity.
-- Treat uniform appearance as no proof of equivalent lifecycle, accessibility, permission, or failure behavior.
-- Validate shared logic plus every affected target, native boundary, release artifact, and platform-specific negative path.
-- Route signing, store/channel rollout, release approval, and rollback authority to `delivery-release-gate`.
+- Unknown targets after source inspection prohibit loading and require one bounded target question.
+- Load only active ownership, bridge, parity, or target-evidence References and confirmed platform Domains.
+- Keep cohesive targets together; use Analysis when ownership, dependency, validation, or integration splits execution.
+- Return signing, rollout, release, and rollback authority to `delivery-release-gate`.
 
 ## High-Value Gotchas
 
-- A shared test can pass while one native adapter restores stale state or loses an error.
-- A plugin can compile on every target while runtime capability, permission, or packaging support differs.
-- An abstraction can hide platform-specific threading, lifecycle, navigation, accessibility, or security behavior.
-- Pixel similarity can coexist with unequal keyboard, screen-reader, back, window, or failure behavior.
+- Shared or compile-time success does not close target-specific runtime behavior; load the target evidence before closure.
 
 ## Execution Checklist
 
-- Load only the active decision family's Reference and every concrete platform Domain.
-- Verify ownership, compatibility, normal, failure, upgrade, and artifact behavior per affected target.
-- Report the target matrix, source freshness, untested targets, non-inferences, and residual risk.
+1. Confirm the concrete target matrix and current owners.
+2. Load only the active shared-client References and registered target Domains.
+3. Close with per-target evidence, non-inferences, and proof limits.
 
 ## Stop / Escalation Conditions
 
-- Stop on unresolved target, executable-slice boundary, owner, bridge contract, platform delta, artifact, or per-target evidence.
-- Inspect repository/build/release/published artifacts first; then ask one bounded question if the concrete target set remains unresolved.
+Stop on unresolved target, owner, bridge, platform delta, artifact, or per-target evidence; inspect source before one bounded question.
 
 ## Output Contract
 
-Return the shared/platform ownership decision, concrete target matrix, rejected abstraction, compatibility boundary, parity definition, normal and failure behavior, and per-target validation. Include source freshness, proof limits, and residual risk.
+Return ownership, target matrix, compatibility, parity, normal/failure behavior, per-target validation, freshness, proof limits, and residual risk.
 
 ## Targeted References
 

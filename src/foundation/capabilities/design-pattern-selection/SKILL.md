@@ -19,30 +19,22 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when a current v
 
 ## Skill Role
 
-After `minimal-correct-implementation` has established that structure is needed, select or reject inheritance, composition, strategy, adapter, provider, interface, registry, or another pattern only for a current variation, lifecycle, protocol, concurrency, or extension force. Exclude placement, refactoring, public contracts, and language rules.
+Select one relationship for an accepted variation, lifecycle, protocol, concurrency, or extension force; exclude placement, refactoring, public contracts, and language rules.
 
 ## High-Value Rules
 
-- Name the current variation, lifecycle, protocol, concurrency, or extension force, reachable variants or consumers, and the simpler direct alternative before selecting a pattern.
-- The selected relationship exposes construction, lifecycle and teardown ownership, dependency direction, invariant enforcement, and side-effect visibility.
-- An interface, registry, provider, or base type has a current substitution axis, independent boundary contract, or lifecycle need; shared implementation by itself is not a force.
-- An adapter, proxy, repository, decorator, or facade keeps latency, partial failure, timeout, retry, cancellation, and cleanup obligations visible at the call site or owning boundary.
-- When selecting a singleton, pool, observer, subscription, or worker, define initialization, synchronization, reset, unsubscribe or drain, shutdown, and error ownership.
-- A queue, pool, pipeline, observer, or fan-out relationship defines work bounds, overload behavior, cancellation, teardown, and result or failure observation.
-- A public, generated, serialized, or cross-module surface change routes to the API, consumer-impact, module, or compatibility owner before pattern approval.
+- Define the current force, reachable consumers, and direct alternative.
+- Define construction, lifecycle, effect, concurrency, and failure ownership.
+- Preserve visible I/O, latency, failure, cancellation, cleanup, and results; sharing is not a force.
+- Route public/cross-module surfaces and specialist proof.
 
 ## Anti-Patterns
 
-- A factory, builder, strategy, registry, or provider wraps one trivial local variant and adds no independent contract or lifecycle.
-- A pattern name hides mutable global state, network or storage I/O, commit order, or cleanup work.
-- A base type exists for code sharing while callers depend on subtype details or one unstable axis.
-- A familiar repository pattern is copied without proving the same force, lifetime, and failure boundary.
+- Local success substituted for evidence of the design pattern selection contract.
 
 ## Stop Conditions
 
-- Consume the accepted existence decision from `minimal-correct-implementation`; do not repeat its delete/reuse/native/direct/new ladder.
-- After the relationship is accepted, route owner-internal method/class/file placement to `implementation-structure-design`, cross-owner/public edges to `module-boundary-design`, and later behavior-preserving movement to `refactoring`.
-- Route language/runtime semantics to `language-idiom-enforcement`, runtime cost to `language-performance-safety` or `profiling`, and concurrency or lifecycle proof to their specialist owners.
+- Consume accepted structure; hand relationship placement/movement and specialist proof to their owners.
 
 ## Output Contract
 

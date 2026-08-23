@@ -21,24 +21,17 @@ Prove executable compatibility on named provider-consumer surfaces. Exclude broa
 
 ## High-Value Rules
 
-- Name the provider, known and unknown consumer classes, authoritative or observed contract source, versions that may coexist, and compatibility direction. A provider self-test does not establish consumer admissibility.
-- Contract the semantics consumers branch on: absent versus null, defaults, error and authorization shapes, unknown fields or enum values, ordering, pagination, and duplicate or replay behavior. Avoid copying provider internals into expectations.
-- Prove both sides of the boundary: provider verification shows named expectations can be served; consumer or generated-client evidence shows named consumers can accept them. Unrepresented consumer classes remain explicit proof limits.
-- Classify compatibility with the actual protocol, reader/writer rules, retention window, and rollout order. Neither an additive change nor a schema-tool pass is universally safe.
-- Treat registries, brokers, generated clients, diffs, and vendor fixtures as scoped evidence. Record the selected subject/version/environment or capture provenance, plus behavior and consumers they do not prove.
-- Exercise old/new producer-consumer combinations and retained or replayed payloads when versions coexist. Preserve field identifiers, unknown-value behavior, and migration semantics required by the selected protocol.
-- Re-run affected checks after contract, fixture, generator, compatibility-policy, or consumer-selection changes. Redact captured credentials and tenant data, and disclose unavailable consumers or environments.
+- Name provider, consumers, contract source, coexisting versions, and compatibility direction; provider self-test is insufficient.
+- Pair provider proof with named consumer/generated-client semantic proof; retain unrepresented consumers.
+- Load only the named Reference for active strategy, closure, or evidence.
 
 ## Anti-Patterns
 
-- Declaring compatibility from schema shape alone while semantic meaning, error behavior, or consumer tolerance changed.
-- Inventing a vendor or consumer mock from memory, or treating one captured response as the provider's complete behavior.
-- Applying one broker, registry mode, versioning style, or consumer-driven workflow to every boundary.
-- Replacing integration, journey, consumer discovery, or rollout proof with contract tests.
+- Local success substituted for evidence of the contract testing contract.
 
 ## Stop Conditions
 
-- Escalate when unknown or independently deployed consumers, retained messages, undocumented provider behavior, or an unavailable compatibility environment prevent a bounded claim and no owner accepts the residual risk.
+- Stop when unknown/deployed consumers, retained messages, undocumented behavior, or unavailable environments prevent an owned bounded claim.
 
 ## Output Contract
 

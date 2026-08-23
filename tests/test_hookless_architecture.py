@@ -103,8 +103,9 @@ class HooklessArchitectureTests(unittest.TestCase):
             "explicit owner/scope/placement/acceptance/validation/rollback",
             "no unresolved material risk",
             "category cannot force analysis",
-            "unresolved owner/placement/behavior/verification/rollback/material impact routes to analyzed work",
-            "without ownership/verification discovery",
+            "unresolved behavior/rollback/material impact or an unknown owner/module/system/verification boundary routes to analyzed work",
+            "already-known stable owner/test/consumer boundary",
+            "bounded confirmation",
             "engineering-change-analysis",
             "synchronous/unknown capability",
             "actual diff, every changed file, validation results",
@@ -272,8 +273,8 @@ class HooklessArchitectureTests(unittest.TestCase):
                 )
                 mutations = {
                     "tampered": text.replace(
-                        "automatic=L2 / L3 / L4",
-                        "automatic=L2 / L4",
+                        "automatic=L1 / L2 / L3 / L4 / L5",
+                        "automatic=L1 / L2 / L4 / L5",
                         1,
                     ),
                     "duplicate": text + "\n" + canonical + "\n",
@@ -375,7 +376,7 @@ class HooklessArchitectureTests(unittest.TestCase):
                 )
                 self.assertEqual(
                     Counter(item["content_class"] for item in items),
-                    {"compact": 124, "complex": 26},
+                    {"compact": 128, "complex": 22},
                 )
                 self.assertTrue(
                     all(

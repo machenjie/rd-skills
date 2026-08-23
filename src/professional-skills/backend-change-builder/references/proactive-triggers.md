@@ -7,6 +7,8 @@ This reference does not authorize self-review or broaden the Task Capsule.
 
 ## Hidden-Risk Escalators
 
+When the change affects untrusted input, identity, resource scope, or tenant scope, preserve validation and server-side authorization before disclosure or mutation.
+
 | Signal in the changed path | Required decision and evidence | Route only when triggered |
 | --- | --- | --- |
 | Resource, owner, account, user, or tenant identifier is resolved without an authoritative scope predicate. | Trace caller identity through every scoped access found; prove server-side owner/tenant/policy enforcement plus allowed and denied cases. Scan the same credible access pattern and disclose unsearched surfaces. | `permission-boundary-modeling`, `authentication-authorization`, `security-privacy-gate`; add `regression-testing` for a verified bug. |

@@ -23,17 +23,6 @@ Official Android Developers pages below were accessed on 2026-07-24.
 - Define cancellation, retry, deduplication, reboot, app-stop, and process-death
   outcomes before implementation.
 
-## Failure Proof
-
-- Exercise untrusted external input, denied and later-revoked permission, disabled
-  notifications, background start, duplicate delivery, and process termination.
-
-## Required Record
-
-Return the exposed surface, caller trust, permission state machine, selected
-execution mechanism, notification behavior, failure handling, current API/SDK
-scope, untested platform paths, and residual risk.
-
 ## Primary Sources
 
 - [Intents and intent filters](https://developer.android.com/guide/components/intents-filters)

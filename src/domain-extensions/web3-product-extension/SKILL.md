@@ -1,50 +1,34 @@
 ---
 name: web3-product-extension
-description: "For analysis/task/review agents using a Professional Skill on wallets, signing, smart contracts, chain transactions, or custody; not for work with no chain behavior."
+description: "Use for confirmed on-chain custody, signing, transaction, contract, bridge, oracle, or wallet behavior."
 ---
 
 # web3-product-extension
 
 ## Role
 
-Load this focused Layer 3 Domain Skill for affected on-chain behavior. Provide
-`analysis-agent`, `task-agent`, and `review-agent` with custody, signing,
-transaction, finality, contract, oracle, bridge, governance, and recovery
-constraints for affected on-chain behavior.
+This focused Layer 3 Domain Skill gives `analysis-agent`, `task-agent`, and `review-agent` the Web3 kernel and named References.
 
 ## When To Use
 
-- blockchain, smart contract, wallet, signing, chain transaction, bridge, oracle, or custody behavior
+- confirmed on-chain behavior
 
 ## Do Not Use
 
-- ordinary application work or payment-only wallets with no chain behavior
-- hash or signature terminology without chain or custody behavior
+- no chain or custody behavior; payment-only wallets; hash or signature terminology alone
 
 ## Required Inputs
 
-- chain identity, asset exposure, custody, signer, finality, upgrade, and recovery boundaries
-- deployed code and configuration, oracle or indexer trust, threat model, and evidence
+- authority, identity, exposure, recovery, and evidence boundaries
 
 ## Professional Decision Rules
 
-- **Bind key controls to custody**: non-custodial secrets never reach application servers or logs. Approved custody proves generation, isolation, recovery, rotation, and audit boundaries.
-- **Confirm irreversible intent before submission**: expose chain, asset, target, authority, amount, fees, and consequence. Scale confirmation and simulation to value and reversibility.
-- **Protect external-call invariants**: prove state or value cannot be reused or observed inconsistently across reentrant calls.
-- **Bind off-chain authorization**: signatures commit to action, domain, network, verifier, nonce, expiry, and version when relevant.
-- **Scale independent assurance to exposure**: select review and verification depth from value, novelty, privilege, attack surface, and recoverability.
-- **Use deployed arithmetic semantics**: prove overflow, precision, scaling, rounding, and exceptional arithmetic against the deployed compiler and assets.
-- **Protect price-dependent actions**: prove oracle authority, freshness, manipulation cost, and fail-safe behavior.
-- **Derive oracle windows from evidence**: use current market behavior instead of a preset duration.
-- **Reconcile indexers to canonical state**: off-chain authorization or balances account for confirmation depth, reorg, replay, and finality.
+- Preserve the accepted on-chain invariant.
+- Load each named Reference whose decision problem is active.
 
 ## High-Value Gotchas
 
-- replay succeeds because authorization omits domain or nonce binding
-- custody recovery bypasses normal signing controls
-- a fresh oracle remains economically manipulable
-- an indexer reports state removed by reorganization
-- an upgrade or bridge key concentrates loss exposure
+- Hash or signature terms can falsely trigger Web3 without chain or custody evidence.
 
 ## Execution Checklist
 
@@ -54,15 +38,20 @@ constraints for affected on-chain behavior.
 
 ## Stop / Escalation Conditions
 
-- Stop when custody authority, deployed bytecode/configuration, chain identity, asset exposure, or recovery ownership is unknown.
-- Escalate possible asset loss, privileged-key compromise, irreversible deployment, bridge/oracle uncertainty, and unsupported audit claims.
+- Stop on unknown authority or material loss, privileged-key, irreversible, bridge/oracle, or audit uncertainty.
 
 ## Output Contract
 
-- State the chain invariant, authority, selected control, finality limits, and residual risk.
+- Invariant, authority, control, limits, and residual risk.
 
 ## Targeted References
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
-| [checklist](references/checklist.md) | decision-checklist | chain custody signing contract finality or indexer behavior needs domain risk closure | hash or signature terminology appears without chain or custody behavior | analysis-agent, task-agent, review-agent | checklist-result, residual-risk |
+| [custody and chain transactions](references/custody-and-chain-transactions.md) | targeted | custody, signing, chain transaction, finality, oracle, indexer, or asset-authority behavior needs a decision | hash or signature terminology appears without chain or custody behavior | analysis-agent, task-agent, review-agent | boundary-decision, selected-approach, failure-decision, residual-risk |
+| [monitoring and independent assurance](references/monitoring-and-independent-assurance.md) | targeted | selected Web3 failure monitoring, response, or independent-assurance scope is open | no Web3 monitoring, response, or assurance claim exists | analysis-agent, task-agent, review-agent | decision-record, validation-plan, proof-limit, residual-risk |
+| [upgrades and deployed behavior](references/upgrades-and-deployed-behavior.md) | targeted | contract upgrade, storage migration, deployed identity, or arithmetic behavior is open | deployed code, configuration, upgrade, storage, and arithmetic behavior are unchanged | analysis-agent, task-agent, review-agent | release-decision, residual-risk |
+| [verification evidence](references/verification-evidence.md) | evidence-pattern | a Web3 claim needs source, build, deployment, fork-simulation, chain-state, or proof-limit closure | no Web3 claim or evidence decision exists | analysis-agent, task-agent, review-agent | evidence-record, validation-plan, proof-limit, residual-risk |
+| [governance authority](references/governance-authority.md) | targeted | on-chain governance, privileged upgrade, or bridge authority is open | governance, privileged upgrade, and bridge authority are unchanged | analysis-agent, task-agent, review-agent | boundary-decision, residual-risk |
+| [allowances nonstandard assets and delegated calls](references/allowances-nonstandard-assets-and-delegated-calls.md) | targeted | allowance, permit, approval, delegated spend, nonstandard asset, callback, or reentrancy behavior is open | none of those allowance, delegated-call, nonstandard-asset, callback, or reentrancy behaviors changes | analysis-agent, task-agent, review-agent | boundary-decision, failure-decision, residual-risk |
+| [account and cross domain execution](references/account-and-cross-domain-execution.md) | targeted | account abstraction, intent, bridge, L2 settlement, or cross-domain authority is open | none of account abstraction, intent, bridge, L2 settlement, or cross-domain authority changes | analysis-agent, task-agent, review-agent | boundary-decision, failure-decision, residual-risk |

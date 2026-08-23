@@ -16,19 +16,6 @@ Official Android Developers pages below were accessed on 2026-07-24.
 - Decide whether backup includes, excludes, transforms, or invalidates each data
   class and its dependent key material.
 
-## Failure Proof
-
-- Exercise missing, invalidated, rotated, and authentication-gated keys.
-- Exercise restore on another device, application upgrade/downgrade boundary,
-  logout/account switch, partial migration, low storage, and corrupt records.
-- Prove deletion removes all owned copies without deleting another account's data.
-
-## Required Record
-
-Return the data inventory, storage and key owner, backup rule, migration path,
-identity binding, invalidation and recovery behavior, tested API/device scope,
-proof limits, and residual risk.
-
 ## Primary Sources
 
 - [Data and file storage](https://developer.android.com/training/data-storage)

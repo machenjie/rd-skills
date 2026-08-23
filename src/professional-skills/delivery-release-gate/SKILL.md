@@ -7,9 +7,9 @@ description: "Use `analysis-agent` for release decisions, `task-agent` for deliv
 
 ## Role
 
-- **Analysis mode (`analysis-agent`):** Decide rollout, containment, and recovery behavior.
-- **Task mode (`task-agent`):** Produce the accepted release artifact and rollback metadata.
-- **Review mode (`review-agent`):** Judge artifact readiness against rollout and recovery criteria.
+- **Analysis mode (`analysis-agent`):** select rollout, containment, and recovery.
+- **Task mode (`task-agent`):** produce the accepted release artifact and rollback metadata.
+- **Review mode (`review-agent`):** judge rollout and recovery readiness.
 
 ## When To Use
 
@@ -24,41 +24,33 @@ description: "Use `analysis-agent` for release decisions, `task-agent` for deliv
 
 - release boundaries; rollback requirements and recovery constraints
 - **Analysis mode (`analysis-agent`):** current release topology, blast radius, compatibility, and recovery evidence.
-- **Task mode (`task-agent`):** accepted release-artifact decision with provenance, rollout, and rollback checks.
+- **Task mode (`task-agent`):** accepted release-artifact decision, provenance, rollout, and rollback checks.
 - **Review mode (`review-agent`):** release artifact with mixed-version and recovery evidence.
 
 ## Professional Decision Rules
 
-- Prove release dimensions material to selected artifact, configuration, compatibility, migration, rollout, observability, and recovery risk.
-- Select rollout, watch, approval, and containment from blast radius, reversibility, current controls, and policy.
-- Test old/new coexistence or recovery against the actual artifact and material environment dimensions when triggered.
-- Reserve destructive, production, privileged, or irreversible actions for explicit user authority.
+- Name the release decision owner.
+- Load the named Reference for the open output.
+- Require authority before action.
 
 ## High-Value Gotchas
 
-- A rollback command does not prove recovery.
-- Clean deployment can miss version skew.
-- Early cleanup can remove recovery.
+- Artifact identity can drift between validation, packaging, promotion, and rollback.
+- Rollback availability does not prove compatibility, data recovery, or restoration time.
+- Mixed-version success can hide an irreversible migration or configuration boundary.
 
 ## Execution Checklist
 
-1. Trace artifact identity, configuration, migration, compatibility, blast radius, and recovery ownership.
-2. Choose rollout, watch, containment, and rollback controls from reversibility and current policy.
-3. Verify mixed-version behavior, promotion provenance, stop signals, and recovery feasibility.
-4. **Analysis mode:** select rollout, watch, containment, and rollback controls.
-5. **Task mode:** produce artifact provenance, compatibility, and rollback metadata.
-6. **Review mode:** judge mixed-version, stop-signal, and recovery evidence.
-7. Stop when authority, artifact identity, or recovery proof remains implicit.
+- **Analysis mode:** Map blast radius, compatibility order, containment, and recovery authority.
+- **Task mode:** Build the accepted release artifact with provenance and rollback metadata.
+- **Review mode:** Verify built identity, mixed-version evidence, and recovery readiness.
+- Record unproved environments, migrations, and operator actions as residual risk.
+- Minimal validation: inspect built-artifact identity and run the selected compatibility or recovery check.
 
 ## Stop / Escalation Conditions
 
-- Block when required immutable artifact identity is unproven.
-- Block unverified target configuration, secrets, or environment equivalence.
-- Require rollout approval, watch ownership, stop signals, and containment when risk triggers them.
-- Require rollback rehearsal only when risk or policy demands it.
-- Block migration or contract release lacking triggered mixed-version, ordering, coordination, reconciliation, rollback, or forward-repair proof.
-- Block infrastructure release when desired/effective change, blast radius, authority, drift or state handling, or containment cannot be inspected.
-- Refuse write tools without permission, sandbox, preview, recovery, and redaction evidence.
+- Block stale artifact/environment, authority, containment, compatibility/migration, infrastructure-state, or recovery evidence.
+- Refuse destructive, privileged, irreversible, or secret-bearing production action absent authority, sandbox/preview, recovery, and redaction.
 
 ## Output Contract
 

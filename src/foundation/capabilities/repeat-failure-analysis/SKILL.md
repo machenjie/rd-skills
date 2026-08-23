@@ -38,17 +38,7 @@ Analyze repeated failure from observable source, commands, diffs, findings, and 
 
 ## Anti-Patterns
 
-- Renaming the same patch is not a different approach.
-- A green unrelated command does not disprove the observed failure.
-- Previous conversation summaries are navigation hints, not source truth.
-
-## Execution Checklist
-
-1. List the failed attempts on the rejected path and the evidence each produced.
-2. State why the prior path is rejected or still uncertain.
-3. Inspect the owner and same-pattern occurrences.
-4. Choose one falsifiable next hypothesis and a different proof path.
-5. Return the bounded next action or a concrete blocker.
+- Local success substituted for evidence of the repeat failure analysis contract.
 
 ## Stop Conditions
 

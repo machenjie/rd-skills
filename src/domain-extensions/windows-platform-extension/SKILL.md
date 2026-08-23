@@ -7,65 +7,69 @@ description: Use when a confirmed Windows target changes desktop or service plat
 
 ## Role
 
-This focused Layer 3 Domain Skill modifies the selected Professional Skill for `analysis-agent`, `task-agent`, and `review-agent`. It is never the primary Professional review owner. A `review-agent` must load it for Windows behavior. Use `installed-client-change-builder` for desktop source changes; select the actual service Professional before adding this modifier for a Windows service.
+This focused Layer 3 Domain Skill supports `analysis-agent`, `task-agent`, and
+`review-agent` for a confirmed Windows application or service. The selected
+Professional remains owner; service routing stays outside this root.
 
 ## When To Use
 
-- Use for a confirmed Windows target whose desktop framework, identity, deployment, integration, process, security, architecture, distribution, DPI, or accessibility behavior changes.
-- For shared clients, also load `cross-platform-client-extension` when shared/native ownership changes.
+- Confirmed framework/lifecycle, identity/install, OS registration, service or
+  background, security/IPC, architecture/distribution, DPI, or accessibility changes.
 
 ## Do Not Use
 
-- Do not use for Web/PWA, generic backend or infrastructure work without Windows application or service behavior, non-Windows, C#-only, PowerShell-only, or framework-only work without a confirmed Windows target.
-- Do not route a Windows service to `installed-client-change-builder` solely because its platform is Windows.
-- Do not use for release, signing, rollout authorization, or independent review ownership.
+- Web/PWA, generic backend/infrastructure, non-Windows, or language/framework-only
+  work without a Windows target; release, signing, or rollout authorization.
 
 ## Required Inputs
 
-- Record target Windows/SDK range, Win32/WinUI/WPF/WinForms boundary, executable topology, package/app identity, packaged or unpackaged state, installer/update source, channel, and x86/x64/ARM64 claims.
-- Record registration, activation, COM/IPC, privilege/container, secret, DLL, service/background/notification, DPI, accessibility, artifact, signing, and unavailable-host evidence.
+- Windows/SDK/framework, application or service owner, identity/architecture,
+  active decision family, accepted carrier, artifact/host evidence, and proof limits.
 
 ## Professional Decision Rules
 
-- Derive the framework, lifecycle, thread, activation, and single-instance owners from repository and final artifact facts.
-- Bind MSIX or unpackaged identity to installation, update, repair, uninstall, registration, protocol, file-association, and COM behavior.
-- Treat registry, activation, named-pipe, COM, and DLL-loading surfaces as explicit trust and compatibility boundaries.
-- Bind UAC, AppContainer, DPAPI, Credential Manager, service identity, background tasks, and notifications to principal, session, package identity, denial, and recovery.
-- For a Windows service, preserve the actual service Professional's acceptance and add Windows-specific service evidence only.
-- Prove each x86/x64/ARM64 claim in the final executable and dependency graph.
-- Keep reusable accessibility rules in Foundation; prove only Windows DPI, UI Automation, input, and assistive-technology deltas here.
-- Route signing, Store/enterprise/direct-release approval, and rollout decisions to `delivery-release-gate`.
+- Analysis loads only active decision-family References.
+- Task and Review load paired evidence companions through the accepted carrier.
+- `service-background-and-notification-contracts` may establish the owner boundary.
+- Its evidence companion validates the accepted owner and never reroutes.
+- Preserve co-triggered families.
 
 ## High-Value Gotchas
 
-- Debug can hide unpackaged activation, repair, dependency, and registration failures.
-- A protocol, COM, named-pipe, or single-instance handoff can cross identity, integrity, session, or bitness boundaries.
-- DPAPI scope, service accounts, interactive sessions, and DLL search paths can make local success non-portable.
-- A signed main executable does not prove dependent binaries, architecture, installer, update, or distribution evidence.
+- Debug, one architecture, or the main executable proves no installed identity,
+  dependent binary, service/session, DPI, or accessibility behavior.
 
 ## Execution Checklist
 
-- Load only the active decision family's Reference and preserve Professional and Foundation ownership.
-- Exercise denied elevation, missing identity, repair/update interruption, external activation, architecture, session, DPI, and accessibility paths.
-- Report target, package identity, artifact/channel, source freshness, untested paths, authorization owner, and non-inferences.
+1. Confirm target, owner boundary, and active families.
+2. Load only the role-valid decision or evidence Reference set.
+3. Record artifact/host validation, non-inferences, and proof limits.
 
 ## Stop / Escalation Conditions
 
-- Stop on unknown target, framework, package/app identity, installer/update source, service owner, principal/session, trust boundary, architecture, channel, DPI/accessibility matrix, or artifact evidence.
-- Resolve unknown targets from repository, build, and release facts; do not infer Windows from language or framework names.
+- Stop on unresolved target, owner, identity/service/trust boundary, accepted
+  decision, carrier, or required artifact/host evidence.
 
 ## Output Contract
 
-Return the Windows decision, rejected alternative, Professional owner, framework/OS/identity/architecture scope, normal and failure behavior, and artifact/host validation. Include source freshness, authorization owner, proof limits, and residual risk.
+- Windows owner and scoped decision/evidence, normal and failure behavior,
+  artifact/host validation, source freshness, proof limits, and residual risk.
 
 ## Targeted References
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
-| [framework lifecycle and activation contracts](references/framework-lifecycle-and-activation-contracts.md) | targeted | Win32 WinUI WPF WinForms lifecycle activation single-instance or UI-thread behavior affects the decision | no Windows desktop framework lifecycle activation instance or thread behavior changes | analysis-agent, task-agent, review-agent | selected-approach, proof-limit, validation-plan |
-| [identity packaging and installation contracts](references/identity-packaging-and-installation-contracts.md) | targeted | packaged unpackaged MSIX package/app identity installer update repair or uninstall behavior affects the decision | no Windows identity deployment installation update repair or uninstall behavior changes | analysis-agent, task-agent, review-agent | boundary-decision, proof-limit, validation-plan |
-| [os integration and registration contracts](references/os-integration-and-registration-contracts.md) | targeted | registry file association protocol handler or COM registration behavior affects the decision | no Windows registry association protocol or COM surface changes | analysis-agent, task-agent, review-agent | decision-record, proof-limit, validation-plan |
-| [service background and notification contracts](references/service-background-and-notification-contracts.md) | targeted | Windows service background task or app notification behavior affects the decision | no Windows service background execution or notification behavior changes | analysis-agent, task-agent, review-agent | routing-decision, failure-decision, validation-plan |
-| [security ipc and loading contracts](references/security-ipc-and-loading-contracts.md) | targeted | UAC AppContainer DPAPI Credential Manager named pipe single-instance or DLL loading affects the decision | no Windows privilege container secret IPC instance or module-loading behavior changes | analysis-agent, task-agent, review-agent | boundary-decision, proof-limit, validation-plan |
-| [architecture signing and distribution contracts](references/architecture-signing-and-distribution-contracts.md) | targeted | x86 x64 ARM64 signing Store enterprise or direct distribution evidence affects the decision | no Windows architecture signed-artifact or distribution-channel evidence changes | analysis-agent, task-agent, review-agent | decision-record, proof-limit, validation-plan |
-| [dpi and accessibility deltas](references/dpi-and-accessibility-deltas.md) | targeted | Windows scaling high-DPI UI Automation keyboard focus or assistive-technology behavior changes | no Windows-specific DPI accessibility input or focus behavior changes beyond Foundation rules | analysis-agent, task-agent, review-agent | decision-record, proof-limit, validation-plan |
+| [framework lifecycle and activation contracts](references/framework-lifecycle-and-activation-contracts.md) | targeted | Win32 WinUI WPF WinForms lifecycle activation single-instance or UI-thread behavior affects the decision | no Windows desktop framework lifecycle activation instance or thread behavior changes | analysis-agent | selected-approach |
+| [framework lifecycle and activation contracts implementation and review evidence](references/framework-lifecycle-and-activation-contracts-implementation-and-review-evidence.md) | evidence-pattern | the accepted Windows framework and lifecycle approach requires implementation or review evidence | no framework lifecycle or activation implementation or review claim is being closed | task-agent, review-agent | evidence-record, proof-limit, validation-plan |
+| [identity packaging and installation contracts](references/identity-packaging-and-installation-contracts.md) | targeted | packaged unpackaged MSIX package/app identity installer update repair or uninstall behavior affects the decision | no Windows identity deployment installation update repair or uninstall behavior changes | analysis-agent | boundary-decision |
+| [identity packaging and installation contracts implementation and review evidence](references/identity-packaging-and-installation-contracts-implementation-and-review-evidence.md) | evidence-pattern | the accepted Windows identity and installation boundary requires implementation or review evidence | no Windows identity packaging or installation implementation or review claim is being closed | task-agent, review-agent | evidence-record, proof-limit, validation-plan |
+| [os integration and registration contracts](references/os-integration-and-registration-contracts.md) | targeted | registry file association protocol handler or COM registration behavior affects the decision | no Windows registry association protocol or COM surface changes | analysis-agent | decision-record |
+| [os integration and registration contracts implementation and review evidence](references/os-integration-and-registration-contracts-implementation-and-review-evidence.md) | evidence-pattern | the accepted Windows registration decision requires implementation or review evidence | no Windows registration implementation or review claim is being closed | task-agent, review-agent | evidence-record, proof-limit, validation-plan |
+| [service background and notification contracts](references/service-background-and-notification-contracts.md) | targeted | Windows service background task or app notification behavior affects the decision | no Windows service background execution or notification behavior changes | analysis-agent | routing-decision, failure-decision |
+| [service background and notification contracts implementation and review evidence](references/service-background-and-notification-contracts-implementation-and-review-evidence.md) | evidence-pattern | the accepted Windows service background and notification owner boundary requires implementation or review evidence | no accepted service background or notification implementation or review claim is being closed | task-agent, review-agent | evidence-record, proof-limit, validation-plan |
+| [security ipc and loading contracts](references/security-ipc-and-loading-contracts.md) | targeted | UAC AppContainer DPAPI Credential Manager named pipe single-instance or DLL loading affects the decision | no Windows privilege container secret IPC instance or module-loading behavior changes | analysis-agent | boundary-decision |
+| [security ipc and loading contracts implementation and review evidence](references/security-ipc-and-loading-contracts-implementation-and-review-evidence.md) | evidence-pattern | the accepted Windows security IPC and loading boundary requires implementation or review evidence | no Windows security IPC or loading implementation or review claim is being closed | task-agent, review-agent | evidence-record, proof-limit, validation-plan |
+| [architecture signing and distribution contracts](references/architecture-signing-and-distribution-contracts.md) | targeted | x86 x64 ARM64 signing Store enterprise or direct distribution evidence affects the decision | no Windows architecture signed-artifact or distribution-channel evidence changes | analysis-agent | decision-record |
+| [architecture signing and distribution contracts implementation and review evidence](references/architecture-signing-and-distribution-contracts-implementation-and-review-evidence.md) | evidence-pattern | the accepted Windows architecture and distribution decision requires implementation or review evidence | no Windows architecture signing or distribution implementation or review claim is being closed | task-agent, review-agent | evidence-record, proof-limit, validation-plan |
+| [dpi and accessibility deltas](references/dpi-and-accessibility-deltas.md) | targeted | Windows scaling high-DPI UI Automation keyboard focus or assistive-technology behavior changes | no Windows-specific DPI accessibility input or focus behavior changes beyond Foundation rules | analysis-agent | decision-record |
+| [dpi and accessibility deltas implementation and review evidence](references/dpi-and-accessibility-deltas-implementation-and-review-evidence.md) | evidence-pattern | the accepted Windows DPI and accessibility delta requires implementation or review evidence | no Windows DPI or accessibility implementation or review claim is being closed | task-agent, review-agent | evidence-record, proof-limit, validation-plan |

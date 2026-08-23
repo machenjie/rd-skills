@@ -1086,7 +1086,6 @@
           "evals/professional-benchmarks/refactoring/shared-utils-business-logic-pollution"
         ],
         "pressure": [
-          "hookless-direct-bounded-local-discovery",
           "hookless-direct-unresolved-behavior",
           "hookless-direct-unresolved-material-impact",
           "hookless-direct-unresolved-placement",
@@ -1102,7 +1101,7 @@
         "positive_route": 103,
         "negative_route": 0,
         "behavior": 2,
-        "pressure": 8,
+        "pressure": 7,
         "release_critical": 0,
         "adversarial_negative_control": 0
       },
@@ -1665,7 +1664,9 @@
           "evals/professional-benchmarks/frontend/form-validation-without-accessibility-states",
           "evals/professional-benchmarks/language/typescript-any-at-api-boundary"
         ],
-        "pressure": [],
+        "pressure": [
+          "hookless-direct-bounded-local-discovery"
+        ],
         "release_critical": [],
         "adversarial_negative_control": []
       },
@@ -1673,7 +1674,7 @@
         "positive_route": 10,
         "negative_route": 0,
         "behavior": 2,
-        "pressure": 0,
+        "pressure": 1,
         "release_critical": 0,
         "adversarial_negative_control": 0
       },
@@ -1682,7 +1683,7 @@
         "route_covered": true,
         "negative_route_covered": false,
         "behavior_covered": true,
-        "pressure_covered": false,
+        "pressure_covered": true,
         "release_critical_covered": false
       },
       "required_states": [],
@@ -1961,7 +1962,8 @@
         "language-testing-strategy",
         "testability-seam-design",
         "targeted-validation-selection",
-        "client-application-testing"
+        "client-application-testing",
+        "bigdata-product-extension"
       ],
       "authoring_status": "pass",
       "evidence_case_ids": {
@@ -2346,7 +2348,9 @@
         "windows-platform-extension",
         "macos-platform-extension",
         "linux-desktop-platform-extension",
-        "cross-platform-client-extension"
+        "cross-platform-client-extension",
+        "web3-product-extension",
+        "low-level-systems-extension"
       ],
       "authoring_status": "pass",
       "evidence_case_ids": {
@@ -7856,7 +7860,6 @@
           "evals/professional-benchmarks/refactoring/shared-utils-business-logic-pollution"
         ],
         "pressure": [
-          "hookless-direct-bounded-local-discovery",
           "hookless-direct-unresolved-behavior",
           "hookless-direct-unresolved-material-impact",
           "hookless-direct-unresolved-placement",
@@ -7871,7 +7874,7 @@
         "positive_route": 79,
         "negative_route": 0,
         "behavior": 2,
-        "pressure": 7,
+        "pressure": 6,
         "release_critical": 0,
         "adversarial_negative_control": 0
       },

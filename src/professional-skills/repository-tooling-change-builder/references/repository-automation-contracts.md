@@ -8,38 +8,25 @@
 
 **Required output:** `decision-record`, `failure-decision`, `proof-limit`
 
-Official sources were accessed on 2026-07-26.
-
-## One Decision
-
-Select one repository automation contract that behaves consistently from supported entrypoints and leaves a known workspace state after success, failure, or interruption.
-
-| Fact to establish | Required decision | Failure signal |
-|---|---|---|
-| Entrypoints and consumers | Name direct CLI, hook, build target, monorepo wrapper, CI caller, and supported invocation context | One caller receives different defaults or working-directory behavior |
-| Interface | Define argv, config precedence, environment, stdin, stdout, stderr, exit, help, and machine-output stability | Human diagnostics corrupt automation output or failure exits zero |
-| Repository identity | Resolve worktree, repository root, submodule, sparse checkout, generated tree, and dirty-state policy | The utility mutates another worktree or assumes one checkout layout |
-| Hermetic inputs | Declare tool versions, files, locale, time, randomness, network, credentials, caches, and host executables | A clean or isolated host produces another result |
-| Mutation | Define dry-run parity, target allowlist, concurrency, atomic commit, backup or recovery, and rerun behavior | Interruption exposes partial state or rerun duplicates changes |
-| Subprocesses | Define executable, argv, environment, working directory, stdio, timeout, cancellation, descendants, and exit mapping | A child remains active or an unknown effect is reported as success |
-| Cleanup | Preserve the primary failure while reporting temporary files, locks, processes, or rollback failure | Cleanup hides the cause or removes an unrelated path |
+Sources accessed 2026-07-26.
 
 ## Decision Rules
 
-- Keep preview and apply selection over the same resolved target set.
-- Reject implicit current-directory authority.
-- Make hooks safe under their documented Git working directory and environment.
+- Name supported CLI, hook, build, monorepo, and CI callers and invocation contexts.
+- Define argv, config/environment precedence, stdio, help, machine output, and exits.
+- Resolve worktree, root, submodule, sparse checkout, generated tree, and dirty-state authority.
+- Declare tool, file, locale, time, randomness, network, credential, cache, and host inputs.
+- Resolve an authorized target allowlist once; use it for preview and apply and reject current-directory authority.
+- Define concurrency, atomic commit or recovery, and rerun behavior.
+- Define child executable, argv, environment, directory, stdio, timeout, cancellation, descendants, and exit mapping.
+- Preserve the primary failure while reporting cleanup or rollback failure.
 - Compare repeated clean runs when reproducibility is required.
-- Return unknown or partial state when recovery cannot prove a final result.
+- Inspect owner, consumer, tests, adjacent utilities, versions, reuse, and invalid, interrupted, and forbidden outcomes before the smallest complete change.
 
 ## Primary Sources
 
-- [Git hooks](https://git-scm.com/docs/githooks)
-- [Bazel hermeticity](https://bazel.build/basics/hermeticity)
-- [Python argument parsing](https://docs.python.org/3/library/argparse.html)
-- [Python subprocess management](https://docs.python.org/3/library/subprocess.html)
-- [Python temporary files](https://docs.python.org/3/library/tempfile.html)
+- [Git hooks](https://git-scm.com/docs/githooks); [Bazel](https://bazel.build/basics/hermeticity); Python [argparse](https://docs.python.org/3/library/argparse.html), [subprocess](https://docs.python.org/3/library/subprocess.html), and [tempfile](https://docs.python.org/3/library/tempfile.html).
 
 ## Proof Limits
 
-These pages do not establish repository wrapper behavior, supported platforms, hook installation, worktree layout, sandbox enforcement, credential policy, or filesystem guarantees. Exercise current callers plus invalid target, interruption, rerun, subprocess failure, and cleanup paths before closure.
+Sources do not prove wrappers, platforms, hook installation, worktree layout, sandbox, credentials, or filesystem guarantees. Verify callers, invalid target, interruption, rerun, child failure, and cleanup; report unknown or partial recovery without widening APIs or unrelated tooling.

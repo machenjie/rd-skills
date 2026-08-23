@@ -351,41 +351,56 @@ def _validate_compiled_layer3_entrypoints(
             errors.append(
                 f"{_display_path(skill_file)}: contains the obsolete compiled-only Layer 3 heading"
             )
-        delivery_phrases = {
-            "recommended": "compiles assigned Foundation and Domain guidance",
-            "full": "compiles assigned Foundation guidance",
-            "dev": "delivers assigned Foundation and Domain guidance as top-level",
-        }
-        expected_delivery = delivery_phrases.get(profile)
-        if expected_delivery is None or expected_delivery not in skill_text:
-            errors.append(
-                f"{_display_path(skill_file)}: missing current-build Layer 3 delivery rule"
+        if profile == "recommended":
+            expected_delivery = (
+                "Foundation and Domain items are compiled at "
+                "`references/layer3/<name>.md`."
+                if expected
+                else "No Foundation or Domain Layer 3 items are assigned to this Skill."
             )
-        if profile == "full" and "delivers Domain guidance as" not in skill_text:
-            errors.append(
-                f"{_display_path(skill_file)}: full must deliver Domain guidance as top-level Skills"
+        elif profile == "full":
+            expected_delivery = (
+                "Foundation items are compiled at `references/layer3/<name>.md`; "
+                "Domain items are top-level Skills."
+                if expected
+                else "Domain items are top-level Skills; no Foundation items are "
+                "compiled for this Skill."
             )
-        if profile == "dev" and "does not compile Layer 3 references" not in skill_text:
-            errors.append(
-                f"{_display_path(skill_file)}: dev must forbid compiled Layer 3 references"
+        elif profile == "dev":
+            expected_delivery = (
+                "Foundation and Domain items are top-level Skills; no Layer 3 "
+                "references are compiled."
             )
-        if "Never preload Layer 3" not in skill_text:
+        else:
+            expected_delivery = ""
+        actual_delivery = (
+            skill_text.split("## Layer 3 Delivery\n\n", 1)[1].strip()
+            if "## Layer 3 Delivery\n\n" in skill_text
+            else ""
+        )
+        if actual_delivery != expected_delivery:
             errors.append(
-                f"{_display_path(skill_file)}: missing Layer 3 preload prohibition"
+                f"{_display_path(skill_file)}: Layer 3 delivery must match the current-build projection"
+            )
+        duplicate_authority = (
+            "Never preload Layer 3",
+            "capsule-named",
+            "Layer 3 index or catalog",
+            "(references/layer3/index.md)",
+        )
+        if any(phrase in skill_text for phrase in duplicate_authority):
+            errors.append(
+                f"{_display_path(skill_file)}: duplicates Profile-owned Layer 3 load authority"
             )
         if not expected:
-            if layer3_root.exists() or "(references/layer3/index.md)" in skill_text:
+            if layer3_root.exists():
                 errors.append(
                     f"{_display_path(skill_root)}: empty compiled mapping must not emit Layer 3 references"
                 )
             continue
-        if "(references/layer3/index.md)" not in skill_text:
-            errors.append(
-                f"{_display_path(skill_file)}: missing explicit compiled Layer 3 index link"
-            )
         if "`references/layer3/<name>.md`" not in skill_text:
             errors.append(
-                f"{_display_path(skill_file)}: missing direct capsule-named Layer 3 loading rule"
+                f"{_display_path(skill_file)}: missing compiled Layer 3 physical mapping"
             )
 
         index_path = layer3_root / "index.md"
@@ -455,14 +470,14 @@ def _validate_compiled_layer3_projection(
             "High-Value Rules",
             "Anti-Patterns",
             "Stop Conditions",
-            "Targeted References",
+            "JIT Reference Delivery",
         ],
         "domain": [
             "Decision Boundary",
             "Professional Decision Rules",
             "High-Value Gotchas",
             "Stop / Escalation Conditions",
-            "Targeted References",
+            "JIT Reference Delivery",
         ],
     }.get(layer)
     if expected_headings is None:
@@ -496,6 +511,17 @@ def _validate_compiled_layer3_projection(
             f"{_display_path(path)}: {layer} compiled projection headings "
             f"{h2_headings} must equal {expected_headings}"
         )
+    if "## Targeted References" in text:
+        errors.append(
+            f"{_display_path(path)}: compact compiled projection must not repeat "
+            "the source Targeted References table"
+        )
+    selector_anchor = "Current-Professional JIT"
+    if text.count(selector_anchor) != 1:
+        errors.append(
+            f"{_display_path(path)}: compact compiled projection must contain "
+            "exactly one current-Professional selector anchor"
+        )
     decision_match = re.search(
         r"(?ms)^## Decision Boundary[ \t]*\n(?P<body>.*?)(?=^## |\Z)",
         text,
@@ -505,6 +531,73 @@ def _validate_compiled_layer3_projection(
             f"{_display_path(path)}: compiled projection needs a non-empty "
             "Decision Boundary"
         )
+    professional = path.parents[2].name
+    profile_root = path.parents[3]
+    selector_path = (
+        profile_root
+        / "engineering-control-plane"
+        / "references"
+        / "selectors"
+        / f"{professional}.json"
+    )
+    try:
+        selector = json.loads(selector_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        errors.append(
+            f"{_display_path(path)}: missing or invalid current-Professional "
+            f"selector projection: {exc}"
+        )
+        return
+    surfaces = selector.get("selection_surfaces")
+    if (
+        selector.get("professional_skill") != professional
+        or not isinstance(surfaces, list)
+        or not surfaces
+    ):
+        errors.append(
+            f"{_display_path(selector_path)}: selector owner or surfaces are invalid"
+        )
+        return
+    observed_records: dict[tuple[str, str], dict[str, object]] = {}
+    for surface in surfaces:
+        records = surface.get("reference_records") if isinstance(surface, dict) else None
+        if not isinstance(records, list):
+            errors.append(
+                f"{_display_path(selector_path)}: selector surface lacks Reference records"
+            )
+            continue
+        for record in records:
+            if not isinstance(record, dict) or record.get("owner_skill") != candidate:
+                continue
+            record_path = record.get("path")
+            outputs = record.get("required_output")
+            if (
+                not isinstance(record_path, str)
+                or not record_path
+                or record.get("type") == "index"
+                or not isinstance(outputs, list)
+                or not outputs
+                or not all(isinstance(output, str) and output for output in outputs)
+            ):
+                errors.append(
+                    f"{_display_path(selector_path)}: {candidate} Reference record "
+                    "has an invalid path, type, or required output"
+                )
+                continue
+            identity = (candidate, record_path)
+            previous = observed_records.get(identity)
+            if previous is not None and previous != record:
+                errors.append(
+                    f"{_display_path(selector_path)}: {candidate} Reference record "
+                    f"{record_path!r} differs across role surfaces"
+                )
+            observed_records[identity] = record
+            physical = path.parent / candidate / record_path
+            if not physical.is_file():
+                errors.append(
+                    f"{_display_path(selector_path)}: {candidate} Reference record "
+                    f"{record_path!r} has no compiled physical file"
+                )
 
 
 def _expected_source_compiled_mapping(profile: str) -> dict[str, list[str]]:

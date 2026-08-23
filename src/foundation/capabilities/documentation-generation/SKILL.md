@@ -35,10 +35,7 @@ Support source-grounded documentation work with an explicit role boundary.
 
 ## Anti-Patterns
 
-- Treating repository discovery or prior summaries as factual proof.
-- Keeping stale docs because code validation passes.
-- Publishing generated examples without checking their compatibility promise.
-- Claiming no documentation impact without naming considered audiences.
+- Local success substituted for evidence of the documentation generation contract.
 
 ## Stop Conditions
 

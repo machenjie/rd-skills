@@ -11,22 +11,11 @@ Official Apple Developer pages below were accessed on 2026-07-24.
   read-write, bookmark-restored, or privileged; request only the required scope.
 - Bind a security-scoped bookmark to file identity, account/document owner,
   storage location, staleness handling, renewal, and balanced access lifetime.
-- Treat denial, revocation, moved/deleted files, stale data, and unavailable
-  volumes as normal reachable states.
 
 ## Sandbox and Entitlement Decision
 
 - Inventory files, network, devices, automation, app groups, temporary
   exceptions, and child-process needs before selecting entitlements.
-- Compare source entitlements with the exact signed app, helper, XPC service,
-  extension, and distribution channel.
-- Do not use an entitlement as a substitute for user authorization or a defined
-  data lifecycle.
-
-## Required Record
-
-Return authority type, bookmark lifecycle, sandbox owner, exact entitlements,
-artifact evidence, denied/stale recovery, OS/deployment scope, and risk.
 
 ## Primary Sources
 

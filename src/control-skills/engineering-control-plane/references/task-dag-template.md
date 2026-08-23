@@ -23,10 +23,10 @@ review preserves Primary Skills, required Review Skills, Specialists, and
 professional-risk obligations. Review-side Layer 3 is selected independently
 from review risk and is not copied from Task implementation Layer 3.
 
-The public Execution Level lines use Core public `execution-level/v1`. The integrity
+The public Execution Level lines use Core public `execution-level/v2`. The integrity
 fallback for missing, malformed, or duplicate public execution-level data is
 defined in [execution-level-contract.md](execution-level-contract.md).
-Legacy without v1 is completed/read only; active or resumed work, edit,
+Legacy v1 is completed/read only; active or resumed work, edit,
 validation, or review requires reissue.
 
 ```markdown
@@ -52,8 +52,8 @@ Write Scheduling Consequence:
 Task ID:
 Status: in_progress
 <!-- BEGIN CHANGEFORGE CORE PUBLIC EXECUTION TEMPLATE: task-dag-template.md -->
-Level: requested=unspecified / L1 / L5; automatic=L2 / L3 / L4; default=L3; effective=L1 / L2 / L3 / L4 / L5; edit=allowed / blocked
-Basis: source=user_fact:<anchor> / analysis_handoff:<anchor>; triggers=["<matched or unknown trigger ID>"] / []; l2=["<false or unknown L2 predicate ID>"] / []; unresolved=[] / ["unknown-critical-boundary=>L4,edit=blocked"]
+Level: requested=unspecified / L1 / L2 / L3 / L4 / L5; automatic=L1 / L2 / L3 / L4 / L5; minimum=L1 / L2 / L3 / L4 / L5; default=L3; effective=L1 / L2 / L3 / L4 / L5; edit=allowed / blocked
+Basis: source=user_fact:<anchor> / analysis_handoff:<anchor>; triggers=["<matched or unknown trigger ID>"] / []; l1=["<false or unknown L1 predicate ID>"] / []; l2=["<false or unknown L2 predicate ID>"] / []; l5=["<false or unknown L5 predicate ID>"] / []; confirmation=not-required / pending / confirmed / rejected / explicit; unresolved=[] / ["unknown-critical-boundary=>L4,edit=blocked"]
 L5 Evidence: when=effective L5 only; requires=independent pre-implementation review / strong safety and applicability proof / declared-scope comprehensive negative and failure proof / exhaustive final review
 <!-- END CHANGEFORGE CORE PUBLIC EXECUTION TEMPLATE: task-dag-template.md -->
 Goal:
@@ -83,8 +83,8 @@ Professional Risk Dimensions:
 Task ID:
 Status: in_progress
 <!-- BEGIN CHANGEFORGE CORE PUBLIC EXECUTION TEMPLATE: task-dag-template.md -->
-Level: requested=unspecified / L1 / L5; automatic=L2 / L3 / L4; default=L3; effective=L1 / L2 / L3 / L4 / L5; edit=allowed / blocked
-Basis: source=user_fact:<anchor> / analysis_handoff:<anchor>; triggers=["<matched or unknown trigger ID>"] / []; l2=["<false or unknown L2 predicate ID>"] / []; unresolved=[] / ["unknown-critical-boundary=>L4,edit=blocked"]
+Level: requested=unspecified / L1 / L2 / L3 / L4 / L5; automatic=L1 / L2 / L3 / L4 / L5; minimum=L1 / L2 / L3 / L4 / L5; default=L3; effective=L1 / L2 / L3 / L4 / L5; edit=allowed / blocked
+Basis: source=user_fact:<anchor> / analysis_handoff:<anchor>; triggers=["<matched or unknown trigger ID>"] / []; l1=["<false or unknown L1 predicate ID>"] / []; l2=["<false or unknown L2 predicate ID>"] / []; l5=["<false or unknown L5 predicate ID>"] / []; confirmation=not-required / pending / confirmed / rejected / explicit; unresolved=[] / ["unknown-critical-boundary=>L4,edit=blocked"]
 L5 Evidence: when=effective L5 only; requires=independent pre-implementation review / strong safety and applicability proof / declared-scope comprehensive negative and failure proof / exhaustive final review
 <!-- END CHANGEFORGE CORE PUBLIC EXECUTION TEMPLATE: task-dag-template.md -->
 Goal:

@@ -1,28 +1,13 @@
 # Contract Compatibility Decision Patterns
 
-These patterns select scoped compatibility proof without treating one mechanism as universal.
+Compare proof strategies against the actual boundary:
 
-## Select Proof From The Boundary
+- **Request/response:** provider verification plus named consumer parsing/behavior for absent/null/default, errors/authorization, unknown values, ordering, and pagination.
+- **Event/retained message:** structural rule plus old/new writer-reader, replay, duplicate, stable-identifier, and retained-payload cases.
+- **Generated client:** regenerate and compile/execute named generator/runtime versions and affected calls.
+- **External provider/webhook:** replay redacted provenance-bearing captures and state unobserved signing, partial, error, and drift behavior.
+- **Independent consumer:** exercise named coexistence/release-order cases and retain unknown-consumer risk.
 
-| Surface at risk | Easy-to-miss incompatibility | Scoped proof |
-| --- | --- | --- |
-| Request or response | absent/null/default differences, error and authorization shape, unknown fields, ordering, pagination | provider verification plus representative consumer parsing or behavior |
-| Event or retained message | reader/writer direction, field identity, replay, duplicate delivery, old payloads | changed schema check plus old/new producer-consumer and retained-payload cases |
-| Generated client | generator/runtime version, closed enums, deserialization, call-site adoption | regenerate and compile or execute named client versions and affected calls |
-| External provider or webhook | documented behavior differs from observed behavior, signing, partial payloads, capture drift | redacted provenance-bearing fixture replay plus stated unobserved behavior |
-| Independently deployed consumer | unknown release order, long-lived installation, hidden dependency | named coexistence matrix and explicit unknown-consumer residual risk |
+Name provider, consumers, authoritative schema or observed fixture, versions, compatibility direction/policy, retention/replay source, and rollout order. Select structural versus semantic proof explicitly: schema shape cannot prove meanings or consumer tolerance. Exercise old readers with new values and new readers with retained old payloads; preserve identifiers and migration meaning until current consumer/replay evidence and rollback permit removal.
 
-## Mixed-Version Pattern
-
-1. Name versions that can coexist and which side reads or writes each representation.
-2. Record the authoritative schema or observed fixture, compatibility policy, retention or replay source, and rollout order.
-3. Exercise semantic branches consumers use, including old readers receiving new values and new readers receiving retained old payloads.
-4. Preserve stable identifiers and migration meaning until the consuming population or retained data no longer needs them.
-5. Remove compatibility paths only with current consumer and replay evidence plus an owned rollback or recovery path.
-
-## Decision Boundaries
-
-- Schema shape checks structural evolution; semantic compatibility still needs named provider and consumer behavior.
-- Provider verification closes named expectations; consumer discovery and production adoption remain separate claims.
-- Captured provider behavior is evidence for its source, version, environment, and capture time, not an evergreen specification.
-- Contract tests route real transport, persistence, timing, and deployment interaction to integration or journey proof.
+Bound provider checks to named expectations, captures to source/version/environment/time, and contract tests to the modeled transport/persistence/timing behavior. Return the option comparison, selected approach, rejected strategies, and proof limits.

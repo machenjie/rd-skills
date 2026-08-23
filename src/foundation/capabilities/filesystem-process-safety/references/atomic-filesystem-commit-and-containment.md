@@ -1,5 +1,7 @@
 # Atomic Filesystem Commit And Containment
 
+- Define exclusive temporary creation in the destination directory, restrictive protection, documented same-filesystem commit, atomic visibility, and separate crash-durability proof.
+
 **Load when:** Local file creation, replacement, crash durability, path containment, link handling, protection, ownership, or cleanup can change the decision.
 
 **Do not load when:** No local filesystem mutation or path-authority decision changes.

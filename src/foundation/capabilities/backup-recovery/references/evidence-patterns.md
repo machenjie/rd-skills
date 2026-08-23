@@ -1,32 +1,34 @@
 # Backup Recovery Evidence Patterns
 
-Use this reference when backup-recovery closure depends on evidence quality, validation freshness, repository inspection, prior task evidence, observable action sequence, tool permission boundaries, or recovery-to-validation mapping. Keep it as an evidence map, not a second backup tutorial.
+Use this evidence map for a named recovery claim whose artifact, objective, dependency, validation, freshness, permission, or proof limit remains open; it is not a second backup catalog.
 
 ## Recovery-To-Validation Map
 
-| Recovery claim | Minimum evidence | What it proves | What it does not prove |
-| --- | --- | --- | --- |
-| Protected datasets are known | Current data-store, object, queue, index, key, config, runbook, and owner inventory inspected | The plan covers the inspected recovery surface | Hidden stores, manual exports, provider caches, or uninspected tenants |
-| RPO/RTO is accepted | Business impact analysis, business owner approval, target, last drill actual, and gap owner | The named owner accepted the measured loss and time window | Future volume growth or incident stress stays within target |
-| Backup artifact is usable | Restore command, artifact id/path, validator, exit code or manual pass, dataset size, and timestamp | The named artifact restored under the tested conditions | Cross-region copy, older key version, or full production scale unless tested |
-| Atomic restore scope is complete | Dependency map for DB, objects, indexes, queues/offsets, keys, config, secrets, flags, and compatible app version | Inspected dependencies can be restored together | Unknown downstream consumers or partner caches are correct |
-| Ransomware copy survives compromise | Immutable/off-account policy read, deletion-denied evidence when safe, key separation, and deletion alert | Production credentials should not delete or decrypt the recovery copy | Backup admin compromise or untested incident procedure is covered |
-| Retention and erasure are correct | Regulatory class, retention window, legal hold owner, erasure/crypto-shred plan, and audit evidence | The inspected policy matches declared retention and erasure duties | All jurisdictions, historic backups, or manual exports are compliant |
-| Prior drill evidence is fresh | Prior report reconciled with current schema, key, config, region, data volume, runbook, and validation command | Previous evidence still covers the current recovery claim | Later source/config/key/schema/report edits remain covered |
+| Claim | Minimum current evidence | Proves / limit |
+| --- | --- | --- |
+| Protected state known | Current store/object/queue/index/key/config/runbook/owner inventory. | Inspected surface; not hidden stores, exports, caches, or tenants. |
+| Objective accepted | Impact analysis, owner approval, target, last exercise actual, gap owner. | Named loss/time window; not future volume or incident stress. |
+| Artifact usable | Restore command, artifact id/path, outcome, size, timestamp. | Tested conditions; not other region/key/scale. |
+| Atomic scope complete | Dependency map for data, objects, indexes, offsets, keys, config, secrets, flags, compatible code. | Inspected dependencies; not unknown consumers/caches. |
+| Failure isolation survives | Immutable/off-account policy, safe deletion denial, key separation, deletion alert. | Named credential path; not backup-admin compromise or procedure. |
+| Retention/erasure correct | Policy class/window, hold owner, erasure/crypto-shred plan, audit evidence. | Inspected duties; not every jurisdiction, historic copy, or export. |
+| Prior exercise fresh | Report reconciled to current schema/key/config/region/volume/runbook/validator. | Current claim; not later edits. |
 
-## Evidence Quality Labels
+## Evidence Quality And Freshness
 
-- **Strong evidence**: current restore or failover command/drill, named artifact/report, exit code or manual pass/fail, dataset size, dependency scope, owner, timestamp, and freshness after final material change.
-- **Weak evidence**: config or snapshot existence, old drill report, wiki runbook, or dashboard screenshot without current restore proof.
-- **Missing evidence**: no owner, no RPO/RTO approval, no artifact id, no restore command, no key-retention proof, or no validation result.
-- **Invalid evidence**: empty-schema drill, database-only restore for multi-store product state, same-account snapshot as ransomware proof, or stale prior evidence after schema/key/config/region change.
+- Strong evidence names current restore/failover result, artifact/report, size/scope, owner, time, and final-edit freshness.
+- Weak evidence is config/snapshot existence or old documentation without current restore proof.
+- Missing evidence lacks owner, objective approval, artifact, restore command, key retention, or validation.
+- Invalid evidence includes empty-schema drills, partial multi-store restore, same-account ransomware proof, or stale evidence after material change.
+- Treat repository inspection, prior tasks, runbooks, incidents, dashboards, and results as discovery until current source and validation confirm them.
+- Reopen after schema/migration, key/policy, lifecycle, topology/region/volume, config/secret, runbook, report, or build/install change.
+- Map every accepted claim to command, validator, drill report, policy path, query, approval, or explicit not-run residual risk.
 
-## Current Evidence And Freshness
+## Tool Boundary And Anti-Patterns
 
-- Treat repository inspection, prior task evidence, old runbooks, incident notes, provider dashboards, and prior execution results as discovery inputs until current source and validation confirm them.
-- Accept a prior "restore tested", "RTO met", "keys retained", or "off-account copy exists" claim only when current schema, data volume, key policy, storage topology, region, runbook, and validator still match.
-- Reject or downgrade evidence after edits to schema, migrations, KMS/key policy, bucket lifecycle, object-lock policy, queue/index dependencies, config/secrets, runbook, reports, or build/install outputs.
-- Map every accepted recovery claim to a command, validator, drill report, policy-as-code path, telemetry query, owner approval, or explicit not-run residual risk.
-
-- If restore drill in local, staging, or throwaway environment, record dataset, artifact, target environment, cleanup/reset, absence of production credentials, and stop condition.
-- If production backup, restore, failover, cloud console, KMS, bucket lock, deletion test, or retention change, require explicit permission, dry-run or read-only proof when possible, rollback/forward-fix path, redaction, and stop condition.
+- Local/staging drills record dataset, artifact, environment, cleanup/reset, absence of production credentials, and stop.
+- Production restore/failover/cloud/KMS/lock/deletion/retention actions require explicit permission, dry-run/read-only proof where possible, rollback/forward-fix, redaction, and stop.
+- Reject snapshot, replication, or command success as product usability proof.
+- Reject a restore that omits dependent state.
+- Reject a universal copy, cadence, or objective.
+- Reject production-scale or incident-time claims from a small local exercise.

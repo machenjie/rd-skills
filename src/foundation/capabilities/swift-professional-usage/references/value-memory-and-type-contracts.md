@@ -1,53 +1,30 @@
 # Swift Value, Memory, And Type Contracts
 
-Use this checklist when identity, ownership, representation, or error behavior changes. It is not a Swift syntax guide.
+Use for identity, ownership, representation, or error decisions.
 
-## Decision Checklist
+## Decision And Probe Matrix
 
-- **Value versus reference:** define semantic identity, mutation owner, copy independence and cost, and any stored references shared after copying.
-- **Copy-on-write:** define shared storage, mutation detachment, uniqueness checks, nested-reference aliasing, and the boundary that leaves thread safety unproven.
-- **ARC graph:** trace strong edges through closures, delegates, async work, timers, notifications, Objective-C objects, and caches; assign the edge that breaks each cycle.
-- **Weak or unowned:** choose `weak` for valid absence and `unowned` only when every affected reachable access is protected by a live-referent lifetime invariant; a violation may trap only when the contract explicitly accepts that failure.
-- **Protocol/generic:** establish associated types, `Self` requirements, specialization needs, storage and heterogeneous collection needs, and the public compatibility surface.
-- **Opaque/existential:** choose `some` for one hidden producer type or `any` for runtime-erased storage/dispatch, including the lost static relationships.
-- **Optional:** define `nil` as a named state, safe binding/chaining or defaulting, forced-unwrapping preconditions, nested Optional behavior, and public/Objective-C API representation.
-- **Error model:** list domain failures, cancellation, programmer faults, partial results, cleanup failure, and the exact boundary translating `throws`, `Result`, callbacks, or `NSError`.
-- **Property wrapper:** identify backing storage, initialization order, projected API, mutation/observation owner, serialization behavior, and thread/isolation assumptions.
-
-## Failure Probes
-
-- Verify copy-on-write by copying an alias, mutating across its uniqueness boundary, and observing semantic independence, nested-reference aliasing, and allocation evidence.
-- Release each owner in a closure/delegate/task cycle and prove teardown or the intended retained lifetime.
-- For each affected reachable `unowned` access whose contract explicitly accepts
-  a trap, exercise invalid lifetime only in an isolated expected-crash harness.
-  For other `unowned` uses, prove the lifetime invariant and teardown without
-  deliberately dereferencing after deallocation.
-- Separately store the protocol existential and cross an associated-type boundary;
-  record erased and static relationships independently of lifetime probes.
-- Exercise nil, present, nested Optional, failed conversion, chaining, defaulting, and invalid forced-unwrapping paths at each changed API boundary.
-- Force each error category plus cleanup failure and confirm the caller can distinguish cancellation from domain failure.
+| Boundary | Contract and probe |
+| --- | --- |
+| Value/reference | Identity, mutation owner, copy independence/cost, shared references; copy then mutate across identity. |
+| Copy-on-write | Storage sharing, detachment, uniqueness, nested aliases, unproved thread boundary; measure independence/allocation. |
+| ARC | Strong edges through closure, delegate, task, timer, notification, Objective-C, cache; release owners, prove teardown/retention. |
+| Weak/unowned | `weak` for valid absence; `unowned` under live-referent invariant. Test accepted trap in isolation; otherwise prove lifetime/teardown. |
+| Protocol/generic | Associated type, `Self`, specialization, storage, heterogeneous collection, compatibility; cross affected type boundary. |
+| Opaque/existential | `some` for one hidden producer type; `any` for erased storage/dispatch; record lost static relationships. |
+| Optional | Named `nil`, binding/chaining/default, force precondition, nesting, public/Objective-C representation; exercise absent/present/invalid paths. |
+| Error | Domain failure, cancellation, programmer fault, partial result, cleanup failure, `throws`/`Result`/callback/`NSError` translation; exercise each. |
+| Wrapper | Storage, initialization, projection, mutation/observation owner, serialization, isolation; test API outcomes. |
 
 ## Primary Sources
 
-- [Value and reference types](https://www.swift.org/documentation/articles/value-and-reference-types.html)
-- [Structures and classes](https://docs.swift.org/swift-book/LanguageGuide/ClassesAndStructures.html)
-- [Automatic Reference Counting](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/automaticreferencecounting/)
-- [Protocols](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/protocols/)
-- [Opaque and boxed protocol types](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/opaquetypes/)
-- [Generics](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/generics/)
-- [Error handling](https://docs.swift.org/swift-book/LanguageGuide/ErrorHandling.html)
-- [The basics and Optionals](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/thebasics/)
-- [Optional chaining](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/optionalchaining/)
-- [Properties and property wrappers](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/properties/)
+[values](https://www.swift.org/documentation/articles/value-and-reference-types.html), [types](https://docs.swift.org/swift-book/LanguageGuide/ClassesAndStructures.html), [ARC](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/automaticreferencecounting/), [protocols](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/protocols/), [opaque](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/opaquetypes/), [generics](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/generics/), [errors](https://docs.swift.org/swift-book/LanguageGuide/ErrorHandling.html), [optional](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/thebasics/), [chaining](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/optionalchaining/), [wrappers](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/properties/). Accessed 2026-07-24.
 
-Official pages in this reference were recorded as accessed on 2026-07-24.
+## Proof Limits
 
-## Version And Inference Limits
+Sources require language mode, compiler, library, target, and packages. They do not prove copy cost, uniqueness, lifetime, Objective-C annotations, observation, compatibility, deep immutability, or concurrency safety.
 
-- Swift.org and Swift Book pages are rolling; prove the repository's Swift language mode, compiler, standard library, deployment target, and package versions.
-- Language rules do not prove copy-on-write cost, custom-storage uniqueness, retained-object lifetime, Objective-C annotations, framework observation, or source/binary compatibility for this project.
-- Do not infer deep immutability from value syntax, safe lifetime from ARC, or concurrency safety from a locally accepted conformance.
+## Required Record And Rejections
 
-## Required Record
-
-- Record identity/copy representation, Optional state and unwrap/API outcomes, ownership graph, error mapping, invalid/teardown paths, version evidence, proof limits, and residual risk.
+- Record identity/copy representation, Optional/API outcomes, ownership graph, error mapping, invalid/teardown, versions, limits, residual risk.
+- Reject value syntax, ARC, `weak`/`unowned`, protocol, or `Sendable` as immutability, lifetime, or race-freedom proof.

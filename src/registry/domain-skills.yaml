@@ -5,7 +5,7 @@ description: "Focused Layer 3 domain extensions loaded only when a domain signal
 domain_skills:
   - name: web3-product-extension
     routing_mode: modifier-only
-    used_by: ["engineering-change-analysis", "integration-change-builder"]
+    used_by: ["ai-code-review-refactor", "engineering-change-analysis", "integration-change-builder"]
     required_expertise_tags: ["domain-web3-product-extension", "foundation-data-middleware", "foundation-reliability-operations", "foundation-security-privacy", "specialty-messaging-event-delivery", "specialty-transaction-consistency"]
     path: "src/domain-extensions/web3-product-extension"
     role_support: ["analysis-agent", "task-agent", "review-agent"]
@@ -18,12 +18,100 @@ domain_skills:
     output_contract: ["domain risks, invariants, failure modes, and validation obligations"]
     escalation_signals: ["domain risk changes public behavior, irreversible state, safety, security, or financial correctness"]
     reference_index:
-      - path: "references/checklist.md"
-        type: decision-checklist
-        load_when: "chain custody signing contract finality or indexer behavior needs domain risk closure"
+      - path: "references/custody-and-chain-transactions.md"
+        type: targeted
+        load_when: "custody, signing, chain transaction, finality, oracle, indexer, or asset-authority behavior needs a decision"
         do_not_load_when: "hash or signature terminology appears without chain or custody behavior"
         required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["checklist-result", "residual-risk"]
+        required_output: ["boundary-decision", "selected-approach", "failure-decision", "residual-risk"]
+      - path: "references/monitoring-and-independent-assurance.md"
+        type: targeted
+        load_when: "selected Web3 failure monitoring, response, or independent-assurance scope is open"
+        do_not_load_when: "no Web3 monitoring, response, or assurance claim exists"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "validation-plan", "proof-limit", "residual-risk"]
+      - path: "references/upgrades-and-deployed-behavior.md"
+        type: targeted
+        load_when: "contract upgrade, storage migration, deployed identity, or arithmetic behavior is open"
+        do_not_load_when: "deployed code, configuration, upgrade, storage, and arithmetic behavior are unchanged"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["release-decision", "residual-risk"]
+      - path: "references/verification-evidence.md"
+        type: evidence-pattern
+        load_when: "a Web3 claim needs source, build, deployment, fork-simulation, chain-state, or proof-limit closure"
+        do_not_load_when: "no Web3 claim or evidence decision exists"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["evidence-record", "validation-plan", "proof-limit", "residual-risk"]
+      - path: "references/governance-authority.md"
+        type: targeted
+        load_when: "on-chain governance, privileged upgrade, or bridge authority is open"
+        do_not_load_when: "governance, privileged upgrade, and bridge authority are unchanged"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "residual-risk"]
+      - path: "references/allowances-nonstandard-assets-and-delegated-calls.md"
+        type: targeted
+        load_when: "allowance, permit, approval, delegated spend, nonstandard asset, callback, or reentrancy behavior is open"
+        do_not_load_when: "none of those allowance, delegated-call, nonstandard-asset, callback, or reentrancy behaviors changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "failure-decision", "residual-risk"]
+      - path: "references/account-and-cross-domain-execution.md"
+        type: targeted
+        load_when: "account abstraction, intent, bridge, L2 settlement, or cross-domain authority is open"
+        do_not_load_when: "none of account abstraction, intent, bridge, L2 settlement, or cross-domain authority changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "failure-decision", "residual-risk"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/custody-and-chain-transactions.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["primary-professional-skill", "layer3", "domain", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "custody-and-chain-transactions"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/monitoring-and-independent-assurance.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "monitoring-and-independent-assurance"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/upgrades-and-deployed-behavior.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["primary-professional-skill", "layer3", "domain", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "upgrades-and-deployed-behavior"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/verification-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "verification-evidence"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/governance-authority.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["primary-professional-skill", "layer3", "domain", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "governance-authority"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/allowances-nonstandard-assets-and-delegated-calls.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["layer3", "domain", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "allowances-nonstandard-assets-and-delegated-calls"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/account-and-cross-domain-execution.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["primary-professional-skill", "layer3", "domain", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "account-and-cross-domain-execution"
+          sequenced_after: []
+          must_co_trigger_with: []
   - name: ai-product-extension
     routing_mode: modifier-only
     used_by: ["ai-code-review-refactor", "backend-change-builder", "data-middleware-change-builder", "engineering-change-analysis", "frontend-change-builder", "installed-client-change-builder", "integration-change-builder", "security-privacy-gate"]
@@ -47,7 +135,7 @@ domain_skills:
         required_output: ["checklist-result", "residual-risk"]
   - name: bigdata-product-extension
     routing_mode: modifier-only
-    used_by: ["data-middleware-change-builder", "engineering-change-analysis"]
+    used_by: ["data-middleware-change-builder", "engineering-change-analysis", "quality-test-gate"]
     required_expertise_tags: ["domain-bigdata-product-extension", "foundation-data-api-contracts", "foundation-data-middleware", "foundation-reliability-operations", "specialty-messaging-event-delivery", "specialty-migration-compatibility"]
     path: "src/domain-extensions/bigdata-product-extension"
     role_support: ["analysis-agent", "task-agent", "review-agent"]
@@ -60,12 +148,74 @@ domain_skills:
     output_contract: ["big-data correctness, performance, replay, and operability obligations"]
     escalation_signals: ["domain risk changes public behavior, irreversible state, safety, security, or financial correctness"]
     reference_index:
-      - path: "references/checklist.md"
-        type: decision-checklist
-        load_when: "distributed batch stream schema replay backfill or consumer behavior needs domain risk closure"
+      - path: "references/consumer-and-schema-contracts.md"
+        type: targeted
+        load_when: "distributed consumer, schema, grain, metric meaning, correction, or compatibility is open"
         do_not_load_when: "the task changes one database table without a distributed pipeline or replay boundary"
         required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["checklist-result", "residual-risk"]
+        required_output: ["boundary-decision", "decision-record", "residual-risk"]
+      - path: "references/pipeline-replay-and-event-identity.md"
+        type: targeted
+        load_when: "batch, stream, CDC, event-time, checkpoint, replay, backfill, or writer coexistence is open"
+        do_not_load_when: "no pipeline, replay, backfill, checkpoint, or writer-coexistence decision exists"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "decision-record", "failure-decision", "residual-risk"]
+      - path: "references/quality-lineage-and-point-in-time-correctness.md"
+        type: targeted
+        load_when: "quality, failed-data, lineage, point-in-time, leakage, or experiment semantics is open"
+        do_not_load_when: "no quality, lineage, point-in-time, leakage, or experiment decision exists"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "failure-decision", "validation-plan", "residual-risk"]
+      - path: "references/storage-performance-and-recovery.md"
+        type: targeted
+        load_when: "partition, storage, metadata, recovery, skew, state, memory, compute, or cost is open"
+        do_not_load_when: "no storage, recovery, resource, performance, or cost decision exists"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["selected-approach", "failure-decision", "validation-plan", "residual-risk"]
+      - path: "references/observability-and-privacy.md"
+        type: targeted
+        load_when: "pipeline signals or classified samples, logs, failed data, exports, retention, or deletion is open"
+        do_not_load_when: "no pipeline-observability or classified-data handling decision exists"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "validation-plan", "residual-risk"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/consumer-and-schema-contracts.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["primary-professional-skill", "layer3", "domain", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "consumer-and-schema-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/pipeline-replay-and-event-identity.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["primary-professional-skill", "layer3", "domain", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "pipeline-replay-and-event-identity"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/quality-lineage-and-point-in-time-correctness.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "quality-lineage-and-point-in-time-correctness"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/storage-performance-and-recovery.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "storage-performance-and-recovery"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/observability-and-privacy.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["primary-professional-skill", "layer3", "domain", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "observability-and-privacy"
+          sequenced_after: []
+          must_co_trigger_with: []
   - name: iot-embedded-extension
     routing_mode: modifier-only
     used_by: ["delivery-release-gate", "engineering-change-analysis"]
@@ -102,15 +252,142 @@ domain_skills:
     output_contract: ["financial decision with invariant, authority, selected control, reconciliation limits, regulatory scope and accountable owner, control evidence, exceptions, release consequences, proof limits, and residual risk"]
     escalation_signals: ["domain risk changes public behavior, irreversible state, safety, security, or financial correctness"]
     reference_index:
-      - path: "references/checklist.md"
-        type: decision-checklist
-        load_when: "money movement ledger order execution settlement or reconciliation behavior needs domain risk closure"
-        do_not_load_when: "the task only displays prices or ordinary orders without funds or execution state"
+      - path: "references/financial-role-and-state-authority.md"
+        type: targeted
+        load_when: "payment custody model, provider/custody/ledger/settlement roles, source of truth, or authoritative completion state is open"
+        do_not_load_when: "roles, source of truth, custody and authoritative state are already explicit, or no monetary state exists, including price display or ordinary orders without funds, ledger, settlement, or execution state"
         required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["checklist-result", "residual-risk"]
+        required_output: ["boundary-decision", "residual-risk"]
+      - path: "references/raw-card-custody-evidence.md"
+        type: evidence-pattern
+        load_when: "approved raw-card custody requires PCI/PAN/CVV retention, storage, display, logging, or evidence closure"
+        do_not_load_when: "no raw-card custody exists; the flow is provider-hosted/non-custodial"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "residual-risk"]
+      - path: "references/non-custodial-sensitive-data-boundary.md"
+        type: targeted
+        load_when: "tokenized/provider-hosted payment flow must prove PAN/CVV/payment-secret exclusion"
+        do_not_load_when: "application has no reachable payment secret, or approved raw-card custody rather than a non-custodial boundary is being assessed"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "proof-limit", "residual-risk"]
+      - path: "references/duplicate-financial-effect-control.md"
+        type: targeted
+        load_when: "retry, replay, concurrent submission, result reuse, or unknown outcome can repeat a financial effect"
+        do_not_load_when: "no retryable financial effect exists, or current provider/storage uniqueness is already proven and unchanged"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["selected-approach", "residual-risk"]
+      - path: "references/owned-financial-state-accounting-and-balances.md"
+        type: targeted
+        load_when: "owned payment/ledger transitions, correction history, accounting ownership, or balance authority is open"
+        do_not_load_when: "pure provider orchestration owns no ledger, accounting book, or application balance"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "residual-risk"]
+      - path: "references/trading-order-execution-and-identity.md"
+        type: targeted
+        load_when: "order acknowledgement/fill/cancel/replace, execution identity, race, gap, or recovery behavior is open"
+        do_not_load_when: "payment-only work has no order execution, fill, cancel, venue identity, or trading-session recovery"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "failure-decision", "residual-risk"]
+      - path: "references/market-data-and-trading-risk-controls.md"
+        type: targeted
+        load_when: "price-sensitive execution, risk limits, overrides, kill switch, leverage, margin, or liquidation behavior is open"
+        do_not_load_when: "no price-sensitive execution, leverage, override, limit, or kill-switch behavior changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["selected-approach", "failure-decision", "residual-risk"]
+      - path: "references/venue-product-monetary-and-calendar-contracts.md"
+        type: targeted
+        load_when: "venue/product units, tick/lot/notional, fee/funding, precision/rounding, currency, cutoff, calendar, or timestamp contract is open"
+        do_not_load_when: "no venue/product monetary representation or calendar contract changes, and current contracts are explicit"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "residual-risk"]
+      - path: "references/provider-venue-event-authentication.md"
+        type: targeted
+        load_when: "inbound provider/venue events require identity, replay, ordering, version, credential, or audit closure"
+        do_not_load_when: "no inbound external financial event is consumed"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "residual-risk"]
+      - path: "references/financial-reconciliation-and-monitoring.md"
+        type: targeted
+        load_when: "orders, executions, positions, balances, ledgers, settlements, corrections, breaks, replay windows, or operational signals require reconciliation closure"
+        do_not_load_when: "no cross-source reconciliation or financial-operability boundary changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "validation-plan", "residual-risk"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/financial-role-and-state-authority.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["primary-professional-skill", "layer3", "domain", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "financial-role-and-state-authority"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/raw-card-custody-evidence.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["layer3", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "raw-card-custody-evidence"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/non-custodial-sensitive-data-boundary.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["layer3", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "non-custodial-sensitive-data-boundary"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/duplicate-financial-effect-control.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["layer3", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "duplicate-financial-effect-control"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/owned-financial-state-accounting-and-balances.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["layer3", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "owned-financial-state-accounting-and-balances"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/trading-order-execution-and-identity.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["layer3", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "trading-order-execution-and-identity"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/market-data-and-trading-risk-controls.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["layer3", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "market-data-and-trading-risk-controls"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/venue-product-monetary-and-calendar-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["layer3", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "venue-product-monetary-and-calendar-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/provider-venue-event-authentication.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["layer3", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "provider-venue-event-authentication"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/financial-reconciliation-and-monitoring.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["layer3", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "financial-reconciliation-and-monitoring"
+          sequenced_after: []
+          must_co_trigger_with: []
   - name: low-level-systems-extension
     routing_mode: modifier-only
-    used_by: ["backend-change-builder", "engineering-change-analysis"]
+    used_by: ["ai-code-review-refactor", "backend-change-builder", "engineering-change-analysis"]
     required_expertise_tags: ["domain-low-level-systems-extension", "foundation-language-professional-usage", "foundation-reliability-operations", "foundation-security-privacy", "specialty-concurrency-coordination", "specialty-lang-cpp", "specialty-lang-rust"]
     path: "src/domain-extensions/low-level-systems-extension"
     role_support: ["analysis-agent", "task-agent", "review-agent"]
@@ -123,12 +400,74 @@ domain_skills:
     output_contract: ["systems safety, performance, compatibility, and validation obligations"]
     escalation_signals: ["domain risk changes public behavior, irreversible state, safety, security, or financial correctness"]
     reference_index:
-      - path: "references/checklist.md"
-        type: decision-checklist
-        load_when: "native memory ABI FFI syscall concurrency or platform-resource behavior needs domain risk closure"
+      - path: "references/ownership-and-concurrency-contracts.md"
+        type: targeted
+        load_when: "native ownership, lifetime, unsafe preconditions, lock ordering, scheduling, or concurrency proof is open"
+        do_not_load_when: "no native ownership, unsafe boundary, lock ordering, scheduling, or concurrency decision exists"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "failure-decision", "proof-limit", "residual-risk"]
+      - path: "references/abi-platform-and-syscall-contracts.md"
+        type: targeted
+        load_when: "ABI representation, deployed consumers, target platform, syscall, privilege, sandbox, or partial I/O is open"
         do_not_load_when: "C++ or Rust is mentioned without a native ABI OS or resource boundary"
         required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["checklist-result", "residual-risk"]
+        required_output: ["boundary-decision", "failure-decision", "residual-risk"]
+      - path: "references/resource-lifecycle-and-error-contracts.md"
+        type: targeted
+        load_when: "native resource lifecycle, partial initialization, error translation, retry, diagnostics, or recovery is open"
+        do_not_load_when: "no native resource, error, diagnostic, retry, or recovery decision exists"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "failure-decision", "residual-risk"]
+      - path: "references/performance-and-verification-evidence.md"
+        type: evidence-pattern
+        load_when: "low-level performance, measurement, validation, absence, or post-edit evidence needs closure"
+        do_not_load_when: "no low-level performance, validation, evidence, or absence claim is open"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["evidence-record", "validation-plan", "proof-limit", "residual-risk"]
+      - path: "references/signals-ffi-atomics-shared-memory-and-fork.md"
+        type: targeted
+        load_when: "signal, interrupt, FFI, unwind, atomic, shared-memory, DMA, fork, cancellation, or abnormal-error behavior is open"
+        do_not_load_when: "none of those signal, FFI, atomic, shared-memory, fork, cancellation, or abnormal-error behaviors changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "selected-approach", "failure-decision", "proof-limit", "residual-risk"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/ownership-and-concurrency-contracts.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["primary-professional-skill", "layer3", "domain", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "ownership-and-concurrency-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/abi-platform-and-syscall-contracts.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["primary-professional-skill", "layer3", "domain", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "abi-platform-and-syscall-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/resource-lifecycle-and-error-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "resource-lifecycle-and-error-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/performance-and-verification-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "performance-and-verification-evidence"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/signals-ffi-atomics-shared-memory-and-fork.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["primary-professional-skill", "layer3", "domain", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "signals-ffi-atomics-shared-memory-and-fork"
+          sequenced_after: []
+          must_co_trigger_with: []
   - name: android-platform-extension
     routing_mode: modifier-only
     used_by: ["ai-code-review-refactor", "engineering-change-analysis", "installed-client-change-builder"]
@@ -146,44 +485,236 @@ domain_skills:
         type: targeted
         load_when: "Activity process task back-stack configuration-change or saved-state behavior affects the decision"
         do_not_load_when: "the change cannot alter Android lifecycle task navigation restoration or state ownership"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["decision-record", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["decision-record"]
+      - path: "references/lifecycle-task-and-state-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted Android lifecycle task and state decision requires implementation or review evidence"
+        do_not_load_when: "no lifecycle task or state implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/components-permissions-and-background-contracts.md"
         type: targeted
         load_when: "Intent deep-link exported-component permission foreground-service persistent-work or notification behavior affects the decision"
         do_not_load_when: "the change has no Android entry authority permission background execution or notification effect"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["boundary-decision", "failure-decision", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["boundary-decision"]
       - path: "references/storage-and-keystore-contracts.md"
         type: targeted
         load_when: "local storage backup account scope encryption or Android Keystore behavior affects the decision"
         do_not_load_when: "no Android-local data key backup migration logout or recovery behavior can change"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["decision-record", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["decision-record"]
+      - path: "references/storage-and-keystore-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted Android storage and key decision requires implementation or review evidence"
+        do_not_load_when: "no storage or key implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/compatibility-packaging-and-performance-contracts.md"
         type: targeted
         load_when: "API compatibility APK AAB signing Play packaging ANR startup or device-matrix proof affects the decision"
         do_not_load_when: "no Android version artifact package signing performance or supported-device evidence changes"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["decision-record", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["decision-record"]
+      - path: "references/compatibility-packaging-and-performance-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted Android compatibility artifact and performance decision requires implementation or review evidence"
+        do_not_load_when: "no compatibility packaging or performance implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/jetpack-compose-contracts.md"
         type: targeted
         load_when: "Jetpack Compose state navigation lifecycle side-effect or rendering behavior affects the Android decision"
         do_not_load_when: "the UI uses Views only or Kotlin syntax changes without Android Compose behavior"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["selected-approach", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["selected-approach"]
+      - path: "references/jetpack-compose-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted Jetpack Compose approach requires implementation or review evidence"
+        do_not_load_when: "no Compose implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/accessibility-representation-input-and-scaling.md"
         type: targeted
         load_when: "Android Views or Compose semantics TalkBack Switch Access Voice Access keyboard D-pad accessibility focus alternatives font or display scaling or Android accessibility evidence affects the decision"
         do_not_load_when: "no Android behavior changes or only Android accessibility API names are mentioned"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["decision-record", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["decision-record"]
+      - path: "references/accessibility-representation-input-and-scaling-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted Android accessibility decision requires implementation or review evidence"
+        do_not_load_when: "no Android accessibility implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/special-form-factor-boundaries.md"
         type: targeted
         load_when: "Android TV Wear OS or Android Automotive is an explicit supported target or requested coverage claim"
         do_not_load_when: "the confirmed target is handheld or tablet Android with no special-form-factor claim"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["boundary-decision", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["boundary-decision"]
+      - path: "references/special-form-factor-boundaries-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted Android special form-factor boundary requires implementation or review evidence"
+        do_not_load_when: "no special form-factor implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
+      - path: "references/components-permissions-and-background-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted Android component permission and background boundary requires implementation or review evidence"
+        do_not_load_when: "no component permission or background implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/lifecycle-task-and-state-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "lifecycle-task-and-state-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/lifecycle-task-and-state-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "lifecycle-task-and-state-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "android-platform-extension/references/lifecycle-task-and-state-contracts.md"
+              required_output: "decision-record"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/components-permissions-and-background-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "components-permissions-and-background-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/components-permissions-and-background-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "components-permissions-and-background-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "android-platform-extension/references/components-permissions-and-background-contracts.md"
+              required_output: "boundary-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/storage-and-keystore-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "storage-and-keystore-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/storage-and-keystore-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "storage-and-keystore-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "android-platform-extension/references/storage-and-keystore-contracts.md"
+              required_output: "decision-record"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/compatibility-packaging-and-performance-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "compatibility-packaging-and-performance-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/compatibility-packaging-and-performance-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "compatibility-packaging-and-performance-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "android-platform-extension/references/compatibility-packaging-and-performance-contracts.md"
+              required_output: "decision-record"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/jetpack-compose-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "jetpack-compose-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/jetpack-compose-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "jetpack-compose-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "android-platform-extension/references/jetpack-compose-contracts.md"
+              required_output: "selected-approach"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/accessibility-representation-input-and-scaling.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "accessibility-representation-input-and-scaling"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/accessibility-representation-input-and-scaling-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "accessibility-representation-input-and-scaling-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "android-platform-extension/references/accessibility-representation-input-and-scaling.md"
+              required_output: "decision-record"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/special-form-factor-boundaries.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "special-form-factor-boundaries"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/special-form-factor-boundaries-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "special-form-factor-boundaries-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "android-platform-extension/references/special-form-factor-boundaries.md"
+              required_output: "boundary-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
   - name: cloud-platform-extension
     routing_mode: modifier-only
     used_by: ["backend-change-builder", "engineering-change-analysis", "platform-infrastructure-change-builder", "reliability-observability-gate", "security-privacy-gate"]
@@ -281,38 +812,203 @@ domain_skills:
         type: targeted
         load_when: "app or scene lifecycle multiple-scene restoration BackgroundTasks or background expiration affects the decision"
         do_not_load_when: "no iOS/iPadOS lifecycle scene restoration or background-execution behavior can change"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["decision-record", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["decision-record"]
+      - path: "references/lifecycle-scenes-and-background-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted lifecycle and background decision requires implementation or review evidence"
+        do_not_load_when: "no lifecycle or background implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/entry-capabilities-and-entitlements-contracts.md"
         type: targeted
         load_when: "URL scheme Universal Link push capability entitlement App ID or provisioning behavior affects the decision"
         do_not_load_when: "no external entry capability entitlement identity or provisioning behavior changes"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["boundary-decision", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["boundary-decision"]
+      - path: "references/entry-capabilities-and-entitlements-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted entry and entitlement boundary requires implementation or review evidence"
+        do_not_load_when: "no entry capability or entitlement implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/data-keychain-and-extension-contracts.md"
         type: targeted
         load_when: "Keychain Data Protection app group shared container or app-extension data behavior affects the decision"
         do_not_load_when: "no local secret protected file shared-container or extension boundary changes"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["decision-record", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["decision-record"]
+      - path: "references/data-keychain-and-extension-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted data key and extension decision requires implementation or review evidence"
+        do_not_load_when: "no data key or extension implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/ui-form-factor-and-accessibility-contracts.md"
         type: targeted
         load_when: "UIKit SwiftUI iPhone iPad VoiceOver Dynamic Type or adaptive-interface behavior affects the decision"
         do_not_load_when: "no Apple mobile UI framework form-factor or accessibility delta changes"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["selected-approach", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["selected-approach"]
+      - path: "references/ui-form-factor-and-accessibility-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted UI form-factor and accessibility approach requires implementation or review evidence"
+        do_not_load_when: "no UI form-factor or accessibility implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/compatibility-signing-and-distribution-contracts.md"
         type: targeted
         load_when: "deployment compatibility app/API versions archive signing provisioning TestFlight or App Store proof affects the decision"
         do_not_load_when: "no supported version artifact identity signing distribution or mixed-version evidence changes"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["decision-record", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["decision-record"]
+      - path: "references/compatibility-signing-and-distribution-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted compatibility artifact and channel decision requires implementation or review evidence"
+        do_not_load_when: "no compatibility signing or distribution implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/special-platform-boundaries.md"
         type: targeted
         load_when: "watchOS tvOS or visionOS is an explicit target or requested coverage claim adjacent to iOS/iPadOS"
         do_not_load_when: "the confirmed scope is only iOS/iPadOS with no special-platform claim"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["boundary-decision", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["boundary-decision"]
+      - path: "references/special-platform-boundaries-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted special-platform boundary requires implementation or review evidence"
+        do_not_load_when: "no watchOS tvOS or visionOS implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/lifecycle-scenes-and-background-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "lifecycle-scenes-and-background-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/lifecycle-scenes-and-background-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "lifecycle-scenes-and-background-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "ios-ipados-platform-extension/references/lifecycle-scenes-and-background-contracts.md"
+              required_output: "decision-record"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/entry-capabilities-and-entitlements-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "entry-capabilities-and-entitlements-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/entry-capabilities-and-entitlements-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "entry-capabilities-and-entitlements-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "ios-ipados-platform-extension/references/entry-capabilities-and-entitlements-contracts.md"
+              required_output: "boundary-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/data-keychain-and-extension-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "data-keychain-and-extension-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/data-keychain-and-extension-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "data-keychain-and-extension-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "ios-ipados-platform-extension/references/data-keychain-and-extension-contracts.md"
+              required_output: "decision-record"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/ui-form-factor-and-accessibility-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["acceptance", "scope"]
+          conflicts_with: []
+          decision_problem: "ui-form-factor-and-accessibility-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/ui-form-factor-and-accessibility-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "ui-form-factor-and-accessibility-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "ios-ipados-platform-extension/references/ui-form-factor-and-accessibility-contracts.md"
+              required_output: "selected-approach"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/compatibility-signing-and-distribution-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "compatibility-signing-and-distribution-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/compatibility-signing-and-distribution-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "compatibility-signing-and-distribution-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "ios-ipados-platform-extension/references/compatibility-signing-and-distribution-contracts.md"
+              required_output: "decision-record"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/special-platform-boundaries.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["acceptance", "scope"]
+          conflicts_with: []
+          decision_problem: "special-platform-boundaries"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/special-platform-boundaries-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "special-platform-boundaries-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "ios-ipados-platform-extension/references/special-platform-boundaries.md"
+              required_output: "boundary-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
   - name: linux-desktop-platform-extension
     routing_mode: modifier-only
     used_by: ["ai-code-review-refactor", "engineering-change-analysis", "installed-client-change-builder"]
@@ -330,44 +1026,278 @@ domain_skills:
         type: targeted
         load_when: "X11 Wayland Xwayland compositor window focus coordinate clipboard input or toolkit behavior affects the decision"
         do_not_load_when: "no Linux display-session compositor window input or toolkit behavior changes"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["boundary-decision", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["boundary-decision"]
+      - path: "references/display-session-and-toolkit-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted Linux display-session and toolkit boundary requires implementation or review evidence"
+        do_not_load_when: "no display-session or toolkit implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/dbus-portal-and-session-integration-contracts.md"
         type: targeted
         load_when: "D-Bus name object interface desktop portal consent request or graphical-session integration affects the decision"
         do_not_load_when: "no Linux D-Bus portal consent or session integration changes"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["decision-record", "failure-decision", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["decision-record"]
+      - path: "references/dbus-portal-and-session-integration-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted Linux D-Bus portal and session decision requires implementation or review evidence"
+        do_not_load_when: "no D-Bus portal or session implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/desktop-entry-mime-and-keyring-contracts.md"
         type: targeted
         load_when: "desktop entry application ID MIME association activation or keyring behavior affects the decision"
         do_not_load_when: "no Linux launcher association identity activation or secret-store behavior changes"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["boundary-decision", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["boundary-decision"]
+      - path: "references/desktop-entry-mime-and-keyring-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted Linux desktop identity MIME and keyring boundary requires implementation or review evidence"
+        do_not_load_when: "no desktop identity MIME or keyring implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/packaging-installation-and-update-contracts.md"
         type: targeted
         load_when: "Flatpak Snap AppImage deb rpm sandbox install update rollback or distribution evidence affects the decision"
         do_not_load_when: "no Linux desktop package sandbox installation update or channel evidence changes"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["selected-approach", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["selected-approach"]
+      - path: "references/packaging-installation-and-update-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted Linux package approach requires implementation or review evidence"
+        do_not_load_when: "no Linux package implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/desktop-environment-input-and-localization-contracts.md"
         type: targeted
         load_when: "desktop environment IME locale font fractional scaling or toolkit behavior affects the decision"
         do_not_load_when: "no Linux desktop input localization font scaling or environment-specific behavior changes"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["decision-record", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["decision-record"]
+      - path: "references/desktop-environment-input-and-localization-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted Linux environment input and localization decision requires implementation or review evidence"
+        do_not_load_when: "no environment input or localization implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/accessibility-platform-deltas.md"
         type: targeted
         load_when: "Linux desktop toolkit AT-SPI keyboard focus scaling or assistive-technology behavior changes"
         do_not_load_when: "no Linux-desktop-specific accessibility behavior changes beyond Foundation rules"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["decision-record", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["decision-record"]
+      - path: "references/accessibility-platform-deltas-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted Linux accessibility delta requires implementation or review evidence"
+        do_not_load_when: "no Linux accessibility implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/server-and-system-boundaries.md"
         type: targeted
         load_when: "Linux server daemon system service or host-runtime adjacency could misroute ownership"
         do_not_load_when: "the task is confirmed graphical desktop work with no server system or service boundary"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["routing-decision", "boundary-decision", "proof-limit"]
+        required_by: ["analysis-agent"]
+        required_output: ["routing-decision", "boundary-decision"]
+      - path: "references/server-and-system-boundaries-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted Linux server or system owner boundary requires implementation or review evidence"
+        do_not_load_when: "no accepted server or system boundary implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/display-session-and-toolkit-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "display-session-and-toolkit-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/dbus-portal-and-session-integration-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "dbus-portal-and-session-integration-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/desktop-entry-mime-and-keyring-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "desktop-entry-mime-and-keyring-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/packaging-installation-and-update-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "packaging-installation-and-update-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/desktop-environment-input-and-localization-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "desktop-environment-input-and-localization-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/accessibility-platform-deltas.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "accessibility-platform-deltas"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/server-and-system-boundaries.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["primary-professional-skill", "domain", "scope"]
+          conflicts_with: []
+          decision_problem: "server-and-system-boundaries"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/display-session-and-toolkit-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "display-session-and-toolkit-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "linux-desktop-platform-extension/references/display-session-and-toolkit-contracts.md"
+              required_output: "boundary-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+            - reference: "linux-desktop-platform-extension/references/server-and-system-boundaries.md"
+              required_output: "routing-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/dbus-portal-and-session-integration-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "dbus-portal-and-session-integration-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "linux-desktop-platform-extension/references/dbus-portal-and-session-integration-contracts.md"
+              required_output: "decision-record"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+            - reference: "linux-desktop-platform-extension/references/server-and-system-boundaries.md"
+              required_output: "routing-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/desktop-entry-mime-and-keyring-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "desktop-entry-mime-and-keyring-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "linux-desktop-platform-extension/references/desktop-entry-mime-and-keyring-contracts.md"
+              required_output: "boundary-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+            - reference: "linux-desktop-platform-extension/references/server-and-system-boundaries.md"
+              required_output: "routing-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/packaging-installation-and-update-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "packaging-installation-and-update-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "linux-desktop-platform-extension/references/packaging-installation-and-update-contracts.md"
+              required_output: "selected-approach"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+            - reference: "linux-desktop-platform-extension/references/server-and-system-boundaries.md"
+              required_output: "routing-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/desktop-environment-input-and-localization-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "desktop-environment-input-and-localization-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "linux-desktop-platform-extension/references/desktop-environment-input-and-localization-contracts.md"
+              required_output: "decision-record"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+            - reference: "linux-desktop-platform-extension/references/server-and-system-boundaries.md"
+              required_output: "routing-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/accessibility-platform-deltas-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "accessibility-platform-deltas-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "linux-desktop-platform-extension/references/accessibility-platform-deltas.md"
+              required_output: "decision-record"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+            - reference: "linux-desktop-platform-extension/references/server-and-system-boundaries.md"
+              required_output: "routing-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/server-and-system-boundaries-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "server-and-system-boundaries-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "linux-desktop-platform-extension/references/server-and-system-boundaries.md"
+              required_output: "boundary-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
   - name: macos-platform-extension
     routing_mode: modifier-only
     used_by: ["ai-code-review-refactor", "engineering-change-analysis", "installed-client-change-builder"]
@@ -385,38 +1315,203 @@ domain_skills:
         type: targeted
         load_when: "AppKit SwiftUI Mac Catalyst app window document responder or restoration behavior affects the decision"
         do_not_load_when: "no macOS framework lifecycle window document responder or restoration behavior can change"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["selected-approach", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["selected-approach"]
+      - path: "references/framework-lifecycle-window-and-document-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted framework lifecycle window and document approach requires implementation or review evidence"
+        do_not_load_when: "no framework lifecycle window or document implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/file-sandbox-and-entitlement-contracts.md"
         type: targeted
         load_when: "file authorization security-scoped bookmark App Sandbox container or entitlement behavior affects the decision"
         do_not_load_when: "no macOS file authority bookmark sandbox container or entitlement behavior changes"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["boundary-decision", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["boundary-decision"]
+      - path: "references/file-sandbox-and-entitlement-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted file sandbox and entitlement boundary requires implementation or review evidence"
+        do_not_load_when: "no file sandbox or entitlement implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/keychain-xpc-and-helper-contracts.md"
         type: targeted
         load_when: "Keychain XPC helper agent daemon login item protocol identity or privilege behavior affects the decision"
         do_not_load_when: "no macOS secret interprocess helper login persistence or privilege boundary changes"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["decision-record", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["decision-record"]
+      - path: "references/keychain-xpc-and-helper-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted keychain XPC and helper decision requires implementation or review evidence"
+        do_not_load_when: "no keychain XPC or helper implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/signing-notarization-and-distribution-contracts.md"
         type: targeted
         load_when: "hardened runtime nested signing Developer ID notarization Gatekeeper Mac App Store or independent distribution proof affects the decision"
         do_not_load_when: "no macOS runtime protection signed artifact notarization or distribution-channel evidence changes"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["decision-record", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["decision-record"]
+      - path: "references/signing-notarization-and-distribution-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted signing notarization and distribution decision requires implementation or review evidence"
+        do_not_load_when: "no signing notarization or distribution implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/architecture-and-update-contracts.md"
         type: targeted
         load_when: "universal binary Apple Silicon Intel updater installer upgrade downgrade or mixed-version behavior affects the decision"
         do_not_load_when: "no macOS architecture update installation or compatibility evidence changes"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["boundary-decision", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["boundary-decision"]
+      - path: "references/architecture-and-update-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted architecture and update boundary requires implementation or review evidence"
+        do_not_load_when: "no architecture or update implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/accessibility-platform-deltas.md"
         type: targeted
         load_when: "AppKit SwiftUI or Mac Catalyst changes macOS keyboard focus VoiceOver menu window or custom-control accessibility"
         do_not_load_when: "no macOS-specific accessibility behavior changes beyond reusable Foundation rules"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["decision-record", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["decision-record"]
+      - path: "references/accessibility-platform-deltas-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted macOS accessibility decision requires implementation or review evidence"
+        do_not_load_when: "no macOS accessibility implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/framework-lifecycle-window-and-document-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["acceptance", "scope"]
+          conflicts_with: []
+          decision_problem: "framework-lifecycle-window-and-document-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/framework-lifecycle-window-and-document-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "framework-lifecycle-window-and-document-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "macos-platform-extension/references/framework-lifecycle-window-and-document-contracts.md"
+              required_output: "selected-approach"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/file-sandbox-and-entitlement-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "file-sandbox-and-entitlement-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/file-sandbox-and-entitlement-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "file-sandbox-and-entitlement-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "macos-platform-extension/references/file-sandbox-and-entitlement-contracts.md"
+              required_output: "boundary-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/keychain-xpc-and-helper-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "keychain-xpc-and-helper-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/keychain-xpc-and-helper-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "keychain-xpc-and-helper-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "macos-platform-extension/references/keychain-xpc-and-helper-contracts.md"
+              required_output: "decision-record"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/signing-notarization-and-distribution-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "signing-notarization-and-distribution-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/signing-notarization-and-distribution-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "signing-notarization-and-distribution-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "macos-platform-extension/references/signing-notarization-and-distribution-contracts.md"
+              required_output: "decision-record"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/architecture-and-update-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "architecture-and-update-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/architecture-and-update-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "architecture-and-update-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "macos-platform-extension/references/architecture-and-update-contracts.md"
+              required_output: "boundary-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/accessibility-platform-deltas.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["acceptance", "scope"]
+          conflicts_with: []
+          decision_problem: "accessibility-platform-deltas"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/accessibility-platform-deltas-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "accessibility-platform-deltas-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "macos-platform-extension/references/accessibility-platform-deltas.md"
+              required_output: "decision-record"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
   - name: windows-platform-extension
     routing_mode: modifier-only
     used_by: ["ai-code-review-refactor", "backend-change-builder", "domain-impact-modeler", "engineering-change-analysis", "installed-client-change-builder"]
@@ -434,41 +1529,275 @@ domain_skills:
         type: targeted
         load_when: "Win32 WinUI WPF WinForms lifecycle activation single-instance or UI-thread behavior affects the decision"
         do_not_load_when: "no Windows desktop framework lifecycle activation instance or thread behavior changes"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["selected-approach", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["selected-approach"]
+      - path: "references/framework-lifecycle-and-activation-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted Windows framework and lifecycle approach requires implementation or review evidence"
+        do_not_load_when: "no framework lifecycle or activation implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/identity-packaging-and-installation-contracts.md"
         type: targeted
         load_when: "packaged unpackaged MSIX package/app identity installer update repair or uninstall behavior affects the decision"
         do_not_load_when: "no Windows identity deployment installation update repair or uninstall behavior changes"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["boundary-decision", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["boundary-decision"]
+      - path: "references/identity-packaging-and-installation-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted Windows identity and installation boundary requires implementation or review evidence"
+        do_not_load_when: "no Windows identity packaging or installation implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/os-integration-and-registration-contracts.md"
         type: targeted
         load_when: "registry file association protocol handler or COM registration behavior affects the decision"
         do_not_load_when: "no Windows registry association protocol or COM surface changes"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["decision-record", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["decision-record"]
+      - path: "references/os-integration-and-registration-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted Windows registration decision requires implementation or review evidence"
+        do_not_load_when: "no Windows registration implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/service-background-and-notification-contracts.md"
         type: targeted
         load_when: "Windows service background task or app notification behavior affects the decision"
         do_not_load_when: "no Windows service background execution or notification behavior changes"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["routing-decision", "failure-decision", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["routing-decision", "failure-decision"]
+      - path: "references/service-background-and-notification-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted Windows service background and notification owner boundary requires implementation or review evidence"
+        do_not_load_when: "no accepted service background or notification implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/security-ipc-and-loading-contracts.md"
         type: targeted
         load_when: "UAC AppContainer DPAPI Credential Manager named pipe single-instance or DLL loading affects the decision"
         do_not_load_when: "no Windows privilege container secret IPC instance or module-loading behavior changes"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["boundary-decision", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["boundary-decision"]
+      - path: "references/security-ipc-and-loading-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted Windows security IPC and loading boundary requires implementation or review evidence"
+        do_not_load_when: "no Windows security IPC or loading implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/architecture-signing-and-distribution-contracts.md"
         type: targeted
         load_when: "x86 x64 ARM64 signing Store enterprise or direct distribution evidence affects the decision"
         do_not_load_when: "no Windows architecture signed-artifact or distribution-channel evidence changes"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["decision-record", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["decision-record"]
+      - path: "references/architecture-signing-and-distribution-contracts-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted Windows architecture and distribution decision requires implementation or review evidence"
+        do_not_load_when: "no Windows architecture signing or distribution implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
       - path: "references/dpi-and-accessibility-deltas.md"
         type: targeted
         load_when: "Windows scaling high-DPI UI Automation keyboard focus or assistive-technology behavior changes"
         do_not_load_when: "no Windows-specific DPI accessibility input or focus behavior changes beyond Foundation rules"
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["decision-record", "proof-limit", "validation-plan"]
+        required_by: ["analysis-agent"]
+        required_output: ["decision-record"]
+      - path: "references/dpi-and-accessibility-deltas-implementation-and-review-evidence.md"
+        type: evidence-pattern
+        load_when: "the accepted Windows DPI and accessibility delta requires implementation or review evidence"
+        do_not_load_when: "no Windows DPI or accessibility implementation or review claim is being closed"
+        required_by: ["task-agent", "review-agent"]
+        required_output: ["evidence-record", "proof-limit", "validation-plan"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/framework-lifecycle-and-activation-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "framework-lifecycle-and-activation-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/identity-packaging-and-installation-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "identity-packaging-and-installation-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/os-integration-and-registration-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "os-integration-and-registration-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/service-background-and-notification-contracts.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["primary-professional-skill", "domain", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "service-background-and-notification-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/security-ipc-and-loading-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "security-ipc-and-loading-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/architecture-signing-and-distribution-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "architecture-signing-and-distribution-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/dpi-and-accessibility-deltas.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "dpi-and-accessibility-deltas"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/framework-lifecycle-and-activation-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "framework-lifecycle-and-activation-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "windows-platform-extension/references/framework-lifecycle-and-activation-contracts.md"
+              required_output: "selected-approach"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+            - reference: "windows-platform-extension/references/service-background-and-notification-contracts.md"
+              required_output: "routing-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/identity-packaging-and-installation-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "identity-packaging-and-installation-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "windows-platform-extension/references/identity-packaging-and-installation-contracts.md"
+              required_output: "boundary-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+            - reference: "windows-platform-extension/references/service-background-and-notification-contracts.md"
+              required_output: "routing-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/os-integration-and-registration-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "os-integration-and-registration-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "windows-platform-extension/references/os-integration-and-registration-contracts.md"
+              required_output: "decision-record"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+            - reference: "windows-platform-extension/references/service-background-and-notification-contracts.md"
+              required_output: "routing-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/security-ipc-and-loading-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "security-ipc-and-loading-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "windows-platform-extension/references/security-ipc-and-loading-contracts.md"
+              required_output: "boundary-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+            - reference: "windows-platform-extension/references/service-background-and-notification-contracts.md"
+              required_output: "routing-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/architecture-signing-and-distribution-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "architecture-signing-and-distribution-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "windows-platform-extension/references/architecture-signing-and-distribution-contracts.md"
+              required_output: "decision-record"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+            - reference: "windows-platform-extension/references/service-background-and-notification-contracts.md"
+              required_output: "routing-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/dpi-and-accessibility-deltas-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "dpi-and-accessibility-deltas-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "windows-platform-extension/references/dpi-and-accessibility-deltas.md"
+              required_output: "decision-record"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+            - reference: "windows-platform-extension/references/service-background-and-notification-contracts.md"
+              required_output: "routing-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []
+        references/service-background-and-notification-contracts-implementation-and-review-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "service-background-and-notification-contracts-implementation-and-review-evidence"
+          sequenced_after:
+            - reference: "windows-platform-extension/references/service-background-and-notification-contracts.md"
+              required_output: "failure-decision"
+              carried_by:
+                task-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3"]
+                review-agent:
+                  engineering-brief: ["selector-receipt.contract", "selector-receipt.authority_contract", "selector-receipt.selection_owner", "selector-receipt.profile", "selector-receipt.professional_skill", "selector-receipt.selection_kind", "selector-receipt.selection_basis", "selector-receipt.selector_ids", "selector-receipt.evidence_signals", "selector-receipt.selected_layer3", "selector-receipt.receipt_sha256", "engineering-brief.Owner", "engineering-brief.Scope", "engineering-brief.Professional Skill", "engineering-brief.Layer3", "review-handoff.Inbound Review Projection.Review Boundary", "review-handoff.Inbound Review Projection.Required Changed Scope", "review-handoff.Inbound Review Projection.Scope", "review-handoff.Inbound Review Projection.Freshness", "review-handoff.Inbound Review Projection.Proof Limit"]
+          must_co_trigger_with: []

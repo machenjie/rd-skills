@@ -7,6 +7,7 @@ Official framework documentation below was accessed on 2026-07-24.
 
 ## Decision Boundary
 
+- Version bridge, FFI, plugin, and generated interfaces; define payload, threading, cancellation, error, and backward-compatibility behavior.
 - Pin framework, runtime, plugin, native dependency, generated binding, and
   serialization versions for each target.
 - Define payload schema, nullability, ownership, threading, reentrancy,

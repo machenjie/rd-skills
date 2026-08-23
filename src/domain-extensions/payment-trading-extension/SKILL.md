@@ -28,34 +28,22 @@ financial state.
 
 ## Professional Decision Rules
 
-- **Use authoritative provider evidence**: client redirects are not proof of authorization, capture, settlement, or revocation state. Bind authenticated server evidence to the intended transaction and account.
-- **Control repeated financial effects**: choose provider or storage enforcement that prevents duplicate effects across retry, replay, and concurrent submission.
-- **Match controls to custody**: approved raw-card custody carries current PCI evidence. Other flows keep sensitive values out of application storage and logs.
-- **Enforce owned transitions**: define authority, retry, compensation, and correction for each owned state. Stale or impossible transitions receive rejection with auditable reasons.
-- **Preserve ledger history**: corrections to an owned balance or audit ledger retain prior entries and traceability. Provider orchestration must not invent an ownerless ledger.
-- **Use double entry only with accounting ownership**: a book of record proves balanced debits and credits. External status tracking instead reconciles provider balances.
-- **Authenticate inbound events**: verify the provider's signature, freshness, identity, secret rotation, replay, and ordering contract.
-- **Keep monetary arithmetic exact**: bind amount to currency, scale, rounding, conversion, overflow, and allocation semantics.
-- **Bind regulation to accountable interpretation**: identify affected product, jurisdictions, actors, flows, assets, custody, and locations. The accountable legal or compliance owner maps applicable obligations to controls, evidence, exceptions, and release consequences; this Skill prescribes no universal regulatory rule.
+- Preserve the accepted financial invariant across authoritative state, duplicate effects, custody, owned transitions, ledger/accounting boundaries, inbound events, exact arithmetic, reconciliation, and accountable regulation.
+- Load the named Reference for detailed closure.
 
 ## High-Value Gotchas
 
-- a timeout hides a successful charge before retry
-- fulfillment follows a client redirect instead of authoritative state
-- out-of-order refund, dispute, or settlement events regress state
-- an internal ledger has no accounting or reconciliation owner
-- rounding differences create persistent settlement gaps
+- A timeout, redirect, stale event, ownerless ledger, or rounding drift is not authoritative financial completion.
 
 ## Execution Checklist
 
-1. Classify the system as provider orchestration, custody, ledger/book of record, trading, or a combination.
-2. Trace authority, business identity, transitions, balances, and reconciliation ownership.
-3. Prove duplicate, stale-event, reversal, rounding, authorization, and residual-risk behavior.
+1. Establish the financial invariant and authoritative state.
+2. Load each named Reference whose decision problem is active.
+3. Record selected controls, reconciliation evidence, proof limits, and residual risk.
 
 ## Stop / Escalation Conditions
 
-- Stop when source of truth, custody/accounting role, reconciliation owner, or regulatory scope is unknown.
-- Escalate possible double charge, asset loss, ledger imbalance, unauthorized movement, or unreviewed regulated-data handling.
+- Stop when source of truth, custody/accounting role, reconciliation or regulatory owner, or a possible double-charge, asset-loss, imbalance, unauthorized-movement, or regulated-data consequence remains unresolved.
 
 ## Output Contract
 
@@ -65,4 +53,13 @@ financial state.
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
-| [checklist](references/checklist.md) | decision-checklist | money movement ledger order execution settlement or reconciliation behavior needs domain risk closure | the task only displays prices or ordinary orders without funds or execution state | analysis-agent, task-agent, review-agent | checklist-result, residual-risk |
+| [financial role and state authority](references/financial-role-and-state-authority.md) | targeted | payment custody model, provider/custody/ledger/settlement roles, source of truth, or authoritative completion state is open | roles, source of truth, custody and authoritative state are already explicit, or no monetary state exists, including price display or ordinary orders without funds, ledger, settlement, or execution state | analysis-agent, task-agent, review-agent | boundary-decision, residual-risk |
+| [raw card custody evidence](references/raw-card-custody-evidence.md) | evidence-pattern | approved raw-card custody requires PCI/PAN/CVV retention, storage, display, logging, or evidence closure | no raw-card custody exists; the flow is provider-hosted/non-custodial | analysis-agent, task-agent, review-agent | evidence-record, proof-limit, residual-risk |
+| [non custodial sensitive data boundary](references/non-custodial-sensitive-data-boundary.md) | targeted | tokenized/provider-hosted payment flow must prove PAN/CVV/payment-secret exclusion | application has no reachable payment secret, or approved raw-card custody rather than a non-custodial boundary is being assessed | analysis-agent, task-agent, review-agent | boundary-decision, proof-limit, residual-risk |
+| [duplicate financial effect control](references/duplicate-financial-effect-control.md) | targeted | retry, replay, concurrent submission, result reuse, or unknown outcome can repeat a financial effect | no retryable financial effect exists, or current provider/storage uniqueness is already proven and unchanged | analysis-agent, task-agent, review-agent | selected-approach, residual-risk |
+| [owned financial state accounting and balances](references/owned-financial-state-accounting-and-balances.md) | targeted | owned payment/ledger transitions, correction history, accounting ownership, or balance authority is open | pure provider orchestration owns no ledger, accounting book, or application balance | analysis-agent, task-agent, review-agent | decision-record, residual-risk |
+| [trading order execution and identity](references/trading-order-execution-and-identity.md) | targeted | order acknowledgement/fill/cancel/replace, execution identity, race, gap, or recovery behavior is open | payment-only work has no order execution, fill, cancel, venue identity, or trading-session recovery | analysis-agent, task-agent, review-agent | decision-record, failure-decision, residual-risk |
+| [market data and trading risk controls](references/market-data-and-trading-risk-controls.md) | targeted | price-sensitive execution, risk limits, overrides, kill switch, leverage, margin, or liquidation behavior is open | no price-sensitive execution, leverage, override, limit, or kill-switch behavior changes | analysis-agent, task-agent, review-agent | selected-approach, failure-decision, residual-risk |
+| [venue product monetary and calendar contracts](references/venue-product-monetary-and-calendar-contracts.md) | targeted | venue/product units, tick/lot/notional, fee/funding, precision/rounding, currency, cutoff, calendar, or timestamp contract is open | no venue/product monetary representation or calendar contract changes, and current contracts are explicit | analysis-agent, task-agent, review-agent | decision-record, residual-risk |
+| [provider venue event authentication](references/provider-venue-event-authentication.md) | targeted | inbound provider/venue events require identity, replay, ordering, version, credential, or audit closure | no inbound external financial event is consumed | analysis-agent, task-agent, review-agent | boundary-decision, residual-risk |
+| [financial reconciliation and monitoring](references/financial-reconciliation-and-monitoring.md) | targeted | orders, executions, positions, balances, ledgers, settlements, corrections, breaks, replay windows, or operational signals require reconciliation closure | no cross-source reconciliation or financial-operability boundary changes | analysis-agent, task-agent, review-agent | decision-record, validation-plan, residual-risk |

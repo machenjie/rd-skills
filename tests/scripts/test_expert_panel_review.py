@@ -822,9 +822,9 @@ class ExpertPanelReviewTests(unittest.TestCase):
             },
             actual_graph["implementation-structure-design"],
         )
-        self.assertEqual(44, len(domain_declarations))
+        self.assertEqual(47, len(domain_declarations))
         self.assertEqual(
-            44,
+            47,
             sum(
                 source_id in actual_graph[adjacent_id]
                 for source_id, adjacent_id in domain_declarations
@@ -1146,10 +1146,7 @@ Route current work to `candidate-a`.
             scenario_adjacency["registry_declared_skills"],
         )
         self.assertEqual(
-            (
-                s2a_scenario_required
-                - {"data-side-effect-flow-tracing"}
-            )
+            s2a_scenario_required
             | set(scenario_adjacency["source_declared_skills"]),
             scenario_required,
         )
@@ -1691,7 +1688,7 @@ Route current work to `candidate-a`.
         self.assertEqual(PANEL.PROFESSIONAL_COMPLETENESS_SCHEMA_VERSION, packet["schema_version"])
         self.assertEqual(189, len(packet["professional_targets"]))
         self.assertEqual(
-            519,
+            603,
             sum(
                 len(target["indexed_references"])
                 for target in packet["professional_targets"]
@@ -3471,9 +3468,9 @@ Route current work to `candidate-a`.
             attestation_selector=selector,
         )
 
-        self.assertEqual(208, len(selected["semantic_targets"]))
+        self.assertEqual(205, len(selected["semantic_targets"]))
         self.assertEqual(
-            {"root": 79, "reference": 129},
+            {"root": 70, "reference": 135},
             selected["panel_contract"]["required_axis_target_counts"],
         )
 
@@ -3491,7 +3488,7 @@ Route current work to `candidate-a`.
 
         self.assertEqual(original, audit)
         self.assertEqual(
-            {"root": 79, "reference": 129},
+            {"root": 70, "reference": 135},
             packet["panel_contract"]["required_axis_target_counts"],
         )
         PANEL.validate_semantic_packet_current(packet, original)
@@ -3952,7 +3949,7 @@ Route current work to `candidate-a`.
                     "b30afbeafb68bb21ade261d0ada1698865ccef20327dac0fe8edca4138ed1fcb"
                 ),
                 "root_detector_contract": (
-                    "7e45706770e42dbe3f83fda946be11724d348a8d2898c45bef255b3cbdb6dcac"
+                    "7b00576812cf683b980c12ec32466b3150c59a1dea846a19a52df4b909fad8e5"
                 ),
             },
             {

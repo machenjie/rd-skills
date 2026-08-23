@@ -1,59 +1,42 @@
 # High-Risk Test Depth And Handoff
 
-Load this reference only when the task names a migration, security, release, financial, concurrency, public-contract, external-integration, or multi-boundary validation risk.
+Load only for a named migration, security, release, financial, concurrency, public-contract, integration, or multi-boundary validation risk.
 
 ## Risk To Proof Map
 
 | Risk | Minimum evidence |
 | --- | --- |
-| Authorization or tenant isolation | Allowed and denied cases at the real enforcement boundary, including object scope. |
-| Money or irreversible state | Branch, invariant, idempotency, duplicate, rollback or compensation, and reconciliation tests. |
-| Schema or data migration | Forward migration, representative backfill or coexistence, integrity check, rollback/forward-fix limit, and compatibility order. |
-| Public API or event contract | Old/new consumer compatibility, validation/error semantics, generated artifacts when applicable, and contract tests. |
-| External integration | Contract or sandbox test plus timeout, retry, malformed response, credential denial, replay, and reconciliation paths. |
-| Concurrency or distributed state | Race/contention test, ordering or lock invariant, duplicate delivery, and failure recovery. |
-| Frontend or accessibility | Loading, empty, error, success, denial, keyboard/focus, responsive, and browser-relevant behavior. |
-| Release or configuration | Built artifact, environment/config compatibility, migration order, stop signal, rollback check, and post-release validation plan. |
-| Performance or scale | Representative input, measurement method, threshold, regression comparison, and environment caveat. |
+| Authorization/tenancy | Allowed/denied cases at real enforcement and object scope. |
+| Money/irreversible state | Invariant, idempotency, duplicate, rollback/compensation, reconciliation. |
+| Schema/migration | Forward, representative coexistence/backfill, integrity, rollback/forward-fix limit, compatibility order. |
+| Public API/event | Old/new compatibility, validation/error semantics, generated artifacts, contract tests. |
+| External integration | Contract/sandbox, timeout, retry, malformed response, credential denial, replay, reconciliation. |
+| Concurrent/distributed state | Race/contention, order/lock invariant, duplicate delivery, recovery. |
+| Frontend/accessibility | Loading, empty, error, success, denial, keyboard/focus, responsive, browser behavior. |
+| Release/configuration | Built artifact, environment/config compatibility, migration order, stop, rollback, post-release plan. |
+| Performance/scale | Representative input, method, threshold, comparison, environment limit. |
 
 ## Evidence Rules
 
-- Map every material changed path, acceptance item, invariant, and failure mode to a check or residual risk.
-- Prefer the lowest test level that exercises the real failure boundary; add a higher level only for a concrete integration risk.
-- Use real infrastructure or contract-calibrated doubles when database, queue, cache, filesystem, HTTP, or browser behavior is the risk.
-- Prove that a regression assertion fails when the repaired branch is removed, inverted, or bypassed.
-- Keep time, randomness, UUIDs, test data, concurrency, network behavior, and shared state deterministic or isolated.
-- Treat flaky, skipped, retried, quarantined, partial, and not-run checks as explicit limitations with an owner.
-- Record source, test, fixture, schema, configuration, generated-input, or lockfile edits that invalidate evidence and the resulting Core Guard G refresh decision.
-- After that decision, task mode may run accepted commands.
-- Review mode reports stale or missing evidence without independently setting timing.
-- Do not call lint, type checking, a single test, or manual inspection a full behavior pass.
+- Broaden only for a concrete shared boundary or escape risk.
+- Map material paths, acceptance, invariants, and failures to checks or residual risk.
+- Prefer the lowest level exercising the real boundary; add a higher level only for concrete integration risk.
+- Use real infrastructure or contract-calibrated doubles when its behavior is the risk.
+- Show a regression assertion fails when the repaired branch is removed, inverted, or bypassed.
+- Control or isolate time, randomness, IDs, data, concurrency, network behavior, and shared state.
+- Record flaky, skipped, retried, quarantined, partial, and not-run checks as owned limits.
+- Treat source, test, fixture, schema, configuration, generated-input, or lockfile edits as evidence invalidators.
+- Core Guard G decides refresh; Task runs only accepted commands afterward.
+- Review reports stale or missing evidence without setting timing.
+- Do not label lint, type checking, one test, or manual inspection a full behavior pass.
 
-## Natural-Language Handoff
+## Handoff
 
-```markdown
-## Validation Strategy
-
-## Acceptance and Risk Mapping
-
-## Changed-file Coverage
-
-## Commands Run and Actual Results
-
-## Fixtures, Mocks, and Real Boundaries
-
-## What the Evidence Proves
-
-## Flaky, Skipped, Partial, or Not-run Checks
-
-## Unverified Scope and Residual Risk
-
-## Recommended Next Step
-```
+Record strategy, acceptance/risk and changed-file maps, commands/results, real boundaries and doubles, proved/unproved scope, limitations, residual risk, and next step.
 
 ## Stop Conditions
 
-- Stop before a check that mutates production, exceeds authority, exposes secrets, or lacks cleanup.
-- Return a finding when changed behavior, a changed file, a blocking risk, or the last repair remains uncovered.
-- Escalate when a high-risk invariant has no realistic negative or recovery test.
-- Keep release readiness unverified when the evidence does not cover the built artifact and rollback boundary.
+- Stop before checks that mutate production, exceed authority, expose secrets, or lack cleanup.
+- Return a finding for uncovered changed behavior, files, blocking risk, or last repair.
+- Escalate a high-risk invariant without a realistic negative or recovery test.
+- Keep release readiness unverified without built-artifact and rollback evidence.

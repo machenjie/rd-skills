@@ -9,36 +9,29 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when UI semantic
 
 **Use when**
 
-- A user-interface change can alter perception, keyboard or switch operation, focus, assistive-technology meaning, motion, scaling, error recovery, or pointer alternatives.
+- A UI change alters perception, keyboard or switch operation, focus, assistive-technology meaning, motion, scaling, recovery, or pointer alternatives.
 
 **Do not use when**
 
-- No user interface changes, the task only names a platform accessibility API, or the question is limited to design-system consistency.
+- No UI changes, only a platform accessibility API, or only design-system consistency.
 
 ## Skill Role
 
-Define cross-platform inclusive interaction semantics and proof obligations. Exclude platform API encyclopedias, visual-system ownership, product-flow ownership, legal conformance certification, and the general testing workflow.
+Own cross-platform inclusive interaction meaning and proof; exclude platform encyclopedias, visual or product-flow ownership, legal certification, and general testing workflow.
 
 ## High-Value Rules
 
-- **Preserve semantic meaning before decoration.** Give every meaningful control an owned role, accessible name, state, value, relationship, and update behavior.
-- **Provide a complete keyboard path.** Keep focus order logical, focus indication perceivable, composite navigation conventional, and every action operable without pointer-only gestures.
-- **Restore focus to the continuing task.** Define initial, modal return, navigation, deletion, validation, and asynchronous-update focus destinations.
-- **Announce consequential dynamic changes once.** Expose loading, completion, error, validation, and changed-state meaning without stealing focus or repeating noise.
-- **Keep information independent of color.** Preserve text and non-text contrast under supported themes while adding shape, text, position, or programmatic meaning.
-- **Respect user presentation settings.** Support text scaling, reflow, zoom, high contrast, reduced motion, and localization without hiding content or controls.
-- **Require an equivalent direct-manipulation path.** Add a non-drag and non-precision alternative for touch, pointer, swipe, or motion-operated outcomes.
-- **Combine automated and human evidence.** Pair semantic-tree and contrast checks with manual keyboard, focus, scaling, motion, and assistive-technology journeys.
+- Preserve meaning, operability, and focus on the continuing task.
+- Preserve presentation and direct-manipulation alternatives under supported settings.
+- Bind accessibility claims to current automated and human evidence.
 
 ## Anti-Patterns
 
-- Add an accessibility label while leaving the control's role, state, focus behavior, or action inaccessible.
-- Treat passing automation, a screenshot, or one screen reader as proof of accessibility conformance.
-- Remove visible focus, error text, or non-color cues because a mouse path still works.
+- Do not substitute a local scan, screenshot, or one assistive-technology run for the inclusive interaction contract.
 
 ## Stop Conditions
 
-Stop when the intended semantic role, keyboard convention, focus destination, or applicable accessibility requirement is unresolved. Escalate platform-specific implementation to its Domain Skill and conformance claims to the accountable policy or legal owner.
+Stop on unresolved semantic role, keyboard convention, focus destination, requirement authority, or representative proof; return platform or conformance ownership.
 
 ## Output Contract
 
@@ -48,4 +41,7 @@ Stop when the intended semantic role, keyboard convention, focus destination, or
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
-| [inclusive interaction contracts](references/inclusive-interaction-contracts.md) | targeted | Semantics keyboard focus contrast scaling touch alternatives or proof expectations remain open | Current product and platform contracts already determine the affected inclusive interaction | analysis-agent, task-agent, review-agent | selected-approach, proof-limit |
+| [semantic keyboard and focus contracts](references/semantic-keyboard-and-focus-contracts.md) | targeted | Semantic meaning, keyboard operation, or focus behavior remains open | Current semantic, keyboard, and focus contracts fix the changed behavior | analysis-agent, task-agent, review-agent | selected-approach, boundary-decision, proof-limit |
+| [announcements and form recovery contracts](references/announcements-and-form-recovery-contracts.md) | targeted | Announcement, status, validation, or form-recovery behavior remains open | Current announcement and form-recovery contract fixes the changed behavior | analysis-agent, task-agent, review-agent | selected-approach, failure-decision, proof-limit |
+| [visual adaptation and direct manipulation contracts](references/visual-adaptation-and-direct-manipulation-contracts.md) | targeted | Visual meaning, adaptation, motion, or direct-manipulation alternative remains open | Current presentation and input-alternative contracts fix the changed behavior | analysis-agent, task-agent, review-agent | selected-approach, boundary-decision, proof-limit |
+| [accessibility verification evidence](references/accessibility-verification-evidence.md) | evidence-pattern | Accessibility claim needs automated and human verification evidence | No changed accessibility claim awaits verification | analysis-agent, task-agent, review-agent | evidence-record, validation-plan, proof-limit, residual-risk |

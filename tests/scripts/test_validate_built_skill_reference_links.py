@@ -39,8 +39,8 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
         fixed_lines = [
             "# Sample Professional",
             "## Layer 3 Delivery",
-            "This build compiles assigned Foundation and Domain guidance.",
-            "Never preload Layer 3 or open a Layer 3 index or catalog.",
+            "",
+            "No Foundation or Domain Layer 3 items are assigned to this Skill.",
         ]
         self.assertGreaterEqual(body_line_count, len(fixed_lines))
         body = [
@@ -198,10 +198,9 @@ class CompiledLayer3ReadabilityTests(unittest.TestCase):
             "- Reject evidence that predates the final edit.\n\n"
             "## Stop Conditions\n\n"
             "- Stop when the owner is unknown.\n\n"
-            "## Targeted References\n\n"
-            "- [checklist](references/checklist.md): "
-            "load the changed invariant needs negative-path coverage; "
-            "skip no invariant or failure path changes.\n"
+            "## JIT Reference Delivery\n\n"
+            "Current-Professional JIT. Exact skips it; never select/reroute/preload\n"
+            "index/catalog.\n"
         )
 
     def test_rejects_41_word_sentence_in_compiled_projection(self) -> None:
@@ -222,9 +221,46 @@ class CompiledLayer3ReadabilityTests(unittest.TestCase):
 
     def test_accepts_canonical_load_skip_projection(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
-            path = Path(raw) / "sample-foundation.md"
+            root = Path(raw)
+            path = (
+                root
+                / "sample-professional/references/layer3/sample-foundation.md"
+            )
+            path.parent.mkdir(parents=True)
             path.write_text(
                 self._projection("Keep the changed ownership boundary explicit."),
+                encoding="utf-8",
+            )
+            physical = path.parent / "sample-foundation/references/checklist.md"
+            physical.parent.mkdir(parents=True)
+            physical.write_text("# Sample Checklist\n", encoding="utf-8")
+            selector = (
+                root
+                / "engineering-control-plane/references/selectors/sample-professional.json"
+            )
+            selector.parent.mkdir(parents=True)
+            selector.write_text(
+                json.dumps(
+                    {
+                        "contract": "changeforge.layer3-selector-control/v1",
+                        "professional_skill": "sample-professional",
+                        "selection_surfaces": [
+                            {
+                                "reference_records": [
+                                    {
+                                        "owner_skill": "sample-foundation",
+                                        "path": "references/checklist.md",
+                                        "required_output": ["checklist-result"],
+                                        "type": "decision-checklist",
+                                    }
+                                ]
+                            }
+                        ],
+                    },
+                    sort_keys=True,
+                    separators=(",", ":"),
+                )
+                + "\n",
                 encoding="utf-8",
             )
             errors: list[str] = []

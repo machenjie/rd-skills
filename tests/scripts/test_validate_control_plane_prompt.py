@@ -71,7 +71,47 @@ class ControlPromptProjectionTests(unittest.TestCase):
 
         self.assertLessEqual(
             VALIDATOR.count_o200k_base_tokens(text),
-            min(1415, VALIDATOR.PROMPT_MAX_O200K_BASE_TOKENS),
+            VALIDATOR.PROMPT_MAX_O200K_BASE_TOKENS,
+        )
+
+    def test_context_budget_accepts_authoritative_limit_and_rejects_overflow(
+        self,
+    ) -> None:
+        text = VALIDATOR.PROMPT.read_text(encoding="utf-8")
+        limit = VALIDATOR.PROMPT_MAX_O200K_BASE_TOKENS
+
+        accepted_errors: list[str] = []
+        with mock.patch.object(
+            VALIDATOR,
+            "count_o200k_base_tokens",
+            return_value=limit,
+        ):
+            _, accepted_tokens = VALIDATOR._validate_context_budget(
+                text, accepted_errors
+            )
+        self.assertEqual(limit, accepted_tokens)
+        self.assertFalse(
+            any("o200k_base tokens" in error for error in accepted_errors),
+            accepted_errors,
+        )
+
+        rejected_errors: list[str] = []
+        with mock.patch.object(
+            VALIDATOR,
+            "count_o200k_base_tokens",
+            return_value=limit + 1,
+        ):
+            _, rejected_tokens = VALIDATOR._validate_context_budget(
+                text, rejected_errors
+            )
+        self.assertEqual(limit + 1, rejected_tokens)
+        self.assertTrue(
+            any(
+                f"maximum is {limit}" in error
+                and "o200k_base tokens" in error
+                for error in rejected_errors
+            ),
+            rejected_errors,
         )
 
     def test_main_business_execution_and_permission_gates_are_projected(
@@ -141,8 +181,8 @@ class ControlPromptProjectionTests(unittest.TestCase):
         scheduling = VALIDATOR.extract_section_body(text, "Scheduling and Context") or ""
 
         for term in (
-            "current Engineering Brief: sole analysis authority",
-            "First Executable Slice: Task Contract v2",
+            "current Engineering Brief",
+            "First Executable Slice",
             "dispatch verbatim",
             "never reinterpret",
             "blocked -> main-control-agent -> analysis-agent -> updated Engineering Brief",
@@ -150,6 +190,17 @@ class ControlPromptProjectionTests(unittest.TestCase):
         ):
             with self.subTest(term=term):
                 self.assertIn(term.casefold(), analyzed.casefold())
+        authority = VALIDATOR.CORE_CONTRACTS["task_contract"][
+            "analyzed_work_authority"
+        ]
+        self.assertEqual(
+            "current-engineering-brief",
+            authority["operational_authority"],
+        )
+        self.assertEqual(
+            "Task Contract v2",
+            authority["first_executable_slice"]["contract"],
+        )
         self.assertIn(
             "requested task > DAG > blockers > adjacent",
             scheduling,
@@ -173,7 +224,11 @@ class ControlPromptProjectionTests(unittest.TestCase):
 
     def test_managed_block_and_digest_mutations_fail(self) -> None:
         text = VALIDATOR.PROMPT.read_text(encoding="utf-8")
-        mutation = text.replace("State: current", "State: stale", 1)
+        mutation = text.replace(
+            "Claims: latest-material-edit, validation-passed",
+            "Claims: latest-material-edit, validation-stale",
+            1,
+        )
         self.assertNotEqual(text, mutation)
 
         errors = VALIDATOR.prompt_projection_errors(
@@ -227,8 +282,11 @@ class ControlPromptProjectionTests(unittest.TestCase):
         }
 
         self.assertNotIn("Evidence Phase", projections["review-evidence-contract"])
-        self.assertIn("schema authority", projections["review-evidence-contract"])
         self.assertIn(
+            "references/implementation-handoff-template.md JIT-owns Ledger State/currentness",
+            projections["review-evidence-contract"],
+        )
+        self.assertNotIn(
             "State: fresh, replaced, rejected",
             projections["review-evidence-contract"],
         )
@@ -435,29 +493,39 @@ class ControlPromptProjectionTests(unittest.TestCase):
         for term in (
             "references/execution-level-contract.md",
             "Trust exact build/install validation",
-            "Runtime checks only",
-            "existence",
-            "JSON parse",
-            "required sections",
-            "unique IDs",
-            "not coordinated tampering or unknown IDs",
             "integrity fallback/no partial computation",
-            "Effective=max(base,mandatory,prior historical max effective)",
-            "fallback=max(L4,explicit known L5,prior historical max effective)",
             "edit blocked",
-            "dispatch read-only diagnosis",
+            "read-only diagnosis",
             "never Router",
-            "Task ID/lineage",
-            "Active executable surfaces: carry Level/Basis",
             "default L3",
-            "L5 explicit-only",
-            "Level Basis(trigger_evaluations|l2_eligibility|obligations|unresolved|edit_status)",
-            "L5 Evidence only at effective L5",
-            "After 2 same-path failures: changed hypothesis/material/gap/transition",
+            "L5 explicit or confirmed automatic recommendation",
+            "After 2 same-path failures",
+            "changed hypothesis/material/gap/transition",
             "return Main/block; never third unchanged retry",
-            "Reissue on active/resumed edit/validation/review",
+            "Active/resumed edit/validation/review requires current Level/Basis reissue",
         ):
             self.assertIn(term, block)
+        contract = VALIDATOR.CORE_CONTRACTS["execution_level_contract"]
+        self.assertEqual(
+            [
+                "requested_or_automatic",
+                "minimum_eligible_level",
+                "mandatory_floor",
+                "prior_historical_max_effective",
+            ],
+            contract["formula"]["effective_level_sources"],
+        )
+        self.assertEqual(
+            ["missing", "malformed", "duplicate"],
+            contract["integrity_fallback"]["inputs"],
+        )
+        self.assertFalse(contract["integrity_fallback"]["partial_computation"])
+        self.assertIn("trigger_evaluations", contract["level_basis_fields"])
+        self.assertIn("edit_status", contract["level_basis_fields"])
+        self.assertIn(
+            "active or resumed work, edit, validation, or review",
+            contract["legacy_migration"]["active_or_resumed_without_level"],
+        )
         self.assertNotIn("runtime hash", block.casefold())
         self.assertNotIn("payload sha", block.casefold())
         self.assertNotIn("Canonical validation identity", block)

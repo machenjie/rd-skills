@@ -20,18 +20,6 @@ Official systemd and Linux man-pages pages below were accessed on 2026-07-24.
 - A systemd unit, D-Bus dependency, GTK/Qt library, or C/C++ language alone does
   not prove a Linux desktop target.
 
-## Boundary Proof
-
-- For a Linux server daemon, record the Professional and Linux systems
-  Foundation, and prove Linux Desktop was rejected.
-- For a graphical client plus companion daemon, record two owners, protocol,
-  identity, lifecycle, install/update, failure isolation, and separate evidence.
-
-## Required Record
-
-Return selected Professional/Foundation/Domain composition, rejected
-misrouting, target evidence, boundary behavior, validation split, and proof limits.
-
 ## Primary Sources
 
 - [systemd service](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html)

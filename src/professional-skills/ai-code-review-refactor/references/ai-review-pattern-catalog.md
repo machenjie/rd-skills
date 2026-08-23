@@ -1,6 +1,7 @@
 # AI Review Pattern Catalog
 
 Load this reference when concrete examples are needed to calibrate hallucinated APIs, silent failure, over-abstraction, helper bags, side-effect pollution, mock-only tests, feature-flag debt, dependency pollution, or other recurring AI-generated failure modes.
+A summary is not the diff.
 
 ## Anti-Examples
 

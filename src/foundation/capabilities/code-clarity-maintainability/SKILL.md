@@ -33,10 +33,7 @@ Make changed behavior and obligations traceable from its public entry point. Exc
 
 ## Anti-Patterns
 
-- A guard or early return bypasses cleanup, audit, rollback, or response work.
-- A boolean, mode, negated condition, or magic value hides authority or state semantics at the call site.
-- Tiny helpers or files force traversal across vague wrappers to understand one decision.
-- A shorter diff or lower metric is treated as clarity proof while behavior, ownership, or test intent becomes harder to see.
+- Local success substituted for evidence of the code clarity maintainability contract.
 
 ## Stop Conditions
 

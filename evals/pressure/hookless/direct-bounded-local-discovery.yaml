@@ -1,29 +1,31 @@
 id: hookless-direct-bounded-local-discovery
 pressure_type: unnecessary_analysis_for_local_discovery
-prompt: Fix the settings-form focus bug inside the named module, but discover its owner and non-production verification before editing.
+prompt: Fix the settings-form focus bug in the named settings module after confirming its exact symbol, targeted test, minimum local consumer, reuse and placement, and local validation command inside that already-known owner boundary; the semantic route, scope, and material risk are stable.
 expected:
-  profile: analysis-agent
-  primary_skill: engineering-change-analysis
-  layer3_skills: [repository-context-map]
-  review_skill: architecture-impact-reviewer
+  profile: task-agent
+  primary_skill: frontend-change-builder
+  layer3_skills: []
+  review_skill: ai-code-review-refactor
   behaviors:
-    - chose Analyzed Work before Direct Task dispatch
-    - resolved owner and non-production verification in analysis
-    - returned the earliest safe First Executable Slice
+    - confirmed bounded owner test consumer reuse placement and validation evidence before editing
+    - continued only inside the already-known owner boundary
+    - preserved the assigned Skill Domain Layer3 and Execution Level
   forbidden_behaviors:
-    - dispatch Direct Task while owner or verification is unknown
-    - discover ownership or verification in task-agent
+    - search repo-wide or discover an unknown owner module system or external consumer graph
+    - select a new Skill Domain or Layer3 in task-agent
+    - ask the user for a source-resolvable fact
+    - lower the assigned Execution Level because discovery proves the change is simpler
     - add a third routing path
 captured:
-  profile: analysis-agent
-  primary_skill: engineering-change-analysis
-  layer3_skills: [repository-context-map]
-  review_skill: architecture-impact-reviewer
+  profile: task-agent
+  primary_skill: frontend-change-builder
+  layer3_skills: []
+  review_skill: ai-code-review-refactor
   observed_behaviors:
-    - chose Analyzed Work before Direct Task dispatch
-    - resolved owner and non-production verification in analysis
-    - returned the earliest safe First Executable Slice
-  validation_status: not-applicable
-  residual_risk: implementation remains outside this analysis fixture
+    - confirmed bounded owner test consumer reuse placement and validation evidence before editing
+    - continued only inside the already-known owner boundary
+    - preserved the assigned Skill Domain Layer3 and Execution Level
+  validation_status: not-verified
+  residual_risk: checked-in capture does not prove live task behavior or the product fix
   completion_claim: false
 evidence_kind: captured-fixture

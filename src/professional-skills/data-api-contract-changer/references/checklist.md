@@ -9,3 +9,7 @@
 - Define rollback for code and data.
 - Document deprecation and client migration notes.
 - Verify observability for migration and API errors.
+
+## Professional Decision Rules
+
+- Treat the accepted API, event, schema, error, or data-format delta as one producer-to-consumer transition; load the named Reference for compatibility, migration, null/default, version, generated-surface, replay, or rollback decisions.

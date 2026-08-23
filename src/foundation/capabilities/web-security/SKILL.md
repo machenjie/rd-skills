@@ -21,19 +21,14 @@ Trace web-controlled sources to render, navigation, state-change, fetch, upload,
 
 ## High-Value Rules
 
-- **Trace changed routes from source to sink.** Identify attacker-controlled values, browser or server transformations, framework defaults, trust transitions, reachable sinks, and alternate encoded or nested paths before selecting a control.
-- **Match rendering protection to context.** Preserve contextual escaping, sanitization, trusted-template boundaries, URL and style handling, and script or markup policy for the actual sink; avoid decoding or concatenation after validation.
-- **Protect state-changing requests at the authority boundary.** Combine authenticated context with current request-integrity, origin, cookie, method, and object-authorization controls without treating browser UI or route guards as enforcement.
-- **Constrain server-side fetching and navigation.** Validate destinations against owned policy, re-check redirects and resolved addresses, block credential forwarding and internal reachability, and preserve safe recovery for rejected targets.
-- **Treat uploads and downloads as active content boundaries.** Bound type, size, name, path, archive expansion, scanning, storage authority, rendering disposition, and retrieval authorization according to reachable abuse.
-- **Define cross-origin and embedding behavior narrowly.** Derive origin, credential, header, method, framing, opener, and message-channel policy from current consumers and reject ambient wildcard trust.
-- **Prove denial and bypass paths.** Exercise alternate encodings, redirects, stale sessions, direct routes, nested payloads, mixed content, unauthorized objects, and deployment policy relevant to the changed sink.
+- Map the changed web-controlled source through transformations and trust transitions.
+- Classify its actual render, state-change, fetch, upload, navigation, cross-origin, embedding, or protected-action sink.
+- Select the named decision or evidence Reference for controls and bypass proof.
+- When the selected web-security decision remains active, load only its named Reference.
 
 ## Anti-Patterns
 
-- Apply one generic sanitizer or allowlist before later decoding, templating, redirect, or parser transformations change the context.
-- Trust client validation, hidden UI, same-origin appearance, internal hostnames, file extensions, or authenticated identity as sufficient sink protection.
-- Claim a framework default or response header is deployed protection without route and environment evidence.
+- Do not infer sink protection from a generic sanitizer, client/UI signal, hostname, extension, identity, framework default, or response header without final-context and deployment evidence.
 
 ## Stop Conditions
 

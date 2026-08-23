@@ -1,44 +1,34 @@
 # .NET Runtime, Deployment, And Interop Contracts
 
-Use this reference to compare runtime reachability, loading, ABI, UI-affinity, and deployment choices.
+Use for runtime reachability, loading, ABI, UI-affinity, or deployment decisions.
 
 ## Decision Matrix
 
-| Boundary | Required evidence | Failure signal |
+| Boundary | Evidence | Failure |
 | --- | --- | --- |
-| Trimming | Actual publish options, reflection/serialization/DI roots, annotations or descriptors, warning ownership, plugin policy, and smoke entry points | Warnings are suppressed or a dynamically reached member disappears only after publish |
-| Native AOT | Supported runtime features, dynamic-code/reflection use, native dependencies, target RID, diagnostics, size/startup goal, and fallback | Compilation succeeds but dynamic loading, runtime generation, or target-native behavior is unavailable |
-| Assembly loading | Load-context owner, probing paths, shared contracts, version rules, unload roots, concurrency, native dependency resolution, and trust | Equal-named types come from different contexts or callbacks/caches prevent unload |
-| P/Invoke | Header-derived signature, calling convention, charset/string marshalling, struct layout, ownership, error retrieval, callback lifetime, and architecture | A default marshalling assumption truncates data, leaks a handle, or corrupts layout |
-| COM | Registration/activation model, interface/version, apartment, message pump, marshalled ownership, release owner, and deployment | A thread/apartment transition deadlocks or final release occurs on the wrong owner |
-| Desktop UI | Framework-specific dispatcher, thread affinity, reentrancy, cancellation, background result handoff, and teardown | Sync wait deadlocks, background code touches UI state, or dispatcher work outlives the view |
-| Deployment | Target framework, RID, host/runtime availability, framework-dependent or self-contained mode, single-file/trim/AOT options, native assets, and update/rollback | The artifact is built for a different runtime, architecture, OS, or publish mode |
+| Trimming | Publish options; reflection/serialization/DI roots; annotations/descriptors; warning owner; plugins; smoke entry. | Suppressed warning or publish-only missing member. |
+| Native AOT | Feature support; dynamic code/reflection; native dependencies; RID; diagnostics; size/startup goal; fallback. | Target behavior absent after successful compile. |
+| Loading | Context owner; probes; shared contracts; versions; unload roots; concurrency; native resolution; trust. | Split type identity or callbacks/caches prevent unload. |
+| P/Invoke | Header signature; convention; charset; layout; ownership; error; callback lifetime; architecture. | Truncation, leak, or corruption. |
+| COM | Registration/activation; interface/version; apartment/pump; ownership/release; deployment. | Deadlock or wrong-owner release. |
+| Desktop UI | Dispatcher/affinity; reentrancy; cancellation; result handoff; teardown. | Deadlock, off-owner access, or work outliving view. |
+| Deployment | Framework; RID; host/runtime; dependent/self-contained; single-file/trim/AOT; native assets; update/rollback. | Wrong runtime, architecture, OS, or mode. |
 
 ## Required Proof
 
-- Build and exercise the exact publish mode and target RID, including a dynamically reached entry point and native dependency when present.
-- For custom loading, prove shared-contract identity, failure resolution, concurrent load behavior, and unload after callbacks/caches are released.
-- For native/COM/UI boundaries, exercise invalid input, native failure, cancellation, wrong-thread access, and teardown on the target architecture/host.
+- Exercise publish mode/RID, dynamic reachability, and native dependencies.
+- Prove loading identity, failure resolution, concurrent load, and unload after callback/cache release.
+- Exercise invalid input, native failure, cancellation, wrong-thread access, and teardown on host.
 
 ## Primary Sources
 
-- [Native AOT deployment](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/)
-- [Fix trimming warnings](https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/fixing-warnings)
-- [AssemblyLoadContext concepts](https://learn.microsoft.com/en-us/dotnet/core/dependency-loading/understanding-assemblyloadcontext)
-- [Native interoperability best practices](https://learn.microsoft.com/en-us/dotnet/standard/native-interop/best-practices)
-- [Interoperate with unmanaged code](https://learn.microsoft.com/en-us/dotnet/framework/interop/)
-- [WPF threading model](https://learn.microsoft.com/en-us/dotnet/desktop/wpf/advanced/threading-model)
-- [dotnet publish](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-publish)
-- [.NET RID catalog](https://learn.microsoft.com/en-us/dotnet/core/rid-catalog)
+[Native AOT](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/), [trimming](https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/fixing-warnings), [loading](https://learn.microsoft.com/en-us/dotnet/core/dependency-loading/understanding-assemblyloadcontext), [native interop](https://learn.microsoft.com/en-us/dotnet/standard/native-interop/best-practices), [unmanaged interop](https://learn.microsoft.com/en-us/dotnet/framework/interop/), [WPF](https://learn.microsoft.com/en-us/dotnet/desktop/wpf/advanced/threading-model), [publish](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-publish), [RIDs](https://learn.microsoft.com/en-us/dotnet/core/rid-catalog). Accessed 2026-07-24.
 
-Official pages in this reference were recorded as accessed on 2026-07-24.
+## Proof Limits
 
-## Version And Inference Limits
+Rolling sources require SDK/runtime, framework/UI, RID, OS/architecture, publish, native/COM evidence. Do not transfer `AssemblyLoadContext` to .NET Framework or WPF rules across UI frameworks. They do not prove reachability, ABI, apartment state, host availability, or performance.
 
-- Microsoft Learn is rolling and version-selectable; prove SDK/runtime, target framework, desktop framework, RID, OS/architecture, publish properties, and native/COM versions.
-- Do not infer .NET 5+ `AssemblyLoadContext` guidance for .NET Framework or generalize WPF dispatcher rules to other UI frameworks.
-- Documentation does not prove project reachability, native ABI correctness, COM registration/apartment state, target-host availability, or production performance.
+## Required Record And Rejections
 
-## Required Record
-
-- Record the runtime and publish target, reachability/loading owner, ABI/apartment/dispatcher contract, exercised target artifact, proof limits, and residual risk.
+- Record target, loading owner, ABI/apartment/dispatcher, exercised artifact, limits, residual risk.
+- Reject build or nullable/type syntax as runtime, immutability, loading, AOT, UI, or deployment proof.

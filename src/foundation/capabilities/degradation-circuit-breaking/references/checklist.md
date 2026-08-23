@@ -10,3 +10,17 @@
 - Validate config, feature flag, provider mode, or kill-switch defaults, owner, rollback, and cleanup.
 - Observe fallback usage, circuit state, timeout/retry counts, dependency health, and user impact.
 - Map every timeout, retry, circuit, bulkhead, fallback, degraded response, config, metric, and chaos/test decision to validation evidence or residual risk.
+
+## Anti-Patterns
+
+- Nested timeouts can exceed the caller deadline unless budgets flow downstream.
+- Allow layered retries because they multiply dependency load.
+- Skip jitter when concurrent callers can synchronize retries.
+- Continue ordinary attempts while the circuit breaker is open.
+- A stale or empty fallback is user-visible behavior, not a neutral implementation detail.
+
+## Execution Checklist
+
+1. Map dependency criticality, caller deadline, immutable gateway ceilings or out-of-chain local ceilings, resource pool, and fallback authority.
+2. Record dependency connection/read/phase timeouts and the actual retry policy beneath those ceilings, plus fallback, bulkhead, breaker states, probes, and recovery criteria.
+3. Verify timeout exhaustion, amplification, fallback, isolation, and half-open recovery.

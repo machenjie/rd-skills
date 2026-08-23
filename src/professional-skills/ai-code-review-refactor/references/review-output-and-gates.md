@@ -1,55 +1,30 @@
 # AI Review Output And Gates
 
-Load only for an L5 implementation or repair-diff review that needs the full finding, approval, blocked, or repair/re-review contract.
+Load only for an L5 implementation or repair-diff review needing the full finding, decision, blocked, or re-review contract.
 
 ## Do Not Load
 
-Do not load when the root output contract or compact checklist is sufficient. An inaccessible actual diff blocks implementation review; it does not permit review from a changed-file summary. This reference governs AI-review judgment; named Layer 3 Skills own specialized architecture, security, contract, test, and implementation decisions.
+Skip when the compact root is sufficient. An unavailable actual diff blocks implementation review. This Reference owns review judgment; selected Layer 3 Skills own specialized decisions.
 
 ## Output Contract
 
-Return these sections in order:
+Return in this order:
 
-1. **Findings:** Put Critical, High, Medium, and Low findings first.
-   - For each finding, give its path and line or symbol, reachable failure scenario, and source evidence.
-   - State user or system impact and severity rationale.
-   - State the required outcome and a correction direction without implementing it.
-   - If no findings exist, say so explicitly.
-2. **Review decision:**
-   - Record specification compliance before code quality, then `Approved`, `Returned for remediation`, or `Blocked`.
-   - Use `Blocked` only for unavailable required evidence or unverifiable scope, naming the missing evidence, unverified scope, and unblock condition.
-   - Number remediation actions and state exactly what an approval covers and excludes.
-3. **Reviewed scope:** Name the actual diff, every changed file inspected, relevant source and tests read, and any changed or reachable boundary left unreviewed. Record implementer/reviewer separation.
-4. **Source-to-impact evidence:** Tie current evidence to the affected acceptance criterion or reachable impact path.
-   - Use the diff, source, tests, contracts, validation, or authoritative dependency metadata.
-   - Link each finding through the applicable call, state, contract, or affected invariant.
-   - Distinguish facts from assumptions and unverified behavior.
-5. **Behavior preservation:** For a refactor or repair, state which affected invariants and observable behavior remain unchanged.
-   - Name the proof, changed-code-to-test coverage, and any intentional delta.
-   - Report same-pattern scope, result, and exclusions only when the failure mechanism credibly recurs.
-   - Summarize reuse or placement only when that decision was triggered and assigned.
-6. **Repair and re-review:** Map each blocking finding to its required repair.
-   - Identify the stage that must be re-reviewed.
-   - Close the finding only against the latest repair diff plus fresh validation.
-7. **Evidence limits and next action:** Record each validation or command actually run with its outcome, plus stale, skipped, or unavailable checks. The same evidence states its proof limits, residual risk, and recommended next owner and action.
+1. **Findings:** list Critical/High/Medium/Low findings first; give path/line or symbol, reachable failure, evidence, impact, severity, required outcome, and non-implementing correction direction. State explicitly when none exist.
+2. **Review decision:** assess specification before quality; choose `Approved`, `Returned for remediation`, or evidence-blocked `Blocked`; number remediation and bound approval/exclusions.
+3. **Reviewed scope:** name actual diff, inspected changed files/source/tests, unreviewed reachable boundaries, and implementer/reviewer separation.
+4. **Source-to-impact evidence:** connect each finding to acceptance/invariant through current diff, source, tests, contracts, validation, or authoritative metadata; separate fact, assumption, and unverified behavior.
+5. **Behavior preservation:** for repair/refactor, state invariant/observable preservation, proof and changed-code coverage, intentional delta, and warranted same-pattern/reuse/placement scope.
+6. **Repair and re-review:** map blocking findings to repair and re-review stage; close only against latest repair diff plus fresh validation.
+7. **Evidence limits and next action:** record each run and result, stale/skipped/unavailable checks, proof limits, residual risk, and next owner/action.
 
 ## Quality Gate
 
-1. Report a finding only when current diff, source, test, contract, validation, or authoritative dependency evidence supports an acceptance gap or reachable source-to-impact path. Otherwise, record the uncertainty as an evidence limit or request the missing proof.
-2. Calibrate severity from credible impact, reachability, affected scope, reversibility, and acceptance or release risk; do not promote style preference into a blocking defect.
-3. When generated code depends on an API, symbol, dependency, or contract that may be invented or version-sensitive, require proof against the declared version. Repository search, typecheck, build output, or authoritative package metadata are candidate mechanisms; cite why the selected evidence is sufficient.
-4. When a refactor or repair may alter observable behavior, require bounded equivalence evidence.
-
-Select characterization, regression, contract, or semantic-diff checks from the affected behavior. Identify uncovered paths explicitly.
-
-5. When the failure mechanism provides a credible recurrence signal, require a same-pattern search scope tied to that mechanism and explain exclusions. Sibling implementations, call sites, or analogous contracts form evidence when warranted; an isolated finding without recurrence evidence does not trigger the scan.
-6. When a finding blocks approval, require repair and fresh relevant validation.
-   - Require independent re-review of the latest diff at the stage that raised the finding.
-   - Do not accept implementer assurance or an earlier passing result as closure.
-7. When specialized risk exceeds assigned skills or evidence, return a handoff naming the triggered owner and required proof.
-   - Examples include sensitive-data, public-contract, schema, cross-boundary, and performance-sensitive impact.
-   - Name a gate or Layer 3 Skill only when selected from the actual risk.
-   - Do not load one by default.
-8. Define approval by the inspected diff, files, contracts, and exercised paths.
-   - When evidence is partial, list uninspected behavior.
-   - Exclude production-safety and broad-equivalence claims that the evidence does not support.
+1. Report findings only from current evidence of an acceptance gap or reachable impact; otherwise record an evidence limit or missing proof.
+2. Calibrate severity by credible impact, reachability, scope, reversibility, and release risk; style alone is non-blocking.
+3. For possibly invented/version-sensitive API or contract use, require sufficient version-bound search, typecheck, build, or authoritative metadata.
+4. When repair/refactor may change behavior, require bounded characterization, regression, contract, or semantic-diff evidence and name uncovered paths.
+5. When recurrence evidence is credible, bind required same-pattern scope and exclusions to its mechanism.
+6. Blocking findings require repair, fresh relevant validation, and independent re-review of the latest diff.
+7. When assigned expertise or evidence is insufficient, hand off the triggered owner and proof; never load a gate by default.
+8. Bound approval to inspected diff/files/contracts/paths; list partial scope and exclude unsupported production-safety or broad-equivalence claims.

@@ -21,20 +21,14 @@ Define operation identity, record/effect coordination, unknown outcomes, late re
 
 ## High-Value Rules
 
-- **Define business identity before choosing a key mechanism.** Bind principal, tenant, subject, operation, canonical request meaning, and version or canonicalization effects into identity matching.
-- **Coordinate the idempotency record with the business side effect.** Map crash windows around acceptance, effect commit, result persistence, publication, and acknowledgement.
-- Choose a mechanism that closes every reachable duplicate-or-loss window.
-- **Specify same-identity concurrency as a state contract.** Define pending, succeeded, failed, and unknown ownership and responses so concurrent arrivals cannot cause duplicate or conflicting business effects or mistake in-flight work for completion.
-- **Treat timeout, cancellation, and transport loss as unknown until commit status is proven.** Reconcile with the authoritative effect before replay unless repeat safety is proven; reuse an established result when it exists.
-- **Derive retention and late-replay behavior from reachable replay sources.** Cover clients, brokers, providers, workflows, backfills, and disaster recovery; define what an expired identity or tombstone permits, rejects, or reconciles.
-- **Bound the aggregate retry budget across layers.** Account for callers, libraries, gateways, queues, schedulers, and workers together; prevent amplification and define cancellation, pacing, recovery, and downstream-load limits from current semantics.
-- **End exhausted or permanent failure in an owned observable state.** Name the authority for reconciliation, compensation, manual recovery, or accepted loss; silent discard and endless retry are invalid terminal behavior.
+- Bind business identity to record/effect coordination and concurrent state.
+- Define unknown outcomes, replay horizon, aggregate retry budget, and owned terminal resolution.
+- Select the named Reference for multi-boundary closure, proof, or competing mechanisms.
+- When the selected idempotency or retry decision remains active, load only its named Reference.
 
 ## Anti-Patterns
 
-- Treat a transport key, request attempt, or caller-generated token as business identity without proving scope, canonical meaning, collision behavior, and authorization.
-- Use check-then-act coordination or infer success or failure from a timeout while record/effect ordering and authoritative status remain unknown.
-- Optimize one retrying layer while ignoring aggregate amplification, late replay, terminal ownership, or cross-tenant result exposure.
+- Do not infer identity, effect status, or replay safety from a transport key, timeout, or one retry layer.
 
 ## Stop Conditions
 

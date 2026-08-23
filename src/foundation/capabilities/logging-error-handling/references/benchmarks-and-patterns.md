@@ -1,33 +1,21 @@
 # Logging And Error Handling Benchmarks And Patterns
 
-Load this reference when error classification, structured schema, trace propagation, redaction, audit separation, or logging proof changes. OWASP/NIST/OpenTelemetry/RFC guidance anchors the decision but does not prove the implementation.
+Use when the logging/error mechanism remains unresolved; skip when current policy selects it.
 
-## Event And Error Contract
+## Root-Relocated Error And Diagnostic Rules
 
-| Surface | Required decision | Guardrail/proof |
-| --- | --- | --- |
-| Expected user/business outcome | Stable client code/remediation and a log level consistent with operator action. | Do not emit system-failure noise or stack traces for routine denied/invalid/not-found/conflict outcomes. |
-| Unexpected/system/dependency failure | Internal cause/stack only where safe, opaque client response, correlation and dependency/retry context. | No raw exception/provider body, SQL, topology, policy, or secret leakage. |
-| Security-relevant outcome | Keep the diagnostic event separate and consume an accepted audit contract when protected actor/action/resource/outcome evidence is required. | Record the audit owner and hand off unresolved semantics, integrity, retention, access, sink, or durability instead of defining the protected record here. |
-| Retry/overload | Classify retryability and circuit/rate state without promising unsafe replay. | Client and log guidance match idempotency and current provider semantics. |
+- **Define error ownership and external meaning.** Preserve causal context across layers while translating only at owned boundaries; distinguish user, domain, dependency, transient, permanent, cancellation, and unexpected outcomes relevant to caller action.
+- **Log an owned diagnostic event, not arbitrary data.** Name audience, decision enabled, event point, stable identity, outcome, and retention need before selecting fields or severity.
+- **Preserve correlation across attempts and effects.** Carry request, operation, trace, job, message, tenant-safe, and real or effective actor identity needed to reconstruct a causal path without confusing retries with distinct business operations.
+- **Classify terminal outcome accurately.** Avoid reporting handled intermediate retries, expected denial, cancellation, or fallback as terminal errors, and avoid hiding exhausted or partially applied work behind informational success.
+- **Minimize sensitive and unbounded content.** Exclude secrets and raw bodies by default, transform personal or regulated fields according to current policy, and bound message, stack, collection, key, and payload expansion.
+- **Control volume and cardinality at the source.** Derive event rate, level, sampling, aggregation, dynamic labels, and hot-path detail from current diagnostic need, cost, and incident consequence.
+- **Separate diagnostics from audit records.** Identify the security-relevant outcome, accepted audit dependency, unresolved semantics, integrity, retention, access, sink, or durability, named specialist handoff, and gap without claiming protected-record closure.
+- Log the same exception at each layer, producing duplicate noise without additional ownership or action.
+- Store raw requests, tokens, personal data, stack detail, or dynamic high-cardinality values because they might help later.
+- Treat a fallback or retry as success while the original failure, final disposition, or lost effect cannot be reconstructed.
 
-## Structured Context, Redaction, And Propagation
+## Comparison And Proof Limits
 
-- Choose fields from the diagnostic need and accepted audit contract. Typical safe fields include timestamp, severity, service/version/environment, event/error code, operation, bounded resource/tenant context, correlation, status, and failure class.
-- At a changed logging or diagnostic boundary, allowlist safe fields. Exclude passwords, cryptographic keys, bearer or session material, sensitive authentication or payment data, unrestricted payloads, query or provider bodies, and unredacted rejected input. Hash or pseudonymize identifiers when direct identity is unnecessary.
-- Bind inbound trace/correlation context before the first log, propagate on outbound calls and async metadata, and extract before consumer work. Start a new trace only for an independent operation with an explicit link.
-- Keep message prose evolvable; dashboards/alerts and client behavior depend on stable structured codes and bounded labels, not free text.
+Expected outcomes use stable remediation and consequence level; unexpected failures keep safe cause, opaque results and retry/correlation. Allowlist fields, propagate context, bound labels and use stable codes. Final-edit fixtures prove named paths, not production sinks/traffic, uninspected adapters, retry policy or protected audit closure; route these to owners.
 
-## Freshness And Validation
-
-| Claim | Evidence and limit |
-| --- | --- |
-| Schema/redaction | Captured output proves required fields and forbidden-field absence for the changed path; local fixtures do not prove sink transforms/retention/access. |
-| Error mapping | Success, expected failure, unexpected failure, dependency failure, and sensitive denial fixtures cover changed branches. |
-| Trace continuity | HTTP/RPC and queue/job test shows context before logs and across the changed boundary. |
-| Audit-contract handoff | Current accepted policy and owner identify required actor/action/resource/outcome evidence, integrity, retention, access, sink, and durability; this Skill verifies only the diagnostic boundary and dependency, not protected-record closure. |
-| Freshness | Inspect current wrappers, middleware, mappers, consumers, clients, sinks and same-pattern paths; rerun after final edit. |
-
-Route public error taxonomy to `error-code-design`, telemetry/cardinality to `observability`, sensitive/audit policy to `security-privacy-gate`, and retry semantics to `idempotency-retry-design`.
-
-Reject blanket `ERROR` logging, client-visible internals, trace ids regenerated mid-request, correlation stored in domain payload, security audit mixed with disposable diagnostics, secret-bearing tool output, or green local assertions reported as live-sink proof.

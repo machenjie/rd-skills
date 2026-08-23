@@ -18,27 +18,21 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when secrets, KM
 
 ## Skill Role
 
-Define secret creation, storage, distribution, use, rotation, revocation, redaction, and exposure response. Exclude general configuration and authentication semantics.
+Own secret exposure, lifecycle, redaction, and recovery.
 
 ## High-Value Rules
 
-- Trace changed values through source and history, CI variables and logs, build cache and image layers, client bundles and source maps, runtime manifests, observability sinks, support exports, backups, and offline consumers.
-- Treat a plausibly exposed credential as compromised according to its authority and policy: contain access, rotate or revoke, verify consumer adoption, then decide whether history or artifact cleanup is also required.
-- Design rotation as a state transition across known consumers. Define overlap or dual-read behavior when required, adoption evidence, revoke criteria, failure recovery, and a forward-safe rollback that does not revive compromised material.
-- Scope storage and decrypt authority by principal, purpose, operation, environment, tenant, and lifetime; include audit, break-glass, deletion recovery, and inaccessible-consumer ownership where material.
-- Keep raw values out of prompts, commands, diffs, fixtures, screenshots, reports, and retained scanner output. Validate transformation-aware redaction with representative secret-bearing shapes and downstream sinks.
-- Separate sensitivity from mechanism: environment variables, encryption, masking, or a managed store do not by themselves prove least privilege, non-exposure, rotation safety, or recovery.
-- Escalate security-sensitive defaults or config changes that weaken authentication, transport, authorization, isolation, rate control, or data protection; general config semantics remain with `configuration-runtime-policy`.
+- Map consumers and exposure paths before controls.
+- Treat plausible exposure or unknown consumers as rotation gaps; masking or deletion is not revocation.
+- Load named lifecycle/redaction/access/recovery References; exclude raw evidence.
 
 ## Anti-Patterns
 
-- Deleting a committed value, masking a CI setting, or removing one log line does not revoke copies already present in history, caches, artifacts, or external sinks.
-- Public build prefixes, client-side config, serialized request objects, crash reports, and support exports can cross the intended audience boundary without an obvious “secret” field name.
-- Rollback to an old compromised value is re-exposure, not recovery.
+- Local success substituted for evidence of the secret configuration security contract.
 
 ## Stop Conditions
 
-- Escalate credible leaks, unknown consumers, broad decrypt/break-glass authority, unsafe rotation, unredacted sinks, unrecoverable key actions, evidence disclosure, or uninspected production-only paths.
+- Stop on leaks, unknown consumers, broad decryption, unsafe rotation, unredacted sinks, unrecoverable keys, or uninspected production paths.
 
 ## Output Contract
 

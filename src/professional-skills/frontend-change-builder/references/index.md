@@ -1,12 +1,16 @@
 # Frontend Change Builder Reference Index
 
-Use this index to load only the local reference needed for the selected frontend risk. Record skipped-reference rationale when a plausible reference is not loaded.
+Load only the named decision Reference selected from the source-owned registry; never preload this index or the Reference set.
 
-| Reference | Load When | Do Not Load When | Depends On | Conflicts With | Max Level | Output Fragment |
-| --- | --- | --- | --- | --- | --- | --- |
-| `../examples/example-output.md` | A builder needs a tiny example before drafting a compact frontend implementation plan. | The body output contract is enough or task evidence must be artifact-specific. | Mode selected, component placement, state owner, API/failure claim, and residual risk. | Treating example text as validation evidence or as a substitute for user-flow/a11y/API proof. | L1 | Compact frontend plan with component, state, accessibility, and tests. |
-| `references/checklist.md` | A bounded L2 review needs a compact frontend inventory for component, route, form, state, API, accessibility, security, performance, or tests. | The inline quality gate is enough or deeper gate/evidence mapping is required. | Changed frontend surface, owner boundary, selected mode, and validation signal. | Checklist completion replacing behavior, accessibility, browser, or screenshot evidence. | L2 | Compact frontend checklist with validation artifact and owner. |
-| `references/solution-optimality.md` | A rendering, state, data-fetching, asset, lifecycle, or interaction-path choice may materially change user experience or browser resource use. | Copy/style changes do not affect runtime behavior, or current design-system/repository evidence already fixes the bounded implementation. | Affected journey, device/network profile, render/data path, current baseline, material alternative, and available evidence. | Memoization, workers, splitting, caching, or "feels fast" claims selected without a reachable delta and current evidence. | L4 | Contextual questions on user impact, main-thread/lifecycle effects, network/data cost, smallest option, and evidence limits. |
-| `references/frontend-output-and-gates.md` | Drafting or reviewing placement decisions, failure contracts, a11y/security gates, same-pattern scans, state-to-validation maps, or closure evidence. | The body output contract and minimal verification are sufficient for the risk. | Boundaries inspected, state/API/failure map, gate owner, validator, artifact, and evidence limits. | Gate matrix used as a substitute for actual tests, scans, browser checks, or residual-risk statement. | L5 | Frontend gate/evidence map, same-pattern scan, and handoff closure. |
-| `references/visual-quality-and-redesign.md` | The user explicitly requests visual polish or redesign, or hierarchy, typography, spacing, density, or composition is an acceptance target. | The frontend task is ordinary behavior work without a visual-quality acceptance target, or reference fidelity alone defines the visual goal. | Current page, components, design system, product intent, user, scenario, and visual acceptance. | Generic visual signals or personal taste treated as mandatory style rules or as authority to rewrite working behavior. | L5 | Selected visual approach, local repair scope, consistency check, and residual risk. |
-| `references/visual-reference-reconstruction.md` | Screenshot, mockup, or reference-image implementation requires visual fidelity or matching the supplied reference. | No visual reference is supplied, or visual polish and redesign do not require matching one. | Supplied visual evidence, repository tokens and components, target states and viewports, and fidelity acceptance. | Pixel imitation that breaks architecture or claims unsupported interaction, responsive, accessibility, or runtime behavior. | L5 | Selected reconstruction approach, visual comparison plan, proof limits, and residual risk. |
+| Reference | Named decision |
+|---|---|
+| `references/checklist.md` | compact bounded inventory |
+| `references/component-placement-and-reuse-gates.md` | placement and reuse |
+| `references/state-ownership-and-api-failure-gates.md` | state and failure |
+| `references/accessibility-closure-gates.md` | accessibility closure |
+| `references/frontend-security-closure-gates.md` | security closure |
+| `references/frontend-quality-and-validation-evidence.md` | quality evidence |
+| `references/same-pattern-scan-and-handoff-evidence.md` | scan and handoff evidence |
+| `references/solution-optimality.md` | material implementation alternative |
+| `references/visual-quality-and-redesign.md` | explicit visual-quality target |
+| `references/visual-reference-reconstruction.md` | supplied visual reference fidelity |

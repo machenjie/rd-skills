@@ -7,10 +7,10 @@ description: "Analyze an API, schema, migration, or compatibility decision with 
 
 ## Role
 
-Support `analysis-agent` and `task-agent` for bounded data and public-contract changes.
+Own evidenced data and public-contract transitions.
 
-- **Analysis mode (`analysis-agent`):** Classify compatibility, migration, and coexistence requirements.
-- **Task mode (`task-agent`):** Apply the accepted transition across producers and consumers.
+- **Analysis mode (`analysis-agent`):** Decide compatibility and coexistence.
+- **Task mode (`task-agent`):** Apply the accepted transition.
 
 ## When To Use
 
@@ -24,46 +24,42 @@ Support `analysis-agent` and `task-agent` for bounded data and public-contract c
 
 ## Required Inputs
 
-- contract evidence
-- compatibility requirements
+- contract evidence and compatibility requirements
 - **Analysis mode (`analysis-agent`):** consumer inventory, deployed versions, and current schema or API behavior.
-- **Task mode (`task-agent`):** accepted contract decision with producer, consumer, migration, and rollback checks.
+- **Task mode (`task-agent`):** accepted contract decision, producer, consumer, migration, and rollback checks.
 
 ## Professional Decision Rules
 
-- Treat API, event, schema, error, and data formats as consumer contracts with explicit compatibility windows.
-- Prefer additive evolution; use expand, migrate, verify, and contract ordering for stateful changes.
-- Identify old/new coexistence, defaults, nullability, versioning, replay, and rollback behavior.
-- Validate producers and consumers, not only the changed implementation.
+- Classify the contract, consumers, deployed versions, and coexistence.
+- Select an additive, versioned, or staged transition from compatibility and rollback evidence.
+- Preserve null, default, generated, replay, and old-client semantics.
+- Verify producers, generated surfaces, and known consumers.
+- Record unverified consumers.
 
 ## High-Value Gotchas
 
-- A nullable or defaulted field can still break semantic compatibility.
-- Rollback may fail after irreversible data contraction.
-- Producer-only tests miss consumer breakage.
+- An additive field can still break strict, exhaustive, generated, or default-sensitive consumers.
+- Rollback cannot restore contracted data or a stranded consumer automatically.
 
 ## Execution Checklist
 
-1. Trace the changed field, schema, error, or event semantics through every known consumer.
-2. Choose an additive, versioned, or staged transition from coexistence and rollback evidence.
-3. Verify defaults, nullability, generated surfaces, replay, and old-client behavior.
-4. **Analysis mode:** select a transition from consumer and coexistence evidence.
-5. **Task mode:** apply the transition across generated and deployed consumer surfaces.
-6. Stop when consumer coverage or rollback feasibility remains unknown.
+1. Inventory the authoritative contract, producers, consumers, deployed versions, and generated surfaces.
+2. Choose one transition and state coexistence, migration, validation, and rollback limits.
+3. Limit loading to the active decision's named Reference, with index/catalog paths excluded.
+4. Prove producer and known-consumer behavior after the final material edit.
+5. Record unknown consumers, external authority, and irreversible limits.
+6. **Analysis mode:** Return the selected transition and proof limits.
+7. **Task mode:** Apply the accepted transition at the producer and consumer owners.
 
 ## Stop / Escalation Conditions
 
-- Stop implementation when compatibility class, known/unknown consumers, old-client behavior, generated artifact diff, migration order, rollback, validation command, or deprecation owner is implicit.
-- Stop breaking changes that remove/rename/change type/semantics until versioning or expand/migrate/contract, migration guide, consumer notification, and rollback evidence are present.
-- Stop schema or data changes when production table size, lock behavior, null/default semantics, old/new version skew, or rollback script is unknown.
-- Stop external actions when generated clients, production data, external
-  consumers, mobile lag, audit data, or releases require additional authority.
-- Require current permission, redaction, approval, and freshness evidence before proceeding.
+- Stop on unresolved compatibility, consumer coverage, generated lineage, migration, rollback, validation, or authority.
 
 ## Output Contract
 
-- **Analysis mode (`analysis-agent`):** contract transition; consumer impact; migration and rollback model.
-- **Task mode (`task-agent`):** producer and consumer changes; compatibility evidence; unverified consumers.
+- contract transition, consumer impact, and compatibility evidence
+- **Analysis mode (`analysis-agent`):** contract transition, consumer impact, and migration and rollback model.
+- **Task mode (`task-agent`):** producer and consumer changes, compatibility evidence, and unverified consumers.
 
 ## Targeted References
 

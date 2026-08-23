@@ -802,16 +802,20 @@ def _direct_rule_ids() -> list[str]:
 
 def _candidate_rule_ids() -> list[str]:
     tree = ast.parse(ORACLE_PATH.read_text(encoding="utf-8"))
-    direct_blueprints = next(
-        ast.literal_eval(node.value)
-        for node in tree.body
-        if isinstance(node, ast.Assign)
-        and any(
-            isinstance(target, ast.Name)
-            and target.id == "_DIRECT_FOUNDATION_SELECTOR_BLUEPRINTS"
-            for target in node.targets
-        )
+    foundation = VALIDATION.load_yaml_file(
+        ROOT / "src/registry/foundation-skills.yaml"
     )
+    direct_blueprints = [
+        (
+            record["selector_id"],
+            tuple(record["selectable_layer3"]),
+            tuple(record["positive_evidence"][:-1]),
+            record["owner_bindings"][0]["primary_skill"],
+            record["owner_bindings"][0]["review_skill"],
+        )
+        for record in foundation["selector_authority"]["selectors"]
+        if record["source"]["kind"] == "direct-static"
+    ]
     direct_selector_ids = [
         selector_id
         for (
@@ -886,7 +890,10 @@ def _test_main_execution(task_id: str) -> dict[str, object]:
                     "plausible_critical": False,
                 }
             ],
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": ["high-risk pre-implementation evidence"],
             "unresolved": [],
             "edit_status": "allowed",
@@ -917,7 +924,10 @@ def _four_foundation_main_execution() -> dict[str, object]:
                     "plausible_critical": False,
                 },
             ],
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": ["high-risk pre-implementation evidence"],
             "unresolved": [],
             "edit_status": "allowed",

@@ -9,6 +9,7 @@ from pathlib import Path
 from capability_coverage import fixture_ids, validate_capability_coverage
 from validation_utils import (
     EXPECTED_PROFESSIONAL_SKILL_COUNT,
+    PROFESSIONAL_BUILT_KERNEL_HEADINGS,
     ValidationProblem,
     empty_markdown_headings,
     fail_many,
@@ -25,18 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SKILLS_ROOT = ROOT / "src" / "professional-skills"
 REGISTRY = ROOT / "src" / "registry" / "professional-skills.yaml"
 CAPABILITY_MATRIX = ROOT / "evals" / "capability-coverage" / "matrix.yaml"
-REQUIRED_SECTIONS = (
-    "Role",
-    "When To Use",
-    "Do Not Use",
-    "Required Inputs",
-    "Professional Decision Rules",
-    "High-Value Gotchas",
-    "Execution Checklist",
-    "Stop / Escalation Conditions",
-    "Output Contract",
-    "Targeted References",
-)
+AUTHORING_DETAIL_SECTIONS = ("High-Value Gotchas", "Execution Checklist")
 FORBIDDEN = (
     "task context compiler",
     "runtime dispatch bridge",
@@ -120,6 +110,34 @@ def _role_labeled_line(section: str, mode: str, role: str) -> str | None:
     return match.group(1).strip() if match else None
 
 
+def _validate_professional_section_contract(
+    body: str,
+    context: str,
+    errors: list[str],
+) -> None:
+    detail_presence = {
+        title: bool(re.search(rf"^## {re.escape(title)}\s*$", body, re.MULTILINE))
+        for title in AUTHORING_DETAIL_SECTIONS
+    }
+    if len(set(detail_presence.values())) != 1:
+        errors.append(
+            f"{context}: 'High-Value Gotchas' and 'Execution Checklist' "
+            "must appear together"
+        )
+    required_sections = [*PROFESSIONAL_BUILT_KERNEL_HEADINGS]
+    if all(detail_presence.values()):
+        insertion = required_sections.index("Stop / Escalation Conditions")
+        required_sections[insertion:insertion] = AUTHORING_DETAIL_SECTIONS
+    required_sections.append("Targeted References")
+    validate_required_sections(
+        body,
+        required_sections,
+        context,
+        errors,
+        require_order=True,
+    )
+
+
 def _generic_permission_scaffold_findings(body: str) -> list[str]:
     """Reject duplicated Profile permissions while allowing professional mode rules."""
 
@@ -165,6 +183,9 @@ def _validate_role_contract(
     do_not_use = _section(body, "Do Not Use")
     required_inputs = _section(body, "Required Inputs")
     execution = _section(body, "Execution Checklist")
+    has_execution = bool(
+        re.search(r"^## Execution Checklist\s*$", body, re.MULTILINE)
+    )
     output = _section(body, "Output Contract")
 
     if GENERIC_TRIGGER_PHRASE in folded_description:
@@ -207,7 +228,7 @@ def _validate_role_contract(
             mode_marker = f"**{mode} mode:**"
             if role_marker not in role_section:
                 errors.append(f"{context}: Role must define {role_marker}")
-            if mode_marker not in execution:
+            if has_execution and mode_marker not in execution:
                 errors.append(f"{context}: Execution Checklist must define {mode_marker}")
             if role_marker not in output:
                 errors.append(f"{context}: Output Contract must define {role_marker}")
@@ -293,7 +314,7 @@ def main() -> int:
                 check_bullets=False,
             )
         _validate_role_contract(entry, metadata, body, context, errors)
-        validate_required_sections(body, REQUIRED_SECTIONS, context, errors, require_order=True)
+        _validate_professional_section_contract(body, context, errors)
         for line_number, _level, title in empty_markdown_headings(body):
             errors.append(f"{context}: empty heading '{title}' at line {line_number}")
         validate_ai_markdown_format(body, context, errors)

@@ -1,6 +1,6 @@
 ---
 name: client-application-testing
-description: "`analysis-agent`/`task-agent`/`review-agent`: use for installed-client lifecycle, permissions, activation, installation, device, or accessibility tests; skip general quality work."
+description: "`analysis-agent`/`task-agent`/`review-agent`: test installed-client lifecycle, permission, activation, installation, device, or accessibility behavior; skip general quality."
 ---
 
 # client-application-testing
@@ -17,28 +17,21 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use for installed-cl
 
 ## Skill Role
 
-Select client-specific interruption paths, application artifacts, environment dimensions, observable oracles, and cleanup. Exclude general test strategy, release verdicts, platform API instructions, and accessibility conformance decisions.
+Own client interruption, artifact, environment, oracle, and cleanup decisions; exclude general strategy, release, platform, and accessibility-conformance decisions.
 
 ## High-Value Rules
 
-- **Derive the matrix from the changed client risk.** Retain only lifecycle, integration, environment, and artifact dimensions that can alter the accepted behavior.
-- **Match the test boundary to the failure mechanism.** Keep pure policy tests local while exercising operating-system lifecycle, activation, packaging, and resource pressure in a capable client environment.
-- **Separate background and return, UI recreation, process termination and relaunch, crash recovery, and low-memory response into distinct interruption paths.**
-- **Exercise permission loss as a state transition.** Cover initial denial, later grant, revocation while inactive, process termination where applicable, and recovery without stale authority.
-- **Test every external entry from cold and warm state.** Validate deep links and notifications for duplicate delivery, malformed input, wrong account, unavailable content, and existing-instance activation.
-- **Verify storage across artifact transitions.** Test fresh install, upgrade, incompatible data, logout, account switch, and uninstall against the intended preserve, migrate, or clear behavior.
-- **Select environment dimensions explicitly.** Name supported device class, operating-system version, architecture, locale, timezone, font scale, assistive technology, and memory class instead of claiming an unbounded matrix.
-- **Assert user outcomes and durable effects.** Reset application, server, clock, network, permission, notification, and device state so a passing rerun cannot inherit success.
+- Derive the smallest client matrix for the named failure.
+- For the named client failure, bind its oracle to clean state and a release-equivalent artifact.
+- Select `client-test-matrix.md` only when client dimensions compete.
 
 ## Anti-Patterns
 
-- Treat activity or window recreation as proof of full process death and relaunch.
-- Promote one simulator, emulator, architecture, or debug build to the supported client matrix.
-- Use screenshots or automation-tree presence as the sole oracle for interaction or assistive-technology behavior.
+- Local success substituted for evidence of the client application testing contract.
 
 ## Stop Conditions
 
-Stop when the supported client matrix, install artifact, required operating-system control, or cleanup authority is unavailable. Report skipped hardware, versions, accessibility checks, and destructive install states rather than converting them to passes.
+Stop without the matrix, artifact, OS control, or cleanup authority. Record skipped hardware, versions, accessibility, and destructive-install states as limits.
 
 ## Output Contract
 

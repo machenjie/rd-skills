@@ -99,7 +99,10 @@ def _main_execution(task_id: str) -> dict[str, object]:
                     "plausible_critical": False,
                 }
             ],
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": ["high-risk pre-implementation evidence"],
             "unresolved": [],
             "edit_status": "allowed",

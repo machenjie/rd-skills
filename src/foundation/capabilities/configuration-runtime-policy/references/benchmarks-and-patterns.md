@@ -1,60 +1,26 @@
-# Configuration Runtime Policy Benchmarks And Patterns
+# Configuration Runtime Policy Mechanism Benchmarks
 
-Use this reference when `configuration-runtime-policy` needs more depth than the main `SKILL.md` should carry efficiently. Keep the body focused on route-time policy and evidence.
-Use this file for config taxonomy, precedence, lifecycle patterns, graph variants, cleanup debt, and anti-pattern review.
+Use this benchmark-pattern Reference only when precedence, reload, rollout, kill-switch, variant, or cleanup mechanism remains unsettled.
 
-## Benchmark Anchors
+## Mechanism Comparison
 
-- Twelve-factor config: environment-specific behavior belongs in explicit configuration, not hidden code branches.
-- Typed config binding and JSON Schema/OpenAPI-style validation: invalid values should fail before use.
-- Progressive delivery and feature flag lifecycle practice: rollout state needs owner, telemetry, cleanup, and rollback.
-- Kill-switch design: mitigation should state fail-open/fail-closed posture, blast radius, and re-enable path.
-- Policy-as-code and audit-ready change records: operator changes need visible owner, audit, and proof.
-- Config observability: expose safe effective state and version without leaking secrets or tenant/user data.
-
-## Config Classification Matrix
-
-| Config class | Required policy | Escalate when |
+| Class | Required policy | Escalation boundary |
 | --- | --- | --- |
-| Build/deploy config | Type, default, env/profile matrix, validation before artifact or deploy. | Artifact is baked with unsafe or ambiguous value. |
-| Runtime/remote config | Atomic apply, validation-before-use, version, last-good rollback, audit. | Hot reload can produce mixed versions under traffic. |
-| Feature flag | Type, owner, reason, expiry, telemetry, cleanup issue, old/new path tests. | Flag changes auth, tenant, money, migration, or availability. |
-| Kill switch | Default posture, trigger, blast radius, runbook, re-enable and rollback. | Mitigation weakens security or data integrity. |
-| Targeting/experiment | Assignment rule, precedence, exposure event, guardrail metrics, audit. | Cross-tenant leakage or SRM/sample-ratio risk is plausible. |
-| Mode/kind/provider | Bounded enum, graph variant, rejected values, startup fail-fast. | It becomes an unowned strategy registry. |
-| Stale cleanup | Usage evidence, owner, removal condition, rollback after deletion. | Deletion affects public/operator behavior or migration rollback. |
+| Build/deploy config | Type, default, environment matrix, validation before artifact/deploy. | Unsafe or ambiguous baked value. |
+| Runtime/remote config | Validate before atomic apply; expose version/current state and last-good rollback. | Mixed versions under traffic. |
+| Feature flag | Type, owner, reason, expiry, telemetry, cleanup, and old/new tests. | Auth, tenant, money, migration, or availability changes. |
+| Kill switch | Default posture, trigger, blast radius, runbook, re-enable, and rollback. | Mitigation weakens security or integrity. |
+| Targeting/experiment | Assignment, precedence, exposure event, guardrails, and audit. | Cross-tenant leakage or sample-ratio risk. |
+| Mode/kind/provider | Bounded enum, graph variants, rejected values, and startup fail-fast. | Unowned strategy registry. |
+| Stale cleanup | Usage evidence, owner, removal condition, and rollback after deletion. | Public/operator or migration-recovery impact. |
 
-## Precedence Pattern
+## Selection Rules
 
-```text
-effective_config =
-  operator emergency override
-  > tenant override
-  > user or cohort assignment
-  > remote runtime config
-  > environment or deploy profile
-  > config file
-  > code default
-```
-
-State the real order used by the system. Do not copy this order unless it matches current source.
-
-## Anti-Patterns To Reject
-
-| Anti-pattern | Failure | Safer treatment |
-| --- | --- | --- |
-| Boolean flag without type, owner, or expiry. | Temporary behavior becomes permanent architecture. | Flag taxonomy, owner, telemetry, cleanup issue, and old/new tests. |
-| Runtime config bypasses invariant. | Permission, tenant, validation, transaction, or audit rule becomes optional. | Move invariant into code or fail closed with specialist review. |
-| Late validation. | Invalid config starts and fails under traffic. | Validate at build, deploy, startup, load, or before apply. |
-| Mode string grows branches. | Hidden strategy registry bypasses design review. | Bounded enum, variant matrix, and design-pattern handoff. |
-| Secret in ordinary config. | Secret leaks through logs, docs, frontend, traces, or generated artifacts. | Route to secret configuration boundary. |
-| Happy-path-only validation. | Unsafe variant combinations escape tests. | Key-to-test matrix with skipped combinations disclosed. |
+- Record the actual precedence from code default through file, environment/deploy, runtime, cohort/user/tenant, and emergency override.
+- When current source does not match a generic precedence order, do not copy that order.
+- Validate typed values before use, preserve protected invariants, expose safe effective version/state, and recover atomically to a known-good value.
+- When these failure modes are reachable, reject ownerless flags, late validation, invariant bypass, hidden strategy registries, secret-bearing ordinary config, and happy-path-only variant coverage.
 
 ## Handoff Boundaries
 
-- Use `secret-configuration-security` for secrets, public-prefix frontend variables, credentials, KMS, or sensitive defaults.
-- Use `delivery-release-gate` for rollout execution, environment mutation, deploy sequencing, and rollback operations.
-- Use `dependency-wiring-lifecycle` when config selects graph construction or provider variants.
-- Use `cleanup-deletion-governance` for stale flag removal.
-- Use `experience-impact-modeler` or `bigdata-product-extension` for experiment exposure, guardrails, or SRM concerns.
-- Use `quality-test-gate` or `targeted-validation-selection` when variant coverage is the main gap.
+- Route secrets to `secret-configuration-security`, release mutation to `delivery-release-gate`, graph construction to `dependency-wiring-lifecycle`, stale removal to `cleanup-deletion-governance`, experiment semantics to `experience-impact-modeler` or `bigdata-product-extension`, and variant coverage to `quality-test-gate` or `targeted-validation-selection`.

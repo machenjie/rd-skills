@@ -17,30 +17,21 @@ description: "Use with analysis-agent, task-agent, or review-agent for task-loca
 
 ## Skill Role
 
-Protect authentication issuance, transport, storage, renewal, privilege change, rotation, revocation, logout, recovery, linking, and compromise response.
+Own authentication lifecycle, recovery, linking, federation, and compromise.
 
 ## High-Value Rules
 
-- Start from the current threat model, identity provider, assurance requirement, organization policy, regulatory boundary, performance budget, and recovery UX; do not substitute fixed credential, token, cookie, magic-link, or MFA values.
-- When local passwords are stored, use a platform-supported password hashing/KDF with policy-derived parameters and measured capacity instead of fast hashes or custom cryptography.
-- Define credential lifecycle controls across issuance, transport, storage, renewal, privilege change, rotation, revocation, logout, and compromise response.
-- Select session or token controls from the actual client, identity provider, deployment, and replay boundary.
-- Treat recovery and account linking as authentication paths. Choose factor strength, rate controls, notifications, verification, session invalidation, and negative-flow proof from takeover impact and current policy.
+- Select controls from threat/provider/client/policy evidence.
+- Define lifecycle, recovery/linking/federation, and compromise outcomes.
+- Select one active named Reference.
 
 ## Anti-Patterns
 
-- Clearing a client cookie is not revocation when a refresh token or server session remains valid.
-- Recovery, email change, federation, or account linking can bypass stronger controls on the primary login path.
-
-## Execution Checklist
-
-1. Map actors, credentials, IdP trust, session/token families, privilege transitions, recovery paths, and compromise events.
-2. Verify current provider capabilities, signing/key policy, browser cookie model, revocation store, performance/UX constraints, and applicable organizational policy before choosing controls.
-3. Prove reachable attack paths and record untested paths, evidence limits, and residual takeover risk.
+- Local success is insufficient.
 
 ## Stop Conditions
 
-- Escalate admin/payment actions, regulated data, account recovery/linking, federation trust, elevated service accounts, persistent device trust, or cross-domain cookies when the threat model, IdP evidence, exception owner, or residual takeover risk is unclear.
+- Stop on unclear controls, exceptions, or takeover risk.
 
 ## Output Contract
 

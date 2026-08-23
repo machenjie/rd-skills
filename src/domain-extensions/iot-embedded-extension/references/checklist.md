@@ -1,19 +1,25 @@
 # IoT Embedded Extension Checklist
 
-- Model reachable device lifecycle across provisioning, activation, operation, degradation, update, rollback, reset, decommission, replacement, loss, and ownership transfer. Assign transition authority and reset or retirement outcomes for credentials, binding, protected state, retained data, and cloud authorization.
-- Define offline buffering, retry identity and budget, duplicate or reordered delivery, command expiry, reconnect, cloud reconciliation, and behavior when connectivity-dependent recovery is unavailable.
-- Define update compatibility, image validation, write and activation boundaries, staged exposure, rollback, and recovery. Bootloader and flash guarantees determine storage and activation controls.
-- Track third-party firmware component and SBOM identity, vulnerabilities, and support lifecycle across fleet releases.
-- Version protocol schema and command semantics; define required fields, ordering, duplicate behavior, authentication, deprecation, mixed-fleet compatibility, and recovery from partial or unsupported messages.
-- Define trusted wall-clock sources, drift bounds, no-RTC startup semantics, resynchronization discontinuities, monotonic-time uses, expiry behavior, and event ordering across reboot and offline intervals.
-- Derive CPU, memory, storage endurance, battery, bandwidth, thermal, and real-time budgets together with overload and exhaustion behavior from component limits and representative workloads.
+## Lifecycle
 
-Timing proof uses a defensible upper-bound method across reachable paths, interrupts, interference, locking, priority, and scheduling. Observed maxima are corroboration; unsupported conditions remain residual risk.
-- For material physical impact, define safe state, emergency action, local override, notification, command rejection, reset behavior, and fault containment. Current hazard analysis supplies the governing evidence.
-- Map device identity, attestation, firmware integrity, clone detection, command authority, credential rotation and revocation, tamper signals, and duplicate-identity outcomes across affected trust boundaries. The map includes attestation-loss recovery across device, edge, network, and cloud.
-- For manufacturing and first boot, define identity issuance, binding, secret injection or derivation, trust-chain rotation, custody, and audit evidence. The lifecycle covers rework, duplicates, ownership transfer, and recovery from lost, expired, or invalid initial credentials.
-- Choose disablement or authenticated authorization for production JTAG, UART, SWD, or comparable debug paths from serviceability and threat evidence. Production evidence covers configuration, re-enable authority, traceability, secret-exposure behavior, and supported revisions in scope.
-- When older firmware violates security, data, safety, or compatibility, define trusted version authority and downgrade or recovery policy. Protected-state evidence covers monotonic counters or equivalent mechanisms under brownout, replacement, factory reset, and service recovery.
-- When boot failure can strand a device or energize unsafe state, define boot-loop detection evidence, recovery authority, and a bootable, serviceable, or safe target. The recovery contract covers behavior when its image or required connectivity is unavailable.
-- Use risk-selected simulator, HIL, degraded-network, power-loss, rollback, and fault-injection runs as sampled corroboration across representative hardware revisions rather than worst-case timing evidence.
-- Monitor the selected fleet-health, firmware, boot-loop, credential, telemetry-lag, command, resource, update, connectivity, and safety signals; define bounded labels, alert ownership, and field-recovery action.
+- Prove update recovery through image validation, atomic activation, last-known-good boot, power-loss behavior, mixed-fleet compatibility, rollback, and offline recovery.
+- Map provisioning, operation, update, reset, retirement, transfer, and loss to authority and credential, binding, protected-state, retained-data, and cloud outcomes.
+- Define buffering, retry identity/budget, duplicates/reordering, command expiry, reconnect, reconciliation, and behavior without network recovery.
+- Bind firmware/SBOM identity, vulnerabilities, support lifecycle, protocol/command versions, authentication, deprecation, and unsupported-message recovery to releases.
+- Define clock trust, drift, no-RTC startup, resynchronization, monotonic time, expiry, and reboot/offline ordering.
+- Derive compute, memory, endurance, power, bandwidth, thermal, and real-time budgets plus overload/exhaustion behavior from limits.
+
+## Safety And Identity
+
+- Treat timing evidence as a path bound across interrupts, interference, locking, priority, and scheduling, with observed maxima sampled and unsupported conditions residual.
+- Bind physical-impact safe state, emergency action, local override, notification, command rejection, reset, and containment to hazard evidence.
+- Map identity, attestation, integrity, clone detection, command authority, credential rotation and revocation, tamper, duplicates, and attestation-loss recovery across affected trust boundaries.
+- Bind manufacturing identity, secret injection/derivation, custody, audit, rework, transfer, and invalid credential recovery to its trust chain.
+- Select authorization or disablement for production debug from threat/service evidence, including re-enable authority, traceability, secret-exposure behavior, and supported revisions in scope.
+- For unsafe old firmware, bind downgrade/recovery to trusted version authority and protected-state behavior under brownout, replacement, reset, and service.
+- Stranding/unsafe-boot risk requires boot-loop detection evidence, recovery authority, a bootable, serviceable, or safe target, and behavior when its image or connectivity is unavailable.
+
+## Evidence
+
+- Use simulator, HIL, degraded-network, power-loss, rollback, and fault-injection runs as samples, not worst-case timing proof.
+- Monitor fleet health, firmware, boot loops, credentials, telemetry lag, commands, resources, update, connectivity, and safety with bounded labels, alert ownership, and field-recovery action.

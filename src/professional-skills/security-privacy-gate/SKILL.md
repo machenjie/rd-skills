@@ -7,9 +7,9 @@ description: "Use `analysis-agent` to analyze permissions, secrets, sensitive da
 
 ## Role
 
-- **Analysis mode (`analysis-agent`):** Model reachable abuse paths and select controls.
-- **Task mode (`task-agent`):** Apply accepted trust-boundary controls.
-- **Review mode (`review-agent`):** Judge controls against reachable abuse paths.
+- **Analysis mode (`analysis-agent`):** Trace paths.
+- **Task mode (`task-agent`):** Apply controls.
+- **Review mode (`review-agent`):** Judge proof.
 
 ## When To Use
 
@@ -29,20 +29,16 @@ description: "Use `analysis-agent` to analyze permissions, secrets, sensitive da
 
 ## Required Inputs
 
-- acceptance
-- trust boundary summary
+- acceptance and trust boundary summary
 - **Analysis mode (`analysis-agent`):** affected assets, actors, entry points, sinks, and current control evidence.
-- **Task mode (`task-agent`):** accepted control decision with denied-path and abuse-case checks.
-- **Review mode (`review-agent`):** changed trust boundary with exploit-relevant evidence.
+- **Task mode (`task-agent`):** accepted control decision and denied-path and abuse-case checks.
+- **Review mode (`review-agent`):** changed trust boundary and exploit-relevant evidence.
 
 ## Professional Decision Rules
 
-- Model affected assets, actors, trust boundaries, abuse paths, and data lifecycle before selecting controls.
-- Mutability or future replacement alone does not prove a reachable abuse path.
-- Bounded same-principal non-sensitive local access without privilege elevation or a less-trusted writer is not a material trust-boundary change by itself.
-- Enforce changed actor, object, or tenant authorization from authenticated server context; UI hiding is not authorization.
-- Select controls from the actual sink, deployment, data classification, effective policy, and reachable abuse path.
-- Validate triggered negative paths with explicit residual exposure when dynamic proof is unavailable.
+- Trace authority to asset and sink.
+- Gate controls on current denial/containment evidence.
+- Reject abuse without a privilege path or less-trusted writer.
 
 ## High-Value Gotchas
 
@@ -51,25 +47,21 @@ description: "Use `analysis-agent` to analyze permissions, secrets, sensitive da
 
 ## Execution Checklist
 
-1. Trace attacker-controlled data and authority from entry point to asset, sink, and disclosure path.
-2. Choose authorization, validation, containment, and lifecycle controls from the reachable abuse path.
-3. Verify denied cases, tenant isolation, secret handling, and residual exposure where triggered.
-4. **Analysis mode:** select controls from the reachable abuse path.
-5. **Task mode:** apply controls at the effective trust boundary.
-6. **Review mode:** judge denied paths, containment, and residual exposure.
-7. Stop when trust boundaries, policy, or exploit-relevant evidence remain unknown.
+1. Confirm the active asset, actor, controlled source, reachable sink, and accountable owner.
+2. Select the named Reference owning the reachable-path control decision.
+3. Verify denied behavior, containment, proof limits, and residual exposure.
+4. Stop when exploit-relevant evidence does not establish policy, reachability, and control applicability.
+5. **Analysis mode:** Select controls from the reachable path.
+6. **Task mode:** Apply controls at the effective boundary.
+7. **Review mode:** Judge denied paths, containment, and residual exposure.
 
 ## Stop / Escalation Conditions
 
-- Block authorization, tenant, or session changes without server-side denied-path proof; require CSRF proof only for unproven ambient browser authority.
-- Block attacker-controlled data reaching a sensitive sink without abuse-path proof and a sink-specific control.
-- Block secret, dependency, cloud, or key work without an owner, policy, containment, and rotation path.
-- Block privacy or compliance closure when a triggered obligation lacks control, evidence, owner, or exception.
-- Set severity from exploitability and current release policy, not scanner labels.
-- Refuse risky tool execution without authority, isolation, recovery, and redaction evidence.
+- Stop on incomplete security closure evidence.
 
 ## Output Contract
 
+- abuse-path model; trust-boundary changes; security verdict.
 - **Analysis mode (`analysis-agent`):** abuse-path model; control strategy; unknown exposure.
 - **Task mode (`task-agent`):** trust-boundary changes; denied-case evidence; unverified exposure.
 - **Review mode (`review-agent`):** security verdict; reachable findings; residual exposure.

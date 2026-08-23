@@ -1,5 +1,7 @@
 # Package Dependency Evidence Patterns
 
+**Treat lifecycle code as executable supply chain.** Inspect install hooks, build plugins, generators, native extensions, downloaded binaries, registry provenance, checksums, and credential exposure according to current trust policy.
+
 Use this reference when dependency approval depends on repository inspection, prior task evidence, observable action sequence, validation freshness, tool permission boundaries, generated artifacts, or production evidence limits. Keep it as an evidence map, not a package-manager tutorial.
 
 ## Dependency Change-To-Evidence Map

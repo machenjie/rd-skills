@@ -26,6 +26,7 @@ Use this reference when a change adds test helpers, fixtures, factories, golden 
 
 ## Mock Boundary Rules
 
+- Mock-heavy tests can prove the mock instead of the real boundary.
 - Mock external systems, public module APIs, time, randomness, and slow side-effect boundaries.
 - Test refactored code through observable behavior rather than mocked internal implementation details.
 - If a mock encodes provider behavior, validate the assumption with contract or integration evidence.

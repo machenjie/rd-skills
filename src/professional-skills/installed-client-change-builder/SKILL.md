@@ -1,14 +1,13 @@
 ---
 name: installed-client-change-builder
-description: "Use `task-agent` for accepted Android, iOS/iPadOS, desktop, or cross-platform installed-client source changes. Skip browser/PWA-only, backend, infrastructure, release approval, and independent review work."
+description: "`task-agent`: installed-client implementation; skip browser/PWA, backend, infrastructure, planning, release, and review."
 ---
 
 # installed-client-change-builder
 
 ## Role
 
-Support `task-agent` in changing installed application source while preserving
-platform lifecycle, local state, operating-system integration, and packaging behavior.
+Support `task-agent` inside the accepted installed-client boundary.
 
 ## When To Use
 
@@ -25,59 +24,40 @@ platform lifecycle, local state, operating-system integration, and packaging beh
 
 ## Required Inputs
 
-- accepted design and observable client behavior
-- exact target platforms, framework versions, and build variants
-- UI, state, lifecycle, persistence, and platform-integration ownership
-- API compatibility, permission, packaging, and non-production validation constraints
+- Accepted behavior, owners, targets, repository-pinned versions, boundaries, and validation; source records accessed 2026-07-24.
 
 ## Professional Decision Rules
 
-- Keep presentation state in the narrowest current owner across shared and native layers.
-- Model cold start, foreground, background, suspension, termination, and restoration separately when they are reachable.
-- Preserve denial, revocation, deep-link, notification, local-data, offline, and operating-system integration outcomes when affected.
-- Confirm API and stored-data compatibility across supported client versions before changing a shared contract.
-- Validate shared behavior on every affected native target.
-- Do not treat framework-only tests as platform-packaging proof.
-- Treat build targets and release configuration as evidence; never infer target platforms from the framework name.
+- Preserve the accepted route/targets through active named References and carriers.
+- Inspect owner, consumers, tests, and target/package facts before the smallest complete change.
+- Record target checks, unavailable evidence, proof limits, and residual risk.
 
 ## High-Value Gotchas
 
-- A framework lifecycle callback does not prove survival after operating-system process termination.
-- Permissions can be denied or revoked outside the current screen flow.
-- Deep links and notifications can enter through cold, warm, or already-running paths.
-- Local data and queued offline work can outlive the client or server version that created them.
-- A successful shared test can miss native manifest, entitlement, signing, or package defects.
+- Keep the selected installed client change builder decision within its declared owner, inputs, stops, and output contract.
 
 ## Execution Checklist
 
-1. Inspect the accepted design, current owner, minimum consumer, tests, build targets, and release configuration.
-2. Map normal, denied, invalid, interrupted, offline, restored, and version-skew outcomes that the change can reach.
-3. Reuse the current platform seam and implement the smallest complete source change.
-4. Run target-relevant unit, UI, lifecycle, persistence, permission, link, notification, offline, and compatibility checks.
-5. Build or render affected packages when packaging metadata or native integration changes.
-6. Stop closure when any affected path lacks fresh evidence.
+1. Apply the decision rules above in order.
 
 ## Stop / Escalation Conditions
 
-- Stop implementation when target discovery remains inconclusive after repository inspection.
-- Ask one bounded target question after that inspection remains inconclusive.
-- Stop when UI/state ownership, lifecycle restoration, local-data migration, permission behavior, or API compatibility remains implicit.
-- Stop when an affected native target, SDK, entitlement, manifest, signing identity, package format, or test environment cannot be inspected.
-- Route production release, store submission or approval, staged rollout, and rollback decisions to `delivery-release-gate`.
-- Do not claim full watchOS, tvOS, or visionOS coverage from this Skill.
-- Do not perform or claim independent review.
+- Stop on unresolved target, owner, client contract, artifact, or environment.
+- Main owns release and routing.
 
 ## Output Contract
 
-- changed files with target, owner, reuse, and placement decisions
-- affected UI, lifecycle, local-data, permission, link, notification, offline, and API-version outcomes
-- current target-specific tests, build or package evidence, and skipped or unavailable checks
-- compatibility and migration decisions with proof limits
-- residual client risk and release owner
+- Changed placement, framework/version, native owner/behavior, bridge/compatibility/migration decisions, target/package evidence, affected target behavior, proof limits, residual risk.
 
 ## Targeted References
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
 | [native platform source contracts](references/native-platform-source-contracts.md) | targeted | Android iOS/iPadOS Windows macOS or Linux desktop lifecycle permission link OS integration or packaging behavior affects the change | Only shared framework behavior changes and native target contracts remain untouched | task-agent | boundary-decision, proof-limit, validation-plan |
-| [framework contracts](references/framework-contracts.md) | targeted | Flutter React Native Electron Tauri Qt .NET MAUI or Kotlin Multiplatform ownership bridge lifecycle or packaging behavior affects the change | The client is native-only or the framework layer is not affected | task-agent | proof-limit, selected-approach, validation-plan |
+| [flutter framework contracts](references/flutter-framework-contracts.md) | targeted | Flutter shared state platform-channel restoration link plugin or target packaging behavior affects the accepted change | No Flutter source channel plugin lifecycle link or packaging behavior changes | task-agent | proof-limit, selected-approach, validation-plan |
+| [react native framework contracts](references/react-native-framework-contracts.md) | targeted | React Native JavaScript state native state process recreation link or platform seam affects the accepted change | No React Native state lifecycle link native seam or packaging behavior changes | task-agent | proof-limit, selected-approach, validation-plan |
+| [electron framework contracts](references/electron-framework-contracts.md) | targeted | Electron main renderer operating-system privilege deep-link or packaged-artifact behavior affects the accepted change | No Electron process privilege deep-link operating-system or packaging behavior changes | task-agent | proof-limit, selected-approach, validation-plan |
+| [tauri framework contracts](references/tauri-framework-contracts.md) | targeted | Tauri command plugin capability webview deep-link or bundle behavior affects the accepted change | No Tauri command capability plugin webview link or bundle behavior changes | task-agent | proof-limit, selected-approach, validation-plan |
+| [qt framework contracts](references/qt-framework-contracts.md) | targeted | Qt window ownership window-manager runtime library plugin QML or package behavior affects the accepted change | No Qt window runtime plugin QML platform or packaging behavior changes | task-agent | proof-limit, selected-approach, validation-plan |
+| [dotnet maui framework contracts](references/dotnet-maui-framework-contracts.md) | targeted | .NET MAUI window native lifecycle restoration permission workload or package target affects the accepted change | No .NET MAUI lifecycle restoration permission workload or package behavior changes | task-agent | proof-limit, selected-approach, validation-plan |
+| [kotlin multiplatform framework contracts](references/kotlin-multiplatform-framework-contracts.md) | targeted | Kotlin Multiplatform source-set target support expected actual binary or host integration affects the accepted change | No Kotlin Multiplatform source-set target binary or host-integration behavior changes | task-agent | proof-limit, selected-approach, validation-plan |

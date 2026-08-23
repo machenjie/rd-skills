@@ -33,6 +33,23 @@ def _body(role: str, execution: str, output: str, required: str = "") -> str:
     )
 
 
+def _section_contract_body(*, authoring_details: tuple[str, ...] = ()) -> str:
+    sections = [
+        ("Role", "Support `task-agent` for bounded work."),
+        ("When To Use", "- bounded work"),
+        ("Do Not Use", "- unrelated work"),
+        ("Required Inputs", "- accepted scope"),
+        ("Professional Decision Rules", "- Preserve the accepted boundary."),
+        *[(heading, "- Retain source-backed detail.") for heading in authoring_details],
+        ("Stop / Escalation Conditions", "- Stop on unknown ownership."),
+        ("Output Contract", "- bounded result"),
+        ("Targeted References", "No named References are required."),
+    ]
+    return "# test\n\n" + "\n\n".join(
+        f"## {heading}\n\n{content}" for heading, content in sections
+    )
+
+
 def _ai_review_example_scope_errors(markdown: str) -> list[str]:
     errors: list[str] = []
 
@@ -102,6 +119,102 @@ class ValidateProfessionalSkillRoleContractTests(unittest.TestCase):
     def test_professional_root_hard_gate_is_120_lines(self) -> None:
         self.assertEqual(self.module.MAX_ROOT_SKILL_LINES, 120)
 
+    def test_professional_section_contract_accepts_compact_and_full_roots(
+        self,
+    ) -> None:
+        for authoring_details in (
+            (),
+            ("High-Value Gotchas", "Execution Checklist"),
+        ):
+            with self.subTest(authoring_details=authoring_details):
+                errors: list[str] = []
+                self.module._validate_professional_section_contract(
+                    _section_contract_body(authoring_details=authoring_details),
+                    "test/SKILL.md",
+                    errors,
+                )
+                self.assertEqual([], errors)
+
+    def test_professional_section_contract_rejects_partial_authoring_details(
+        self,
+    ) -> None:
+        for authoring_details in (
+            ("High-Value Gotchas",),
+            ("Execution Checklist",),
+        ):
+            with self.subTest(authoring_details=authoring_details):
+                errors: list[str] = []
+                self.module._validate_professional_section_contract(
+                    _section_contract_body(authoring_details=authoring_details),
+                    "test/SKILL.md",
+                    errors,
+                )
+                self.assertTrue(
+                    any("must appear together" in error for error in errors),
+                    errors,
+                )
+
+    def test_professional_section_contract_rejects_missing_kernel_heading(
+        self,
+    ) -> None:
+        errors: list[str] = []
+        body = _section_contract_body().replace(
+            "## Professional Decision Rules\n\n"
+            "- Preserve the accepted boundary.\n\n",
+            "",
+        )
+        self.module._validate_professional_section_contract(
+            body,
+            "test/SKILL.md",
+            errors,
+        )
+        self.assertIn(
+            "test/SKILL.md: missing required section 'Professional Decision Rules'",
+            errors,
+        )
+
+    def test_compact_multi_role_contract_does_not_require_execution_markers(
+        self,
+    ) -> None:
+        body = _body(
+            "**Analysis mode (`analysis-agent`):** decide the boundary.\n"
+            "**Task mode (`task-agent`):** apply the accepted decision.",
+            "",
+            "common output\n"
+            "- **Analysis mode (`analysis-agent`):** analysis-agent output.\n"
+            "- **Task mode (`task-agent`):** task-agent output.",
+            "common input\n"
+            "- **Analysis mode (`analysis-agent`):** analysis-agent input.\n"
+            "- **Task mode (`task-agent`):** task-agent input.",
+        ).replace("## Execution Checklist\n\n\n\n", "")
+        errors = self._errors(
+            ["analysis-agent", "task-agent"],
+            "Analyze with `analysis-agent` or implement with `task-agent`.",
+            body,
+        )
+        self.assertEqual([], errors)
+
+    def test_full_multi_role_contract_requires_execution_markers(self) -> None:
+        errors = self._errors(
+            ["analysis-agent", "task-agent"],
+            "Analyze with `analysis-agent` or implement with `task-agent`.",
+            _body(
+                "**Analysis mode (`analysis-agent`):** decide the boundary.\n"
+                "**Task mode (`task-agent`):** apply the accepted decision.",
+                "Close the accepted work.",
+                "common output\n"
+                "- **Analysis mode (`analysis-agent`):** analysis-agent output.\n"
+                "- **Task mode (`task-agent`):** task-agent output.",
+                "common input\n"
+                "- **Analysis mode (`analysis-agent`):** analysis-agent input.\n"
+                "- **Task mode (`task-agent`):** task-agent input.",
+            ),
+        )
+        self.assertTrue(
+            any("Execution Checklist must define" in error for error in errors),
+            errors,
+        )
+
     def test_routing_review_assignment_is_a_positive_trigger_not_an_anti_trigger(
         self,
     ) -> None:
@@ -155,8 +268,7 @@ class ValidateProfessionalSkillRoleContractTests(unittest.TestCase):
             skill_file.parent / "examples/example-output.md"
         ).read_text(encoding="utf-8")
 
-        self.assertIn("- reviewed files", output)
-        self.assertIn("- unreviewed files with reason and residual risk", output)
+        self.assertIn("- reviewed/unreviewed scope", output)
         self.assertEqual([], _ai_review_example_scope_errors(example))
 
         missing_scope = example.replace("### Unreviewed files\n\nNone.\n\n", "")

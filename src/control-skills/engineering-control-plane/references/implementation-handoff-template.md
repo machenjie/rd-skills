@@ -18,10 +18,10 @@ Owner, Non-goals, and other existing Authority at its source instead of copying
 them here. Keep raw command logs as JIT-readable artifacts and include them only
 when a downstream consumer explicitly requires them.
 
-The public Execution Level lines use Core public `execution-level/v1`. The integrity
+The public Execution Level lines use Core public `execution-level/v2`. The integrity
 fallback for missing, malformed, or duplicate public execution-level data is
 defined in [execution-level-contract.md](execution-level-contract.md).
-Legacy without v1 is completed/read only; active or resumed work, edit,
+Legacy v1 is completed/read only; active or resumed work, edit,
 validation, or review requires reissue.
 
 ```markdown
@@ -36,8 +36,8 @@ in_progress / blocked / partial / completed
 ## Execution Level
 
 <!-- BEGIN CHANGEFORGE CORE PUBLIC EXECUTION TEMPLATE: implementation-handoff-template.md -->
-Level: requested=unspecified / L1 / L5; automatic=L2 / L3 / L4; default=L3; effective=L1 / L2 / L3 / L4 / L5; edit=allowed / blocked
-Basis: source=user_fact:<anchor> / analysis_handoff:<anchor>; triggers=["<matched or unknown trigger ID>"] / []; l2=["<false or unknown L2 predicate ID>"] / []; unresolved=[] / ["unknown-critical-boundary=>L4,edit=blocked"]
+Level: requested=unspecified / L1 / L2 / L3 / L4 / L5; automatic=L1 / L2 / L3 / L4 / L5; minimum=L1 / L2 / L3 / L4 / L5; default=L3; effective=L1 / L2 / L3 / L4 / L5; edit=allowed / blocked
+Basis: source=user_fact:<anchor> / analysis_handoff:<anchor>; triggers=["<matched or unknown trigger ID>"] / []; l1=["<false or unknown L1 predicate ID>"] / []; l2=["<false or unknown L2 predicate ID>"] / []; l5=["<false or unknown L5 predicate ID>"] / []; confirmation=not-required / pending / confirmed / rejected / explicit; unresolved=[] / ["unknown-critical-boundary=>L4,edit=blocked"]
 L5 Evidence: when=effective L5 only; requires=independent pre-implementation review / strong safety and applicability proof / declared-scope comprehensive negative and failure proof / exhaustive final review
 <!-- END CHANGEFORGE CORE PUBLIC EXECUTION TEMPLATE: implementation-handoff-template.md -->
 
@@ -120,6 +120,22 @@ unavailable proof.
 
 ## Residual Risk
 ```
+
+Main JIT-loads this template for Core `generic_capability_contract` decisions:
+
+`exact-change-evidence-read`:
+- `supported`: exact change evidence read -> review-agent.
+- `unsupported`: block review before dispatch; diff scope unverified; a changed-file summary is not evidence.
+`reviewer-accessible-change-reference`:
+- `supported`: reviewer-accessible change reference -> review-agent.
+- `unsupported`: block review before dispatch; diff scope unverified.
+`non-mutating-validation`:
+- `supported`: non-mutating validation -> current evidence.
+- `unsupported`: block validation; unverified.
+
+`not-required` still requires ordinary independent review and digest-only matching
+to both lower-risk authorities. Missing or inconsistent authority/binding fails closed
+and requires reissue.
 
 Keep the Evidence Ledger task-local, handoff-visible, and non-persistent. Use
 no daemon, database, private evidence storage, runtime task state engine, or

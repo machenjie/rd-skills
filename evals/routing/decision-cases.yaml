@@ -1,0 +1,145 @@
+---
+schema_version: 1
+defaults:
+  path_decision: {path: direct}
+  gap_ownership: {kind: repo-resolvable-fact, resolution: source}
+  discovery_decision: {mode: none, boundary: not-applicable, after_invalidation: not-applicable}
+  professional_layer3_decision:
+    primary_skill: quality-test-gate
+    implementation_layer3: [regression-testing]
+    domain: [bigdata-product-extension]
+    required_layer3: [bigdata-product-extension, regression-testing]
+    context_overflow: false
+    route_fingerprint: stable-semantic-route
+    rerouted_after_level_confirmation: false
+  execution_level:
+    requested_level: unspecified
+    requested_or_automatic: L2
+    automatic_level: L2
+    minimum_eligible_level: L2
+    mandatory_risk_floor: L2
+    historical_max: L2
+    effective_level: L2
+    l5_basis: none
+    l5_confirmation: not-required
+    computation_basis: {evidence_profile: l2-eligible, prior_historical_max_floor: L2, prior_historical_max_effective: L2}
+  action_authority: {outcome: execute}
+  review_decision:
+    review_skill: ai-code-review-refactor
+    review_layer3: [code-review]
+    selection_basis: independent-review-risk
+    selection_provenance: review-risk-selector
+level_invariance:
+  requested_levels: [unspecified, L1, L2, L3, L4, L5]
+  semantic_route:
+    task_id: decision-level-invariance
+    prompt: Select regression tests and validate a changed distributed stream pipeline replay checkpoint and downstream consumer.
+    review_layer3: [code-review]
+    brief_semantics:
+      goal: Validate the changed distributed pipeline behavior.
+      acceptance: Preserve the fixed expertise route while assurance varies.
+      non_goals: [Do not reinterpret Brief semantics during assurance confirmation.]
+      owner: quality-test-gate
+      invariants: [Only execution_level_extension changes during confirmation.]
+      scope: distributed stream pipeline regression validation
+      professional_skill: quality-test-gate
+      implementation_layer3: [regression-testing]
+      domain: [bigdata-product-extension]
+      review_requirements: {review_skill: ai-code-review-refactor, review_layer3: [code-review]}
+review_domain_cases:
+  - id: web3-review-risk
+    review_skill: ai-code-review-refactor
+    domain: web3-product-extension
+    positive_signals: [changed-surface, blockchain, finality]
+    nearest_negative_signal: hash or signature terminology without chain or custody behavior
+    background_signals: [blockchain, finality]
+  - id: low-level-review-risk
+    review_skill: ai-code-review-refactor
+    domain: low-level-systems-extension
+    positive_signals: [changed-surface, ABI, ownership]
+    nearest_negative_signal: C++ or Rust usage without a native ABI, OS, or resource boundary
+    background_signals: [ABI, ownership]
+  - id: bigdata-review-risk
+    review_skill: quality-test-gate
+    domain: bigdata-product-extension
+    positive_signals: [changed-surface, stream, checkpoint]
+    nearest_negative_signal: single-database large-table work without a distributed pipeline, replay, or downstream consumer boundary
+    background_signals: [stream, checkpoint]
+cases:
+  - id: source-fact-to-ask-user
+    axis: action-authority
+    invariant_id: source-fact-resolves-without-user-question
+    failure_id: decision-source-fact-not-user-question
+    decision: {}
+    mutation: {pointer: /action_authority/outcome, value: ask}
+  - id: user-choice-to-source-inference
+    axis: gap-ownership
+    invariant_id: user-choice-requires-user-answer
+    failure_id: decision-user-choice-not-source-inference
+    decision:
+      gap_ownership: {kind: user-owned-choice, resolution: ask-user}
+      action_authority: {outcome: ask}
+    mutation: {pointer: /gap_ownership/resolution, value: source}
+  - id: route-material-unknown-to-direct
+    axis: path-decision
+    invariant_id: route-material-unknown-fails-closed
+    failure_id: decision-material-unknown-not-direct
+    decision:
+      path_decision: {path: analyzed}
+      gap_ownership: {kind: route-or-material-unknown, resolution: analysis}
+      action_authority: {outcome: block}
+    mutation: {pointer: /path_decision/path, value: direct}
+  - id: direct-discovery-escape-then-edit
+    axis: discovery-decision
+    invariant_id: invalidated-discovery-stops-before-edit
+    failure_id: decision-discovery-invalidated-stop-before-edit
+    decision:
+      discovery_decision: {mode: direct-bounded, boundary: invalidated, after_invalidation: return-main}
+      action_authority: {outcome: block}
+    mutation: {pointer: /discovery_decision/after_invalidation, value: continue-edit}
+  - id: unsupported-l1-downgrade
+    axis: execution-level
+    invariant_id: effective-level-respects-all-floors
+    failure_id: decision-level-no-unsupported-downgrade
+    decision:
+      execution_level: {requested_level: unspecified, requested_or_automatic: L3, automatic_level: L3, minimum_eligible_level: L3, mandatory_risk_floor: L3, historical_max: L3, effective_level: L3, l5_basis: none, l5_confirmation: not-required, computation_basis: {evidence_profile: l3-default, prior_historical_max_floor: L3, prior_historical_max_effective: L3}}
+    mutation: {pointer: /execution_level/effective_level, value: L1}
+  - id: keyword-only-l5
+    axis: execution-level
+    invariant_id: automatic-l5-requires-confirmed-analysis-evidence
+    failure_id: decision-level-l5-not-keyword-only
+    decision:
+      execution_level: {requested_level: unspecified, requested_or_automatic: L4, automatic_level: L4, minimum_eligible_level: L4, mandatory_risk_floor: L4, historical_max: L4, effective_level: L4, l5_basis: keyword-only, l5_confirmation: not-required, computation_basis: {evidence_profile: material-l4, prior_historical_max_floor: L4, prior_historical_max_effective: L4}}
+    mutation: {pointer: /execution_level/effective_level, value: L5}
+  - id: l5-confirmation-reroute
+    axis: professional-layer3-decision
+    invariant_id: level-confirmation-preserves-semantic-route
+    failure_id: decision-level-confirmation-route-invariant
+    decision:
+      execution_level: {requested_level: unspecified, requested_or_automatic: L5, automatic_level: L5, minimum_eligible_level: L4, mandatory_risk_floor: L4, historical_max: L4, effective_level: L5, l5_basis: analysis-handoff, l5_confirmation: confirmed, computation_basis: {evidence_profile: material-l5, prior_historical_max_floor: L4, prior_historical_max_effective: L4}}
+    mutation: {pointer: /professional_layer3_decision/rerouted_after_level_confirmation, value: true}
+  - id: token-overflow-drops-layer3
+    axis: professional-layer3-decision
+    invariant_id: context-pressure-preserves-required-layer3
+    failure_id: decision-context-preserve-required-layer3
+    decision:
+      professional_layer3_decision:
+        primary_skill: quality-test-gate
+        implementation_layer3: [regression-testing]
+        domain: [bigdata-product-extension]
+        required_layer3: [bigdata-product-extension, regression-testing]
+        context_overflow: true
+        route_fingerprint: stable-semantic-route
+        rerouted_after_level_confirmation: false
+    mutation: {pointer: /professional_layer3_decision/implementation_layer3, value: [test-strategy, regression-testing]}
+  - id: review-copies-implementation-layer3
+    axis: review-decision
+    invariant_id: review-layer3-selected-from-review-risk
+    failure_id: decision-review-layer3-independent
+    decision:
+      review_decision:
+        review_skill: ai-code-review-refactor
+        review_layer3: [regression-testing]
+        selection_basis: independent-review-risk
+        selection_provenance: review-risk-selector
+    mutation: {pointer: /review_decision/selection_provenance, value: review-risk-selector}

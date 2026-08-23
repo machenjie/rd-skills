@@ -473,7 +473,7 @@ class AgentProfileReadabilityTests(unittest.TestCase):
                 "review-target-modes",
                 "implementation-review",
                 "Re-review may be skipped after repair.",
-                ("including re-review of only", "excluding re-review of"),
+                ("including only", "excluding"),
             ),
         )
         for role, capability_id, rule_id, contradiction, wrong_replacement in bindings:
@@ -712,23 +712,26 @@ class AgentProfileReadabilityTests(unittest.TestCase):
                 self.assertIn("validate-agent-profiles: ERROR:", rendered)
                 self.assertIn(expected, rendered)
 
-    def test_analysis_handoff_requires_four_state_status(self) -> None:
-        result, output = self._mutated_source_result(
-            "analysis-agent",
-            "four-state Status, a visible task-local Evidence Ledger",
-            "completed Status, a visible task-local Evidence Ledger",
-        )
-        self.assertEqual(1, result)
-        self.assertIn("handoff 'analysis-handoff'", output)
+    def test_analysis_handoff_status_is_owned_by_engineering_brief(self) -> None:
+        profile = next(
+            item
+            for item in json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))["profiles"]
+            if item["name"] == "analysis-agent"
+        )["instructions"]
+        brief = (
+            ROOT
+            / "src/control-skills/engineering-control-plane/references/engineering-brief-template.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("Professional/mode contract owns", profile)
+        self.assertIn("in_progress / blocked / partial / completed", brief)
 
-    def test_analysis_assignments_require_initial_in_progress(self) -> None:
-        result, output = self._mutated_source_result(
-            "analysis-agent",
-            "`Status: in_progress`",
-            "`Status: partial`",
-        )
-        self.assertEqual(1, result)
-        self.assertIn("task-contract-status", output)
+    def test_analysis_assignment_status_is_owned_by_task_template(self) -> None:
+        brief = (
+            ROOT
+            / "src/control-skills/engineering-control-plane/references/engineering-brief-template.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("Status: in_progress", brief)
+        self.assertIn("Task Contract v2", brief)
 
     def test_main_profile_rejects_prompt_owned_contract_copies(self) -> None:
         anchor = (
@@ -821,19 +824,30 @@ class AgentProfileReadabilityTests(unittest.TestCase):
                 self.assertIn("capability", output)
                 self.assertIn("boundary", output)
 
-    def test_analysis_and_review_profiles_preserve_decision_projections(self) -> None:
+    def test_analysis_and_review_profiles_load_relocated_decision_owners(self) -> None:
         source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
         profiles = {item["name"]: item["instructions"] for item in source["profiles"]}
         analysis = profiles["analysis-agent"]
+        implementation = (
+            ROOT
+            / "src/professional-skills/engineering-change-analysis/references/implementation-preparation.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("selected Professional/mode contract owns", analysis)
         for term in (
-            "complete updated Brief",
+            "complete updated Engineering Brief",
             "Delta Impact",
             "Main consumes",
-            "without reinterpretation",
+            "without reinterpreting",
         ):
             with self.subTest(role="analysis-agent", term=term):
-                self.assertIn(term, analysis)
+                self.assertIn(term, implementation)
+                self.assertNotIn(term, analysis)
         review = profiles["review-agent"]
+        review_handoff = (
+            ROOT
+            / "src/control-skills/engineering-control-plane/references/review-handoff-template.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("assigned Review Handoff", review)
         for term in (
             "Finding Relation",
             "before severity or blocker",
@@ -841,7 +855,7 @@ class AgentProfileReadabilityTests(unittest.TestCase):
             "Pre-implementation artifact review is exempt",
         ):
             with self.subTest(role="review-agent", term=term):
-                self.assertIn(term, review)
+                self.assertIn(term, review_handoff)
 
     def test_external_read_is_analysis_only_and_resident_rules_are_locked(self) -> None:
         source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
@@ -853,7 +867,7 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         analysis = profiles["analysis-agent"]["instructions"]
         for terms in (
             ("Material unresolved Claim", "local or current evidence", "Proof Limit"),
-            ("untrusted evidence input", "normalized Claim", "Engineering Brief"),
+            ("Untrusted evidence input", "normalized Claim", "Engineering Brief"),
             ("minimum public information", "repository-private source", "credential"),
             ("external-source-read", "unsupported", "unknown-critical-boundary"),
         ):

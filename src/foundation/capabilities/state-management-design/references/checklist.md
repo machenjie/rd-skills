@@ -15,3 +15,9 @@
 - Justify global state with cross-route or cross-feature consumers, owner, boundary, reset/invalidation rule, and test impact.
 - Map state, cache, auth, persistence, rollback, race, and global-store decisions to tests, validators, manual review, or residual risk.
 - Name handoff boundaries, validation evidence, evidence limits, and rollback path before completion.
+
+## Anti-Patterns
+
+- Promote state globally because prop flow is inconvenient, or duplicate server state without an invalidation owner.
+- Key cache or persisted state without tenant, account, resource, or query identity needed to prevent cross-context reuse.
+- Let a stale response, optimistic failure, logout, or navigation leave durable or sensitive state under the wrong owner.

@@ -7,11 +7,11 @@ description: "Use `analysis-agent` to map acceptance to validation, `task-agent`
 
 ## Role
 
-Support `analysis-agent`, `task-agent`, and `review-agent` for bounded acceptance-to-validation work.
+Map acceptance and failure paths to proving signals.
 
-- **Analysis mode (`analysis-agent`):** Map acceptance and failure paths to proving signals.
-- **Task mode (`task-agent`):** Add or repair the smallest proving test.
-- **Review mode (`review-agent`):** Judge proof coverage and freshness for changed behavior.
+- **Analysis mode (`analysis-agent`):** Select the proof strategy.
+- **Task mode (`task-agent`):** Implement the smallest proving test.
+- **Review mode (`review-agent`):** Judge coverage and freshness.
 
 ## When To Use
 
@@ -33,38 +33,27 @@ Support `analysis-agent`, `task-agent`, and `review-agent` for bounded acceptanc
 
 ## Professional Decision Rules
 
-- Own proof strategy and acceptance-to-signal mapping before command selection.
-- Use `targeted-validation-selection` only after strategy selection, and only for repository-defined command and coverage selection.
-- Leave evidence timing and refresh decisions to Core Guard G and the validation-freshness contract.
-- For scoped acceptance and material risks, define an acceptance-and-risk-to-test-level mapping using the smallest sufficient levels.
-- Test the regression mechanism and relevant negative path, not only the happy path.
-- Control time, randomness, concurrency, data, network, and global state.
-- Add broader validation only for a concrete shared boundary or escape risk.
+- Map each acceptance and material failure to one signal.
+- Select the lowest level exercising the real boundary.
+- Record stale, flaky, skipped, or partial evidence as limited.
 
 ## High-Value Gotchas
 
 - A broad green suite can miss the changed mechanism.
-- A result becomes stale after a material source, test, fixture, schema, or config edit.
-- Mock-heavy tests can prove the mock instead of the real boundary.
-- Lint, type checks, and manual inspection do not substitute for behavior proof.
+- A mock or stale result can prove the harness instead of current behavior.
 
 ## Execution Checklist
 
-1. Map each acceptance criterion and material failure path to one proving signal.
-2. Choose the smallest sufficient test level from the real boundary and regression mechanism.
-3. Verify freshness, deterministic control, changed-file coverage, and negative-path evidence.
-4. **Analysis mode:** select the smallest sufficient test level.
-5. **Task mode:** add the smallest proving test at the regression boundary.
-6. **Review mode:** judge changed-file, negative-path, and acceptance coverage.
-7. Stop closure when any changed behavior or acceptance remains unverified.
+- **Analysis mode:** Map acceptance and material failure paths to test levels.
+- **Task mode:** Implement the smallest proving test and capture its current result.
+- **Review mode:** Judge changed-file, negative-path, and freshness coverage.
+- Record unproved scope with its owner and release consequence.
 
 ## Stop / Escalation Conditions
 
-- Stop before validation that mutates production data or exceeds authority.
-- Escalate when money, permission, migration, public contract, external effects,
-  concurrency, rollback, or security lacks a specific negative or boundary test.
-- Escalate flaky, skipped, or partial evidence without an owner and release consequence.
-- Flag every unverified changed file or acceptance criterion.
+- Stop before production mutation or authority overrun.
+- Escalate unowned flaky, skipped, or partial evidence.
+- Flag uncovered changed files or acceptance.
 
 ## Output Contract
 

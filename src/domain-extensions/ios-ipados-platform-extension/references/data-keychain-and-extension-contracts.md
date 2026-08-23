@@ -13,7 +13,6 @@ Official Apple Developer pages below were accessed on 2026-07-24.
 - Bind each item to its accessibility class, access group, authentication
   policy, account, invalidation, and recovery.
 - Select Data Protection from required locked-device behavior.
-- Verify effective file protection rather than assuming a default.
 
 ## Shared and Extension Boundary
 
@@ -21,13 +20,6 @@ Official Apple Developer pages below were accessed on 2026-07-24.
   targets, team, entitlement, schema, and concurrent-access protocol.
 - Treat the host and extension as separate processes with separate lifecycle,
   memory, failure, and least-privilege boundaries.
-- Exercise device lock, missing or invalid key, account switch, partial
-  migration, extension termination, corrupt data, and mismatched entitlement.
-
-## Required Record
-
-Return the data inventory, storage/key owner, protection and access-group rule,
-shared schema/coordination, migration/recovery proof, limits, and residual risk.
 
 ## Primary Sources
 

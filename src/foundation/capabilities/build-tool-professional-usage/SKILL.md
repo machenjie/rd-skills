@@ -18,28 +18,25 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when build graph
 
 ## Skill Role
 
-Define build graph edges, source/generated authority, behavior inputs, toolchain identity, cache and parallel correctness, reproducibility, and evidence. Exclude package resolution and hosted pipelines.
+Define build graph, source/generated authority, inputs, toolchain identity, cache/parallel correctness, reproducibility, and evidence; exclude packages and hosted pipelines.
 
 ## High-Value Rules
 
-- **Own build-graph decisions and proof.** This capability decides and proves graph edges, generated authority, cache/action identity, and affected-test selection, then hands accepted constraints to `architecture-enforcement-tooling` for diagnostics, exceptions, baselines, and gates.
-- **Model the target graph from real inputs and outputs.** Name source, generated, configuration, schema, environment, toolchain, and dependency edges needed to rebuild each affected artifact.
-- **Declare source and generated authority.** Bind output to its generator, inputs, destination, repository policy, drift check, and sole editable authority.
-- **Include behavior-affecting inputs in identity.** Define cache and incremental keys from the toolchain, flags, environment, platform, schemas, plugins, generated inputs, and transitive dependencies that can change behavior.
-- **Prove parallel and incremental correctness.** Remove hidden ordering, undeclared files, shared mutable outputs, timestamp assumptions, and accidental working-directory state through clean, repeated, and concurrent builds.
-- **Bound environment dependence.** Identify network, credentials, locale, clock, filesystem case, executable metadata, host tools, and platform assumptions, then make accepted dependencies explicit and reproducible.
-- **Compare artifacts, not command success alone.** Tie source revision and build inputs to expected outputs, checksums or semantic comparison, packaged contents, and consumer-visible behavior.
-- **Test failure and recovery paths.** Exercise missing input, stale generated output, cache miss or corruption, partial output, interrupted build, and clean rebuild relevant to the changed graph.
+- Define graph, generated authority, cache/action identity, and affected-test proof.
+- Route enforcement constraints to `architecture-enforcement-tooling`.
+- Define inputs, outputs, dependencies, generated policy, toolchain, and cache identity.
+- Prove clean, incremental, parallel, and hermetic behavior.
+- Bound environment dependence.
+- Compare source-bound artifacts rather than command success.
+- Validate missing, stale, corrupt, partial, interrupted, and clean rebuild outcomes.
 
 ## Anti-Patterns
 
-- Rely on command order, undeclared files, local caches, host-installed tools, or mutable shared output for a green build.
-- Hand-edit generated artifacts or accept broad regeneration churn without source-to-output explanation.
-- Treat local command success as proof of hosted enforcement, cross-platform reproducibility, or deployed artifact identity.
+- Local success substituted for evidence of the build tool professional usage contract.
 
 ## Stop Conditions
 
-Escalate unknown source authority, undeclared graph or cache inputs, irreproducible or racing output, unexpected network credentials, or unproved artifact equivalence.
+Escalate unknown authority/inputs, racing or irreproducible output, unexpected network credentials, or unproved artifacts.
 
 ## Output Contract
 

@@ -28,23 +28,21 @@ decisions affect multiple downstream tasks. Reject phase-pipeline expansion.
 
 ## Professional Decision Rules
 
-- Test the brief as four connected dimensions: problem and acceptance; ownership and invariants; placement, contract, and failure design; acceptance-to-validation mapping.
-- Require decisions only when they change downstream work, risk, rollback, or user-visible behavior.
-- Confirm the First Executable Slice remains safe, verifiable, and reversible.
-- Reject dependency cycles, conflicting writes, unowned shared contracts, and rollback claims without an executable path.
+- Keep the selected high risk design review decision within its declared owner, inputs, stops, and output contract.
 
 ## High-Value Gotchas
 
-- More artifacts do not improve accuracy when they repeat the same facts.
-- A complete-looking brief can still name the wrong owner or omit version skew and failure behavior.
-- Review breadth must remain proportional to the concrete risk.
+- When ownership is ambiguous, an invariant or failure path may be split across decision makers.
+- Reversibility on paper does not prove an executable rollback or forward-repair path.
+- Multiple downstream tasks can preserve local acceptance while breaking the shared boundary.
 
 ## Execution Checklist
 
-1. Verify source evidence and acceptance.
-2. Check owner, invariants, reuse, and rejected placements.
-3. Check public contract, data, failure, compatibility, and rollback effects.
-4. Check dependencies, workspace requirements, integration, review, and validation boundaries.
+- **Review mode:** Map every material decision to one owner, invariant, failure path, and proof.
+- Compare the selected design with at least one plausible alternative at the critical boundary.
+- Verify rollback or forward repair for each irreversible or cross-task consequence.
+- Record unreviewed decisions and evidence gaps as blocking findings or residual risk.
+- Minimal validation: inspect the brief's named proofs and its recovery path.
 
 ## Stop / Escalation Conditions
 

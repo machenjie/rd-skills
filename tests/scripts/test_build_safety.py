@@ -140,6 +140,167 @@ class BuildSafetyTests(unittest.TestCase):
                     BUILD.build_profile("recommended")
             self.assertEqual("unchanged\n", sentinel.read_text(encoding="utf-8"))
 
+    def test_compact_runtime_roots_omit_routing_and_keep_source_authority(self) -> None:
+        professional_source = """---
+name: sample-professional
+description: synthetic
+---
+
+# sample-professional
+
+## Role
+
+Support `task-agent` at the bounded owner.
+
+## When To Use
+
+- authoring positive trigger
+
+## Do Not Use
+
+- authoring anti-trigger
+
+## Required Inputs
+
+- accepted task input
+
+## Professional Decision Rules
+
+- Preserve the accepted owner and decision.
+
+## Stop / Escalation Conditions
+
+- Stop when authority is unknown.
+
+## Output Contract
+
+- bounded result and proof limit
+
+## Targeted References
+
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [sample](references/sample.md) | targeted | a named decision is open | no named decision is open | task-agent | proof-limit |
+"""
+        foundation_source = """---
+name: sample-foundation
+description: synthetic
+---
+
+# sample-foundation
+
+## Registry Trigger
+
+**Use when**
+
+- authoring positive trigger
+
+**Do not use when**
+
+- authoring anti-trigger
+
+## Skill Role
+
+Own one bounded decision.
+
+## Inputs
+
+- accepted task input
+
+## High-Value Rules
+
+- Preserve the accepted decision.
+- Prove the negative path.
+- Record the proof limit.
+
+## Anti-Patterns
+
+- Local success substituted for boundary evidence.
+
+## Stop Conditions
+
+- Stop when authority is unknown.
+
+## Output Contract
+
+- bounded result and proof limit
+
+## Targeted References
+
+| Path | Type | Load when | Do not load when | Required by | Required output |
+|---|---|---|---|---|---|
+| [sample](references/sample.md) | targeted | a named decision is open | no named decision is open | task-agent | proof-limit |
+"""
+
+        def headings(text: str) -> list[str]:
+            return [
+                line.removeprefix("## ").strip()
+                for line in text.splitlines()
+                if line.startswith("## ")
+            ]
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            professional = root / "sample-professional"
+            professional.mkdir()
+            professional_file = professional / "SKILL.md"
+            professional_file.write_text(professional_source, encoding="utf-8")
+            professional_item = BUILD.SkillItem(
+                name="sample-professional",
+                path=professional,
+                layer="professional",
+                description="synthetic",
+                metadata={},
+                body=professional_source,
+                registry={"reference_index": []},
+            )
+            BUILD._write_compact_professional_projection(professional, professional_item)
+            rendered_professional = professional_file.read_text(encoding="utf-8")
+            self.assertEqual(
+                [*BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, "JIT Reference Delivery"],
+                headings(rendered_professional),
+            )
+            for omitted in ("When To Use", "Do Not Use", "Required Inputs"):
+                self.assertIn(f"## {omitted}", professional_source)
+                self.assertNotIn(f"## {omitted}", rendered_professional)
+
+            foundation = root / "sample-foundation"
+            foundation.mkdir()
+            foundation_file = foundation / "SKILL.md"
+            foundation_file.write_text(foundation_source, encoding="utf-8")
+            foundation_item = BUILD.SkillItem(
+                name="sample-foundation",
+                path=foundation,
+                layer="foundation",
+                description="synthetic",
+                metadata={},
+                body=foundation_source,
+                registry={"reference_index": []},
+            )
+            BUILD._write_compact_layer3_root_projection(foundation, foundation_item)
+            rendered_foundation = foundation_file.read_text(encoding="utf-8")
+            self.assertEqual(
+                [*BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, "JIT Reference Delivery"],
+                headings(rendered_foundation),
+            )
+            for source_only in ("Registry Trigger", "Inputs", "Output Contract"):
+                self.assertIn(f"## {source_only}", foundation_source)
+                self.assertNotIn(f"## {source_only}", rendered_foundation)
+
+            professional_file.write_text(
+                professional_source.replace(
+                    "## Output Contract\n\n- bounded result and proof limit\n\n",
+                    "",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                BUILD.BuildError,
+                "exactly one non-empty 'Output Contract'",
+            ):
+                BUILD._write_compact_professional_projection(professional, professional_item)
+
     def test_all_profiles_build_with_canonical_manifest_in_isolated_layout(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "repo"
@@ -495,8 +656,8 @@ class BuildSafetyTests(unittest.TestCase):
             prompt = root / "src/control-prompts/main-control-agent.md"
             original = prompt.read_text(encoding="utf-8")
             mutated = original.replace(
-                "State: current, superseded, invalid",
-                "State: stale, superseded, invalid",
+                "Trust exact build/install validation.",
+                "Trust stale build/install validation.",
                 1,
             )
             self.assertNotEqual(original, mutated)
@@ -727,22 +888,58 @@ class BuildSafetyTests(unittest.TestCase):
                     BUILD._load_host_enforcement()
 
     def test_layer3_entrypoint_describes_only_the_current_build(self) -> None:
-        expected = {
-            "recommended": "compiles assigned Foundation and Domain guidance",
-            "full": "delivers Domain guidance as",
-            "dev": "delivers assigned Foundation and Domain guidance as top-level",
-        }
+        expected = (
+            (
+                "recommended",
+                False,
+                "No Foundation or Domain Layer 3 items are assigned to this Skill.",
+            ),
+            (
+                "recommended",
+                True,
+                "Foundation and Domain items are compiled at `references/layer3/<name>.md`.",
+            ),
+            (
+                "full",
+                False,
+                "Domain items are top-level Skills; no Foundation items are compiled for this Skill.",
+            ),
+            (
+                "full",
+                True,
+                "Foundation items are compiled at `references/layer3/<name>.md`; Domain items are top-level Skills.",
+            ),
+            (
+                "dev",
+                False,
+                "Foundation and Domain items are top-level Skills; no Layer 3 references are compiled.",
+            ),
+        )
         with tempfile.TemporaryDirectory() as temporary:
             skill_root = Path(temporary) / "professional"
             skill_root.mkdir()
-            for profile, phrase in expected.items():
-                with self.subTest(profile=profile):
+            for profile, compiled, expected_body in expected:
+                with self.subTest(profile=profile, compiled=compiled):
                     (skill_root / "SKILL.md").write_text("# Professional\n", encoding="utf-8")
+                    layer3_root = skill_root / "references/layer3"
+                    if layer3_root.exists():
+                        shutil.rmtree(layer3_root)
+                    if compiled:
+                        layer3_root.mkdir(parents=True)
+                        (layer3_root / "index.md").write_text(
+                            "# Layer 3 Reference Index\n",
+                            encoding="utf-8",
+                        )
                     BUILD._append_layer3_entrypoint(skill_root, profile)
                     text = (skill_root / "SKILL.md").read_text(encoding="utf-8")
                     self.assertEqual(1, text.count("## Layer 3 Delivery"))
-                    self.assertIn(phrase, text)
-                    self.assertIn("Never preload Layer 3", text)
+                    self.assertEqual(
+                        expected_body,
+                        text.split("## Layer 3 Delivery\n\n", 1)[1].strip(),
+                    )
+                    self.assertNotIn(BUILD.GENERATED_MARKER, text)
+                    self.assertNotIn("Never preload Layer 3", text)
+                    self.assertNotIn("index or catalog", text)
                     self.assertNotIn("## Compiled Layer 3 References", text)
 
     def test_foundation_layer3_projection_keeps_exact_runtime_sections(self) -> None:
@@ -855,7 +1052,7 @@ Preserve this second paragraph because the complete role defines the decision bo
                 "High-Value Rules",
                 "Anti-Patterns",
                 "Stop Conditions",
-                "Targeted References",
+                "JIT Reference Delivery",
             ],
             list(sections),
         )
@@ -879,12 +1076,8 @@ Preserve this second paragraph because the complete role defines the decision bo
         )
         self.assertNotIn("foundation-semantic-matcher/v1", rendered)
         self.assertNotIn("runtime matcher metadata sentinel", rendered)
-        self.assertIn(
-            "| [checklist](sample-foundation/references/checklist.md) | "
-            "decision-checklist | boundary evidence remains unresolved | "
-            "the root proves the bounded decision | task-agent | checklist-result |",
-            rendered,
-        )
+        self.assertNotIn("## Targeted References", rendered)
+        self.assertIn("Current-Professional JIT", rendered)
 
     def test_occurrence_activation_metadata_is_not_rendered(self) -> None:
         body = """# sample-occurrence-activation
@@ -1039,14 +1232,8 @@ Own the occurrence-render-body-sentinel boundary.
         ):
             self.assertNotIn(forbidden, rendered_with)
         self.assertIn("occurrence-render-body-sentinel", rendered_with)
-        self.assertIn(
-            "| [occurrence]"
-            "(sample-occurrence-activation/references/occurrence-checklist.md) | "
-            "decision-checklist | occurrence-reference-load-sentinel | "
-            "occurrence-reference-skip-sentinel | task-agent | "
-            "checklist-result |",
-            rendered_with,
-        )
+        self.assertNotIn("## Targeted References", rendered_with)
+        self.assertIn("Current-Professional JIT", rendered_with)
 
     def test_domain_layer3_projection_uses_domain_decision_sections(self) -> None:
         body = """# sample-domain
@@ -1109,7 +1296,7 @@ Own the complete domain boundary. Keep this second sentence.
                 "Professional Decision Rules",
                 "High-Value Gotchas",
                 "Stop / Escalation Conditions",
-                "Targeted References",
+                "JIT Reference Delivery",
             ],
             list(sections),
         )
@@ -1117,7 +1304,7 @@ Own the complete domain boundary. Keep this second sentence.
             "Own the complete domain boundary. Keep this second sentence.",
             sections["Decision Boundary"][0],
         )
-        self.assertIn("No task-local Reference is indexed", rendered)
+        self.assertNotIn("No task-local Reference is indexed", rendered)
         for heading in BUILD.LAYER3_PROJECTION_FORBIDDEN_HEADINGS:
             self.assertNotIn(f"## {heading}", rendered)
 
@@ -1187,14 +1374,12 @@ Second role.
                 skill_file.write_text(rendered_source, encoding="utf-8")
                 _metadata, raw_frontmatter, body = BUILD.parse_frontmatter(skill_file)
                 body_lines = body.splitlines()
-                self.assertLessEqual(len(body_lines), 115)
-                targeted_index = body_lines.index("## Targeted References")
+                kernel_index = body_lines.index("## Professional Decision Rules") + 1
                 padding = [
                     f"Rendered-budget fixture line {index}"
-                    for index in range(115 - len(body_lines))
+                    for index in range(121)
                 ]
-                body_lines[targeted_index:targeted_index] = padding
-                self.assertEqual(115, len(body_lines))
+                body_lines[kernel_index:kernel_index] = padding
                 skill_file.write_text(
                     "---\n"
                     + raw_frontmatter

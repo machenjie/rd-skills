@@ -17,28 +17,22 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when personal-da
 
 ## Skill Role
 
-Define engineering data-flow inventory, purpose boundaries, minimization, lifecycle controls, individual-facing operations, telemetry, de-identification risk, and third-party handling. Inform accountable privacy and legal decisions without giving legal advice or claiming compliance.
+Own engineering data-flow purpose, minimization, lifecycle, individual operations, telemetry, de-identification, and provider/region handling; exclude legal conclusions.
 
 ## High-Value Rules
 
-- **Classify data by meaning and flow.** Name direct, derived, inferred, linked, and sensitive elements with subjects, producers, consumers, stores, regions, and accountable owners.
-- **Bind processing to an accepted purpose.** Reject collection, derivation, sharing, or retention that lacks a necessary product or operational outcome and authorized policy source.
-- **Reject unnecessary representation.** Bound fields, precision, granularity, frequency, population, access, and lifetime across primary data, telemetry, exports, and support artifacts.
-- **Apply lifecycle policy to every reachable copy.** Cover caches, indexes, logs, queues, analytics, replicas, archives, and backups with deletion propagation and non-resurrection behavior.
-- **Make export, correction, and deletion observable.** Define identity binding, scope, asynchronous progress, partial failure, completion evidence, and unavailable-copy disclosure.
-- **Constrain third-party and regional handling.** Record provider purpose, data classes, location, onward sharing, retention, deletion, incident, and exit obligations before transfer.
-- **Treat telemetry as data processing.** Remove unnecessary identifiers and payloads before collection instead of relying on sampling, access restriction, or later redaction.
-- **Evaluate de-identification against linkage.** Name direct and quasi-identifiers, recipient knowledge, release model, utility tradeoff, and re-identification testing before reducing controls.
+- Map accepted flow through meaning, purpose, and minimization.
+- Bound copies, telemetry, individual operations, regions, providers, and de-identification.
+- Load only the named Reference for an active lifecycle, provider, or de-identification decision.
 
 ## Anti-Patterns
 
-- Call data anonymous because obvious names were removed while stable identifiers or joinable attributes remain.
-- Report deletion complete when searchable, queued, exported, provider-held, or restorable backup copies remain unexplained.
-- Copy production events into logs, analytics, tests, or support tools and rely on access control as minimization.
+- Privacy closure inferred from controls or unexplained linkable copies.
 
 ## Stop Conditions
 
-Stop when data meaning, purpose authority, retention source, deletion reachability, provider flow, region, or re-identification risk is unknown. Route legal obligations and compliance conclusions to accountable counsel or privacy governance.
+- Stop on unknown meaning, purpose authority, retention, deletion reachability, provider/region flow, or re-identification risk.
+- Route legal/compliance conclusions to accountable governance.
 
 ## Output Contract
 

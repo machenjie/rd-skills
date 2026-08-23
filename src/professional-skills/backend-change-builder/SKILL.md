@@ -27,29 +27,23 @@ Support `task-agent` in preserving invariants across bounded backend changes.
 
 ## Professional Decision Rules
 
-- When the change affects untrusted input, identity, resource scope, or tenant scope, preserve validation and server-side authorization before disclosure or mutation.
-- When multi-step writes or side effects can partially succeed, define the atomicity, ordering, recovery, and observable failure outcome needed to preserve the affected invariant.
-- When execution or delivery can repeat, define duplicate behavior and idempotency; add acknowledgement, replay, or poison-message recovery only for message or job delivery paths.
+- Trace the affected invariant through authorization, mutation, side effects, repetition, and failure using only the triggered named References.
 - Preserve compatible error contracts when failure behavior changes.
 - Select redacted observability from current API and platform policy.
 
 ## High-Value Gotchas
 
-- Authorization after loading an object can leak existence or data.
-- Publishing side effects before commit creates phantom events.
-- Retries without idempotency duplicate money, jobs, or notifications.
+- Late authorization, pre-commit effects, or unbounded repetition can violate the invariant.
 
 ## Execution Checklist
 
-1. Trace each affected invariant through authorization, mutation, side effects, and failure outcomes.
-2. Choose transaction, idempotency, and recovery controls from the reachable failure paths.
-3. Implement the bounded change while preserving compatible errors and redacted diagnostics.
-4. Stop closure when a triggered invariant lacks negative-path or recovery evidence.
+1. Select controls from the accepted invariant and reachable failure paths.
+2. Implement the bounded change with compatible errors and redacted diagnostics.
+3. Stop when a triggered invariant lacks negative-path or recovery evidence.
 
 ## Stop / Escalation Conditions
 
 - Stop when behavior, ownership, validation, or a triggered invariant remains implicit.
-- Stop repair work without an accepted finding or verified failure mechanism.
 - Stop new structure until placement, ownership, dependency direction, and the simpler local option are evaluated.
 - Stop sensitive or external actions without authority, redaction, recovery, and fresh evidence.
 

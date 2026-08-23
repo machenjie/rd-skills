@@ -1,44 +1,33 @@
 # SDK Library Contract Design Benchmarks And Patterns
 
-Use this reference when an SDK/library change needs benchmark-backed judgment, graph-memory-execution coupling, or release evidence beyond the compact `SKILL.md` checklist.
+Load for a named versioning, generated-client, compatibility, adoption, or publication decision; skip when ecosystem policy and current consumer evidence already select the path.
 
-## Benchmark Anchors
+## Compatibility Choice Matrix
 
-- Version policy: Semantic Versioning 2.0.0, Cargo SemVer compatibility, Haskell PVP, ecosystem-specific pre-1.0 break policy, and date-based service API versioning when SDKs mirror server APIs.
-- Change record: Keep a Changelog 1.1.0 with breaking, deprecated, removed, fixed, security, and migration entries tied to the package version.
-- Public API diffing: `@microsoft/api-extractor`, `cargo semver-checks`, `revapi`, `japicmp`, Go `apidiff`, .NET `ApiCompat`, Python `griffe check`, `pyright --outputjson`, or the nearest ecosystem equivalent.
-- Generated-client reproducibility: source spec hash, generator version or container digest, generator config, committed generated output, reviewed generated diff, and deterministic regeneration command.
-- Supply chain: signed tags/commits where policy requires them, signed artifacts, npm provenance, PyPI Trusted Publishers/attestations, Maven/NuGet/crates/Go registry norms, SBOM, OSV scan, SLSA provenance, and registry-specific yank/hotfix path.
-- Consumer proof: Pact or equivalent contract tests, old/new fixture-consumer builds, downstream smoke matrix, packed-artifact examples, runtime floor matrix, and generated signature snapshots.
-
-## Contract Surface Matrix
-
-| Surface | Evidence | Common Hidden Risk |
+| Surface | Evidence | Hidden risk |
 | --- | --- | --- |
-| Exported symbols and public types | API diff, shipped/unshipped public API file, type snapshot | Minor release contains breaking rename, narrowing, abstract method, or enum change. |
-| Generated operations and models | Spec hash, generator pin, generated diff review | Floating generator or template silently reshapes clients. |
-| Error taxonomy | Throwable/error snapshot and negative contract tests | Downstream `instanceof`, code, or retry handling misses new or renamed errors. |
-| Runtime and dependency floors | package metadata diff, runtime/package-manager matrix | Minor release breaks install for still-supported consumers. |
-| Examples and docs | packed-artifact example run and versioned docs build | README compiles against source or stale docs instead of release artifact. |
-| Publication artifacts | digest, signature, provenance, SBOM, registry metadata | Artifact cannot be verified, yanked, or hotfixed after publish. |
+| Exports and public types | API diff, signature snapshot, compatibility rationale. | Rename, narrowing, abstract member, enum, reflection, or exhaustive-match break. |
+| Generated operations/models | Spec hash, generator/template/config pin, reproducible diff. | Floating tools or local templates reshape clients. |
+| Errors/defaults/behavior | Negative contract tests and old/new fixtures. | Retry, overload, serialization, or implicit-default drift. |
+| Runtime/dependency floors | Package metadata and supported runtime/package-manager matrix. | A nominally minor release no longer installs. |
+| Examples/docs | Packed-artifact examples and versioned docs build. | Source-only or stale examples pass. |
+| Publication | Digest, provenance, SBOM, registry metadata, yank/hotfix owner. | Artifact integrity or recovery is unproved. |
 
-## Graph Memory Execution Coupling
+## Benchmark Evidence
 
-- repository inspection: inspect exports, package manifests, generated trees, examples, docs, changelog, release scripts, test fixtures, and package dependency edges before classifying the change.
-- prior task evidence: compare previous compatibility promises, accepted exceptions, deprecation windows, runtime floors, and consumer commitments with the current source; mark stale prior evidence as not verified.
-- Consumer graph: identify first-party consumers, fixture projects, generated-client users, public/private export boundaries, and downstream smoke targets; record unknown external consumers as residual risk.
-- Observable action sequence: connect each observed change to its proving command or review artifact. Evidence may be an API diff, generator command, packed example run, fixture build, contract test, matrix job, SBOM/provenance verification, or explicit not-verified owner.
+- Apply the governing ecosystem policy before SemVer, Cargo SemVer, Haskell PVP, pre-1.0, or date-based service-version labels.
+- Use current Public API diffing evidence from API Extractor, `cargo semver-checks`, Revapi, japicmp, Go `apidiff`, .NET `ApiCompat`, `griffe check`, `pyright --outputjson`, or the nearest ecosystem equivalent.
+- Bind source specification, generator and template version or digest, configuration, committed output, reviewed semantic diff, and regeneration command.
+- Build representative consumers against the packed artifact across supported environments and affected calls, errors, configuration, and generated code.
+- Record changelog/deprecation/migration evidence plus applicable signature, provenance, SBOM, OSV, SLSA, licensing, and registry recovery ownership.
 
-## Compatibility Review Patterns
+## Adoption And Handoff
 
-- Under semantic versioning, classify a patch as a backward-compatible bug fix; a public type, generated shape, runtime floor, error taxonomy, default, package metadata, or dependency-floor break requires a higher compatibility classification.
-- Minor: additive surface that old consumers can ignore; examples, docs, changelog, and fixture consumers still pass.
-- Major: removal, rename, required parameter, narrowed type, changed default, module-format flip, runtime-floor raise, error taxonomy break, or changed extension contract.
-- Internal-only: no published package, exported symbol, generated client, docs example, fixture consumer, or package metadata boundary changes; prove with repository inspection evidence.
-
-## Handoff Boundaries
-
-- Hand server API semantics to `api-contract-design`; keep SDK contract focus on generated clients, package surface, examples, and consumer compatibility.
-- Hand mixed-version rollout windows to `version-compatibility`; keep SDK release classification tied to package versions and consumer adoption.
-- Hand dependency/CVE/license/provenance depth to `package-dependency-management` and `security-privacy-gate`; keep this capability focused on publication evidence and rollback/yank behavior.
-- Hand test depth and stale validation decisions to `quality-test-gate` and `targeted-validation-selection`; this capability names the required evidence but does not replace the validator.
+- Classify patch, minor, major, or internal-only from exported, binary, wire, behavioral, packaging, runtime, and ecosystem evidence.
+- Select mixed-version adoption, removal timing, rollback, or yank only from current consumer and persisted/wire compatibility evidence.
+- Route server semantics to `api-contract-design`.
+- Route rollout windows to `version-compatibility`.
+- Route dependency and provenance depth to package and security owners.
+- Route documentation publication to its owner.
+- Route test depth to quality and validation owners.
+- Record unknown external consumers, private extensions, optional dependencies, mirrors, future generators, registry outages, and consumer timing as proof limits.

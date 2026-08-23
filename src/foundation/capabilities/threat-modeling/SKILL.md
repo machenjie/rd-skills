@@ -21,19 +21,15 @@ Define the security delta, attacker capability, reachable source-to-effect path,
 
 ## High-Value Rules
 
-- **Bound the changed security graph.** Name the protected asset or authority, changed entry point, trust transition, data or control flow, and downstream effect. Out-of-scope or unknown edges introduced or altered by the task remain explicit.
-- **Model capability and preconditions, not actor labels alone.** Include only behaviors with graph-backed access, knowledge, timing, and control prerequisites.
-- **Trace a reachable abuse path.** Follow source, attacker-controlled or stale values, transformations, policy or parser decisions, storage or transport, sink, and resulting effect; distinguish evidenced edges from assumptions and unreachable branches.
-- **Define the protected outcome before severity.** State the confidentiality, integrity, availability, safety, financial, privacy, tenant, or authority invariant at risk. Current exposure and consequences determine likelihood, impact, and blast radius rather than a threat label.
-- **Select and place controls from the path.** Compare candidate controls by protected outcome, intercepted edge, authority and owner, failure behavior, compatibility, and bypass surface. A mechanism remains undecided until the reachable path is known.
-- **Map the threat to fresh verification and detection.** Connect the changed path and control to an abuse test, source/policy proof, monitoring, and final-edit freshness. The evidence limit remains explicit; scanner output alone cannot close business abuse.
-- **Own residual risk and reopening.** Record the unclosed path or consequence, compensating or containment evidence, accountable owner, release consequence, and the scope, incident, exposure, data, actor, or control change that requires review.
+- Define the changed protected outcome.
+- Trace its capability-backed reachable source-to-effect path.
+- Select and place an owned control at an intercepting edge.
+- Select the named decision or evidence Reference for impact, bypass, validation, detection, and residual-risk detail.
+- When the selected threat-model decision remains active, load only its named Reference.
 
 ## Anti-Patterns
 
-- Substitute an asset catalog, framework taxonomy, regulation list, or generic attacker story for a task-local reachable path and protected outcome.
-- Select a familiar validation, authentication, network, encryption, logging, or approval mechanism from the threat label while its placement, authority, failure mode, and bypass paths remain unproved.
-- Close the model from a design note, scanner pass, happy-path test, or named mitigation while graph edges, alternate actors, deployed state, detection, or residual ownership remain unknown.
+- Do not substitute a catalog, threat label, scanner pass, or named mitigation for a reachable task-local path, control placement, bypass analysis, and residual owner.
 
 ## Stop Conditions
 

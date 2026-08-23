@@ -1,38 +1,52 @@
 # State, Plan, And Drift Contracts
 
-Use this reference when the selected tool changes state authority, coordination, drift, unknown-value, or proposal-freshness decisions. Do not use it as permission to mutate infrastructure.
+Use for state authority, coordination, drift, unknowns, or proposal freshness; it excludes mutation authority.
 
-Official sources were accessed on 2026-07-24.
+Sources accessed 2026-07-24.
 
 ## State Boundary
 
-| Surface | Decision |
+| Surface | Bind |
 | --- | --- |
-| Desired source | Name the final module, template, program, object, chart values, or overlay and its immutable revision. |
-| Recorded state | Name the backend, workspace or stack, state version, encryption boundary, and recovery owner when the tool records state. |
-| Provider state | Record the observed remote identity, refresh or drift scope, unsupported fields, and observation time. |
-| Effective state | Separate admitted, reconciled, serving, and externally visible effects from submitted intent. |
-| Coordination | Identify the supported lock, lease, field owner, controller, or single-writer rule and its failure behavior. |
-| Proposal | Bind the plan, preview, change set, render, or diff to source, state, target, versions, time, unknowns, and omissions. |
+| Desired | Source and immutable revision. |
+| Recorded | Backend, workspace/stack, version, encryption, recovery owner. |
+| Provider | Remote identity, drift scope, unsupported fields, observation time. |
+| Effective | Admitted, reconciled, serving, external effects. |
+| Coordination | Lock/lease/field owner/controller/single writer and failure behavior. |
+| Proposal | Artifact, source/state/target/versions/time/unknowns/omissions. |
 
-## Tool Deltas
+## Tool Boundaries
 
-- **Terraform:** inspect state mapping, backend locking, provider locks, unknown values, and targeting separately; see [state purpose](https://developer.hashicorp.com/terraform/language/state/purpose), [locking](https://developer.hashicorp.com/terraform/language/state/locking), [plan](https://developer.hashicorp.com/terraform/cli/commands/plan), [references](https://developer.hashicorp.com/terraform/language/expressions/references), and [dependency locks](https://developer.hashicorp.com/terraform/language/files/dependency-lock).
-- **OpenTofu:** verify backend locking, plan mode, dependency locks, and key recovery; see [backends](https://opentofu.org/docs/language/state/backends/), [locking](https://opentofu.org/docs/language/state/locking/), [plan](https://opentofu.org/docs/cli/commands/plan/), [encryption](https://opentofu.org/docs/language/state/encryption/), and [dependency locks](https://opentofu.org/docs/language/files/dependency-lock/).
-- **Pulumi:** inspect the selected backend, stack state, refresh stance, and update-plan unknowns; see [state and backends](https://www.pulumi.com/docs/reference/state/) and [update plans](https://www.pulumi.com/docs/iac/operations/stack-management/update-plans/).
-- **CloudFormation:** separate template, parameters, stack state, drift coverage, and executable change set; see [change sets](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html) and [drift-aware change sets](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/drift-aware-change-sets.html).
-- **Kubernetes:** separate submitted objects, field ownership, observed status, controller reconciliation, and external effects; see [objects](https://kubernetes.io/docs/concepts/overview/working-with-objects/), [controllers](https://kubernetes.io/docs/concepts/architecture/controller/), and [Server-Side Apply](https://kubernetes.io/docs/reference/using-api/server-side-apply/).
-- **Helm:** resolve values, dependencies, hooks, and CRDs before interpreting the final render; see [upgrade](https://helm.sh/docs/helm/helm_upgrade/) and [chart hooks](https://helm.sh/docs/topics/charts_hooks/).
-- **Kustomize:** inspect the selected overlay and final transformed identities; see [bases, overlays, and generators](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/).
+- **Terraform:** inspect state mapping, locking, plan unknowns, reference dependencies, and dependency locks separately.
+- **OpenTofu:** verify backend/locking, plan mode, encryption, and dependency locks.
+- **Pulumi:** inspect backend/state, stack, refresh stance, and plan unknowns.
+- **CloudFormation:** separate template/parameters, stack state, drift coverage, executable and drift-aware change sets.
+- **Kubernetes:** separate objects, field ownership, status, controller reconciliation, and external effects.
+- **Helm:** resolve values, dependencies, hooks, and CRDs before upgrade output.
+- **Kustomize:** inspect overlay and transformed identities.
+
+## Official Evidence
+
+- Terraform: <https://developer.hashicorp.com/terraform/language/state/purpose> <https://developer.hashicorp.com/terraform/language/state/locking> <https://developer.hashicorp.com/terraform/cli/commands/plan> <https://developer.hashicorp.com/terraform/language/expressions/references> <https://developer.hashicorp.com/terraform/language/files/dependency-lock>
+- OpenTofu: <https://opentofu.org/docs/language/state/backends/> <https://opentofu.org/docs/language/state/locking/> <https://opentofu.org/docs/cli/commands/plan/> <https://opentofu.org/docs/language/state/encryption/> <https://opentofu.org/docs/language/files/dependency-lock/>
+- Pulumi: <https://www.pulumi.com/docs/reference/state/> <https://www.pulumi.com/docs/iac/operations/stack-management/update-plans/>
+- CloudFormation: <https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html> <https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/drift-aware-change-sets.html>
+- Kubernetes: <https://kubernetes.io/docs/concepts/overview/working-with-objects/> <https://kubernetes.io/docs/reference/using-api/server-side-apply/> <https://kubernetes.io/docs/concepts/architecture/controller/>
+- Helm: <https://helm.sh/docs/topics/charts_hooks/> <https://helm.sh/docs/helm/helm_upgrade/>
+- Kustomize: <https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/>
 
 ## Non-Equivalence Rules
 
-- Treat Terraform and OpenTofu plans, Pulumi update plans, CloudFormation change sets, Kubernetes dry-run behavior, Helm renders, and Kustomize builds as different evidence classes.
-- Do not project OpenTofu state encryption onto Terraform, Pulumi secret handling, CloudFormation storage, Kubernetes Secrets, or rendered Helm output.
-- Do not infer live drift coverage from a render, or controller convergence from accepted desired state.
-- Refresh proposal evidence after any bound source, state, target, version, provider, dependency, or relevant elapsed-time change.
+- Keep Terraform/OpenTofu plans, Pulumi plans, CloudFormation sets, Kubernetes dry-run, Helm renders, and Kustomize builds distinct.
+- Do not project OpenTofu encryption onto Terraform, Pulumi, CloudFormation, Kubernetes Secrets, or Helm output.
+- Do not infer live drift from render or convergence from accepted desired state.
+- Refresh evidence after a bound source/state/target/version/provider/dependency or relevant-time change.
 
-## Source Limits
+## Proof Limits
 
-- The OpenTofu pages identify 1.12 where stated, and Helm command pages identify 4.2.2 where stated; other pages are rolling documentation.
-- These sources do not establish repository versions, backend guarantees, provider behavior, cluster admission, live drift, production authority, or future apply results.
+- OpenTofu pages identify 1.12 and Helm pages 4.2.2 where stated; others are rolling.
+- Sources do not prove repository versions, backends, providers, admission, live drift, production authority, or apply results.
+
+## Anti-Patterns
+
+- Proposals are not execution/convergence proof; source rollback may leave effects.

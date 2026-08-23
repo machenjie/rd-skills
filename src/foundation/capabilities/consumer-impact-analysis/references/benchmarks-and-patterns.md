@@ -1,57 +1,17 @@
-# Consumer Impact Benchmarks And Patterns
-Use this reference for L3+ public API/SDK/schema/event/export changes, generated-client impact, unknown consumers, compatibility migrations, telemetry gates, deprecation/removal, mixed-version rollout, rollback, or mobile/partner lag.
-## Benchmark Anchors
-- **SemVer 2.0.0 / RFC 8594:** breaking public APIs need a major version or bridge; deprecation needs machine-readable sunset signaling and migration guidance.
-- **Consumer contracts / generated clients:** providers verify active expectations before deploy; generated SDKs, exports, examples, diffs, and compile checks are consumer evidence.
-- **OpenAPI / AsyncAPI / Protobuf / schema registries:** When structural schema tooling governs a mixed-version rollout, align the inspected diff and BACKWARD/FORWARD/FULL mode with producer/consumer order. A passing structural check supports shape compatibility. It does not prove semantic, default, or rollout safety.
-- **Expand/contract plus telemetry:** add compatibility, migrate, then remove only after available old/new usage and error evidence supports the gate.
-## Consumer Inventory Matrix
+# Consumer Impact Strategy Comparison
 
-| Consumer Class | Examples | Evidence |
-| --- | --- | --- |
-| Known direct | Frontend app, backend service, CLI caller, import site | Search result, call graph, owner confirmation |
-| Generated | SDK, typed client, protobuf/OpenAPI/AsyncAPI output | Generator config, source spec hash, generated diff, compile |
-| Public/partner/mobile | Published API, partner webhook, app-store client | API key/client id/version telemetry, support window |
-| Event/job/report | Subscriber, batch job, dashboard, analytics query | Topic/consumer group, job definition, dashboard query |
-| Docs/examples | Copied snippets, fixtures, public examples | Docs search, example tests, release notes |
-| Unknown | Dynamic calls, external users, package downloads | Telemetry, registry/package metadata, residual risk owner |
+Compare each option against structure, meaning, validation, defaults, errors, timing/order, persistence/rollback, generated output, and retained data or messages.
 
-## Compatibility Classification Matrix
+- **Additive optional:** preserve semantics and unknown-field tolerance.
+- **Bridge/alias:** accept old/new names with explicit mapping and precedence.
+- **Expand/migrate/contract:** separate compatibility, migration, telemetry, and cleanup.
+- **Version:** isolate breaking behavior; pair SemVer or Sunset signaling with migration guidance.
+- **Upcaster/adapter:** version and deterministically map old events, data, or generated models.
+- **Flag/opt-in:** retain the old default and an owned rollback.
+- **Dual publish/write:** define duplicates, reconciliation, and removal.
+- **Configuration bridge:** support old/new keys and defaults through rolling restart.
+- **No-ship:** select when no bounded compatible path is proved.
 
-| Dimension | Consumer Risk | Required Evidence |
-| --- | --- | --- |
-| Structure | field/endpoint/event/export shape changes | schema/API/export diff and generated-client compile |
-| Meaning | same shape with changed semantics or units | before/after semantics and consumer acceptance |
-| Validation | requiredness, enum, regex, min/max, unknown-field policy | old/new request fixtures and validation diff |
-| Defaults | omitted fields now behave differently | default map, opt-in bridge, telemetry impact |
-| Error behavior | status, retryable flag, problem body, error code | error contract tests and client remediation map |
-| Timing/order | pagination, ordering, async/sync, timeout, retention | ordering/pagination/replay fixtures |
-| Persistence | new writes old code cannot read after rollback | old/new reader-writer and rollback validation |
+Exercise old-producer/new-consumer, new-producer/old-consumer, rollback readers after new writes, delayed consumers with retained/replayed messages, and generated clients against providers. Structural OpenAPI, AsyncAPI, Protobuf, or registry checks prove only their configured shape and reader/writer mode; separately prove semantics and rollout order.
 
-## Mixed-Version Rollout Matrix
-
-| Path | Question | Pass Condition |
-| --- | --- | --- |
-| Old producer -> new consumer | Can new consumers read old requests/events/data/config? | default/upcaster/dual-read handles old shape |
-| New producer -> old consumer | Can old consumers read new responses/events/data/config? | additive-only, bridge, or old path still served |
-| Old code -> new data | Can rollback read data written by new code? | old reader ignores or bridge writes old representation |
-| Delayed consumer -> retained events | Can lagging consumers process retained messages? | schema compatibility covers retention/replay window |
-| Generated client -> provider | Do generated clients preserve source/binary compatibility? | generated diff and compile tests pass or major version is used |
-
-## Mitigation Pattern Matrix
-
-| Pattern | Use When | Controls |
-| --- | --- | --- |
-| Additive optional change | Existing semantics do not change | unknown-field tolerance, docs, tests |
-| Bridge/alias | Rename or semantic migration needs old/new names | accept/read both, write both or map, precedence, telemetry |
-| Expand/migrate/contract | Cleanup cannot be atomic | separate phases, migration telemetry, cleanup gate |
-| Versioned endpoint/schema | Existing semantics must break | version, migration guide, deprecation window, old support |
-| Upcaster/adapter | Old events/data need transformation | version tag, deterministic mapping, replay tests |
-| Feature flag/opt-in | Behavior can be isolated by client/tenant | default old behavior, rollback flag, telemetry |
-| Dual publish/write | Consumers migrate across event/store/field | duplicate handling, reconciliation, removal gate |
-| Config bridge | Config key/default changes during rolling restart | old/new key support, precedence, cleanup owner |
-
-## Anti-Patterns
-- "No callers" from local `rg`, or server unit tests presented as consumer compatibility proof.
-- Generated clients or event payloads changed without semver/API diff, compile/downstream smoke, replay fixture, registry mode, and subscriber inventory as applicable.
-- Deprecation removed by date despite usage telemetry, or rollback reduced to old-code redeploy without checking new data, events, and config.
+Bound external, generated, mobile, partner, copied, package, dashboard, and dynamic consumers with inventory, compile/replay/telemetry evidence, and gaps. Return option comparison, selected approach, rejected alternatives, and proof limits.

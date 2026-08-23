@@ -7,8 +7,7 @@ description: "Use `task-agent` for bounded frontend component or browser changes
 
 ## Role
 
-Support `task-agent` in changing frontend interaction states, accessibility,
-responsive behavior, and API failure handling.
+Support `task-agent` in owning bounded frontend interaction states within declared owners and acceptance.
 
 ## When To Use
 
@@ -22,50 +21,34 @@ responsive behavior, and API failure handling.
 
 ## Required Inputs
 
-- experience evidence
-- interaction-state and API failure contracts
-- design-system and accessibility constraints
+- current owner, consumers, behavior contracts, and observable acceptance
+- validation signal and proof limits
 
 ## Professional Decision Rules
 
-- Keep state in the narrowest correct owner and derive rather than duplicate state.
-- Handle loading, empty, error, success, disabled, permission, cancellation, retry, and stale-response behavior for async work.
-- Reuse design-system components and preserve keyboard, focus, semantic, responsive, and screen-reader behavior.
-- Map UI acceptance to component, integration, accessibility, and visual validation proportional to risk.
-
-## High-Value Gotchas
-
-- Duplicated derived state drifts.
-- Unmount, cancellation, and out-of-order responses create race defects.
-- Automated accessibility checks do not prove keyboard and screen-reader flows.
-
-## Execution Checklist
-
-1. Trace the affected interaction states, API outcomes, focus path, and responsive behavior.
-2. Choose state ownership and component reuse from current design-system and lifecycle evidence.
-3. Implement the bounded behavior with explicit cancellation, denial, failure, and recovery paths.
-4. Stop closure when an affected state lacks accessibility or behavior proof.
+- When any named frontend decision remains unresolved, keep the change with its owner and load only the active named References whose contracts supply the required outputs.
+- No shared UI, hook, store, client, flag, or dependency without consumers, reuse, and deletion evidence.
 
 ## Stop / Escalation Conditions
 
-- Stop implementation when component ownership, state scope, API error semantics, accessibility/focus behavior, or security boundary is implicit.
-- Stop shared UI, hook, global store, wrapper API client, mode flag, or dependency creation until current consumers, native/design-system alternatives, and rollback/deletion path are proven.
-- Stop frontend closure when loading, empty, error, success, disabled, validation, permission, and retry/fallback states are not mapped to validation evidence or accepted residual risk.
-- Stop tool execution when browser, app, account, API, storage, production-like, or connector actions lack permission/sandbox, test scope, rollback/revert path, and redaction evidence.
+- Stop implementation on unresolved authority, owner, behavior, or proof.
+- Stop unbounded or unapproved tool actions.
 
 ## Output Contract
 
-- changed interaction and state boundaries
-- accessibility and failure-state evidence
-- current post-final-edit validation result, including interaction-state and API-failure proof
-- residual UX risk
+- changed boundaries, current evidence, proof limits, and residual UX risk
 
 ## Targeted References
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
 | [checklist](references/checklist.md) | decision-checklist | A bounded L2 review needs a compact frontend inventory for component, route, form, state, API, accessibility, security, performance, or tests | The inline quality gate is enough or deeper gate/evidence mapping is required | task-agent | checklist-result, residual-risk |
-| [frontend output and gates](references/frontend-output-and-gates.md) | targeted | Drafting or reviewing placement decisions, failure contracts, a11y/security gates, same-pattern scans, state-to-validation maps, or closure evidence | The body output contract and minimal verification are sufficient for the risk | task-agent | gate-decision, residual-risk |
+| [component placement and reuse gates](references/component-placement-and-reuse-gates.md) | targeted | Component, shared UI, hook, store, client, or reuse ownership remains open | Owner, current consumers, and reuse decision are fixed | task-agent | boundary-decision, selected-approach, residual-risk |
+| [state ownership and api failure gates](references/state-ownership-and-api-failure-gates.md) | targeted | State ownership or API, failure, or retry contract remains open | Current contract fixes states, failures, recovery, and retry | task-agent | decision-record, failure-decision, residual-risk |
+| [accessibility closure gates](references/accessibility-closure-gates.md) | targeted | Frontend accessibility closure decision remains open | Accepted accessibility contract already fixes the implementation | task-agent | gate-decision, validation-plan, proof-limit |
+| [frontend security closure gates](references/frontend-security-closure-gates.md) | targeted | HTML, content, token, script, or browser-storage security decision remains open | No frontend security boundary changes | task-agent | gate-decision, validation-plan, residual-risk |
+| [frontend quality and validation evidence](references/frontend-quality-and-validation-evidence.md) | evidence-pattern | State, testability, reliability, performance, or quality claim needs proof | No changed frontend quality claim awaits validation | task-agent | evidence-record, validation-plan, proof-limit, residual-risk |
+| [same pattern scan and handoff evidence](references/same-pattern-scan-and-handoff-evidence.md) | evidence-pattern | Same-pattern, tool-boundary, or final-handoff evidence is required | No scan or closure claim remains | task-agent | evidence-record, validation-plan, proof-limit, residual-risk |
 | [index](references/index.md) | index | competing frontend change builder references require dependency, conflict, or output-fragment selection | the frontend change builder root or a task-named reference already resolves selection | task-agent | reference-selection |
 | [solution optimality](references/solution-optimality.md) | targeted | A rendering, state, data-fetching, asset, lifecycle, or interaction-path choice may materially change user experience or browser resource use | Copy/style changes do not affect runtime behavior, or current design-system/repository evidence already fixes the bounded implementation | task-agent | selected-approach, residual-risk |
 | [visual quality and redesign](references/visual-quality-and-redesign.md) | targeted | The user explicitly requests visual polish or redesign, or hierarchy, typography, spacing, density, or composition is an acceptance target | The frontend task is ordinary behavior work without a visual-quality acceptance target, or reference fidelity alone defines the visual goal | task-agent | selected-approach, residual-risk |

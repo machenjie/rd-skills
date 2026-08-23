@@ -38,6 +38,18 @@ reversible assumptions and user-owned decisions.
 - A source-discoverable fact is not a reason to interrupt the user.
 - Make every reversible assumption explicit in the output.
 
+## Evidence Resolution Source Declaration
+
+The following closed declaration is the semantic source for control-plane gap
+projections. Control may retain labels and actions only when they validate
+exactly against this declaration.
+
+<!-- BEGIN CHANGEFORGE EVIDENCE RESOLUTION SOURCE -->
+```json
+{"contract":"changeforge.evidence-resolution-source/v1","gap_classes":[{"id":"repo-resolvable-fact","source_semantic":"discoverable-fact","source_anchor":"A source-discoverable fact is not a reason to interrupt the user.","subtypes":[]},{"id":"user-owned-choice","source_semantic":"user-owned-choice","source_anchor":"Classify each gap as discoverable fact, reversible assumption, or user-owned choice.","subtypes":["semantic-choice","execution-level-choice"]},{"id":"route-or-material-unknown","source_semantic":"unsafe-or-non-reversible-assumption","source_anchor":"Proceed with explicit reversible assumptions only when they cannot change public behavior, data, authorization, or domain meaning.","subtypes":[]}],"decision_rules":{"repo-resolvable-fact":{"question":"forbidden","route_affecting":"analyzed","otherwise":"direct-bounded-discovery"},"semantic-choice":{"question":"one-minimum-concrete","invalidation":"protected-brief-semantics"},"execution-level-choice":{"question":"one-minimum-concrete","invalidation":"execution-level-projection-only"},"route-or-material-unknown":{"question":"forbidden","decision":"analysis-or-fail-closed"}}}
+```
+<!-- END CHANGEFORGE EVIDENCE RESOLUTION SOURCE -->
+
 ## Execution Checklist
 
 1. Reconstruct current behavior, desired behavior, acceptance or completion signal, constraints, non-goals, and affected surfaces from the request and source evidence.

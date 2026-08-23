@@ -16,18 +16,6 @@ Official Microsoft Learn pages below were accessed on 2026-07-24.
 - Define identity and registration continuity plus downgrade, dependency,
   certificate, and repair responses across upgrades.
 
-## Failure Proof
-
-- Exercise clean install, same-version repair, interrupted update, downgrade,
-  uninstall/reinstall, dependency failure, and packaged/unpackaged transitions.
-- Inspect the installed artifact and registrations; build output alone is not
-  installation evidence.
-
-## Required Record
-
-Return identity inventory, deployment model, installer/updater authority,
-transition matrix, failure recovery, artifact/host evidence, and proof limits.
-
 ## Primary Sources
 
 - [Package and deploy overview](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/)

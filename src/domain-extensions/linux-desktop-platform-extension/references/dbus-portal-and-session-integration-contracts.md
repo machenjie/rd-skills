@@ -22,18 +22,6 @@ Official D-Bus and XDG Desktop Portal pages below were accessed on 2026-07-24.
 - Do not silently replace denied or unavailable portal behavior with broader
   filesystem, capture, notification, or host access.
 
-## Failure Proof
-
-- Exercise name contention, service activation failure, malformed/unknown
-  messages, disconnect/reconnect, timeout, cancellation, denial, and missing backend.
-- Prove stale responses and objects cannot mutate a new session or application
-  instance.
-
-## Required Record
-
-Return bus/portal contract, identity/consent boundary, lifecycle and cancellation,
-failure behavior, desktop/backend evidence, and proof limits.
-
 ## Primary Sources
 
 - [D-Bus specification](https://dbus.freedesktop.org/doc/dbus-specification.html)

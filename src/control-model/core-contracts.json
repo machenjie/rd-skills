@@ -68,6 +68,7 @@
       {"id": "profile-contract-authority", "pointer": "/profile_contract", "scope": "Exact Agent Profile roles, capabilities, and handoff projections."},
       {"id": "control-skill-contract-authority", "pointer": "/control_skill_contract", "scope": "Thin Control Skill routing and Prompt delegation."},
       {"id": "docs-contract-authority", "pointer": "/docs_contract", "scope": "Managed documentation projections and source bindings."},
+      {"id": "decision-eval-authority", "pointer": "/decision_eval_contract", "scope": "Seven-axis routing Decision Eval, controlled mutation bindings, compatibility baseline, route-once, and Layer 3 cardinality evidence."},
       {"id": "impact-graph-authority", "pointer": "/impact_graph_contract", "scope": "Affected producer and unit-test selection, dependency closure, fail-closed classification, isolated producer execution, and deterministic unsharded unique test execution."}
     ],
     "producers": [
@@ -93,7 +94,7 @@
       {"id": "validate-docs-consistency", "argv": ["python3", "scripts/validate-docs-consistency.py"], "depends_on": ["eval-rendered-context"], "reports": [], "release_reports": [], "authority_inputs": ["context-budget-authority", "task-contract-authority", "evidence-contract-authority", "completion-contract-authority", "docs-contract-authority"], "timeout_seconds": 600},
       {"id": "validate-built-links", "argv": ["python3", "scripts/validate-built-skill-reference-links.py"], "depends_on": ["build-recommended", "build-full", "build-dev"], "reports": [], "release_reports": [], "authority_inputs": ["reference-contract-authority"], "timeout_seconds": 600},
       {"id": "validate-installation", "argv": ["python3", "scripts/validate-installation.py"], "depends_on": ["validate-built-links", "validate-agent-profiles"], "reports": ["reports/installation-validation.json"], "release_reports": ["reports/installation-validation.md"], "authority_inputs": ["roles-authority", "prompt-contract-authority", "profile-contract-authority"], "timeout_seconds": 600},
-      {"id": "eval-routing", "argv": ["python3", "scripts/eval-routing.py"], "depends_on": [], "reports": ["reports/routing-eval.json"], "release_reports": ["reports/routing-eval.md"], "authority_inputs": ["roles-authority"], "timeout_seconds": 600},
+      {"id": "eval-routing", "argv": ["python3", "scripts/eval-routing.py"], "depends_on": [], "reports": ["reports/routing-eval.json"], "release_reports": ["reports/routing-eval.md"], "authority_inputs": ["roles-authority", "decision-eval-authority"], "timeout_seconds": 600},
       {"id": "eval-skill-professionalism", "argv": ["python3", "scripts/eval-skill-professionalism.py"], "depends_on": [], "reports": ["reports/skill-professionalism-eval.json", "reports/skill-professionalism-depth.json", "reports/professional-coverage-matrix.json"], "release_reports": ["reports/skill-professionalism-eval.md", "reports/skill-professionalism-depth.md", "reports/professional-coverage-matrix.md"], "authority_inputs": [], "timeout_seconds": 600},
       {"id": "eval-professional-benchmarks", "argv": ["python3", "scripts/eval-professional-benchmarks.py"], "depends_on": [], "reports": ["reports/professional-benchmarks-report.json", "reports/professional-benchmarks-eval.json"], "release_reports": ["reports/professional-benchmarks-report.md", "reports/professional-benchmarks-eval.md"], "authority_inputs": [], "timeout_seconds": 600},
       {"id": "validate-professional-routing", "argv": ["python3", "scripts/validate-professional-routing-coverage.py"], "depends_on": ["eval-routing", "eval-skill-professionalism", "eval-professional-benchmarks"], "reports": ["reports/professional-routing-coverage.json"], "release_reports": ["reports/professional-routing-coverage.md"], "authority_inputs": [], "timeout_seconds": 600},
@@ -289,7 +290,7 @@
       {"id": "impact-graph-resolver", "path_patterns": ["scripts/impact_graph.py"], "producer_ids": [], "test_modules": ["tests/scripts/test_impact_graph.py", "tests/scripts/test_impact_graph_git.py"]},
       {"id": "affected-test-runner", "path_patterns": ["scripts/run-ci-tests.py"], "producer_ids": [], "test_modules": ["tests/scripts/test_run_ci_tests.py"]},
       {"id": "core-evaluator", "path_patterns": ["scripts/eval-core-principles.py"], "producer_ids": [], "test_modules": ["tests/scripts/test_affected_professionalism.py", "tests/scripts/test_eval_core_affected.py", "tests/scripts/test_eval_core_principles.py"]},
-      {"id": "core-schema-and-validation", "path_patterns": ["scripts/validation_utils.py", "src/control-model/core-contracts.json"], "producer_ids": ["validate-task-contracts"], "test_modules": ["tests/scripts/test_impact_graph.py", "tests/scripts/test_report_directory_cli.py", "tests/scripts/test_validate_task_contracts.py", "tests/scripts/test_validation_utils.py"]},
+      {"id": "core-schema-and-validation", "path_patterns": ["scripts/validation_utils.py", "src/control-model/core-contracts.json"], "producer_ids": ["validate-task-contracts"], "test_modules": ["tests/scripts/test_decision_eval.py", "tests/scripts/test_evidence_direct_authority.py", "tests/scripts/test_impact_graph.py", "tests/scripts/test_report_directory_cli.py", "tests/scripts/test_validate_task_contracts.py", "tests/scripts/test_validation_utils.py"]},
       {"id": "retired-workflow-guard", "path_patterns": [".github/workflows/ci.yml", ".github/workflows/formal-release.yml"], "producer_ids": ["validate-docs-consistency"], "test_modules": ["tests/scripts/test_validate_docs_consistency.py"]},
       {"id": "affected-test-support", "path_patterns": ["tests/scripts/affected_test_support.py"], "producer_ids": [], "test_modules": ["tests/scripts/test_affected_professionalism.py", "tests/scripts/test_eval_core_affected.py", "tests/scripts/test_impact_graph_git.py"]},
       {"id": "expert-panel-source-test-support", "path_patterns": ["tests/scripts/expert_panel_source_test_support.py"], "producer_ids": [], "test_modules": ["tests/scripts/test_expert_panel_actionability.py", "tests/scripts/test_expert_panel_attestation.py", "tests/scripts/test_expert_panel_manifest.py", "tests/scripts/test_expert_panel_review.py", "tests/scripts/test_professional_completeness_carry_forward.py", "tests/scripts/test_professional_completeness_schema3.py", "tests/scripts/test_professional_review_cost_fixture.py", "tests/scripts/test_professionalism_expert_panel.py"]},
@@ -300,7 +301,7 @@
       {"id": "professional-sample-evaluator", "path_patterns": ["scripts/eval-professional-agent-samples.py"], "producer_ids": ["eval-professional-samples"], "test_modules": ["tests/scripts/test_deterministic_report_contracts.py"]},
       {"id": "professional-benchmark-evaluator", "path_patterns": ["evals/professional-benchmarks/**", "scripts/eval-professional-benchmarks.py"], "producer_ids": ["eval-professional-benchmarks"], "test_modules": ["tests/scripts/test_deterministic_report_contracts.py", "tests/scripts/test_eval_professional_benchmarks.py"]},
       {"id": "rendered-context-evaluator", "path_patterns": ["scripts/eval-rendered-context-budget.py"], "producer_ids": ["eval-rendered-context"], "test_modules": ["tests/scripts/test_eval_rendered_context_budget.py", "tests/scripts/test_report_directory_cli.py", "tests/test_hookless_evaluations.py"]},
-      {"id": "routing-evaluator", "path_patterns": ["scripts/eval-routing.py"], "producer_ids": ["eval-routing"], "test_modules": ["tests/scripts/test_capability_coverage_red.py", "tests/scripts/test_report_directory_cli.py", "tests/scripts/test_route_implementation_owner_candidates.py", "tests/scripts/test_route_oracle_instrumentation.py", "tests/scripts/test_validate_professional_routing_coverage.py", "tests/test_hookless_evaluations.py"]},
+      {"id": "routing-evaluator", "path_patterns": ["scripts/eval-routing.py"], "producer_ids": ["eval-routing"], "test_modules": ["tests/scripts/test_capability_coverage_red.py", "tests/scripts/test_decision_eval.py", "tests/scripts/test_evidence_direct_authority.py", "tests/scripts/test_report_directory_cli.py", "tests/scripts/test_route_implementation_owner_candidates.py", "tests/scripts/test_route_oracle_instrumentation.py", "tests/scripts/test_validate_professional_routing_coverage.py", "tests/test_hookless_evaluations.py"]},
       {"id": "skill-professionalism-evaluator", "path_patterns": ["scripts/eval-skill-professionalism.py"], "producer_ids": ["eval-skill-professionalism"], "test_modules": ["tests/scripts/test_affected_professionalism.py", "tests/scripts/test_capability_coverage_red.py", "tests/scripts/test_deterministic_report_contracts.py", "tests/scripts/test_eval_skill_professionalism.py", "tests/test_hookless_evaluations.py"]},
       {"id": "expert-panel-attestation-tooling", "path_patterns": ["scripts/expert_panel_attestation.py"], "producer_ids": [], "test_modules": ["tests/scripts/test_expert_panel_actionability.py", "tests/scripts/test_expert_panel_attestation.py"]},
       {"id": "expert-panel-contract-projections", "path_patterns": ["scripts/expert_panel_contracts.py"], "producer_ids": [], "test_modules": ["tests/scripts/test_expert_panel_actionability.py", "tests/scripts/test_expert_panel_attestation.py", "tests/scripts/test_expert_panel_review.py", "tests/scripts/test_professional_completeness_carry_forward.py", "tests/scripts/test_professional_completeness_schema3.py"]},
@@ -322,8 +323,8 @@
       {"id": "professionalism-release-review-config", "path_patterns": ["config/professionalism-release-review.yaml"], "producer_ids": [], "test_modules": ["tests/scripts/test_expert_panel_actionability.py", "tests/scripts/test_expert_panel_attestation.py", "tests/scripts/test_professional_completeness_carry_forward.py", "tests/scripts/test_professional_review_cost_fixture.py"]},
       {"id": "expert-panel-fixed-attestations", "path_patterns": ["evals/expert-panel/**"], "producer_ids": [], "test_modules": ["tests/scripts/test_expert_panel_actionability.py", "tests/scripts/test_expert_panel_attestation.py", "tests/scripts/test_professional_completeness_carry_forward.py"]},
       {"id": "agent-behavior-evaluator", "path_patterns": ["evals/agent-behavior/**", "scripts/eval-agent-behavior.py"], "producer_ids": ["eval-agent-behavior"], "test_modules": ["tests/scripts/test_capability_coverage_red.py"]},
-      {"id": "pressure-behavior-evaluator", "path_patterns": ["evals/pressure/**", "scripts/eval-pressure-behavior.py"], "producer_ids": ["eval-pressure-behavior"], "test_modules": ["tests/scripts/test_affected_professionalism.py", "tests/test_hookless_architecture.py"]},
-      {"id": "routing-fixtures-and-helpers", "path_patterns": ["evals/capability-coverage/**", "evals/routing/**", "scripts/capability_coverage.py", "scripts/deterministic_route_oracle.py", "scripts/routing_scenarios.py"], "producer_ids": ["eval-routing"], "test_modules": ["tests/scripts/test_capability_coverage_red.py", "tests/scripts/test_domain_modifier_routing.py", "tests/scripts/test_foundation_selector_authority.py", "tests/scripts/test_route_oracle_instrumentation.py", "tests/scripts/test_run_codegen_benchmarks.py"]},
+      {"id": "pressure-behavior-evaluator", "path_patterns": ["evals/pressure/**", "scripts/eval-pressure-behavior.py"], "producer_ids": ["eval-pressure-behavior"], "test_modules": ["tests/scripts/test_affected_professionalism.py", "tests/scripts/test_evidence_direct_authority.py", "tests/test_hookless_architecture.py"]},
+      {"id": "routing-fixtures-and-helpers", "path_patterns": ["evals/capability-coverage/**", "evals/routing/**", "scripts/capability_coverage.py", "scripts/deterministic_route_oracle.py", "scripts/routing_scenarios.py"], "producer_ids": ["eval-routing"], "test_modules": ["tests/scripts/test_capability_coverage_red.py", "tests/scripts/test_decision_eval.py", "tests/scripts/test_domain_modifier_routing.py", "tests/scripts/test_evidence_direct_authority.py", "tests/scripts/test_foundation_selector_authority.py", "tests/scripts/test_route_oracle_instrumentation.py", "tests/scripts/test_run_codegen_benchmarks.py", "tests/scripts/test_selector_jit_domain_parity.py"]},
       {"id": "agent-lightweight-fixtures", "path_patterns": ["evals/agent-light-trajectories/**", "scripts/eval-agent-lightweight.py"], "producer_ids": ["eval-agent-lightweight"], "test_modules": ["tests/scripts/test_eval_agent_lightweight_utility.py", "tests/scripts/test_eval_agent_lightweight_layer3_references.py", "tests/scripts/test_report_directory_cli.py"]},
       {"id": "codegen-fixtures", "path_patterns": ["evals/codegen/**"], "producer_ids": [], "test_modules": ["tests/scripts/test_run_codegen_benchmarks.py"]},
       {"id": "codegen-tooling", "path_patterns": ["scripts/codegen_benchmark_harness.py", "scripts/codegen_benchmark_manifest.py", "scripts/run-codegen-assertion.py", "scripts/run-codegen-benchmarks.py", "scripts/validate-codegen-benchmarks.py"], "producer_ids": [], "test_modules": ["tests/scripts/test_run_codegen_benchmarks.py"]},
@@ -332,15 +333,15 @@
       {"id": "marketplace-and-package-tooling", "path_patterns": ["Makefile", "config/open-source-release.yaml", "pyproject.toml", "schemas/marketplace-index.schema.json", "scripts/export-marketplace-index.py", "scripts/generate-marketplace-catalog.py", "scripts/package.py", "scripts/toml_compat.py", "scripts/validate-marketplace-index.py", "scripts/validate-open-source-readiness.py"], "producer_ids": [], "test_modules": ["tests/scripts/test_build_input_freshness.py", "tests/scripts/test_export_marketplace_index.py", "tests/scripts/test_generate_marketplace_catalog.py", "tests/scripts/test_package.py", "tests/scripts/test_validate_marketplace_index.py", "tests/scripts/test_validate_productization_assets.py"]},
       {"id": "targeted-reference-sync-tooling", "path_patterns": ["scripts/sync-targeted-references.py"], "producer_ids": [], "test_modules": ["tests/scripts/test_sync_targeted_references.py"]},
       {"id": "test-package-metadata", "path_patterns": ["tests/__init__.py", "tests/scripts/__init__.py"], "producer_ids": [], "test_modules": ["tests/scripts/test_impact_graph.py"]},
-      {"id": "skill-content-collector", "path_patterns": ["scripts/audit-skill-content.py"], "producer_ids": ["audit-skill-content"], "test_modules": ["tests/scripts/test_audit_skill_content.py", "tests/scripts/test_expert_panel_actionability.py", "tests/scripts/test_expert_panel_attestation.py", "tests/scripts/test_report_directory_cli.py", "tests/scripts/test_validate_root_content.py"]},
+      {"id": "skill-content-collector", "path_patterns": ["scripts/audit-skill-content.py"], "producer_ids": ["audit-skill-content"], "test_modules": ["tests/scripts/test_audit_skill_content.py", "tests/scripts/test_evidence_direct_authority.py", "tests/scripts/test_expert_panel_actionability.py", "tests/scripts/test_expert_panel_attestation.py", "tests/scripts/test_report_directory_cli.py", "tests/scripts/test_validate_root_content.py"]},
       {"id": "build-profiles", "path_patterns": ["scripts/build.py"], "producer_ids": [], "test_modules": ["tests/scripts/test_build_safety.py"]},
       {"id": "quickstart", "path_patterns": ["scripts/quickstart.py"], "producer_ids": [], "test_modules": ["tests/scripts/test_quickstart.py"]},
-      {"id": "agent-profiles", "path_patterns": ["scripts/validate-agent-profiles.py", "src/agent-profiles/**"], "producer_ids": ["validate-agent-profiles"], "test_modules": ["tests/scripts/test_validate_agent_profiles.py"]},
-      {"id": "control-prompt", "path_patterns": ["scripts/validate-control-plane-prompt.py", "src/control-prompts/**"], "producer_ids": ["validate-control-plane-prompt", "validate-hookless-residue"], "test_modules": ["tests/scripts/test_validate_control_plane_prompt.py", "tests/test_hookless_architecture.py"]},
+      {"id": "agent-profiles", "path_patterns": ["scripts/validate-agent-profiles.py", "src/agent-profiles/**"], "producer_ids": ["validate-agent-profiles"], "test_modules": ["tests/scripts/test_evidence_direct_authority.py", "tests/scripts/test_validate_agent_profiles.py"]},
+      {"id": "control-prompt", "path_patterns": ["scripts/validate-control-plane-prompt.py", "src/control-prompts/**"], "producer_ids": ["validate-control-plane-prompt", "validate-hookless-residue"], "test_modules": ["tests/scripts/test_evidence_direct_authority.py", "tests/scripts/test_validate_control_plane_prompt.py", "tests/test_hookless_architecture.py"]},
       {"id": "task-contract-producer", "path_patterns": ["scripts/validate-task-contracts.py"], "producer_ids": ["validate-task-contracts"], "test_modules": ["tests/scripts/test_validate_task_contracts.py"]},
-      {"id": "control-skills", "path_patterns": ["src/control-skills/**"], "producer_ids": ["validate-control-skills", "validate-hookless-residue", "validate-task-contracts"], "test_modules": ["tests/scripts/test_rds_006_task_dag_decomposition.py", "tests/scripts/test_validate_control_skills.py", "tests/scripts/test_validate_task_contracts.py", "tests/test_hookless_architecture.py"]},
+      {"id": "control-skills", "path_patterns": ["src/control-skills/**"], "producer_ids": ["validate-control-skills", "validate-hookless-residue", "validate-task-contracts"], "test_modules": ["tests/scripts/test_evidence_direct_authority.py", "tests/scripts/test_rds_006_task_dag_decomposition.py", "tests/scripts/test_validate_control_skills.py", "tests/scripts/test_validate_task_contracts.py", "tests/test_hookless_architecture.py"]},
       {"id": "foundation-skills", "path_patterns": ["src/foundation/**"], "producer_ids": ["validate-capabilities", "validate-registry", "validate-skill-routing", "validate-skill-body-links", "validate-skill-content-size", "audit-skill-content", "validate-reference-content", "validate-root-content"], "test_modules": ["tests/scripts/test_audit_skill_content.py", "tests/scripts/test_validate_capabilities.py", "tests/scripts/test_validate_reference_content.py", "tests/scripts/test_validate_registry.py", "tests/scripts/test_validate_root_content.py", "tests/scripts/test_validate_task_contracts.py"]},
-      {"id": "professional-skills", "path_patterns": ["src/professional-skills/**"], "producer_ids": ["validate-skills", "validate-registry", "validate-skill-routing", "validate-skill-body-links", "validate-skill-content-size", "audit-skill-content", "validate-reference-content", "validate-root-content", "eval-skill-professionalism"], "test_modules": ["tests/scripts/test_audit_skill_content.py", "tests/scripts/test_rds_006_task_dag_decomposition.py", "tests/scripts/test_validate_reference_content.py", "tests/scripts/test_validate_registry.py", "tests/scripts/test_validate_root_content.py", "tests/scripts/test_validate_skills.py", "tests/scripts/test_validate_task_contracts.py"]},
+      {"id": "professional-skills", "path_patterns": ["src/professional-skills/**"], "producer_ids": ["validate-skills", "validate-registry", "validate-skill-routing", "validate-skill-body-links", "validate-skill-content-size", "audit-skill-content", "validate-reference-content", "validate-root-content", "eval-skill-professionalism"], "test_modules": ["tests/scripts/test_audit_skill_content.py", "tests/scripts/test_evidence_direct_authority.py", "tests/scripts/test_rds_006_task_dag_decomposition.py", "tests/scripts/test_validate_reference_content.py", "tests/scripts/test_validate_registry.py", "tests/scripts/test_validate_root_content.py", "tests/scripts/test_validate_skills.py", "tests/scripts/test_validate_task_contracts.py"]},
       {"id": "domain-skills", "path_patterns": ["src/domain-extensions/**"], "producer_ids": ["validate-domain-extensions", "validate-registry", "validate-skill-routing", "validate-skill-body-links", "validate-skill-content-size", "audit-skill-content", "validate-reference-content", "validate-root-content"], "test_modules": ["tests/scripts/test_audit_skill_content.py", "tests/scripts/test_validate_reference_content.py", "tests/scripts/test_validate_registry.py", "tests/scripts/test_validate_root_content.py", "tests/scripts/test_validate_task_contracts.py"]},
       {"id": "skill-registries", "path_patterns": ["src/registry/**"], "producer_ids": ["validate-skills", "validate-capabilities", "validate-domain-extensions", "validate-registry", "validate-skill-routing", "validate-src-invariants", "audit-skill-content", "validate-reference-content", "validate-root-content", "build-recommended", "build-full", "build-dev"], "test_modules": ["tests/scripts/test_audit_skill_content.py", "tests/scripts/test_validate_capabilities.py", "tests/scripts/test_validate_reference_content.py", "tests/scripts/test_validate_registry.py", "tests/scripts/test_validate_root_content.py", "tests/scripts/test_validate_skills.py"]}
     ]
@@ -459,28 +460,28 @@
     "profile_projection": [
       {
         "rule_id": "inspect-before-edit",
-        "required_terms": ["Before normal edits", "inspect owner", "tests", "minimum consumer"],
-        "exact_rule": "- Before normal edits, inspect owner, tests, and minimum consumer."
+        "required_terms": ["Before edits", "inspect owner", "tests", "minimum consumer"],
+        "exact_rule": "- Before edits, inspect owner, tests, and minimum consumer."
       },
       {
         "rule_id": "inspection-stop-conditions",
-        "required_terms": ["Stop unless inspection proves", "behavior", "owner", "reuse", "non-proximity placement", "edit scope"],
-        "exact_rule": "- Stop unless inspection proves behavior/owner/reuse/non-proximity placement/edit scope."
+        "required_terms": ["Stop unless", "behavior", "owner", "reuse", "non-proximity placement", "edit scope", "proved"],
+        "exact_rule": "- Stop unless behavior/owner/reuse/non-proximity placement/edit scope are proved."
       },
       {
         "rule_id": "observable-acceptance",
-        "required_terms": ["Before implementation", "observable normal, invalid, boundary, and forbidden outcomes", "validation signal", "stop if unverifiable"],
-        "exact_rule": "- Before implementation, define acceptance's observable normal, invalid, boundary, and forbidden outcomes plus validation signal; stop if unverifiable."
+        "required_terms": ["Before implementation", "normal/invalid/boundary/forbidden outcomes", "validation signal", "unverifiable work stops"],
+        "exact_rule": "- Before implementation, define normal/invalid/boundary/forbidden outcomes and validation signal; unverifiable work stops."
       },
       {
         "rule_id": "verified-bugfix-cause",
-        "required_terms": ["Before bugfixes", "prove cause", "similar paths", "feasible recurrence proof", "symptoms or hypotheses block editing"],
-        "exact_rule": "- Before bugfixes, prove cause across similar paths with feasible recurrence proof; symptoms or hypotheses block editing."
+        "required_terms": ["Bugfixes require", "proved cause", "similar-path scan", "feasible recurrence proof", "symptoms or hypotheses block edits"],
+        "exact_rule": "- Bugfixes require proved cause, similar-path scan, and feasible recurrence proof; symptoms or hypotheses block edits."
       },
       {
         "rule_id": "owner-first-placement",
-        "required_terms": ["Place business rules only in their owner", "necessary structure", "after reuse fails"],
-        "exact_rule": "- Place business rules only in their owner or necessary structure after reuse fails."
+        "required_terms": ["Put rules in their owner", "necessary structure", "only after reuse fails"],
+        "exact_rule": "- Put rules in their owner or necessary structure only after reuse fails."
       },
       {
         "rule_id": "placement-stop-conditions",
@@ -495,7 +496,7 @@
       {
         "rule_id": "smallest-complete-change",
         "required_terms": ["smallest complete change", "unrelated refactors", "duplicate helpers", "needless dependencies", "untargeted contracts"],
-        "exact_rule": "- Make the smallest complete change, excluding unrelated refactors, duplicate helpers, needless dependencies, and untargeted contracts."
+        "exact_rule": "- Make the smallest complete change; exclude unrelated refactors, duplicate helpers, needless dependencies, and untargeted contracts."
       },
       {
         "rule_id": "adaptive-method-selection",
@@ -504,8 +505,8 @@
       },
       {
         "rule_id": "test-first-required",
-        "required_terms": ["Require test-first", "high risk", "reproducible bugs", "review findings"],
-        "exact_rule": "- Require test-first for high risk, reproducible bugs, or review findings."
+        "required_terms": ["Test-first is required", "high risk", "reproducible bugs", "review findings"],
+        "exact_rule": "- Test-first is required for high risk, reproducible bugs, or review findings."
       },
       {
         "rule_id": "red-proof-classification",
@@ -514,13 +515,13 @@
       },
       {
         "rule_id": "validation-integrity",
-        "required_terms": ["Preserve oracle", "assertion strength", "derived risk", "during validation"],
-        "exact_rule": "- Preserve oracle, assertion strength, and derived risk during validation."
+        "required_terms": ["Preserve oracle", "assertion strength", "derived risk"],
+        "exact_rule": "- Preserve oracle, assertion strength, and derived risk."
       },
       {
         "rule_id": "test-after-boundary",
-        "required_terms": ["Reserve test-after", "low-risk local work", "primary coverage"],
-        "exact_rule": "- Reserve test-after for low-risk local work or primary coverage."
+        "required_terms": ["Test-after is only for", "low-risk local work", "primary coverage"],
+        "exact_rule": "- Test-after is only for low-risk local work or primary coverage."
       },
       {
         "rule_id": "existing-proof-only-boundary",
@@ -529,18 +530,18 @@
       },
       {
         "rule_id": "non-test-validation-boundary",
-        "required_terms": ["Non-test-validation is only for", "docs", "comments", "formatting", "generated-sync", "static-config", "schema", "build changes"],
-        "exact_rule": "- Non-test-validation is only for docs/comments/formatting/generated-sync/static-config/schema/build changes."
+        "required_terms": ["Non-test-validation is only for", "docs", "comments", "format", "generated sync", "static config", "schema", "build"],
+        "exact_rule": "- Non-test-validation is only for docs/comments/format/generated sync/static config/schema/build."
       },
       {
         "rule_id": "material-edit-staleness",
-        "required_terms": ["source", "test", "fixture", "schema", "config", "generated-artifact", "validation-command edits invalidate evidence"],
-        "exact_rule": "- Source/test/fixture/schema/config/generated-artifact/validation-command edits invalidate evidence."
+        "required_terms": ["Source/test/fixture/schema/config/generated artifact/validation-command edits", "stale evidence"],
+        "exact_rule": "- Source/test/fixture/schema/config/generated artifact/validation-command edits stale evidence."
       },
       {
         "rule_id": "final-edit-rerun",
         "required_terms": ["Rerun after latest material edit", "current task-agent evidence", "latest-material-edit", "validation-passed"],
-        "exact_rule": "- Rerun after latest material edit as current task-agent evidence with `latest-material-edit`/`validation-passed` Claims."
+        "exact_rule": "- Rerun after latest material edit as current task-agent evidence; record latest-material-edit/validation-passed."
       },
       {
         "rule_id": "validation-outcome-reporting",
@@ -549,8 +550,8 @@
       },
       {
         "rule_id": "changed-behavior-proof",
-        "required_terms": ["lint", "types", "builds", "coverage", "manual checks", "full-suite alone", "never prove changed behavior"],
-        "exact_rule": "- Lint/types/builds/coverage/manual checks/full-suite alone never prove changed behavior."
+        "required_terms": ["Lint", "types", "build", "coverage", "manual", "full-suite alone", "never prove changed behavior"],
+        "exact_rule": "- Lint/types/build/coverage/manual/full-suite alone never prove changed behavior."
       }
     ]
   },
@@ -736,33 +737,33 @@
     "profile_projection": [
       {
         "rule_id": "uniform-review-dimensions",
-        "required_terms": ["Apply Core review discipline at L1-L5", "actual latest diff", "every changed file", "observable acceptance", "validation freshness", "regression mechanism", "negative and boundary behavior", "ownership and placement", "unnecessary scope", "unverified scope", "residual risk", "Level may add depth, independence, or evidence only"],
-        "exact_rule": "- Apply Core review discipline at L1-L5 to the actual latest diff and every changed file. Cover observable acceptance, validation freshness, regression mechanism, negative and boundary behavior, ownership and placement, unnecessary scope, unverified scope, and residual risk. Level may add depth, independence, or evidence only; it never removes a base dimension."
+        "required_terms": ["Review L1-L5", "actual latest diff/every changed file", "acceptance", "validation freshness", "regression", "negative/boundary", "ownership/placement", "unnecessary/unverified scope", "residual risk", "Level only adds depth/evidence/independence"],
+        "exact_rule": "- Review L1-L5 against actual latest diff/every changed file: acceptance, validation freshness, regression, negative/boundary, ownership/placement, unnecessary/unverified scope, residual risk; Level only adds depth/evidence/independence."
       },
       {
         "rule_id": "professional-risk-matrix",
-        "required_terms": ["For every assigned Review Skill", "decide all Core professional-risk dimensions", "verified, finding, source-backed not-applicable", "named-specialist delegation with scope and reason", "blocked", "No Level may omit a dimension"],
-        "exact_rule": "- For every assigned Review Skill, decide all Core professional-risk dimensions. Use verified, finding, source-backed not-applicable, named-specialist delegation with scope and reason, or blocked. No Level may omit a dimension."
+        "required_terms": ["For each Review Skill", "every professional-risk dimension", "verified/finding/source-backed N/A", "named specialist with scope+reason", "blocked", "no Level omission"],
+        "exact_rule": "- For each Review Skill, decide every professional-risk dimension: verified/finding/source-backed N/A/named specialist with scope+reason/blocked; no Level omission."
       },
       {
         "rule_id": "repair-review-order",
-        "required_terms": ["After repair", "fresh validation", "latest actual diff", "fresh re-review", "invalidate only affected evidence", "covering re-review satisfies final review", "Older review cannot cover the new modification"],
-        "exact_rule": "- After repair, require fresh validation, then the latest actual diff, then fresh re-review; invalidate only affected evidence, and a covering re-review satisfies final review. Older review cannot cover the new modification."
+        "required_terms": ["After repair", "fresh validation", "latest actual diff", "fresh re-review", "invalidate only affected evidence", "covering re-review closes", "older review cannot cover new edits"],
+        "exact_rule": "- After repair: fresh validation, latest actual diff, fresh re-review; invalidate only affected evidence; covering re-review closes, and older review cannot cover new edits."
       },
       {
         "rule_id": "review-frequency-and-subsumption",
-        "required_terms": ["Effective Level sets review depth", "Review or Risk Boundary sets frequency", "Task completion is not a Review Boundary", "Intermediate Review exists only when delay materially increases downstream material risk", "categories alone do not create a Review Boundary", "same-or-stronger current independent review", "required Review Skills", "Specialist obligations"],
-        "exact_rule": "- Effective Level sets review depth; the Review or Risk Boundary sets frequency, and Task completion is not a Review Boundary. Intermediate Review exists only when delay materially increases downstream material risk; security, migration, or concurrency categories alone do not create a Review Boundary. A same-or-stronger current independent review subsumes weaker equivalent obligations only when required Review Skills and unique Specialist obligations remain covered."
+        "required_terms": ["Level sets depth", "frequency comes only from Review/Risk Boundary and material delay risk", "never Task completion or categories", "same-or-stronger independent review", "Review Skills/Specialist obligations"],
+        "exact_rule": "- Level sets depth; frequency comes only from Review/Risk Boundary and material delay risk, never Task completion or categories, and same-or-stronger independent review subsumes only with Review Skills/Specialist obligations covered."
       },
       {
         "rule_id": "validation-evidence-reuse",
-        "required_terms": ["Reuse fresh", "scope-correct", "trustworthy-oracle validation evidence", "stale, gapped, suspicious, flaky, environment-sensitive", "concrete doubt", "independent reproduction"],
-        "exact_rule": "- Reuse fresh, scope-correct, trustworthy-oracle validation evidence. Rerun only when stale, gapped, suspicious, flaky, environment-sensitive, under concrete doubt, or when Level or professional risk requires independent reproduction."
+        "required_terms": ["Reuse fresh/scope-correct/trustworthy-oracle validation", "stale/gapped/suspicious/flaky/environment-sensitive", "concretely doubtful", "independent reproduction"],
+        "exact_rule": "- Reuse fresh/scope-correct/trustworthy-oracle validation; rerun only if stale/gapped/suspicious/flaky/environment-sensitive, concretely doubtful, or independent reproduction is required."
       },
       {
         "rule_id": "material-findings-and-fail-fast",
-        "required_terms": ["Only material current-task findings", "Acceptance, correctness, invariant, regression, security, reliability, or material code health", "Adjacent, optional, style, speculative, unrelated, or future work", "fail-fast blocked", "Reviewed and Unreviewed Scope", "PASS requires full required changed-scope review"],
-        "exact_rule": "- Only material current-task findings affecting Acceptance, correctness, invariant, regression, security, reliability, or material code health require repair. Adjacent, optional, style, speculative, unrelated, or future work does not. A fundamental failure may fail-fast blocked with Reviewed and Unreviewed Scope; PASS requires full required changed-scope review."
+        "required_terms": ["Only material current-task findings", "acceptance/correctness/invariant/regression/security/reliability/material code health", "adjacent/optional/style/speculative/unrelated/future", "fail-fast blocked", "Reviewed/Unreviewed Scope", "PASS needs full changed-scope review"],
+        "exact_rule": "- Only material current-task findings affecting acceptance/correctness/invariant/regression/security/reliability/material code health require repair; adjacent/optional/style/speculative/unrelated/future work does not. Fundamental failure may fail-fast blocked with Reviewed/Unreviewed Scope; PASS needs full changed-scope review."
       }
     ],
     "handoff_projection": {
@@ -890,6 +891,26 @@
       "references/review-handoff-template.md": ["review-handoff"]
     }
   },
+  "decision_eval_contract": {
+    "schema_version": 1,
+    "fixture_path": "evals/routing/decision-cases.yaml",
+    "decision_axes": ["path-decision", "gap-ownership", "discovery-decision", "professional-layer3-decision", "execution-level", "action-authority", "review-decision"],
+    "invariant_bindings": [
+      {"mutant_id": "source-fact-to-ask-user", "axis": "action-authority", "invariant_id": "source-fact-resolves-without-user-question", "failure_id": "decision-source-fact-not-user-question"},
+      {"mutant_id": "user-choice-to-source-inference", "axis": "gap-ownership", "invariant_id": "user-choice-requires-user-answer", "failure_id": "decision-user-choice-not-source-inference"},
+      {"mutant_id": "route-material-unknown-to-direct", "axis": "path-decision", "invariant_id": "route-material-unknown-fails-closed", "failure_id": "decision-material-unknown-not-direct"},
+      {"mutant_id": "direct-discovery-escape-then-edit", "axis": "discovery-decision", "invariant_id": "invalidated-discovery-stops-before-edit", "failure_id": "decision-discovery-invalidated-stop-before-edit"},
+      {"mutant_id": "unsupported-l1-downgrade", "axis": "execution-level", "invariant_id": "effective-level-respects-all-floors", "failure_id": "decision-level-no-unsupported-downgrade"},
+      {"mutant_id": "keyword-only-l5", "axis": "execution-level", "invariant_id": "automatic-l5-requires-confirmed-analysis-evidence", "failure_id": "decision-level-l5-not-keyword-only"},
+      {"mutant_id": "l5-confirmation-reroute", "axis": "professional-layer3-decision", "invariant_id": "level-confirmation-preserves-semantic-route", "failure_id": "decision-level-confirmation-route-invariant"},
+      {"mutant_id": "token-overflow-drops-layer3", "axis": "professional-layer3-decision", "invariant_id": "context-pressure-preserves-required-layer3", "failure_id": "decision-context-preserve-required-layer3"},
+      {"mutant_id": "review-copies-implementation-layer3", "axis": "review-decision", "invariant_id": "review-layer3-selected-from-review-risk", "failure_id": "decision-review-layer3-independent"}
+    ],
+    "compatibility_baseline": {"routing_cases": 233, "capability_cases": 62},
+    "route_once": "required",
+    "layer3_cardinality": {"minimum": 0, "maximum": 3, "duplicates": "fail", "overflow": "fail-never-truncate"},
+    "runtime_dependency": false
+  },
   "route_decision_contract": {
     "schema_version": 1,
     "envelope_fields": ["path", "route_result", "selection_evidence", "main_execution_provenance", "route_once"],
@@ -908,17 +929,37 @@
     "maximum_layer3_skills": 3,
     "main_execution_producer": "main-control-agent"
   },
+  "layer3_selector_contract": {
+    "schema_version": 2,
+    "source": "src/registry/foundation-skills.yaml#/selector_authority",
+    "selection_owners": {"direct-task": "main-control-agent", "direct-review": "main-control-agent", "initial-analysis": "main-control-agent", "analyzed-task": "engineering-brief", "analyzed-review": "engineering-brief"},
+    "selector_load": "only-when-current-owner-must-select",
+    "professional_projection": "current-professional-only",
+    "delivery_projection": "control-local-professional-json",
+    "delivery_path_template": "engineering-control-plane/references/selectors/<professional-skill>.json",
+    "exact_layer3": "skip-selection-signals-after-authorization",
+    "authorization": "itemwise-professional-profile-domain",
+    "minimum": 0,
+    "maximum": 3,
+    "duplicates": "fail-closed",
+    "over_maximum": "fail-closed",
+    "worker_reroute": "forbidden-return-main",
+    "level_invariant_fields": ["primary-professional", "foundation", "domain", "layer3-eligibility", "required-review-skill"],
+    "review_selection": "independent-review-risk",
+    "review_projection": "fixed-review-skill-and-review-risk",
+    "review_implementation_relation": "never-copy-or-union"
+  },
   "execution_level_contract": {
-    "schema_version": 1,
+    "schema_version": 2,
     "levels": [
-      {"id": "L1", "rank": 1, "obligations": ["explicit minimum level", "all non-bypassable controls remain required"]},
+      {"id": "L1", "rank": 1, "obligations": ["strict L2-subset eligibility is proven", "all non-bypassable controls remain required"]},
       {"id": "L2", "rank": 2, "obligations": ["smallest reversible bounded execution", "all L2 eligibility predicates are proven true"]},
       {"id": "L3", "rank": 3, "obligations": ["default standard source-backed execution"]},
       {"id": "L4", "rank": 4, "obligations": ["high-risk pre-implementation evidence", "all trigger-applicable specialized gates"]},
-      {"id": "L5", "rank": 5, "obligations": ["explicit request only", "independent pre-implementation review", "independent implementation review", "strong safety and applicability proof", "declared-scope comprehensive negative and failure proof", "exhaustive final review", "does not automatically require formal release, full validation, or CI"]}
+      {"id": "L5", "rank": 5, "obligations": ["explicit request or confirmed automatic assurance recommendation", "independent pre-implementation review", "independent implementation review", "strong safety and applicability proof", "declared-scope comprehensive negative and failure proof", "exhaustive final review", "does not automatically require formal release, full validation, or CI"]}
     ],
-    "requested_values": ["unspecified", "L1", "L5"],
-    "dynamic_levels": ["L2", "L3", "L4"],
+    "requested_values": ["unspecified", "L1", "L2", "L3", "L4", "L5"],
+    "dynamic_levels": ["L1", "L2", "L3", "L4", "L5"],
     "default_level": "L3",
     "lifecycle": {
       "analysis_assignment_has_execution_level": false,
@@ -935,6 +976,13 @@
       "professional_risk_signal": {"decision": "skill-or-risk-lens-selection", "execution_level_effect": "none", "rule": "route expertise from concrete task evidence without inferring material residual impact"},
       "residual_reachable_material_risk": {"decision": "execution-level", "execution_level_effect": "L4 only for a reachable material residual impact or explicit policy floor", "rule": "evaluate the impact path after existing enforced controls"},
       "concrete_action_authority": {"decision": "action-decision", "execution_level_effect": "none unless the action exposes a new material Task risk", "rule": "classify each action from host capability, Task Scope, and user authority without granting permission"}
+    },
+    "routing_invariance": {
+      "requested_levels": ["unspecified", "L1", "L2", "L3", "L4", "L5"],
+      "fixed_fields": ["primary_professional_skill", "implementation_layer3", "domain", "required_review_skills"],
+      "allowed_variations": ["effective_level", "validation_depth", "review_depth_or_frequency", "evidence_strength", "independence", "level_dependent_targeted_reference"],
+      "confirmation_scope": "execution-level-projection-only",
+      "forbidden_confirmation_effects": ["analysis-invalidation", "brief-semantic-mutation", "expertise-reroute", "selector-reload", "layer3-reselection"]
     },
     "material_assessment_fields": ["affected_asset_or_invariant", "actor_or_controlling_input", "authority_or_behavior_delta", "reachable_impact_path", "blast_radius", "reversibility_or_recovery", "existing_enforced_controls", "residual_impact"],
     "material_candidate_statuses": ["matched", "non_material", "unknown", "not_matched"],
@@ -964,6 +1012,14 @@
       {"id": "formal-release-declared", "floor": "L4", "positive_predicate": "formal release readiness is explicitly declared in scope as a policy floor", "anti_trigger": "formal release readiness is not in the declared scope", "source_anchor": "user fact or accepted Task Contract goal"},
       {"id": "unknown-critical-boundary", "floor": "L4", "positive_predicate": "a named candidate L4 predicate has a named missing fact, a concrete plausible impact path, and a material consequence if the fact is adverse", "anti_trigger": "the unknown is generic or non-material, or any required critical-unknown field is absent", "source_anchor": "analysis handoff critical-unknown evidence"}
     ],
+    "l1_eligibility": [
+      {"id": "no-runtime-or-product-behavior-change", "positive_predicate": "no runtime or product behavior changes", "anti_trigger": "runtime or product behavior changes or is unknown", "source_anchor": "Task Contract goal, acceptance, or analysis handoff behavior evidence"},
+      {"id": "no-public-or-shared-contract-change", "positive_predicate": "no public or shared contract changes", "anti_trigger": "a public or shared contract changes or is unknown", "source_anchor": "Task Contract scope or analysis handoff consumer evidence"},
+      {"id": "no-state-data-or-invariant-change", "positive_predicate": "no state, data, or invariant changes", "anti_trigger": "state, data, or an invariant changes or is unknown", "source_anchor": "Task Contract acceptance or analysis handoff invariant evidence"},
+      {"id": "no-external-or-integration-effect", "positive_predicate": "no external or integration effect occurs", "anti_trigger": "an external or integration effect occurs or is unknown", "source_anchor": "Task Contract non-goals or analysis handoff integration evidence"},
+      {"id": "deterministic-bounded-verification", "positive_predicate": "verification is deterministic and bounded", "anti_trigger": "verification is nondeterministic, unbounded, or unknown", "source_anchor": "Task Contract verification"},
+      {"id": "trivial-bounded-revert", "positive_predicate": "revert is trivial and bounded", "anti_trigger": "revert is non-trivial, unbounded, or unknown", "source_anchor": "Task Contract rollback or analysis handoff recovery evidence"}
+    ],
     "l2_eligibility": [
       {"id": "single-bounded-owner", "positive_predicate": "one bounded owner is proven", "anti_trigger": "owner is multiple, shared, or unresolved", "source_anchor": "Task Contract owner or analysis handoff ownership evidence"},
       {"id": "local-scope-only", "positive_predicate": "behavior, placement, read scope, and write scope are explicit, local, and bounded", "anti_trigger": "behavior or placement is unresolved, or scope crosses a module, system, or ownership boundary", "source_anchor": "Task Contract goal and allowed scope or analysis handoff placement evidence"},
@@ -974,6 +1030,24 @@
       {"id": "no-material-high-risk-residual-impact", "positive_predicate": "no reachable material high-risk residual impact or material unknown remains after existing enforced controls", "anti_trigger": "a reachable material high-risk residual impact or material unknown remains", "source_anchor": "user fact or analysis handoff material assessment and proof limits"},
       {"id": "no-unresolved-owner-placement-verification-or-rollback-gap", "positive_predicate": "owner, placement, behavior, verification, rollback, and material impact have no unresolved gap", "anti_trigger": "any named gap remains false or unknown", "source_anchor": "Task Contract goal, owner, scope, acceptance, verification, non-goals, and stop conditions or analysis handoff evidence gaps"}
     ],
+    "l5_assurance_eligibility": [
+      {"id": "confirmed-material-l4", "positive_predicate": "a non-provisional material L4 consequence is confirmed", "anti_trigger": "material L4 is absent, provisional, or unresolved", "source_anchor": "analysis handoff material assessment"},
+      {"id": "critical-consequence", "positive_predicate": "the confirmed consequence is critical", "anti_trigger": "the consequence is non-critical or unknown", "source_anchor": "analysis handoff consequence evidence"},
+      {"id": "broad-blast-radius", "positive_predicate": "the confirmed consequence has broad blast radius", "anti_trigger": "blast radius is bounded or unknown", "source_anchor": "analysis handoff blast-radius evidence"},
+      {"id": "irreversible", "positive_predicate": "the confirmed consequence is irreversible", "anti_trigger": "the consequence is reversible or unknown", "source_anchor": "analysis handoff reversibility evidence"},
+      {"id": "weak-recovery", "positive_predicate": "recovery for the confirmed consequence is weak", "anti_trigger": "recovery is strong and bounded or unknown", "source_anchor": "analysis handoff recovery evidence"},
+      {"id": "extra-assurance-materially-reduces-uncertainty", "positive_predicate": "L5 assurance materially reduces remaining uncertainty", "anti_trigger": "extra assurance does not materially reduce uncertainty or that effect is unknown", "source_anchor": "analysis handoff assurance-value evidence"}
+    ],
+    "l5_confirmation": {
+      "required_source": "analysis_handoff",
+      "states": ["not-required", "pending", "confirmed", "rejected", "explicit"],
+      "automatic_pending_action": "ask-once",
+      "confirmed_level": "L5",
+      "rejected_level": "L4",
+      "explicit_l5_state": "explicit",
+      "confirmation_effect": "execution-level-projection-only",
+      "forbidden_effects": ["analysis-invalidation", "brief-semantic-mutation", "expertise-reroute", "selector-reload", "layer3-reselection"]
+    },
     "main_evidence_kinds": ["user_fact", "analysis_handoff"],
     "critical_unknown": {"floor": "L4", "edit_status": "blocked", "provisional": true, "required_fields": ["candidate_l4_predicate", "missing_fact", "plausible_impact_path", "material_consequence"], "rule": "only a concrete critical unknown with every required field receives provisional L4 and blocks editing until resolved; generic possibility is a Proof Limit"},
     "integrity_fallback": {
@@ -997,14 +1071,17 @@
       "automatic_l2_ceiling": "L2",
       "automatic_l2_level": "L2",
       "automatic_default_level": "L3",
+      "l1_requirement": "all_true_and_l2_true",
       "l2_requirement": "all_true",
-      "requested_base": {"unspecified": "automatic", "L1": "L1", "L5": "L5"},
+      "l5_requirement": {"required_all": ["confirmed-material-l4", "critical-consequence", "extra-assurance-materially-reduces-uncertainty"], "required_any": ["broad-blast-radius", "irreversible", "weak-recovery"], "source": "analysis_handoff"},
+      "requested_base": {"unspecified": "automatic", "L1": "L1", "L2": "L2", "L3": "L3", "L4": "L4", "L5": "L5"},
+      "minimum_eligible_sources": ["l1_eligibility", "l2_eligibility", "computed_floor"],
       "mandatory_floor_sources": ["computed_floor", "prior_historical_max_floor"],
-      "effective_level_sources": ["requested_base", "mandatory_floor", "prior_historical_max_effective"],
+      "effective_level_sources": ["requested_or_automatic", "minimum_eligible_level", "mandatory_floor", "prior_historical_max_effective"],
       "next_historical_floor_sources": ["prior_historical_max_floor", "confirmed_mandatory_floor"],
       "next_historical_effective_sources": ["prior_historical_max_effective", "confirmed_effective_level"]
     },
-    "level_basis_fields": ["trigger_evaluations", "l2_eligibility", "obligations", "unresolved", "edit_status"],
+    "level_basis_fields": ["trigger_evaluations", "l1_eligibility", "l2_eligibility", "l5_assurance_eligibility", "l5_confirmation", "obligations", "unresolved", "edit_status"],
     "scope_lineage": {
       "lock_key_fields": ["Task ID", "Scope Lineage"],
       "history_independent_of_material_tree": true,
@@ -1029,11 +1106,11 @@
       "router": {"path": "src/control-skills/engineering-control-plane/references/professional-skill-router.md", "id": "execution-level-router-projection", "input_field": "effective_level"},
       "runtime_reference": {"path": "src/control-skills/engineering-control-plane/references/execution-level-contract.md", "id": "execution-level-runtime-reference", "excluded_fields": ["projection"]}
       ,"public_task_extension": {
-        "version": "execution-level/v1",
+        "version": "execution-level/v2",
         "ordered_labels": ["Level", "Basis", "L5 Evidence"],
         "line_fields": {
-          "Level": ["requested", "automatic", "default", "effective", "edit"],
-          "Basis": ["source", "triggers", "l2", "unresolved"],
+          "Level": ["requested", "automatic", "minimum", "default", "effective", "edit"],
+          "Basis": ["source", "triggers", "l1", "l2", "l5", "confirmation", "unresolved"],
           "L5 Evidence": ["when", "requires"]
         }
       }
@@ -1068,7 +1145,7 @@
     "parallel_group_fields": ["Parallel Group", "Task IDs", "Workspace Requirement", "Integration Owner", "Merge Owner", "Conflict Resolution Owner"],
     "execution_level_extension": {
       "heading": "Execution Level",
-      "fields": ["Requested Level", "Automatic Level", "Default Level", "Effective Level", "Edit Status", "Level Basis", "L5 Evidence Requirements"],
+      "fields": ["Requested Level", "Automatic Level", "Minimum Eligible Level", "Default Level", "Effective Level", "Edit Status", "Level Basis", "L5 Evidence Requirements"],
       "surface_insertions": {
         "direct-task-template.md": {"kind": "heading", "after": "Status"},
         "engineering-brief-template.md": {"kind": "labeled-section", "section": "First Executable Slice", "after": "Status"},
@@ -1080,6 +1157,44 @@
     "scheduling_rules": {
       "shared_or_unknown_writes": "serialize",
       "parallel_write_requirements": ["isolated workspace", "no dependency", "no shared write surface"]
+    },
+    "evidence_resolution": {
+      "semantics_owner": "change-intake-compiler",
+      "source_path": "src/professional-skills/change-intake-compiler/SKILL.md",
+      "projection_only": true,
+      "source_binding": {
+        "collector": "scripts/audit-skill-content.py:root-skill-content",
+        "normalization": "unicode-nfkc-whitespace-collapse-v1",
+        "source_fingerprint": "abb543e4e517fdeec991b56b9d75dcde4607467fb99037da731b5d8b6050397a",
+        "anchor_fingerprint": "d7cf478d91d08f2a8c5ff57e0b2a4d29d77d416a8649c7b0f75982dc0e73f1ab"
+      },
+      "gap_classes": [
+        {"id": "repo-resolvable-fact", "source_semantic": "discoverable-fact", "source_anchor": "A source-discoverable fact is not a reason to interrupt the user.", "subtypes": []},
+        {"id": "user-owned-choice", "source_semantic": "user-owned-choice", "source_anchor": "Classify each gap as discoverable fact, reversible assumption, or user-owned choice.", "subtypes": ["semantic-choice", "execution-level-choice"]},
+        {"id": "route-or-material-unknown", "source_semantic": "unsafe-or-non-reversible-assumption", "source_anchor": "Proceed with explicit reversible assumptions only when they cannot change public behavior, data, authorization, or domain meaning.", "subtypes": []}
+      ],
+      "route_affecting_surfaces": ["primary-professional-skill", "layer3", "domain", "acceptance", "scope", "material-risk-floor"],
+      "decision_rules": {
+        "repo-resolvable-fact": {"question": "forbidden", "route_affecting": "analyzed", "otherwise": "direct-bounded-discovery"},
+        "semantic-choice": {"question": "one-minimum-concrete", "invalidation": "protected-brief-semantics"},
+        "execution-level-choice": {"question": "one-minimum-concrete", "invalidation": "execution-level-projection-only"},
+        "route-or-material-unknown": {"question": "forbidden", "decision": "analysis-or-fail-closed"}
+      },
+      "path_values": ["direct", "analyzed"],
+      "maximum_user_questions": 1
+    },
+    "direct_bounded_discovery": {
+      "preconditions": ["primary-professional-stable", "domain-and-layer3-route-stable", "semantic-scope-stable", "no-unresolved-user-choice", "no-unresolved-material-risk", "bounded-read-boundary"],
+      "allowed_checks": ["exact-owning-symbol-or-file", "relevant-existing-test", "minimum-local-consumer", "local-reuse-candidate", "local-validation-command", "placement-within-known-owner-boundary"],
+      "prohibited": ["repo-wide-discovery", "unknown-owner-module-or-system", "unknown-external-consumer-graph", "security-money-migration-or-domain-boundary-discovery", "worker-rerouting", "worker-skill-domain-or-layer3-selection"],
+      "outcomes": {
+        "boundary-confirmed": "confirm-and-continue",
+        "route-or-risk-invalidated": "stop-before-edit-return-main-for-analysis",
+        "user-choice-discovered": "stop-before-edit-return-main-for-one-question"
+      },
+      "worker_route_authority": false,
+      "level_rules": {"simpler": "preserve-current", "higher-risk": "recompute"},
+      "read_boundary": "already-known-owner-test-and-minimum-consumer"
     },
     "analyzed_work_authority": {
       "applies_to": "analyzed-work",
@@ -1116,6 +1231,12 @@
         "real_structural_choice": "invoke-corresponding-specialist",
         "effective_after": "incorporated-into-current-engineering-brief",
         "parallel_analysis_authority": "forbidden"
+      },
+      "decision_ownership": {
+        "engineering_brief": ["Goal", "Acceptance", "Non-goals", "Owner", "Invariants", "Scope", "Professional Skill", "Layer3", "Review requirements"],
+        "main": ["Path control", "Execution Level projection", "Review scheduling", "user decision interaction"],
+        "main_reinterpretation": "forbidden",
+        "worker_route_change": "forbidden"
       },
       "dag_planner_policy": {
         "allowed": ["task-splitting", "dependencies", "parallel-safety", "critical-path", "integration-merge-conflict-ownership", "remaining-task-contract-projection"],
@@ -1374,8 +1495,8 @@
         "projections": [
           {"target": "prompt:Review and Repair", "terms": ["Claims: latest-material-edit, validation-passed", "current review-agent evidence", "latest material edit", "changed-scope-reviewed", "high-risk-review-passed", "blocking-findings-none", "blocking-findings-resolved"]},
           {"target": "profile:task-agent", "terms": ["current task-agent evidence", "latest material edit", "latest-material-edit", "validation-passed"]},
-          {"target": "implementation-handoff-template.md", "terms": ["current task-agent evidence", "latest material edit", "latest-material-edit", "validation-passed"]},
           {"target": "profile:review-agent", "terms": ["current review-agent evidence", "latest material edit", "changed-scope-reviewed", "high-risk-review-passed", "blocking-findings-none", "blocking-findings-resolved"]},
+          {"target": "implementation-handoff-template.md", "terms": ["current task-agent evidence", "latest material edit", "latest-material-edit", "validation-passed"]},
           {"target": "review-handoff-template.md", "terms": ["current review-agent evidence", "latest material edit", "changed-scope-reviewed", "high-risk-review-passed", "blocking-findings-none", "blocking-findings-resolved"]}
         ]
       }
@@ -1434,7 +1555,7 @@
   "prompt_contract": {
     "schema_version": 1,
     "path": "src/control-prompts/main-control-agent.md",
-    "document_sha256": "4877b60eaf2e914ac1734d8fcd68f38170d937b4b5709c0e03d141cb30325c4f",
+    "document_sha256": "c0377059d4b8d010344fc6a7e5377cda22fd70c781478f38239fa841c2a4501b",
     "managed_projections": [
       {"id": "execution-level-contract", "section": "Execution Level and Validation", "required_contracts": ["execution_level_contract"]},
       {"id": "review-evidence-contract", "section": "Review and Repair", "required_contracts": ["visible_evidence_contract", "review_discipline_contract"]},
@@ -1444,7 +1565,9 @@
     "concepts": [
       {"id": "dispatch-only-boundary", "section": null, "required_terms": ["dispatch-only", "never inspect/search target source", "edit files", "execute business commands", "review implementation"]},
       {"id": "bounded-delegation-authorization", "section": "Authorization", "required_terms": ["bounded subagents authorized", "permission required", "scope expansion", "destructive/production action", "elevation", "irreversible/material data change", "unsupported choice"]},
-      {"id": "adaptive-path-selection", "section": "Choose Exactly One Path", "required_terms": ["choose exactly Direct Task or Analyzed Work", "explicit owner/scope/placement/acceptance/validation/rollback", "no unresolved material risk", "category cannot force analysis", "unresolved owner/placement/behavior/verification/rollback/material impact routes to Analyzed Work", "inspect named owner/test/consumer boundaries", "without ownership/verification discovery", "Inspection Boundary/stops"]},
+      {"id": "adaptive-path-selection", "section": "Choose Exactly One Path", "required_terms": ["choose exactly Direct Task or Analyzed Work", "explicit owner/scope/placement/acceptance/validation/rollback", "no unresolved material risk", "category cannot force analysis", "unresolved behavior/rollback/material impact or an unknown owner/module/system/verification boundary routes to Analyzed Work", "already-known stable owner/test/consumer boundary", "bounded confirmation", "Inspection Boundary/stops"]},
+      {"id": "evidence-resolution-authority", "section": "Choose Exactly One Path", "required_terms": ["Evidence Resolution reuses", "change-intake-compiler", "source fact never asks", "route-affecting fact/material unknown -> Analysis", "user choice -> one Main question", "otherwise bounded Direct discovery"]},
+      {"id": "direct-bounded-discovery-authority", "section": "Choose Exactly One Path", "required_terms": ["Direct bounded discovery outcomes", "confirm+continue", "invalidate -> Main/Analysis before edit", "choice -> Main question", "Worker never reroutes", "simpler keeps Level", "higher risk recomputes"]},
       {"id": "assignment-initial-status", "section": null, "required_terms": ["new Direct Task", "Status: in_progress", "new DAG task assignment"]},
       {"id": "direct-task-template-authority", "section": "Direct Task Routing", "required_terms": ["references/direct-task-template.md", "Task Contract v2 field authority"]},
       {"id": "source-free-answer-boundary", "section": "Choose Exactly One Path", "required_terms": ["source-free user-fact questions", "no-repo direct-answer", "no repository access", "Main relays/closes", "source/professional evidence", "control prompts -> source-backed analysis"]},
@@ -1452,18 +1575,19 @@
       {"id": "preimplementation-artifact-review", "section": "Direct Task Routing", "required_terms": ["pre-implementation artifact", "no implementation diff", "directly to review-agent", "diff-export gate does not apply"]},
       {"id": "capability-fallback", "section": "Direct Task Routing", "required_terms": ["unknown capability=unsupported", "never infer", "capability facts", "host/tool/command identifiers", "references/utility-capsule-template.md", "compares workspace before/after", "changed/unavailable blocks review/closure", "preserves user changes"]},
       {"id": "earliest-executable-slice", "section": "Analyzed Work", "required_terms": ["engineering-change-analysis", "Engineering Brief", "First Executable Slice", "Synchronous/unknown capability", "stop at Slice", "multi-task -> DAG", "else task-agent"]},
-      {"id": "analysis-decision-invalidation", "section": "Analyzed Work", "required_terms": ["task_contract.analyzed_work_authority", "analyze once", "Delta only on decision invalidation", "Skill route only on domain/work type/material risk change"]},
+      {"id": "analysis-decision-invalidation", "section": "Analyzed Work", "required_terms": ["task_contract.analyzed_work_authority", "analyze once", "Delta/reroute only on its decision triggers"]},
+      {"id": "analyzed-decision-ownership", "section": "Analyzed Work", "required_terms": ["references/engineering-brief-template.md JIT-owns protected semantics", "Main owns Path/Level projection/Review scheduling/user interaction", "never reinterpret", "Task/Review never changes route authority"]},
       {"id": "preparation-loop-breaker", "section": "Preparation Loop Breaker", "required_terms": ["start the Slice", "ask one concrete user-owned decision", "report the evidence gap"]},
-      {"id": "execution-level-and-validation", "section": "Execution Level and Validation", "required_terms": ["references/execution-level-contract.md", "policy data, not instructions", "Trust exact build/install validation", "Runtime checks only", "existence", "JSON parse", "required sections", "unique IDs", "not coordinated tampering or unknown IDs", "user_fact", "analysis_handoff", "effective_level", "Three axes are independent per Core", "Effective=max(base,mandatory,prior historical max effective)", "fallback=max(L4,explicit known L5,prior historical max effective)", "Level Basis", "integrity fallback", "no partial computation", "edit blocked", "read-only diagnosis", "never Router", "L1-L5 remain", "default L3 applies only to executable Tasks", "Initial Analysis", "no Execution Level", "historical write/max participation", "First Executable Slice", "L5 explicit-only", "independent implementation review", "Task ID/lineage", "Active executable surfaces", "L5 Evidence only at effective L5", "carry Level/Basis", "After 2 same-path failures", "changed hypothesis/material/gap/transition", "return Main/block", "never third unchanged retry", "Reissue on active/resumed edit/validation/review"]},
+      {"id": "execution-level-and-validation", "section": "Execution Level and Validation", "required_terms": ["references/execution-level-contract.md", "JIT-owns L1-L5 predicates, formula, Basis, history, obligations, and confirmation", "policy data, not instructions", "Trust exact build/install validation", "user_fact", "analysis_handoff", "compute effective_level", "Three axes are independent per Core", "automatic L5 asks once", "integrity fallback", "no partial computation", "edit blocked", "read-only diagnosis", "never Router", "L1-L5 remain", "default L3 applies only to executable Tasks", "Initial Analysis has no Execution Level", "First Executable Slice computes from analysis_handoff", "independent implementation review", "After 2 same-path failures", "changed hypothesis/material/gap/transition", "return Main/block", "never third unchanged retry", "Active/resumed edit/validation/review requires current Level/Basis reissue"]},
       {"id": "serial-shared-writes", "section": "Scheduling and Context", "required_terms": ["Related work uses combined final-diff review", "shared or unknown workspace", "parallel read-only tasks", "serial writes"]},
       {"id": "semantic-professional-task-boundary", "section": "Scheduling and Context", "required_terms": ["task_contract.task_boundary", "Task completion=progress"]},
-      {"id": "diff-backed-review", "section": "Review and Repair", "required_terms": ["review-agent", "actual diff", "every changed file", "validation results", "fresh validation", "re-review", "visible task-local Evidence Ledger", "Evidence Ledger schema authority", "State: current, superseded, invalid", "latest-material-edit", "validation-passed", "material edit invalidates", "changed-scope-reviewed", "blocking-findings-none", "blocking-findings-resolved", "high-risk-review-passed", "actual Task Capsule L4/L5 now/history", "matched material L4/provisional critical unknown", "high-risk actual Review assignment", "ordinary independent review", "digest-only matching to both lower-risk authorities", "Missing/inconsistent authority/binding fails closed", "reissue"]},
-      {"id": "review-input-readiness", "section": "Review and Repair", "required_terms": ["Review Input Ready", "latest changed paths", "exact reviewable change evidence", "reviewer capability accessibility", "validation after the latest material edit", "fixed Review scope", "before review-agent dispatch", "same Implementation Handoff", "review dispatch=0", "legacy/incomplete handoff", "one bounded pre-review recovery", "Review before Task before Review is forbidden"]},
-      {"id": "evidence-template-authority", "section": "Review and Repair", "required_terms": ["references/implementation-handoff-template.md", "Evidence Ledger schema authority"]},
-      {"id": "minimum-sufficient-review-boundaries", "section": "Review and Repair", "required_terms": ["review_discipline_contract", "review_frequency_policy"]},
-      {"id": "review-obligation-subsumption", "section": "Review and Repair", "required_terms": ["validation_evidence_reuse", "obligation_subsumption"]},
+      {"id": "diff-backed-review", "section": "Review and Repair", "required_terms": ["review-agent", "actual diff", "every changed file", "validation results", "fresh validation/re-review", "references/implementation-handoff-template.md", "JIT-owns Ledger State/currentness, freshness, capability branches, and review proof", "latest-material-edit", "validation-passed", "changed-scope-reviewed", "blocking-findings-none", "blocking-findings-resolved", "high-risk-review-passed", "not-required JIT-loads from the Handoff owner", "Missing/inconsistent authority/binding fails closed", "reissue"]},
+      {"id": "review-input-readiness", "section": "Review and Repair", "required_terms": ["Review Input Ready", "latest changed paths", "exact reviewable change evidence", "reviewer capability accessibility", "post-latest-edit validation", "fixed scope", "before review-agent dispatch", "missing=>review dispatch=0", "Legacy/incomplete permits one recovery", "Review before Task before Review is forbidden"]},
+      {"id": "evidence-template-authority", "section": "Review and Repair", "required_terms": ["references/implementation-handoff-template.md", "JIT-owns Ledger State/currentness"]},
+      {"id": "minimum-sufficient-review-boundaries", "section": "Review and Repair", "required_terms": ["review_discipline_contract", "authoritative"]},
+      {"id": "review-obligation-subsumption", "section": "Review and Repair", "required_terms": ["review_discipline_contract", "authoritative"]},
       {"id": "material-finding-repair", "section": "Review and Repair", "required_terms": ["task_contract.finding_relations"]},
-      {"id": "scoped-repair-invalidation", "section": "Review and Repair", "required_terms": ["repair_invalidation_policy"]},
+      {"id": "scoped-repair-invalidation", "section": "Review and Repair", "required_terms": ["review_discipline_contract", "authoritative"]},
       {"id": "event-driven-progress", "section": "Progress", "required_terms": ["Checkpoints", "start/path", "dispatch/batch", "validation", "review/close", "Report path/batch/outcome/supported completion/blockers"]},
       {"id": "evidence-backed-closure", "section": "Closure", "required_terms": ["`completed` only", "post-edit validation", "every changed file", "no blockers", "fresh validation", "re-review", "unverified scope", "residual risk", "current evidence scope covers claimed result", "Status: in_progress | blocked | partial | completed", "Diagnosis-only/answer-only", "fail-closed outcomes"]}
     ],
@@ -1542,35 +1666,35 @@
         {"rule_id": "utility-handoff", "required_terms": ["Return bounded utility evidence", "without normal fallthrough", "workspace diff check", "residual risk"]}
       ],
       "task-scope-boundary": [
-        {"rule_id": "task-escalation", "required_terms": ["Escalate before editing", "ownership/verification/material risk/repair", "named current-task scope"]},
+        {"rule_id": "task-escalation", "required_terms": ["Unknown owner/module/system/verification boundary", "already-known stable owner/test/consumer boundary", "bounded confirmation", "Boundary escape/material risk/repair", "Main before edit"]},
         {"rule_id": "task-role-boundary", "required_terms": ["Never dispatch, reroute", "read another task's context", "perform final review", "mark stale evidence completed"]},
-        {"rule_id": "task-action-authority", "required_terms": ["within current authority→execute", "bounded extra authority→request minimum exact authority", "user-owned decision→return Main", "unsafe/unsupported→block", "Permission alone leaves Task Level unchanged", "New material Task risk→block, return Main, Delta Analysis, Level recomputation", "Never self-authorize", "emulate the host sandbox"]}
+        {"rule_id": "task-action-authority", "required_terms": ["within current authority→execute", "bounded extra authority→request minimum exact authority", "user-owned decision→return Main", "unsafe/unsupported→block", "Permission leaves Task Level unchanged", "new material risk→Main/Delta Analysis/Level recomputation", "never self-authorize", "emulate the host sandbox"]}
       ],
       "review-target-modes": [
-        {"rule_id": "implementation-review", "required_terms": ["implementation or repair review", "actual diff or an accessible host-native diff reference", "inspect the diff and every changed file", "re-review", "latest repaired diff"], "exact_rule": "- Implementation or repair review requires the actual diff or an accessible host-native diff reference. It must inspect the diff and every changed file, including re-review of only the latest repaired diff."},
-        {"rule_id": "missing-diff", "required_terms": ["implementation review", "blocked verdict", "diff scope unverified"]},
+        {"rule_id": "implementation-review", "required_terms": ["Implementation or repair review", "actual diff or an accessible host-native diff reference", "inspect it and every changed file", "latest repaired diff"], "exact_rule": "- Implementation or repair review requires the actual diff or an accessible host-native diff reference; inspect it and every changed file, including only the latest repaired diff."},
+        {"rule_id": "missing-diff", "required_terms": ["Missing evidence", "blocked verdict", "diff scope unverified"]},
         {"rule_id": "no-summary-substitute", "required_terms": ["Never substitute a changed-file summary", "actual diff"]},
-        {"rule_id": "artifact-review", "required_terms": ["pre-implementation design", "supporting source evidence", "no implementation diff is required"]}
+        {"rule_id": "artifact-review", "required_terms": ["Pre-implementation design or artifact review", "supporting source evidence", "no implementation diff is required"]}
       ],
       "review-scope-boundary": [
-        {"rule_id": "review-handoff-evidence", "required_terms": ["assigned Review Handoff", "Status", "visible task-local Evidence Ledger", "superseded or invalid"]},
+        {"rule_id": "review-handoff-evidence", "required_terms": ["assigned Review Handoff", "Status", "current Evidence Ledger", "reviewed/unreviewed scope"]},
         {"rule_id": "review-role-boundary", "required_terms": ["Never edit", "repair findings", "inherit implementer reasoning", "dispatch agents", "become a task agent"]}
       ]
     },
     "role_capabilities": {
       "main-control-agent": {"required_capability_ids": ["main-prompt-single-load", "main-role-boundary"], "forbidden_capabilities": ["may_edit", "may_review"], "handoff_contract": "control-dispatch", "forbidden_storage_projection_ids": []},
-      "analysis-agent": {"required_capability_ids": ["layer3-jit-delivery", "analysis-direct-answer", "analysis-one-pass", "analysis-task-contract", "analysis-scope-boundary"], "forbidden_capabilities": ["may_dispatch", "may_edit", "may_review"], "handoff_contract": "analysis-handoff", "forbidden_storage_projection_ids": []},
-      "task-agent": {"required_capability_ids": ["layer3-jit-delivery", "task-normal-mode", "task-implementation-discipline", "task-utility-mode", "task-scope-boundary"], "forbidden_capabilities": ["may_dispatch", "may_review"], "handoff_contract": "implementation-handoff", "forbidden_storage_projection_ids": ["no-daemon", "no-database", "no-private-evidence-storage", "no-runtime-task-state-engine", "no-hidden-protocol-record"]},
+      "analysis-agent": {"required_capability_ids": ["layer3-jit-delivery", "analysis-scope-boundary"], "forbidden_capabilities": ["may_dispatch", "may_edit", "may_review"], "handoff_contract": "analysis-handoff", "forbidden_storage_projection_ids": []},
+      "task-agent": {"required_capability_ids": ["layer3-jit-delivery", "task-normal-mode", "task-implementation-discipline", "task-scope-boundary"], "forbidden_capabilities": ["may_dispatch", "may_review"], "handoff_contract": "implementation-handoff", "forbidden_storage_projection_ids": ["no-daemon", "no-database", "no-private-evidence-storage", "no-runtime-task-state-engine", "no-hidden-protocol-record"]},
       "review-agent": {"required_capability_ids": ["layer3-jit-delivery", "review-target-modes", "review-scope-boundary", "review-discipline"], "forbidden_capabilities": ["may_dispatch", "may_edit"], "handoff_contract": "review-handoff", "forbidden_storage_projection_ids": []}
     },
     "handoff_contracts": {
       "control-dispatch": [{"rule_id": "control-capability-boundary", "required_terms": ["Capability facts authoritative", "host/tool/command identifiers", "absent/unrecognized", "unsupported"]}],
-      "analysis-handoff": [{"rule_id": "analysis-visible-handoff", "required_terms": ["source-backed", "four-state Status", "visible task-local Evidence Ledger", "Analysis carries neither Execution Level", "First Executable Slice computes"]}],
+      "analysis-handoff": [{"rule_id": "analysis-visible-handoff", "required_terms": ["Professional/mode contract owns", "analysis output"]}],
       "implementation-handoff": [
         {"rule_id": "implementation-current-validation", "required_terms": ["current task-agent evidence", "latest material edit", "latest-material-edit", "validation-passed"]},
         {"rule_id": "implementation-visible-handoff", "required_terms": ["assigned Implementation Handoff template", "visible task-local Evidence Ledger", "Review Input Ready", "same handoff"]}
       ],
-      "review-handoff": [{"rule_id": "review-visible-handoff", "required_terms": ["assigned Review Handoff", "visible task-local Evidence Ledger", "superseded or invalid"]}]
+      "review-handoff": [{"rule_id": "review-visible-handoff", "required_terms": ["assigned Review Handoff", "Status", "current Evidence Ledger", "reviewed/unreviewed scope"]}]
     }
   },
   "control_skill_contract": {

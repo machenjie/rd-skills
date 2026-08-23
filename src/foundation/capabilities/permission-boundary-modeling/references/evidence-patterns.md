@@ -18,3 +18,9 @@ Load this reference when permission authority, enforcement reachability, object 
 - Classify known and discovered protected paths as inspected, not applicable, or unknown; keep unknown and externally owned paths as residual scope.
 - Re-run selected positive and negative cases after the final route, query, policy, relationship, generated artifact, fixture, or audit change.
 - Map the final confidence claim to current source paths, fixtures, parsed validation outcomes, audit evidence, owner evidence, and explicit unverified scope.
+
+## Anti-Patterns
+
+- Treat a role, hidden UI control, gateway scope, authenticated caller, or internal workload as the authoritative permission decision for object- or tenant-sensitive work.
+- Let caller-controlled owner, tenant, role, status, purpose, or mutable privilege fields establish entitlement, or filter a broad result after protected data has crossed its disclosure boundary.
+- Generalize one endpoint’s denial response, one policy placement, or one happy-path fixture to unrelated resources, entry points, bulk behavior, delegated actors, or deployed policy state.

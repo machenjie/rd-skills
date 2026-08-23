@@ -20,13 +20,6 @@ Official Apple Developer pages below were accessed on 2026-07-24.
   Agent, Launch Daemon, or no helper, based on lifecycle and privilege.
 - Bind helper registration, installation, user visibility, enable/disable,
   upgrade, removal, signing, sandbox, and crash recovery to one owner.
-- Exercise missing helper, rejected peer, protocol skew, crash/restart, disabled
-  login item, partial upgrade, and orphaned registration.
-
-## Required Record
-
-Return secret owner, process topology, peer/auth contract, helper lifecycle,
-privilege and signing boundary, failure evidence, limits, and residual risk.
 
 ## Primary Sources
 

@@ -21,3 +21,7 @@ Use this reference when SDK/library closure depends on validation freshness, gen
 - **Invalid evidence**: semver class contradicts API diff, generated output from floating `latest`, docs example imports source internals, old validation predates final generated diff, or release artifact is unsigned when policy requires signing.
 
 - If registry publish, yanking, deprecation, signing-key use, package token use, or external downstream smoke, require owner, dry-run or staging where available, rollback/yank/hotfix path, stop condition, and secret redaction.
+
+## Anti-Patterns
+
+- Do not infer compatibility or adoption from a declaration diff or source-only fixture.

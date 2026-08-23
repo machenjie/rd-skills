@@ -126,6 +126,7 @@ EXPECTED_RECIPROCITY = {
     "bigdata-product-extension": {
         "data-middleware-change-builder",
         "engineering-change-analysis",
+        "quality-test-gate",
     },
     "cloud-platform-extension": {
         "backend-change-builder",
@@ -154,6 +155,7 @@ EXPECTED_RECIPROCITY = {
         "installed-client-change-builder",
     },
     "low-level-systems-extension": {
+        "ai-code-review-refactor",
         "backend-change-builder",
         "engineering-change-analysis",
     },
@@ -168,6 +170,7 @@ EXPECTED_RECIPROCITY = {
         "security-privacy-gate",
     },
     "web3-product-extension": {
+        "ai-code-review-refactor",
         "engineering-change-analysis",
         "integration-change-builder",
     },
@@ -294,7 +297,7 @@ class DomainModifierRegistryContractTests(unittest.TestCase):
             for row in domains
         }
         self.assertEqual(EXPECTED_RECIPROCITY, actual)
-        self.assertEqual(44, sum(len(owners) for owners in actual.values()))
+        self.assertEqual(47, sum(len(owners) for owners in actual.values()))
         domain_names = set(actual)
         professional_edges = {
             (row["name"], candidate)

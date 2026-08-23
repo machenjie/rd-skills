@@ -12,7 +12,6 @@ Official Android Developers and Google Play pages below were accessed on
   identity, ABI/resource splits, variant, and dependency versions from the tree.
 - Guard platform behavior by the affected runtime API and supported devices;
   compilation success is not compatibility proof.
-- Inspect the final APK/AAB and signing identity for the selected variant.
 - Keep upload-key handling, app-signing authority, Play submission, rollout,
   approval, and rollback under `delivery-release-gate`.
 
@@ -20,17 +19,6 @@ Official Android Developers and Google Play pages below were accessed on
 
 - Define ANR and startup acceptance from current product baselines and affected
   cold, warm, restored, and externally launched paths.
-- Remove blocking work from the main thread.
-- Measure on representative supported hardware, API levels, memory classes,
-  and architectures.
-- Keep emulator, local APK, release AAB, Play-generated artifact, and field-vitals
-  evidence as separate proof classes.
-
-## Required Record
-
-Return SDK and compatibility guards, variant/package/artifact identity, signing
-source without secrets, current Play-policy check, ANR/startup measurements,
-device matrix, unavailable proof, authorization owner, and residual risk.
 
 ## Primary Sources
 

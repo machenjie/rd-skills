@@ -7,9 +7,9 @@ description: "Use `analysis-agent` to analyze recovery, SLO, capacity, degradati
 
 ## Role
 
-- **Analysis mode (`analysis-agent`):** Model failure, objective, and recovery behavior.
+- **Analysis mode (`analysis-agent`):** Select a failure model, owned objective, and recovery evidence.
 - **Task mode (`task-agent`):** Apply accepted resilience or observability controls.
-- **Review mode (`review-agent`):** Judge controls against failure and recovery criteria.
+- **Review mode (`review-agent`):** Judge current control and recovery evidence.
 
 ## When To Use
 
@@ -33,37 +33,33 @@ description: "Use `analysis-agent` to analyze recovery, SLO, capacity, degradati
 
 ## Professional Decision Rules
 
-- Define affected failure modes, user impact, recovery owner, and any decision-relevant operating objective.
-- Require an SLI or SLO only when an owned objective has a decision consequence.
-- Apply timeouts, backpressure, retry budgets, circuit breaking, and degradation only where latency or load risk triggers them.
-- Select only actionable signals, alerts, and runbook links justified by current risk.
-- Validate triggered restart, failover, replay, rollback, and capacity assumptions proportionally.
+- Bind each objective to consequence, indicator, owner, and action.
+- Match each resilience control to reachable failure and recovery behavior.
+- Select only telemetry that proves an owned decision.
 
 ## High-Value Gotchas
 
-- Retries can worsen overload.
-- An alert without an operator action is noise.
-- Average latency hides tail failure.
+- Retries can amplify overload after the original failure.
+- A signal without an owned action is not operational proof.
+- A backup artifact does not prove usable recovery.
 
 ## Execution Checklist
 
-1. Trace the failure mode through user impact, dependency pressure, telemetry, and recovery ownership.
-2. Choose objectives, timeouts, retry budgets, degradation, and alerts only when current risk triggers them.
-3. Verify restart, failover, replay, rollback, capacity, and operator-action assumptions where material.
-4. **Analysis mode:** select objectives and recovery controls from failure evidence.
-5. **Task mode:** apply accepted controls at the affected runtime boundary.
-6. **Review mode:** judge restart, failover, capacity, and operator-action evidence.
-7. Stop when a material objective or recovery action lacks evidence and ownership.
+1. Trace the failure mode through consequence, dependency pressure, telemetry, and recovery ownership.
+2. Select only the named objective, resilience, observability, capacity, or recovery References required by current risk.
+3. Verify failure, degraded behavior, signal action, recovery, freshness, and proof limits.
+4. **Analysis mode:** Return the selected objective and recovery decisions from current evidence.
+5. **Task mode:** Apply accepted controls at the affected runtime boundary.
+6. **Review mode:** Judge control, telemetry, recovery, and freshness evidence.
+7. Stop when required reliability closure evidence is incomplete.
 
 ## Stop / Escalation Conditions
 
-- Block an owned objective when required indicator, target, budget, rollback, or watch evidence lacks an owner.
-- Block required observability lacking current evidence, an owner and action, safe data handling, or bounded cardinality.
-- Block incident closure with unverified cause, missing customer impact, or unowned corrective action.
-- Refuse diagnostic, load, profile, cloud, deploy, rollback, migration, connector, or network-write tools without permission, sandbox, rollback, and redaction evidence.
+- Stop when required reliability closure evidence is incomplete.
 
 ## Output Contract
 
+- failure model; resilience changes; reliability verdict.
 - **Analysis mode (`analysis-agent`):** failure model; objective and recovery decisions; telemetry gaps; current evidence and freshness; proof limits; residual risk.
 - **Task mode (`task-agent`):** resilience changes; rollout-watch signals; current post-edit evidence and freshness; proof limits; residual risk.
 - **Review mode (`review-agent`):** reliability verdict; failure findings; current reviewed evidence and freshness; proof limits; unproven recovery behavior; residual risk.

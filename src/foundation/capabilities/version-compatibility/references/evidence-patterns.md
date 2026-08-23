@@ -1,23 +1,25 @@
 # Version Compatibility Evidence Patterns
 
-Use this reference when compatibility closure depends on old/new matrix proof, generated-client freshness, schema registry evidence, telemetry gate proof, rollback evidence, stale consumer memory, or proof limits. Keep it as an evidence map, not another compatibility benchmark catalog.
+Use this evidence-pattern Reference only when a compatibility claim needs current consumer, old/new, retirement, rollback, or proof-limit evidence.
 
-## Compatibility Surface-To-Validation Map
+## Evidence Records
 
-| Compatibility claim | Minimum evidence | What it proves | What it does not prove |
-| --- | --- | --- | --- |
-| API/DTO change is compatible | Old/new schema diff, structure/meaning/default/error review, consumer list, and contract fixture | Inspected request/response surface matches declared compatibility class | Unknown consumers, generated clients, or partner behavior are covered |
-| Event/schema change is compatible | Schema registry mode, old/new producer-consumer matrix, replay fixture, retention window, and consumer inventory | Inspected event payload can be read in declared directions | Lagged consumers, DLQ behavior, or unregistered schemas are fully safe |
-| Stored data/config rollback is safe | Old/new reader-writer matrix, config bridge/precedence, migration phase, rollback query, and release order | Inspected old/new binaries can coexist under named assumptions | Production data distribution, every deployment skew, or emergency rollback is proven |
-| SDK/package/export compatibility is current | Public API diff, generated-client diff, semver decision, downstream compile/test, and changelog note | Inspected package surface matches declared version class | Unpublished consumers or all language-specific runtime behavior is compatible |
-| Deprecation removal is gated | Usage telemetry, threshold, elapsed window, notification/owner approval, and removal validation | Inspected deprecated surface met named removal criteria | Future calls, uninstrumented clients, or all partner schedules are exhausted |
-| Prior consumer evidence is fresh | Current source/generated/telemetry paths, accepted/rejected memory, validator/report, and final-edit freshness | Reused compatibility claim still matches inspected source | Later schema, client, config, topic, or deployment edits remain covered |
+| Claim | Minimum current evidence | Explicit limit |
+| --- | --- | --- |
+| API/DTO | Schema diff, structure/meaning/default/error review, consumer list, and contract fixture. | Unknown consumers, generated clients, and partners remain unproved. |
+| Event/schema | Registry mode, producer-consumer matrix, replay fixture/window, and consumer inventory. | Lagged consumers, DLQ behavior, and unregistered schemas remain unproved. |
+| Data/config rollback | Reader-writer matrix, config bridge/precedence, migration phase, rollback query, and release order. | Production distributions or deployment skews not represented by this evidence remain proof limits. |
+| SDK/package/export | Public/generated API diff, semver decision, downstream compile/test, and change note. | Unpublished consumers or language runtimes not exercised by this evidence remain proof limits. |
+| Retirement | Usage telemetry, threshold/window, notification/approval, owner, and removal validation. | Future or uninstrumented use remains unproved. |
+| Reused evidence | Current source, generated artifacts, telemetry, accepted/rejected prior evidence, validator/report, and final-edit freshness. | Later contract, client, config, topic, or deployment edits invalidate it. |
 
-## Evidence Quality Labels
+## Evidence Status And Authority
 
-- **Strong evidence**: current contracts, generated artifacts, consumers, telemetry, migration/config paths, and tests inspected; command/report and freshness recorded; proof limits named.
-- **Weak evidence**: local caller search only, docs-only deprecation, schema-only diff, happy-path 200 fixture, old generated-client report, or prior claim without current source.
-- **Missing evidence**: no old/new matrix, no rollback state, no consumer inventory, no generated-client check, no telemetry gate, no schema registry mode, or no owner for unknown consumers.
-- **Invalid evidence**: breaking change shipped as patch/minor, old code cannot read new data on rollback, enum expansion lacks unknown handling for strict consumers, or stale "no consumers" memory accepted as proof.
+- Strong evidence inspects current contracts, consumers, generated artifacts, telemetry, migration/config paths, tests, freshness, and proof limits.
+- Record weak or missing local-only searches, docs-only removal, schema-only diffs, happy-path fixtures, stale reports, absent matrices, rollback gaps, unknown consumers, or ownerless claims instead of treating them as closure.
+- When old code cannot read new state, strict consumers lack unknown handling, or a breaking change uses an incompatible version class, record the evidence as invalid.
+- For telemetry, registry, flag, migration, notification, or rollback actions, record owner, scope, permission, dry-run/staging proof, stop, recovery, and redaction.
 
-- If production telemetry query, schema registry mutation, deployment flag change, partner notification, migration, or rollback rehearsal, require owner, scope, dry-run or staging proof, stop condition, rollback/forward-fix path, and redaction.
+## Anti-Patterns
+
+- Do not assume consumers upgrade together, call behavior-changing additions safe, or remove a bridge by calendar without usage, stored-data, queue, and rollback evidence.

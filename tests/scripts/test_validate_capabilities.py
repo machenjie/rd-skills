@@ -221,7 +221,11 @@ Bound the example decision to its named invariant and current source evidence.
         skill_file = self.module.SKILLS_ROOT / name / "SKILL.md"
         _metadata, _raw, body = self.module.parse_frontmatter(skill_file)
         entry = self._foundation_entry(name)
-        expected = [
+        expected_root = [
+            "Skip absent lifecycle/restoration, offline-only policy, or a "
+            "platform API without a shared state rule."
+        ]
+        expected_registry = [
             "no lifecycle or restoration decision",
             "only offline-sync policy",
             "one platform API without a shared state rule",
@@ -239,16 +243,37 @@ Bound the example decision to its named invariant and current source evidence.
             for value in self._root_do_not_use_triggers(skill_file)
         ]
         registry_values = entry["anti_trigger_signals"]
-        self.assertEqual([normalize(value) for value in expected], root_values)
-        self.assertEqual(expected, registry_values)
+        self.assertEqual(
+            [normalize(value) for value in expected_root],
+            root_values,
+        )
+        self.assertEqual(expected_registry, registry_values)
+        self.assertEqual(1, len(root_values))
+        self.assertEqual(3, len(registry_values))
+        self.assertEqual(3, len(set(registry_values)))
+
+        compact_root = root_values[0]
+        required_markers = (
+            "absent lifecycle/restoration",
+            "offline-only policy",
+            "a platform api without a shared state rule",
+        )
+        for marker in required_markers:
+            with self.subTest(compact_marker=marker):
+                self.assertIn(marker, compact_root)
+                self.assertNotEqual(
+                    root_values,
+                    [compact_root.replace(marker, "", 1)],
+                )
+
         self.assertNotIn(normalize(old_combined), root_values)
         self.assertNotIn(old_combined, registry_values)
         self.assertNotIn(
             "shared cross-client restoration contract",
             " ".join(registry_values),
         )
-        self.assertIn("shared cross-client restoration contract", body)
-        self.assertIn("not a platform callback", body)
+        self.assertIn("Own shared lifecycle and restoration boundaries", body)
+        self.assertIn("exclude platform callbacks", body)
         _source_body, projected = self._compiled_foundation_projection(
             name,
             entry,
@@ -257,23 +282,28 @@ Bound the example decision to its named invariant and current source evidence.
         self.assertNotIn("## Registry Trigger", projected)
         self.assertNotIn(old_combined, projected_normalized)
         self.assertIn(
-            "shared cross-client restoration contract",
+            "own shared lifecycle and restoration boundaries",
             projected_normalized,
         )
+        self.assertIn("exclude platform callbacks", projected_normalized)
 
-        for rejected in (
+        rejected_registry_sets = (
+            expected_registry[:2],
+            expected_registry[1:],
+            [expected_registry[0], expected_registry[2]],
             [old_combined],
             [
-                *expected[:2],
+                *expected_registry[:2],
                 "one platform callback without a shared lifecycle state rule",
             ],
-        ):
-            with self.subTest(rejected=rejected):
+        )
+        for rejected in rejected_registry_sets:
+            with self.subTest(rejected_registry=rejected):
                 self.assertIn(
                     "ordered Root/Registry trigger scalars differ",
-                    self._trigger_mirror_errors(root_values, rejected),
+                    self._trigger_mirror_errors(expected_registry, rejected),
                 )
-                self.assertNotEqual(expected, rejected)
+                self.assertNotEqual(expected_registry, rejected)
 
         admission = self.module.load_yaml_file(
             self.module.ROOT
@@ -447,18 +477,22 @@ Bound the example decision to its named invariant and current source evidence.
         )
 
         observability = bullets("observability", "High-Value Rules")
-        alert_boundary = "Give alerts a condition, owner, severity, and response."
-        self.assertEqual(
-            [
-                alert_boundary,
-                "Define or adjust an SLI/SLO only for an existing objective or "
-                "triggered risk, and prove its semantics.",
-            ],
-            observability[
-                observability.index(alert_boundary) : observability.index(alert_boundary)
-                + 2
-            ],
-        )
+        observability_boundary = "Bind every alert to an owner and response."
+        self.assertIn(observability_boundary, observability)
+        observability_benchmark = (
+            self.module.SKILLS_ROOT
+            / "observability"
+            / "references"
+            / "benchmarks-and-patterns.md"
+        ).read_text(encoding="utf-8")
+        for detail in (
+            "Define SLI formula/distribution, population, source/query, target/window, "
+            "budget owner, and exclusions",
+            "Define each alert’s intent, threshold/source/window, owner/escalation, "
+            "dedupe/silence, and safe action",
+        ):
+            self.assertIn(detail, observability_benchmark)
+        self.assertNotIn("Give alerts a condition, owner, severity, and response.", observability)
 
         shell = bullets("shell-cli-professional-usage", "Anti-Patterns")
         destructive_boundary = (
@@ -483,9 +517,24 @@ Bound the example decision to its named invariant and current source evidence.
         )
         _metadata, _raw, body = self.module.parse_frontmatter(skill_file)
         high_value_rules = self.module._section(body, "High-Value Rules")
-        anti_patterns = self.module._section(body, "Anti-Patterns")
+        root_anti_patterns = self.module._section(body, "Anti-Patterns")
+        checklist = (
+            skill_file.parent / "references" / "checklist.md"
+        ).read_text(encoding="utf-8")
+        anti_patterns = self.module._section(checklist, "Anti-Patterns")
 
-        self.assertIn("deadline-aware backoff and jitter", high_value_rules)
+        self.assertIn(
+            "- Local success substituted for dependency-failure and recovery evidence.",
+            root_anti_patterns,
+        )
+        self.assertIn(
+            "- Bind phase timeouts and retry to current ceiling and failure evidence.",
+            high_value_rules,
+        )
+        evidence_patterns = (
+            skill_file.parent / "references" / "evidence-patterns.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("Attempt/backoff/jitter config", evidence_patterns)
         self.assertIn(
             "- Skip jitter when concurrent callers can synchronize retries.",
             anti_patterns,
@@ -615,7 +664,7 @@ Bound the example decision to its named invariant and current source evidence.
             "existing tests",
             "command coverage",
             "expected signal",
-            "mutation surfaces",
+            "effects",
             "retained-output boundary",
             "actual result when run",
             "freshness input/hash/time facts",
@@ -641,39 +690,26 @@ Bound the example decision to its named invariant and current source evidence.
             for line in self.module._section(body, "High-Value Rules").splitlines()
             if line.startswith("- ")
         ]
-        self.assertEqual(8, len(rules))
         self.assertEqual(
             [
-                "Inspect repository guidance and command definitions for "
-                "test/build/schema/lint/static/generator entrypoints.",
-                "When entrypoint coverage is disputed, use existing tests to "
-                "establish the behavior and paths covered by candidate entrypoints.",
-                "For the accepted proof strategy, map its observable acceptance and "
-                "material risk surfaces to command coverage and repository sources.",
-                "Select exact smallest-sufficient commands with combined coverage "
-                "for the accepted mapping and a defined expected signal per command.",
-                "Run a selected command only after resolving its target, working "
-                "directory, hooks/subprocesses, mutation surfaces, credentials, "
-                "external effects, authority, stop condition, recovery, cleanup, and "
-                "retained-output boundary.",
-                "Record freshness input/hash/time facts without deciding evidence "
-                "timing.",
-                "Select an unavailable-entry fallback only from repository-defined "
-                "commands with evidenced coverage.",
-                "Preserve unverified scope, proof limits, and residual risk when "
-                "coverage remains incomplete.",
+                "Map acceptance and risk to the smallest-sufficient evidenced commands "
+                "and coverage.",
+                "Record target, directory, effects, authority, stop, recovery, cleanup, "
+                "and retained output before execution.",
+                "Record the result and freshness facts.",
+                "Select a repository fallback only from coverage evidence.",
+                "Preserve unsupported coverage, proof limits, and residual risk.",
             ],
             rules,
         )
-        self.assertEqual(
+        moved_entrypoint_rule = (
             "Inspect repository guidance and command definitions for "
-            "test/build/schema/lint/static/generator entrypoints.",
-            rules[0],
+            "test/build/schema/lint/static/generator entrypoints."
         )
-        self.assertEqual(
-            "Preserve unverified scope, proof limits, and residual risk when coverage "
-            "remains incomplete.",
-            rules[-1],
+        self.assertIn(moved_entrypoint_rule, checklist)
+        self.assertNotIn(
+            moved_entrypoint_rule,
+            self.module._section(body, "High-Value Rules"),
         )
         self.assertNotIn("## Execution Checklist", body)
 

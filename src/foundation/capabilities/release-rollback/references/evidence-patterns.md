@@ -24,3 +24,10 @@ These records bind release identity, compatibility, exposure, recovery, authorit
 - Distinguish local, dry-run, staged, and live commands; name target, permission, mutation scope, redaction, and recovery path for authorized writes.
 - Mark evidence stale after material artifact, config, schema, flag, job, route, provider, telemetry, environment, or recovery-plan changes.
 - Close with untested environments, consumers, providers, credentials, scale, operational behavior, residual owners, and the delivery gate handoff.
+
+## Anti-Patterns
+
+- Calling the previous binary a rollback while schema, config, jobs, routes, provider, or visible state remains changed.
+- Treating canary, blue-green, rolling, flags, approvals, or incident roles as universal.
+- Inventing traffic, metric, watch, or deadline thresholds without baseline and consequence evidence.
+- Deleting old artifacts or compatibility paths before the exposure and recovery windows that need them have closed.

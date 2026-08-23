@@ -17,30 +17,22 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use for release iden
 
 ## Skill Role
 
-Define release exposure, recovery, irreversible boundaries, and proof limits. Consume `version-compatibility` decisions; exclude image, pipeline, and cluster mechanics. Route migration mechanics to `data-migration-design`.
+Own release identity, exposure, recovery, irreversible boundaries, and proof limits; consume `version-compatibility` and exclude mechanics.
 
 ## High-Value Rules
 
-- Define one release identity from revision, immutable artifact, config, schema/migration state, flags, jobs, routes, provider state, and target; a previous image alone is incomplete.
-- Consume the accepted `version-compatibility` decision's consumers, mixed-version behavior, migration, retirement, and rollback readability.
-- Confirm that decision is current for the identity and changed surfaces before choosing release order, exposure, or recovery.
-- Derive exposure, observation, stop signals, authority, and containment from blast radius, reversibility, consequence, telemetry, and policy; progressive exposure is not a fixed ladder.
-- Give each changed surface a rollback, disable, compensate, restore, or forward-repair path with preconditions and validation; name when forward recovery becomes safer.
-- **Potentially irreversible data protection:** Backup, reconciliation, old-code compatibility, and write fencing cover destructive or semantic data changes.
-- Account for in-flight jobs, side effects, cached config, retained messages, provider actions, and partial rollback across versions.
-- Refresh compatibility, artifact, environment, telemetry, and recovery evidence after edits. Separate staged proof from live authority and state; leave go/no-go to `delivery-release-gate`.
+- Bind one release identity and current compatibility decision before exposure or recovery.
+- Give each changed surface an owned rollback, disable, compensation, restore, reconciliation, or forward-repair path.
+- Load the named benchmark, checklist, or evidence Reference according to the open output.
 
 ## Anti-Patterns
 
-- Calling the previous binary a rollback while schema, config, jobs, routes, provider, or visible state remains changed.
-- Treating canary, blue-green, rolling, flags, approvals, or incident roles as universal.
-- Inventing traffic, metric, watch, or deadline thresholds without baseline and consequence evidence.
-- Deleting old artifacts or compatibility paths before the exposure and recovery windows that need them have closed.
+- Do not call a previous artifact a rollback while other release state remains changed.
 
 ## Stop Conditions
 
-- Escalate unknown identity, stop authority, external reversal, irreversibility, partial recovery, or validation.
-- Block missing or stale compatibility evidence and route unresolved semantic compatibility design to `version-compatibility`.
+- Stop on stale compatibility or unknown identity, authority, irreversibility, external reversal, partial recovery, or validation.
+- Return compatibility and release authority to their owners.
 
 ## Output Contract
 

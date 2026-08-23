@@ -1,57 +1,27 @@
 # Test Data Management Evidence Patterns
 
-Use this reference when test-data closure depends on fixture-to-validation mapping, cleanup proof, privacy or secret scan evidence, deterministic rerun proof, parallel-safety proof, stale fixture memory, or proof limits. Keep it as an evidence map, not another fixture strategy catalog.
+Use this evidence map for a named fixture ownership, cleanup, privacy, determinism, parallel-safety, freshness, or proof-limit claim; it is not another fixture catalog.
 
-## Test Data Surface-To-Validation Map
+## Surface-To-Validation Map
 
-| Test-data claim | Minimum evidence | What it proves | What it does not prove |
-| --- | --- | --- | --- |
-| Fixture or factory is owned | Fixture/factory path, consumer tests, asserted fields, default/trait rule, and update/deletion owner | Inspected data artifact has a bounded owner and purpose | Future schema or hidden consumers are covered |
-| Persistent side effects are isolated | Side-effect inventory, namespace/transaction/container strategy, cleanup command, and parallel-safety review | Inspected DB/cache/file/queue/email/sandbox state has a reset path | All CI shards, external sandboxes, or delayed jobs are clean |
-| Data is privacy-safe | Data category, synthetic/sanitized rule, secret/PII scan or manual review, and retention owner | Inspected fixtures avoid selected sensitive patterns | Every real-world identifier, free-text leak, or historic artifact is absent |
-| Determinism is controlled | Clock/random/UUID/locale/timezone/order control, seed, rerun command, and failure signature | Inspected tests can reproduce named generated values | Every asynchronous or environment-specific flake is solved |
-| Volume/parallel data is partitioned | Worker/VU namespace, dataset slice rule, collision check, cleanup/retention, and quota note | Inspected parallel or load data avoids named collisions | Production scale, all quotas, or long-term retention are proven |
-| Prior fixture evidence is fresh | Current schema/fixture/test/CI paths, accepted/rejected memory, validator/report, and final-edit freshness | Reused test-data pattern still matches inspected source | Later schema, runner, cleanup, or sandbox edits remain covered |
+| Claim | Minimum current evidence | Proves / limit |
+| --- | --- | --- |
+| Owned fixture | Artifact, consumers, asserted fields, defaults/traits, update/deletion owner. | Bounded purpose; not future schema or hidden consumers. |
+| Isolated effects | Side-effect inventory, namespace/transaction/container, cleanup, parallel review. | Inspected reset path; not every shard, delayed job, or sandbox. |
+| Privacy-safe data | Category, synthetic/sanitized rule, scan/review, retention owner. | Selected patterns absent; not every identifier, free-text leak, or historic artifact. |
+| Determinism | Clock/random/ID/locale/order controls, seed, rerun, failure signature. | Named values reproducible; not every async/environment flake. |
+| Parallel/volume partition | Worker/VU scope, slice, collision check, cleanup/retention, quota. | Named collisions bounded; not production scale, every quota, or long retention. |
+| Fresh evidence | Current schema/fixture/test/CI paths, prior-claim decision, validator/report, final-edit freshness. | Inspected source matches; not later edits. |
 
-## Evidence Quality Labels
+## Evidence Quality
 
-- **Strong evidence**: current tests/fixtures/factories/seeds/schema/cleanup/CI paths inspected, command or review artifact named, exit code or status recorded, final-edit freshness stated, and proof limits named.
-- **Weak evidence**: prior green CI, global fixture convention, unscoped factory reuse, old memory, or cleanup review without side-effect inventory.
-- **Missing evidence**: no fixture owner, no cleanup command, no privacy classification, no deterministic seed, no parallel-safety statement, or no owner for inaccessible sandbox state.
-- **Invalid evidence**: real secret or PII in fixture, global destructive cleanup in shared environment without guard, unseeded asserted randomness, or stale fixture memory accepted as current proof.
+- Strong: current artifacts, command/review status, final-edit freshness, and proof limits.
+- Weak: old CI, global convention, unscoped reuse, memory, or cleanup review without side-effect inventory.
+- Missing: no owner, cleanup, classification, seed, parallel statement, or inaccessible-sandbox owner.
+- Invalid: real secret/PII, unguarded shared reset, asserted unseeded randomness, or stale memory treated as current.
 
-## Tool Permission Boundary
+## Tool Boundary And Handoff
 
-- Truncate, drop, flush, purge, and external sandbox reset actions require an isolated namespace, dry-run or staging proof, stop condition, and restore or reseed path.
-- Production-like exports and regulated-data scans require an approved source, minimization and redaction rules, retention/deletion evidence, and proof that parallel tests cannot cross namespaces.
-
-## Handoff Evidence Shape
-
-```yaml
-test_data_evidence_closure:
-  inspected_paths:
-    - path: ""
-      finding: ""
-  accepted_prior_claims:
-    - claim: ""
-      current_evidence: ""
-  rejected_or_stale_claims:
-    - claim: ""
-      reason: ""
-  test_data_surface_to_validation_map:
-    - surface: ""
-      risk: ownership | cleanup | privacy | determinism | parallel | freshness
-      validator_or_artifact: ""
-      exit_code_or_status: ""
-      proves: ""
-      does_not_prove: ""
-      owner: ""
-  tool_permission_boundary:
-    action_class: ""
-    state_mutation: ""
-    redaction: ""
-  residual_risk:
-    - risk: ""
-      owner: ""
-      next_gate: ""
-```
+- Destructive cleanup or sandbox reset needs owned isolation, dry-run/staging proof, stop, and restore/reseed.
+- Protected exports/scans need approved source, minimization/redaction, retention/deletion, and cross-namespace proof.
+- Record inspected paths; accepted and stale claims; surface, risk, artifact/status, proves/does-not-prove, and owner; mutation/redaction boundary; residual risk and next gate.

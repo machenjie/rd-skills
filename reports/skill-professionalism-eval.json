@@ -928,7 +928,7 @@
         "non-goal-boundary-definition",
         "user-role-identification"
       ],
-      "line_count": 71,
+      "line_count": 83,
       "decision_rule_count": 4,
       "gotcha_count": 3,
       "reference_count": 4,
@@ -1013,8 +1013,8 @@
         "configuration-runtime-policy",
         "dependency-vulnerability-scanning"
       ],
-      "line_count": 75,
-      "decision_rule_count": 6,
+      "line_count": 66,
+      "decision_rule_count": 3,
       "gotcha_count": 1,
       "reference_count": 7,
       "routing_coverage_count": 103,
@@ -1365,9 +1365,9 @@
         "microservice-splitting",
         "technology-stack-selection"
       ],
-      "line_count": 76,
+      "line_count": 72,
       "decision_rule_count": 6,
-      "gotcha_count": 3,
+      "gotcha_count": 1,
       "reference_count": 4,
       "routing_coverage_count": 98,
       "benchmark_coverage_count": 1
@@ -1626,7 +1626,7 @@
         "configuration-runtime-policy",
         "dependency-vulnerability-scanning"
       ],
-      "line_count": 73,
+      "line_count": 70,
       "decision_rule_count": 4,
       "gotcha_count": 3,
       "reference_count": 4,
@@ -1737,7 +1737,8 @@
         "language-testing-strategy",
         "testability-seam-design",
         "targeted-validation-selection",
-        "client-application-testing"
+        "client-application-testing",
+        "bigdata-product-extension"
       ],
       "line_count": 82,
       "decision_rule_count": 7,
@@ -1808,7 +1809,7 @@
         "cryptography-key-lifecycle",
         "audit-evidence-integrity"
       ],
-      "line_count": 84,
+      "line_count": 81,
       "decision_rule_count": 6,
       "gotcha_count": 2,
       "reference_count": 4,
@@ -1978,7 +1979,7 @@
         "kubernetes-gateway",
         "project-initialization"
       ],
-      "line_count": 76,
+      "line_count": 74,
       "decision_rule_count": 4,
       "gotcha_count": 3,
       "reference_count": 4,
@@ -2042,7 +2043,9 @@
         "windows-platform-extension",
         "macos-platform-extension",
         "linux-desktop-platform-extension",
-        "cross-platform-client-extension"
+        "cross-platform-client-extension",
+        "web3-product-extension",
+        "low-level-systems-extension"
       ],
       "line_count": 98,
       "decision_rule_count": 8,

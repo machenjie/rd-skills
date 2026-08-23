@@ -9,42 +9,30 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use for C# async, re
 
 **Use when**
 
-- C# or .NET code changes async/cancellation, disposal, iterators/LINQ, nullable contracts, value/reference behavior, DI lifetime, trimming/AOT, assembly loading, native/COM interop, UI dispatch, or deployment.
-- A compiler, target framework, RID, host, framework, or generated boundary can change behavior beyond compilation.
+- C# or .NET source changes async, resource, type, DI, runtime, interop, UI, publish, or deployment behavior.
 
 **Do not use when**
 
-- C# appears only in comments/generated output, or another-language change has no C#/.NET source.
-- The change is only MSIX identity, signing, manifest capability, packaging metadata, or Windows policy with no C#/.NET semantic decision.
+- C# is incidental, or only Windows identity, signing, manifest, capability, or packaging metadata changes.
 
 ## Skill Role
 
-Own C# language and .NET runtime/library semantics. Leave Windows identity/policy and generic concerns to their owners.
+Own C#/.NET language and runtime semantics; exclude Windows policy and generic concerns.
 
 ## High-Value Rules
 
-- Preserve async ownership, `CancellationToken` propagation, context/dispatcher needs, observed exceptions, and caller-visible cancellation.
-- Define one owner and ordered cleanup for each disposable resource, including partial construction, repeated disposal, and cleanup failure.
-- Define iterator and LINQ execution plans by enumeration count, deferred effects, provider translation, cancellation, and resource lifetime.
-- Validate nullable compiler contracts across reflection, serialization, interop, generated, and disabled-context runtime boundaries.
-- Choose class, struct, record, or `ValueTask` from identity, copy, equality, boxing, consumption, and compatibility evidence.
-- Enforce DI lifetime ownership against shorter-lived capture, service location, and disposal of container-owned instances.
-- Prove trim/AOT reachability for reflection, serialization, DI, dynamic code, and plugins in the actual publish mode.
-- Define load context, native/COM ABI and apartment, UI dispatcher, target, RID, and framework-dependent/self-contained deployment.
+- Select `async-resource-and-iterator-contracts` for active async, cancellation, resource, iterator/LINQ, null/type, or DI decisions.
+- Select `runtime-deployment-and-interop-contracts` for active trim/AOT, loading, native/COM, UI, RID, publish, or deployment decisions.
+- Bind decisions to current compiler, runtime, target, host, caller, and owner evidence.
 
 ## Anti-Patterns
 
-- `async void`, fire-and-forget tasks, or sync-over-async hides failure, cancellation, context deadlock, or owner teardown.
-- A `using`, finalizer, DI container, GC, or `await using` is assumed to establish the required cleanup order without failure-path proof.
-- Nullable-clean compilation, a record, or a struct is treated as runtime null safety, deep immutability, or cheap copying.
-- Build success is treated as reflection, native loading, trimming, AOT, UI-affinity, or deployment proof.
+- Compilation substituted for runtime, ownership, ABI, or deployment evidence.
 
 ## Stop Conditions
 
-- Stop until behavior-controlling compiler, target, runtime, RID, publish, host, and desktop versions are known.
-- Route Windows identity, registry deployment, entitlements/capabilities, signing, installer, and OS policy to the Windows domain owner.
-- Route concurrency, security, persistence, API compatibility, performance, and testing to their owners.
-- Stop on an unknown resource owner, enumeration site, DI scope, reflection root, native ABI, COM apartment, UI dispatcher, or deployment target.
+- Stop on unknown controlling version or boundary.
+- Route Windows policy and generic risks to their owners.
 
 ## Output Contract
 

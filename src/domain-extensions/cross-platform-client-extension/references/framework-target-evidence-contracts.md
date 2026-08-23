@@ -7,6 +7,7 @@ Official framework documentation below was accessed on 2026-07-24.
 
 ## Evidence Order
 
+- Prove targets from repository, build targets, release configuration, or published artifacts without framework inference.
 - Inspect repository manifests, source sets, platform directories, build
   targets, CI jobs, release configuration, and published artifacts.
 - Record only targets supported by task evidence; distinguish compilable,
@@ -45,3 +46,12 @@ routing decision, one unresolved question if needed, and proof limits.
 These pages are rolling or version-specific support statements. They do not
 prove repository target selection, artifact publication, release support,
 account ownership, or the installed toolchain. Recheck exact versions.
+
+## High-Value Gotchas
+
+- Shared or compile-time success can hide target-specific lifecycle, permission, accessibility, packaging, or runtime failure.
+
+## Execution Checklist
+
+- Verify ownership, compatibility, normal, failure, upgrade, and artifact behavior per affected target.
+- Report the target matrix, source freshness, untested targets, non-inferences, and residual risk.

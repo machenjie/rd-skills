@@ -17,27 +17,21 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use for tenant isola
 
 ## Skill Role
 
-Define subject-resource-action-condition decisions, trusted policy inputs, tenant scope, enforcement reachability, bulk semantics, denial disclosure, delegated entitlement, and permission proof. Exclude subject derivation and credential lifecycle.
+Own permission authority, scope, enforcement, collection, bulk, denial, delegation, and negative proof; exclude identity and credential lifecycle.
 
 ## High-Value Rules
 
-- **Model the decision and its authorities.** Name subject, resource, action, conditions, decision outcomes, and the current identity, resource, relationship, policy, or lifecycle source authorized to supply each decision input.
-- **Resolve object and tenant scope from trusted state.** Derive ownership, tenancy, sharing, classification, and lifecycle from validated identity, resource, relationship, or policy data. Request-supplied selectors remain untrusted, while intentionally public access is recorded as explicit policy.
-- **Place enforcement on each reachable protected path.** Require an architecture-appropriate authorization decision before protected data leaves or an effect commits.
-- **Define collection and bulk authorization before exposure or effect.** Apply an authoritative visibility predicate before pagination, aggregation, caching, serialization, reporting, or export. The chosen per-object or equivalent aggregate authorization specifies partial-result and continuation behavior.
-- **Derive denial disclosure from the current contract.** Distinguish missing identity, invisible resource, visible-but-forbidden action, conditional approval, and unavailable policy state without standardizing one protocol response across resources or clients.
-- **Bound delegated and machine entitlement.** Define the resource, action, tenant, run or purpose, delegation source, revocation or end condition, real/effective actor audit, and diagnostic-versus-mutation boundary for service, support, impersonation, and override paths.
-- **Prove allows, denials, and bypass resistance.** Cover positive, wrong-subject, wrong-owner, wrong-tenant, stale-relationship, collection, bulk, delegated, and alternate-entry behavior from the changed graph. Uninspected paths, deployed-policy state, and owners remain residual scope.
+- Resolve decision inputs from trusted identity, resource, relationship, policy, or lifecycle state.
+- Enforce the decision before protected disclosure or effect on each in-scope path.
+- Load the named benchmark, checklist, or evidence Reference according to the open output.
 
 ## Anti-Patterns
 
-- Treat a role, hidden UI control, gateway scope, authenticated caller, or internal workload as the authoritative permission decision for object- or tenant-sensitive work.
-- Let caller-controlled owner, tenant, role, status, purpose, or mutable privilege fields establish entitlement, or filter a broad result after protected data has crossed its disclosure boundary.
-- Generalize one endpoint’s denial response, one policy placement, or one happy-path fixture to unrelated resources, entry points, bulk behavior, delegated actors, or deployed policy state.
+- Do not infer permission from authentication, UI hiding, gateway scope, internal callers, or caller fields.
 
 ## Stop Conditions
 
-Escalate when a policy input lacks trusted authority, a protected path lacks reachable enforcement, shared or cross-tenant scope is ambiguous, or bulk semantics can expose unauthorized objects. Also escalate when delegated mutation lacks attribution or end conditions, denial conflicts with the public contract, or residual paths lack an owner.
+- Stop on untrusted authority, unreachable enforcement, ambiguous scope, unsafe collection or bulk behavior, unbounded delegation, incompatible denial, or unowned paths.
 
 ## Output Contract
 

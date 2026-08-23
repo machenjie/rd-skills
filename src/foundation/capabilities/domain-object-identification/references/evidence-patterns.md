@@ -1,6 +1,12 @@
 # Domain Object Identification Evidence Patterns
 
+- Confirm business owner, data owner, source of truth, tenant scope, mutation authority, and writer entry points from current evidence.
+
 Use this reference when object-identification closure depends on validation freshness, prior source or task evidence claims, writer scans, tool permission boundaries, or proof limits. Keep it as an evidence map, not a second object taxonomy.
+
+## Ownership And Writer Scan
+
+Inspect defining, creating, mutating, merging, splitting, renaming, exposing, and translating paths: handlers, jobs, migrations, support tools, persistence hooks/SQL, replayers, schemas, events, provider/UI/read models, policies, tenant filters, audits, docs, and generated clients. Record accepted/rejected writers, translation-only boundaries, and unsearched external or generated writers.
 
 ## Object-Claim-To-Validation Map
 
@@ -20,6 +26,7 @@ Use this reference when object-identification closure depends on validation fres
 - Accept prior "this table is the object", "resource equals aggregate", "term owner is known", or "writer path is unique" claims only when current source, schemas, tests, events, and owners still match.
 - Mark evidence stale after edits to object names, identity fields, lifecycle states, writer paths, schemas, generated clients, events, docs, reports, or validation outputs.
 - For each final object-identification claim, cite current command, test, report, or owner-review evidence. Coverage includes the selected classification, rejected alternatives, identity or value equality and immutability, lifecycle, aggregate/invariants, writer authority, relationship, mappings, and downstream handoff; unsupported claims retain `not_run` and residual risk.
+- After final object/schema edits, validate mapping, permission, persistence, event, generated-client, and read-model surfaces; skipped adjacent consumers and unknown writers remain explicit proof limits.
 
 - If data migration, object merge/split, production writer disablement, or event replay, record environment, owner approval, stop condition, rollback plan, and redaction rule.
 - If production telemetry, audit, or consumer query, keep access read-only or approved-connector-scoped, aggregate sensitive labels, and redact tenant/user/secret-bearing fields.
@@ -29,3 +36,7 @@ Use this reference when object-identification closure depends on validation fres
 - Source and test evidence proves only the inspected writers, mappings, lifecycle transitions, and equality cases.
 - Language equality/hash/reference documentation does not prove domain identity or value semantics.
 - Unknown external writers, reflective/generated mutation, cross-service replay, and production races remain residual risks until their owners supply current evidence.
+
+## Anti-Patterns
+
+- Reject table/DTO/UI names, nesting, joins, proximity, or repository search as domain ownership proof.

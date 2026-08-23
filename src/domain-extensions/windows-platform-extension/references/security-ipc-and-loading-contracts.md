@@ -18,17 +18,6 @@ Official Microsoft Learn pages below were accessed on 2026-07-24.
 - Resolve DLLs only from explicit trusted locations with verified module path
   and architecture.
 
-## Failure Proof
-
-- Exercise denied elevation, AppContainer denial, wrong user/session, secret
-  invalidation, spoofed IPC, unavailable peer, and attacker-controlled DLL paths.
-- Prove recovery does not broaden scope, expose secrets, or silently lower trust.
-
-## Required Record
-
-Return principal/session matrix, privilege/container decision, secret scope and
-recovery, IPC protocol/authorization, DLL policy, failure proof, and risk.
-
 ## Primary Sources
 
 - [User Account Control](https://learn.microsoft.com/en-us/windows/security/application-security/application-control/user-account-control/)

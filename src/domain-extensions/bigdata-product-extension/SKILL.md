@@ -28,29 +28,17 @@ affected pipelines and consumers.
 
 ## Professional Decision Rules
 
-- **Prove consumer compatibility**: verify every active consumer can read the deployed schema transition.
-- **Make replay correct**: prevent duplicates, omissions, and cross-window corruption during retries and backfills.
-- **Gate promotion on invariants**: prevent failed required invariants from reaching affected consumers.
-- **Own failed-data disposition**: name recovery behavior and an owner for every failed invariant.
-- **Derive quality thresholds**: use observed distributions and consumer impact instead of fixed universal cutoffs.
-- **Protect classified data**: apply current access, deletion, retention, and logging obligations across the pipeline.
-- **Bound distributed resources**: use representative plans and profiles to constrain skew, spill, memory, and cost.
-- **Maintain decision-relevant lineage**: trace producer, transformation, consumer, owner, and recovery evidence for affected assets.
-- **Preserve experiment semantics**: prove stable assignment, event compatibility, point-in-time correctness, and applicable online/offline parity.
+- Close triggered compatibility, replay, promotion, failed-data, quality, classification, resource, lineage, and experiment risks through named References and current pipeline evidence.
 
 ## High-Value Gotchas
 
-- a compatible-looking schema change silently maps a removed or retyped field to null
-- hot keys turn an acceptable average runtime into one failed long-tail partition
-- a replay appends an already-processed interval and doubles downstream metrics
-- late events, timezone boundaries, or mutable dimensions invalidate a backfill
-- raw identifiers escape through task logs, samples, dead-letter queues, or debug exports
+- Schema appearance, averages, or file presence can hide semantic incompatibility, skew, duplicate replay, late data, or classified-data leakage.
 
 ## Execution Checklist
 
 1. Identify affected producers, transformations, consumers, invariants, and replay window.
-2. Select compatibility, quality, recovery, and resource controls from current engine and data evidence.
-3. Record negative-path tests, cost limits, escalation, and residual risk.
+2. Load each named Reference whose decision problem is active.
+3. Record mechanisms, negative paths, cost limits, proof limits, and residual risk.
 
 ## Stop / Escalation Conditions
 
@@ -65,4 +53,8 @@ affected pipelines and consumers.
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
-| [checklist](references/checklist.md) | decision-checklist | distributed batch stream schema replay backfill or consumer behavior needs domain risk closure | the task changes one database table without a distributed pipeline or replay boundary | analysis-agent, task-agent, review-agent | checklist-result, residual-risk |
+| [consumer and schema contracts](references/consumer-and-schema-contracts.md) | targeted | distributed consumer, schema, grain, metric meaning, correction, or compatibility is open | the task changes one database table without a distributed pipeline or replay boundary | analysis-agent, task-agent, review-agent | boundary-decision, decision-record, residual-risk |
+| [pipeline replay and event identity](references/pipeline-replay-and-event-identity.md) | targeted | batch, stream, CDC, event-time, checkpoint, replay, backfill, or writer coexistence is open | no pipeline, replay, backfill, checkpoint, or writer-coexistence decision exists | analysis-agent, task-agent, review-agent | boundary-decision, decision-record, failure-decision, residual-risk |
+| [quality lineage and point in time correctness](references/quality-lineage-and-point-in-time-correctness.md) | targeted | quality, failed-data, lineage, point-in-time, leakage, or experiment semantics is open | no quality, lineage, point-in-time, leakage, or experiment decision exists | analysis-agent, task-agent, review-agent | decision-record, failure-decision, validation-plan, residual-risk |
+| [storage performance and recovery](references/storage-performance-and-recovery.md) | targeted | partition, storage, metadata, recovery, skew, state, memory, compute, or cost is open | no storage, recovery, resource, performance, or cost decision exists | analysis-agent, task-agent, review-agent | selected-approach, failure-decision, validation-plan, residual-risk |
+| [observability and privacy](references/observability-and-privacy.md) | targeted | pipeline signals or classified samples, logs, failed data, exports, retention, or deletion is open | no pipeline-observability or classified-data handling decision exists | analysis-agent, task-agent, review-agent | boundary-decision, validation-plan, residual-risk |

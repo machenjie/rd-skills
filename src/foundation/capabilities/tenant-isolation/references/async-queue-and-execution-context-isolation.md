@@ -2,7 +2,7 @@
 
 **Load when:** Tenant provenance crosses messages, jobs, callbacks, workers, retries, DLQs, replays, shared compute, temporary state, or execution-context boundaries.
 
-**Do not load when:** No asynchronous or compute-context tenant boundary changes and current evidence proves context derivation, propagation, reset, and terminal handling.
+**Do not load when:** No asynchronous or compute-context tenant boundary changes and current evidence covers derivation, propagation, reset, and terminal handling.
 
 **Required by:** `analysis-agent`, `task-agent`, `review-agent`
 
@@ -10,28 +10,28 @@
 
 ## One Decision
 
-Select one tenant-context propagation and execution-isolation contract that fails closed across asynchronous ownership and reuse.
+Select a tenant-context propagation and execution-isolation contract that fails closed across asynchronous ownership and reuse.
 
 ## Decision Matrix
 
-| Boundary | Required isolation decision | Failure signal |
+| Boundary | Required decision | Failure signal |
 |---|---|---|
-| Context authority | Trusted source, immutable internal representation, conflict handling, and freshness | Payload tenant field replaces authenticated provenance |
-| Message envelope | Tenant identity, schema/version, producer authority, signature or broker trust, and validation | Consumer accepts a missing or forged tenant |
-| Queue or topic | Shared/dedicated topology, tenant routing, access, ordering, quotas, and metrics | One tenant can publish to or consume another tenant's entity |
-| Job record | Tenant-bound identity, initiator, dedupe key, status lookup, cancellation, and result location | Job status or result is keyed globally |
-| Consumer | Revalidation, context installation, cleanup, acknowledgement, and terminal outcome | Reused worker retains the previous tenant |
-| Retry and replay | Tenant-preserving identity, DLQ/quarantine scope, operator selection, and late behavior | Replay changes tenant or bypasses current isolation |
-| Batch | Homogeneous-tenant requirement or per-item scope, partitioning, failure, and continuation | One batch-level tenant is applied to mixed items |
-| Compute state | Worker/pod/namespace choice, local cache, temp path, credentials, pool reset, and resource bounds | Shared scratch, credentials, or memory crosses tenants |
+| Authority | Trusted source, immutable tenant, conflict handling, freshness | Payload tenant replaces authenticated provenance |
+| Envelope | Tenant, schema/version, producer trust, validation | Consumer accepts missing or forged tenant |
+| Queue/topic | Shared/dedicated topology, routing, access, order, quota | Tenant reaches another tenant's entity |
+| Job | Tenant-bound ID, initiator, dedupe, status, cancel, result | Status or result uses a global key |
+| Consumer | Revalidate, install context, clean up, acknowledge, terminate | Reused worker retains prior tenant |
+| Retry/replay | Preserve tenant, scope DLQ/quarantine, authorize selection | Replay changes tenant or bypasses isolation |
+| Batch | Homogeneous scope or per-item scope and failure policy | Batch scope covers mixed tenants |
+| Compute | Namespace, local cache, temp path, credentials, pool reset | Shared state crosses tenants |
 
 ## Verification
 
 - Publish missing, conflicting, forged, stale, and valid tenant envelopes through the real consumer.
-- Reuse worker, connection, callback, and temporary-state owners across alternating tenants.
-- Exercise retries, DLQ inspection, replay, cancellation, duplicate delivery, and late completion.
+- Reuse workers, connections, callbacks, and temporary state across alternating tenants.
+- Exercise retries, DLQ inspection, replay, cancellation, duplicates, and late completion.
 - Submit mixed-tenant batches and identical job identifiers under two tenants.
-- Verify shared and dedicated queue or compute variants with their actual access identities.
+- Verify shared and dedicated queue or compute variants with their actual identities.
 
 ## Primary Sources
 
@@ -44,4 +44,9 @@ Official platform pages were accessed on 2026-07-26.
 
 ## Proof Limits
 
-Topology and namespace choices do not prove application context propagation, broker authorization, worker cleanup, or tenant fairness. Tests prove only the exercised producers, consumers, identities, retries, platforms, and shared-resource configurations.
+Topology and namespaces do not prove context propagation, broker authorization, worker cleanup, or fairness. Tests prove only exercised producers, consumers, identities, retries, platforms, and resource configurations.
+
+## Failure Evidence
+
+- Async context loss uses no tenant or the prior tenant.
+- If mixed-tenant items would share one tenant scope, reject the work as an isolation failure.

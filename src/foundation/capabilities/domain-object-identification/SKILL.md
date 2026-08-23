@@ -22,27 +22,19 @@ Establish where identity, lifecycle, invariants, ownership, permissions, persist
 
 ## High-Value Rules
 
-- Classify each candidate as entity, value object, aggregate root, child entity, resource, policy, boundary model, or read model from domain meaning and bounded-context evidence.
-- Define entity identity across time, including natural or surrogate keys, tenant scope, external identifiers, uniqueness, and merge or split behavior.
-- A value object has no independent identity. Define equality attributes and normalization, keep it immutable, and express change through replacement semantics.
-- Make the aggregate root the entry point for aggregate updates and invariants. Derive its boundary from consistency and writer authority rather than joins, screens, or nesting.
-- Record lifecycle, transitions, invariant owner, accepted and rejected writers, mutation entry points, permissions, persistence, and events.
-- Record relationships, cardinality, optionality, reference direction, cross-aggregate identity references, and mappings to DTO, schema, table, event, provider, UI, and read-model surfaces.
-- Return classification, rejected alternatives, ownership evidence, proof limits, and residual risks.
-- Treat naming and proximity observations as insufficient evidence of domain authority.
+- Reject naming and proximity observations as domain-authority evidence.
+- Select the category or checklist Reference for disputed classification and multi-part closure.
+- Load the evidence Reference for current writer, schema, and consumer proof.
 
 ## Anti-Patterns
 
-- Reject ownership inferred only from names, proximity, or repository search.
-- Confirm business owner, data owner, source of truth, tenant scope, mutation authority, and writer entry points from current evidence.
-- Reject deep object nesting across aggregates unless the parent owns the child’s lifecycle and invariants.
-- Keep cross-aggregate references by identity.
-- Reject unowned cross-aggregate workflows; assign domain events, a process manager, compensation, or an explicit eventual-consistency decision.
+- Local success substituted for evidence of the domain object identification contract.
 
 ## Stop Conditions
 
 - Route language reference, value, equality, hash, and aliasing semantics to the language Skill.
 - Route object-versus-function/module and accepted-owner method placement to `implementation-structure-design`.
+- Route unclear invariants/lifecycle, actor rights, persistence, transfer/event contracts, and concurrent cross-aggregate ownership to their named business-rule, state, permission, data, schema/event, or consistency owners.
 
 Escalate when object boundaries affect consistency, tenant ownership, money movement, regulated records, audit history, migration design, external API resources, or event semantics.
 

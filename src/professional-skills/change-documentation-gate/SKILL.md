@@ -32,25 +32,21 @@ migration guidance, and operator instructions.
 
 ## Professional Decision Rules
 
-- Update documentation when behavior, public contract, configuration, operations, migration, deprecation, or user workflow changes.
-- Keep examples executable and consistent with current names, defaults, errors, and version behavior.
-- Place facts in the owning source document and link rather than duplicate unstable details.
-- Validate links, commands, generated outputs, and migration instructions against the final implementation.
+- Keep the selected change documentation gate decision within its declared owner, inputs, stops, and output contract.
 
 ## High-Value Gotchas
 
-- Stale examples are worse than missing examples.
-- Generated docs must be changed at their source.
-- A migration guide without rollback and version boundaries is incomplete.
+- Generated documentation can pass source checks while rendered links or examples remain stale.
+- A no-docs claim can hide audience impact when its evidence omits changed behavior.
+- Safe-disclosure limits still apply to examples, runbooks, migration notes, and incident records.
 
 ## Execution Checklist
 
-1. Trace the behavior delta to its audience, owning document, generated origin, and version boundary.
-2. Choose update, migration note, deprecation guidance, or evidence-backed no-docs treatment.
-3. Verify examples, commands, links, rollback guidance, and safe-disclosure boundaries.
-4. **Task mode:** update the owning source for the accepted behavior delta.
-5. **Review mode:** judge examples, commands, links, and migration guidance.
-6. Stop closure when source behavior and published guidance cannot be reconciled.
+- **Task mode:** Map changed behavior to its owning documentation source and generated origin.
+- **Task mode:** Validate rendered links, examples, commands, and failure guidance against current behavior.
+- **Review mode:** Compare published guidance with current behavior and freshness evidence.
+- Record skipped documentation surfaces as owned residual debt.
+- Minimal validation: render the affected artifact and run its link, example, or command checks.
 
 ## Stop / Escalation Conditions
 

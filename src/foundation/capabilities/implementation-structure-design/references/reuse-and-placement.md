@@ -1,5 +1,7 @@
 # Reuse And Placement Evidence
 
+- Reuse only when semantics, authority, failure, lifecycle, and evolution match; similarity is insufficient.
+
 These decision patterns compare repository-local reuse, owner-private placement, deliberate separate implementation, and generated-source authority by semantics, ownership, failure, lifecycle, evolution, and current consumers.
 
 ## Search Scope

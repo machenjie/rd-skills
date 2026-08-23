@@ -800,7 +800,7 @@
       "status": "pass",
       "decision_rule_count": 4,
       "gotcha_count": 3,
-      "line_count": 71
+      "line_count": 83
     },
     {
       "name": "engineering-change-analysis",
@@ -808,9 +808,9 @@
       "path": "src/professional-skills/engineering-change-analysis/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 6,
+      "decision_rule_count": 3,
       "gotcha_count": 1,
-      "line_count": 75
+      "line_count": 66
     },
     {
       "name": "acceptance-criteria-builder",
@@ -879,8 +879,8 @@
       "total_score": 100,
       "status": "pass",
       "decision_rule_count": 6,
-      "gotcha_count": 3,
-      "line_count": 76
+      "gotcha_count": 1,
+      "line_count": 72
     },
     {
       "name": "data-api-contract-changer",
@@ -920,7 +920,7 @@
       "status": "pass",
       "decision_rule_count": 4,
       "gotcha_count": 3,
-      "line_count": 73
+      "line_count": 70
     },
     {
       "name": "integration-change-builder",
@@ -950,7 +950,7 @@
       "status": "pass",
       "decision_rule_count": 6,
       "gotcha_count": 2,
-      "line_count": 84
+      "line_count": 81
     },
     {
       "name": "reliability-observability-gate",
@@ -980,7 +980,7 @@
       "status": "pass",
       "decision_rule_count": 4,
       "gotcha_count": 3,
-      "line_count": 76
+      "line_count": 74
     },
     {
       "name": "ai-code-review-refactor",

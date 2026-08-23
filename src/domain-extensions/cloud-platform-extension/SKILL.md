@@ -7,56 +7,50 @@ description: Use when a selected Professional decision materially depends on con
 
 ## Role
 
-This focused Layer 3 Domain Skill modifies a selected Professional Skill for `analysis-agent`, `task-agent`, and `review-agent`. It is never a Professional owner. `platform-infrastructure-change-builder` owns cloud and infrastructure-as-code source changes; backend, security, or reliability Professionals may load it when cloud policy materially changes their decision. A `review-agent` must load it.
+This focused Layer 3 Domain Skill modifies the selected Professional decision
+for `analysis-agent`, `task-agent`, and `review-agent` with confirmed cloud
+authority; it never becomes the Professional owner. Infrastructure source
+remains with `platform-infrastructure-change-builder`.
 
 ## When To Use
 
-- Use when confirmed cloud ownership, service, location, identity, network, capacity, key, cost, or provider API policy changes the decision.
-- Use only within the Professional workflow.
+- confirmed cloud ownership, service, location, identity, network, capacity, key, cost, or provider API policy changes the Professional decision
 
 ## Do Not Use
 
-- Do not use for unknown cloud scope, provider-name-only or language-only work, local Kubernetes, generic backend work without a cloud control-plane dependency, or release authorization.
-- Do not create provider-specific top-level Skills or duplicate infrastructure-as-code state, plan, drift, identity, or recovery workflow.
+- unknown cloud scope, provider-name/language-only work, local Kubernetes, generic backend work without cloud authority, or release authorization
+- never create provider-specific top-level Skills or duplicate infrastructure state, plan, drift, identity, or recovery ownership
 
 ## Required Inputs
 
-- Record provider, account/project/subscription, environment, owners, region/zone, plane operations, and source authority.
-- Record identity trust, network, service responsibility, capacity/consistency, key authority, versions, and non-production evidence.
+- provider, account/project/subscription, environment, owner, region/zone, plane, source authority
+- identity, network, service, and capacity facts
+- evidence-backed key-lifecycle facts
+- evidence-backed provider-version facts
 
 ## Professional Decision Rules
 
-- Bind every resource to its account/project/subscription, hierarchy, billing owner, environment, and inherited policy boundary.
-- Classify runtime and recovery operations by service-specific control or data plane; minimize dependence on impaired management operations.
-- Model principal, issuer, audience, trust side, resource side, cross-boundary policy, credential lifetime, and workload identity without assuming federation proves least privilege.
-- Prove route, DNS, endpoint, filtering, egress, shared-network ownership, and transitivity; hierarchy separation alone proves no connectivity outcome.
-- State actual region, zone, replication, residency, and failure-domain behavior; treat multi-region and managed-service guarantees as service-specific.
-- Query live effective quota, throttle headers, propagation state, key status, provider registration, API support, and current cost when those conditions can invalidate the decision.
-- Define bounded retry, idempotency, unknown-result, and pending-state behavior per operation; publish no universal propagation or convergence promise.
-- Keep provider and customer managed-service authority explicit.
-- Route production apply, rollout, release, and rollback to `delivery-release-gate`.
+- Preserve the selected Professional as decision owner.
+- Bind the active cloud resource, plane, identity, network, location, capacity, key, cost, provider API, and managed-service authority to the exact environment.
+- Load only the active decision family's Reference.
 
 ## High-Value Gotchas
 
-- A hierarchy can inherit broad IAM while providing no network or runtime isolation.
-- A documented quota, requested increase, budget, or regional label can be mistaken for live capacity, a hard cost cap, or failover proof.
-- A key replica, alias, provider version, or managed service can hide independent policy, lifecycle, or customer obligations.
-- Layered retries can amplify throttling and repeat non-idempotent operations after an unknown result.
+- Hierarchy, quota, region, key alias, managed-service label, or layered retry is not live isolation, capacity, recovery, authority, or safe replay proof.
 
 ## Execution Checklist
 
-- Load only the active decision family's Reference and preserve the selected Professional owner's acceptance.
-- Verify normal, denied, throttled, pending, degraded, cross-boundary, and recovery behavior against the exact environment.
-- Report source freshness, live checks performed, unverified provider state, non-inferences, and residual risk.
+1. Confirm the cloud owner, environment, plane, and active decision family.
+2. Load only that family's Reference and preserve the selected Professional.
+3. Report live evidence, proof limits, validation, and residual risk.
 
 ## Stop / Escalation Conditions
 
-- Stop when account/project/subscription, resource owner, authority, region, plane, or decision-critical live provider state remains unresolved.
-- Keep production mutation and release authority outside this modifier.
+- Stop when account/project/subscription, resource owner, authority, region, plane, or decision-critical live state remains unresolved; keep production mutation and release authority outside this modifier.
 
 ## Output Contract
 
-Return the selected Professional owner, cloud boundary decision, rejected alternative, authority and resource owners, normal and failure behavior, live-state evidence, and validation plan. Include source freshness, proof limits, and residual risk.
+- selected Professional, cloud decision, rejected alternative, owners, normal/failure behavior, live evidence, validation, freshness, proof limits, residual risk
 
 ## Targeted References
 

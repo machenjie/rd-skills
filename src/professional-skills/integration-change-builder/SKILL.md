@@ -7,10 +7,8 @@ description: "Use `analysis-agent` for integration decisions or `task-agent` for
 
 ## Role
 
-Support `analysis-agent` and `task-agent` for bounded cross-component and external-integration changes.
-
-- **Analysis mode (`analysis-agent`):** Decide cross-boundary contract, authority, and failure behavior.
-- **Task mode (`task-agent`):** Apply the accepted boundary and reconciliation behavior.
+- **Analysis mode (`analysis-agent`):** Decide contract, authority, and failure behavior.
+- **Task mode (`task-agent`):** Apply the boundary and reconciliation.
 
 ## When To Use
 
@@ -32,43 +30,25 @@ Support `analysis-agent` and `task-agent` for bounded cross-component and extern
 
 ## Professional Decision Rules
 
-- Align affected producer and consumer contracts before resolving implementation conflicts.
-- Define triggered timeout, retry, idempotency, ordering, authentication, version-skew, and partial-failure behavior at the boundary.
-- Derive the exact signed representation and permitted transformation or canonicalization from the current provider contract.
-- Preserve raw bytes only when the current provider contract defines raw bytes as the signed representation.
-- Complete verification, freshness, and replay checks before an operation changes the signed representation or causes effects.
-- Keep integration ownership explicit; do not hide a shared contract inside a local adapter.
-- Validate the integrated diff and changed cross-boundary behavior, not only isolated components.
+- Keep integration decisions within declared owners, inputs, stops, and outputs.
 
 ## High-Value Gotchas
 
-- Passing component tests does not prove the integrated contract.
-- Retries across a non-idempotent boundary amplify failures.
-- Conflict resolution can silently choose one owner’s incompatible assumption.
+- A successful request can still leave a duplicate or unknown external effect.
+- Provider sandbox behavior does not prove production credentials, quotas, ordering, or recovery.
+- Signature, serialization, or adapter drift can invalidate an otherwise correct contract.
 
 ## Execution Checklist
 
-1. Trace producer, consumer, authority, timeout, duplicate, and partial-failure behavior across the boundary.
-2. Choose retry, idempotency, reconciliation, and version-skew controls from provider semantics.
-3. Derive the exact signed representation and permitted transformation or canonicalization from the current provider contract.
-4. Prove verification, freshness, and replay checks precede representation-changing operations and effects.
-5. Verify credential containment, recovery, and integrated consumer behavior.
-6. **Analysis mode:** select timeout, duplicate, and reconciliation behavior from provider evidence.
-7. **Task mode:** apply the accepted boundary across producer and consumer paths.
-8. Stop when provider authority or reconciliation ownership remains unknown.
+- **Analysis mode:** Map producer, consumer, provider, credential, contract, and reconciliation authority.
+- **Task mode:** Apply the accepted adapter boundary with idempotency and failure handling.
+- Verify timeout, retry, duplicate, malformed, denied, and unknown-outcome behavior.
+- Record provider assumptions and untested recovery paths as residual risk.
+- Minimal validation: run contract and failure tests at the real adapter or calibrated sandbox.
 
 ## Stop / Escalation Conditions
 
-Block when:
-- affected provider, credential, sandbox/production, or reconciliation authority is unknown and changes acceptance, security, data, or release;
-- the current provider contract does not establish the exact signed representation or permitted transformation or canonicalization;
-- raw-byte preservation is assumed without provider evidence that raw bytes are the signed representation;
-- evidence cannot prove verification, freshness, and replay checks precede representation-changing operations and effects;
-- a retried external write lacks idempotency scope, duplicate-result behavior, aggregate retry budget, or compensation or reconciliation;
-- payload, signature, token, cookie, authorization, secret, or credential data could enter logs, source, images, configuration, or generated artifacts;
-- provider or generated models escape the adapter without version, null, and default mapping.
-
-Escalate consequential, no-sandbox, no-reconciliation, provider-contract, production-release, combined high-impact, or unclear-rollback risk.
+Block unknown provider/environment/credential/reconciliation authority or unproved signed bytes/order, duplicates/failures, sensitive data, or adapter mappings; escalate material production/provider/combined-impact/weak-recovery risk.
 
 ## Output Contract
 

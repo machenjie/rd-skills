@@ -9,42 +9,30 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use for Kotlin corou
 
 **Use when**
 
-- Kotlin code changes coroutine ownership, `Flow`/`StateFlow`, null or Java interop, sealed/reified/value/data classes, delegated-property or DSL ownership, or Compose state.
-- A compiler, coroutine, framework, generated, or Java boundary can change behavior beyond compilation.
+- Kotlin source changes coroutine, stream/state, type, Java interop, delegate, DSL, or Compose-state behavior.
 
 **Do not use when**
 
-- Kotlin appears only in comments/generated output, or a Java/JVM-only change has no Kotlin source.
-- The change is only Android manifest, permission, packaging, signing, or other platform metadata with no Kotlin semantic decision.
+- Kotlin is incidental, or only Android manifest, permission, signing, or packaging metadata changes.
 
 ## Skill Role
 
-Own Kotlin language/library semantics. Leave shared JVM runtime to `java-jvm-professional-usage`, Android contracts to their domain owner, and generic concerns to specialists.
+Own Kotlin language/library semantics; leave JVM runtime and Android policy to their owners.
 
 ## High-Value Rules
 
-- Give every coroutine a lifecycle owner, parent, dispatcher rationale, cancellation outcome, cleanup path, and observed failure.
-- Decide whether a stream is cold, shared, or state-bearing; specify collection lifetime, replay/conflation, backpressure, failure, and slow-consumer behavior.
-- Expose `StateFlow` as current state with an explicit mutation owner and atomic transition rule; do not use it as an unbounded event queue.
-- Treat Java platform types and generated/reflection boundaries as unproven null contracts; validate or narrow them before Kotlin assumptions escape.
-- Use sealed hierarchies, variance, and reified APIs only after proving closure, compatibility, and generated/reflective behavior.
-- Check data/value-class equality, copy depth, boxing, mangling, and Java-callable ABI at every identity or interop boundary.
-- Define each delegated property's owner, `getValue`/`setValue` effects, lifecycle, interop failure, and verification output.
-- In Compose, locate state at its mutation/sharing owner; prove observability, identity, lifecycle-aware collection, and one-way events.
+- When coroutine, cancellation, Flow, shared/state stream, or Compose-state decisions are active, load `coroutine-flow-state-contracts`.
+- When nullability, Java interop, sealed/reified/value/data/variance, delegate, or DSL decisions are active, load `type-interop-and-dsl-contracts`.
+- Bind the decision to current compiler/backend, libraries, caller, lifecycle owner, and target evidence.
+- Stop on an unknown controlling version or boundary.
 
 ## Anti-Patterns
 
-- `GlobalScope`, an unowned scope, or a default dispatcher hides cancellation, failure, or shutdown.
-- A cold `Flow` is assumed to cache work, or `StateFlow`/`SharedFlow` is assumed to preserve every event.
-- `!!`, a platform type, or a generated annotation is treated as runtime null proof.
-- Data-class `copy`, a value wrapper, sealed `when`, or `remember` is treated as deep immutability, stable ABI, future exhaustiveness, or durable state.
+- Local compilation substituted for lifecycle, stream, type, or Java-caller evidence.
 
 ## Stop Conditions
 
-- Stop until behavior-controlling compiler, coroutine, Compose, Java-caller, and deployment versions are known.
-- Route bytecode, classloading, JVM executor, GC, and shared runtime lifecycle to `java-jvm-professional-usage`.
-- Route Android components, permissions, lifecycle policy, and packaging to the Android owner.
-- Route concurrency, API compatibility, security, persistence, performance, and testing to their owners.
+- Route JVM runtime, Android policy, and generic concurrency, compatibility, security, persistence, performance, and testing to their owners.
 
 ## Output Contract
 

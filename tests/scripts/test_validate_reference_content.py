@@ -1567,15 +1567,23 @@ class ValidateReferenceContentTests(unittest.TestCase):
     def test_android_intent_boundary_is_limited_to_untrusted_entry(self) -> None:
         path = (
             ROOT
-            / "src/domain-extensions/android-platform-extension/SKILL.md"
+            / "src/domain-extensions/android-platform-extension/references/"
+            "components-permissions-and-background-contracts.md"
         )
         text = " ".join(path.read_text(encoding="utf-8").split())
         self.assertIn(
-            "Treat an Intent as an external entry boundary only when its "
-            "input is externally supplied or untrusted, including input "
-            "delivered through a deep link or exported component. Prove safe "
-            "handling of that boundary by validating the payload, caller or "
-            "source identity, authorization, and task behavior as applicable.",
+            "Load this Reference only when external Android entry or continued "
+            "execution authority changes.",
+            text,
+        )
+        self.assertIn(
+            "Inventory Intent filters, App Links, custom schemes, exported "
+            "components, caller-controlled extras, and the destination task/account.",
+            text,
+        )
+        self.assertIn(
+            "Default components to private; justify every exported surface and "
+            "validate input before privileged work.",
             text,
         )
         self.assertNotIn(
@@ -1672,22 +1680,38 @@ class ValidateReferenceContentTests(unittest.TestCase):
             ROOT
             / "src/foundation/capabilities/authentication-security/references/evidence-patterns.md"
         )
-        row = next(
+        rows = [
             line
             for line in path.read_text(encoding="utf-8").splitlines()
-            if line.startswith("| Access token validation matches its format |")
+            if line.startswith("| JWT or opaque token validation |")
+        ]
+        self.assertEqual(1, len(rows))
+        row = rows[0].casefold()
+        groups = (
+            (
+                "JWT: configured algorithm allowlist",
+                "bound to expected key types/keys",
+                "issuer/audience/time checks",
+                "trusted `kid`",
+                "negatives for header-selected algorithm/key changes",
+            ),
+            (
+                "Opaque/reference: provider introspection",
+                "active/client/resource/scope/time",
+                "cache",
+                "failure behavior",
+            ),
+            (
+                "Does not prove other consumers/providers share policy",
+                "introspection availability",
+            ),
         )
-        for required in (
-            "explicit configured allowed-algorithm set (allowlist)",
-            "bound to expected key types and verifier keys",
-            "rejecting untrusted token-header attempts",
-            "select an unconfigured algorithm",
-            "switch key types",
-            "select a verifier key",
-            "For opaque/reference only:",
-        ):
-            with self.subTest(required=required):
-                self.assertIn(required, row)
+        for group in groups:
+            expected = tuple(term.casefold() for term in group)
+            with self.subTest(anchor=expected[0]):
+                self.assertTrue(all(term in row for term in expected))
+                without_anchor = row.replace(expected[0], "", 1)
+                self.assertFalse(all(term in without_anchor for term in expected))
 
 
 if __name__ == "__main__":

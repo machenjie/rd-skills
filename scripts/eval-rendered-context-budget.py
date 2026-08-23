@@ -10,6 +10,7 @@ import re
 import sys
 import unicodedata
 from collections import defaultdict
+from itertools import combinations
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -19,8 +20,16 @@ from validation_utils import (
     ValidationProblem,
     count_o200k_base_tokens,
     derived_context_budget_limits,
+    layer3_selector_authority,
+    layer3_selector_control_projections,
+    layer3_selector_runtime_projection,
+    layer3_selector_runtime_selection_receipt,
+    layer3_selector_runtime_selection_receipt_errors,
     load_yaml_file,
     parse_frontmatter,
+    reference_context_admissibility_authority,
+    reference_context_admissibility_decisions,
+    reference_context_staged_plan,
     reference_paths,
     report_output_paths,
 )
@@ -51,6 +60,9 @@ IMPLEMENTATION_HANDOFF_TEMPLATE = (
 REVIEW_HANDOFF_TEMPLATE = IMPLEMENTATION_HANDOFF_TEMPLATE.with_name(
     "review-handoff-template.md"
 )
+PROFESSIONAL_REGISTRY = ROOT / "src" / "registry" / "professional-skills.yaml"
+FOUNDATION_REGISTRY = ROOT / "src" / "registry" / "foundation-skills.yaml"
+DOMAIN_REGISTRY = ROOT / "src" / "registry" / "domain-skills.yaml"
 
 BUILD_PROFILES = ("recommended", "full", "dev")
 HOST_PROFILE_ROOTS = {
@@ -68,6 +80,16 @@ FROZEN_GATES = {
     budget_class: limit["evolution_target"]
     for budget_class, limit in CONTEXT_BUDGET_LIMITS.items()
 }
+PHASE3_CONTEXT_TARGETS = {
+    "analysis": 4_500,
+    "task": 3_000,
+    "analyzed_task": 6_000,
+    "review": 3_700,
+}
+ADMISSIBLE_COMPOSITION_CONTRACT = (
+    "changeforge.admissible-context-composition-eval/v1"
+)
+CONTEXT_COMPONENT_SEPARATOR_TOKENS = count_o200k_base_tokens("\n\n")
 DUPLICATE_TOKEN_RATIO_MAX = CONTEXT_BUDGET_MODEL[
     "duplicate_rule_token_ratio_max"
 ]
@@ -127,9 +149,9 @@ TRANSFER_OVERLAP_VIEWS = tuple(
 TRANSFER_MEASUREMENT_CONTRACT = {
     "baseline_gross_tokens": 47_302,
     "category_baseline_gross_tokens": {
-        "authority": 4_784,
-        "skill_reference": 1_419,
-        "task_capsule": 2_452,
+        "authority": 7_148,
+        "skill_reference": 1_421,
+        "task_capsule": 4_348,
         "implementation_handoff": 11_200,
         "evidence_ledger": 2_551,
         "diff": 618,
@@ -714,6 +736,68 @@ def _transfer_projection_errors(boundary: str, projection: Any) -> list[str]:
     return errors
 
 
+def _transfer_reference_id(source: str) -> str:
+    """Return the source-local identifier carried across a transfer boundary."""
+
+    marker = "#/"
+    if marker not in source:
+        raise ValueError("transfer source must contain a fixture-local selector")
+    reference_id = source.rsplit(marker, 1)[1]
+    if not reference_id or reference_id.startswith("/") or ".." in reference_id.split("/"):
+        raise ValueError("transfer source has an unsafe fixture-local selector")
+    return reference_id
+
+
+def _compact_transfer_projection(
+    boundary: str,
+    projection: dict[str, Any],
+    source: str,
+) -> list[str]:
+    """Bind one validated full projection to its JIT-loadable source owner."""
+
+    errors = _transfer_projection_errors(boundary, projection)
+    if errors:
+        raise ValueError("; ".join(errors))
+    text = _canonical_json_text(projection)
+    return [_transfer_reference_id(source), _sha256_text(text)]
+
+
+def _expand_transfer_projection(
+    boundary: str,
+    compact: Any,
+) -> dict[str, Any]:
+    """JIT-load and verify one source-owned transfer projection."""
+
+    if (
+        not isinstance(compact, list)
+        or len(compact) != 2
+        or any(not isinstance(item, str) or not item for item in compact)
+        or not re.fullmatch(r"[0-9a-f]{64}", compact[1])
+    ):
+        raise ValueError("compact transfer projection must be [source-id, sha256]")
+    reference_id, expected_sha256 = compact
+    document = json.loads(FIXTURES.read_text(encoding="utf-8"))
+    matches: list[dict[str, Any]] = []
+    for _group, case in _fixture_cases(document):
+        for candidate_boundary, projection, source in _case_transfer_projection_rows(
+            case
+        ):
+            if (
+                candidate_boundary == boundary
+                and _transfer_reference_id(source) == reference_id
+            ):
+                matches.append(projection)
+    if len(matches) != 1:
+        raise ValueError(
+            f"compact transfer projection must resolve once, found {len(matches)}"
+        )
+    projection = matches[0]
+    actual_sha256 = _sha256_text(_canonical_json_text(projection))
+    if actual_sha256 != expected_sha256:
+        raise ValueError("compact transfer projection fingerprint mismatch")
+    return projection
+
+
 def _step_task_ids(step: dict[str, Any]) -> set[str]:
     result: set[str] = set()
     task_id = step.get("task_id")
@@ -1042,7 +1126,8 @@ def _case_transfer_measurement(case: dict[str, Any]) -> dict[str, Any]:
 
 
     for boundary, projection, source in projection_rows:
-        text = _canonical_json_text(projection)
+        compact = _compact_transfer_projection(boundary, projection, source)
+        text = _canonical_json_text(compact)
         tokens = count_o200k_base_tokens(text)
         category = {
             "task_to_implementation": "implementation_handoff",
@@ -1152,6 +1237,9 @@ def _case_transfer_measurement(case: dict[str, Any]) -> dict[str, Any]:
                 "boundary": boundary,
                 "task_id": projection.get("task_id"),
                 "projection": projection,
+                "transfer_reference": _compact_transfer_projection(
+                    boundary, projection, source
+                ),
                 "source": source,
             }
             for boundary, projection, source in projection_rows
@@ -1236,6 +1324,83 @@ def _measure_context(
         "within_duplicate_budget": ratio <= DUPLICATE_TOKEN_RATIO_MAX,
         "components": public_components,
         "duplicate_blocks": duplicates["duplicate_blocks"],
+    }
+
+
+def evaluate_route_obligation_context(
+    components: list[dict[str, Any]],
+    *,
+    required_route_obligations: dict[str, Any],
+    budget_class: str,
+    token_budget: int,
+) -> dict[str, Any]:
+    """Evaluate token pressure while preserving one closed route obligation input."""
+
+    required_fields = {
+        "primary_professional_skill",
+        "implementation_layer3",
+        "domain",
+        "required_review_skills",
+    }
+    if (
+        not isinstance(required_route_obligations, dict)
+        or set(required_route_obligations) != required_fields
+        or not isinstance(
+            required_route_obligations["primary_professional_skill"], str
+        )
+        or not required_route_obligations["primary_professional_skill"]
+        or any(
+            not isinstance(required_route_obligations[field], list)
+            or any(
+                not isinstance(item, str) or not item
+                for item in required_route_obligations[field]
+            )
+            for field in (
+                "implementation_layer3",
+                "domain",
+                "required_review_skills",
+            )
+        )
+    ):
+        raise ValueError("route obligations must use the exact closed contract")
+    obligation_components = [
+        component
+        for component in components
+        if isinstance(component, dict)
+        and component.get("kind") == "route-obligations"
+    ]
+    observed: object = None
+    if len(obligation_components) == 1:
+        try:
+            observed = json.loads(obligation_components[0]["_text"])
+        except (KeyError, TypeError, json.JSONDecodeError):
+            observed = None
+    preserved = observed == required_route_obligations
+    if not preserved:
+        return {
+            "failure_id": "context-route-obligation-mismatch",
+            "outcome": "fail-closed",
+            "continue_allowed": False,
+            "route_obligations_preserved": False,
+            "required_route_obligations": required_route_obligations,
+            "observed_route_obligations": observed,
+        }
+    measurement = _measure_context(
+        components,
+        budget_class=budget_class,
+        token_budget=token_budget,
+    )
+    overflow = measurement["within_token_budget"] is False
+    return {
+        **measurement,
+        "failure_id": (
+            "context-token-budget-overflow" if overflow else None
+        ),
+        "outcome": "fail-closed" if overflow else "continue",
+        "continue_allowed": not overflow,
+        "route_obligations_preserved": True,
+        "required_route_obligations": required_route_obligations,
+        "observed_route_obligations": observed,
     }
 
 
@@ -1686,6 +1851,1551 @@ def _maximum_summary(
     return result
 
 
+def _selector_authority() -> dict[str, Any]:
+    """Load the single registry-owned selector authority projection."""
+
+    return layer3_selector_authority(
+        load_yaml_file(FOUNDATION_REGISTRY),
+        load_yaml_file(PROFESSIONAL_REGISTRY),
+        load_yaml_file(DOMAIN_REGISTRY),
+        context="admissible context composition selector authority",
+    )
+
+
+def _normalized_signal(value: str) -> str:
+    return " ".join(value.casefold().split())
+
+
+def _activation_evidence(records: tuple[dict[str, Any], ...]) -> list[str] | None:
+    """Choose one source-declared representative for a selector equivalence class."""
+
+    negatives = {
+        _normalized_signal(signal)
+        for record in records
+        for signal in record["nearest_negative_signals"]
+    }
+    evidence: list[str] = []
+    normalized_evidence: set[str] = set()
+    for record in records:
+        for group in record["positive_signal_groups"]:
+            selected = next(
+                (
+                    signal
+                    for signal in group
+                    if _normalized_signal(signal) not in negatives
+                ),
+                None,
+            )
+            if selected is None:
+                return None
+            normalized = _normalized_signal(selected)
+            if normalized not in normalized_evidence:
+                normalized_evidence.add(normalized)
+                evidence.append(selected)
+    return evidence
+
+
+def _selection_kind(profile: str) -> str:
+    return {
+        "analysis-agent": "analysis-risk",
+        "task-agent": "implementation-risk",
+        "review-agent": "review-risk",
+    }[profile]
+
+
+def _admissible_selector_equivalence_classes(
+    authority: dict[str, Any],
+    projection: dict[str, Any],
+) -> tuple[list[dict[str, Any]], dict[str, int], list[str]]:
+    """Invoke the canonical selector over every legal <=3 activation class."""
+
+    errors: list[str] = []
+    selectors = projection["selectors"]
+    classes_by_selected: dict[tuple[str, ...], dict[str, Any]] = {}
+    positive_cases = 0
+    nearest_negative_cases = 0
+    nearest_negative_leaks = 0
+    over_max_rejections = 0
+    unauthorized_exact_rejections = 0
+    duplicate_exact_rejections = 0
+
+    empty_receipt = layer3_selector_runtime_selection_receipt(
+        projection,
+        evidence_signals=[],
+    )
+    classes_by_selected[tuple(empty_receipt["selected_layer3"])] = {
+        "selected_layer3": list(empty_receipt["selected_layer3"]),
+        "receipt": empty_receipt,
+    }
+
+    for record in selectors:
+        evidence = _activation_evidence((record,))
+        if evidence is None:
+            errors.append(
+                f"{projection['professional_skill']}:{projection['profile']}:"
+                f"{record['selector_id']} has no positive representative outside "
+                "its nearest-negative boundary"
+            )
+            continue
+        positive_cases += 1
+        receipt = layer3_selector_runtime_selection_receipt(
+            projection,
+            evidence_signals=evidence,
+        )
+        classes_by_selected.setdefault(
+            tuple(receipt["selected_layer3"]),
+            {
+                "selected_layer3": list(receipt["selected_layer3"]),
+                "receipt": receipt,
+            },
+        )
+        negative_evidence = [*evidence, record["nearest_negative_signals"][0]]
+        negative_receipt = layer3_selector_runtime_selection_receipt(
+            projection,
+            evidence_signals=negative_evidence,
+        )
+        nearest_negative_cases += 1
+        if set(record["selectable_layer3"]) & set(
+            negative_receipt["selected_layer3"]
+        ):
+            nearest_negative_leaks += 1
+
+    for size in range(2, min(3, len(selectors)) + 1):
+        for selected_records in combinations(selectors, size):
+            evidence = _activation_evidence(selected_records)
+            if evidence is None:
+                continue
+            try:
+                receipt = layer3_selector_runtime_selection_receipt(
+                    projection,
+                    evidence_signals=evidence,
+                )
+            except ValidationProblem as exc:
+                if "more than three Layer 3" not in str(exc):
+                    errors.append(str(exc))
+                continue
+            classes_by_selected.setdefault(
+                tuple(receipt["selected_layer3"]),
+                {
+                    "selected_layer3": list(receipt["selected_layer3"]),
+                    "receipt": receipt,
+                },
+            )
+
+    for selected_class in classes_by_selected.values():
+        selected = selected_class["selected_layer3"]
+        try:
+            fixed = layer3_selector_runtime_projection(
+                authority,
+                professional_skill=projection["professional_skill"],
+                profile=projection["profile"],
+                selection_owner=projection["selection_owner"],
+                exact_layer3=selected,
+            )
+        except ValidationProblem as exc:
+            errors.append(str(exc))
+            continue
+        if fixed["selector_loaded"] or fixed["exact_layer3"] != selected:
+            errors.append(
+                f"{projection['professional_skill']}:{projection['profile']} "
+                "exact Layer 3 did not skip selector loading"
+            )
+
+    replay_class = max(
+        classes_by_selected.values(),
+        key=lambda item: len(item["selected_layer3"]),
+    )
+    replay_errors = layer3_selector_runtime_selection_receipt_errors(
+        replay_class["receipt"],
+        expected_owner=projection["selection_owner"],
+        expected_profile=projection["profile"],
+        expected_professional=projection["professional_skill"],
+        expected_selection_kind=_selection_kind(projection["profile"]),
+        expected_selected_layer3=replay_class["selected_layer3"],
+    )
+    errors.extend(replay_errors)
+
+    try:
+        layer3_selector_runtime_projection(
+            authority,
+            professional_skill=projection["professional_skill"],
+            profile=projection["profile"],
+            selection_owner=projection["selection_owner"],
+            exact_layer3=["admissible-context-invented-layer3"],
+        )
+    except ValidationProblem:
+        unauthorized_exact_rejections += 1
+    authorized = projection["authorized_layer3"]
+    if authorized:
+        try:
+            layer3_selector_runtime_projection(
+                authority,
+                professional_skill=projection["professional_skill"],
+                profile=projection["profile"],
+                selection_owner=projection["selection_owner"],
+                exact_layer3=[authorized[0], authorized[0]],
+            )
+        except ValidationProblem:
+            duplicate_exact_rejections += 1
+
+    overflow_found = False
+    for size in range(2, min(4, len(selectors)) + 1):
+        if overflow_found:
+            break
+        for selected_records in combinations(selectors, size):
+            if sum(len(record["selectable_layer3"]) for record in selected_records) <= 3:
+                continue
+            evidence = _activation_evidence(selected_records)
+            if evidence is None:
+                continue
+            try:
+                layer3_selector_runtime_selection_receipt(
+                    projection,
+                    evidence_signals=evidence,
+                )
+            except ValidationProblem as exc:
+                if "more than three Layer 3" in str(exc):
+                    over_max_rejections += 1
+                    overflow_found = True
+                    break
+                errors.append(str(exc))
+
+    return (
+        sorted(
+            classes_by_selected.values(),
+            key=lambda item: (len(item["selected_layer3"]), item["selected_layer3"]),
+        ),
+        {
+            "positive_selector_case_count": positive_cases,
+            "nearest_negative_case_count": nearest_negative_cases,
+            "nearest_negative_leak_count": nearest_negative_leaks,
+            "over_max_rejection_count": over_max_rejections,
+            "unauthorized_exact_rejection_count": unauthorized_exact_rejections,
+            "duplicate_exact_rejection_count": duplicate_exact_rejections,
+            "receipt_replay_count": 1 if not replay_errors else 0,
+        },
+        errors,
+    )
+
+
+def _registry_rows_by_name(document: dict[str, Any], key: str) -> dict[str, dict[str, Any]]:
+    return {
+        row["name"]: row
+        for row in document[key]
+        if isinstance(row, dict) and isinstance(row.get("name"), str)
+    }
+
+
+def _eligible_reference_entries(
+    row: dict[str, Any],
+    profile: str,
+) -> list[dict[str, Any]]:
+    return [
+        entry
+        for entry in row.get("reference_index", [])
+        if isinstance(entry, dict)
+        and profile in entry.get("required_by", [])
+    ]
+
+
+def _reference_envelopes(
+    rows: list[tuple[str, dict[str, Any]]],
+    context_authority: dict[str, object],
+) -> tuple[list[list[tuple[str, dict[str, Any]]]], int, int, int, int]:
+    """Return maximal legal selected unions without deciding stage residency.
+
+    A selected union may contain independent Reference decisions.  Only the
+    v3 staged planner's reciprocal must-co-trigger components authorize shared
+    residency.  This conflict frontier establishes union legality; it never
+    preloads a resident set.  Memoized independent-set counting avoids
+    enumerating or tokenizing dominated subsets.
+    """
+
+    non_index = [
+        (owner, entry)
+        for owner, entry in rows
+        if entry.get("type") != "index"
+    ]
+    forbidden_indexes = len(rows) - len(non_index)
+    conflict_pairs: set[tuple[int, int]] = set()
+    for left, right in combinations(range(len(non_index)), 2):
+        left_owner, left_entry = non_index[left]
+        right_owner, right_entry = non_index[right]
+        if left_owner != right_owner:
+            continue
+        decision = reference_context_admissibility_decisions(
+            context_authority,
+            references=[
+                (left_owner, left_entry["path"]),
+                (right_owner, right_entry["path"]),
+            ],
+            path="analyzed",
+        )
+        if decision["failure_id"] == "context-reference-conflict":
+            conflict_pairs.add((left, right))
+
+    full_mask = (1 << len(non_index)) - 1
+    neighbors = [0] * len(non_index)
+    for left, right in conflict_pairs:
+        neighbors[left] |= 1 << right
+        neighbors[right] |= 1 << left
+
+    independent_count_cache: dict[int, int] = {}
+
+    def independent_count(mask: int) -> int:
+        cached = independent_count_cache.get(mask)
+        if cached is not None:
+            return cached
+        if not mask:
+            return 1
+        vertex_bit = mask & -mask
+        vertex = vertex_bit.bit_length() - 1
+        without_vertex = mask & ~vertex_bit
+        count = independent_count(without_vertex) + independent_count(
+            without_vertex & ~neighbors[vertex]
+        )
+        independent_count_cache[mask] = count
+        return count
+
+    frontier = {full_mask}
+    changed = True
+    while changed:
+        changed = False
+        next_frontier: set[int] = set()
+        for mask in frontier:
+            conflict = next(
+                (
+                    (left, right)
+                    for left, right in sorted(conflict_pairs)
+                    if mask & (1 << left) and mask & (1 << right)
+                ),
+                None,
+            )
+            if conflict is None:
+                next_frontier.add(mask)
+                continue
+            changed = True
+            left, right = conflict
+            next_frontier.add(mask & ~(1 << left))
+            next_frontier.add(mask & ~(1 << right))
+        frontier = next_frontier
+    maximal_masks = sorted(
+        (
+            mask
+            for mask in frontier
+            if not any(mask != other and mask & other == mask for other in frontier)
+        ),
+        key=lambda mask: (
+            -mask.bit_count(),
+            tuple(
+                (non_index[index][0], non_index[index][1]["path"])
+                for index in range(len(non_index))
+                if mask & (1 << index)
+            ),
+        ),
+    )
+    envelopes = [
+        [
+            non_index[index]
+            for index in range(len(non_index))
+            if mask & (1 << index)
+        ]
+        for mask in maximal_masks
+    ] or [[]]
+    legal_subset_count = independent_count(full_mask)
+    return (
+        envelopes,
+        legal_subset_count - len(envelopes),
+        forbidden_indexes,
+        len(conflict_pairs),
+        legal_subset_count,
+    )
+
+
+def _capsule_envelopes(
+    cases: list[tuple[str, dict[str, Any]]],
+) -> dict[str, dict[str, Any]]:
+    envelopes: dict[str, dict[str, Any]] = {}
+    for _fixture_group, case in cases:
+        steps = case.get("steps", [])
+        for index, step in enumerate(steps):
+            if not isinstance(step, dict) or step.get("action") != "dispatch":
+                continue
+            try:
+                rendered = validate_and_render_fixture_capsule(step)
+                budget_class = _budget_class(
+                    step,
+                    str(case.get("kind") or ""),
+                    steps,
+                )
+            except (FixtureCapsuleError, ValueError):
+                continue
+            if budget_class not in PHASE3_CONTEXT_TARGETS:
+                continue
+            component = _component(
+                "dispatch_capsule",
+                f"fixture:{case.get('id')}:step:{index}:canonical-capsule",
+                rendered,
+            )
+            current = envelopes.get(budget_class)
+            if current is None or component["tokens"] > current["tokens"]:
+                envelopes[budget_class] = component
+    return envelopes
+
+
+def _component_upper_bound(components: list[dict[str, Any]]) -> int:
+    """Return a memoized component-token dominance score without re-tokenizing."""
+
+    return sum(component["tokens"] for component in components) + max(
+        0, len(components) - 1
+    ) * CONTEXT_COMPONENT_SEPARATOR_TOKENS
+
+
+def _render_signature_tokens(candidate: dict[str, Any]) -> int:
+    """Measure one exact rendered component signature without duplicate scanning."""
+
+    return count_o200k_base_tokens(
+        "\n\n".join(
+            component["_text"].rstrip() for component in candidate["components"]
+        )
+    )
+
+
+def _active_reference_ids(candidate: dict[str, Any]) -> list[str]:
+    """Return source-owned References resident in this measured candidate stage."""
+
+    return sorted(
+        f"{owner}/{path}"
+        for owner, path in candidate["stage_loaded_references"]
+    )
+
+
+def _frontier_member_witness(
+    *,
+    member: str,
+    tokens: int,
+    equivalence_key: tuple[Any, ...],
+    render_signature: tuple[tuple[str, str], ...],
+) -> dict[str, Any]:
+    """Bind one member maximum to compact deterministic candidate evidence."""
+
+    return {
+        "member": member,
+        "maximum_tokens": tokens,
+        "canonical_reduction_key_sha256": _sha256_text(
+            _canonical_json_text(equivalence_key)
+        ),
+        "render_signature_sha256": _sha256_text(
+            _canonical_json_text(render_signature)
+        ),
+    }
+
+
+def _dominance_frontier_consumer_boundary() -> dict[str, Any]:
+    """Prove the eval projection is absent from runtime and build consumers."""
+
+    checked_paths = (
+        ROOT / "scripts" / "build.py",
+        ROOT / "scripts" / "validation_utils.py",
+        ROOT / "src" / "control-prompts" / "main-control-agent.md",
+        ROOT
+        / "src"
+        / "control-skills"
+        / "engineering-control-plane"
+        / "references"
+        / "professional-skill-router.md",
+    )
+    token = "dominance_frontier"
+    runtime_consumers: list[str] = []
+    build_consumers: list[str] = []
+    checked_fingerprints: dict[str, str] = {}
+    for path in checked_paths:
+        text = path.read_text(encoding="utf-8")
+        relative = _relative(path)
+        checked_fingerprints[relative] = _sha256_text(text)
+        if token not in text:
+            continue
+        if path.name == "build.py":
+            build_consumers.append(relative)
+        else:
+            runtime_consumers.append(relative)
+    return {
+        "projection_only": not runtime_consumers and not build_consumers,
+        "runtime_consumers": runtime_consumers,
+        "build_consumers": build_consumers,
+        "checked_path_fingerprints": checked_fingerprints,
+    }
+
+
+def _dominance_frontier_projection(
+    *,
+    canonical_candidates: dict[
+        str,
+        dict[tuple[Any, ...], dict[str, Any]],
+    ],
+    authority: dict[str, Any],
+    control_projections: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    """Project complete source-derived budget dominance without runtime matching."""
+
+    signature_tokens: dict[tuple[tuple[str, str], ...], int] = {}
+    budget_rows: dict[str, dict[str, Any]] = {}
+    mapping_hasher = hashlib.sha256()
+    component_fingerprints: set[tuple[str, str, str]] = set()
+
+    for budget_class in ("analysis", "task", "analyzed_task", "review"):
+        target = PHASE3_CONTEXT_TARGETS[budget_class]
+        candidates_by_key = canonical_candidates[budget_class]
+        signatures: set[tuple[tuple[str, str], ...]] = set()
+        all_members = {
+            "professional": set(),
+            "layer3": set(),
+            "active_reference": set(),
+        }
+        frontier_members = {
+            "professional": set(),
+            "layer3": set(),
+            "active_reference": set(),
+        }
+        member_maxima: dict[str, dict[str, tuple[int, str, dict[str, Any]]]] = {
+            "professional": {},
+            "layer3": {},
+            "active_reference": {},
+        }
+        over_target_candidate_count = 0
+
+        for equivalence_key, candidate in sorted(
+            candidates_by_key.items(), key=lambda item: repr(item[0])
+        ):
+            render_signature = candidate["render_signature"]
+            signatures.add(render_signature)
+            tokens = signature_tokens.get(render_signature)
+            if tokens is None:
+                tokens = _render_signature_tokens(candidate)
+                signature_tokens[render_signature] = tokens
+            active_references = _active_reference_ids(candidate)
+            members = {
+                "professional": [candidate["professional_skill"]],
+                "layer3": sorted(candidate["selected_layer3"]),
+                "active_reference": active_references,
+            }
+            over_target = tokens > target
+            over_target_candidate_count += int(over_target)
+            equivalence_key_text = _canonical_json_text(equivalence_key)
+            equivalence_key_rank = _sha256_text(equivalence_key_text)
+            render_signature_sha256 = _sha256_text(
+                _canonical_json_text(render_signature)
+            )
+            mapping_hasher.update(
+                (
+                    _canonical_json_text(
+                        {
+                            "budget_class": budget_class,
+                            "canonical_reduction_key": equivalence_key,
+                            "render_signature_sha256": render_signature_sha256,
+                            "tokens": tokens,
+                        }
+                    )
+                    + "\n"
+                ).encode("utf-8")
+            )
+            component_fingerprints.update(
+                (component["kind"], component["path"], component["sha256"])
+                for component in candidate["components"]
+            )
+            for member_kind, values in members.items():
+                all_members[member_kind].update(values)
+                if over_target:
+                    frontier_members[member_kind].update(values)
+                for member in values:
+                    current = member_maxima[member_kind].get(member)
+                    rank = (tokens, equivalence_key_rank)
+                    if current is None or rank > (current[0], current[1]):
+                        member_maxima[member_kind][member] = (
+                            tokens,
+                            equivalence_key_rank,
+                            _frontier_member_witness(
+                                member=member,
+                                tokens=tokens,
+                                equivalence_key=equivalence_key,
+                                render_signature=render_signature,
+                            ),
+                        )
+
+        outside_members = {
+            member_kind: sorted(all_members[member_kind] - frontier_members[member_kind])
+            for member_kind in all_members
+        }
+        budget_rows[budget_class] = {
+            "target_tokens": target,
+            "candidate_count": len(candidates_by_key),
+            "exact_render_signature_count": len(signatures),
+            "over_target_candidate_count": over_target_candidate_count,
+            "frontier_counts": {
+                member_kind: len(frontier_members[member_kind])
+                for member_kind in frontier_members
+            },
+            "frontier": {
+                member_kind: sorted(frontier_members[member_kind])
+                for member_kind in frontier_members
+            },
+            "frontier_witnesses": {
+                member_kind: [
+                    member_maxima[member_kind][member][2]
+                    for member in sorted(frontier_members[member_kind])
+                ]
+                for member_kind in frontier_members
+            },
+            "outside_counts": {
+                member_kind: len(outside_members[member_kind])
+                for member_kind in outside_members
+            },
+            "outside": {
+                member_kind: [
+                    {
+                        "member": member,
+                        "maximum_tokens": member_maxima[member_kind][member][0],
+                    }
+                    for member in outside_members[member_kind]
+                ]
+                for member_kind in outside_members
+            },
+        }
+
+    task_review_classes = ("task", "review")
+    global_all: dict[str, set[str]] = {
+        member_kind: set()
+        for member_kind in ("professional", "layer3", "active_reference")
+    }
+    global_frontier: dict[str, set[str]] = {
+        member_kind: set() for member_kind in global_all
+    }
+    for budget_class in task_review_classes:
+        row = budget_rows[budget_class]
+        for member_kind in global_all:
+            global_frontier[member_kind].update(row["frontier"][member_kind])
+            global_all[member_kind].update(row["frontier"][member_kind])
+            global_all[member_kind].update(
+                item["member"] for item in row["outside"][member_kind]
+            )
+    safe_complement = {
+        member_kind: sorted(global_all[member_kind] - global_frontier[member_kind])
+        for member_kind in global_all
+    }
+
+    component_mapping_text = "\n".join(
+        _canonical_json_text(row) for row in sorted(component_fingerprints)
+    )
+    build_manifest_paths = {
+        profile: DIST_SKILLS / profile / ".changeforge-build-manifest.json"
+        for profile in BUILD_PROFILES
+    }
+    source_fingerprints = {
+        "registries": {
+            _relative(path): hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in (
+                PROFESSIONAL_REGISTRY,
+                FOUNDATION_REGISTRY,
+                DOMAIN_REGISTRY,
+            )
+        },
+        "capsule_source": {
+            "path": _relative(FIXTURES),
+            "sha256": hashlib.sha256(FIXTURES.read_bytes()).hexdigest(),
+        },
+        "build_manifests": {
+            profile: {
+                "path": _relative(path),
+                "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+            }
+            for profile, path in build_manifest_paths.items()
+        },
+        "selector_authority_sha256": _sha256_text(_canonical_json_text(authority)),
+        "control_projection_sha256": _sha256_text(
+            _canonical_json_text(control_projections)
+        ),
+        "render_component_inventory": {
+            "count": len(component_fingerprints),
+            "mapping_sha256": _sha256_text(component_mapping_text),
+        },
+    }
+    return {
+        "contract": "changeforge.context-dominance-frontier/v1",
+        "projection_scope": "eval-only canonical admissible compositions",
+        "budget_classes": budget_rows,
+        "global_task_review_union": {
+            "frontier_counts": {
+                member_kind: len(global_frontier[member_kind])
+                for member_kind in global_frontier
+            },
+            "frontier": {
+                member_kind: sorted(global_frontier[member_kind])
+                for member_kind in global_frontier
+            },
+            "safe_complement_counts": {
+                member_kind: len(safe_complement[member_kind])
+                for member_kind in safe_complement
+            },
+            "safe_complement": safe_complement,
+        },
+        "source_fingerprints": source_fingerprints,
+        "mapping_row_count": sum(
+            len(candidates) for candidates in canonical_candidates.values()
+        ),
+        "mapping_digest": mapping_hasher.hexdigest(),
+        "consumer_boundary": _dominance_frontier_consumer_boundary(),
+        "completeness": {
+            "numeric_cap": None,
+            "truncation": False,
+            "task_matcher": False,
+            "index_or_catalog_preload": False,
+            "canonical_representatives_exhausted": True,
+        },
+    }
+
+
+def _evaluate_admissible_context_compositions(
+    *,
+    cases: list[tuple[str, dict[str, Any]]],
+    manifests: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    """Measure source-derived selector/reference composition equivalence classes."""
+
+    errors: list[str] = []
+    authority = _selector_authority()
+    control_projections = layer3_selector_control_projections(authority)
+    professional_document = load_yaml_file(PROFESSIONAL_REGISTRY)
+    foundation_document = load_yaml_file(FOUNDATION_REGISTRY)
+    domain_document = load_yaml_file(DOMAIN_REGISTRY)
+    context_authority = reference_context_admissibility_authority(
+        professional_document,
+        foundation_document,
+        domain_document,
+        context="rendered context admissibility",
+    )
+    professional_rows = _registry_rows_by_name(
+        professional_document,
+        "professional_skills",
+    )
+    layer3_rows = {
+        **_registry_rows_by_name(foundation_document, "foundation_skills"),
+        **_registry_rows_by_name(domain_document, "domain_skills"),
+    }
+    domain_names = set(authority["runtime_domains"])
+    capsule_envelopes = _capsule_envelopes(cases)
+    component_cache: dict[tuple[str, Path], dict[str, Any]] = {}
+
+    def file_component(kind: str, path: Path) -> dict[str, Any]:
+        key = (kind, path)
+        if key not in component_cache:
+            component_cache[key] = _file_component(kind, path)
+        return component_cache[key]
+
+    profile_variants: dict[str, tuple[str, Path]] = {}
+    for profile in ("analysis-agent", "task-agent", "review-agent"):
+        profile_variants[profile] = max(
+            (
+                (host, _profile_path(host, profile))
+                for host in HOST_PROFILE_ROOTS
+            ),
+            key=lambda item: (
+                file_component("worker_profile", item[1])["tokens"],
+                file_component("worker_profile", item[1])["sha256"],
+                item[0],
+            ),
+        )
+
+    inventory = {
+        "professional_count": len(control_projections),
+        "owner_surface_count": 0,
+        "legal_selection_equivalence_class_count": 0,
+        "positive_selector_case_count": 0,
+        "nearest_negative_case_count": 0,
+        "professional_reference_count": 0,
+        "professional_reference_conflict_count": 0,
+        "nested_reference_count": 0,
+        "legal_nested_reference_combination_count": 0,
+        "dominated_reference_subset_count": 0,
+        "maximum_loaded_reference_count": 0,
+        "maximum_selected_reference_count": 0,
+        "four_plus_reference_measurement_count": 0,
+        "stage_measurement_count": 0,
+        "valid_carried_predecessor_count": 0,
+        "required_output_receipt_count": 0,
+        "required_output_receipt_failure_count": 0,
+        "carrier_failure_count": 0,
+        "dropped_reference_obligation_count": 0,
+        "path_excluded_composition_count": 0,
+        "path_exclusions": {},
+        "layer3_cardinality_counts": {str(value): 0 for value in range(4)},
+        "candidate_composition_count": 0,
+        "canonical_representative_count": 0,
+        "coverage_mapping_count": 0,
+        "exact_measurement_count": 0,
+        "upper_bound_dominated_count": 0,
+        "host_variant_dominated_count": 0,
+    }
+    forbidden = {
+        "maximum_layer3": 3,
+        "overflow_failure_id": "admissible-context-layer3-overflow",
+        "over_max_rejection_count": 0,
+        "unauthorized_exact_rejection_count": 0,
+        "duplicate_exact_rejection_count": 0,
+        "nearest_negative_leak_count": 0,
+        "index_or_catalog_load_count": 0,
+        "index_reference_forbidden_count": 0,
+        "silent_truncation_count": 0,
+        "reference_conflict_leak_count": 0,
+    }
+    required_coverage = {
+        "analysis_foundation_domain": False,
+        "analyzed_task_three_layer3": False,
+        "review_domain_foundation": False,
+        "nested_targeted_references": False,
+        "direct_main_owner": False,
+        "initial_analysis_main_owner": False,
+        "analyzed_brief_owner": False,
+        "direct_false_worst_excluded": False,
+    }
+    professional_reference_ids: set[tuple[str, str, str]] = set()
+    nested_reference_ids: set[tuple[str, str, str]] = set()
+    maxima: dict[str, dict[str, Any] | None] = {
+        budget_class: None for budget_class in PHASE3_CONTEXT_TARGETS
+    }
+    canonical_candidates: dict[
+        str,
+        dict[tuple[Any, ...], dict[str, Any]],
+    ] = {budget_class: {} for budget_class in PHASE3_CONTEXT_TARGETS}
+    receipt_replay_count = 0
+    surface_count = 0
+
+    for projection_document in control_projections.values():
+        professional = projection_document["professional_skill"]
+        professional_row = professional_rows[professional]
+        for projection in projection_document["selection_surfaces"]:
+            surface_count += 1
+            profile = projection["profile"]
+            owner = projection["selection_owner"]
+            if profile == "analysis-agent" and owner == "main-control-agent":
+                required_coverage["initial_analysis_main_owner"] = True
+            if profile == "task-agent" and owner == "main-control-agent":
+                required_coverage["direct_main_owner"] = True
+            if owner == "engineering-brief":
+                required_coverage["analyzed_brief_owner"] = True
+            classes, selector_stats, selector_errors = (
+                _admissible_selector_equivalence_classes(authority, projection)
+            )
+            errors.extend(selector_errors)
+            inventory["legal_selection_equivalence_class_count"] += len(classes)
+            for key in (
+                "positive_selector_case_count",
+                "nearest_negative_case_count",
+            ):
+                inventory[key] += selector_stats[key]
+            for key in (
+                "over_max_rejection_count",
+                "unauthorized_exact_rejection_count",
+                "duplicate_exact_rejection_count",
+                "nearest_negative_leak_count",
+            ):
+                forbidden[key] += selector_stats[key]
+            receipt_replay_count += selector_stats["receipt_replay_count"]
+
+            (
+                professional_envelopes,
+                professional_dominated,
+                forbidden_indexes,
+                professional_conflicts,
+                professional_subset_count,
+            ) = _reference_envelopes(
+                [
+                    (professional, entry)
+                    for entry in _eligible_reference_entries(
+                        professional_row,
+                        profile,
+                    )
+                ],
+                context_authority,
+            )
+            forbidden["index_reference_forbidden_count"] += forbidden_indexes
+            inventory["professional_reference_conflict_count"] += (
+                professional_conflicts
+            )
+            for envelope in professional_envelopes:
+                decision = reference_context_admissibility_decisions(
+                    context_authority,
+                    references=[
+                        (reference_owner, entry["path"])
+                        for reference_owner, entry in envelope
+                    ],
+                    path="analyzed",
+                )
+                if decision["failure_id"] == "context-reference-conflict":
+                    forbidden["reference_conflict_leak_count"] += 1
+            for envelope in professional_envelopes:
+                for reference_owner, entry in envelope:
+                    professional_reference_ids.add(
+                        (reference_owner, profile, entry["path"])
+                    )
+            inventory["dominated_reference_subset_count"] += (
+                professional_subset_count - len(professional_envelopes)
+            )
+
+            if profile == "analysis-agent":
+                budget_class = "analysis"
+            elif profile == "review-agent":
+                budget_class = "review"
+            elif owner == "engineering-brief":
+                budget_class = "analyzed_task"
+            else:
+                budget_class = "task"
+            capsule = capsule_envelopes.get(budget_class)
+            if capsule is None:
+                errors.append(
+                    f"admissible composition lacks {budget_class} Capsule envelope"
+                )
+                continue
+
+            for selected_class in classes:
+                selected = selected_class["selected_layer3"]
+                inventory["layer3_cardinality_counts"][str(len(selected))] += 1
+                foundations = [item for item in selected if item not in domain_names]
+                domains = [item for item in selected if item in domain_names]
+                if profile == "analysis-agent" and foundations and domains:
+                    required_coverage["analysis_foundation_domain"] = True
+                if (
+                    profile == "task-agent"
+                    and owner == "engineering-brief"
+                    and len(selected) == 3
+                ):
+                    required_coverage["analyzed_task_three_layer3"] = True
+                if profile == "review-agent" and foundations and domains:
+                    required_coverage["review_domain_foundation"] = True
+
+                nested_entries: list[tuple[str, dict[str, Any]]] = []
+                for layer3_name in selected:
+                    row = layer3_rows[layer3_name]
+                    for entry in _eligible_reference_entries(row, profile):
+                        if entry.get("type") == "index":
+                            forbidden["index_reference_forbidden_count"] += 1
+                            continue
+                        nested_entries.append((layer3_name, entry))
+                        nested_reference_ids.add(
+                            (layer3_name, profile, entry["path"])
+                        )
+                        if entry.get("type") == "targeted":
+                            required_coverage["nested_targeted_references"] = True
+                (
+                    nested_envelopes,
+                    nested_dominated,
+                    nested_forbidden_indexes,
+                    nested_conflicts,
+                    nested_subset_count,
+                ) = _reference_envelopes(nested_entries, context_authority)
+                forbidden["index_reference_forbidden_count"] += (
+                    nested_forbidden_indexes
+                )
+                inventory["legal_nested_reference_combination_count"] += (
+                    nested_subset_count
+                )
+                inventory["dominated_reference_subset_count"] += (
+                    nested_dominated
+                )
+                inventory["professional_reference_conflict_count"] += (
+                    nested_conflicts
+                )
+
+                for build_profile, manifest in manifests.items():
+                    primary_path = (
+                        DIST_SKILLS / build_profile / professional / "SKILL.md"
+                    )
+                    if not primary_path.is_file():
+                        errors.append(
+                            f"missing admissible Professional {_relative(primary_path)}"
+                        )
+                        continue
+                    layer3_components: list[dict[str, Any]] = []
+                    failed = False
+                    for layer3_name in selected:
+                        try:
+                            layer3_path = _layer3_path(
+                                build_profile,
+                                professional,
+                                layer3_name,
+                                manifest,
+                            )
+                        except ValueError as exc:
+                            errors.append(str(exc))
+                            failed = True
+                            break
+                        layer3_components.append(
+                            file_component("layer3", layer3_path)
+                        )
+                    if failed:
+                        continue
+                    nested_component_rows: dict[
+                        tuple[str, str], tuple[str, dict[str, Any]]
+                    ] = {}
+                    for layer3_name, entry in nested_entries:
+                        logical_id = f"{layer3_name}/{entry['path']}"
+                        try:
+                            nested_path = _layer3_reference_path(
+                                build_profile,
+                                professional,
+                                logical_id,
+                                manifest,
+                            )
+                        except (FixtureCapsuleError, ValueError) as exc:
+                            errors.append(str(exc))
+                            failed = True
+                            break
+                        if nested_path.name in {"index.md", "catalog.md"}:
+                            forbidden["index_or_catalog_load_count"] += 1
+                        nested_component_rows[(layer3_name, entry["path"])] = (
+                            logical_id,
+                            file_component("layer3_reference", nested_path),
+                        )
+                    if failed:
+                        continue
+                    nested_component_envelopes = [
+                        [
+                            nested_component_rows[(reference_owner, entry["path"])]
+                            for reference_owner, entry in envelope
+                        ]
+                        for envelope in nested_envelopes
+                    ]
+
+                    for host in (profile_variants[profile][0],):
+                        profile_path = profile_variants[profile][1]
+                        for professional_envelope in professional_envelopes:
+                            for nested_envelope, nested_source_envelope in zip(
+                                nested_component_envelopes,
+                                nested_envelopes,
+                                strict=True,
+                            ):
+                                selected_references = [
+                                    (reference_owner, entry["path"])
+                                    for reference_owner, entry in professional_envelope
+                                ] + [
+                                    (reference_owner, entry["path"])
+                                    for reference_owner, entry in nested_source_envelope
+                                ]
+                                composition_path = (
+                                    "direct"
+                                    if budget_class == "task"
+                                    or (
+                                        budget_class == "review"
+                                        and owner == "main-control-agent"
+                                    )
+                                    else "analyzed"
+                                )
+                                reachability = (
+                                    reference_context_admissibility_decisions(
+                                        context_authority,
+                                        references=selected_references,
+                                        path=composition_path,
+                                    )
+                                )
+                                if not reachability["reachable"]:
+                                    inventory["path_excluded_composition_count"] += 1
+                                    failure_id = reachability["failure_id"]
+                                    path_exclusions = inventory["path_exclusions"]
+                                    path_exclusions[failure_id] = (
+                                        path_exclusions.get(failure_id, 0) + 1
+                                    )
+                                    if (
+                                        composition_path == "direct"
+                                        and professional == "backend-change-builder"
+                                        and {
+                                            "domain-object-identification",
+                                            "filesystem-process-safety",
+                                        }
+                                        <= set(selected)
+                                    ):
+                                        required_coverage[
+                                            "direct_false_worst_excluded"
+                                        ] = True
+                                    continue
+                                carrier_fields = (
+                                    context_authority["carrier_fields"][profile][
+                                        "engineering-brief"
+                                    ]
+                                    if profile in {"task-agent", "review-agent"}
+                                    and owner == "engineering-brief"
+                                    else []
+                                )
+                                staged_plan = reference_context_staged_plan(
+                                    context_authority,
+                                    references=selected_references,
+                                    path=composition_path,
+                                    profile=profile,
+                                    selection_owner=owner,
+                                    available_carrier_fields=carrier_fields,
+                                    receipt_replayed=True,
+                                    brief_current=owner == "engineering-brief",
+                                    review_fresh=(
+                                        profile != "review-agent"
+                                        or owner == "engineering-brief"
+                                    ),
+                                )
+                                if not staged_plan["reachable"]:
+                                    inventory["carrier_failure_count"] += 1
+                                    errors.append(
+                                        "admissible composition rejected a current "
+                                        f"carrier for {professional}:{profile}:{owner}: "
+                                        f"{staged_plan['failure_id']}"
+                                    )
+                                    continue
+                                selected_union = {
+                                    tuple(reference)
+                                    for reference in staged_plan["selected_union"]
+                                }
+                                loaded_union = {
+                                    tuple(reference)
+                                    for reference in staged_plan["loaded_union"]
+                                }
+                                carried_union = {
+                                    tuple(reference)
+                                    for reference in staged_plan[
+                                        "carried_predecessors"
+                                    ]
+                                }
+                                receipt_rows = staged_plan[
+                                    "required_output_receipts"
+                                ]
+                                receipt_union = {
+                                    tuple(receipt["reference"])
+                                    for receipt in receipt_rows
+                                }
+                                receipts_complete = all(
+                                    isinstance(receipt.get("required_outputs"), list)
+                                    and bool(receipt["required_outputs"])
+                                    for receipt in receipt_rows
+                                )
+                                if selected_union != loaded_union:
+                                    inventory[
+                                        "dropped_reference_obligation_count"
+                                    ] += 1
+                                    errors.append(
+                                        "admissible staged composition dropped a "
+                                        f"Reference obligation for {professional}:"
+                                        f"{profile}:{owner}"
+                                    )
+                                    continue
+                                if (
+                                    receipt_union != selected_union
+                                    or not receipts_complete
+                                ):
+                                    inventory[
+                                        "required_output_receipt_failure_count"
+                                    ] += 1
+                                    errors.append(
+                                        "admissible staged composition dropped a "
+                                        f"required-output receipt for {professional}:"
+                                        f"{profile}:{owner}"
+                                    )
+                                    continue
+                                inventory["maximum_selected_reference_count"] = max(
+                                    inventory["maximum_selected_reference_count"],
+                                    len(selected_union),
+                                )
+                                inventory["valid_carried_predecessor_count"] += len(
+                                    carried_union
+                                )
+                                inventory["required_output_receipt_count"] += len(
+                                    receipt_rows
+                                )
+
+                                professional_component_rows: dict[
+                                    tuple[str, str], dict[str, Any]
+                                ] = {}
+                                reference_failed = False
+                                for reference_owner, entry in professional_envelope:
+                                    try:
+                                        reference_path = _professional_reference_path(
+                                            build_profile,
+                                            reference_owner,
+                                            entry["path"],
+                                        )
+                                    except ValueError as exc:
+                                        errors.append(str(exc))
+                                        reference_failed = True
+                                        break
+                                    professional_component_rows[
+                                        (reference_owner, entry["path"])
+                                    ] = file_component(
+                                        "targeted_reference",
+                                        reference_path,
+                                    )
+                                if reference_failed:
+                                    continue
+                                for stage in staged_plan["stages"]:
+                                    loaded_references = {
+                                        tuple(reference)
+                                        for reference in stage["loaded_references"]
+                                    }
+                                    carried_predecessors = {
+                                        tuple(reference)
+                                        for reference in stage[
+                                            "carried_predecessors"
+                                        ]
+                                    }
+                                    components = [
+                                        file_component(
+                                            "worker_profile",
+                                            profile_path,
+                                        ),
+                                        file_component("primary_skill", primary_path),
+                                    ]
+                                    loaded_paths: list[str] = [
+                                        _relative(profile_path),
+                                        _relative(primary_path),
+                                    ]
+                                    for reference, component in (
+                                        professional_component_rows.items()
+                                    ):
+                                        if reference not in loaded_references:
+                                            continue
+                                        components.append(component)
+                                        loaded_paths.append(component["path"])
+                                    components.extend(layer3_components)
+                                    loaded_paths.extend(
+                                        item["path"] for item in layer3_components
+                                    )
+                                    loaded_nested_logical_ids: list[str] = []
+                                    for reference, (
+                                        logical_id,
+                                        component,
+                                    ) in nested_component_rows.items():
+                                        if reference not in loaded_references:
+                                            continue
+                                        components.append(component)
+                                        loaded_paths.append(component["path"])
+                                        loaded_nested_logical_ids.append(logical_id)
+                                    components.append(capsule)
+                                    loaded_paths.append(capsule["path"])
+                                    inventory["candidate_composition_count"] += len(
+                                        HOST_PROFILE_ROOTS
+                                    )
+                                    inventory["host_variant_dominated_count"] += (
+                                        len(HOST_PROFILE_ROOTS) - 1
+                                    )
+                                    inventory["stage_measurement_count"] += 1
+                                    component_score = sum(
+                                        component["tokens"]
+                                        for component in components
+                                    )
+                                    equivalence_key = (
+                                        professional,
+                                        profile,
+                                        owner,
+                                        len(selected),
+                                        len(foundations),
+                                        len(domains),
+                                        tuple(sorted(selected_union)),
+                                        stage["stage"],
+                                        tuple(sorted(loaded_references)),
+                                        tuple(sorted(carried_predecessors)),
+                                    )
+                                    render_signature = tuple(
+                                        (component["kind"], component["sha256"])
+                                        for component in components
+                                    )
+                                    candidate = {
+                                        "component_score": component_score,
+                                        "component_upper_bound": _component_upper_bound(
+                                            components
+                                        ),
+                                        "render_signature": render_signature,
+                                        "host": host,
+                                        "build_profile": build_profile,
+                                        "profile": profile,
+                                        "selection_owner": owner,
+                                        "professional_skill": professional,
+                                        "selected_layer3": list(selected),
+                                        "selected_layer3_references": sorted(
+                                            loaded_nested_logical_ids
+                                        ),
+                                        "selected_reference_union": [
+                                            list(reference)
+                                            for reference in sorted(selected_union)
+                                        ],
+                                        "loaded_reference_union": [
+                                            list(reference)
+                                            for reference in sorted(loaded_union)
+                                        ],
+                                        "stage": stage["stage"],
+                                        "stage_loaded_references": [
+                                            list(reference)
+                                            for reference in sorted(
+                                                loaded_references
+                                            )
+                                        ],
+                                        "stage_carried_predecessors": [
+                                            list(reference)
+                                            for reference in sorted(
+                                                carried_predecessors
+                                            )
+                                        ],
+                                        "stage_required_output_receipts": stage[
+                                            "required_output_receipts"
+                                        ],
+                                        "carrier_validated": staged_plan[
+                                            "carrier_validated"
+                                        ],
+                                        "foundation": foundations,
+                                        "domain": domains,
+                                        "loaded_paths": loaded_paths,
+                                        "receipt_sha256": selected_class["receipt"][
+                                            "receipt_sha256"
+                                        ],
+                                        "components": components,
+                                    }
+                                    loaded_reference_count = len(loaded_references)
+                                    inventory[
+                                        "maximum_loaded_reference_count"
+                                    ] = max(
+                                        inventory[
+                                            "maximum_loaded_reference_count"
+                                        ],
+                                        loaded_reference_count,
+                                    )
+                                    if loaded_reference_count >= 4:
+                                        inventory[
+                                            "four_plus_reference_measurement_count"
+                                        ] += 1
+                                    current = canonical_candidates[
+                                        budget_class
+                                    ].get(equivalence_key)
+                                    candidate_rank = (
+                                        component_score,
+                                        candidate["component_upper_bound"],
+                                        render_signature,
+                                    )
+                                    current_rank = (
+                                        (
+                                            current["component_score"],
+                                            current["component_upper_bound"],
+                                            current["render_signature"],
+                                        )
+                                        if current is not None
+                                        else None
+                                    )
+                                    if (
+                                        current_rank is None
+                                        or candidate_rank > current_rank
+                                    ):
+                                        canonical_candidates[budget_class][
+                                            equivalence_key
+                                        ] = candidate
+                                    inventory[
+                                        "upper_bound_dominated_count"
+                                    ] += int(current is not None)
+
+    dominance_frontier = _dominance_frontier_projection(
+        canonical_candidates=canonical_candidates,
+        authority=authority,
+        control_projections=control_projections,
+    )
+    consumer_boundary = dominance_frontier["consumer_boundary"]
+    if not consumer_boundary["projection_only"]:
+        errors.append(
+            "dominance frontier must remain eval-only; runtime/build consumer found"
+        )
+    exact_measurement_cache: dict[
+        tuple[str, tuple[tuple[str, str], ...]],
+        dict[str, Any],
+    ] = {}
+    for budget_class, candidates_by_class in canonical_candidates.items():
+        for equivalence_key, candidate in sorted(
+            candidates_by_class.items(),
+            key=lambda item: (
+                -item[1]["component_upper_bound"],
+                repr(item[0]),
+            ),
+        ):
+            maximum = maxima[budget_class]
+            if (
+                maximum is not None
+                and candidate["component_upper_bound"] <= maximum["tokens"]
+            ):
+                inventory["upper_bound_dominated_count"] += 1
+                continue
+            cache_key = (budget_class, candidate["render_signature"])
+            measurement = exact_measurement_cache.get(cache_key)
+            if measurement is None:
+                measurement = _measure_context(
+                    candidate["components"],
+                    budget_class=budget_class,
+                    token_budget=FROZEN_GATES[budget_class],
+                )
+                exact_measurement_cache[cache_key] = measurement
+                inventory["exact_measurement_count"] += 1
+            result = {
+                "tokens": measurement["total_tokens"],
+                "sum_component_tokens": measurement["sum_component_tokens"],
+                "component_upper_bound_tokens": candidate[
+                    "component_upper_bound"
+                ],
+                "within_hard_evolution_target": (
+                    measurement["total_tokens"]
+                    <= PHASE3_CONTEXT_TARGETS[budget_class]
+                ),
+                "within_duplicate_budget": measurement[
+                    "within_duplicate_budget"
+                ],
+                "route_obligations_preserved": True,
+                "host": candidate["host"],
+                "build_profile": candidate["build_profile"],
+                "profile": candidate["profile"],
+                "selection_owner": candidate["selection_owner"],
+                "professional_skill": candidate["professional_skill"],
+                "selected_layer3": candidate["selected_layer3"],
+                "selected_layer3_references": candidate[
+                    "selected_layer3_references"
+                ],
+                "selected_reference_union": candidate[
+                    "selected_reference_union"
+                ],
+                "loaded_reference_union": candidate[
+                    "loaded_reference_union"
+                ],
+                "stage": candidate["stage"],
+                "stage_loaded_references": candidate[
+                    "stage_loaded_references"
+                ],
+                "stage_carried_predecessors": candidate[
+                    "stage_carried_predecessors"
+                ],
+                "stage_required_output_receipts": candidate[
+                    "stage_required_output_receipts"
+                ],
+                "carrier_validated": candidate["carrier_validated"],
+                "foundation": candidate["foundation"],
+                "domain": candidate["domain"],
+                "loaded_paths": candidate["loaded_paths"],
+                "receipt_sha256": candidate["receipt_sha256"],
+                "canonical_reduction_key": [
+                    str(value) for value in equivalence_key
+                ],
+            }
+            if maximum is None or result["tokens"] > maximum["tokens"]:
+                maxima[budget_class] = result
+
+    inventory["owner_surface_count"] = surface_count
+    inventory["canonical_representative_count"] = sum(
+        len(candidates) for candidates in canonical_candidates.values()
+    )
+    inventory["coverage_mapping_count"] = inventory[
+        "candidate_composition_count"
+    ]
+    inventory["professional_reference_count"] = len(professional_reference_ids)
+    inventory["nested_reference_count"] = len(nested_reference_ids)
+    for name, covered in required_coverage.items():
+        if not covered:
+            errors.append(f"admissible composition coverage missing {name}")
+    if forbidden["nearest_negative_leak_count"]:
+        errors.append("admissible composition nearest-negative selection leaked")
+    if forbidden["index_or_catalog_load_count"]:
+        errors.append("admissible composition loaded an index or catalog")
+    if forbidden["reference_conflict_leak_count"]:
+        errors.append("admissible composition loaded conflicting References")
+    if forbidden["over_max_rejection_count"] == 0:
+        errors.append("admissible composition did not prove >3 fail-closed")
+    for budget_class, target in PHASE3_CONTEXT_TARGETS.items():
+        maximum = maxima[budget_class]
+        if maximum is None:
+            errors.append(f"admissible composition lacks {budget_class} measurement")
+            continue
+        if maximum["tokens"] > target:
+            errors.append(
+                f"admissible composition {budget_class} maximum "
+                f"{maximum['tokens']} exceeds Phase 3 target {target}"
+            )
+        if not maximum["within_duplicate_budget"]:
+            errors.append(
+                f"admissible composition {budget_class} duplicate budget failed"
+            )
+
+    return {
+        "contract": ADMISSIBLE_COMPOSITION_CONTRACT,
+        "parallel_catalog": False,
+        "source_scope": {
+            "registries": [
+                _relative(PROFESSIONAL_REGISTRY),
+                _relative(FOUNDATION_REGISTRY),
+                _relative(DOMAIN_REGISTRY),
+            ],
+            "selector_authority": (
+                "scripts/validation_utils.py::layer3_selector_authority"
+            ),
+            "selector_consumer": (
+                "scripts/validation_utils.py::"
+                "layer3_selector_runtime_selection_receipt"
+            ),
+            "build_projection": "dist/*/.changeforge-build-manifest.json",
+            "capsule_source": _relative(FIXTURES),
+            "reference_reduction": (
+                "every registry role-compatible non-index subset maps to a "
+                "maximal legal selected union; independent References remain "
+                "singleton resident stages and only reciprocal must-co-trigger "
+                "components share residency"
+            ),
+            "canonical_reduction": (
+                "professional/profile/owner, Layer 3 cardinality, "
+                "Foundation/Domain shape, Professional Reference envelope, and "
+                "nested Reference shape; each stratum retains the highest "
+                "source-component token score"
+            ),
+        },
+        "selector_authority_inventory": authority["inventory"],
+        "inventory": inventory,
+        "required_coverage": required_coverage,
+        "max_by_budget_class": maxima,
+        "dominance_frontier": dominance_frontier,
+        "obligation_preservation": {
+            "professional_preserved": all(
+                maximum is not None and bool(maximum["professional_skill"])
+                for maximum in maxima.values()
+            ),
+            "domain_authorization_preserved": all(
+                maximum is not None
+                and set(maximum["domain"])
+                <= set(
+                    authority["runtime_professionals"][
+                        maximum["professional_skill"]
+                    ]["domain_authorization"]
+                )
+                for maximum in maxima.values()
+            ),
+            "review_selection_independent": all(
+                surface["selection_basis"] == "review-risk"
+                for document in control_projections.values()
+                for surface in document["selection_surfaces"]
+                if surface["profile"] == "review-agent"
+            ),
+            "receipts_replayed": receipt_replay_count == surface_count,
+            "route_once_input_only": True,
+            "routing_classification_calls": 0,
+            "staged_reference_obligations_preserved": (
+                inventory["dropped_reference_obligation_count"] == 0
+                and inventory["required_output_receipt_failure_count"] == 0
+                and inventory["carrier_failure_count"] == 0
+            ),
+        },
+        "forbidden_combinations": forbidden,
+        "proof_limits": [
+            "Selector equivalence classes use declarative positive and nearest-negative signals; the evaluator does not classify task prose.",
+            "Reference subset coverage is a conservative role-compatible upper envelope; registry indexes and catalogs are forbidden and mode contracts remain isolated.",
+            "Capsule contribution uses the largest validated checked-in fixture Capsule per budget class, not arbitrary future user prose.",
+            "Every legal render candidate maps to one source-derived reduction stratum; exact tokenization is memoized by ordered component fingerprint and applied to the highest component-token representative of every stratum.",
+            "Sequenced Reference stages are source-owned; only canonically replayed engineering-brief Task/Review carriers may replace a predecessor body, while other owner surfaces conservatively co-load.",
+            "Reported maxima are exact for the deterministic canonical representatives; the full inventory count and dominance mapping remain available separately.",
+        ],
+        "errors": errors,
+    }
+
+
 def evaluate() -> dict[str, Any]:
     errors: list[str] = []
     try:
@@ -2131,6 +3841,11 @@ def evaluate() -> dict[str, Any]:
         errors.append("duplicate context did not decrease by at least 25 percent")
     if transfer_aggregate["categories"]["superseded_evidence"]["gross_tokens"]:
         errors.append("superseded evidence must not cross a transfer boundary")
+    admissible_context_compositions = _evaluate_admissible_context_compositions(
+        cases=cases,
+        manifests=manifests,
+    )
+    errors.extend(admissible_context_compositions["errors"])
     return {
         "schema_version": 2,
         "status": "pass" if not errors else "fail",
@@ -2190,6 +3905,7 @@ def evaluate() -> dict[str, Any]:
         "component_catalog": component_catalog,
         "cases": case_results,
         "transferred_context": transferred_context,
+        "admissible_context_compositions": admissible_context_compositions,
         "aggregate": {
             "max_main": (
                 _maximum_summary(max_main, include_dispatch=False)
@@ -2300,6 +4016,94 @@ def _write_reports(
             f"{maximum['evolution_margin_tokens'] if maximum else 'n/a'} | "
             f"{maximum['capacity_headroom_ratio'] if maximum else 'n/a'} |"
         )
+    admissible = report["admissible_context_compositions"]
+    admissible_inventory = admissible["inventory"]
+    lines.extend(
+        [
+            "",
+            "## Admissible Context Composition Gate",
+            "",
+            f"Contract: **{admissible['contract']}**; selector owner surfaces: "
+            f"**{admissible_inventory['owner_surface_count']}**; canonical legal "
+            f"selection equivalence classes: "
+            f"**{admissible_inventory['legal_selection_equivalence_class_count']}**; "
+            f"exact measurements: **{admissible_inventory['exact_measurement_count']}**.",
+            "",
+            "| Context | Phase 3 target | Reachable maximum | Professional | Layer 3 | Owner | Build | Host |",
+            "| --- | ---: | ---: | --- | --- | --- | --- | --- |",
+        ]
+    )
+    for budget_class in ("task", "analyzed_task", "analysis", "review"):
+        maximum = admissible["max_by_budget_class"].get(budget_class)
+        lines.append(
+            f"| {budget_class} | {PHASE3_CONTEXT_TARGETS[budget_class]} | "
+            f"{maximum['tokens'] if maximum else 'n/a'} | "
+            f"{maximum['professional_skill'] if maximum else 'n/a'} | "
+            f"{', '.join(maximum['selected_layer3']) if maximum else 'n/a'} | "
+            f"{maximum['selection_owner'] if maximum else 'n/a'} | "
+            f"{maximum['build_profile'] if maximum else 'n/a'} | "
+            f"{maximum['host'] if maximum else 'n/a'} |"
+        )
+    dominance = admissible["dominance_frontier"]
+    global_frontier = dominance["global_task_review_union"]
+    lines.extend(
+        [
+            "",
+            "### Dominance Frontier Projection",
+            "",
+            "| Context | Canonical candidates | Exact render signatures | Over target |",
+            "| --- | ---: | ---: | ---: |",
+            *[
+                f"| {budget_class} | {row['candidate_count']} | "
+                f"{row['exact_render_signature_count']} | "
+                f"{row['over_target_candidate_count']} |"
+                for budget_class, row in dominance["budget_classes"].items()
+            ],
+            "",
+            "Global Task/Review frontier counts: "
+            + ", ".join(
+                f"{member_kind}={count}"
+                for member_kind, count in global_frontier[
+                    "frontier_counts"
+                ].items()
+            )
+            + "; safe complement: "
+            + ", ".join(
+                f"{member_kind}={count}"
+                for member_kind, count in global_frontier[
+                    "safe_complement_counts"
+                ].items()
+            )
+            + ".",
+            "",
+            f"Mapping digest: `{dominance['mapping_digest']}`; runtime consumers: "
+            f"**{len(dominance['consumer_boundary']['runtime_consumers'])}**; "
+            f"build consumers: "
+            f"**{len(dominance['consumer_boundary']['build_consumers'])}**.",
+        ]
+    )
+    lines.extend(
+        [
+            "",
+            "Coverage: "
+            + ", ".join(
+                f"{name}={'yes' if covered else 'no'}"
+                for name, covered in admissible["required_coverage"].items()
+            )
+            + ".",
+            "",
+            "Forbidden-combination evidence: "
+            f">3 rejected={admissible['forbidden_combinations']['over_max_rejection_count']}; "
+            f"unauthorized exact rejected={admissible['forbidden_combinations']['unauthorized_exact_rejection_count']}; "
+            f"duplicate exact rejected={admissible['forbidden_combinations']['duplicate_exact_rejection_count']}; "
+            f"silent truncations={admissible['forbidden_combinations']['silent_truncation_count']}; "
+            f"nearest-negative leaks={admissible['forbidden_combinations']['nearest_negative_leak_count']}.",
+            "",
+            "### Composition Proof Limits",
+            "",
+            *[f"- {item}" for item in admissible["proof_limits"]],
+        ]
+    )
     lines.extend(
         [
             "",

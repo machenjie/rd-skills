@@ -18,3 +18,9 @@ Load this reference when subject authority, derivation, propagation, attribution
 - Re-run selected negative cases after the final identity mapping, propagation, configuration, fixture, generated artifact, or audit edit.
 - Map the final confidence claim to current source/config paths, parsed validation outcomes, audit samples, owner evidence, and explicit unverified scope.
 - Keep credential lifecycle, external provider behavior, production mapping data, undiscovered clients, and permission enforcement outside the proven boundary unless inspected by their owning decision.
+
+## Anti-Patterns
+
+- Treat an authenticated session, signed assertion, embedded role, or internal caller as sufficient authorization for a protected action.
+- Trust caller-supplied subject, tenant, delegation, role, group, or scope, or propagate identity context whose authority and freshness cannot be reconstructed downstream.
+- Expand this Skill into credential/session/token control selection, or generalize one successful login or API path to workers, callbacks, recovery, support, and external identity mappings.

@@ -20,13 +20,6 @@ Official Apple Developer pages below were accessed on 2026-07-24.
   autosave, close approval, undo, and error presentation to one owner.
 - Trace commands through the actual responder chain.
 - Reject assumptions that the visible view receives menu or keyboard actions.
-- Exercise failed save, close during work, stale restoration, reopened file,
-  missing window, repeated command, and termination with unsaved state.
-
-## Required Record
-
-Return framework/bridge ownership, lifecycle matrix, responder route, document
-save/close rule, OS/SDK scope, failure proof, non-inferences, and residual risk.
 
 ## Primary Sources
 

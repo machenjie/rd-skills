@@ -13,19 +13,7 @@ Official Android Developers pages below were accessed on 2026-07-24.
   repository data; bind user and account identity before restoring it.
 - Preserve task, launch mode, deep-link, and back behavior separately from
   screen rendering.
-- Make one-time effects idempotent across recreation and restoration.
-
-## Failure Proof
-
-- Recreate the Activity without killing the process.
-- Restore after system process death with the prior task or entry Intent.
-- Exercise back, task removal, and relaunch without assuming identical callbacks.
-- Prove stale account or obsolete navigation state is rejected.
-
-## Required Record
-
-Return the event matrix, state owner, restore key and invalidation rule, task/back
-decision, recurrence proof, untested OEM or API paths, and residual risk.
+- Require one-time effects to be idempotent across recreation and restoration.
 
 ## Primary Sources
 

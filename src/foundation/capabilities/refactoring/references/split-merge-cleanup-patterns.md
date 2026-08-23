@@ -1,5 +1,7 @@
 # Split, Merge, And Cleanup Patterns
 
+- **Honor accepted deletion readiness.** Consume `cleanup-deletion-governance` exit, residue, absence-proof, and recovery limits; verify that structural sequencing preserves them.
+
 Use this reference when a refactor changes file/object/module shape, merges small files, sequences an accepted deletion decision, or claims complexity reduction. `cleanup-deletion-governance` owns deletion readiness, exit conditions, residue, absence proof, and irreversible recovery limits.
 
 ## Split Decision Matrix

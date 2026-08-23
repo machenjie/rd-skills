@@ -41,6 +41,16 @@ Boundaries, and critical gaps blocking the First Executable Slice. Task
 completion or switch, ordinary implementation discovery, and an unreached
 Review Boundary do not re-trigger Analysis.
 
+When this Brief must select Layer 3 for an analyzed downstream Task or Review,
+load exactly one current-Professional projection from
+`engineering-control-plane/references/selectors/<professional-skill>.json`.
+Load it only after the Professional and downstream profile are fixed, and do
+not load any sibling projection, index, or catalog. If the exact authorized
+Layer 3 set is already fixed, skip the selector file and retain that authorized
+set. Write the resulting exact set into the Brief; downstream Task and Review
+agents do not reroute. Main continues to own Direct and initial-Analysis
+selection.
+
 Delta Analysis is permitted only when evidence invalidates Acceptance/Non-goals,
 Owner/Placement/Invariant, contract/data semantics, dependency/rollback,
 material risk, or a scope blocker. Reuse Core `delta_analysis`; do not change
@@ -68,10 +78,10 @@ Proof Limit and return blocked. Main consumes Delta Impact without reinterpretin
 Use full re-analysis only when foundational goals or system assumptions are
 invalidated. Delta Impact never replaces, summarizes, or weakens the Brief.
 
-The public Execution Level lines use Core public `execution-level/v1`. The integrity
+The public Execution Level lines use Core public `execution-level/v2`. The integrity
 fallback for missing, malformed, or duplicate public execution-level data is
 defined in [execution-level-contract.md](execution-level-contract.md).
-Legacy without v1 is completed/read only; active or resumed work, edit,
+Legacy v1 is completed/read only; active or resumed work, edit,
 validation, or review requires reissue.
 
 ```markdown
@@ -102,8 +112,8 @@ in_progress / blocked / partial / completed
 Task ID:
 Status: in_progress
 <!-- BEGIN CHANGEFORGE CORE PUBLIC EXECUTION TEMPLATE: engineering-brief-template.md -->
-Level: requested=unspecified / L1 / L5; automatic=L2 / L3 / L4; default=L3; effective=L1 / L2 / L3 / L4 / L5; edit=allowed / blocked
-Basis: source=user_fact:<anchor> / analysis_handoff:<anchor>; triggers=["<matched or unknown trigger ID>"] / []; l2=["<false or unknown L2 predicate ID>"] / []; unresolved=[] / ["unknown-critical-boundary=>L4,edit=blocked"]
+Level: requested=unspecified / L1 / L2 / L3 / L4 / L5; automatic=L1 / L2 / L3 / L4 / L5; minimum=L1 / L2 / L3 / L4 / L5; default=L3; effective=L1 / L2 / L3 / L4 / L5; edit=allowed / blocked
+Basis: source=user_fact:<anchor> / analysis_handoff:<anchor>; triggers=["<matched or unknown trigger ID>"] / []; l1=["<false or unknown L1 predicate ID>"] / []; l2=["<false or unknown L2 predicate ID>"] / []; l5=["<false or unknown L5 predicate ID>"] / []; confirmation=not-required / pending / confirmed / rejected / explicit; unresolved=[] / ["unknown-critical-boundary=>L4,edit=blocked"]
 L5 Evidence: when=effective L5 only; requires=independent pre-implementation review / strong safety and applicability proof / declared-scope comprehensive negative and failure proof / exhaustive final review
 <!-- END CHANGEFORGE CORE PUBLIC EXECUTION TEMPLATE: engineering-brief-template.md -->
 Goal:

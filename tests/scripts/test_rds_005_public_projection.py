@@ -47,20 +47,29 @@ class Rds005PublicProjectionTests(unittest.TestCase):
             ROOT / "src/control-skills/engineering-control-plane/references"
         )
 
-    def test_l1_through_l4_public_projection_is_decision_only(self) -> None:
+    def test_l1_through_l5_public_projection_is_decision_only(self) -> None:
         self.assertEqual(
             {
-                "version": "execution-level/v1",
+                "version": "execution-level/v2",
                 "ordered_labels": ["Level", "Basis", "L5 Evidence"],
                 "line_fields": {
                     "Level": [
                         "requested",
                         "automatic",
+                        "minimum",
                         "default",
                         "effective",
                         "edit",
                     ],
-                    "Basis": ["source", "triggers", "l2", "unresolved"],
+                    "Basis": [
+                        "source",
+                        "triggers",
+                        "l1",
+                        "l2",
+                        "l5",
+                        "confirmation",
+                        "unresolved",
+                    ],
                     "L5 Evidence": ["when", "requires"],
                 },
             },
@@ -97,8 +106,11 @@ class Rds005PublicProjectionTests(unittest.TestCase):
                     block = text[start:end]
                     for term in forbidden:
                         self.assertNotIn(term, block)
-                    self.assertIn("requested=unspecified / L1 / L5", block)
-                    self.assertIn("automatic=L2 / L3 / L4", block)
+                    self.assertIn(
+                        "requested=unspecified / L1 / L2 / L3 / L4 / L5", block
+                    )
+                    self.assertIn("automatic=L1 / L2 / L3 / L4 / L5", block)
+                    self.assertIn("minimum=L1 / L2 / L3 / L4 / L5", block)
                     self.assertIn("default=L3", block)
                     self.assertIn("effective=L1 / L2 / L3 / L4 / L5", block)
                     self.assertIn("source=user_fact:<anchor> / analysis_handoff:<anchor>", block)
@@ -187,8 +199,13 @@ class Rds005PublicProjectionTests(unittest.TestCase):
 
     def test_level_safety_retry_closure_and_l5_contracts_remain(self) -> None:
         execution = self.execution
-        self.assertEqual(["unspecified", "L1", "L5"], execution["requested_values"])
-        self.assertEqual(["L2", "L3", "L4"], execution["dynamic_levels"])
+        self.assertEqual(
+            ["unspecified", "L1", "L2", "L3", "L4", "L5"],
+            execution["requested_values"],
+        )
+        self.assertEqual(
+            ["L1", "L2", "L3", "L4", "L5"], execution["dynamic_levels"]
+        )
         self.assertEqual("L3", execution["default_level"])
         self.assertEqual(
             {

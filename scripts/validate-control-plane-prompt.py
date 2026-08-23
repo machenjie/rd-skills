@@ -70,14 +70,13 @@ PROMPT_TEMPLATE_BINDINGS = (
     ("direct-task-template.md", ("main-control-agent",)),
     ("implementation-handoff-template.md", ("task-agent",)),
 )
+CAPABILITY_BRANCH_OWNER = REFERENCE_ROOT / "implementation-handoff-template.md"
+ANALYZED_WORK_OWNER = REFERENCE_ROOT / "engineering-brief-template.md"
 ANALYZED_WORK_PROMPT_TERMS = {
     "Analyzed Work": (
-        "current Engineering Brief: sole analysis authority",
-        "First Executable Slice: Task Contract v2",
-        "dispatch verbatim",
+        "current Engineering Brief",
+        "First Executable Slice",
         "never reinterpret",
-        "Specialists: Brief only",
-        "DAGs/handoffs cannot redefine it",
         "blocked -> main-control-agent -> analysis-agent -> updated Engineering Brief",
         "redispatch affected tasks",
         "Direct Task/non-implementation paths remain unchanged",
@@ -87,6 +86,14 @@ ANALYZED_WORK_PROMPT_TERMS = {
         "adjacent never preempts task/DAG",
     ),
 }
+ANALYZED_WORK_OWNER_TERMS = (
+    "only operational analysis authority",
+    "Task Contract v2",
+    "dispatches it verbatim",
+    "Specialist",
+    "derived artifacts",
+    "must not redefine Acceptance",
+)
 
 
 def _fold(text: str) -> str:
@@ -375,13 +382,39 @@ def _validate_analyzed_work_authority(text: str, errors: list[str]) -> None:
                 errors.append(
                     f"{section}: missing analyzed-work authority term {term!r}"
                 )
+    if not ANALYZED_WORK_OWNER.is_file():
+        errors.append("missing analyzed-work JIT authority owner")
+        return
+    owner = _fold(ANALYZED_WORK_OWNER.read_text(encoding="utf-8"))
+    missing_owner = [
+        term for term in ANALYZED_WORK_OWNER_TERMS if term.casefold() not in owner
+    ]
+    if missing_owner:
+        errors.append(
+            "analyzed-work JIT authority owner is incomplete: "
+            + ", ".join(repr(term) for term in missing_owner)
+        )
 
 
 def _validate_capability_branches(text: str, errors: list[str]) -> None:
-    section = extract_section_body(text, PROMPT_CONTRACT_MODEL["capability_section"])
-    if section is None:
+    prompt_section = extract_section_body(
+        text, PROMPT_CONTRACT_MODEL["capability_section"]
+    )
+    if prompt_section is None:
         errors.append("cannot validate capability branches: missing Direct Task Routing")
         return
+    for anchor in (
+        "generic_capability_contract",
+        "references/implementation-handoff-template.md",
+    ):
+        if anchor not in prompt_section:
+            errors.append(
+                f"Direct Task Routing is missing capability JIT owner anchor {anchor!r}"
+            )
+    if not CAPABILITY_BRANCH_OWNER.is_file():
+        errors.append("missing generic capability branch JIT owner")
+        return
+    section = CAPABILITY_BRANCH_OWNER.read_text(encoding="utf-8")
 
     regions: dict[str, str] = {}
     branch_contracts = REVIEW_DISCIPLINE_MODEL["generic_capability_contract"][
@@ -393,7 +426,7 @@ def _validate_capability_branches(text: str, errors: list[str]) -> None:
         marker = f"`{field}`"
         if section.count(marker) != 1:
             errors.append(
-                f"Direct Task Routing must name capability field {field!r} exactly once"
+                f"capability JIT owner must name field {field!r} exactly once"
             )
             continue
         start = section.index(marker) + len(marker)

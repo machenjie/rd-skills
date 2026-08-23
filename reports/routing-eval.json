@@ -3,6 +3,678 @@
   "automatic_routing_policy_fingerprint": "81efd6d39cefc37df743253378fa0783117c5ea3b221987981d1de95f685f293",
   "candidate_coverage": "full",
   "case_count": 233,
+  "compatibility_baseline": {
+    "capability_cases": 62,
+    "routing_cases": 233
+  },
+  "decision_eval": {
+    "axes": [
+      "path-decision",
+      "gap-ownership",
+      "discovery-decision",
+      "professional-layer3-decision",
+      "execution-level",
+      "action-authority",
+      "review-decision"
+    ],
+    "axis_count": 7,
+    "case_count": 9,
+    "errors": [],
+    "level_invariance_count": 6,
+    "mechanism_evidence": {
+      "l5_confirmation": {
+        "all_protected_fields_preserved": true,
+        "brief_semantics_preserved": true,
+        "changed_fields_by_transition": {
+          "pending-to-confirmed": [
+            "execution_level_extension"
+          ],
+          "pending-to-rejected": [
+            "execution_level_extension"
+          ]
+        },
+        "confirmed_effective": "L5",
+        "consumer": "fixture_capsule_contract:engineering-brief-task-projection/v1",
+        "execution_extension_versions": {
+          "confirmed": "execution-level/v2",
+          "pending": "execution-level/v2",
+          "rejected": "execution-level/v2"
+        },
+        "pending_action": "ask-once",
+        "protected_fields": [
+          "goal",
+          "acceptance",
+          "non_goals",
+          "owner",
+          "invariants",
+          "scope",
+          "professional_skill",
+          "implementation_layer3",
+          "domain",
+          "review_requirements"
+        ],
+        "public_projection_count": 3,
+        "rejected_effective": "L4",
+        "route_preserved": true,
+        "selector_preserved": true,
+        "transition_errors": {
+          "pending-to-confirmed": [],
+          "pending-to-rejected": []
+        }
+      },
+      "level_derivation": {
+        "call_count": 9,
+        "consumer": "validation_utils:compute_execution_level",
+        "errors": [],
+        "rows": [
+          {
+            "case_id": "source-fact-to-ask-user",
+            "computed_projection": {
+              "automatic_level": "L2",
+              "effective_level": "L2",
+              "historical_max": "L2",
+              "mandatory_risk_floor": "L2",
+              "minimum_eligible_level": "L2",
+              "requested_or_automatic": "L2"
+            },
+            "declared_projection": {
+              "automatic_level": "L2",
+              "effective_level": "L2",
+              "historical_max": "L2",
+              "mandatory_risk_floor": "L2",
+              "minimum_eligible_level": "L2",
+              "requested_or_automatic": "L2"
+            },
+            "errors": [],
+            "requested_level": "unspecified"
+          },
+          {
+            "case_id": "user-choice-to-source-inference",
+            "computed_projection": {
+              "automatic_level": "L2",
+              "effective_level": "L2",
+              "historical_max": "L2",
+              "mandatory_risk_floor": "L2",
+              "minimum_eligible_level": "L2",
+              "requested_or_automatic": "L2"
+            },
+            "declared_projection": {
+              "automatic_level": "L2",
+              "effective_level": "L2",
+              "historical_max": "L2",
+              "mandatory_risk_floor": "L2",
+              "minimum_eligible_level": "L2",
+              "requested_or_automatic": "L2"
+            },
+            "errors": [],
+            "requested_level": "unspecified"
+          },
+          {
+            "case_id": "route-material-unknown-to-direct",
+            "computed_projection": {
+              "automatic_level": "L2",
+              "effective_level": "L2",
+              "historical_max": "L2",
+              "mandatory_risk_floor": "L2",
+              "minimum_eligible_level": "L2",
+              "requested_or_automatic": "L2"
+            },
+            "declared_projection": {
+              "automatic_level": "L2",
+              "effective_level": "L2",
+              "historical_max": "L2",
+              "mandatory_risk_floor": "L2",
+              "minimum_eligible_level": "L2",
+              "requested_or_automatic": "L2"
+            },
+            "errors": [],
+            "requested_level": "unspecified"
+          },
+          {
+            "case_id": "direct-discovery-escape-then-edit",
+            "computed_projection": {
+              "automatic_level": "L2",
+              "effective_level": "L2",
+              "historical_max": "L2",
+              "mandatory_risk_floor": "L2",
+              "minimum_eligible_level": "L2",
+              "requested_or_automatic": "L2"
+            },
+            "declared_projection": {
+              "automatic_level": "L2",
+              "effective_level": "L2",
+              "historical_max": "L2",
+              "mandatory_risk_floor": "L2",
+              "minimum_eligible_level": "L2",
+              "requested_or_automatic": "L2"
+            },
+            "errors": [],
+            "requested_level": "unspecified"
+          },
+          {
+            "case_id": "unsupported-l1-downgrade",
+            "computed_projection": {
+              "automatic_level": "L3",
+              "effective_level": "L3",
+              "historical_max": "L3",
+              "mandatory_risk_floor": "L3",
+              "minimum_eligible_level": "L3",
+              "requested_or_automatic": "L3"
+            },
+            "declared_projection": {
+              "automatic_level": "L3",
+              "effective_level": "L3",
+              "historical_max": "L3",
+              "mandatory_risk_floor": "L3",
+              "minimum_eligible_level": "L3",
+              "requested_or_automatic": "L3"
+            },
+            "errors": [],
+            "requested_level": "unspecified"
+          },
+          {
+            "case_id": "keyword-only-l5",
+            "computed_projection": {
+              "automatic_level": "L4",
+              "effective_level": "L4",
+              "historical_max": "L4",
+              "mandatory_risk_floor": "L4",
+              "minimum_eligible_level": "L4",
+              "requested_or_automatic": "L4"
+            },
+            "declared_projection": {
+              "automatic_level": "L4",
+              "effective_level": "L4",
+              "historical_max": "L4",
+              "mandatory_risk_floor": "L4",
+              "minimum_eligible_level": "L4",
+              "requested_or_automatic": "L4"
+            },
+            "errors": [],
+            "requested_level": "unspecified"
+          },
+          {
+            "case_id": "l5-confirmation-reroute",
+            "computed_projection": {
+              "automatic_level": "L5",
+              "effective_level": "L5",
+              "historical_max": "L4",
+              "mandatory_risk_floor": "L4",
+              "minimum_eligible_level": "L4",
+              "requested_or_automatic": "L5"
+            },
+            "declared_projection": {
+              "automatic_level": "L5",
+              "effective_level": "L5",
+              "historical_max": "L4",
+              "mandatory_risk_floor": "L4",
+              "minimum_eligible_level": "L4",
+              "requested_or_automatic": "L5"
+            },
+            "errors": [],
+            "requested_level": "unspecified"
+          },
+          {
+            "case_id": "token-overflow-drops-layer3",
+            "computed_projection": {
+              "automatic_level": "L2",
+              "effective_level": "L2",
+              "historical_max": "L2",
+              "mandatory_risk_floor": "L2",
+              "minimum_eligible_level": "L2",
+              "requested_or_automatic": "L2"
+            },
+            "declared_projection": {
+              "automatic_level": "L2",
+              "effective_level": "L2",
+              "historical_max": "L2",
+              "mandatory_risk_floor": "L2",
+              "minimum_eligible_level": "L2",
+              "requested_or_automatic": "L2"
+            },
+            "errors": [],
+            "requested_level": "unspecified"
+          },
+          {
+            "case_id": "review-copies-implementation-layer3",
+            "computed_projection": {
+              "automatic_level": "L2",
+              "effective_level": "L2",
+              "historical_max": "L2",
+              "mandatory_risk_floor": "L2",
+              "minimum_eligible_level": "L2",
+              "requested_or_automatic": "L2"
+            },
+            "declared_projection": {
+              "automatic_level": "L2",
+              "effective_level": "L2",
+              "historical_max": "L2",
+              "mandatory_risk_floor": "L2",
+              "minimum_eligible_level": "L2",
+              "requested_or_automatic": "L2"
+            },
+            "errors": [],
+            "requested_level": "unspecified"
+          }
+        ]
+      },
+      "level_invariance": {
+        "canonical_route_invocation_count": 6,
+        "fixed_route_equal": true,
+        "projections": [
+          {
+            "effective_level": "L1",
+            "fixed_route": {
+              "domain": [
+                "bigdata-product-extension"
+              ],
+              "implementation_layer3": [
+                "regression-testing"
+              ],
+              "primary_professional_skill": "quality-test-gate",
+              "required_review_skills": [
+                "ai-code-review-refactor"
+              ]
+            },
+            "requested_level": "unspecified",
+            "review_selection_basis": "review-risk",
+            "route_once": true
+          },
+          {
+            "effective_level": "L1",
+            "fixed_route": {
+              "domain": [
+                "bigdata-product-extension"
+              ],
+              "implementation_layer3": [
+                "regression-testing"
+              ],
+              "primary_professional_skill": "quality-test-gate",
+              "required_review_skills": [
+                "ai-code-review-refactor"
+              ]
+            },
+            "requested_level": "L1",
+            "review_selection_basis": "review-risk",
+            "route_once": true
+          },
+          {
+            "effective_level": "L2",
+            "fixed_route": {
+              "domain": [
+                "bigdata-product-extension"
+              ],
+              "implementation_layer3": [
+                "regression-testing"
+              ],
+              "primary_professional_skill": "quality-test-gate",
+              "required_review_skills": [
+                "ai-code-review-refactor"
+              ]
+            },
+            "requested_level": "L2",
+            "review_selection_basis": "review-risk",
+            "route_once": true
+          },
+          {
+            "effective_level": "L3",
+            "fixed_route": {
+              "domain": [
+                "bigdata-product-extension"
+              ],
+              "implementation_layer3": [
+                "regression-testing"
+              ],
+              "primary_professional_skill": "quality-test-gate",
+              "required_review_skills": [
+                "ai-code-review-refactor"
+              ]
+            },
+            "requested_level": "L3",
+            "review_selection_basis": "review-risk",
+            "route_once": true
+          },
+          {
+            "effective_level": "L4",
+            "fixed_route": {
+              "domain": [
+                "bigdata-product-extension"
+              ],
+              "implementation_layer3": [
+                "regression-testing"
+              ],
+              "primary_professional_skill": "quality-test-gate",
+              "required_review_skills": [
+                "ai-code-review-refactor"
+              ]
+            },
+            "requested_level": "L4",
+            "review_selection_basis": "review-risk",
+            "route_once": true
+          },
+          {
+            "effective_level": "L5",
+            "fixed_route": {
+              "domain": [
+                "bigdata-product-extension"
+              ],
+              "implementation_layer3": [
+                "regression-testing"
+              ],
+              "primary_professional_skill": "quality-test-gate",
+              "required_review_skills": [
+                "ai-code-review-refactor"
+              ]
+            },
+            "requested_level": "L5",
+            "review_selection_basis": "review-risk",
+            "route_once": true
+          }
+        ],
+        "requested_levels": [
+          "unspecified",
+          "L1",
+          "L2",
+          "L3",
+          "L4",
+          "L5"
+        ],
+        "semantic_route": {
+          "brief_semantics": {
+            "acceptance": "Preserve the fixed expertise route while assurance varies.",
+            "domain": [
+              "bigdata-product-extension"
+            ],
+            "goal": "Validate the changed distributed pipeline behavior.",
+            "implementation_layer3": [
+              "regression-testing"
+            ],
+            "invariants": [
+              "Only execution_level_extension changes during confirmation."
+            ],
+            "non_goals": [
+              "Do not reinterpret Brief semantics during assurance confirmation."
+            ],
+            "owner": "quality-test-gate",
+            "professional_skill": "quality-test-gate",
+            "review_requirements": {
+              "review_layer3": [
+                "code-review"
+              ],
+              "review_skill": "ai-code-review-refactor"
+            },
+            "scope": "distributed stream pipeline regression validation"
+          },
+          "prompt": "Select regression tests and validate a changed distributed stream pipeline replay checkpoint and downstream consumer.",
+          "review_layer3": [
+            "code-review"
+          ],
+          "task_id": "decision-level-invariance"
+        }
+      },
+      "review_copy": {
+        "baseline_failure_ids": [],
+        "baseline_receipt_errors": [],
+        "baseline_review_layer3": [
+          "regression-testing"
+        ],
+        "fixture_labels_consulted": false,
+        "implementation_layer3": [
+          "regression-testing"
+        ],
+        "implementation_selection_receipt": {
+          "authority_contract": "changeforge.layer3-selector-authority/v1",
+          "contract": "changeforge.layer3-selector-selection-receipt/v1",
+          "evidence_signals": [
+            "protect a named prior failure mechanism and materially reachable same pattern variants from recurrence"
+          ],
+          "professional_skill": "quality-test-gate",
+          "profile": "task-agent",
+          "receipt_sha256": "d01722cb828d4a6a56abdaee0fa941145adf1624392130d2753dbdf91a8d220d",
+          "selected_layer3": [
+            "regression-testing"
+          ],
+          "selection_basis": "professional-risk",
+          "selection_kind": "implementation-risk",
+          "selection_owner": "main-control-agent",
+          "selector_ids": [
+            "dynamic-foundation:regression-testing"
+          ]
+        },
+        "mutant_evaluated": true,
+        "mutant_failure_ids": [
+          "decision-review-layer3-independent"
+        ],
+        "mutant_receipt_errors": [
+          "selector selection receipt professional_skill differs from canonical replay",
+          "selector selection receipt profile differs from canonical replay",
+          "selector selection receipt receipt_sha256 differs from canonical replay",
+          "selector selection receipt selection_basis differs from canonical replay",
+          "selector selection receipt selection_kind differs from canonical replay"
+        ],
+        "mutant_review_layer3": [
+          "regression-testing"
+        ],
+        "receipts_distinct": true,
+        "review_selection_receipt": {
+          "authority_contract": "changeforge.layer3-selector-authority/v1",
+          "contract": "changeforge.layer3-selector-selection-receipt/v1",
+          "evidence_signals": [
+            "protect a named prior failure mechanism and materially reachable same pattern variants from recurrence"
+          ],
+          "professional_skill": "ai-code-review-refactor",
+          "profile": "review-agent",
+          "receipt_sha256": "619ed0c7574a871303e2c28513c347ce3a67faa2a5e90c05c8b5adf066c3da2d",
+          "selected_layer3": [
+            "regression-testing"
+          ],
+          "selection_basis": "review-risk",
+          "selection_kind": "review-risk",
+          "selection_owner": "main-control-agent",
+          "selector_ids": [
+            "dynamic-foundation:regression-testing"
+          ]
+        },
+        "selection_call_count": 2
+      },
+      "review_domain_consumers": {
+        "case_count": 3,
+        "errors": [],
+        "outcomes": [
+          {
+            "domain": "web3-product-extension",
+            "id": "web3-review-risk",
+            "passed": {
+              "background": true,
+              "nearest-negative": true,
+              "positive": true
+            },
+            "review_skill": "ai-code-review-refactor"
+          },
+          {
+            "domain": "low-level-systems-extension",
+            "id": "low-level-review-risk",
+            "passed": {
+              "background": true,
+              "nearest-negative": true,
+              "positive": true
+            },
+            "review_skill": "ai-code-review-refactor"
+          },
+          {
+            "domain": "bigdata-product-extension",
+            "id": "bigdata-review-risk",
+            "passed": {
+              "background": true,
+              "nearest-negative": true,
+              "positive": true
+            },
+            "review_skill": "quality-test-gate"
+          }
+        ],
+        "passed_outcome_count": 9
+      },
+      "token_pressure": {
+        "consumer": "eval-rendered-context-budget:evaluate_route_obligation_context",
+        "continue_allowed": false,
+        "failure_id": "context-token-budget-overflow",
+        "observed_route_obligations": {
+          "domain": [
+            "bigdata-product-extension"
+          ],
+          "implementation_layer3": [
+            "regression-testing"
+          ],
+          "primary_professional_skill": "quality-test-gate",
+          "required_review_skills": [
+            "ai-code-review-refactor"
+          ]
+        },
+        "outcome": "fail-closed",
+        "overflow_observed": true,
+        "required_route_obligations": {
+          "domain": [
+            "bigdata-product-extension"
+          ],
+          "implementation_layer3": [
+            "regression-testing"
+          ],
+          "primary_professional_skill": "quality-test-gate",
+          "required_review_skills": [
+            "ai-code-review-refactor"
+          ]
+        },
+        "route_obligations": {
+          "domain": [
+            "bigdata-product-extension"
+          ],
+          "implementation_layer3": [
+            "regression-testing"
+          ],
+          "primary_professional_skill": "quality-test-gate",
+          "required_review_skills": [
+            "ai-code-review-refactor"
+          ]
+        },
+        "route_obligations_preserved": true,
+        "token_budget": 3200,
+        "total_tokens": 25645
+      }
+    },
+    "passed_count": 9,
+    "results": [
+      {
+        "axis": "action-authority",
+        "baseline_failure_ids": [],
+        "expected_failure_id": "decision-source-fact-not-user-question",
+        "id": "source-fact-to-ask-user",
+        "invariant_id": "source-fact-resolves-without-user-question",
+        "mutant_evaluated": true,
+        "mutant_failure_ids": [
+          "decision-source-fact-not-user-question"
+        ],
+        "passed": true
+      },
+      {
+        "axis": "gap-ownership",
+        "baseline_failure_ids": [],
+        "expected_failure_id": "decision-user-choice-not-source-inference",
+        "id": "user-choice-to-source-inference",
+        "invariant_id": "user-choice-requires-user-answer",
+        "mutant_evaluated": true,
+        "mutant_failure_ids": [
+          "decision-user-choice-not-source-inference"
+        ],
+        "passed": true
+      },
+      {
+        "axis": "path-decision",
+        "baseline_failure_ids": [],
+        "expected_failure_id": "decision-material-unknown-not-direct",
+        "id": "route-material-unknown-to-direct",
+        "invariant_id": "route-material-unknown-fails-closed",
+        "mutant_evaluated": true,
+        "mutant_failure_ids": [
+          "decision-material-unknown-not-direct"
+        ],
+        "passed": true
+      },
+      {
+        "axis": "discovery-decision",
+        "baseline_failure_ids": [],
+        "expected_failure_id": "decision-discovery-invalidated-stop-before-edit",
+        "id": "direct-discovery-escape-then-edit",
+        "invariant_id": "invalidated-discovery-stops-before-edit",
+        "mutant_evaluated": true,
+        "mutant_failure_ids": [
+          "decision-discovery-invalidated-stop-before-edit"
+        ],
+        "passed": true
+      },
+      {
+        "axis": "execution-level",
+        "baseline_failure_ids": [],
+        "expected_failure_id": "decision-level-no-unsupported-downgrade",
+        "id": "unsupported-l1-downgrade",
+        "invariant_id": "effective-level-respects-all-floors",
+        "mutant_evaluated": true,
+        "mutant_failure_ids": [
+          "decision-level-no-unsupported-downgrade"
+        ],
+        "passed": true
+      },
+      {
+        "axis": "execution-level",
+        "baseline_failure_ids": [],
+        "expected_failure_id": "decision-level-l5-not-keyword-only",
+        "id": "keyword-only-l5",
+        "invariant_id": "automatic-l5-requires-confirmed-analysis-evidence",
+        "mutant_evaluated": true,
+        "mutant_failure_ids": [
+          "decision-level-l5-not-keyword-only"
+        ],
+        "passed": true
+      },
+      {
+        "axis": "professional-layer3-decision",
+        "baseline_failure_ids": [],
+        "expected_failure_id": "decision-level-confirmation-route-invariant",
+        "id": "l5-confirmation-reroute",
+        "invariant_id": "level-confirmation-preserves-semantic-route",
+        "mutant_evaluated": true,
+        "mutant_failure_ids": [
+          "decision-level-confirmation-route-invariant"
+        ],
+        "passed": true
+      },
+      {
+        "axis": "professional-layer3-decision",
+        "baseline_failure_ids": [],
+        "expected_failure_id": "decision-context-preserve-required-layer3",
+        "id": "token-overflow-drops-layer3",
+        "invariant_id": "context-pressure-preserves-required-layer3",
+        "mutant_evaluated": true,
+        "mutant_failure_ids": [
+          "decision-context-preserve-required-layer3"
+        ],
+        "passed": true
+      },
+      {
+        "axis": "review-decision",
+        "baseline_failure_ids": [],
+        "expected_failure_id": "decision-review-layer3-independent",
+        "id": "review-copies-implementation-layer3",
+        "invariant_id": "review-layer3-selected-from-review-risk",
+        "mutant_evaluated": true,
+        "mutant_failure_ids": [
+          "decision-review-layer3-independent"
+        ],
+        "passed": true
+      }
+    ],
+    "schema_version": 1,
+    "status": "pass"
+  },
   "domain_anti_case_count": 26,
   "domain_family_case_count": 44,
   "domain_transition_case_count": 13,
@@ -8993,7 +9665,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -9021,7 +9696,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -9779,7 +10457,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -9804,7 +10485,10 @@
           "layer3_skills": [],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -10704,7 +11388,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -10729,7 +11416,10 @@
           "layer3_skills": [],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -14050,7 +14740,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -14075,7 +14768,10 @@
           "layer3_skills": [],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -14977,7 +15673,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -15004,7 +15703,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -16386,7 +17088,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -16413,7 +17118,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -17795,7 +18503,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -17822,7 +18533,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -19208,7 +19922,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -19237,7 +19954,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -22119,7 +22839,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -22147,7 +22870,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -22582,6 +23308,44 @@
                 "not-selected-by-layer3-route-evidence"
               ],
               "skill": "cross-platform-client-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4",
+                "route-evidence-5",
+                "route-evidence-6",
+                "route-evidence-7",
+                "route-evidence-8",
+                "route-evidence-9",
+                "route-evidence-10"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "web3-product-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4",
+                "route-evidence-5",
+                "route-evidence-6",
+                "route-evidence-7",
+                "route-evidence-8",
+                "route-evidence-9",
+                "route-evidence-10"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "low-level-systems-extension"
             }
           ],
           "primary_candidates": [
@@ -24075,7 +24839,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -24104,7 +24871,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -26184,7 +26954,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -26213,7 +26986,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -27135,7 +27911,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -27162,7 +27941,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -27467,6 +28249,32 @@
                 "not-selected-by-layer3-route-evidence"
               ],
               "skill": "cross-platform-client-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "web3-product-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "low-level-systems-extension"
             }
           ],
           "primary_candidates": [
@@ -28162,7 +28970,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -28189,7 +29000,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -28494,6 +29308,32 @@
                 "not-selected-by-layer3-route-evidence"
               ],
               "skill": "cross-platform-client-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "web3-product-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "low-level-systems-extension"
             }
           ],
           "primary_candidates": [
@@ -29080,7 +29920,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -29107,7 +29950,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -29412,6 +30258,32 @@
                 "not-selected-by-layer3-route-evidence"
               ],
               "skill": "cross-platform-client-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "web3-product-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "low-level-systems-extension"
             }
           ],
           "primary_candidates": [
@@ -32175,7 +33047,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -32204,7 +33079,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -33778,7 +34656,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -33805,7 +34686,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -34732,7 +35616,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -34760,7 +35647,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -37832,7 +38722,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -37859,7 +38752,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -38164,6 +39060,32 @@
                 "not-selected-by-layer3-route-evidence"
               ],
               "skill": "cross-platform-client-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "web3-product-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "low-level-systems-extension"
             }
           ],
           "primary_candidates": [
@@ -40666,7 +41588,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -40693,7 +41618,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -40998,6 +41926,32 @@
                 "not-selected-by-layer3-route-evidence"
               ],
               "skill": "cross-platform-client-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "web3-product-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "low-level-systems-extension"
             }
           ],
           "primary_candidates": [
@@ -42240,7 +43194,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -42267,7 +43224,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -42884,7 +43844,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -42911,7 +43874,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -45097,7 +46063,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -45124,7 +46093,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -47829,7 +48801,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -47856,7 +48831,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -48502,7 +49480,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -48530,7 +49511,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -50861,7 +51845,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -50888,7 +51875,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -59609,7 +60599,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -59636,7 +60629,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -59809,6 +60805,20 @@
                 "not-selected-by-layer3-route-evidence"
               ],
               "skill": "client-application-testing"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4",
+                "route-evidence-5"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "bigdata-product-extension"
             }
           ],
           "primary_candidates": [
@@ -62293,7 +63303,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -62322,7 +63335,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -64690,7 +65706,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -64717,7 +65736,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -65347,7 +66369,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -65375,7 +66400,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -66353,7 +67381,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -66380,7 +67411,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -66958,7 +67992,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -66985,7 +68022,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -67268,6 +68308,30 @@
                 "not-selected-by-layer3-route-evidence"
               ],
               "skill": "cross-platform-client-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "web3-product-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "low-level-systems-extension"
             }
           ],
           "primary_candidates": [
@@ -67702,7 +68766,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -67727,7 +68794,10 @@
           "layer3_skills": [],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -78819,7 +79889,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -78846,7 +79919,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -93491,7 +94567,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -93518,7 +94597,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -94432,7 +95514,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -94457,7 +95542,10 @@
           "layer3_skills": [],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -95357,7 +96445,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -95382,7 +96473,10 @@
           "layer3_skills": [],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -96291,7 +97385,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -96318,7 +97415,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -97025,7 +98125,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -97052,7 +98155,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -97761,7 +98867,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -97789,7 +98898,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -98646,7 +99758,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -98674,7 +99789,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -99534,7 +100652,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -99561,7 +100682,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -100268,7 +101392,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -100295,7 +101422,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -101001,7 +102131,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -101028,7 +102161,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -101730,7 +102866,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -101757,7 +102896,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -102513,7 +103655,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -102540,7 +103685,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -108258,7 +109406,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -108285,7 +109436,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -109042,7 +110196,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -109069,7 +110226,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -109826,7 +110986,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -109853,7 +111016,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -110610,7 +111776,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -110637,7 +111806,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -115523,7 +116695,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -115548,7 +116723,10 @@
           "layer3_skills": [],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -116448,7 +117626,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -116473,7 +117654,10 @@
           "layer3_skills": [],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -117377,7 +118561,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -117404,7 +118591,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -118156,7 +119346,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -118181,7 +119374,10 @@
           "layer3_skills": [],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -119749,7 +120945,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -119778,7 +120977,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -121657,7 +122859,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -121684,7 +122889,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -122230,7 +123438,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -122257,7 +123468,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -122430,6 +123644,20 @@
                 "not-selected-by-layer3-route-evidence"
               ],
               "skill": "client-application-testing"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4",
+                "route-evidence-5"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "bigdata-product-extension"
             }
           ],
           "primary_candidates": [
@@ -122985,7 +124213,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -123012,7 +124243,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -123644,7 +124878,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -123672,7 +124909,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -130716,7 +131956,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -130741,7 +131984,10 @@
           "layer3_skills": [],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -131639,7 +132885,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -131664,7 +132913,10 @@
           "layer3_skills": [],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -132562,7 +133814,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -132587,7 +133842,10 @@
           "layer3_skills": [],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -133485,7 +134743,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -133510,7 +134771,10 @@
           "layer3_skills": [],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -134408,7 +135672,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -134433,7 +135700,10 @@
           "layer3_skills": [],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -135331,7 +136601,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -135356,7 +136629,10 @@
           "layer3_skills": [],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -146841,7 +148117,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -146866,7 +148145,10 @@
           "layer3_skills": [],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -147770,7 +149052,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -147798,7 +149083,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -149068,7 +150356,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -149095,7 +150386,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -149400,6 +150694,32 @@
                 "not-selected-by-layer3-route-evidence"
               ],
               "skill": "cross-platform-client-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "web3-product-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "low-level-systems-extension"
             }
           ],
           "primary_candidates": [
@@ -149870,7 +151190,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -149897,7 +151220,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -150202,6 +151528,32 @@
                 "not-selected-by-layer3-route-evidence"
               ],
               "skill": "cross-platform-client-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "web3-product-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "low-level-systems-extension"
             }
           ],
           "primary_candidates": [
@@ -150674,7 +152026,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -150702,7 +152057,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -151767,7 +153125,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -151794,7 +153155,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -152099,6 +153463,32 @@
                 "not-selected-by-layer3-route-evidence"
               ],
               "skill": "cross-platform-client-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "web3-product-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "low-level-systems-extension"
             }
           ],
           "primary_candidates": [
@@ -152808,7 +154198,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -152836,7 +154229,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -153635,7 +155031,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -153662,7 +155061,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -153967,6 +155369,32 @@
                 "not-selected-by-layer3-route-evidence"
               ],
               "skill": "cross-platform-client-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "web3-product-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "low-level-systems-extension"
             }
           ],
           "primary_candidates": [
@@ -154441,7 +155869,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -154470,7 +155901,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -155572,7 +157006,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -155599,7 +157036,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -155904,6 +157344,32 @@
                 "not-selected-by-layer3-route-evidence"
               ],
               "skill": "cross-platform-client-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "web3-product-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "low-level-systems-extension"
             }
           ],
           "primary_candidates": [
@@ -156500,7 +157966,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -156527,7 +157996,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -156832,6 +158304,32 @@
                 "not-selected-by-layer3-route-evidence"
               ],
               "skill": "cross-platform-client-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "web3-product-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3",
+                "route-evidence-4"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "low-level-systems-extension"
             }
           ],
           "primary_candidates": [
@@ -157420,7 +158918,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -157449,7 +158950,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -158796,7 +160300,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -158823,7 +160330,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -159106,6 +160616,30 @@
                 "not-selected-by-layer3-route-evidence"
               ],
               "skill": "cross-platform-client-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "web3-product-extension"
+            },
+            {
+              "eligible": false,
+              "evidence_ids": [
+                "route-evidence-1",
+                "route-evidence-2",
+                "route-evidence-3"
+              ],
+              "rejection_reasons": [
+                "not-selected-by-layer3-route-evidence"
+              ],
+              "skill": "low-level-systems-extension"
             }
           ],
           "primary_candidates": [
@@ -164949,7 +166483,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -164977,7 +166514,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -166200,7 +167740,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -166228,7 +167771,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -167029,7 +168575,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -167057,7 +168606,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -168520,7 +170072,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -168548,7 +170103,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -169570,7 +171128,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -169598,7 +171159,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -170751,7 +172315,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -170780,7 +172347,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -172126,7 +173696,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -172155,7 +173728,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -173227,7 +174803,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -173256,7 +174835,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -186968,7 +188550,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -186995,7 +188580,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -187497,7 +189085,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -187524,7 +189115,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -188028,7 +189622,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -188056,7 +189653,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -188891,7 +190491,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -188918,7 +190521,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -189756,7 +191362,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -189783,7 +191392,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -190873,7 +192485,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -190900,7 +192515,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -191768,7 +193386,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -191796,7 +193417,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -192511,7 +194135,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -192538,7 +194165,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -193254,7 +194884,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -193283,7 +194916,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -195109,7 +196745,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -195137,7 +196776,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -195972,7 +197614,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -195999,7 +197644,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -196837,7 +198485,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -196864,7 +198515,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -197954,7 +199608,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -197981,7 +199638,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -198849,7 +200509,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -198877,7 +200540,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -199592,7 +201258,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -199619,7 +201288,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -200335,7 +202007,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -200364,7 +202039,10 @@
           ],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -206861,7 +208539,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -206886,7 +208567,10 @@
           "layer3_skills": [],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -208743,7 +210427,10 @@
           "execution_level": "L4",
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],
@@ -208768,7 +210455,10 @@
           "layer3_skills": [],
           "level_basis": {
             "edit_status": "allowed",
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": [
               "high-risk pre-implementation evidence"
             ],

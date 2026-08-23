@@ -25,3 +25,7 @@ Use this reference when model-boundary closure depends on validation freshness, 
 
 - If regenerating clients, schema export, contract fixture update, compatibility report, record generator/source, diff scope, rollback, and owner.
 - If production data export, support query, live schema registry mutation, connector write, require owner approval, data class, rollback or containment path, and redaction rule.
+
+## Anti-Patterns
+
+- Do not cross a representation boundary without owned mapping and semantic-preservation proof.

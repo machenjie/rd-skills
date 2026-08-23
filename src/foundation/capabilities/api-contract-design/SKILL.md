@@ -17,27 +17,22 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when endpoints, 
 
 ## Skill Role
 
-Define resource and operation semantics, requests, responses, identity context, errors, repeat delivery, pagination, compatibility, and consumer proof. Exclude controller implementation, permission policy, and domain invariants.
+Own resource semantics, trusted context, failures, replay, pagination, and compatibility.
 
 ## High-Value Rules
 
-- **Start from consumer goal and resource semantics.** Name operation meaning, authoritative resource, affected consumers, state and side effects, consistency, and current contract source before choosing route or payload shape.
-- **Separate caller data from trusted context.** Define subject and tenant provenance, object identity, writable fields, permission handoff, and server-owned values without treating authentication as action authorization.
-- **Specify request and response meaning completely.** Cover required, optional, absent, null, default, unknown, partial, pagination, ordering, content, and compatibility behavior that consumers can observe.
-- **Make failure externally stable and safe.** Define machine meaning, retryability, field association, conflict or unknown outcome, safe detail, and transport mapping according to the current protocol contract.
-- **Coordinate repeat delivery with side effects.** Define operation identity, duplicate and concurrent request behavior, timeout, cancellation, result reuse, and reconciliation from the authoritative business effect.
-- **Design pagination and long-running outcomes honestly.** Preserve stable ordering and continuation identity, distinguish acceptance from completion, and expose progress or terminal status only where the underlying operation supports it.
-- **Prove mixed-consumer compatibility.** Exercise representative current clients, old and new request or response combinations, errors, unknown values, rollback, generated artifacts, and unverified external consumers.
+- Define operation, resource, consumer, trusted identity, and writable fields.
+- Define request, response, error, repeat-delivery, pagination, and completion meaning.
+- Select one named Reference for protocol choice, closure, or evidence.
+- If the API decision remains active, load only its named Reference.
 
 ## Anti-Patterns
 
-- Mirror database or internal domain objects directly into an external contract.
-- Return transport success with a hidden business failure, or expose raw exceptions and internal identifiers.
-- Label an additive schema change safe while defaults, strict validation, exhaustive matching, ordering, or side effects change.
+- Local success substituted for consumer-contract evidence.
 
 ## Stop Conditions
 
-Escalate when consumer or resource ownership is unknown, permission or identity boundaries are ambiguous, repeat delivery can duplicate consequential effects, or pagination or completion semantics are unstable. Also escalate when compatibility populations are uninspected or public, partner, financial, regulated, or destructive behavior lacks specialist ownership.
+Stop on unknown ownership, identity, replay, pagination, completion, compatibility, or specialist authority.
 
 ## Output Contract
 

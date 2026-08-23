@@ -23,30 +23,13 @@ Define cross-service recovery contracts without replacing participant or transpo
 
 ## High-Value Rules
 
-- Define durable business, workflow, run, step, command, effect, attempt, tenant, and definition-version identity with persisted state before dispatch.
-- Record transition authority, guards, fences, timestamps, terminal meaning, and invalid legacy state.
-- Correlate commands and results to workflow, step, and effect while rejecting send or broker acknowledgement as completion.
-- Preserve unknown outcomes after timeout, crash, cancellation, or lost response until participant authority or reconciliation proves the effect.
-- Require forward and compensating effects to be idempotent or durably deduplicated, with compensation inputs, preconditions, pivots, ordering, and convergence recorded.
-- Reconcile desired state against participant facts with bounded, attributable corrections safe under concurrent progress.
-- Detect stuck or poison work and constrain repair by target, authority, precondition, dry run, evidence, audit identity, and terminal outcome.
-- Define active-workflow version compatibility, replay, migration or pinning, and retirement evidence.
+- Persist workflow, step, command, effect, attempt, tenant, version, and authoritative state before dispatch.
+- Preserve command and effect correlation plus unknown outcomes until participant facts or reconciliation resolve them.
+- Define idempotent forward, compensation, reconciliation, repair, stuck handling, audit, versioning, replay, and terminal evidence.
 
 ## Anti-Patterns
 
-- Duplicate delivery commits an effect twice.
-- Lost completion leaves a committed effect unfinished.
-- Wrong compensation violates current business state.
-- Partial ordering advances a dependency early.
-- Poison or stuck work loops or blocks progress.
-- Old-version execution misreads state or commands.
-- Manual repair changes state without audit evidence.
-
-## Execution Checklist
-
-- Fault before/after dispatch and effect, before result persistence, and during compensation.
-- Exercise duplicate, reordered, delayed, poison, lost-response, stuck, repair, and participant-drift cases.
-- Replay representative old/new definitions against histories and mixed participant versions.
+- Local success substituted for evidence of the distributed workflow consistency contract.
 
 ## Stop Conditions
 

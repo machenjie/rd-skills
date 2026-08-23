@@ -274,12 +274,36 @@ class HooklessBuildInstallTests(unittest.TestCase):
                 skill_text = (skill_root / "SKILL.md").read_text()
                 self.assertEqual(1, skill_text.count("## Layer 3 Delivery"))
                 self.assertNotIn("## Compiled Layer 3 References", skill_text)
-                self.assertIn("Never preload Layer 3", skill_text)
+                if profile == "recommended":
+                    expected_delivery = (
+                        "Foundation and Domain items are compiled at "
+                        "`references/layer3/<name>.md`."
+                        if candidates
+                        else "No Foundation or Domain Layer 3 items are assigned to this Skill."
+                    )
+                elif profile == "full":
+                    expected_delivery = (
+                        "Foundation items are compiled at `references/layer3/<name>.md`; "
+                        "Domain items are top-level Skills."
+                        if candidates
+                        else "Domain items are top-level Skills; no Foundation items are compiled for this Skill."
+                    )
+                else:
+                    expected_delivery = (
+                        "Foundation and Domain items are top-level Skills; "
+                        "no Layer 3 references are compiled."
+                    )
+                self.assertEqual(
+                    expected_delivery,
+                    skill_text.split("## Layer 3 Delivery\n\n", 1)[1].strip(),
+                )
+                self.assertNotIn("Never preload Layer 3", skill_text)
+                self.assertNotIn("Layer 3 index or catalog", skill_text)
                 if not candidates:
                     self.assertFalse((skill_root / "references/layer3").exists())
                     self.assertNotIn("(references/layer3/index.md)", skill_text)
                     continue
-                self.assertIn("(references/layer3/index.md)", skill_text, (profile, skill_name))
+                self.assertNotIn("(references/layer3/index.md)", skill_text)
                 index_text = (skill_root / "references/layer3/index.md").read_text()
                 for candidate in candidates:
                     self.assertIn(f"- [{candidate}]({candidate}.md)", index_text)
@@ -353,14 +377,14 @@ class HooklessBuildInstallTests(unittest.TestCase):
             "High-Value Rules",
             "Anti-Patterns",
             "Stop Conditions",
-            "Targeted References",
+            "JIT Reference Delivery",
         ]
         expected_domain = [
             "Decision Boundary",
             "Professional Decision Rules",
             "High-Value Gotchas",
             "Stop / Escalation Conditions",
-            "Targeted References",
+            "JIT Reference Delivery",
         ]
         forbidden = {
             "Registry Trigger",
@@ -404,141 +428,270 @@ class HooklessBuildInstallTests(unittest.TestCase):
                 self.assertFalse(forbidden & set(headings))
 
         nested = compiled_paths["recommended-foundation"][0]
-        nested_text = nested.read_text(encoding="utf-8")
-        self.assertIn(
-            "transaction-consistency/references/evidence-patterns.md",
-            nested_text,
-        )
         self.assertTrue(
             (
                 nested.parent
                 / "transaction-consistency/references/evidence-patterns.md"
             ).is_file()
         )
+        selector = json.loads(
+            (
+                ROOT
+                / "dist/universal/skills/recommended/engineering-control-plane"
+                / "references/selectors/backend-change-builder.json"
+            ).read_text(encoding="utf-8")
+        )
+        self.assertTrue(
+            any(
+                record.get("owner_skill") == "transaction-consistency"
+                and record.get("path") == "references/evidence-patterns.md"
+                and record.get("required_output")
+                for surface in selector["selection_surfaces"]
+                for record in surface["reference_records"]
+            )
+        )
 
         full_domain = (
-            ROOT
-            / "dist/universal/skills/full/bigdata-product-extension/SKILL.md"
+            ROOT / "dist/universal/skills/full/bigdata-product-extension/SKILL.md"
         ).read_text(encoding="utf-8")
-        dev_foundation = (
+        dev_foundation_without_inputs = (
             ROOT
             / "dist/universal/skills/dev/transaction-consistency/SKILL.md"
+        ).read_text(encoding="utf-8")
+        dev_foundation_with_inputs = (
+            ROOT
+            / "dist/universal/skills/dev/targeted-validation-selection/SKILL.md"
         ).read_text(encoding="utf-8")
         dev_domain = (
             ROOT
             / "dist/universal/skills/dev/bigdata-product-extension/SKILL.md"
         ).read_text(encoding="utf-8")
-        for text in (full_domain, dev_domain):
-            for heading in (
-                "Role",
-                "When To Use",
-                "Do Not Use",
-                "Required Inputs",
-                "Execution Checklist",
-                "Output Contract",
-            ):
-                self.assertIn(f"## {heading}", text)
-            self.assertNotIn("## Decision Boundary", text)
-        for heading in (
-            "Registry Trigger",
-            "Skill Role",
-            "Execution Checklist",
+        expected_domain_headings = [
+            "Role",
+            "Professional Decision Rules",
+            "Stop / Escalation Conditions",
             "Output Contract",
+            "JIT Reference Delivery",
+        ]
+        expected_foundation_without_inputs = [
+            "Skill Role",
+            "High-Value Rules",
+            "Anti-Patterns",
+            "Stop Conditions",
+            "JIT Reference Delivery",
+        ]
+        expected_foundation_with_inputs = expected_foundation_without_inputs
+
+        def h2_headings(text: str) -> list[str]:
+            return [
+                line.removeprefix("## ").strip()
+                for line in text.splitlines()
+                if line.startswith("## ")
+            ]
+
+        for text in (full_domain, dev_domain):
+            self.assertEqual(expected_domain_headings, h2_headings(text))
+            self.assertNotIn("## Targeted References", text)
+        self.assertEqual(
+            expected_foundation_without_inputs,
+            h2_headings(dev_foundation_without_inputs),
+        )
+        self.assertEqual(
+            expected_foundation_with_inputs,
+            h2_headings(dev_foundation_with_inputs),
+        )
+        for text in (dev_foundation_without_inputs, dev_foundation_with_inputs):
+            self.assertNotIn("## Targeted References", text)
+
+        source_domain = (
+            ROOT / "src/domain-extensions/bigdata-product-extension/SKILL.md"
+        ).read_text(encoding="utf-8")
+        for heading in ("When To Use", "Do Not Use", "Required Inputs"):
+            self.assertIn(f"## {heading}", source_domain)
+            self.assertNotIn(f"## {heading}", full_domain)
+            self.assertNotIn(f"## {heading}", dev_domain)
+        source_foundation_without_inputs = (
+            ROOT / "src/foundation/capabilities/transaction-consistency/SKILL.md"
+        ).read_text(encoding="utf-8")
+        source_foundation_with_inputs = (
+            ROOT
+            / "src/foundation/capabilities/targeted-validation-selection/SKILL.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("## Registry Trigger", source_foundation_without_inputs)
+        self.assertNotIn("## Registry Trigger", dev_foundation_without_inputs)
+        self.assertNotIn("## Inputs", source_foundation_without_inputs)
+        self.assertNotIn("## Inputs", dev_foundation_without_inputs)
+        self.assertIn("## Inputs", source_foundation_with_inputs)
+        self.assertNotIn("## Inputs", dev_foundation_with_inputs)
+        for source, built in (
+            (source_foundation_without_inputs, dev_foundation_without_inputs),
+            (source_foundation_with_inputs, dev_foundation_with_inputs),
         ):
-            self.assertIn(f"## {heading}", dev_foundation)
-        self.assertNotIn("## Decision Boundary", dev_foundation)
+            self.assertIn("## Output Contract", source)
+            self.assertNotIn("## Output Contract", built)
+
+        def without_section(text: str, heading: str) -> str:
+            marker = f"\n## {heading}\n"
+            self.assertIn(marker, text)
+            prefix, remainder = text.split(marker, 1)
+            next_heading = remainder.find("\n## ")
+            if next_heading < 0:
+                return prefix.rstrip() + "\n"
+            return prefix + remainder[next_heading:]
+
+        with tempfile.TemporaryDirectory() as raw:
+            fixture_root = Path(raw) / "transaction-consistency"
+            fixture_root.mkdir()
+            fixture_file = fixture_root / "SKILL.md"
+            item = BUILD.SkillItem(
+                name="transaction-consistency",
+                path=fixture_root,
+                layer="foundation",
+                description="synthetic",
+                metadata={},
+                body=source_foundation_without_inputs,
+                registry={"reference_index": []},
+            )
+            for required_heading in (
+                "Skill Role",
+                "High-Value Rules",
+                "Anti-Patterns",
+                "Stop Conditions",
+                "Output Contract",
+                "Targeted References",
+            ):
+                fixture_file.write_text(
+                    without_section(
+                        source_foundation_without_inputs,
+                        required_heading,
+                    ),
+                    encoding="utf-8",
+                )
+                expected_error = (
+                    "complete source Targeted References authority"
+                    if required_heading == "Targeted References"
+                    else f"one non-empty {required_heading!r} section"
+                )
+                with self.subTest(required_heading=required_heading):
+                    with self.assertRaisesRegex(BUILD.BuildError, expected_error):
+                        BUILD._write_compact_layer3_root_projection(
+                            fixture_root,
+                            item,
+                        )
 
     def test_source_profiles_use_compact_role_and_generated_delivery_rules(self) -> None:
         data = json.loads((ROOT / "src/agent-profiles/role-agents.json").read_text())
         core = json.loads((ROOT / "src/control-model/core-contracts.json").read_text())
+        roles = core["roles"]
+        profile_contract = core["profile_contract"]
         limits = core["profile_contract"]["instruction_rule_count"]
-        expected_counts = {
-            "main-control-agent": 6,
-            "analysis-agent": 16,
-            "task-agent": 38,
-            "review-agent": 21,
-        }
         profiles = {item["name"]: item for item in data["profiles"]}
-        self.assertEqual(set(expected_counts), set(profiles))
+        self.assertEqual(set(roles), set(profiles))
+
+        capability_groups = dict(profile_contract["capability_terms"])
+        for contract_name in (
+            "implementation_discipline_contract",
+            "review_discipline_contract",
+        ):
+            contract = core[contract_name]
+            capability_groups[contract["profile_capability_id"]] = contract[
+                "profile_projection"
+            ]
+
+        def matching_rules(rules: list[str], rule: dict[str, object]) -> list[str]:
+            required_terms = rule.get(
+                "required_terms",
+                rule.get("projection_terms"),
+            )
+            self.assertIsInstance(required_terms, list)
+            return [
+                bullet
+                for bullet in rules
+                if all(
+                    term.casefold() in bullet.casefold()
+                    for term in required_terms
+                )
+            ]
+
+        forbidden_storage = {
+            rule["id"]: rule
+            for rule in core["visible_evidence_contract"]["forbidden_storage"]
+        }
+        built_profile_roots = {
+            "codex": (ROOT / "dist/codex/project/.codex/agents", ".toml"),
+            "claude": (ROOT / "dist/claude/project/.claude/agents", ".md"),
+            "copilot": (
+                ROOT / "dist/copilot/project/.github/agents",
+                ".agent.md",
+            ),
+        }
         for name, profile in profiles.items():
+            role = roles[name]
+            expected_fields = set(profile_contract["profile_fields"]) | set(
+                profile_contract["optional_fields_by_role"][name]
+            )
+            self.assertEqual(expected_fields, set(profile))
+            self.assertEqual(role["sandbox"], profile["sandbox"])
+            self.assertEqual(role["tools"], profile["tools"])
+            tools = set(profile["tools"])
+            self.assertEqual("dispatch" in tools, role["may_dispatch"])
+            self.assertEqual({"edit", "execute"} <= tools, role["may_edit"])
+            self.assertEqual("execute-read-only" in tools, role["may_review"])
+
             rules = profile["instructions"].splitlines()
             maximum = limits["maximum_by_role"].get(name, limits["maximum"])
             self.assertGreaterEqual(len(rules), limits["minimum"])
             self.assertLessEqual(len(rules), maximum)
-            self.assertEqual(expected_counts[name], len(rules))
             self.assertTrue(all(rule.startswith("- ") for rule in rules))
-            for obsolete in ("In a recommended build", "In a full build", "In a dev build"):
-                self.assertNotIn(obsolete, profile["instructions"])
-        for name in ("analysis-agent", "task-agent", "review-agent"):
-            instructions = profiles[name]["instructions"]
-            self.assertIn("generated `## Layer 3 Delivery` section", instructions)
-            self.assertIn("Never preload Layer 3", instructions)
-            self.assertIn("Layer 3 index or catalog", instructions)
-        review = profiles["review-agent"]["instructions"]
-        self.assertIn("actual diff or an accessible host-native diff reference", review)
-        self.assertIn("inspect the diff and every changed file", review)
-        self.assertIn("pre-implementation design", review)
-        self.assertIn("no implementation diff is required", review)
-        self.assertIn("assigned Review Handoff", review)
-        task = profiles["task-agent"]["instructions"]
-        task_casefold = task.casefold()
-        task_rules = task.splitlines()
-        capability_rules = core["profile_contract"]["capability_terms"]
-        projected_rules = [
-            rule
-            for group in (
-                "layer3-jit-delivery",
-                "task-normal-mode",
-                "task-utility-mode",
-                "task-scope-boundary",
-            )
-            for rule in capability_rules[group]
-        ]
-        projected_rules.extend(
-            core["implementation_discipline_contract"]["profile_projection"]
-        )
-        canonical_task_rules = []
-        for rule in projected_rules:
-            matches = [
-                line
-                for line in task_rules
-                if all(
-                    term.casefold() in line.casefold()
-                    for term in rule["required_terms"]
-                )
-            ]
-            self.assertEqual(1, len(matches), rule["rule_id"])
-            if "exact_rule" in rule:
-                self.assertEqual(rule["exact_rule"], matches[0], rule["rule_id"])
-            canonical_task_rules.append(matches[0])
+            for forbidden in profile_contract["forbidden_instruction_terms"]:
+                self.assertNotIn(forbidden, profile["instructions"])
 
-        built_task_profiles = {
-            "codex": ROOT / "dist/codex/project/.codex/agents/task-agent.toml",
-            "claude": ROOT / "dist/claude/project/.claude/agents/task-agent.md",
-            "copilot": (
-                ROOT
-                / "dist/copilot/project/.github/agents/task-agent.agent.md"
-            ),
-        }
-        for host, path in built_task_profiles.items():
-            built_lines = path.read_text(encoding="utf-8").splitlines()
-            for rule in task_rules:
-                self.assertIn(rule, built_lines, (host, rule))
-            for rule in canonical_task_rules:
-                self.assertIn(rule, built_lines, (host, rule))
-        analysis = profiles["analysis-agent"]["instructions"]
-        for phrase in (
-            "no-repo direct-answer",
-            "fully determined by user-supplied facts",
-            "Control prompt files are ineligible and require source-backed analysis.",
-            "do not load a named Skill, inspect repository or source evidence, or produce an Engineering Brief or First Executable Slice",
-            "only user-supplied facts",
-            "answer, assumptions, limits, and four-state Status",
-            "Remain read-only",
-            "one bounded scope in one pass",
-            "minimum safe slice handoff",
-        ):
-            self.assertIn(phrase, analysis)
+            role_capability = profile_contract["role_capabilities"][name]
+            for capability_id in role_capability["required_capability_ids"]:
+                for rule in capability_groups[capability_id]:
+                    matches = matching_rules(rules, rule)
+                    self.assertEqual(1, len(matches), rule["rule_id"])
+                    if "exact_rule" in rule:
+                        self.assertEqual(
+                            rule["exact_rule"],
+                            matches[0],
+                            rule["rule_id"],
+                        )
+
+            handoff_id = role_capability["handoff_contract"]
+            for rule in profile_contract["handoff_contracts"][handoff_id]:
+                matches = matching_rules(rules, rule)
+                self.assertEqual(1, len(matches), rule["rule_id"])
+                if "exact_rule" in rule:
+                    self.assertEqual(rule["exact_rule"], matches[0], rule["rule_id"])
+
+            for rule_id in role_capability["forbidden_storage_projection_ids"]:
+                matches = matching_rules(rules, forbidden_storage[rule_id])
+                self.assertEqual(1, len(matches), rule_id)
+
+            for host, (root, suffix) in built_profile_roots.items():
+                built_lines = (
+                    (root / f"{name}{suffix}")
+                    .read_text(encoding="utf-8")
+                    .splitlines()
+                )
+                for rule in rules:
+                    self.assertIn(rule, built_lines, (host, name, rule))
+
+        self.assertEqual(
+            core["prompt_contract"]["path"],
+            profiles["main-control-agent"]["prompt"],
+        )
+        external = core["external_read_contract"]
+        self.assertEqual("analysis-agent", external["exclusive_role"])
+        self.assertEqual("external-source-read", external["operation"])
+        for name, profile in profiles.items():
+            self.assertEqual(
+                name == external["exclusive_role"],
+                external["operation"] in profile["tools"],
+            )
+        for name in ("task-agent", "review-agent"):
+            self.assertNotIn(external["operation"], profiles[name]["tools"])
 
     def test_no_built_runtime_or_hidden_delivery(self) -> None:
         forbidden_names = {".changeforge-packs", ".changeforge-control", "hooks", "runtime_governance"}

@@ -2173,31 +2173,21 @@ The root contract already settles the bounded change.
         self.assertEqual(16, blank_facts["max_decision_section_item_count"])
         self.assertEqual(2, len(blank_facts["invalid_decision_section_headings"]))
 
-    def test_payment_and_web3_checklists_report_section_aware_totals(self) -> None:
-        expected = {
-            "src/domain-extensions/payment-trading-extension/references/checklist.md": (
-                27,
-                14,
-                [3, 6, 4, 14],
-            ),
-            "src/domain-extensions/web3-product-extension/references/checklist.md": (
-                36,
-                9,
-                [9, 5, 4, 7, 1, 8, 2],
-            ),
-        }
-        for relative, (total, maximum, section_counts) in expected.items():
-            with self.subTest(path=relative):
-                facts = self.module._markdown_structural_facts(
-                    (ROOT / relative).read_text(encoding="utf-8"),
-                    "decision-checklist",
-                )
-                self.assertEqual(total, facts["decision_item_count"])
-                self.assertEqual(maximum, facts["max_decision_section_item_count"])
-                self.assertEqual(
-                    section_counts,
-                    [row["decision_item_count"] for row in facts["decision_sections"]],
-                )
+    def test_web3_custody_reference_reports_section_aware_totals(self) -> None:
+        relative = (
+            "src/domain-extensions/web3-product-extension/references/"
+            "custody-and-chain-transactions.md"
+        )
+        facts = self.module._markdown_structural_facts(
+            (ROOT / relative).read_text(encoding="utf-8"),
+            "targeted",
+        )
+        self.assertEqual(19, facts["decision_item_count"])
+        self.assertEqual(15, facts["max_decision_section_item_count"])
+        self.assertEqual(
+            [15, 4],
+            [row["decision_item_count"] for row in facts["decision_sections"]],
+        )
 
     def test_rds_006_stale_reference_dispositions_are_absent(self) -> None:
         config = self.module.load_yaml_file(

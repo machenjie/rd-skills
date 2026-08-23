@@ -2,6 +2,119 @@
 schema_version: 8
 kind: changeforge.foundation_skills
 description: "Focused Layer 3 engineering decisions loaded only for a concrete task signal."
+selector_authority:
+  contract: changeforge.layer3-selector-authority/v1
+  inventory: {"selector_count":62,"selectable_layer3_count":69,"owner_binding_count":180}
+  selectors:
+    - {"selector_id":"acceptance-definition","selectable_layer3":["acceptance-standard-definition"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["observable-acceptance","foundation-selector:acceptance-definition"],"owner_bindings":[{"primary_skill":"acceptance-criteria-builder","review_skill":"ai-code-review-refactor"}],"route_bindings":[]}
+    - {"selector_id":"accepted-brief-task-dag","selectable_layer3":["task-dag-decomposition"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["accepted-engineering-brief","explicit-task-dag","foundation-selector:accepted-brief-task-dag"],"owner_bindings":[{"primary_skill":"task-dag-planner","review_skill":"engineering-artifact-review"}],"route_bindings":[]}
+    - {"selector_id":"ambiguous-intake","selectable_layer3":["requirement-clarification"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["ambiguous-request","foundation-selector:ambiguous-intake"],"owner_bindings":[{"primary_skill":"change-intake-compiler","review_skill":"ai-code-review-refactor"}],"route_bindings":[]}
+    - {"selector_id":"audit-integrity-change","selectable_layer3":["audit-evidence-integrity"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["audit-evidence-integrity","foundation-selector:audit-integrity-change"],"owner_bindings":[{"primary_skill":"security-privacy-gate","review_skill":"security-privacy-gate"},{"primary_skill":"logging-design-gate","review_skill":"logging-design-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:logging-design-gate","rule_id":"audit-integrity-change","routing_family":"logging","primary_skill":"logging-design-gate","review_skill":"logging-design-gate"}]}
+    - {"selector_id":"backend-idempotency-analysis","selectable_layer3":["idempotency-retry-design"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["backend-retry-idempotency","foundation-selector:backend-idempotency-analysis"],"owner_bindings":[{"primary_skill":"engineering-change-analysis","review_skill":"ai-code-review-refactor"},{"primary_skill":"data-middleware-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"integration-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"backend-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"data-middleware-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"integration-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:data-middleware-change-builder","rule_id":null,"routing_family":"data-middleware","primary_skill":"data-middleware-change-builder","review_skill":"ai-code-review-refactor"},{"candidate_id":"implementation-owner:integration-change-builder","rule_id":null,"routing_family":"integration","primary_skill":"integration-change-builder","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"cache-stampede-analysis","selectable_layer3":["concurrency-control"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["cache-stampede","single-flight","foundation-selector:cache-stampede-analysis"],"owner_bindings":[{"primary_skill":"engineering-change-analysis","review_skill":"reliability-observability-gate"},{"primary_skill":"backend-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"backend-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"data-middleware-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:backend-change-builder","rule_id":null,"routing_family":"backend","primary_skill":"backend-change-builder","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"cryptography-key-lifecycle","selectable_layer3":["secret-configuration-security","cryptography-key-lifecycle"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["cryptographic-construction-or-key-lifecycle","foundation-selector:cryptography-key-lifecycle"],"owner_bindings":[{"primary_skill":"security-privacy-gate","review_skill":"security-privacy-gate"},{"primary_skill":"logging-design-gate","review_skill":"logging-design-gate"}],"route_bindings":[{"candidate_id":"review-logging-risk","rule_id":"review-logging-risk-candidate","routing_family":null,"primary_skill":"logging-design-gate","review_skill":"logging-design-gate"},{"candidate_id":"implementation-owner:logging-design-gate","rule_id":null,"routing_family":"logging","primary_skill":"logging-design-gate","review_skill":"logging-design-gate"}]}
+    - {"selector_id":"database-migration-analysis","selectable_layer3":["data-migration-design"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["database-migration","foundation-selector:database-migration-analysis"],"owner_bindings":[{"primary_skill":"engineering-change-analysis","review_skill":"delivery-release-gate"},{"primary_skill":"data-middleware-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"data-middleware-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:data-middleware-change-builder","rule_id":null,"routing_family":"data-middleware","primary_skill":"data-middleware-change-builder","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"design-pattern-analysis","selectable_layer3":["design-pattern-selection"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["design-pattern-change","analysis-only","foundation-selector:design-pattern-analysis"],"owner_bindings":[{"primary_skill":"architecture-impact-reviewer","review_skill":"architecture-impact-reviewer"},{"primary_skill":"backend-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"repository-tooling-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"},{"primary_skill":"backend-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"repository-tooling-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:backend-change-builder","rule_id":null,"routing_family":"backend","primary_skill":"backend-change-builder","review_skill":"ai-code-review-refactor"},{"candidate_id":"implementation-owner:repository-tooling-change-builder","rule_id":null,"routing_family":"repository-tooling","primary_skill":"repository-tooling-change-builder","review_skill":"ai-code-review-refactor"},{"candidate_id":"review-generic","rule_id":"review-generic-candidate","routing_family":null,"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"distributed-workflow-analysis","selectable_layer3":["transaction-consistency"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["distributed-effect-change","foundation-selector:distributed-workflow-analysis"],"owner_bindings":[{"primary_skill":"data-middleware-change-builder","review_skill":"quality-test-gate"},{"primary_skill":"data-middleware-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"engineering-change-analysis","review_skill":"delivery-release-gate"},{"primary_skill":"backend-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"data-middleware-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:data-middleware-change-builder","rule_id":null,"routing_family":"data-middleware","primary_skill":"data-middleware-change-builder","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"distributed-workflow-consistency-analysis","selectable_layer3":["distributed-workflow-consistency"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["distributed-effect-change","foundation-selector:distributed-workflow-consistency-analysis"],"owner_bindings":[{"primary_skill":"data-middleware-change-builder","review_skill":"quality-test-gate"},{"primary_skill":"data-middleware-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[]}
+    - {"selector_id":"domain-object-analysis","selectable_layer3":["domain-object-identification"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["domain-object-change","analysis-only","foundation-selector:domain-object-analysis"],"owner_bindings":[{"primary_skill":"domain-impact-modeler","review_skill":"architecture-impact-reviewer"},{"primary_skill":"backend-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"},{"primary_skill":"backend-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:backend-change-builder","rule_id":null,"routing_family":"backend","primary_skill":"backend-change-builder","review_skill":"ai-code-review-refactor"},{"candidate_id":"review-generic","rule_id":"review-generic-candidate","routing_family":null,"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"dto-model-boundary-analysis","selectable_layer3":["model-boundary-mapping"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["accepted-brief","dto-mapping","foundation-selector:dto-model-boundary-analysis"],"owner_bindings":[{"primary_skill":"data-api-contract-changer","review_skill":"architecture-impact-reviewer"}],"route_bindings":[]}
+    - {"selector_id":"explicit-architecture-tradeoff","selectable_layer3":["architecture-tradeoff-analysis"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["explicit-architecture-tradeoff","foundation-selector:explicit-architecture-tradeoff"],"owner_bindings":[{"primary_skill":"architecture-impact-reviewer","review_skill":"architecture-impact-reviewer"}],"route_bindings":[]}
+    - {"selector_id":"explicit-authentication-authorization-analysis","selectable_layer3":["authentication-authorization"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["explicit-authentication-authorization-handoff","foundation-selector:explicit-authentication-authorization-analysis"],"owner_bindings":[{"primary_skill":"security-privacy-gate","review_skill":"security-privacy-gate"},{"primary_skill":"backend-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[]}
+    - {"selector_id":"explicit-test-data-analysis","selectable_layer3":["test-data-management"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["explicit-test-data-decision","foundation-selector:explicit-test-data-analysis"],"owner_bindings":[{"primary_skill":"quality-test-gate","review_skill":"quality-test-gate"}],"route_bindings":[]}
+    - {"selector_id":"external-integration-analysis","selectable_layer3":["consumer-impact-analysis","failure-contract-design"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["external-integration","foundation-selector:external-integration-analysis"],"owner_bindings":[{"primary_skill":"engineering-change-analysis","review_skill":"ai-code-review-refactor"},{"primary_skill":"integration-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"backend-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"integration-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:integration-change-builder","rule_id":null,"routing_family":"integration","primary_skill":"integration-change-builder","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"incident-response-coordination","selectable_layer3":["failure-diagnosis"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["active-multi-responder-incident","coordination","foundation-selector:incident-response-coordination"],"owner_bindings":[{"primary_skill":"incident-response-coordinator","review_skill":"reliability-observability-gate"},{"primary_skill":"engineering-change-analysis","review_skill":"reliability-observability-gate"},{"primary_skill":"backend-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[]}
+    - {"selector_id":"integration-handoff-artifact","selectable_layer3":["contract-testing"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["accepted-brief","integration-handoff","foundation-selector:integration-handoff-artifact"],"owner_bindings":[{"primary_skill":"integration-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"integration-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:integration-change-builder","rule_id":null,"routing_family":"integration","primary_skill":"integration-change-builder","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"module-boundary-analysis","selectable_layer3":["module-boundary-design"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["module-boundary-change","foundation-selector:module-boundary-analysis"],"owner_bindings":[{"primary_skill":"architecture-impact-reviewer","review_skill":"architecture-impact-reviewer"},{"primary_skill":"high-risk-design-review","review_skill":"high-risk-design-review"}],"route_bindings":[{"candidate_id":"high-risk-module-boundary-review","rule_id":"high-risk-module-boundary-review","routing_family":null,"primary_skill":"high-risk-design-review","review_skill":"high-risk-design-review"}]}
+    - {"selector_id":"owner-internal-structure-analysis","selectable_layer3":["implementation-structure-design"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["analysis-only-action","explicit-known-owner","owner-internal-implementation-structure","reuse-and-deliberate-separation-alternatives","unresolved-structure-decision","foundation-selector:owner-internal-structure-analysis"],"owner_bindings":[{"primary_skill":"architecture-impact-reviewer","review_skill":"architecture-impact-reviewer"},{"primary_skill":"backend-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"repository-tooling-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"},{"primary_skill":"backend-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"repository-tooling-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:backend-change-builder","rule_id":null,"routing_family":"backend","primary_skill":"backend-change-builder","review_skill":"ai-code-review-refactor"},{"candidate_id":"implementation-owner:repository-tooling-change-builder","rule_id":null,"routing_family":"repository-tooling","primary_skill":"repository-tooling-change-builder","review_skill":"ai-code-review-refactor"},{"candidate_id":"review-generic","rule_id":"review-generic-candidate","routing_family":null,"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"package-dependency-analysis","selectable_layer3":["package-dependency-management"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["package-capability-gap","supply-chain-decision","foundation-selector:package-dependency-analysis"],"owner_bindings":[{"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}],"route_bindings":[]}
+    - {"selector_id":"personal-data-lifecycle","selectable_layer3":["privacy-data-lifecycle"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["personal-data-purpose","retention","foundation-selector:personal-data-lifecycle"],"owner_bindings":[{"primary_skill":"security-privacy-gate","review_skill":"security-privacy-gate"},{"primary_skill":"installed-client-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[]}
+    - {"selector_id":"production-release-decision","selectable_layer3":["release-rollback","version-compatibility"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["production-apply-or-rollout","foundation-selector:production-release-decision"],"owner_bindings":[{"primary_skill":"delivery-release-gate","review_skill":"delivery-release-gate"},{"primary_skill":"engineering-change-analysis","review_skill":"delivery-release-gate"},{"primary_skill":"data-api-contract-changer","review_skill":"architecture-impact-reviewer"},{"primary_skill":"engineering-change-analysis","review_skill":"high-risk-design-review"},{"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"},{"primary_skill":"data-middleware-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-preparation","rule_id":"implementation-preparation-candidate","routing_family":null,"primary_skill":"engineering-change-analysis","review_skill":"delivery-release-gate"},{"candidate_id":"review-release-risk","rule_id":"review-release-risk-candidate","routing_family":null,"primary_skill":"delivery-release-gate","review_skill":"delivery-release-gate"}]}
+    - {"selector_id":"refactor-fixed-destination","selectable_layer3":["refactoring"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["refactoring-change","fixed-destination","foundation-selector:refactor-fixed-destination"],"owner_bindings":[{"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"},{"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"}],"route_bindings":[{"candidate_id":"review-generic","rule_id":"review-generic-candidate","routing_family":null,"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"review-ambiguous-structure-repository-first","selectable_layer3":["repository-context-map"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["actual-diff","ambiguous-structure","foundation-selector:review-ambiguous-structure-repository-first"],"owner_bindings":[{"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}],"route_bindings":[{"candidate_id":"critical-unknown","rule_id":"critical-unknown-candidate","routing_family":null,"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}]}
+    - {"selector_id":"review-minimality-change","selectable_layer3":["minimal-correct-implementation"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["actual-diff","minimality-change","foundation-selector:review-minimality-change"],"owner_bindings":[{"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"},{"primary_skill":"backend-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"repository-tooling-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"},{"primary_skill":"backend-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"repository-tooling-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:backend-change-builder","rule_id":null,"routing_family":"backend","primary_skill":"backend-change-builder","review_skill":"ai-code-review-refactor"},{"candidate_id":"implementation-owner:repository-tooling-change-builder","rule_id":null,"routing_family":"repository-tooling","primary_skill":"repository-tooling-change-builder","review_skill":"ai-code-review-refactor"},{"candidate_id":"review-generic","rule_id":"review-generic-candidate","routing_family":null,"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"review-readability-change","selectable_layer3":["code-clarity-maintainability"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["actual-diff","readability-change","foundation-selector:review-readability-change"],"owner_bindings":[{"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"}],"route_bindings":[]}
+    - {"selector_id":"review-repeat-failure","selectable_layer3":["repeat-failure-analysis"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["actual-diff","repeated-failure","foundation-selector:review-repeat-failure"],"owner_bindings":[{"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"}],"route_bindings":[]}
+    - {"selector_id":"sdk-contract-analysis","selectable_layer3":["sdk-library-contract-design"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["accepted-brief","sdk-contract","foundation-selector:sdk-contract-analysis"],"owner_bindings":[{"primary_skill":"data-api-contract-changer","review_skill":"architecture-impact-reviewer"}],"route_bindings":[]}
+    - {"selector_id":"security-anti-input-shape","selectable_layer3":["api-contract-design"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["input-shape-change","no-security-sink","foundation-selector:security-anti-input-shape"],"owner_bindings":[{"primary_skill":"data-api-contract-changer","review_skill":"architecture-impact-reviewer"},{"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}],"route_bindings":[]}
+    - {"selector_id":"security-anti-reliability-only","selectable_layer3":["degradation-circuit-breaking","observability"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["reliability-only","no-abuse-or-privacy-risk","foundation-selector:security-anti-reliability-only"],"owner_bindings":[{"primary_skill":"reliability-observability-gate","review_skill":"reliability-observability-gate"},{"primary_skill":"logging-design-gate","review_skill":"logging-design-gate"},{"primary_skill":"engineering-change-analysis","review_skill":"reliability-observability-gate"},{"primary_skill":"incident-response-coordinator","review_skill":"reliability-observability-gate"},{"primary_skill":"backend-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"data-middleware-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"review-logging-risk","rule_id":"review-logging-risk-candidate","routing_family":null,"primary_skill":"logging-design-gate","review_skill":"logging-design-gate"},{"candidate_id":"review-reliability-risk","rule_id":"review-reliability-risk-candidate","routing_family":null,"primary_skill":"reliability-observability-gate","review_skill":"reliability-observability-gate"}]}
+    - {"selector_id":"security-anti-scanner-report","selectable_layer3":["documentation-generation"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["scanner-report-organization","no-security-verdict","foundation-selector:security-anti-scanner-report"],"owner_bindings":[{"primary_skill":"change-documentation-gate","review_skill":"change-documentation-gate"}],"route_bindings":[]}
+    - {"selector_id":"security-credential-session-lifecycle","selectable_layer3":["authentication-security"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["credential-or-session-lifecycle-change","foundation-selector:security-credential-session-lifecycle"],"owner_bindings":[{"primary_skill":"security-privacy-gate","review_skill":"security-privacy-gate"}],"route_bindings":[]}
+    - {"selector_id":"ssrf-url-fetch-analysis","selectable_layer3":["threat-modeling","web-security"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["ssrf","url-fetch","foundation-selector:ssrf-url-fetch-analysis"],"owner_bindings":[{"primary_skill":"engineering-change-analysis","review_skill":"security-privacy-gate"},{"primary_skill":"security-privacy-gate","review_skill":"security-privacy-gate"},{"primary_skill":"integration-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"review-security-risk","rule_id":"review-security-risk-candidate","routing_family":null,"primary_skill":"security-privacy-gate","review_skill":"security-privacy-gate"}]}
+    - {"selector_id":"technology-stack-commitment","selectable_layer3":["technology-stack-selection"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["technology-stack-commitment","foundation-selector:technology-stack-commitment"],"owner_bindings":[{"primary_skill":"architecture-impact-reviewer","review_skill":"architecture-impact-reviewer"},{"primary_skill":"high-risk-design-review","review_skill":"high-risk-design-review"}],"route_bindings":[{"candidate_id":"high-risk-technology-stack-review","rule_id":"high-risk-technology-stack-review","routing_family":null,"primary_skill":"high-risk-design-review","review_skill":"high-risk-design-review"}]}
+    - {"selector_id":"tenant-isolation-security","selectable_layer3":["permission-boundary-modeling","tenant-isolation"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["tenant-isolation","propagated-boundary","foundation-selector:tenant-isolation-security"],"owner_bindings":[{"primary_skill":"security-privacy-gate","review_skill":"security-privacy-gate"},{"primary_skill":"backend-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"data-middleware-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"review-security-risk","rule_id":"review-security-risk-candidate","routing_family":null,"primary_skill":"security-privacy-gate","review_skill":"security-privacy-gate"}]}
+    - {"selector_id":"user-flow-analysis","selectable_layer3":["interaction-state-modeling","design-system-rules"],"source":{"kind":"direct-static","symbol":"_route_impl"},"positive_evidence":["user-flow","foundation-selector:user-flow-analysis"],"owner_bindings":[{"primary_skill":"experience-impact-modeler","review_skill":"ai-code-review-refactor"},{"primary_skill":"frontend-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[]}
+    - {"selector_id":"dynamic-foundation:accessibility-inclusive-design","selectable_layer3":["accessibility-inclusive-design"],"source":{"kind":"dynamic-helper-only","symbol":"_accessibility_behavior_requested"},"positive_evidence":["dynamic-helper:_accessibility_behavior_requested","foundation-selector:dynamic-foundation:accessibility-inclusive-design"],"owner_bindings":[{"primary_skill":"frontend-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"installed-client-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"},{"primary_skill":"frontend-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"installed-client-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:frontend-change-builder","rule_id":null,"routing_family":"frontend","primary_skill":"frontend-change-builder","review_skill":"ai-code-review-refactor"},{"candidate_id":"implementation-owner:installed-client-change-builder","rule_id":null,"routing_family":"installed-client","primary_skill":"installed-client-change-builder","review_skill":"ai-code-review-refactor"},{"candidate_id":"review-generic","rule_id":"review-generic-candidate","routing_family":null,"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"dynamic-foundation:backup-recovery","selectable_layer3":["backup-recovery"],"source":{"kind":"dynamic-helper-only","symbol":"_review_risk_layer3"},"positive_evidence":["dynamic-helper:_review_risk_layer3","foundation-selector:dynamic-foundation:backup-recovery"],"owner_bindings":[{"primary_skill":"reliability-observability-gate","review_skill":"reliability-observability-gate"}],"route_bindings":[{"candidate_id":"review-reliability-risk","rule_id":"review-reliability-risk-candidate","routing_family":null,"primary_skill":"reliability-observability-gate","review_skill":"reliability-observability-gate"}]}
+    - {"selector_id":"dynamic-foundation:build-tool-professional-usage","selectable_layer3":["build-tool-professional-usage"],"source":{"kind":"dynamic-helper-only","symbol":"_implementation_owner_layer3"},"positive_evidence":["dynamic-helper:_implementation_owner_layer3","foundation-selector:dynamic-foundation:build-tool-professional-usage"],"owner_bindings":[{"primary_skill":"repository-tooling-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"repository-tooling-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:repository-tooling-change-builder","rule_id":null,"routing_family":"repository-tooling","primary_skill":"repository-tooling-change-builder","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"dynamic-foundation:client-application-testing","selectable_layer3":["client-application-testing"],"source":{"kind":"dynamic-helper-only","symbol":"_build_route_candidates"},"positive_evidence":["dynamic-helper:_build_route_candidates","foundation-selector:dynamic-foundation:client-application-testing"],"owner_bindings":[{"primary_skill":"quality-test-gate","review_skill":"ai-code-review-refactor"},{"primary_skill":"installed-client-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:quality-test-gate","rule_id":null,"routing_family":"test-validation","primary_skill":"quality-test-gate","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"dynamic-foundation:client-lifecycle-state-restoration","selectable_layer3":["client-lifecycle-state-restoration"],"source":{"kind":"dynamic-helper-only","symbol":"_implementation_owner_layer3"},"positive_evidence":["dynamic-helper:_implementation_owner_layer3","foundation-selector:dynamic-foundation:client-lifecycle-state-restoration"],"owner_bindings":[{"primary_skill":"installed-client-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"installed-client-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:installed-client-change-builder","rule_id":null,"routing_family":"installed-client","primary_skill":"installed-client-change-builder","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"dynamic-foundation:code-review","selectable_layer3":["code-review"],"source":{"kind":"dynamic-helper-only","symbol":"_build_route_candidates"},"positive_evidence":["dynamic-helper:_build_route_candidates","foundation-selector:dynamic-foundation:code-review"],"owner_bindings":[{"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"}],"route_bindings":[{"candidate_id":"review-generic","rule_id":"review-generic-candidate","routing_family":null,"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"dynamic-foundation:configuration-runtime-policy","selectable_layer3":["configuration-runtime-policy"],"source":{"kind":"dynamic-helper-only","symbol":"_implementation_owner_layer3"},"positive_evidence":["dynamic-helper:_implementation_owner_layer3","foundation-selector:dynamic-foundation:configuration-runtime-policy"],"owner_bindings":[{"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"},{"primary_skill":"frontend-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"installed-client-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"backend-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"data-middleware-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"platform-infrastructure-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"integration-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"repository-tooling-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"},{"primary_skill":"delivery-release-gate","review_skill":"delivery-release-gate"},{"primary_skill":"frontend-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"installed-client-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"backend-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"data-middleware-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"platform-infrastructure-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"integration-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"repository-tooling-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"critical-unknown","rule_id":"critical-unknown-candidate","routing_family":null,"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"},{"candidate_id":"implementation-owner:frontend-change-builder","rule_id":null,"routing_family":"frontend","primary_skill":"frontend-change-builder","review_skill":"ai-code-review-refactor"},{"candidate_id":"implementation-owner:installed-client-change-builder","rule_id":null,"routing_family":"installed-client","primary_skill":"installed-client-change-builder","review_skill":"ai-code-review-refactor"},{"candidate_id":"implementation-owner:backend-change-builder","rule_id":null,"routing_family":"backend","primary_skill":"backend-change-builder","review_skill":"ai-code-review-refactor"},{"candidate_id":"implementation-owner:data-middleware-change-builder","rule_id":null,"routing_family":"data-middleware","primary_skill":"data-middleware-change-builder","review_skill":"ai-code-review-refactor"},{"candidate_id":"implementation-owner:platform-infrastructure-change-builder","rule_id":null,"routing_family":"platform-infrastructure","primary_skill":"platform-infrastructure-change-builder","review_skill":"ai-code-review-refactor"},{"candidate_id":"implementation-owner:integration-change-builder","rule_id":null,"routing_family":"integration","primary_skill":"integration-change-builder","review_skill":"ai-code-review-refactor"},{"candidate_id":"implementation-owner:repository-tooling-change-builder","rule_id":null,"routing_family":"repository-tooling","primary_skill":"repository-tooling-change-builder","review_skill":"ai-code-review-refactor"},{"candidate_id":"review-generic","rule_id":"review-generic-candidate","routing_family":null,"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"},{"candidate_id":"review-release-risk","rule_id":"review-release-risk-candidate","routing_family":null,"primary_skill":"delivery-release-gate","review_skill":"delivery-release-gate"}]}
+    - {"selector_id":"dynamic-foundation:csharp-dotnet-professional-usage","selectable_layer3":["csharp-dotnet-professional-usage"],"source":{"kind":"dynamic-helper-only","symbol":"_implementation_owner_layer3"},"positive_evidence":["dynamic-helper:_implementation_owner_layer3","foundation-selector:dynamic-foundation:csharp-dotnet-professional-usage"],"owner_bindings":[{"primary_skill":"backend-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"installed-client-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"backend-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:backend-change-builder","rule_id":null,"routing_family":"backend","primary_skill":"backend-change-builder","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"dynamic-foundation:dependency-vulnerability-scanning","selectable_layer3":["dependency-vulnerability-scanning"],"source":{"kind":"dynamic-helper-only","symbol":"_implementation_owner_layer3"},"positive_evidence":["dynamic-helper:_implementation_owner_layer3","foundation-selector:dynamic-foundation:dependency-vulnerability-scanning"],"owner_bindings":[{"primary_skill":"frontend-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"installed-client-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"backend-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"data-middleware-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"platform-infrastructure-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"integration-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"repository-tooling-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"security-privacy-gate","review_skill":"security-privacy-gate"},{"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}],"route_bindings":[{"candidate_id":"implementation-owner:frontend-change-builder","rule_id":"implementation-dependency-risk","routing_family":"frontend","primary_skill":"frontend-change-builder","review_skill":"security-privacy-gate"},{"candidate_id":"implementation-owner:installed-client-change-builder","rule_id":"implementation-dependency-risk","routing_family":"installed-client","primary_skill":"installed-client-change-builder","review_skill":"security-privacy-gate"},{"candidate_id":"implementation-owner:backend-change-builder","rule_id":"implementation-dependency-risk","routing_family":"backend","primary_skill":"backend-change-builder","review_skill":"security-privacy-gate"},{"candidate_id":"implementation-owner:data-middleware-change-builder","rule_id":"implementation-dependency-risk","routing_family":"data-middleware","primary_skill":"data-middleware-change-builder","review_skill":"security-privacy-gate"},{"candidate_id":"implementation-owner:platform-infrastructure-change-builder","rule_id":"implementation-dependency-risk","routing_family":"platform-infrastructure","primary_skill":"platform-infrastructure-change-builder","review_skill":"security-privacy-gate"},{"candidate_id":"implementation-owner:integration-change-builder","rule_id":"implementation-dependency-risk","routing_family":"integration","primary_skill":"integration-change-builder","review_skill":"security-privacy-gate"},{"candidate_id":"implementation-owner:repository-tooling-change-builder","rule_id":"implementation-dependency-risk","routing_family":"repository-tooling","primary_skill":"repository-tooling-change-builder","review_skill":"security-privacy-gate"},{"candidate_id":"review-security-risk","rule_id":"review-security-risk-candidate","routing_family":null,"primary_skill":"security-privacy-gate","review_skill":"security-privacy-gate"}]}
+    - {"selector_id":"dynamic-foundation:filesystem-process-safety","selectable_layer3":["filesystem-process-safety"],"source":{"kind":"dynamic-helper-only","symbol":"_implementation_owner_layer3"},"positive_evidence":["dynamic-helper:_implementation_owner_layer3","foundation-selector:dynamic-foundation:filesystem-process-safety"],"owner_bindings":[{"primary_skill":"backend-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"backend-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"repository-tooling-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"repository-tooling-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"installed-client-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"installed-client-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:backend-change-builder","rule_id":null,"routing_family":"backend","primary_skill":"backend-change-builder","review_skill":"ai-code-review-refactor"},{"candidate_id":"implementation-owner:backend-change-builder","rule_id":null,"routing_family":"backend","primary_skill":"backend-change-builder","review_skill":"security-privacy-gate"},{"candidate_id":"implementation-owner:repository-tooling-change-builder","rule_id":null,"routing_family":"repository-tooling","primary_skill":"repository-tooling-change-builder","review_skill":"ai-code-review-refactor"},{"candidate_id":"implementation-owner:repository-tooling-change-builder","rule_id":null,"routing_family":"repository-tooling","primary_skill":"repository-tooling-change-builder","review_skill":"security-privacy-gate"},{"candidate_id":"implementation-owner:installed-client-change-builder","rule_id":null,"routing_family":"installed-client","primary_skill":"installed-client-change-builder","review_skill":"ai-code-review-refactor"},{"candidate_id":"implementation-owner:installed-client-change-builder","rule_id":null,"routing_family":"installed-client","primary_skill":"installed-client-change-builder","review_skill":"security-privacy-gate"}]}
+    - {"selector_id":"dynamic-foundation:infrastructure-as-code-safety","selectable_layer3":["infrastructure-as-code-safety"],"source":{"kind":"dynamic-helper-only","symbol":"_implementation_owner_layer3"},"positive_evidence":["dynamic-helper:_implementation_owner_layer3","foundation-selector:dynamic-foundation:infrastructure-as-code-safety"],"owner_bindings":[{"primary_skill":"platform-infrastructure-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"platform-infrastructure-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:platform-infrastructure-change-builder","rule_id":null,"routing_family":"platform-infrastructure","primary_skill":"platform-infrastructure-change-builder","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"dynamic-foundation:kotlin-professional-usage","selectable_layer3":["kotlin-professional-usage"],"source":{"kind":"dynamic-helper-only","symbol":"_implementation_owner_layer3"},"positive_evidence":["dynamic-helper:_implementation_owner_layer3","foundation-selector:dynamic-foundation:kotlin-professional-usage"],"owner_bindings":[{"primary_skill":"backend-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"installed-client-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"backend-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:backend-change-builder","rule_id":null,"routing_family":"backend","primary_skill":"backend-change-builder","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"dynamic-foundation:logging-error-handling","selectable_layer3":["logging-error-handling"],"source":{"kind":"dynamic-helper-only","symbol":"_review_risk_layer3"},"positive_evidence":["dynamic-helper:_review_risk_layer3","foundation-selector:dynamic-foundation:logging-error-handling"],"owner_bindings":[{"primary_skill":"logging-design-gate","review_skill":"logging-design-gate"},{"primary_skill":"backend-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:logging-design-gate","rule_id":null,"routing_family":"logging","primary_skill":"logging-design-gate","review_skill":"logging-design-gate"},{"candidate_id":"review-logging-risk","rule_id":"review-logging-risk-candidate","routing_family":null,"primary_skill":"logging-design-gate","review_skill":"logging-design-gate"}]}
+    - {"selector_id":"dynamic-foundation:nodejs-runtime-professional-usage","selectable_layer3":["nodejs-runtime-professional-usage"],"source":{"kind":"dynamic-helper-only","symbol":"_implementation_owner_layer3"},"positive_evidence":["dynamic-helper:_implementation_owner_layer3","foundation-selector:dynamic-foundation:nodejs-runtime-professional-usage"],"owner_bindings":[{"primary_skill":"backend-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"backend-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:backend-change-builder","rule_id":null,"routing_family":"backend","primary_skill":"backend-change-builder","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"dynamic-foundation:offline-sync-conflict-resolution","selectable_layer3":["offline-sync-conflict-resolution"],"source":{"kind":"dynamic-helper-only","symbol":"_implementation_owner_layer3"},"positive_evidence":["dynamic-helper:_implementation_owner_layer3","foundation-selector:dynamic-foundation:offline-sync-conflict-resolution"],"owner_bindings":[{"primary_skill":"installed-client-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"installed-client-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:installed-client-change-builder","rule_id":null,"routing_family":"installed-client","primary_skill":"installed-client-change-builder","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"dynamic-foundation:powershell-professional-usage","selectable_layer3":["powershell-professional-usage"],"source":{"kind":"dynamic-helper-only","symbol":"_implementation_owner_layer3"},"positive_evidence":["dynamic-helper:_implementation_owner_layer3","foundation-selector:dynamic-foundation:powershell-professional-usage"],"owner_bindings":[{"primary_skill":"platform-infrastructure-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"platform-infrastructure-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:platform-infrastructure-change-builder","rule_id":null,"routing_family":"platform-infrastructure","primary_skill":"platform-infrastructure-change-builder","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"dynamic-foundation:regression-testing","selectable_layer3":["regression-testing"],"source":{"kind":"dynamic-helper-only","symbol":"_build_route_candidates"},"positive_evidence":["dynamic-helper:_build_route_candidates","foundation-selector:dynamic-foundation:regression-testing"],"owner_bindings":[{"primary_skill":"backend-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"quality-test-gate","review_skill":"ai-code-review-refactor"},{"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"},{"primary_skill":"security-privacy-gate","review_skill":"security-privacy-gate"},{"primary_skill":"backend-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"data-middleware-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:backend-change-builder","rule_id":null,"routing_family":"backend","primary_skill":"backend-change-builder","review_skill":"ai-code-review-refactor"},{"candidate_id":"implementation-owner:quality-test-gate","rule_id":null,"routing_family":"test-validation","primary_skill":"quality-test-gate","review_skill":"ai-code-review-refactor"},{"candidate_id":"review-generic","rule_id":"review-generic-candidate","routing_family":null,"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"},{"candidate_id":"review-security-risk","rule_id":"review-security-risk-candidate","routing_family":null,"primary_skill":"security-privacy-gate","review_skill":"security-privacy-gate"}]}
+    - {"selector_id":"dynamic-foundation:state-management-design","selectable_layer3":["state-management-design"],"source":{"kind":"dynamic-helper-only","symbol":"_implementation_owner_layer3"},"positive_evidence":["dynamic-helper:_implementation_owner_layer3","foundation-selector:dynamic-foundation:state-management-design"],"owner_bindings":[{"primary_skill":"frontend-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"frontend-change-builder","review_skill":"security-privacy-gate"},{"primary_skill":"installed-client-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:frontend-change-builder","rule_id":null,"routing_family":"frontend","primary_skill":"frontend-change-builder","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"dynamic-foundation:swift-professional-usage","selectable_layer3":["swift-professional-usage"],"source":{"kind":"dynamic-helper-only","symbol":"_implementation_owner_layer3"},"positive_evidence":["dynamic-helper:_implementation_owner_layer3","foundation-selector:dynamic-foundation:swift-professional-usage"],"owner_bindings":[{"primary_skill":"installed-client-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"installed-client-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:installed-client-change-builder","rule_id":null,"routing_family":"installed-client","primary_skill":"installed-client-change-builder","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"dynamic-foundation:targeted-validation-selection","selectable_layer3":["targeted-validation-selection"],"source":{"kind":"dynamic-helper-only","symbol":"_implementation_owner_layer3"},"positive_evidence":["dynamic-helper:_implementation_owner_layer3","foundation-selector:dynamic-foundation:targeted-validation-selection"],"owner_bindings":[{"primary_skill":"repository-tooling-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"quality-test-gate","review_skill":"ai-code-review-refactor"},{"primary_skill":"repository-tooling-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:repository-tooling-change-builder","rule_id":null,"routing_family":"repository-tooling","primary_skill":"repository-tooling-change-builder","review_skill":"ai-code-review-refactor"},{"candidate_id":"implementation-owner:quality-test-gate","rule_id":null,"routing_family":"test-validation","primary_skill":"quality-test-gate","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"dynamic-foundation:web-platform-professional-usage","selectable_layer3":["web-platform-professional-usage"],"source":{"kind":"dynamic-helper-only","symbol":"_implementation_owner_layer3"},"positive_evidence":["dynamic-helper:_implementation_owner_layer3","foundation-selector:dynamic-foundation:web-platform-professional-usage"],"owner_bindings":[{"primary_skill":"frontend-change-builder","review_skill":"ai-code-review-refactor"},{"primary_skill":"frontend-change-builder","review_skill":"security-privacy-gate"}],"route_bindings":[{"candidate_id":"implementation-owner:frontend-change-builder","rule_id":null,"routing_family":"frontend","primary_skill":"frontend-change-builder","review_skill":"ai-code-review-refactor"}]}
+    - {"selector_id":"foundation-activation-business-rule-extraction","selectable_layer3":["business-rule-extraction"],"source":{"kind":"runtime-matcher","symbol":"foundation_runtime_matcher_authority"},"positive_evidence":["analysis-action","governed-business-object","owner-qualified-domain-language","foundation-selector:foundation-activation-business-rule-extraction"],"owner_bindings":[{"primary_skill":"domain-impact-modeler","review_skill":"architecture-impact-reviewer"}],"route_bindings":[]}
+    - {"selector_id":"foundation-activation-state-machine-modeling","selectable_layer3":["state-machine-modeling"],"source":{"kind":"runtime-matcher","symbol":"foundation_runtime_matcher_authority"},"positive_evidence":["analysis-action","governed-state-object","owner-qualified-domain-language","foundation-selector:foundation-activation-state-machine-modeling"],"owner_bindings":[{"primary_skill":"domain-impact-modeler","review_skill":"architecture-impact-reviewer"}],"route_bindings":[]}
+    - {"selector_id":"foundation-activation-test-strategy","selectable_layer3":["test-strategy"],"source":{"kind":"runtime-matcher","symbol":"foundation_runtime_matcher_authority"},"positive_evidence":["analysis-action","proof-portfolio-open","failure-oracle-mapping","foundation-selector:foundation-activation-test-strategy"],"owner_bindings":[{"primary_skill":"quality-test-gate","review_skill":"quality-test-gate"}],"route_bindings":[]}
+  aliases:
+    - {"candidate_id":"api-compatibility-artifact","source_selector_ids":["production-release-decision"],"primary_skill":"data-api-contract-changer","review_skill":"architecture-impact-reviewer"}
+    - {"candidate_id":"backend-effects-ambiguous","source_selector_ids":["review-ambiguous-structure-repository-first"],"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}
+    - {"candidate_id":"backend-layer-budget","source_selector_ids":["review-ambiguous-structure-repository-first"],"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}
+    - {"candidate_id":"cache-stampede-reliability-controls","source_selector_ids":["cache-stampede-analysis","security-anti-reliability-only"],"primary_skill":"engineering-change-analysis","review_skill":"reliability-observability-gate"}
+    - {"candidate_id":"data-consistency-artifact","source_selector_ids":["distributed-workflow-analysis"],"primary_skill":"data-middleware-change-builder","review_skill":"quality-test-gate"}
+    - {"candidate_id":"database-migration-coexistence-rollback","source_selector_ids":["database-migration-analysis","distributed-workflow-analysis","production-release-decision"],"primary_skill":"engineering-change-analysis","review_skill":"delivery-release-gate"}
+    - {"candidate_id":"distributed-effect-ambiguous","source_selector_ids":["review-ambiguous-structure-repository-first"],"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}
+    - {"candidate_id":"experience-design-system-analysis","source_selector_ids":["user-flow-analysis"],"primary_skill":"experience-impact-modeler","review_skill":"ai-code-review-refactor"}
+    - {"candidate_id":"experience-interaction-analysis","source_selector_ids":["user-flow-analysis"],"primary_skill":"experience-impact-modeler","review_skill":"ai-code-review-refactor"}
+    - {"candidate_id":"external-integration-consumer-impact-analysis","source_selector_ids":["external-integration-analysis"],"primary_skill":"engineering-change-analysis","review_skill":"ai-code-review-refactor"}
+    - {"candidate_id":"external-integration-failure-contract-analysis","source_selector_ids":["external-integration-analysis"],"primary_skill":"engineering-change-analysis","review_skill":"ai-code-review-refactor"}
+    - {"candidate_id":"documentation-only-change","source_selector_ids":["security-anti-scanner-report"],"primary_skill":"change-documentation-gate","review_skill":"change-documentation-gate"}
+    - {"candidate_id":"failure-diagnosis-analysis","source_selector_ids":["incident-response-coordination"],"primary_skill":"engineering-change-analysis","review_skill":"reliability-observability-gate"}
+    - {"candidate_id":"generic-security-risk","source_selector_ids":["ssrf-url-fetch-analysis","tenant-isolation-security"],"primary_skill":"security-privacy-gate","review_skill":"security-privacy-gate"}
+    - {"candidate_id":"high-risk-architecture-plan","source_selector_ids":["production-release-decision"],"primary_skill":"engineering-change-analysis","review_skill":"high-risk-design-review"}
+    - {"candidate_id":"incident-response-coordination-observability","source_selector_ids":["incident-response-coordination","security-anti-reliability-only"],"primary_skill":"incident-response-coordinator","review_skill":"reliability-observability-gate"}
+    - {"candidate_id":"installed-filesystem-ambiguous","source_selector_ids":["review-ambiguous-structure-repository-first"],"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}
+    - {"candidate_id":"migration-documentation","source_selector_ids":["security-anti-scanner-report"],"primary_skill":"change-documentation-gate","review_skill":"change-documentation-gate"}
+    - {"candidate_id":"minimality-analysis","source_selector_ids":["review-minimality-change"],"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}
+    - {"candidate_id":"owner-blast-radius-analysis","source_selector_ids":["review-ambiguous-structure-repository-first"],"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}
+    - {"candidate_id":"package-supply-chain-analysis","source_selector_ids":["package-dependency-analysis","dynamic-foundation:dependency-vulnerability-scanning"],"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}
+    - {"candidate_id":"privacy-or-token-security","source_selector_ids":["personal-data-lifecycle"],"primary_skill":"security-privacy-gate","review_skill":"security-privacy-gate"}
+    - {"candidate_id":"production-rollout-fallback","source_selector_ids":["production-release-decision"],"primary_skill":"delivery-release-gate","review_skill":"delivery-release-gate"}
+    - {"candidate_id":"public-api-analysis","source_selector_ids":["production-release-decision","security-anti-input-shape"],"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}
+    - {"candidate_id":"reliability-signal-analysis","source_selector_ids":["security-anti-reliability-only"],"primary_skill":"reliability-observability-gate","review_skill":"reliability-observability-gate"}
+    - {"candidate_id":"ssrf-threat-professional-precedence","source_selector_ids":["ssrf-url-fetch-analysis"],"primary_skill":"security-privacy-gate","review_skill":"security-privacy-gate"}
+    - {"candidate_id":"test-strategy-professional-precedence","source_selector_ids":["foundation-activation-test-strategy"],"primary_skill":"quality-test-gate","review_skill":"quality-test-gate"}
+    - {"candidate_id":"repository-first-default","source_selector_ids":["review-ambiguous-structure-repository-first"],"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}
+    - {"candidate_id":"repository-tooling-ambiguous","source_selector_ids":["review-ambiguous-structure-repository-first"],"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}
+    - {"candidate_id":"repository-tooling-layer-budget","source_selector_ids":["review-ambiguous-structure-repository-first"],"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}
+    - {"candidate_id":"review-domain-pattern-structure","source_selector_ids":["design-pattern-analysis"],"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"}
+    - {"candidate_id":"review-domain-pattern-structure","source_selector_ids":["domain-object-analysis"],"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"}
+    - {"candidate_id":"review-domain-pattern-structure","source_selector_ids":["design-pattern-analysis","domain-object-analysis"],"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"}
+    - {"candidate_id":"review-refactoring-change","source_selector_ids":["refactor-fixed-destination"],"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"}
+    - {"candidate_id":"review-refactoring-change","source_selector_ids":["owner-internal-structure-analysis","refactor-fixed-destination"],"primary_skill":"ai-code-review-refactor","review_skill":"ai-code-review-refactor"}
+    - {"candidate_id":"secret-rotation","source_selector_ids":["cryptography-key-lifecycle"],"primary_skill":"security-privacy-gate","review_skill":"security-privacy-gate"}
+    - {"candidate_id":"source-backed-repository-question","source_selector_ids":["review-ambiguous-structure-repository-first"],"primary_skill":"engineering-change-analysis","review_skill":"architecture-impact-reviewer"}
+  alias_member_subsets:
+    cache-stampede-reliability-controls: ["concurrency-control","degradation-circuit-breaking","observability"]
+    database-migration-coexistence-rollback: ["data-migration-design","transaction-consistency","release-rollback"]
+    experience-design-system-analysis: ["design-system-rules"]
+    experience-interaction-analysis: ["interaction-state-modeling"]
+    external-integration-consumer-impact-analysis: ["consumer-impact-analysis"]
+    external-integration-failure-contract-analysis: ["failure-contract-design"]
+    incident-response-coordination-observability: ["failure-diagnosis","observability"]
+    package-supply-chain-analysis: ["package-dependency-management","dependency-vulnerability-scanning"]
 foundation_skills:
   - name: requirement-clarification
     required_expertise_tags: ["foundation-intake-requirements"]
@@ -373,24 +486,93 @@ foundation_skills:
     output_contract: ["interaction-state decision with authoritative state mapping, transitions, uncertainty, available actions, optimistic and asynchronous behavior, accessibility signals, forbidden states, evidence limits, and residual owners"]
     escalation_signals: ["Missing states create inaccessible confusing or brittle user experiences"]
     reference_index:
-      - path: "references/benchmarks-and-patterns.md"
+      - path: "references/state-semantics-benchmark-anchors.md"
         type: benchmark-pattern
-        load_when: "State machine, accessibility, background-refresh, or timeout semantics need calibration."
-        do_not_load_when: "No interactive state or transition changes."
+        load_when: "State semantics need benchmark anchors from current operation and product evidence"
+        do_not_load_when: "Current operation semantics already fix the observable state distinctions"
         required_by: ["analysis-agent", "task-agent", "review-agent"]
         required_output: ["option-comparison", "selected-approach"]
+      - path: "references/state-distinction-and-outcome-patterns.md"
+        type: benchmark-pattern
+        load_when: "Unknown, partial, optimistic, or durable outcomes need comparison"
+        do_not_load_when: "Current authority already fixes outcome distinctions and user actions"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["option-comparison", "selected-approach"]
+      - path: "references/state-derivation-and-recovery-decisions.md"
+        type: targeted
+        load_when: "State derivation, retry, cancellation, or recovery decisions remain open"
+        do_not_load_when: "Current backend contract fixes transitions, repeat safety, and recovery"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "failure-decision", "residual-risk"]
+      - path: "references/state-transition-and-backend-evidence.md"
+        type: evidence-pattern
+        load_when: "Transition or backend-alignment claims need current evidence"
+        do_not_load_when: "No transition or backend-alignment claim awaits validation"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["evidence-record", "validation-plan", "proof-limit", "residual-risk"]
+      - path: "references/state-accessibility-evidence.md"
+        type: evidence-pattern
+        load_when: "Accessibility signals for changed states need current evidence"
+        do_not_load_when: "No changed state accessibility claim awaits validation"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["evidence-record", "validation-plan", "proof-limit", "residual-risk"]
+      - path: "references/state-evidence-freshness-and-tool-boundary.md"
+        type: evidence-pattern
+        load_when: "State evidence freshness, tool boundary, or proof limit remains open"
+        do_not_load_when: "Current source and validation already bind the state evidence and tool boundary"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["evidence-record", "validation-plan", "proof-limit", "residual-risk"]
       - path: "references/checklist.md"
         type: decision-checklist
         load_when: "UI states span loading, denial, partial success, rollback, or recovery."
         do_not_load_when: "No loading, denial, rollback, or recovery state changes."
         required_by: ["analysis-agent", "task-agent", "review-agent"]
         required_output: ["checklist-result", "residual-risk"]
-      - path: "references/evidence-patterns.md"
-        type: evidence-pattern
-        load_when: "State claims require fresh backend, story, ARIA, and transition proof."
-        do_not_load_when: "No state-completeness or accessibility claim awaits validation."
-        required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["evidence-record", "proof-limit", "residual-risk"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/state-semantics-benchmark-anchors.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "state-semantics-benchmark-anchors"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/state-distinction-and-outcome-patterns.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "state-distinction-and-outcome-patterns"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/state-derivation-and-recovery-decisions.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "state-derivation-and-recovery-decisions"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/state-transition-and-backend-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "state-transition-and-backend-evidence"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/state-accessibility-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "state-accessibility-evidence"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/state-evidence-freshness-and-tool-boundary.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "state-evidence-freshness-and-tool-boundary"
+          sequenced_after: []
+          must_co_trigger_with: []
     used_by: ["experience-impact-modeler", "frontend-change-builder"]
     group: "experience-design"
     delivery_scope: product
@@ -455,6 +637,16 @@ foundation_skills:
         do_not_load_when: "No ownership or object-category claim awaits proof."
         required_by: ["analysis-agent", "task-agent", "review-agent"]
         required_output: ["evidence-record", "proof-limit", "residual-risk"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/benchmarks-and-patterns.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "benchmarks-and-patterns"
+          sequenced_after: []
+          must_co_trigger_with: []
     used_by: ["domain-impact-modeler", "backend-change-builder", "ai-code-review-refactor"]
     group: "domain-modeling"
     delivery_scope: product
@@ -773,12 +965,42 @@ foundation_skills:
         do_not_load_when: "the changed module edges are covered by fresh boundary enforcement results"
         required_by: ["analysis-agent", "review-agent"]
         required_output: ["option-comparison", "selected-approach"]
-      - path: "references/module-decomposition.md"
+      - path: "references/boundary-kind-and-authority.md"
         type: targeted
-        load_when: "a module split merge or move remains open after responsibility state lifecycle and change-reason analysis"
-        do_not_load_when: "module owner state lifecycle and dependency direction already fix the boundary"
+        load_when: "boundary kind authoritative mechanism owner state surface or dependency direction remains open"
+        do_not_load_when: "current mechanism owner state authority surface and allowed edges already fix the boundary"
         required_by: ["analysis-agent", "review-agent"]
-        required_output: ["boundary-decision", "residual-risk"]
+        required_output: ["boundary-decision", "decision-record", "residual-risk"]
+      - path: "references/split-merge-and-move-decisions.md"
+        type: targeted
+        load_when: "a module split merge or move remains open after authority lifecycle consumer and change-reason analysis"
+        do_not_load_when: "module owner state lifecycle and dependency direction already fix keep split move or merge"
+        required_by: ["analysis-agent", "review-agent"]
+        required_output: ["boundary-decision", "selected-approach", "residual-risk"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/benchmarks-and-enforcement.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "benchmarks-and-enforcement"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/boundary-kind-and-authority.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "boundary-kind-and-authority"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/split-merge-and-move-decisions.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "split-merge-and-move-decisions"
+          sequenced_after: []
+          must_co_trigger_with: []
     used_by: ["architecture-impact-reviewer", "high-risk-design-review"]
     group: "architecture-design"
     delivery_scope: product
@@ -2918,6 +3140,16 @@ foundation_skills:
         do_not_load_when: "Current architecture and policy fix the technology stack and no new commitment or migration is proposed"
         required_by: ["analysis-agent", "task-agent", "review-agent"]
         required_output: ["option-comparison", "selected-approach"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/benchmarks-and-patterns.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "benchmarks-and-patterns"
+          sequenced_after: []
+          must_co_trigger_with: []
     used_by: ["architecture-impact-reviewer", "high-risk-design-review"]
     group: "technology-selection"
     delivery_scope: product
@@ -3424,6 +3656,30 @@ foundation_skills:
         do_not_load_when: "no placement or source-authority claim awaits closure"
         required_by: ["task-agent", "review-agent", "analysis-agent"]
         required_output: ["evidence-record", "validation-plan", "proof-limit", "residual-risk"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/object-module-decomposition.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "object-module-decomposition"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/reuse-and-placement.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "reuse-and-placement"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/evidence-patterns.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "evidence-patterns"
+          sequenced_after: []
+          must_co_trigger_with: []
     used_by: ["architecture-impact-reviewer", "backend-change-builder", "repository-tooling-change-builder", "ai-code-review-refactor"]
     group: "engineering-workflow"
     delivery_scope: product
@@ -4376,12 +4632,61 @@ foundation_skills:
     output_contract: ["accessibility decision with semantic contract keyboard and focus behavior announcements visual and motion alternatives scaling behavior form recovery automated and manual evidence unverified scope and proof limits"]
     escalation_signals: ["inclusive interaction meaning or representative assistive-technology evidence remains unresolved"]
     reference_index:
-      - path: "references/inclusive-interaction-contracts.md"
+      - path: "references/semantic-keyboard-and-focus-contracts.md"
         type: targeted
-        load_when: "Semantics keyboard focus contrast scaling touch alternatives or proof expectations remain open"
-        do_not_load_when: "Current product and platform contracts already determine the affected inclusive interaction"
+        load_when: "Semantic meaning, keyboard operation, or focus behavior remains open"
+        do_not_load_when: "Current semantic, keyboard, and focus contracts fix the changed behavior"
         required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["selected-approach", "proof-limit"]
+        required_output: ["selected-approach", "boundary-decision", "proof-limit"]
+      - path: "references/announcements-and-form-recovery-contracts.md"
+        type: targeted
+        load_when: "Announcement, status, validation, or form-recovery behavior remains open"
+        do_not_load_when: "Current announcement and form-recovery contract fixes the changed behavior"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["selected-approach", "failure-decision", "proof-limit"]
+      - path: "references/visual-adaptation-and-direct-manipulation-contracts.md"
+        type: targeted
+        load_when: "Visual meaning, adaptation, motion, or direct-manipulation alternative remains open"
+        do_not_load_when: "Current presentation and input-alternative contracts fix the changed behavior"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["selected-approach", "boundary-decision", "proof-limit"]
+      - path: "references/accessibility-verification-evidence.md"
+        type: evidence-pattern
+        load_when: "Accessibility claim needs automated and human verification evidence"
+        do_not_load_when: "No changed accessibility claim awaits verification"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["evidence-record", "validation-plan", "proof-limit", "residual-risk"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/semantic-keyboard-and-focus-contracts.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "semantic-keyboard-and-focus-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/announcements-and-form-recovery-contracts.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "announcements-and-form-recovery-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/visual-adaptation-and-direct-manipulation-contracts.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "visual-adaptation-and-direct-manipulation-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/accessibility-verification-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "accessibility-verification-evidence"
+          sequenced_after: []
+          must_co_trigger_with: []
     used_by: ["ai-code-review-refactor", "frontend-change-builder", "installed-client-change-builder"]
     group: "experience-design"
     delivery_scope: product
@@ -4428,8 +4733,7 @@ foundation_skills:
   - name: csharp-dotnet-professional-usage
     required_expertise_tags: ["foundation-backend-engineering", "foundation-language-professional-usage", "foundation-reliability-operations"]
     path: "src/foundation/capabilities/csharp-dotnet-professional-usage"
-    content_class: complex
-    content_class_rationale: "C# async, ownership, runtime, deployment, interop, and UI-dispatch decisions are coupled and must be decided together across the executable boundary."
+    content_class: compact
     role_support: ["task-agent", "review-agent", "analysis-agent"]
     trigger_signals: ["C# .NET async cancellation disposal LINQ nullable DI trimming AOT assembly native COM UI dispatch or deployment semantics", "compiler target framework RID host generated or framework boundary changes runtime behavior"]
     anti_trigger_signals: ["C# only in comments or generated output", "MSIX identity signing manifest packaging metadata or Windows policy without C#/.NET semantics"]
@@ -4449,6 +4753,23 @@ foundation_skills:
         do_not_load_when: "Runtime reachability loading ABI affinity and deployment remain unchanged"
         required_by: ["task-agent", "review-agent", "analysis-agent"]
         required_output: ["selected-approach", "proof-limit", "residual-risk"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/async-resource-and-iterator-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "async-resource-and-iterator-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/runtime-deployment-and-interop-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "runtime-deployment-and-interop-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
     used_by: ["backend-change-builder", "installed-client-change-builder"]
     group: "language-professional-usage"
     delivery_scope: product
@@ -4482,8 +4803,7 @@ foundation_skills:
   - name: kotlin-professional-usage
     required_expertise_tags: ["foundation-backend-engineering", "foundation-language-professional-usage", "foundation-reliability-operations", "specialty-lang-jvm"]
     path: "src/foundation/capabilities/kotlin-professional-usage"
-    content_class: complex
-    content_class_rationale: "Kotlin coroutine, stream, type, Java interop, ABI, DSL, and Compose decisions are coupled and must be decided together for one source boundary."
+    content_class: compact
     role_support: ["task-agent", "review-agent", "analysis-agent"]
     trigger_signals: ["Kotlin coroutine Flow StateFlow null Java interop sealed reified value data delegated DSL or Compose semantics", "compiler coroutine framework generated or Java boundary changes runtime behavior"]
     anti_trigger_signals: ["Kotlin only in comments or generated output or Java/JVM-only source", "Android manifest permission packaging signing or platform metadata without Kotlin semantics"]
@@ -4503,6 +4823,23 @@ foundation_skills:
         do_not_load_when: "Kotlin type and Java-callable boundaries remain unchanged"
         required_by: ["task-agent", "review-agent", "analysis-agent"]
         required_output: ["decision-record", "residual-risk"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/coroutine-flow-state-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "coroutine-flow-state-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/type-interop-and-dsl-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "type-interop-and-dsl-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
     used_by: ["backend-change-builder", "installed-client-change-builder"]
     group: "language-professional-usage"
     delivery_scope: product
@@ -4583,8 +4920,7 @@ foundation_skills:
   - name: swift-professional-usage
     required_expertise_tags: ["foundation-experience-design", "foundation-language-professional-usage", "foundation-reliability-operations"]
     path: "src/foundation/capabilities/swift-professional-usage"
-    content_class: complex
-    content_class_rationale: "Swift identity, ownership, isolation, cancellation, type, interop, UI-state, and module-lifecycle decisions are coupled and must be decided together."
+    content_class: compact
     role_support: ["task-agent", "review-agent", "analysis-agent"]
     trigger_signals: ["Swift value reference copy-on-write Optional ARC actor Sendable cancellation type erasure Objective-C SwiftUI or module semantics", "compiler deployment target imported module runtime or UI lifecycle changes runtime behavior"]
     anti_trigger_signals: ["Swift only in comments or generated output or no Swift source boundary", "iOS/macOS entitlement signing provisioning packaging or configuration without Swift semantics"]
@@ -4604,14 +4940,30 @@ foundation_skills:
         do_not_load_when: "No concurrency interop UI-state or module-lifecycle behavior changes"
         required_by: ["task-agent", "review-agent", "analysis-agent"]
         required_output: ["selected-approach", "proof-limit", "residual-risk"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/value-memory-and-type-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "value-memory-and-type-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/concurrency-interop-and-ui-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "concurrency-interop-and-ui-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
     used_by: ["installed-client-change-builder"]
     group: "language-professional-usage"
     delivery_scope: product
   - name: web-platform-professional-usage
     required_expertise_tags: ["foundation-frontend-engineering", "foundation-security-privacy"]
     path: "src/foundation/capabilities/web-platform-professional-usage"
-    content_class: complex
-    content_class_rationale: "Document, event, rendering, navigation, origin, storage, network, background, compatibility, and accessibility-tree decisions are coupled and must be decided together."
+    content_class: compact
     role_support: ["analysis-agent", "task-agent", "review-agent"]
     trigger_signals: ["browser or PWA document rendering navigation storage network background streaming compatibility or accessibility-tree behavior"]
     anti_trigger_signals: ["installed native client non-browser backend general frontend workflow or TypeScript-only decision"]
@@ -4619,18 +4971,113 @@ foundation_skills:
     output_contract: ["web-platform decision with document semantics event rendering navigation restoration origin storage fetch policy service-worker channel lifecycle compatibility evidence proof limits and specialist routes"]
     escalation_signals: ["browser lifecycle origin storage or background authority remains unresolved"]
     reference_index:
-      - path: "references/document-event-rendering-contracts.md"
+      - path: "references/document-semantics-and-accessibility-tree-contracts.md"
         type: targeted
-        load_when: "HTML semantics DOM events layout paint stacking compositing or accessibility-tree behavior remains unresolved"
-        do_not_load_when: "Existing native semantics and supported-engine evidence settle the changed document behavior"
+        load_when: "Document semantics or accessibility-tree behavior remains open"
+        do_not_load_when: "Native semantics and supported-engine evidence settle the changed document behavior"
         required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["selected-approach", "proof-limit"]
-      - path: "references/navigation-network-background-contracts.md"
+        required_output: ["selected-approach", "boundary-decision", "proof-limit"]
+      - path: "references/event-dispatch-and-default-action-contracts.md"
         type: targeted
-        load_when: "Navigation history storage cookies origins CORS CSP service workers caches BFCache visibility workers WebSocket SSE or compatibility changes"
-        do_not_load_when: "No browser lifecycle persistence network or background behavior changes"
+        load_when: "DOM event dispatch, cancellation, or default action remains open"
+        do_not_load_when: "Current event path and default behavior are fixed"
         required_by: ["analysis-agent", "task-agent", "review-agent"]
-        required_output: ["validation-plan", "residual-risk"]
+        required_output: ["decision-record", "failure-decision", "proof-limit"]
+      - path: "references/layout-paint-and-compositing-contracts.md"
+        type: targeted
+        load_when: "Layout, paint, stacking, or compositing behavior remains open"
+        do_not_load_when: "Supported-engine evidence settles the changed rendering behavior"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["selected-approach", "validation-plan", "proof-limit"]
+      - path: "references/navigation-and-restoration-contracts.md"
+        type: targeted
+        load_when: "Navigation, history, visibility, or restoration behavior remains open"
+        do_not_load_when: "Current navigation and restoration contract fixes all changed entries"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "failure-decision", "proof-limit"]
+      - path: "references/origin-storage-and-fetch-policy-contracts.md"
+        type: targeted
+        load_when: "Origin, storage, cookie, fetch, CORS, or CSP policy remains open"
+        do_not_load_when: "No browser origin, storage, fetch, or policy boundary changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["boundary-decision", "failure-decision", "proof-limit", "residual-risk"]
+      - path: "references/service-worker-and-cache-contracts.md"
+        type: targeted
+        load_when: "Service-worker lifecycle or cache authority remains open"
+        do_not_load_when: "No service-worker or cache behavior changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "failure-decision", "validation-plan", "residual-risk"]
+      - path: "references/worker-and-persistent-channel-contracts.md"
+        type: targeted
+        load_when: "Worker, WebSocket, SSE, or persistent-channel lifecycle remains open"
+        do_not_load_when: "No worker or persistent-channel behavior changes"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["decision-record", "failure-decision", "validation-plan", "residual-risk"]
+      - path: "references/browser-compatibility-and-verification-evidence.md"
+        type: evidence-pattern
+        load_when: "Browser compatibility or verification claim needs current evidence"
+        do_not_load_when: "No changed browser compatibility claim awaits verification"
+        required_by: ["analysis-agent", "task-agent", "review-agent"]
+        required_output: ["evidence-record", "validation-plan", "proof-limit", "residual-risk"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/document-semantics-and-accessibility-tree-contracts.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "document-semantics-and-accessibility-tree-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/event-dispatch-and-default-action-contracts.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "event-dispatch-and-default-action-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/layout-paint-and-compositing-contracts.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "layout-paint-and-compositing-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/navigation-and-restoration-contracts.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "navigation-and-restoration-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/origin-storage-and-fetch-policy-contracts.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["layer3", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "origin-storage-and-fetch-policy-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/service-worker-and-cache-contracts.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["layer3", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "service-worker-and-cache-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/worker-and-persistent-channel-contracts.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["layer3", "acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "worker-and-persistent-channel-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/browser-compatibility-and-verification-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "browser-compatibility-and-verification-evidence"
+          sequenced_after: []
+          must_co_trigger_with: []
     used_by: ["frontend-change-builder"]
     group: "frontend-engineering"
     delivery_scope: product
@@ -4658,6 +5105,23 @@ foundation_skills:
         do_not_load_when: "No direct child-process execution contract changes"
         required_by: ["analysis-agent", "task-agent", "review-agent"]
         required_output: ["boundary-decision", "proof-limit", "residual-risk"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/atomic-filesystem-commit-and-containment.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "atomic-filesystem-commit-and-containment"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/child-process-invocation-and-completion.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "child-process-invocation-and-completion"
+          sequenced_after: []
+          must_co_trigger_with: []
     used_by: ["backend-change-builder", "installed-client-change-builder", "repository-tooling-change-builder"]
     group: "cross-cutting-safety"
     delivery_scope: product

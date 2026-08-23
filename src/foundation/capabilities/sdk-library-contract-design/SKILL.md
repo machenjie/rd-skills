@@ -17,28 +17,22 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when SDK/library
 
 ## Skill Role
 
-Define the consumer contract, ecosystem-specific compatibility classification, generated-client lineage, adoption path, and consumer proof. Exclude package resolution, release mutation, and documentation publication.
+Own contract compatibility, generated lineage, adoption, and consumer proof.
 
 ## High-Value Rules
 
-- **Own distributed contract encoding.** `module-boundary-design` retains internal responsibility, state, and dependencies, while `extensibility-design` retains host registration, negotiation, isolation, and lifecycle; from first distribution, this capability owns exported compatibility, migration, and consumer proof.
-- **Inventory the consumed surface before classifying change.** Include exported symbols and types, defaults, errors, configuration, lifecycle behavior, extension points, generated operations, runtime floors, package metadata, and observable side effects.
-- **Derive compatibility from real consumers and ecosystem semantics.** Classify source, binary, wire, behavioral, packaging, and runtime impact using current support policy and language rules rather than a universal version label.
-- **Treat types, errors, and defaults as behavior.** Check compilation, reflection, exhaustive matching, exception handling, serialization, overload resolution, and implicit default changes even when the nominal signature still parses.
-- **Make generated output reproducible.** Bind source specification, generator and templates, configuration, and generated artifacts to identifiable versions; review semantic drift separately from mechanical churn.
-- **Design mixed-version adoption.** Select a migration strategy only with explicit removal evidence and rollback limits.
-- **Prove the packed consumer experience.** Build representative consumers against the distributable artifact and exercise affected calls, errors, configuration, and generated code across supported environments.
-- **Expose publication and supply-chain consequences.** Hand signing, provenance, registry mutation, dependency floors, licensing, yank, and release authority to the relevant delivery, package, security, and documentation owners.
+- Classify exported types, defaults, errors, runtimes, packaging, and behavior.
+- Bind source, generator, configuration, artifact, and reviewed generated diff.
+- Select adoption and rollback from current consumer evidence.
+- If the library decision remains active, load only its named Reference.
 
 ## Anti-Patterns
 
-- Infer compatibility from declaration diff alone while defaults, errors, packaging, generated output, or runtime behavior change.
-- Assume internal consumers upgrade atomically, or schedule removal from author preference without current usage evidence.
-- Validate examples or fixture consumers against source internals instead of the artifact consumers receive.
+- Local success substituted for packed-consumer evidence.
 
 ## Stop Conditions
 
-Escalate when the public surface or supported consumers are unknown, ecosystem compatibility rules conflict, generated lineage is irreproducible, or a long-lived consumer lacks an adoption path. Also escalate when rollback would strand persisted or wire data, or publication changes credentials, licensing, security, or irreversible registry state.
+Stop on unknown surface, consumers, lineage, adoption, rollback, or publication authority.
 
 ## Output Contract
 

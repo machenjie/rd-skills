@@ -10,3 +10,10 @@ This checklist applies the root traceability contract to the changed path withou
 - Retain comments that explain a non-obvious contract, invariant, compatibility rule, operational reason, or regression mechanism.
 - Use tests that assert public outcomes and the affected failure mechanism rather than private helper shape or mock-call order.
 - State limits from dynamic callers, generated code, reflection, unexercised exits, or external behavior that the inspected path does not establish.
+
+## Anti-Patterns
+
+- A guard or early return bypasses cleanup, audit, rollback, or response work.
+- A boolean, mode, negated condition, or magic value hides authority or state semantics at the call site.
+- Tiny helpers or files force traversal across vague wrappers to understand one decision.
+- A shorter diff or lower metric is treated as clarity proof while behavior, ownership, or test intent becomes harder to see.

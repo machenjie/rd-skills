@@ -7,6 +7,7 @@ Official framework documentation below was accessed on 2026-07-24.
 
 ## Decision Boundary
 
+- Assign shared, adapter, plugin, and native owners; keep platform lifecycle, persistence, permission, and packaging authority with the concrete platform Domain.
 - Map shared domain, presentation, persistence, adapter, and native integration
   owners for every confirmed target.
 - Keep lifecycle, permission, accessibility, packaging, signing-input, and OS

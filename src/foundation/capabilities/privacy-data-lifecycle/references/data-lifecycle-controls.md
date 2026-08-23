@@ -1,46 +1,36 @@
 # Privacy Data Lifecycle Controls
 
-Use this reference when a data flow crosses several processing stages, stores, individual-facing operations, providers, or regions.
-
-Official pages in this reference were recorded as accessed on 2026-07-24.
+Use this Reference for a named data flow crossing processing stages, stores, individual operations, providers, or regions. Official pages were accessed 2026-07-24.
 
 ## Lifecycle Record
 
-| Stage | Required facts | Decision test |
-|---|---|---|
-| Collect | Data element, subject, source, notice or authority, purpose, necessity, and optionality | Reject fields or precision not required for the accepted outcome |
-| Derive | Inputs, inference, confidence, affected subject, reuse, and sensitivity | Classify the derived value independently of its inputs |
-| Use | Actor, operation, purpose, decision impact, and access boundary | Prevent secondary use without a compatible accepted purpose |
-| Observe | Event purpose, fields, identifiers, sampling, access, and incident value | Minimize telemetry before emission |
-| Store | System of record, cache, index, replica, queue, log, archive, and region | Give each copy a purpose, owner, access, and lifetime |
-| Share | Recipient, purpose, fields, region, onward transfer, and return or deletion | Transfer only the bounded representation needed by the recipient |
-| Export or correct | Request identity, scope, format, provenance, conflict, and progress | Produce an observable complete or explicitly partial outcome |
-| Delete | Trigger, target copies, propagation, verification, exceptions, and completion | Prevent active use and name delayed or unavailable copies |
-| Backup | Inclusion, expiry, restore access, deletion boundary, and replay handling | Prevent restored backups from silently resurrecting deleted active data |
-| Retire | Provider exit, archive disposition, key and account closure, and evidence owner | Leave no unowned operational copy or ongoing feed |
+| Stage | Required decision and test |
+| --- | --- |
+| Collect | Bind element, subject, source, authority/notice, purpose, necessity, optionality; reject unnecessary fields or precision. |
+| Derive | Bind inputs, inference, confidence, subject, reuse, sensitivity; classify the derived value separately. |
+| Use | Bind actor, operation, purpose, decision impact, access; prevent secondary use without a compatible accepted purpose. |
+| Observe | Bind event purpose, fields, identifiers, sampling, access, incident value; Minimize telemetry before emission. |
+| Store | Bind record, cache, index, replica, queue, log, archive, region; give each copy purpose, owner, access, lifetime. |
+| Share | Bind recipient, purpose, fields, region, onward transfer, return/deletion; transfer the bounded needed representation. |
+| Export/correct | Bind request identity, scope, format, provenance, conflict, progress; produce a complete or explicitly partial outcome. |
+| Delete | Bind trigger, copies, propagation, verification, exceptions, completion; prevent active use and name delayed/unavailable copies. |
+| Backup | Bind inclusion, expiry, restore access, deletion boundary, replay; prevent backups from silently resurrecting deleted active data. |
+| Retire | Bind provider exit, archive, keys/accounts, evidence owner; detect any unowned operational copy or feed. |
 
 ## Engineering Rules
 
-- Build the inventory from current source, schemas, configuration, telemetry definitions, provider contracts, and data-flow evidence rather than labels alone.
-- Preserve the distinction between privacy risk to individuals and unauthorized-system-activity risk; security controls can support privacy without completing it.
-- Represent deletion, export, and correction as owned asynchronous workflows when copies cannot change atomically.
-- Mark legal basis, retention mandate, regional restriction, exception, and approval as supplied authority instead of interpreting law.
-- Treat generated, inferred, aggregated, and telemetry data as in scope when linkage or decisions can affect a person.
+- Build inventory from current source, schema, configuration, telemetry, provider, and flow evidence.
+- Separate individual privacy risk from unauthorized activity; security controls support but do not complete privacy.
+- Model non-atomic deletion, export, and correction as owned asynchronous workflows.
+- Record supplied legal, policy, retention, regional, exception, and approval authority without interpreting it.
+- Include generated, inferred, aggregated, and telemetry data when linkage or decisions can affect a person.
 
-## Primary Sources
+## Primary Sources And Limits
 
-- [NIST Privacy Framework](https://www.nist.gov/privacy-framework/privacy-framework)
-- [NISTIR 8062: Privacy Engineering and Risk Management](https://www.nist.gov/publications/introduction-privacy-engineering-and-risk-management-federal-information-systems)
-- [NIST relationship between cybersecurity and privacy](https://www.nccoe.nist.gov/relationship-between-cybersecurity-and-privacy)
+[NIST Privacy Framework](https://www.nist.gov/privacy-framework/privacy-framework), [NISTIR 8062](https://www.nist.gov/publications/introduction-privacy-engineering-and-risk-management-federal-information-systems), and [NIST cybersecurity/privacy relationship](https://www.nccoe.nist.gov/relationship-between-cybersecurity-and-privacy).
 
-## Version And Inference Limits
-
-NIST Privacy Framework Version 1.0, published January 2020, remained the final framework version when accessed. NIST Privacy Framework 1.1 was an Initial Public Draft, not a final replacement.
-
-NISTIR 8062 is federal privacy-engineering guidance from 2017. These voluntary and governmental sources do not establish the organization's policy, contract, jurisdiction, retention period, legal basis, or compliance status.
-
-Do not infer that encryption, access control, or deletion from the primary store completes privacy lifecycle obligations. Do not infer legal permission from a technical purpose or data inventory.
+Framework 1.0 was final and 1.1 an initial draft when accessed; NISTIR 8062 is 2017 federal guidance. These sources do not establish organization policy, contract, jurisdiction, retention, legal basis, or compliance. Encryption, access control, or primary-store deletion does not prove lifecycle closure; technical purpose does not prove legal permission.
 
 ## Required Record
 
-Return a source-backed inventory, purpose and minimization decisions, copy and region map, retention and deletion behavior, backup boundary, export and correction status, telemetry handling, authoritative policy gaps, evidence freshness, and residual owners.
+Return a source-backed inventory, purpose and minimization decisions, copy/region map, retention/deletion/backup, export/correction, telemetry, authority gaps, evidence freshness, proof limits, and residual owners.

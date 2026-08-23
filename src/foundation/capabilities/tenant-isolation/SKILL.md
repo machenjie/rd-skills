@@ -1,6 +1,6 @@
 ---
 name: tenant-isolation
-description: "Use when tenant isolation spans data, caches, queues, runtime, search, telemetry, deletion, or export. Skip policy-only authorization, billing, customization, and SaaS lifecycle."
+description: "Use for cross-layer tenant isolation. Skip policy-only and SaaS-product lifecycle work."
 ---
 
 # tenant-isolation
@@ -19,29 +19,18 @@ description: "Use when tenant isolation spans data, caches, queues, runtime, sea
 
 ## Skill Role
 
-Compose cross-layer isolation mechanisms and proof; consume, but do not redefine, trusted context or permissions.
+Select cross-layer tenant isolation from trusted context; permission policy remains with its owner.
 
 ## High-Value Rules
 
-- Derive tenant context at a trusted entry and reject tenant fields that are claims rather than authority.
-- Choose dedicated, partitioned, or shared isolation and bind tenant identity into keys, relationships, paths, caches, indexes, and derivatives.
-- Enforce tenant scope before reads and writes, including owner, superuser, service, and policy-bypass paths.
-- Define cache keys and invalidation with tenant, permission/freshness variant, and schema while rejecting global fallback.
-- Preserve immutable provenance through messages, jobs, retries, DLQs, replays, and callbacks, failing closed on conflict or absence.
-- Isolate reused workers, connections, sessions, buffers, and temporary storage by clearing prior tenant state.
-- Define admin, support, telemetry, control-plane, migration, export, deletion, and restore scope with attributable per-tenant outcomes.
-- Prove same-tenant success, wrong-tenant denial, forged keys, mixed batches, privileged paths, deletion, and recovery.
+- Map active tenant surfaces to trusted context, isolation mechanisms, and pre-effect enforcement.
+- Preserve tenant provenance across asynchronous work and keep reused execution tenant-clean.
+- Preserve per-tenant attribution for privileged operations and lifecycle effects.
+- Prove same-tenant success and wrong-tenant, forged, mixed-batch, privileged, deletion, and recovery failures.
 
 ## Anti-Patterns
 
-- Missing tenant predicate exposes another tenant's row.
-- Attacker-controlled tenant key selects another tenant.
-- Cache key collision returns another tenant's value.
-- Async context loss uses no tenant or the previous tenant.
-- Shared admin or support tooling bypasses isolation.
-- Mixed-tenant batch or migration applies one scope to all items.
-- Delete or restore leaks or resurrects another tenant's data.
-- Telemetry exposes cross-tenant data.
+- Local success substituted for evidence of the tenant isolation contract.
 
 ## Execution Checklist
 
@@ -51,9 +40,8 @@ Compose cross-layer isolation mechanisms and proof; consume, but do not redefine
 
 ## Stop Conditions
 
-- Stop on unknown tenant authority, unscoped data, context loss, privileged bypass, or unowned deletion and restore.
-- Stop shared mechanisms without cross-tenant and mixed-tenant evidence.
-- Route authorization policy to its owner. For SaaS product lifecycle without an installed Domain owner, retain only proven isolation work and escalate the unresolved lifecycle boundary to `engineering-change-analysis`.
+- Stop on unknown tenant authority, scope, provenance, privileged bypass, or deletion/restore owner.
+- Keep authorization policy with its owner; escalate unsupported SaaS lifecycle ownership to `engineering-change-analysis`.
 
 ## Output Contract
 

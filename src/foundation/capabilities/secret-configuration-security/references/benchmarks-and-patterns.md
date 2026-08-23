@@ -1,28 +1,23 @@
 # Secret Configuration Security Exposure And Rotation Patterns
 
-Load this reference when multiple exposure paths or rotation mechanisms are plausible and the root rules do not select a safe lifecycle.
+Use this benchmark-pattern Reference only when multiple exposure paths or rotation mechanisms remain plausible and one approved lifecycle does not resolve the changed secret boundary.
 
-## Exposure Paths
+## Root-Relocated Exposure And Rotation Rules
 
-| Path | Easy-to-miss failure | Decision evidence |
-| --- | --- | --- |
-| Source and history | Deletion hides current text but leaves clones, forks, generated files, or retained history. | Path/history scope, scanner limits, credential authority, containment, and rotation record. |
-| CI and build | Masking misses transformed values; caches, artifacts, metadata, or untrusted jobs retain material. | Event and runner trust, permissions, representative logs, cache/artifact scope, and rebuild plan. |
-| Client artifacts | Public config, bundles, source maps, static HTML, or cached releases cross the server trust boundary. | Build-prefix rules, inspected artifacts, CDN/source-map scope, and version retirement. |
-| Observability and support | Object serialization, traces, crash reports, exports, or debug tools fan out access. | Safe-field policy, representative payload tests, sink audience, retention, and deletion owner. |
-| Secret store or KMS | A managed store still permits broad decrypt, unsafe deletion, or unaudited break-glass. | Principal/operation scope, audit source, recovery window, and emergency authority. |
-| Backups and offline consumers | Old values remain usable after online services rotate. | Consumer inventory, backup policy, job cadence, adoption/revoke criteria, and residual copies. |
+- Trace changed values through source and history, CI variables and logs, build cache and image layers, client bundles and source maps, runtime manifests, observability sinks, support exports, backups, and offline consumers.
+- Treat a plausibly exposed credential as compromised according to its authority and policy: contain access, rotate or revoke, verify consumer adoption, then decide whether history or artifact cleanup is also required.
+- Design rotation as a state transition across known consumers. Define overlap or dual-read behavior when required, adoption evidence, revoke criteria, failure recovery, and a forward-safe rollback that does not revive compromised material.
+- Deleting a committed value, masking a CI setting, or removing one log line does not revoke copies already present in history, caches, artifacts, or external sinks.
+- Public build prefixes, client-side config, serialized request objects, crash reports, and support exports can cross the intended audience boundary without an obvious “secret” field name.
+- Rollback to an old compromised value is re-exposure, not recovery.
 
-## Rotation Sequence
+## Exposure Comparison
 
-1. Inventory known consumers and select adoption signals without exposing the raw value.
-2. Introduce the new version and compatibility window required by the protocol.
-3. Move consumers in an order that preserves service and authorization behavior.
-4. Verify adoption and failure signals before revoking the old version.
-5. Revoke or contain old material, then clean history, images, logs, caches, or support artifacts as a separate recovery action.
+- **Source/history, CI/build, and client artifacts:** bind searched/history scope, runner trust, permissions, representative logs, caches/artifacts/images, public-prefix rules, bundles/source maps/CDN, credential authority, containment, rotation, rebuild, and version retirement.
+- **Observability/support and secret stores:** bind safe fields, representative payloads, sink audience/retention/deletion, principal/operation scope, audit source, recovery window, and break-glass authority.
+- **Backups/offline consumers:** bind consumer inventory, copy policy, job cadence, adoption/revoke criteria, recovery, and residual usable copies.
 
-## Evidence Safety
+## Rotation And Evidence Safety
 
-- Refer to labels, versions, redacted policy fields, or approved fingerprints; keep raw values out of retained evidence.
-- Treat a scanner miss as scoped detector evidence, not proof that provider validity, history, or external sinks are clean.
-- Route image, pipeline, logging, runtime config, and release implementation to their owning Skills.
+Inventory consumers and redacted adoption signals; introduce the new version and required compatibility; move consumers safely; verify health/adoption before revocation; then contain old material and separately clean retained artifacts. Evidence names labels, versions, approved fingerprints, scope and detector limits without raw values. Route image, pipeline, logging, runtime configuration, and release implementation to their owners.
+

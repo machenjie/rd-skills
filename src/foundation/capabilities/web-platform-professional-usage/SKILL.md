@@ -9,36 +9,29 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use for browser/PWA 
 
 **Use when**
 
-- A browser or PWA change depends on web-platform document, rendering, navigation, storage, network, background, streaming, compatibility, or accessibility-tree behavior.
+- Browser or PWA document, rendering, navigation, storage, network, background, streaming, compatibility, or accessibility-tree behavior changes.
 
 **Do not use when**
 
-- The task is an installed native client, a non-browser backend, a general frontend workflow, or a language-only TypeScript decision.
+- Installed native client, backend, general frontend workflow, or TypeScript-only decision.
 
 ## Skill Role
 
-Define browser-runtime semantics that change decisions. Exclude component workflow, product state, TypeScript rules, servers, web security, and framework conventions.
+Own browser-runtime semantics; exclude component workflow, product state, language rules, servers, web security, and framework conventions.
 
 ## High-Value Rules
 
-- **Prefer native document semantics.** Select HTML elements from content and interaction meaning before adding roles or scripted behavior that must recreate browser defaults.
-- **Trace DOM events through the actual tree.** Account for capture, target, bubble, composition, retargeting, cancellation, default action, and listener lifetime before changing delegation.
-- **Separate rendering stages when diagnosing visuals.** Distinguish DOM and style inputs, formatting and layout, paint order, stacking context, and compositing using evidence from supported engines.
-- **Model navigation as state restoration.** Define initial load, same-document history, reload, page hide and show, BFCache return, visibility change, and discarded-document recovery.
-- **Scope browser state by origin and lifetime.** Choose cookies, session storage, durable storage, or caches from identity, credential, expiry, partition, quota, and clearing behavior.
-- **Keep fetch controls distinct.** Reconcile same-origin policy, CORS mode, credentials, HTTP caching, and CSP with the server contract without treating any one as authorization.
-- **Treat service workers as interruptible event handlers.** Version cache contents, define install and activation handoff, bound offline fallback, and avoid dependence on persistent execution.
-- **Own persistent channel lifecycle.** Define worker, WebSocket, and SSE startup, ordering, reconnection, backpressure, visibility behavior, cleanup, and browser-version evidence.
+- Bind behavior to current supported-engine and version evidence.
+- Keep browser policy separate from application authorization.
+- Load only the named runtime decision whose behavior is open.
 
 ## Anti-Patterns
 
-- Replace semantic HTML with generic elements and assume ARIA restores native behavior automatically.
-- Treat `load` or component mount as the only entry path despite history traversal, BFCache, restored storage, or an active service worker.
-- Infer browser support from a specification, one compatibility table, or one engine without testing the supported version matrix.
+- Do not substitute local success, specification presence, or one-engine behavior for web-platform evidence.
 
 ## Stop Conditions
 
-Stop when supported browser versions, origin ownership, navigation model, storage lifetime, cache authority, or event ordering is unknown. Route injection and authorization to `web-security`, language semantics to `typescript-professional-usage`, and general implementation ownership to the selected Professional Skill.
+Stop on unknown browser versions, origin ownership, navigation, storage lifetime, cache authority, or event ordering; return security, language, or implementation ownership.
 
 ## Output Contract
 
@@ -48,5 +41,11 @@ Stop when supported browser versions, origin ownership, navigation model, storag
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
-| [document event rendering contracts](references/document-event-rendering-contracts.md) | targeted | HTML semantics DOM events layout paint stacking compositing or accessibility-tree behavior remains unresolved | Existing native semantics and supported-engine evidence settle the changed document behavior | analysis-agent, task-agent, review-agent | selected-approach, proof-limit |
-| [navigation network background contracts](references/navigation-network-background-contracts.md) | targeted | Navigation history storage cookies origins CORS CSP service workers caches BFCache visibility workers WebSocket SSE or compatibility changes | No browser lifecycle persistence network or background behavior changes | analysis-agent, task-agent, review-agent | validation-plan, residual-risk |
+| [document semantics and accessibility tree contracts](references/document-semantics-and-accessibility-tree-contracts.md) | targeted | Document semantics or accessibility-tree behavior remains open | Native semantics and supported-engine evidence settle the changed document behavior | analysis-agent, task-agent, review-agent | selected-approach, boundary-decision, proof-limit |
+| [event dispatch and default action contracts](references/event-dispatch-and-default-action-contracts.md) | targeted | DOM event dispatch, cancellation, or default action remains open | Current event path and default behavior are fixed | analysis-agent, task-agent, review-agent | decision-record, failure-decision, proof-limit |
+| [layout paint and compositing contracts](references/layout-paint-and-compositing-contracts.md) | targeted | Layout, paint, stacking, or compositing behavior remains open | Supported-engine evidence settles the changed rendering behavior | analysis-agent, task-agent, review-agent | selected-approach, validation-plan, proof-limit |
+| [navigation and restoration contracts](references/navigation-and-restoration-contracts.md) | targeted | Navigation, history, visibility, or restoration behavior remains open | Current navigation and restoration contract fixes all changed entries | analysis-agent, task-agent, review-agent | decision-record, failure-decision, proof-limit |
+| [origin storage and fetch policy contracts](references/origin-storage-and-fetch-policy-contracts.md) | targeted | Origin, storage, cookie, fetch, CORS, or CSP policy remains open | No browser origin, storage, fetch, or policy boundary changes | analysis-agent, task-agent, review-agent | boundary-decision, failure-decision, proof-limit, residual-risk |
+| [service worker and cache contracts](references/service-worker-and-cache-contracts.md) | targeted | Service-worker lifecycle or cache authority remains open | No service-worker or cache behavior changes | analysis-agent, task-agent, review-agent | decision-record, failure-decision, validation-plan, residual-risk |
+| [worker and persistent channel contracts](references/worker-and-persistent-channel-contracts.md) | targeted | Worker, WebSocket, SSE, or persistent-channel lifecycle remains open | No worker or persistent-channel behavior changes | analysis-agent, task-agent, review-agent | decision-record, failure-decision, validation-plan, residual-risk |
+| [browser compatibility and verification evidence](references/browser-compatibility-and-verification-evidence.md) | evidence-pattern | Browser compatibility or verification claim needs current evidence | No changed browser compatibility claim awaits verification | analysis-agent, task-agent, review-agent | evidence-record, validation-plan, proof-limit, residual-risk |

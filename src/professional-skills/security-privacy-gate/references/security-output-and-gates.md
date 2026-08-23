@@ -1,47 +1,49 @@
 # Security Output And Gates
 
-Load only when assigned L3-L5 analysis, implementation, or independent review needs mode-specific closure plus targeted proof for a selected security or privacy risk.
+Load for L3-L5 closure and proof of one selected security or privacy risk.
 
 ## Do Not Load
 
-Do not load when the root contract or compact checklist is sufficient.
-Do not load when no trust, data, dependency, cloud, secret, AI, or tool-authority boundary changes.
-Named Layer 3 Skills own specialized mechanisms.
+Skip when the root/checklist closes the risk or no trust, data, dependency, cloud, secret, AI, or tool-authority boundary changes. Named Layer 3 owns its mechanism.
 
 ## Output Contract
 
-Return exactly one mode closure, followed only by fields triggered by the selected risk:
+Return one mode closure plus triggered risk fields:
 
-1. **Analysis closure:**
-   - Return the trust-boundary model, reachable abuse paths, selected controls, validation strategy, unknowns, residual exposure, and recommended next owner or step.
-   - Make no claim of edits or approval.
-2. **Task closure:** Return the actual control diff, denied abuse-case results run after the last material edit, preserved behavior, unverified exposure, and residual risk. Hand fresh evidence to the independent-review owner without self-approval.
-3. **Review closure:**
-   - Return `Approved`, `Returned`, or `Blocked` with severity-ranked findings, reviewed and unreviewed scope, and proof limits.
-   - Use `Blocked` for inaccessible required evidence, naming missing evidence, unblock condition, repair owner, and handoff.
-   - Make no repair to the target.
-4. **Authorization and abuse path:** When the affected scope involves an actor, object, tenant, session, input, or output, state the authoritative identity. Name the reachable source-to-sink path, denied behavior, and affected invariant. Include evidence for the selected authorization, validation, or neutralization outcome.
-5. **Secrets, supply chain, and cloud:** Return only fields for selected risks.
-   - For secret risk, state deployment environment, lifecycle, and access boundary.
-   - For dependency risk, state identity, provenance, and advisory evidence.
-   - For cloud risk, state effective IAM, public or network exposure, and key exposure.
-   - For every selected risk, state the owner and containment or rollback outcome.
-6. **Privacy and compliance:** When classified data or regulated processing is affected, state data class, jurisdiction, purpose, recipients, and retention/deletion need. Also state the applicable policy or control objective, evidence owner, and any justified exception without assuming a universal legal basis.
-7. **AI, tool, and evidence limits:** State untrusted inputs/outputs for any authority-boundary crossing. Covered surfaces are prompts, retrieval, model output, agents, connectors, scanners, shell, IaC, and network writes. Also state allowed actions/data, permission or isolation evidence, abuse tests, proof limits, and residual exfiltration or unsafe-action risk.
+- **Analysis:** boundary, abuse path, controls, validation, unknown/residual exposure, next owner; no edit or approval.
+- **Task:** control diff, preserved behavior, denied-case results, unverified exposure, residual risk, independent review; no self-approval.
+- **Review:** `Approved`, `Returned`, or `Blocked`; ranked findings, reviewed/unreviewed scope, limits, no repair. A block names missing evidence, unblock condition, and repair owner.
+- **Selected risk:** authority, path, denial, invariant, control evidence, environment/jurisdiction, owner, containment/rollback, limit, residual exposure; add triggered secret, dependency, cloud, privacy, or AI/tool fields.
 
 ## Quality Gate
 
-1. When an actor can control resource identity, tenant, parent scope, filter, or indirect reference, require server-side authorization and denied cross-scope proof. Ownership predicates, tenant-scoped queries, or policy checks are candidates selected from the current authorization model.
-2. When ambient browser credentials can authorize an unsafe state change, require request-integrity evidence through a control selected from the actual browser and authentication flow.
-3. When attacker-controlled data reaches SQL, shell, template, HTML, URL-fetch, file, prompt, retrieval, or tool sinks, require context-specific neutralization and malicious-path proof. Parameterization, contextual encoding, parsers, allowlists, isolation, or sandboxing are candidates selected from sink semantics.
-4. When secret material is required, prove bounded exposure, access ownership, rotation/revocation, and audit behavior appropriate to deployment and policy. Workload identity, managed secret services, orchestrator secrets, or encrypted configuration are candidates; no mechanism is universal.
-5. When a vulnerability or dependency finding is Critical or High, choose repair, remediation, exception, or block.
-   - Base the choice on validated severity, reachability, ownership, controls, and release policy.
-   - Retain scanner uncertainty in the decision.
-6. When privacy or compliance risk is triggered, require actual classification, jurisdiction, purpose, retention or deletion need, and applicable policy evidence. Triggered cloud governance instead carries effective IAM, network exposure, key policy, environment, owner, and rollback evidence. Candidate controls remain limited to applicable obligations.
-7. When untrusted AI, retrieval output, or a tool can influence privileged actions or sensitive data, require authority boundaries.
-   - Require denied-abuse proof through controls selected from reachable impact.
-8. Bind a gate verdict to the assets, paths, environments, and controls actually inspected.
-   - Use automated scans, policy diffs, negative tests, and manual review only for their named coverage.
-   - Record untested environments, unknown consumers, third-party controls, and unenumerated abuse paths as residual exposure.
-   - Assign the next owner.
+- Trace attacker-controlled data and authority from entry point to asset, sink, and disclosure path.
+- Choose authorization, validation, containment, and lifecycle controls from the reachable abuse path.
+- Verify denied cases, tenant isolation, secret handling, and residual exposure where triggered.
+- Enforce server-side authorization; UI hiding is not authorization.
+- Request-integrity proof is required only when ambient browser authority has not been excluded.
+- Require sink-specific neutralization for hostile SQL, shell, template, HTML, fetch, file, prompt, retrieval, or tool paths.
+- Secret work requires an owner, policy, containment, and rotation path.
+- A Critical or High dependency finding requires a repair, remediation, exception, or block decision.
+- Set severity from exploitability and current release policy, not scanner labels.
+- Do not assume a universal legal basis or exception for privacy or compliance processing.
+- Risky tool execution requires authority, isolation, recovery, and redaction evidence.
+- When dynamic proof is unavailable, record explicit residual exposure.
+- Bind the verdict to inspected assets, paths, environments, controls, current negative evidence, proof limits, residual exposure, and next owner.
+
+## Professional Decision Rules
+
+- Trace the accepted trust-boundary delta from controlled source or authority to the protected asset and reachable sink, then select controls at the effective path.
+- Mutability, future replacement, or bounded same-principal non-sensitive local access without privilege elevation or a less-trusted writer does not prove a material abuse path.
+
+## High-Value Gotchas
+
+- Authentication is not object-level authorization; redaction after serialization is late.
+- A security claim without negative-path evidence remains unverified.
+
+## Execution Checklist
+
+1. **Analysis mode:** select controls from the reachable abuse path.
+2. **Task mode:** apply controls at the effective trust boundary.
+3. **Review mode:** judge denied paths, containment, and residual exposure.
+4. Stop when trust boundaries, policy, or exploit-relevant evidence remain unknown.

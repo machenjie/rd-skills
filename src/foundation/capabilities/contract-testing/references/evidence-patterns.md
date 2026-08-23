@@ -2,20 +2,20 @@
 
 These records bound compatibility claims to named providers, consumers, versions, and observed behavior.
 
-## Claim Records
+## Current Claim Records
 
-- **Named surface:** provider, consumer class, operation or message, contract source, compared versions, and compatibility direction.
-- **Provider behavior:** fresh verification command or artifact, selected expectations, outcome, and behavior outside the selected cases.
-- **Consumer admissibility:** named consumer version, parsing/compilation/behavior result, fixture or generated input, and unrepresented consumer classes.
-- **Mixed-version safety:** producer-reader matrix, retained or replayed payload source, rollout order, and combinations not exercised.
-- **External behavior:** fixture provenance, capture environment and time, provider/spec version, redaction, replay result, and drift trigger.
-- **Compatibility service:** subject or selector, configured policy, compared versions, environment, result, and semantic behavior outside that check.
+- Name provider, consumer classes, operation/message, contract source, versions, compatibility direction, and rollout or replay boundary.
+- Record fresh provider verification and named consumer parse/compile/behavior results, including fixture/generated input and unrepresented consumers.
+- Record old/new writer-reader cases, retained/replayed payload provenance, registry/broker subject and policy, external capture environment/time/version, redaction, and drift trigger.
+- Refresh after contract, fixture, generator, compatibility-policy, selector, or consumer changes.
 
-## Freshness And Limits
+## Proof Limits
 
-- Refresh provider and consumer evidence after material contract, fixture, generator, compatibility-policy, or selector changes.
-- Treat historical CI, prior reports, and repository inspection as discovery until current artifacts and selected validation confirm them.
-- Limit schema-diff claims to described structure and compatibility rules; name semantic, unknown-consumer, traffic, and rollout gaps separately.
-- Limit generated-client claims to the generated/runtime versions and call sites actually compiled or exercised.
-- Limit fixture replay to captured cases; disclose unrecorded errors, optional fields, rate behavior, and provider drift.
-- Close with covered versions and consumers, fresh proof, non-proof boundaries, residual owner, and next gate.
+Limit schema checks to configured structure/reader-writer rules; generated proof to exercised versions/calls; captures to observed cases; provider checks to named expectations. Disclose unknown consumers, semantic/error/authorization gaps, unavailable environments, traffic/rate behavior, rollout gaps, residual owner, and next gate.
+
+## Anti-Patterns
+
+- Declaring compatibility from schema shape alone while semantic meaning, error behavior, or consumer tolerance changed.
+- Inventing a vendor or consumer mock from memory, or treating one captured response as the provider's complete behavior.
+- Applying one broker, registry mode, versioning style, or consumer-driven workflow to every boundary.
+- Replacing integration, journey, consumer discovery, or rollout proof with contract tests.

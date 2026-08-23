@@ -19,17 +19,6 @@ Official GNOME, KDE, GTK, and Qt pages below were accessed on 2026-07-24.
 - Do not infer IME, font, scaling, locale, or toolkit behavior across GNOME/KDE,
   X11/Wayland, GTK/Qt, distributions, or versions.
 
-## Failure Proof
-
-- Exercise claimed IMEs/locales/scripts, missing fonts, long/RTL text, scale
-  changes, mixed-DPI monitors, desktop/theme changes, and toolkit fallback paths.
-- Record untested desktop/session/toolkit combinations as non-inferences.
-
-## Required Record
-
-Return environment matrix, input/localization/scaling decisions, normal/failure
-evidence, unsupported combinations, source freshness, and proof limits.
-
 ## Primary Sources
 
 - [GTK input method context](https://docs.gtk.org/gtk4/class.IMContext.html)

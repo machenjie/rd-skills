@@ -7,10 +7,9 @@ description: "For analysis/task/review agents using a Professional Skill on kern
 
 ## Role
 
-Consult this focused Layer 3 Domain Skill at native and operating-system
-boundaries. Provide `analysis-agent`, `task-agent`, and `review-agent` with
-memory, concurrency, ABI/FFI, syscall, unsafe-code, and profiling constraints at
-native and operating-system boundaries.
+Apply this focused Layer 3 Domain Skill at verified native or operating-system boundaries.
+Provide `analysis-agent`, `task-agent`, and `review-agent` with memory, concurrency,
+ABI/FFI, syscall, resource, and profiling constraints.
 
 ## When To Use
 
@@ -23,46 +22,38 @@ native and operating-system boundaries.
 
 ## Required Inputs
 
-- ownership, lifetime, callers, ABI, platform, privilege, concurrency, and timing boundaries
-- compiler and runtime versions, deployed consumers, threat model, and representative measurements
+- ownership/lifetime, ABI/callers, concurrency, platform/privilege, versions, consumers, threat model, and measurements
 
 ## Professional Decision Rules
 
-- **Prove ownership and lifetime**: trace acquisition, transfer, borrowing, publication, and release across functions, threads, languages, callbacks, and failure paths.
-- **Maintain unsafe contracts**: state preconditions, aliasing and lifetime assumptions, caller duties, containment, and negative tests for every unsafe boundary.
-- **Build a scoped deadlock-freedom argument**: derive an acyclic lock order across reachable acquisition, reentrancy, callback, cancellation, cleanup, and teardown paths.
-- **Disclose deadlock proof limits**: treat runtime evidence as corroboration and name untested schedules and residual deadlock risk.
-- **Bound undefined-behavior claims**: enumerate the affected memory and concurrency invariants, supported compiler/target/build matrix, analyzed paths, and targeted static and dynamic evidence. Claim absence only where the method is sound and its assumptions and state space are stated; list unproved inputs, schedules, platforms, and foreign behavior.
-- **Protect deployed ABI consumers**: prove compatibility or coordinated replacement for layout, calling convention, symbols, allocator, and ownership changes.
-- **Constrain privileged capability**: select containment from the target OS, reachable syscalls, authority, recovery path, and threat model.
-- **Bound sensitive arithmetic**: prove overflow, truncation, signedness, and size conversions before allocation, indexing, parsing, or I/O.
-- **Measure optimization causality**: use representative profiles and compare treatment against correctness, resource, and tail-latency constraints.
+- Preserve native ownership/lifetime, unsafe preconditions, ABI consumers, concurrency ordering, syscall/privilege, resource cleanup, arithmetic, and measured-performance invariants.
+- Bound absence claims by the supported compiler/target/build matrix, analyzed state space, and unproved schedules, platforms, inputs, and foreign behavior.
 
 ## High-Value Gotchas
 
-- FFI callback publication loses ownership or lifetime
-- cancellation cleanup introduces a rare lock cycle
-- an unchanged signature changes allocator ownership
-- signed-overflow assumptions remove a bounds check
-- recovery uses a syscall absent from containment tests
+- ABI-compatible syntax can still change allocator ownership, callback lifetime, lock order, arithmetic behavior, or permitted recovery syscalls.
 
 ## Execution Checklist
 
-1. Trace ownership, callers, concurrency, privilege, and compatibility at the affected boundary.
-2. Select mechanisms from platform, compiler behavior, threat model, and measurements.
-3. Prove memory, race, ABI, fault, and recovery behavior within stated limits.
+1. Trace the affected native boundary and consumers.
+2. Load named References for active decision problems.
+3. Verify the selected mechanism within stated limits.
 
 ## Stop / Escalation Conditions
 
-- Stop when ownership, ABI consumers, concurrency topology, target platform, or privilege boundary cannot be verified.
-- Escalate exploitable memory behavior, kernel/driver impact, real-time deadline risk, and incompatible deployed consumers.
+- Stop on unverified ownership, ABI consumers, concurrency topology, target, privilege, or recovery.
+- Escalate exploitable memory, kernel/driver, deadline, or incompatible-consumer risk.
 
 ## Output Contract
 
-- State the systems invariant, risk condition, selected mechanism, safety and compatibility argument, representative performance evidence, current post-edit validation obligations and result, proof limits, unverified inputs/schedules/platforms/foreign behavior, and residual risk.
+- systems invariant, selected mechanism, safety/compatibility and measurement evidence, validation result, proof limits, unverified state space, and residual risk
 
 ## Targeted References
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
-| [checklist](references/checklist.md) | decision-checklist | native memory ABI FFI syscall concurrency or platform-resource behavior needs domain risk closure | C++ or Rust is mentioned without a native ABI OS or resource boundary | analysis-agent, task-agent, review-agent | checklist-result, residual-risk |
+| [ownership and concurrency contracts](references/ownership-and-concurrency-contracts.md) | targeted | native ownership, lifetime, unsafe preconditions, lock ordering, scheduling, or concurrency proof is open | no native ownership, unsafe boundary, lock ordering, scheduling, or concurrency decision exists | analysis-agent, task-agent, review-agent | boundary-decision, failure-decision, proof-limit, residual-risk |
+| [abi platform and syscall contracts](references/abi-platform-and-syscall-contracts.md) | targeted | ABI representation, deployed consumers, target platform, syscall, privilege, sandbox, or partial I/O is open | C++ or Rust is mentioned without a native ABI OS or resource boundary | analysis-agent, task-agent, review-agent | boundary-decision, failure-decision, residual-risk |
+| [resource lifecycle and error contracts](references/resource-lifecycle-and-error-contracts.md) | targeted | native resource lifecycle, partial initialization, error translation, retry, diagnostics, or recovery is open | no native resource, error, diagnostic, retry, or recovery decision exists | analysis-agent, task-agent, review-agent | decision-record, failure-decision, residual-risk |
+| [performance and verification evidence](references/performance-and-verification-evidence.md) | evidence-pattern | low-level performance, measurement, validation, absence, or post-edit evidence needs closure | no low-level performance, validation, evidence, or absence claim is open | analysis-agent, task-agent, review-agent | evidence-record, validation-plan, proof-limit, residual-risk |
+| [signals ffi atomics shared memory and fork](references/signals-ffi-atomics-shared-memory-and-fork.md) | targeted | signal, interrupt, FFI, unwind, atomic, shared-memory, DMA, fork, cancellation, or abnormal-error behavior is open | none of those signal, FFI, atomic, shared-memory, fork, cancellation, or abnormal-error behaviors changes | analysis-agent, task-agent, review-agent | boundary-decision, selected-approach, failure-decision, proof-limit, residual-risk |

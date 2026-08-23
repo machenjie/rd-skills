@@ -226,7 +226,7 @@ PHASE2_F03_FOUNDATION_TRIPLES = frozenset(
 )
 PHASE2_F03_PREDECESSOR_ROW_COUNT = 241
 PHASE2_F03_PREDECESSOR_ROWS_SHA256 = (
-    "cd965934eb9373f2d36a11e99bc7c251a1345ca25bea66c8c96567d2c8854473"
+    "c9f6ac21dcbd2cd5febad3bad244e36355e6646af8d63cf69af0c4c3e50fbc97"
 )
 PHASE2_F03_ADJACENT_FOUNDATIONS = {
     "acceptance-standard-definition": ["requirement-clarification"],
@@ -261,7 +261,7 @@ PHASE2_F04_FOUNDATION_TRIPLES = frozenset(
 )
 PHASE2_F04_PREDECESSOR_ROW_COUNT = 269
 PHASE2_F04_PREDECESSOR_ROWS_SHA256 = (
-    "fc87d0b7fde7632aa6e4cead664a538c21a7f057b2cff3d43c6e5a9cc68dac43"
+    "eee1ebdf32e5fd8f484dce22366d28417a8434636311984f6d07af9b87475676"
 )
 PHASE2_F04_ADJACENT_FOUNDATIONS = {
     "code-clarity-maintainability": ["code-review"],
@@ -376,7 +376,7 @@ PHASE2_A_FOUNDATION_TRIPLES = frozenset(
 )
 PHASE2_A_PREDECESSOR_ROW_COUNT = 313
 PHASE2_A_PREDECESSOR_ROWS_SHA256 = (
-    "d3f44baa2d9b98f2712900ca5d5ef54b4a762544ddcc4549cbdeeca4368e4b72"
+    "260ad68541c4fe4f7618249709890dd14537c75984e07c225a67073b9dc62ea2"
 )
 PHASE2_A_SELECTED_PRIMARY_OVERRIDES = {'consumer-impact-analysis': 'engineering-change-analysis',
  'failure-contract-design': 'engineering-change-analysis',
@@ -2311,7 +2311,10 @@ def _main_execution(task_id: str) -> dict[str, object]:
                     "plausible_critical": False,
                 }
             ],
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": ["high-risk pre-implementation evidence"],
             "unresolved": [],
             "edit_status": "allowed",
@@ -2335,6 +2338,96 @@ class FoundationSelectorAuthorityRedTests(unittest.TestCase):
             row["name"]: row
             for row in cls.professional["professional_skills"]
         }
+
+    def test_r3_execution_fixture_migration_is_exactly_579_v2_only_rows(
+        self,
+    ) -> None:
+        expected_basis_fields = set(
+            VALIDATION.EXECUTION_LEVEL_MODEL["level_basis_fields"]
+        )
+        expected_counts = {
+            ROUTING_CASES: 103,
+            ROOT / "evals/routing/capability-coverage-cases.yaml": 47,
+            ADMISSION_CASES: 429,
+        }
+
+        def active_executions(value: object) -> list[dict[str, object]]:
+            found: list[dict[str, object]] = []
+            if isinstance(value, dict):
+                execution = value.get("main_execution")
+                if (
+                    isinstance(execution, dict)
+                    and isinstance(execution.get("level_basis"), dict)
+                ):
+                    found.append(execution)
+                for child in value.values():
+                    found.extend(active_executions(child))
+            elif isinstance(value, list):
+                for child in value:
+                    found.extend(active_executions(child))
+            return found
+
+        total = 0
+        for path, expected_count in expected_counts.items():
+            with self.subTest(path=path.relative_to(ROOT)):
+                executions = active_executions(
+                    VALIDATION.load_yaml_file(path)
+                )
+                self.assertEqual(expected_count, len(executions))
+                self.assertTrue(
+                    all(
+                        set(execution["level_basis"])
+                        == expected_basis_fields
+                        for execution in executions
+                    )
+                )
+                total += len(executions)
+        self.assertEqual(579, total)
+
+        legacy_checkpoint_digests = {
+            PHASE2_A_PREDECESSOR_ROW_COUNT: (
+                "d3f44baa2d9b98f2712900ca5d5ef54b4a762544ddcc4549cbdeeca4368e4b72"
+            ),
+            PHASE2_F03_PREDECESSOR_ROW_COUNT: (
+                "cd965934eb9373f2d36a11e99bc7c251a1345ca25bea66c8c96567d2c8854473"
+            ),
+            PHASE2_F04_PREDECESSOR_ROW_COUNT: (
+                "fc87d0b7fde7632aa6e4cead664a538c21a7f057b2cff3d43c6e5a9cc68dac43"
+            ),
+        }
+
+        def remove_v2_only_fields(value: object) -> None:
+            if isinstance(value, dict):
+                basis = value.get("level_basis")
+                if isinstance(basis, dict):
+                    for field in (
+                        "l1_eligibility",
+                        "l5_assurance_eligibility",
+                        "l5_confirmation",
+                    ):
+                        basis.pop(field, None)
+                for child in value.values():
+                    remove_v2_only_fields(child)
+            elif isinstance(value, list):
+                for child in value:
+                    remove_v2_only_fields(child)
+
+        for row_count, legacy_digest in legacy_checkpoint_digests.items():
+            with self.subTest(legacy_projection_rows=row_count):
+                predecessor = copy.deepcopy(
+                    self.admission["cases"][:row_count]
+                )
+                remove_v2_only_fields(predecessor)
+                predecessor_bytes = json.dumps(
+                    predecessor,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode("utf-8")
+                self.assertEqual(
+                    legacy_digest,
+                    hashlib.sha256(predecessor_bytes).hexdigest(),
+                )
 
     def _assert_private_spec_ast_mutations(self) -> None:
         source = _private_spec_fixture_source()
@@ -5269,7 +5362,7 @@ class _FoundationSelectorSpec:
         ):
             with self.assertRaisesRegex(
                 ORACLE.RoutingIntegrityError,
-                "owner binding is not reciprocal",
+                "undeclared selector owner binding",
             ):
                 self._route_case("external-integration-consumer-only")
 

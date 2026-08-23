@@ -1,44 +1,30 @@
 # Test Data Management Benchmarks And Patterns
 
-Load this reference when fixtures, factories, golden data, generated volume, external sandbox records, privacy, parallel namespaces, or cleanup changes. Do not load it for a single inline value owned entirely by one test.
+Load this Reference for a named fixture ownership, isolation, privacy, determinism, volume, external sandbox, or cleanup decision; skip a single inline value owned by one test.
 
 ## Artifact Ownership
 
-| Artifact | Use when | Required controls |
-| --- | --- | --- |
-| Inline value | One test needs a meaningful deterministic example. | Assertion reason; no unrelated schema completeness. |
-| Factory/default/trait | A module owns repeated valid setup or behavior-specific variants. | Minimal defaults, named overrides, sequence/identity policy, consumers, and schema-update owner. |
-| Shared seed/reference data | Many tests need immutable approved data. | Read-only contract, version/update owner, reset/isolation proof, and no hidden tenant state. |
-| Golden/snapshot/recording | Exact serialized/rendered compatibility is the claim. | Contract/schema version, regeneration command, semantic diff review, freshness, and redaction. |
-| Load/parallel dataset | Distribution, volume, or concurrency is under test. | Generator/seed, per-worker/VU slice, collision policy, cleanup, and production-assumption limits. |
-| External sandbox record | Real provider behavior is needed. | Unique scope, credentials owner, reset/TTL, quota/cost, retention, and residual state owner. |
+| Artifact | Use and controls |
+| --- | --- |
+| Inline value | One deterministic example; state its assertion reason. |
+| Factory/default/trait | Repeated valid setup; name minimal defaults, overrides, identity policy, consumers, and schema owner. |
+| Shared seed | Immutable shared data; require version owner, reset/isolation proof, and no hidden tenant state. |
+| Golden/snapshot | Serialized/rendered compatibility; bind schema version, regeneration command, semantic diff, freshness, and redaction. |
+| Load/parallel set | Volume/distribution/concurrency; bind generator/seed, worker slice, collision policy, cleanup, and production limits. |
+| External sandbox record | Provider behavior; bind unique scope, credential owner, reset/TTL, quota/cost, retention, and residual owner. |
 
 ## Isolation, Privacy, And Determinism
 
-Inventory relational rows, documents, cache keys, queue messages/DLQ, files/objects, emails/notifications, sessions/browser storage, and external records created by the test. Clean each through transaction, owned namespace, explicit delete, TTL/lifecycle, or disposable resource, and verify the owned scope is empty or declare an accepted residual. When the environment is shared beyond the test's owned namespace, use owned-scope cleanup instead of a global destructive reset.
-
-Control clocks, timezones, locales, random generators, and seeds when assertions depend on them.
-Control IDs, run prefixes, sort tie-breakers, async or TTL timers, worker identity, and environment state when collisions depend on them.
-Treat one repeated seed as proof only for that seed.
-
-Use synthetic reserved-domain identities and provider-approved test values.
-Keep real, usable, or sensitive credentials, tokens, API keys, and session or cookie material out of fixtures and retained output.
-Use inert token or cookie values only when a test exercises their protocol semantics.
-Relevant semantics include parsing, expiry, signatures, `SameSite`, domain, and path.
-Label those values as non-secret fixtures.
-Prohibit production dumps by default.
-Require an approved purpose, de-identification evidence, minimization, access controls, encryption, retention or deletion, mapping-risk review, and an accountable owner for exceptions.
+- Inventory created rows, documents, keys, queue/DLQ items, files, notifications, sessions, and external records; clean only an owned transaction, namespace, resource, or TTL scope and prove or disclose residue.
+- Control clocks, zones, locales, randomness, IDs, prefixes, ordering, timers, workers, and environment state when the oracle depends on them; a repeated seed proves only that seed.
+- Use synthetic reserved-domain identities and provider-approved values.
+- Label inert secret/cookie fixtures and preserve tested parsing, expiry, signature, `SameSite`, domain, or path semantics.
+- Keep usable credentials and production samples out. Any protected-data exception needs approved purpose, de-identification, minimization, access/encryption, retention/deletion, mapping-risk review, and owner.
 
 ## Evidence And Proof Limits
 
-Inspect current schemas, factories, fixtures, cleanup hooks, CI sharding, sandbox policy, and generated artifacts.
-Do not treat secret scans as proof of de-identification.
-Treat namespace cleanup as proof only for the queried namespace.
-Keep collision analysis unverified without a parallel run.
-Keep synthetic volume unverified without a validated distribution.
-
-Reject mutable global users, schema-complete overfixtures, unseeded asserted output, and copied production samples.
-Reject queue, cache, or file cleanup omissions, shared load credentials, and stale goldens.
-Reject broad reset commands that can affect another suite.
-
-Route layer selection to test-strategy, real seams to integration-testing, and schema fixtures to contract-testing. Route browser-journey setup to e2e-testing, historical triggers to regression-testing, and regulated data to security-privacy-gate. Route volume budgets to performance-budgeting and restore datasets to backup-recovery.
+- Inspect current schemas, factories, fixtures, cleanup hooks, CI sharding, sandbox policy, and generated artifacts.
+- Secret scans do not prove de-identification; namespace cleanup proves only that namespace.
+- Keep collision and volume claims unverified without parallel and validated-distribution evidence.
+- Reject mutable global users, schema-complete overfixtures, unseeded asserted output, stale goldens, unowned side effects, shared load credentials, and resets reaching another suite.
+- Route proof-level choice to `test-strategy`, real seams to integration testing, schema fixtures to contract testing, browser journeys to e2e testing, regressions to regression testing, regulated data to `security-privacy-gate`, volume budgets to performance budgeting, and restore data to backup recovery.

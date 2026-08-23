@@ -22,6 +22,7 @@ from validation_utils import (
     CORE_CONTRACTS_PATH,
     NAME_RE,
     PROFILE_CONTRACT_MODEL,
+    PROFESSIONAL_BUILT_KERNEL_HEADINGS,
     PROMPT_CONTRACT_MODEL,
     REGISTRY_SCHEMA_VERSIONS,
     ROLE_CONTRACT_MODEL,
@@ -31,6 +32,8 @@ from validation_utils import (
     foundation_content_class_errors,
     foundation_ownership_errors,
     foundation_registry_field_errors,
+    layer3_selector_authority,
+    layer3_selector_control_projections,
     execution_level_runtime_reference_errors,
     load_yaml_file,
     parse_frontmatter,
@@ -67,14 +70,12 @@ LAYER3_PROJECTION_SECTIONS = {
         ("High-Value Rules", "High-Value Rules"),
         ("Anti-Patterns", "Anti-Patterns"),
         ("Stop Conditions", "Stop Conditions"),
-        ("Targeted References", "Targeted References"),
     ),
     "domain": (
         ("Role", "Decision Boundary"),
         ("Professional Decision Rules", "Professional Decision Rules"),
         ("High-Value Gotchas", "High-Value Gotchas"),
         ("Stop / Escalation Conditions", "Stop / Escalation Conditions"),
-        ("Targeted References", "Targeted References"),
     ),
 }
 LAYER3_PROJECTION_FORBIDDEN_HEADINGS = frozenset(
@@ -86,7 +87,17 @@ LAYER3_PROJECTION_FORBIDDEN_HEADINGS = frozenset(
         "Execution Checklist",
         "When To Use",
         "Do Not Use",
+        "Targeted References",
     }
+)
+# Built Foundation roots start after the selector receipt and bounded assignment.
+# Source Inputs and Output Contract remain authoring authority; the Task capsule
+# and staged required-output receipts carry those values without repetition.
+FOUNDATION_BUILT_KERNEL_HEADINGS = (
+    "Skill Role",
+    "High-Value Rules",
+    "Anti-Patterns",
+    "Stop Conditions",
 )
 ENFORCEMENT_STATUSES = (
     "native-enforced",
@@ -451,8 +462,10 @@ def _preflight_build_plan(
             if item.layer == "control" and item.name == "engineering-control-plane":
                 _write_compact_control_projection(destination, item)
                 _copy_control_prompt(destination)
+            elif item.layer == "professional":
+                _write_compact_professional_projection(destination, item)
             else:
-                _write_targeted_reference_contracts(destination, item)
+                _write_compact_layer3_root_projection(destination, item)
             if item.layer == "professional":
                 selected = _compiled_layer3_names(
                     profile,
@@ -737,8 +750,10 @@ def _build_skill_roots(
             if item.layer == "control" and item.name == "engineering-control-plane":
                 _write_compact_control_projection(destination, item)
                 _copy_control_prompt(destination)
+            elif item.layer == "professional":
+                _write_compact_professional_projection(destination, item)
             else:
-                _write_targeted_reference_contracts(destination, item)
+                _write_compact_layer3_root_projection(destination, item)
             if item.layer == "professional":
                 selected = _compiled_layer3_names(
                     profile,
@@ -863,63 +878,68 @@ def _append_layer3_entrypoint(destination: Path, profile: str) -> None:
     source = skill_file.read_text(encoding="utf-8").rstrip()
     compiled_index = destination / "references" / "layer3" / "index.md"
     if profile == "recommended":
-        delivery = [
-            "This build compiles assigned Foundation and Domain guidance into this",
-            "Professional Skill's `references/layer3/` directory.",
-        ]
+        delivery = (
+            "Foundation and Domain items are compiled at "
+            "`references/layer3/<name>.md`."
+            if compiled_index.is_file()
+            else "No Foundation or Domain Layer 3 items are assigned to this Skill."
+        )
     elif profile == "full":
-        delivery = [
-            "This build compiles assigned Foundation guidance into this Professional",
-            "Skill's `references/layer3/` directory and delivers Domain guidance as",
-            "top-level Skills.",
-        ]
+        delivery = (
+            "Foundation items are compiled at `references/layer3/<name>.md`; "
+            "Domain items are top-level Skills."
+            if compiled_index.is_file()
+            else "Domain items are top-level Skills; no Foundation items are compiled "
+            "for this Skill."
+        )
     elif profile == "dev":
-        delivery = [
-            "This build delivers assigned Foundation and Domain guidance as top-level",
-            "Skills; it does not compile Layer 3 references into this Professional Skill.",
-        ]
+        delivery = (
+            "Foundation and Domain items are top-level Skills; no Layer 3 references "
+            "are compiled."
+        )
     else:
         raise BuildError(f"unsupported profile: {profile}")
-    if compiled_index.is_file():
-        delivery.extend(
-            [
-                "Open each capsule-named compiled item directly at",
-                "`references/layer3/<name>.md`. Never preload Layer 3 or open the",
-                "[Layer 3 index](references/layer3/index.md) during task execution. The",
-                "index exists only for build validation and human discovery.",
-            ]
-        )
-    elif profile == "recommended":
-        delivery.extend(
-            [
-                "This Skill has no assigned compiled Layer 3 guidance. Never preload Layer 3",
-                "or open a Layer 3 index or catalog.",
-            ]
-        )
-    if profile == "full":
-        delivery.extend(
-            [
-                "Load each capsule-named Domain item as a top-level Skill.",
-                "Never preload Layer 3 or open a Layer 3 index or catalog.",
-            ]
-        )
-    elif profile == "dev":
-        delivery.extend(
-            [
-                "Load each capsule-named Foundation or Domain item as a top-level Skill.",
-                "Never preload Layer 3 or open a Layer 3 index or catalog.",
-            ]
-        )
     entrypoint = "\n".join(
         [
-            GENERATED_MARKER,
-            "",
             "## Layer 3 Delivery",
             "",
-            *delivery,
+            delivery,
         ]
     )
     skill_file.write_text(f"{source}\n\n{entrypoint}\n", encoding="utf-8")
+
+
+def _write_control_layer3_selector_projections(destination: Path) -> None:
+    """Render one Control-local declarative selector view per Professional."""
+
+    foundation = load_yaml_file(REGISTRY_DIR / "foundation-skills.yaml")
+    professional_data = load_yaml_file(REGISTRY_DIR / "professional-skills.yaml")
+    domain = load_yaml_file(REGISTRY_DIR / "domain-skills.yaml")
+    try:
+        authority = layer3_selector_authority(
+            foundation,
+            professional_data,
+            domain,
+            context="build Control selector authority",
+        )
+        projections = layer3_selector_control_projections(authority)
+    except ValidationProblem as exc:
+        raise BuildError(str(exc)) from exc
+    root = destination / "references" / "selectors"
+    if root.exists():
+        shutil.rmtree(root)
+    root.mkdir(parents=True, exist_ok=True)
+    for filename, payload in projections.items():
+        (root / filename).write_text(
+            json.dumps(
+                payload,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            + "\n",
+            encoding="utf-8",
+        )
 
 
 def _render_layer3_reference(item: SkillItem) -> str:
@@ -1005,11 +1025,15 @@ def _project_layer3_reference(item: SkillItem, markdown: str) -> str:
                 f"{source_heading!r} section, found {len(values)}"
             )
         output.extend(["", f"## {projected_heading}", "", values[0]])
+    output.extend(_compact_jit_reference_delivery_lines(None))
 
     projected = "\n".join(output).rstrip() + "\n"
     _projected_h1, projected_sections = _markdown_heading_sections(projected)
     projected_headings = list(projected_sections)
-    expected_headings = [target for _source, target in section_contract]
+    expected_headings = [
+        *[target for _source, target in section_contract],
+        "JIT Reference Delivery",
+    ]
     if projected_headings != expected_headings:
         raise BuildError(
             f"{item.name}: projected headings {projected_headings} do not match "
@@ -1049,6 +1073,131 @@ def _write_targeted_reference_contracts(destination: Path, item: SkillItem) -> N
         item.name,
     )
     skill_file.write_text(rendered, encoding="utf-8")
+
+
+def _write_compact_professional_projection(
+    destination: Path,
+    item: SkillItem,
+) -> None:
+    """Emit the built-only always-loaded Professional kernel.
+
+    The complete authoring root and its Reference Contract remain source
+    authority. Built roots retain only the sections that every invocation must
+    load; role-filtered named Reference records are delivered through the
+    Control selector projection generated from the same registry row.
+    """
+
+    _write_compact_skill_root_projection(
+        destination,
+        item,
+        headings=PROFESSIONAL_BUILT_KERNEL_HEADINGS,
+        selector_name=item.name,
+    )
+
+
+def _write_compact_layer3_root_projection(
+    destination: Path,
+    item: SkillItem,
+) -> None:
+    """Emit one built-only Foundation or Domain always-loaded kernel."""
+
+    headings = (
+        FOUNDATION_BUILT_KERNEL_HEADINGS
+        if item.layer == "foundation"
+        else PROFESSIONAL_BUILT_KERNEL_HEADINGS
+        if item.layer == "domain"
+        else None
+    )
+    if headings is None:
+        raise BuildError(
+            f"{item.name}: compact Layer 3 root projection does not support "
+            f"layer {item.layer!r}"
+        )
+    _write_compact_skill_root_projection(
+        destination,
+        item,
+        headings=headings,
+        selector_name=None,
+        source_only_headings=("Output Contract",),
+    )
+
+
+def _write_compact_skill_root_projection(
+    destination: Path,
+    item: SkillItem,
+    *,
+    headings: tuple[str, ...],
+    selector_name: str | None,
+    optional_headings: frozenset[str] = frozenset(),
+    source_only_headings: tuple[str, ...] = (),
+) -> None:
+    """Project one complete source root to its built runtime kernel."""
+
+    skill_file = destination / "SKILL.md"
+    if not skill_file.is_file():
+        raise BuildError(f"{_display_path(destination)} is missing root SKILL.md")
+    try:
+        _metadata, raw_frontmatter, body = parse_frontmatter(skill_file)
+    except ValidationProblem as exc:
+        raise BuildError(str(exc)) from exc
+    h1_titles, sections = _markdown_heading_sections(body)
+    if len(h1_titles) != 1:
+        raise BuildError(
+            f"{item.name}: compact Professional projection requires exactly one H1"
+        )
+    targeted = sections.get("Targeted References", [])
+    if len(targeted) != 1 or not targeted[0]:
+        raise BuildError(
+            f"{item.name}: compact Professional projection requires the complete "
+            "source Targeted References authority"
+        )
+    for heading in source_only_headings:
+        values = sections.get(heading, [])
+        if len(values) != 1 or not values[0]:
+            raise BuildError(
+                f"{item.name}: compact Professional projection requires exactly "
+                f"one non-empty {heading!r} section"
+            )
+    output = ["---", raw_frontmatter, "---", "", f"# {h1_titles[0]}"]
+    for heading in headings:
+        values = sections.get(heading, [])
+        if not values and heading in optional_headings:
+            continue
+        if len(values) != 1 or not values[0]:
+            raise BuildError(
+                f"{item.name}: compact Professional projection requires exactly "
+                f"one non-empty {heading!r} section"
+            )
+        output.extend(["", f"## {heading}", "", values[0]])
+    output.extend(_compact_jit_reference_delivery_lines(selector_name))
+    output.append("")
+    skill_file.write_text("\n".join(output), encoding="utf-8")
+
+
+def _compact_jit_reference_delivery_lines(
+    selector_name: str | None,
+) -> list[str]:
+    """Return the built-only selector anchor; authority stays in its JSON row."""
+
+    if selector_name is None:
+        return [
+            "",
+            "## JIT Reference Delivery",
+            "",
+            "Current-Professional JIT. Exact skips it; never select/reroute/preload",
+            "index/catalog.",
+        ]
+    selector_path = (
+        "engineering-control-plane/references/selectors/"
+        f"{selector_name}.json"
+    )
+    return [
+        "",
+        "## JIT Reference Delivery",
+        "",
+        f"JIT: `{selector_path}`. Exact skips it; never select/reroute/preload",
+        "index/catalog.",
+    ]
 
 
 def _write_compact_control_projection(destination: Path, item: SkillItem) -> None:
@@ -1104,6 +1253,7 @@ def _write_compact_control_projection(destination: Path, item: SkillItem) -> Non
         ]
     )
     skill_file.write_text(rendered, encoding="utf-8")
+    _write_control_layer3_selector_projections(destination)
 
 
 def _render_targeted_reference_section(

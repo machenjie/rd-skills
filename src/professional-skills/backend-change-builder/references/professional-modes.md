@@ -24,6 +24,8 @@ Do not use this reference to diagnose an unknown cause, independently review a d
 
 ## Review-Finding Or Defect Repair
 
+Stop repair work without an accepted finding or verified failure mechanism.
+
 1. Preserve the accepted finding or verified failure mechanism, affected acceptance, target path, and required outcome within the assigned repair rather than a new diagnosis mode.
 2. Confirm current source still exhibits the cited mechanism before editing. When recurrence is credible, scan the mechanism's bounded sibling/caller/contract scope and record results and exclusions; otherwise omit same-pattern claims.
 3. Return the actual repair diff or host-native diff reference, post-repair tests run after the last material edit, proof limits, and residual risk.

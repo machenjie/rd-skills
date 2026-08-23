@@ -22,6 +22,7 @@ from validation_utils import (
     domain_modifier_routing_authority,
     domain_routing_mode_map,
     foundation_runtime_matcher_authority,
+    layer3_selector_authority,
     load_yaml_file,
     professional_automatic_routing_authority,
     professional_routing_authority,
@@ -137,1269 +138,116 @@ _KNOWN_TASK_SKILLS = frozenset(
         *_EXPECTED_REVIEW_TASK_SKILLS,
     }
 )
-_RUNTIME_FOUNDATION_SELECTORS = (
-    "business-rule-extraction",
-    "state-machine-modeling",
-    "test-strategy",
-)
-_DYNAMIC_FOUNDATION_SOURCES = {
-    "accessibility-inclusive-design": "_accessibility_behavior_requested",
-    "backup-recovery": "_review_risk_layer3",
-    "build-tool-professional-usage": "_implementation_owner_layer3",
-    "client-application-testing": "_build_route_candidates",
-    "client-lifecycle-state-restoration": "_implementation_owner_layer3",
-    "code-review": "_build_route_candidates",
-    "configuration-runtime-policy": "_implementation_owner_layer3",
-    "csharp-dotnet-professional-usage": "_implementation_owner_layer3",
-    "dependency-vulnerability-scanning": "_implementation_owner_layer3",
-    "filesystem-process-safety": "_implementation_owner_layer3",
-    "infrastructure-as-code-safety": "_implementation_owner_layer3",
-    "kotlin-professional-usage": "_implementation_owner_layer3",
-    "logging-error-handling": "_review_risk_layer3",
-    "nodejs-runtime-professional-usage": "_implementation_owner_layer3",
-    "offline-sync-conflict-resolution": "_implementation_owner_layer3",
-    "powershell-professional-usage": "_implementation_owner_layer3",
-    "regression-testing": "_build_route_candidates",
-    "state-management-design": "_implementation_owner_layer3",
-    "swift-professional-usage": "_implementation_owner_layer3",
-    "targeted-validation-selection": "_implementation_owner_layer3",
-    "web-platform-professional-usage": "_implementation_owner_layer3",
-}
-_DIRECT_FOUNDATION_SELECTOR_BLUEPRINTS = (
-    (
-        "acceptance-definition",
-        ("acceptance-standard-definition",),
-        ("observable-acceptance",),
-        "acceptance-criteria-builder",
-        "ai-code-review-refactor",
-    ),
-    (
-        "accepted-brief-task-dag",
-        ("task-dag-decomposition",),
-        ("accepted-engineering-brief", "explicit-task-dag"),
-        "task-dag-planner",
-        "engineering-artifact-review",
-    ),
-    (
-        "ambiguous-intake",
-        ("requirement-clarification",),
-        ("ambiguous-request",),
-        "change-intake-compiler",
-        "ai-code-review-refactor",
-    ),
-    (
-        "audit-integrity-change",
-        ("audit-evidence-integrity",),
-        ("audit-evidence-integrity",),
-        "security-privacy-gate",
-        "security-privacy-gate",
-    ),
-    (
-        "backend-idempotency-analysis",
-        ("idempotency-retry-design",),
-        ("backend-retry-idempotency",),
-        "engineering-change-analysis",
-        "ai-code-review-refactor",
-    ),
-    (
-        "cache-stampede-analysis",
-        ("concurrency-control",),
-        ("cache-stampede", "single-flight"),
-        "engineering-change-analysis",
-        "reliability-observability-gate",
-    ),
-    (
-        "cryptography-key-lifecycle",
-        ("secret-configuration-security", "cryptography-key-lifecycle"),
-        ("cryptographic-construction-or-key-lifecycle",),
-        "security-privacy-gate",
-        "security-privacy-gate",
-    ),
-    (
-        "database-migration-analysis",
-        ("data-migration-design",),
-        ("database-migration",),
-        "engineering-change-analysis",
-        "delivery-release-gate",
-    ),
-    (
-        "design-pattern-analysis",
-        ("design-pattern-selection",),
-        ("design-pattern-change", "analysis-only"),
-        "architecture-impact-reviewer",
-        "architecture-impact-reviewer",
-    ),
-    (
-        "distributed-workflow-analysis",
-        ("transaction-consistency",),
-        ("distributed-effect-change",),
-        "data-middleware-change-builder",
-        "quality-test-gate",
-    ),
-    (
-        "distributed-workflow-consistency-analysis",
-        ("distributed-workflow-consistency",),
-        ("distributed-effect-change",),
-        "data-middleware-change-builder",
-        "quality-test-gate",
-    ),
-    (
-        "domain-object-analysis",
-        ("domain-object-identification",),
-        ("domain-object-change", "analysis-only"),
-        "domain-impact-modeler",
-        "architecture-impact-reviewer",
-    ),
-    (
-        "dto-model-boundary-analysis",
-        ("model-boundary-mapping",),
-        ("accepted-brief", "dto-mapping"),
-        "data-api-contract-changer",
-        "architecture-impact-reviewer",
-    ),
-    (
-        "explicit-architecture-tradeoff",
-        ("architecture-tradeoff-analysis",),
-        ("explicit-architecture-tradeoff",),
-        "architecture-impact-reviewer",
-        "architecture-impact-reviewer",
-    ),
-    (
-        "explicit-authentication-authorization-analysis",
-        ("authentication-authorization",),
-        ("explicit-authentication-authorization-handoff",),
-        "security-privacy-gate",
-        "security-privacy-gate",
-    ),
-    (
-        "explicit-test-data-analysis",
-        ("test-data-management",),
-        ("explicit-test-data-decision",),
-        "quality-test-gate",
-        "quality-test-gate",
-    ),
-    (
-        "external-integration-analysis",
-        ("consumer-impact-analysis", "failure-contract-design"),
-        ("external-integration",),
-        "engineering-change-analysis",
-        "ai-code-review-refactor",
-    ),
-    (
-        "incident-response-coordination",
-        ("failure-diagnosis",),
-        ("active-multi-responder-incident", "coordination"),
-        "incident-response-coordinator",
-        "reliability-observability-gate",
-    ),
-    (
-        "integration-handoff-artifact",
-        ("contract-testing",),
-        ("accepted-brief", "integration-handoff"),
-        "integration-change-builder",
-        "ai-code-review-refactor",
-    ),
-    (
-        "module-boundary-analysis",
-        ("module-boundary-design",),
-        ("module-boundary-change",),
-        "architecture-impact-reviewer",
-        "architecture-impact-reviewer",
-    ),
-    (
-        "owner-internal-structure-analysis",
-        ("implementation-structure-design",),
-        (
-            "analysis-only-action",
-            "explicit-known-owner",
-            "owner-internal-implementation-structure",
-            "reuse-and-deliberate-separation-alternatives",
-            "unresolved-structure-decision",
-        ),
-        "architecture-impact-reviewer",
-        "architecture-impact-reviewer",
-    ),
-    (
-        "package-dependency-analysis",
-        ("package-dependency-management",),
-        ("package-capability-gap", "supply-chain-decision"),
-        "engineering-change-analysis",
-        "architecture-impact-reviewer",
-    ),
-    (
-        "personal-data-lifecycle",
-        ("privacy-data-lifecycle",),
-        ("personal-data-purpose", "retention"),
-        "security-privacy-gate",
-        "security-privacy-gate",
-    ),
-    (
-        "production-release-decision",
-        ("release-rollback", "version-compatibility"),
-        ("production-apply-or-rollout",),
-        "delivery-release-gate",
-        "delivery-release-gate",
-    ),
-    (
-        "refactor-fixed-destination",
-        ("refactoring",),
-        ("refactoring-change", "fixed-destination"),
-        "engineering-change-analysis",
-        "architecture-impact-reviewer",
-    ),
-    (
-        "review-ambiguous-structure-repository-first",
-        ("repository-context-map",),
-        ("actual-diff", "ambiguous-structure"),
-        "engineering-change-analysis",
-        "architecture-impact-reviewer",
-    ),
-    (
-        "review-minimality-change",
-        ("minimal-correct-implementation",),
-        ("actual-diff", "minimality-change"),
-        "ai-code-review-refactor",
-        "ai-code-review-refactor",
-    ),
-    (
-        "review-readability-change",
-        ("code-clarity-maintainability",),
-        ("actual-diff", "readability-change"),
-        "ai-code-review-refactor",
-        "ai-code-review-refactor",
-    ),
-    (
-        "review-repeat-failure",
-        ("repeat-failure-analysis",),
-        ("actual-diff", "repeated-failure"),
-        "ai-code-review-refactor",
-        "ai-code-review-refactor",
-    ),
-    (
-        "sdk-contract-analysis",
-        ("sdk-library-contract-design",),
-        ("accepted-brief", "sdk-contract"),
-        "data-api-contract-changer",
-        "architecture-impact-reviewer",
-    ),
-    (
-        "security-anti-input-shape",
-        ("api-contract-design",),
-        ("input-shape-change", "no-security-sink"),
-        "data-api-contract-changer",
-        "architecture-impact-reviewer",
-    ),
-    (
-        "security-anti-reliability-only",
-        ("degradation-circuit-breaking", "observability"),
-        ("reliability-only", "no-abuse-or-privacy-risk"),
-        "reliability-observability-gate",
-        "reliability-observability-gate",
-    ),
-    (
-        "security-anti-scanner-report",
-        ("documentation-generation",),
-        ("scanner-report-organization", "no-security-verdict"),
-        "change-documentation-gate",
-        "change-documentation-gate",
-    ),
-    (
-        "security-credential-session-lifecycle",
-        ("authentication-security",),
-        ("credential-or-session-lifecycle-change",),
-        "security-privacy-gate",
-        "security-privacy-gate",
-    ),
-    (
-        "ssrf-url-fetch-analysis",
-        ("threat-modeling", "web-security"),
-        ("ssrf", "url-fetch"),
-        "engineering-change-analysis",
-        "security-privacy-gate",
-    ),
-    (
-        "tenant-isolation-security",
-        ("permission-boundary-modeling", "tenant-isolation"),
-        ("tenant-isolation", "propagated-boundary"),
-        "security-privacy-gate",
-        "security-privacy-gate",
-    ),
-    (
-        "technology-stack-commitment",
-        ("technology-stack-selection",),
-        ("technology-stack-commitment",),
-        "architecture-impact-reviewer",
-        "architecture-impact-reviewer",
-    ),
-    (
-        "user-flow-analysis",
-        ("interaction-state-modeling", "design-system-rules"),
-        ("user-flow",),
-        "experience-impact-modeler",
-        "ai-code-review-refactor",
-    ),
-)
-_DIRECT_FOUNDATION_SKILLS = frozenset(
-    foundation
-    for _selector_id, foundations, _evidence, _primary, _review
-    in _DIRECT_FOUNDATION_SELECTOR_BLUEPRINTS
-    for foundation in foundations
-)
-_ADMITTED_FOUNDATION_SKILLS = frozenset(
-    {
-        *_DIRECT_FOUNDATION_SKILLS,
-        *_DYNAMIC_FOUNDATION_SOURCES,
-        *_RUNTIME_FOUNDATION_SELECTORS,
+_SELECTOR_REGISTRY_METADATA: dict[str, Any] | None = None
+
+
+def _selector_registry_metadata() -> dict[str, Any]:
+    """Load declarative selector records without importing Runtime matchers."""
+
+    global _SELECTOR_REGISTRY_METADATA
+    if _SELECTOR_REGISTRY_METADATA is not None:
+        return _SELECTOR_REGISTRY_METADATA
+    data = load_yaml_file(FOUNDATION_REGISTRY)
+    domain_data = load_yaml_file(DOMAIN_REGISTRY)
+    authority = data.get("selector_authority") if isinstance(data, dict) else None
+    selectors = authority.get("selectors") if isinstance(authority, dict) else None
+    aliases = authority.get("aliases") if isinstance(authority, dict) else None
+    subsets = (
+        authority.get("alias_member_subsets")
+        if isinstance(authority, dict)
+        else None
+    )
+    if (
+        not isinstance(selectors, list)
+        or not isinstance(aliases, list)
+        or not isinstance(subsets, dict)
+    ):
+        raise RoutingIntegrityError(
+            "registry-owned selector declarations are unavailable"
+        )
+    route_bindings = {
+        record["selector_id"]: tuple(
+            (
+                binding["candidate_id"],
+                binding["rule_id"],
+                binding["routing_family"],
+                binding["primary_skill"],
+                binding["review_skill"],
+            )
+            for binding in record["route_bindings"]
+        )
+        for record in selectors
     }
+    alias_bindings: dict[str, tuple[tuple[object, ...], ...]] = {}
+    for alias in aliases:
+        alias_bindings.setdefault(alias["candidate_id"], ())
+        alias_bindings[alias["candidate_id"]] = (
+            *alias_bindings[alias["candidate_id"]],
+            (
+                tuple(alias["source_selector_ids"]),
+                alias["primary_skill"],
+                alias["review_skill"],
+            ),
+        )
+    _SELECTOR_REGISTRY_METADATA = {
+        "route_bindings": route_bindings,
+        "alias_bindings": alias_bindings,
+        "alias_member_subsets": {
+            candidate_id: tuple(layer3)
+            for candidate_id, layer3 in subsets.items()
+        },
+        "admitted_foundations": frozenset(
+            layer3
+            for record in selectors
+            for layer3 in record["selectable_layer3"]
+        ),
+        "runtime_foundations": tuple(
+            record["selectable_layer3"][0]
+            for record in selectors
+            if record["source"]["kind"] == "runtime-matcher"
+        ),
+        "dynamic_sources": {
+            record["selectable_layer3"][0]: record["source"]["symbol"]
+            for record in selectors
+            if record["source"]["kind"] == "dynamic-helper-only"
+        },
+        "direct_blueprints": tuple(
+            (
+                record["selector_id"],
+                tuple(record["selectable_layer3"]),
+                tuple(record["positive_evidence"][:-1]),
+                record["owner_bindings"][0]["primary_skill"],
+                record["owner_bindings"][0]["review_skill"],
+            )
+            for record in selectors
+            if record["source"]["kind"] == "direct-static"
+        ),
+        "domain_registry": domain_data,
+    }
+    return _SELECTOR_REGISTRY_METADATA
+
+
+_SELECTOR_DECLARATIONS = _selector_registry_metadata()
+_RUNTIME_FOUNDATION_SELECTORS = _SELECTOR_DECLARATIONS["runtime_foundations"]
+_ADMITTED_FOUNDATION_SKILLS = _SELECTOR_DECLARATIONS["admitted_foundations"]
+_DYNAMIC_FOUNDATION_SOURCES = _SELECTOR_DECLARATIONS["dynamic_sources"]
+_DIRECT_FOUNDATION_SELECTOR_BLUEPRINTS = (
+    _SELECTOR_DECLARATIONS["direct_blueprints"]
 )
 _FOUNDATION_SELECTOR_ADDITIONAL_OWNER_BINDINGS = {
-    "audit-integrity-change": (
-        (
-            "implementation-owner:logging-design-gate",
-            "audit-integrity-change",
-            "logging",
-            "logging-design-gate",
-            "logging-design-gate",
-        ),
-    ),
-    "backend-idempotency-analysis": (
-        (
-            "implementation-owner:data-middleware-change-builder",
-            None,
-            "data-middleware",
-            "data-middleware-change-builder",
-            "ai-code-review-refactor",
-        ),
-        (
-            "implementation-owner:integration-change-builder",
-            None,
-            "integration",
-            "integration-change-builder",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "cache-stampede-analysis": (
-        (
-            "implementation-owner:backend-change-builder",
-            None,
-            "backend",
-            "backend-change-builder",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "cryptography-key-lifecycle": (
-        (
-            "review-logging-risk",
-            "review-logging-risk-candidate",
-            None,
-            "logging-design-gate",
-            "logging-design-gate",
-        ),
-        (
-            "implementation-owner:logging-design-gate",
-            None,
-            "logging",
-            "logging-design-gate",
-            "logging-design-gate",
-        ),
-    ),
-    "database-migration-analysis": (
-        (
-            "implementation-owner:data-middleware-change-builder",
-            None,
-            "data-middleware",
-            "data-middleware-change-builder",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "design-pattern-analysis": (
-        (
-            "implementation-owner:backend-change-builder",
-            None,
-            "backend",
-            "backend-change-builder",
-            "ai-code-review-refactor",
-        ),
-        (
-            "implementation-owner:repository-tooling-change-builder",
-            None,
-            "repository-tooling",
-            "repository-tooling-change-builder",
-            "ai-code-review-refactor",
-        ),
-        (
-            "review-generic",
-            "review-generic-candidate",
-            None,
-            "ai-code-review-refactor",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "domain-object-analysis": (
-        (
-            "implementation-owner:backend-change-builder",
-            None,
-            "backend",
-            "backend-change-builder",
-            "ai-code-review-refactor",
-        ),
-        (
-            "review-generic",
-            "review-generic-candidate",
-            None,
-            "ai-code-review-refactor",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "distributed-workflow-analysis": (
-        (
-            "implementation-owner:data-middleware-change-builder",
-            None,
-            "data-middleware",
-            "data-middleware-change-builder",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "external-integration-analysis": (
-        (
-            "implementation-owner:integration-change-builder",
-            None,
-            "integration",
-            "integration-change-builder",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "integration-handoff-artifact": (
-        (
-            "implementation-owner:integration-change-builder",
-            None,
-            "integration",
-            "integration-change-builder",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "module-boundary-analysis": (
-        (
-            "high-risk-module-boundary-review",
-            "high-risk-module-boundary-review",
-            None,
-            "high-risk-design-review",
-            "high-risk-design-review",
-        ),
-    ),
-    "owner-internal-structure-analysis": (
-        (
-            "implementation-owner:backend-change-builder",
-            None,
-            "backend",
-            "backend-change-builder",
-            "ai-code-review-refactor",
-        ),
-        (
-            "implementation-owner:repository-tooling-change-builder",
-            None,
-            "repository-tooling",
-            "repository-tooling-change-builder",
-            "ai-code-review-refactor",
-        ),
-        (
-            "review-generic",
-            "review-generic-candidate",
-            None,
-            "ai-code-review-refactor",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "production-release-decision": (
-        (
-            "implementation-preparation",
-            "implementation-preparation-candidate",
-            None,
-            "engineering-change-analysis",
-            "delivery-release-gate",
-        ),
-        (
-            "review-release-risk",
-            "review-release-risk-candidate",
-            None,
-            "delivery-release-gate",
-            "delivery-release-gate",
-        ),
-    ),
-    "refactor-fixed-destination": (
-        (
-            "review-generic",
-            "review-generic-candidate",
-            None,
-            "ai-code-review-refactor",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "review-ambiguous-structure-repository-first": (
-        (
-            "critical-unknown",
-            "critical-unknown-candidate",
-            None,
-            "engineering-change-analysis",
-            "architecture-impact-reviewer",
-        ),
-    ),
-    "review-minimality-change": (
-        (
-            "implementation-owner:backend-change-builder",
-            None,
-            "backend",
-            "backend-change-builder",
-            "ai-code-review-refactor",
-        ),
-        (
-            "implementation-owner:repository-tooling-change-builder",
-            None,
-            "repository-tooling",
-            "repository-tooling-change-builder",
-            "ai-code-review-refactor",
-        ),
-        (
-            "review-generic",
-            "review-generic-candidate",
-            None,
-            "ai-code-review-refactor",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "security-anti-reliability-only": (
-        (
-            "review-logging-risk",
-            "review-logging-risk-candidate",
-            None,
-            "logging-design-gate",
-            "logging-design-gate",
-        ),
-        (
-            "review-reliability-risk",
-            "review-reliability-risk-candidate",
-            None,
-            "reliability-observability-gate",
-            "reliability-observability-gate",
-        ),
-    ),
-    "ssrf-url-fetch-analysis": (
-        (
-            "review-security-risk",
-            "review-security-risk-candidate",
-            None,
-            "security-privacy-gate",
-            "security-privacy-gate",
-        ),
-    ),
-    "tenant-isolation-security": (
-        (
-            "review-security-risk",
-            "review-security-risk-candidate",
-            None,
-            "security-privacy-gate",
-            "security-privacy-gate",
-        ),
-    ),
-    "technology-stack-commitment": (
-        (
-            "high-risk-technology-stack-review",
-            "high-risk-technology-stack-review",
-            None,
-            "high-risk-design-review",
-            "high-risk-design-review",
-        ),
-    ),
+    selector_id: bindings
+    for selector_id, bindings in _SELECTOR_DECLARATIONS["route_bindings"].items()
+    if bindings and not selector_id.startswith("dynamic-foundation:")
 }
 _DYNAMIC_FOUNDATION_OWNER_BINDINGS = {
-    "dynamic-foundation:accessibility-inclusive-design": (
-        (
-            "implementation-owner:frontend-change-builder",
-            None,
-            "frontend",
-            "frontend-change-builder",
-            "ai-code-review-refactor",
-        ),
-        (
-            "implementation-owner:installed-client-change-builder",
-            None,
-            "installed-client",
-            "installed-client-change-builder",
-            "ai-code-review-refactor",
-        ),
-        (
-            "review-generic",
-            "review-generic-candidate",
-            None,
-            "ai-code-review-refactor",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "dynamic-foundation:backup-recovery": (
-        (
-            "review-reliability-risk",
-            "review-reliability-risk-candidate",
-            None,
-            "reliability-observability-gate",
-            "reliability-observability-gate",
-        ),
-    ),
-    "dynamic-foundation:build-tool-professional-usage": (
-        (
-            "implementation-owner:repository-tooling-change-builder",
-            None,
-            "repository-tooling",
-            "repository-tooling-change-builder",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "dynamic-foundation:client-application-testing": (
-        (
-            "implementation-owner:quality-test-gate",
-            None,
-            "test-validation",
-            "quality-test-gate",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "dynamic-foundation:client-lifecycle-state-restoration": (
-        (
-            "implementation-owner:installed-client-change-builder",
-            None,
-            "installed-client",
-            "installed-client-change-builder",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "dynamic-foundation:code-review": (
-        (
-            "review-generic",
-            "review-generic-candidate",
-            None,
-            "ai-code-review-refactor",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "dynamic-foundation:configuration-runtime-policy": (
-        (
-            "critical-unknown",
-            "critical-unknown-candidate",
-            None,
-            "engineering-change-analysis",
-            "architecture-impact-reviewer",
-        ),
-        (
-            "implementation-owner:frontend-change-builder",
-            None,
-            "frontend",
-            "frontend-change-builder",
-            "ai-code-review-refactor",
-        ),
-        (
-            "implementation-owner:installed-client-change-builder",
-            None,
-            "installed-client",
-            "installed-client-change-builder",
-            "ai-code-review-refactor",
-        ),
-        (
-            "implementation-owner:backend-change-builder",
-            None,
-            "backend",
-            "backend-change-builder",
-            "ai-code-review-refactor",
-        ),
-        (
-            "implementation-owner:data-middleware-change-builder",
-            None,
-            "data-middleware",
-            "data-middleware-change-builder",
-            "ai-code-review-refactor",
-        ),
-        (
-            "implementation-owner:platform-infrastructure-change-builder",
-            None,
-            "platform-infrastructure",
-            "platform-infrastructure-change-builder",
-            "ai-code-review-refactor",
-        ),
-        (
-            "implementation-owner:integration-change-builder",
-            None,
-            "integration",
-            "integration-change-builder",
-            "ai-code-review-refactor",
-        ),
-        (
-            "implementation-owner:repository-tooling-change-builder",
-            None,
-            "repository-tooling",
-            "repository-tooling-change-builder",
-            "ai-code-review-refactor",
-        ),
-        (
-            "review-generic",
-            "review-generic-candidate",
-            None,
-            "ai-code-review-refactor",
-            "ai-code-review-refactor",
-        ),
-        (
-            "review-release-risk",
-            "review-release-risk-candidate",
-            None,
-            "delivery-release-gate",
-            "delivery-release-gate",
-        ),
-    ),
-    "dynamic-foundation:csharp-dotnet-professional-usage": (
-        (
-            "implementation-owner:backend-change-builder",
-            None,
-            "backend",
-            "backend-change-builder",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "dynamic-foundation:dependency-vulnerability-scanning": (
-        (
-            "implementation-owner:frontend-change-builder",
-            "implementation-dependency-risk",
-            "frontend",
-            "frontend-change-builder",
-            "security-privacy-gate",
-        ),
-        (
-            "implementation-owner:installed-client-change-builder",
-            "implementation-dependency-risk",
-            "installed-client",
-            "installed-client-change-builder",
-            "security-privacy-gate",
-        ),
-        (
-            "implementation-owner:backend-change-builder",
-            "implementation-dependency-risk",
-            "backend",
-            "backend-change-builder",
-            "security-privacy-gate",
-        ),
-        (
-            "implementation-owner:data-middleware-change-builder",
-            "implementation-dependency-risk",
-            "data-middleware",
-            "data-middleware-change-builder",
-            "security-privacy-gate",
-        ),
-        (
-            "implementation-owner:platform-infrastructure-change-builder",
-            "implementation-dependency-risk",
-            "platform-infrastructure",
-            "platform-infrastructure-change-builder",
-            "security-privacy-gate",
-        ),
-        (
-            "implementation-owner:integration-change-builder",
-            "implementation-dependency-risk",
-            "integration",
-            "integration-change-builder",
-            "security-privacy-gate",
-        ),
-        (
-            "implementation-owner:repository-tooling-change-builder",
-            "implementation-dependency-risk",
-            "repository-tooling",
-            "repository-tooling-change-builder",
-            "security-privacy-gate",
-        ),
-        (
-            "review-security-risk",
-            "review-security-risk-candidate",
-            None,
-            "security-privacy-gate",
-            "security-privacy-gate",
-        ),
-    ),
-    "dynamic-foundation:filesystem-process-safety": (
-        (
-            "implementation-owner:backend-change-builder",
-            None,
-            "backend",
-            "backend-change-builder",
-            "ai-code-review-refactor",
-        ),
-        (
-            "implementation-owner:backend-change-builder",
-            None,
-            "backend",
-            "backend-change-builder",
-            "security-privacy-gate",
-        ),
-        (
-            "implementation-owner:repository-tooling-change-builder",
-            None,
-            "repository-tooling",
-            "repository-tooling-change-builder",
-            "ai-code-review-refactor",
-        ),
-        (
-            "implementation-owner:repository-tooling-change-builder",
-            None,
-            "repository-tooling",
-            "repository-tooling-change-builder",
-            "security-privacy-gate",
-        ),
-        (
-            "implementation-owner:installed-client-change-builder",
-            None,
-            "installed-client",
-            "installed-client-change-builder",
-            "ai-code-review-refactor",
-        ),
-        (
-            "implementation-owner:installed-client-change-builder",
-            None,
-            "installed-client",
-            "installed-client-change-builder",
-            "security-privacy-gate",
-        ),
-    ),
-    "dynamic-foundation:infrastructure-as-code-safety": (
-        (
-            "implementation-owner:platform-infrastructure-change-builder",
-            None,
-            "platform-infrastructure",
-            "platform-infrastructure-change-builder",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "dynamic-foundation:kotlin-professional-usage": (
-        (
-            "implementation-owner:backend-change-builder",
-            None,
-            "backend",
-            "backend-change-builder",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "dynamic-foundation:logging-error-handling": (
-        (
-            "implementation-owner:logging-design-gate",
-            None,
-            "logging",
-            "logging-design-gate",
-            "logging-design-gate",
-        ),
-        (
-            "review-logging-risk",
-            "review-logging-risk-candidate",
-            None,
-            "logging-design-gate",
-            "logging-design-gate",
-        ),
-    ),
-    "dynamic-foundation:nodejs-runtime-professional-usage": (
-        (
-            "implementation-owner:backend-change-builder",
-            None,
-            "backend",
-            "backend-change-builder",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "dynamic-foundation:offline-sync-conflict-resolution": (
-        (
-            "implementation-owner:installed-client-change-builder",
-            None,
-            "installed-client",
-            "installed-client-change-builder",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "dynamic-foundation:powershell-professional-usage": (
-        (
-            "implementation-owner:platform-infrastructure-change-builder",
-            None,
-            "platform-infrastructure",
-            "platform-infrastructure-change-builder",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "dynamic-foundation:regression-testing": (
-        (
-            "implementation-owner:backend-change-builder",
-            None,
-            "backend",
-            "backend-change-builder",
-            "ai-code-review-refactor",
-        ),
-        (
-            "implementation-owner:quality-test-gate",
-            None,
-            "test-validation",
-            "quality-test-gate",
-            "ai-code-review-refactor",
-        ),
-        (
-            "review-generic",
-            "review-generic-candidate",
-            None,
-            "ai-code-review-refactor",
-            "ai-code-review-refactor",
-        ),
-        (
-            "review-security-risk",
-            "review-security-risk-candidate",
-            None,
-            "security-privacy-gate",
-            "security-privacy-gate",
-        ),
-    ),
-    "dynamic-foundation:state-management-design": (
-        (
-            "implementation-owner:frontend-change-builder",
-            None,
-            "frontend",
-            "frontend-change-builder",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "dynamic-foundation:swift-professional-usage": (
-        (
-            "implementation-owner:installed-client-change-builder",
-            None,
-            "installed-client",
-            "installed-client-change-builder",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "dynamic-foundation:targeted-validation-selection": (
-        (
-            "implementation-owner:repository-tooling-change-builder",
-            None,
-            "repository-tooling",
-            "repository-tooling-change-builder",
-            "ai-code-review-refactor",
-        ),
-        (
-            "implementation-owner:quality-test-gate",
-            None,
-            "test-validation",
-            "quality-test-gate",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "dynamic-foundation:web-platform-professional-usage": (
-        (
-            "implementation-owner:frontend-change-builder",
-            None,
-            "frontend",
-            "frontend-change-builder",
-            "ai-code-review-refactor",
-        ),
-    ),
+    selector_id: bindings
+    for selector_id, bindings in _SELECTOR_DECLARATIONS["route_bindings"].items()
+    if bindings and selector_id.startswith("dynamic-foundation:")
 }
-_FOUNDATION_ALIAS_SOURCE_BINDINGS = {
-    "api-compatibility-artifact": (
-        (
-            ("production-release-decision",),
-            "data-api-contract-changer",
-            "architecture-impact-reviewer",
-        ),
-    ),
-    "backend-effects-ambiguous": (
-        (
-            ("review-ambiguous-structure-repository-first",),
-            "engineering-change-analysis",
-            "architecture-impact-reviewer",
-        ),
-    ),
-    "backend-layer-budget": (
-        (
-            ("review-ambiguous-structure-repository-first",),
-            "engineering-change-analysis",
-            "architecture-impact-reviewer",
-        ),
-    ),
-    "cache-stampede-reliability-controls": (
-        (
-            (
-                "cache-stampede-analysis",
-                "security-anti-reliability-only",
-            ),
-            "engineering-change-analysis",
-            "reliability-observability-gate",
-        ),
-    ),
-    "data-consistency-artifact": (
-        (
-            ("distributed-workflow-analysis",),
-            "data-middleware-change-builder",
-            "quality-test-gate",
-        ),
-    ),
-    "database-migration-coexistence-rollback": (
-        (
-            (
-                "database-migration-analysis",
-                "distributed-workflow-analysis",
-                "production-release-decision",
-            ),
-            "engineering-change-analysis",
-            "delivery-release-gate",
-        ),
-    ),
-    "distributed-effect-ambiguous": (
-        (
-            ("review-ambiguous-structure-repository-first",),
-            "engineering-change-analysis",
-            "architecture-impact-reviewer",
-        ),
-    ),
-    "experience-design-system-analysis": (
-        (
-            ("user-flow-analysis",),
-            "experience-impact-modeler",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "experience-interaction-analysis": (
-        (
-            ("user-flow-analysis",),
-            "experience-impact-modeler",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "external-integration-consumer-impact-analysis": (
-        (
-            ("external-integration-analysis",),
-            "engineering-change-analysis",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "external-integration-failure-contract-analysis": (
-        (
-            ("external-integration-analysis",),
-            "engineering-change-analysis",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "documentation-only-change": (
-        (
-            ("security-anti-scanner-report",),
-            "change-documentation-gate",
-            "change-documentation-gate",
-        ),
-    ),
-    "failure-diagnosis-analysis": (
-        (
-            ("incident-response-coordination",),
-            "engineering-change-analysis",
-            "reliability-observability-gate",
-        ),
-    ),
-    "generic-security-risk": (
-        (
-            ("ssrf-url-fetch-analysis", "tenant-isolation-security"),
-            "security-privacy-gate",
-            "security-privacy-gate",
-        ),
-    ),
-    "high-risk-architecture-plan": (
-        (
-            ("production-release-decision",),
-            "engineering-change-analysis",
-            "high-risk-design-review",
-        ),
-    ),
-    "incident-response-coordination-observability": (
-        (
-            (
-                "incident-response-coordination",
-                "security-anti-reliability-only",
-            ),
-            "incident-response-coordinator",
-            "reliability-observability-gate",
-        ),
-    ),
-    "installed-filesystem-ambiguous": (
-        (
-            ("review-ambiguous-structure-repository-first",),
-            "engineering-change-analysis",
-            "architecture-impact-reviewer",
-        ),
-    ),
-    "migration-documentation": (
-        (
-            ("security-anti-scanner-report",),
-            "change-documentation-gate",
-            "change-documentation-gate",
-        ),
-    ),
-    "minimality-analysis": (
-        (
-            ("review-minimality-change",),
-            "engineering-change-analysis",
-            "architecture-impact-reviewer",
-        ),
-    ),
-    "owner-blast-radius-analysis": (
-        (
-            ("review-ambiguous-structure-repository-first",),
-            "engineering-change-analysis",
-            "architecture-impact-reviewer",
-        ),
-    ),
-    "package-supply-chain-analysis": (
-        (
-            (
-                "package-dependency-analysis",
-                "dynamic-foundation:dependency-vulnerability-scanning",
-            ),
-            "engineering-change-analysis",
-            "architecture-impact-reviewer",
-        ),
-    ),
-    "privacy-or-token-security": (
-        (
-            ("personal-data-lifecycle",),
-            "security-privacy-gate",
-            "security-privacy-gate",
-        ),
-    ),
-    "production-rollout-fallback": (
-        (
-            ("production-release-decision",),
-            "delivery-release-gate",
-            "delivery-release-gate",
-        ),
-    ),
-    "public-api-analysis": (
-        (
-            (
-                "production-release-decision",
-                "security-anti-input-shape",
-            ),
-            "engineering-change-analysis",
-            "architecture-impact-reviewer",
-        ),
-    ),
-    "reliability-signal-analysis": (
-        (
-            ("security-anti-reliability-only",),
-            "reliability-observability-gate",
-            "reliability-observability-gate",
-        ),
-    ),
-    "ssrf-threat-professional-precedence": (
-        (
-            ("ssrf-url-fetch-analysis",),
-            "security-privacy-gate",
-            "security-privacy-gate",
-        ),
-    ),
-    "test-strategy-professional-precedence": (
-        (
-            ("foundation-activation-test-strategy",),
-            "quality-test-gate",
-            "quality-test-gate",
-        ),
-    ),
-    "repository-first-default": (
-        (
-            ("review-ambiguous-structure-repository-first",),
-            "engineering-change-analysis",
-            "architecture-impact-reviewer",
-        ),
-    ),
-    "repository-tooling-ambiguous": (
-        (
-            ("review-ambiguous-structure-repository-first",),
-            "engineering-change-analysis",
-            "architecture-impact-reviewer",
-        ),
-    ),
-    "repository-tooling-layer-budget": (
-        (
-            ("review-ambiguous-structure-repository-first",),
-            "engineering-change-analysis",
-            "architecture-impact-reviewer",
-        ),
-    ),
-    "review-domain-pattern-structure": (
-        (
-            ("design-pattern-analysis",),
-            "ai-code-review-refactor",
-            "ai-code-review-refactor",
-        ),
-        (
-            ("domain-object-analysis",),
-            "ai-code-review-refactor",
-            "ai-code-review-refactor",
-        ),
-        (
-            ("design-pattern-analysis", "domain-object-analysis"),
-            "ai-code-review-refactor",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "review-refactoring-change": (
-        (
-            ("refactor-fixed-destination",),
-            "ai-code-review-refactor",
-            "ai-code-review-refactor",
-        ),
-        (
-            (
-                "owner-internal-structure-analysis",
-                "refactor-fixed-destination",
-            ),
-            "ai-code-review-refactor",
-            "ai-code-review-refactor",
-        ),
-    ),
-    "secret-rotation": (
-        (
-            ("cryptography-key-lifecycle",),
-            "security-privacy-gate",
-            "security-privacy-gate",
-        ),
-    ),
-    "source-backed-repository-question": (
-        (
-            ("review-ambiguous-structure-repository-first",),
-            "engineering-change-analysis",
-            "architecture-impact-reviewer",
-        ),
-    ),
-}
-_FOUNDATION_ALIAS_MEMBER_SUBSETS = {
-    "cache-stampede-reliability-controls": (
-        "concurrency-control",
-        "degradation-circuit-breaking",
-        "observability",
-    ),
-    "database-migration-coexistence-rollback": (
-        "data-migration-design",
-        "transaction-consistency",
-        "release-rollback",
-    ),
-    "experience-design-system-analysis": ("design-system-rules",),
-    "experience-interaction-analysis": ("interaction-state-modeling",),
-    "external-integration-consumer-impact-analysis": (
-        "consumer-impact-analysis",
-    ),
-    "external-integration-failure-contract-analysis": (
-        "failure-contract-design",
-    ),
-    "incident-response-coordination-observability": (
-        "failure-diagnosis",
-        "observability",
-    ),
-    "package-supply-chain-analysis": (
-        "package-dependency-management",
-        "dependency-vulnerability-scanning",
-    ),
-}
+_FOUNDATION_ALIAS_SOURCE_BINDINGS = _SELECTOR_DECLARATIONS["alias_bindings"]
+_FOUNDATION_ALIAS_MEMBER_SUBSETS = (
+    _SELECTOR_DECLARATIONS["alias_member_subsets"]
+)
 _DIRECT_ONLY_FOUNDATION_TASK_EVIDENCE = frozenset(
     {"review-ambiguous-structure-repository-first"}
 )
@@ -1606,6 +454,7 @@ def oracle_admission_authority(
         if professional_registry is None
         else professional_registry
     )
+    domain_data = _SELECTOR_DECLARATIONS["domain_registry"]
     if not isinstance(foundation_data, dict):
         raise RoutingIntegrityError(
             "Foundation selector registry must be a mapping"
@@ -1615,9 +464,11 @@ def oracle_admission_authority(
             "Professional selector registry must be a mapping"
         )
     try:
-        runtime = _canonical_foundation_runtime_matcher_authority(
+        selector_authority = layer3_selector_authority(
             foundation_data,
-            context="Oracle admission Foundation authority",
+            professional_data,
+            domain_data,
+            context="Oracle admission selector authority",
         )
         professional_automatic_routing_authority(
             professional_data,
@@ -1625,25 +476,12 @@ def oracle_admission_authority(
         )
     except ValidationProblem as exc:
         raise RoutingIntegrityError(str(exc)) from exc
-    if tuple(row["name"] for row in runtime) != _RUNTIME_FOUNDATION_SELECTORS:
-        raise RoutingIntegrityError(
-            "Foundation runtime matcher inventory is not canonical"
-        )
 
-    foundation_rows = foundation_data.get("foundation_skills")
     professional_rows = professional_data.get("professional_skills")
-    if not isinstance(foundation_rows, list) or not isinstance(
-        professional_rows,
-        list,
-    ):
+    if not isinstance(professional_rows, list):
         raise RoutingIntegrityError(
             "Oracle admission registries lack canonical Skill rows"
         )
-    foundation_by_name = {
-        row.get("name"): row
-        for row in foundation_rows
-        if isinstance(row, dict) and isinstance(row.get("name"), str)
-    }
     professional_by_name = {
         row.get("name"): row
         for row in professional_rows
@@ -1672,172 +510,26 @@ def oracle_admission_authority(
         raise RoutingIntegrityError(
             "Professional task routing inventory is not canonical"
         )
-    for foundation in _ADMITTED_FOUNDATION_SKILLS:
-        row = foundation_by_name.get(foundation)
-        if not isinstance(row, dict) or row.get("delivery_scope") != "product":
-            raise RoutingIntegrityError(
-                f"admitted Foundation {foundation!r} is unknown or non-product"
-            )
-
-    def owner_bindings(
-        selector_id: str,
-        foundations: tuple[str, ...],
-        *,
-        preferred: tuple[str, str] | None = None,
-    ) -> tuple[FoundationSelectorOwnerBinding, ...]:
-        declared = [
-            (binding[-2], binding[-1])
-            for binding in (
-                *_DYNAMIC_FOUNDATION_OWNER_BINDINGS.get(selector_id, ()),
-                *_FOUNDATION_SELECTOR_ADDITIONAL_OWNER_BINDINGS.get(
-                    selector_id,
-                    (),
-                ),
-            )
-        ]
-        declared.extend(
-            (primary, review)
-            for alias_bindings
-            in _FOUNDATION_ALIAS_SOURCE_BINDINGS.values()
-            for source_ids, primary, review in alias_bindings
-            if selector_id in source_ids
-        )
-        for dependency_spec in _DYNAMIC_FOUNDATION_OWNER_BINDINGS[
-            "dynamic-foundation:dependency-vulnerability-scanning"
-        ]:
-            dependency_primary, dependency_review = dependency_spec[-2:]
-            dependency_primary_row = professional_by_name.get(
-                dependency_primary
-            )
-            if (
-                dependency_spec[1] == "implementation-dependency-risk"
-                and isinstance(dependency_primary_row, dict)
-                and set(foundations).intersection(
-                    dependency_primary_row.get("layer3_candidates", [])
+    records = [
+        FoundationSelectorRecord(
+            selector_id=record["selector_id"],
+            foundations=tuple(record["selectable_layer3"]),
+            source=FoundationSelectorSource(
+                kind=record["source"]["kind"],
+                symbol=record["source"]["symbol"],
+                source_id=record["selector_id"],
+            ),
+            evidence_ids=tuple(record["positive_evidence"]),
+            owner_bindings=tuple(
+                FoundationSelectorOwnerBinding(
+                    primary_skill=binding["primary_skill"],
+                    review_skill=binding["review_skill"],
                 )
-            ):
-                declared.append(
-                    (dependency_primary, dependency_review)
-                )
-        if preferred is not None:
-            declared.insert(0, preferred)
-        declared = list(dict.fromkeys(declared))
-        if not declared:
-            raise RoutingIntegrityError(
-                f"selector {selector_id!r} has no declared owner binding"
-            )
-        for primary, review in declared:
-            primary_row = professional_by_name.get(primary)
-            if (
-                primary not in {*primary_skills, *review_skills}
-                or review not in review_skills
-                or not isinstance(primary_row, dict)
-                or not set(foundations).intersection(
-                    primary_row.get("layer3_candidates", [])
-                )
-            ):
-                raise RoutingIntegrityError(
-                    f"selector {selector_id!r} owner binding is not "
-                    f"reciprocal: {(primary, review)!r}"
-                )
-        if preferred is not None:
-            preferred_primary = professional_by_name[preferred[0]]
-            if not set(foundations).issubset(
-                set(preferred_primary.get("layer3_candidates", []))
-            ):
-                raise RoutingIntegrityError(
-                    f"preferred selector owner is not reciprocal: "
-                    f"{preferred!r}"
-                )
-        return tuple(
-            FoundationSelectorOwnerBinding(
-                primary_skill=primary,
-                review_skill=review,
-            )
-            for primary, review in declared
+                for binding in record["owner_bindings"]
+            ),
         )
-
-    records: list[FoundationSelectorRecord] = []
-    for (
-        selector_id,
-        foundations,
-        evidence_ids,
-        primary,
-        review,
-    ) in _DIRECT_FOUNDATION_SELECTOR_BLUEPRINTS:
-        records.append(
-            FoundationSelectorRecord(
-                selector_id=selector_id,
-                foundations=foundations,
-                source=FoundationSelectorSource(
-                    kind="direct-static",
-                    symbol="_route_impl",
-                    source_id=selector_id,
-                ),
-                evidence_ids=(
-                    *evidence_ids,
-                    f"foundation-selector:{selector_id}",
-                ),
-                owner_bindings=owner_bindings(
-                    selector_id,
-                    foundations,
-                    preferred=(primary, review),
-                ),
-            )
-        )
-    for foundation, symbol in _DYNAMIC_FOUNDATION_SOURCES.items():
-        selector_id = f"dynamic-foundation:{foundation}"
-        records.append(
-            FoundationSelectorRecord(
-                selector_id=selector_id,
-                foundations=(foundation,),
-                source=FoundationSelectorSource(
-                    kind="dynamic-helper-only",
-                    symbol=symbol,
-                    source_id=selector_id,
-                ),
-                evidence_ids=(
-                    f"dynamic-helper:{symbol}",
-                    f"foundation-selector:{selector_id}",
-                ),
-                owner_bindings=owner_bindings(
-                    selector_id,
-                    (foundation,),
-                ),
-            )
-        )
-    for projection in runtime:
-        selector_id = projection["activation_id"]
-        foundation = projection["name"]
-        records.append(
-            FoundationSelectorRecord(
-                selector_id=selector_id,
-                foundations=(foundation,),
-                source=FoundationSelectorSource(
-                    kind="runtime-matcher",
-                    symbol="foundation_runtime_matcher_authority",
-                    source_id=selector_id,
-                ),
-                evidence_ids=(
-                    *projection["matcher_evidence"],
-                    f"foundation-selector:{selector_id}",
-                ),
-                owner_bindings=owner_bindings(
-                    selector_id,
-                    (foundation,),
-                    preferred=(
-                        projection["primary_skill"],
-                        projection["review_skill"],
-                    ),
-                ),
-            )
-        )
-    records.sort(
-        key=lambda record: (
-            _FOUNDATION_SOURCE_KINDS.index(record.source.kind),
-            record.selector_id,
-        )
-    )
+        for record in selector_authority["selectors"]
+    ]
     return OracleAdmissionAuthority(
         contract=ORACLE_ADMISSION_AUTHORITY_CONTRACT,
         foundation_selectors=tuple(records),

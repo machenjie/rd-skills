@@ -1,34 +1,32 @@
 # Observability Benchmarks And Patterns
 
-Load this reference when a changed user path, service/dependency, resource, queue/job, SLI/alert, trace boundary or runbook needs an observable contract. Do not require every signal family for a path that does not traverse it.
+Load for a named signal, SLI, alert, correlation, dashboard, or runbook decision on a changed path. Select only families traversed by that path.
 
 ## Signal Selection
 
-| Surface | Signals that can answer current risk | Guardrail |
+| Surface | Decision-bearing signals | Guardrail |
 | --- | --- | --- |
-| Request/user path | Rate, success/error class, latency/tail, saturation and user-visible outcome. | Prefer route/operation templates and bounded outcome labels. |
-| Dependency/DB | Call/query rate, failure/timeout/circuit, latency, pool/lock/connection pressure. | Do not place raw URL/query/id/user/tenant in labels. |
-| Host/runtime/resource | Utilization, saturation, errors, throttling, queue/pool and memory/GC/process health as applicable. | Treat USE/Golden Signals as selection aids; add panels that answer the named resource risk and operator action. |
-| Queue/job/workflow | Enqueue/consume rate, age/lag/depth, in-flight, outcome/failure class, retry/DLQ/heartbeat/replay. | Depth without arrival/service rate and owner action is ambiguous. |
-| Release/change | Version/config/flag/deployment identity and before/after health. | Correlation must not become high-cardinality labels. |
+| Request/user path | Rate, outcome/error, tail latency, saturation, visible result. | Bounded route/operation/outcome labels. |
+| Dependency/store | Calls/queries, failure/timeout/circuit, latency, pool/lock/connection pressure. | No raw URL/query/id/user/tenant labels. |
+| Host/runtime/resource | Applicable utilization, saturation, errors, throttling, queue/pool, memory/GC/process health. | Add only panels answering the named risk/action. |
+| Queue/job/workflow | Enqueue/consume, age/lag/depth, in-flight, outcome, retry/DLQ/heartbeat/replay. | Depth needs arrival/service context and owner action. |
+| Release/change | Version/config/flag/deploy identity and before/after health. | Avoid high-cardinality correlation labels. |
 
-## SLI, Alert, Trace, And Runbook Contract
+## Operating Contract
 
-- Define SLI numerator/denominator or distribution, population/scope, data source/query, target, window, error-budget owner and exclusions from current product/SLO evidence. No fixed percentage/window/query in this reference is a default.
-- Alerts name intent: urgent burn/user impact, capacity/dependency risk, dead-man/missing work, or ticket/backlog. Record threshold/source/window, owner, escalation, dedupe/silence and the safe action it enables.
-- For a changed path that needs causal linking, propagate trace/correlation across the synchronous and asynchronous HTTP/RPC/DB/cache/queue/job boundaries it actually traverses; document external or unavailable boundaries and avoid unrelated propagation. Async work preserves causation/linking before its first log.
-- Dashboard panels link user outcome to dependency/resource cause and current release identity; runbook names trigger, diagnosis queries, safe/unsafe actions, rollback/escalation and expected recovery signal.
+- Define SLI formula/distribution, population, source/query, target/window, budget owner, and exclusions from current objective evidence; no fixed value is a default.
+- Define each alert’s intent, threshold/source/window, owner/escalation, dedupe/silence, and safe action from objective, traffic, failure duration, budget semantics, and maturity.
+- Propagate correlation across only the synchronous/asynchronous boundaries needed for causal linking; preserve async causation before its first log and disclose unavailable/external boundaries.
+- Link dashboard user outcome to dependency/resource cause and release identity; bind runbook trigger, diagnosis, safe/unsafe action, rollback/escalation, and recovery signal.
 
-## Freshness And Proof Limits
+## Proof Limits
 
-| Claim | Evidence | Limit |
+| Claim | Current evidence | Limit |
 | --- | --- | --- |
-| Metric/log/trace exists | Current instrumentation plus query against the intended backend/schema. | Local emission does not prove ingestion, retention, permissions or panel correctness. |
-| Cardinality/sampling safe | Representative label-value estimate and backend/provider limits. | Small fixtures do not expose production cardinality or rare-path loss. |
-| Alert actionable | Rule/query evaluation or fixture maps to current owner/runbook action. | A syntactically valid rule does not prove paging quality or production threshold. |
-| Path correlated | Trace/log test covers each changed synchronous/async boundary. | One trace does not prove all branches or tail sampling. |
-| Freshness | Queries, panels, alerts, runbooks and owners follow final instrumentation/config edit. | Screenshots and prior task evidence can be stale. |
+| Signal exists | Instrumentation plus intended backend/schema query. | Not ingestion, retention, permissions, or panels. |
+| Cardinality/sampling safe | Representative values and backend/provider limits. | Not production skew or rare loss. |
+| Alert actionable | Rule/query evaluation mapped to owner/runbook action. | Not paging quality or production threshold. |
+| Path correlated | Test across each changed sync/async boundary. | Not every branch or tail sampling. |
+| Fresh | Final instrumentation/config plus current queries, panels, alerts, runbooks, owners. | Not later edits. |
 
-Route structured logging/redaction to `logging-error-handling`, SLO/incident architecture to `reliability-observability-gate`, budgets/capacity to `performance-budgeting`, and sensitive telemetry to `security-privacy-gate`.
-
-Reject unbounded labels, averages-only latency, infrastructure-only dashboards for user risk, and alerts without owner/action. Also reject logs as a sole SLI and trace context dropped at async boundaries. Reject fixed burn thresholds copied without SLO evidence and local instrumentation reported as live-backend proof.
+Route log/redaction to `logging-error-handling`, objectives/incidents to `reliability-observability-gate`, capacity to `performance-budgeting`, and sensitive telemetry to `security-privacy-gate`. Reject unbounded labels, averages-only latency, infrastructure-only user-risk dashboards, actionless alerts, logs-only SLI, dropped async context, copied burn thresholds, and local emission claimed as live proof.

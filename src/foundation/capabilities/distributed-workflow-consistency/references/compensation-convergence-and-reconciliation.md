@@ -44,3 +44,9 @@ Official platform pages were accessed on 2026-07-26.
 ## Proof Limits
 
 Saga, compensation, and controller guidance describes patterns rather than universal ordering or delivery guarantees. Tests cannot prove an external participant is reversible, a compensation always succeeds, or reconciliation covers uninspected effects and concurrent changes.
+
+## Failure And Validation Evidence
+
+- Wrong compensation violates current business state.
+- Partial ordering advances a dependency early.
+- Fault before/after dispatch and effect, before result persistence, and during compensation.

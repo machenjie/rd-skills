@@ -57,7 +57,7 @@ _FENCED_MARKDOWN_RE = re.compile(
 )
 _LABELED_FIELD_RE = re.compile(r"^([A-Za-z][A-Za-z0-9 /-]*):(?:\s.*)?$")
 _PUBLIC_EXECUTION_TEMPLATE_TERMS = (
-    "Core public `execution-level/v1`",
+    "Core public `execution-level/v2`",
     "[execution-level-contract.md](execution-level-contract.md)",
     "completed/read only",
     "active or resumed work, edit, validation, or review requires reissue",
@@ -76,9 +76,10 @@ _PUBLIC_EXECUTION_PREAMBLE_PREFIXES = {
         "unresolved material impact. Otherwise route to Analyzed Work. Direct Task is "
         "outside the Analyzed Work authority path. It keeps this template's existing "
         "field authority and does not create or derive authority from an Engineering "
-        "Brief. Inspect within named owner, test, and consumer boundaries. If ownership "
-        "or verification needs discovery, stop and route to Analyzed Work. Use `not "
-        "applicable` for a field that has no Direct Task value."
+        "Brief. An unknown owner/module/system/verification boundary routes to Analyzed "
+        "Work. Inside an already-known stable owner/test/consumer boundary, bounded "
+        "confirmation may inspect only the named checks below. Use `not applicable` for "
+        "a field that has no Direct Task value."
     ),
     "engineering-brief-template.md": (
         "# Engineering Brief For Analyzed Work, the current Engineering Brief is the "
@@ -113,7 +114,15 @@ _PUBLIC_EXECUTION_PREAMBLE_PREFIXES = {
         "dependencies, professional Skill boundaries, minimum sufficient Review "
         "Boundaries, and critical gaps blocking the First Executable Slice. Task "
         "completion or switch, ordinary implementation discovery, and an unreached "
-        "Review Boundary do not re-trigger Analysis. Delta Analysis is permitted only "
+        "Review Boundary do not re-trigger Analysis. When this Brief must select Layer 3 "
+        "for an analyzed downstream Task or Review, load exactly one current-Professional "
+        "projection from `engineering-control-plane/references/selectors/"
+        "<professional-skill>.json`. Load it only after the Professional and downstream "
+        "profile are fixed, and do not load any sibling projection, index, or catalog. "
+        "If the exact authorized Layer 3 set is already fixed, skip the selector file and "
+        "retain that authorized set. Write the resulting exact set into the Brief; "
+        "downstream Task and Review agents do not reroute. Main continues to own Direct "
+        "and initial-Analysis selection. Delta Analysis is permitted only "
         "when evidence invalidates Acceptance/Non-goals, Owner/Placement/Invariant, "
         "contract/data semantics, dependency/rollback, material risk, or a scope blocker. "
         "Reuse Core `delta_analysis`; do not change its invalidation triggers or "
@@ -172,10 +181,10 @@ _PUBLIC_EXECUTION_PREAMBLE_PREFIXES = {
     ),
 }
 _PUBLIC_EXECUTION_PREAMBLE = (
-    "The public Execution Level lines use Core public `execution-level/v1`. The integrity "
+    "The public Execution Level lines use Core public `execution-level/v2`. The integrity "
     "fallback for missing, malformed, or duplicate public execution-level data is "
     "defined in [execution-level-contract.md](execution-level-contract.md). "
-    "Legacy without v1 is completed/read only; active or resumed work, edit, "
+    "Legacy v1 is completed/read only; active or resumed work, edit, "
     "validation, or review requires reissue."
 )
 
@@ -217,15 +226,16 @@ ANALYZED_WORK_TEMPLATE_TERMS = {
 
 PROFESSIONAL_AUTHORITY_TERMS = {
     "engineering-change-analysis/SKILL.md": (
-        "only operational analysis authority",
-        "complete Task Contract v2 that Main can dispatch verbatim",
-        "Specialist work is input",
-        "derived Task DAG or handoff",
+        "This root owns mode choice",
+        "the mode contract owns output",
+        "Keep Professional, Layer3, and mode fixed; never reroute",
+        "read-only scope",
     ),
     "engineering-change-analysis/references/implementation-preparation.md": (
         "current Engineering Brief is the only operational analysis authority",
         "Specialist analysis are inputs",
         "complete Task Contract v2",
+        "Task DAGs, Task Contracts, Implementation Handoffs, and Review Handoffs are derived artifacts",
         "planner does not reselect the First Executable Slice",
         "updated Brief and redispatch",
     ),
@@ -346,7 +356,7 @@ def _validate_public_execution_rules(
     for term in _PUBLIC_EXECUTION_TEMPLATE_TERMS:
         if term not in normalized:
             errors.append(
-                f"{context}: missing public execution-level/v1 rule {term!r}"
+                f"{context}: missing public execution-level/v2 rule {term!r}"
             )
 
 

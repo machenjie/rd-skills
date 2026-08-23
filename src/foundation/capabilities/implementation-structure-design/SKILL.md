@@ -32,21 +32,12 @@ Choose reuse, placement, visibility, extraction, generated-source separation, an
 ## High-Value Rules
 
 - Consume an accepted need for structure from `minimal-correct-implementation`; this capability decides only semantic-compatible reuse and placement inside the accepted owner.
-- Reuse only when semantics, authority, failure, lifecycle, and evolution match; similarity is insufficient.
-- Keep a deliberate separate implementation when those forces differ; record drift controls and its delete condition.
-- Place code with the owner of its change reason, state, invariant, effect, protocol, lifecycle, and tests; compare co-location and private extraction before new structure.
 - Route exports, cross-owner/shared modules, public surfaces, dependencies, cycles, or distributable artifacts to `module-boundary-design` or `sdk-library-contract-design`.
-- Trace generated placement as `editable source -> generator/template/config -> artifact -> committed/derived policy -> regen/freshness check`.
-- Separate semantic from mechanical generated diffs; use `repository-context-map` for authority and `build-tool-professional-usage` for graph, regeneration, and artifact policy.
-- After placement is fixed, route behavior-preserving movement to `refactoring`; keep naming, guards, and local flow in `code-clarity-maintainability`.
+- Load the object-decomposition, reuse-placement, or evidence Reference for its named open decision; after placement, route movement to `refactoring` and local clarity to its owner.
 
 ## Anti-Patterns
 
-- Using framework layers, directory conventions, or `shared`/`common`/`utils` as owners.
-- Creating parallel helpers or vague managers before checking the semantic owner and boundary.
-- Splitting by size thresholds into ownerless files or mixed lifecycles.
-- Exporting private helpers only for tests.
-- Moving business rules into transport, persistence, DTO, or generic utility layers.
+- Local success substituted for evidence of the implementation structure design contract.
 
 ## Stop Conditions
 

@@ -198,7 +198,7 @@ PHASE2_F03_FOUNDATION_TRIPLES = frozenset(
 )
 PHASE2_F03_PREDECESSOR_ROW_COUNT = 241
 PHASE2_F03_PREDECESSOR_ROWS_SHA256 = (
-    "cd965934eb9373f2d36a11e99bc7c251a1345ca25bea66c8c96567d2c8854473"
+    "c9f6ac21dcbd2cd5febad3bad244e36355e6646af8d63cf69af0c4c3e50fbc97"
 )
 PHASE2_F03_SELECTED_CANDIDATE_IDS = {
     "acceptance-standard-definition": "acceptance-definition",
@@ -370,7 +370,7 @@ PHASE2_F04_FOUNDATION_TRIPLES = frozenset(
 )
 PHASE2_F04_PREDECESSOR_ROW_COUNT = 269
 PHASE2_F04_PREDECESSOR_ROWS_SHA256 = (
-    "fc87d0b7fde7632aa6e4cead664a538c21a7f057b2cff3d43c6e5a9cc68dac43"
+    "eee1ebdf32e5fd8f484dce22366d28417a8434636311984f6d07af9b87475676"
 )
 PHASE2_F04_SELECTED_ROUTES = {
     "code-clarity-maintainability": (
@@ -733,7 +733,7 @@ PHASE2_A_FOUNDATION_TRIPLES = frozenset(
 )
 PHASE2_A_PREDECESSOR_ROW_COUNT = 313
 PHASE2_A_PREDECESSOR_ROWS_SHA256 = (
-    "d3f44baa2d9b98f2712900ca5d5ef54b4a762544ddcc4549cbdeeca4368e4b72"
+    "260ad68541c4fe4f7618249709890dd14537c75984e07c225a67073b9dc62ea2"
 )
 PHASE2_A_SELECTED_PRIMARY_OVERRIDES = {'consumer-impact-analysis': 'engineering-change-analysis',
  'failure-contract-design': 'engineering-change-analysis',
@@ -912,7 +912,10 @@ def _main_execution(task_id: str) -> dict[str, object]:
                     "plausible_critical": False,
                 }
             ],
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": ["high-risk pre-implementation evidence"],
             "unresolved": [],
             "edit_status": "allowed",

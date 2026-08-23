@@ -1,5 +1,7 @@
 # Child Process Invocation And Completion
 
+- Execute a selected program directly with structured argv. Make lookup, environment, working directory, credential, and inherited-resource policy explicit; route shell semantics elsewhere.
+
 **Load when:** Executable selection, argv, environment, working directory, inherited resources, standard streams, exit, timeout, cancellation, descendants, cleanup, or result certainty can change the decision.
 
 **Do not load when:** No direct child-process execution contract changes.
@@ -27,21 +29,14 @@ Select one direct-process contract that binds program identity and inputs to a b
 
 ## Platform Constraints
 
-- POSIX `exec` and spawn variants distinguish exact executable paths from `PATH` search and pass argv and environment as explicit vectors. Waiting obtains and reaps status; sending a signal requests an action and is not completion evidence.
-- Windows `CreateProcessW` separates application name from its command-line buffer. A null or ambiguous application name, inherited environment or current directory, and broad handle inheritance can change the selected program and authority.
-- Define descendant ownership explicitly. POSIX process groups and Windows job objects are mechanisms only when the selected runtime creates and retains them correctly; terminating the direct child alone does not bound a process tree.
-- Match timeout cleanup to the exact high-level runtime API.
-- Do not project Python `run()` kill-and-wait behavior onto `Popen.communicate()` or another wrapper.
+- POSIX path search, argv/environment vectors, signals and wait/reap differ from Windows application-name, command-line, environment/current-directory, and handle inheritance rules.
+- Bound descendants only through runtime-supported process-group/job ownership, and match timeout cleanup to the exact wrapper; direct-child termination alone is insufficient.
+- Do not project one wrapper's kill-and-wait contract onto another.
 
 ## Failure Rules
 
-- Reject command strings assembled from untrusted data.
-- Use direct structured arguments unless accepted behavior requires a shell.
-- Drain both captured output streams concurrently or use the runtime's documented communication primitive before or while waiting.
-- Preserve required partial stdout and stderr with bounded truncation metadata.
-- Keep streams separate unless ordering loss from merging is accepted.
-- Treat timeout, cancellation, and forced termination as unknown side-effect outcomes until the called program's durable effects are inspected or reconciled.
-- After escalation, wait for the owned process or group to reach a terminal state and release resources; returning after a kill request is insufficient.
+- Enforce the table's direct-argument, stream-draining, bounded-output, separate-stream, terminal-wait, and resource-release decisions.
+- Timeout, cancellation, or forced termination leaves side effects unknown until durable effects are inspected or reconciled; never retry blindly.
 
 ## Primary Sources
 

@@ -1,8 +1,8 @@
 # Tenant Data, Storage, Cache, And Search Isolation
 
-**Load when:** Tenant isolation changes in database keys, queries, object paths, caches, search indexes, derived views, or storage topology.
+**Load when:** Database keys, queries, objects, caches, indexes, views, or storage topology change tenant isolation.
 
-**Do not load when:** No stored, cached, object, or indexed tenant boundary changes and current negative tests prove every affected surface.
+**Do not load when:** No stored, cached, object, or indexed boundary changes and current negative evidence covers affected surfaces.
 
 **Required by:** `analysis-agent`, `task-agent`, `review-agent`
 
@@ -10,37 +10,42 @@
 
 ## One Decision
 
-Select one isolation contract for each data surface and prove that tenant scope survives the read, write, derivation, and cache path set.
+Select isolation contracts for active data surfaces and prove tenant scope across reads, writes, derivation, and caches.
 
 ## Decision Matrix
 
-| Surface | Required isolation decision | Failure signal |
+| Surface | Required decision | Failure signal |
 |---|---|---|
-| Tenant authority | Trusted internal identifier, provenance, mismatch outcome, and refresh point | Caller data selects authoritative tenant scope |
-| Relational data | Tenant-scoped primary, unique, and foreign keys; read/write predicates; database policy; privileged bypass | A globally unique ID permits a cross-tenant association |
-| Partitioned data | Partition-key authority, routing map, transaction scope, and cross-partition behavior | Untrusted tenant input routes directly to another partition |
-| Object storage | Account/container/bucket/path model, metadata, delegated URL scope, listing, copy, and delete | Prefix filtering occurs after listing or URL issuance |
-| Cache | Tenant, permission/freshness variant, schema version, invalidation, local cache, and fallback | Shared key or fallback returns another tenant's value |
-| Search index | Tenant field or index, ingest binding, query filter, counts/facets, writes, aliases, and rebuild | Post-query filtering hides hits but leaks aggregates |
-| Derived surface | Source tenant, transformation, destination identity, correction, deletion, and rebuild | A projection drops tenant identity or joins tenants |
+| Authority | Trusted tenant identifier, provenance, mismatch, refresh | Caller data selects scope |
+| Relational | Tenant keys, predicates, policy, privileged bypass | Global ID crosses tenants |
+| Partition | Key authority, routing, transaction, cross-partition behavior | Untrusted input routes partitions |
+| Object | Container/path, metadata, delegated URL, list/copy/delete | Filtering follows listing or URL issue |
+| Cache | Tenant and permission/freshness/schema key, invalidation, fallback | Shared key or fallback leaks |
+| Search | Tenant ingest/query, counts/facets, writes, aliases, rebuild | Post-filtering leaks aggregates |
+| Derived | Source tenant, transform, destination, correction, deletion, rebuild | Projection drops or joins tenant identity |
 
 ## Verification
 
-- Exercise same identifier under two tenants for create, read, update, delete, list, aggregate, and relationship paths.
-- Inspect generated SQL or query plans and database policies under normal and privileged roles.
-- Compare cache keys and invalidation for two tenants with identical object identifiers.
-- Exercise object listing, copy, signed access, search hits, counts, facets, aliases, and rebuilds with forged scope.
-- Verify isolated and shared resource variants separately.
+- Exercise same-tenant, wrong-tenant, forged, stale, privileged, and missing tenant context.
+- Use identical local IDs, object names, cache keys, and search terms across tenants.
+- Test list, count, facet, join, copy, delete, restore, reindex, rebuild, and cache fallback.
+- Inspect generated queries, policies, partition keys, object grants, cache keys, and search filters.
 
 ## Primary Sources
 
+- [AWS SaaS tenant isolation strategies](https://docs.aws.amazon.com/whitepapers/latest/saas-tenant-isolation-strategies/saas-tenant-isolation-strategies.html)
+- [Azure multitenant storage and data approaches](https://learn.microsoft.com/en-us/azure/architecture/guide/multitenant/approaches/storage-data)
 - [PostgreSQL row security policies](https://www.postgresql.org/docs/current/ddl-rowsecurity.html)
-- [Azure storage and data approaches for multitenant solutions](https://learn.microsoft.com/en-us/azure/architecture/guide/multitenant/approaches/storage-data)
-- [Azure compute approaches for multitenant solutions](https://learn.microsoft.com/en-us/azure/architecture/guide/multitenant/approaches/compute)
-- [Elastic document and field level access control](https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/controlling-access-at-document-field-level)
+- [Azure AI Search security filters](https://learn.microsoft.com/en-us/azure/search/search-security-trimming-for-azure-search)
 
-Official project and platform pages were accessed on 2026-07-26.
+Official platform pages were accessed on 2026-07-26.
 
 ## Proof Limits
 
-Vendor mechanisms differ by version, configuration, privilege, API, and operation. Row or document policies do not prove write, owner, superuser, aggregate, alias, cache, backup, or application paths unless those paths are separately exercised.
+Local tests and query inspection do not prove deployed policy activation, provider control-plane isolation, external copies, all replicas, or production restore isolation. Record those as residual risk with an owner.
+
+## Failure Evidence
+
+- Tenant filtering occurs after read, list, count, or facet computation.
+- Cache, object, or search scope can be selected from caller-controlled identity.
+- Privileged paths bypass tenant predicates without explicit scope and audit.

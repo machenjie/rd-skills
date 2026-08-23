@@ -70,7 +70,7 @@ class FoundationOwnershipRegistryTests(unittest.TestCase):
         )
         self.assertEqual(
             Counter(entry["content_class"] for entry in self.foundation),
-            {"compact": 124, "complex": 26},
+            {"compact": 128, "complex": 22},
         )
         self.assertEqual(
             [

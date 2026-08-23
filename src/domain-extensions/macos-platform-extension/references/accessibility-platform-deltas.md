@@ -13,20 +13,6 @@ Official Apple Developer accessibility pages below were accessed on 2026-07-24.
   notifications, and element identity for changed standard or custom controls.
 - Trace full-keyboard, menu, command, responder-chain, window, sheet, popover,
   toolbar, and document focus behavior on changed paths.
-- For SwiftUI or Mac Catalyst, inspect the resulting macOS accessibility tree
-  and keyboard behavior instead of inferring it from shared source or iPad tests.
-
-## Failure Proof
-
-- Exercise VoiceOver navigation/action, keyboard-only operation, focus return,
-  disabled and error states, window transitions, custom controls, and changed
-  menus at the supported macOS/deployment range.
-
-## Required Record
-
-Return the platform-specific delta, accessibility owner, tree/focus/action
-evidence, framework and OS scope, unavailable assistive-technology proof,
-reused Foundation obligations, and residual risk.
 
 ## Primary Sources
 

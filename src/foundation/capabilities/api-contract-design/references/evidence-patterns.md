@@ -18,3 +18,7 @@ Use this reference when API contract closure depends on generated artifacts, con
 - Confirm relevant consumers.
 - Include generated artifact or client evidence when the workflow produces those surfaces.
 - Disclose missing or unverified contract, implementation, provider, consumer, and deployed-version evidence.
+
+## Anti-Patterns
+
+- Do not expose internal representations or call a contract additive without consumer-semantic proof.

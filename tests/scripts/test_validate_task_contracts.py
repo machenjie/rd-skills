@@ -193,17 +193,30 @@ def _recompute_fixture_extension(extension: dict[str, object]) -> dict[str, obje
         row["id"]: {key: item for key, item in row.items() if key != "id"}
         for row in basis["l2_eligibility"]
     }
+    l1 = {
+        row["id"]: {key: item for key, item in row.items() if key != "id"}
+        for row in basis["l1_eligibility"]
+    }
+    l5 = {
+        row["id"]: {key: item for key, item in row.items() if key != "id"}
+        for row in basis["l5_assurance_eligibility"]
+    }
     result = compute_execution_level(
         requested=value["requested_level"],
         trigger_evaluations=triggers,
+        l1_evaluations=l1,
         l2_evaluations=l2,
+        l5_assurance_evaluations=l5,
+        l5_confirmation=value["l5_confirmation"],
         prior_historical_max_floor=value["prior_historical_max_floor"],
         prior_historical_max_effective=value["prior_historical_max_effective"],
     )
     value["computed_floor"] = result["computed_floor"]
     value["mandatory_floor"] = result["mandatory_floor"]
     value["automatic_level"] = result["automatic_level"]
+    value["minimum_eligible_level"] = result["minimum_eligible_level"]
     value["effective_level"] = result["effective_level"]
+    value["l5_confirmation"] = result["l5_confirmation"]
     value["level_basis"] = result["level_basis"]
     value["historical_max_floor"] = result["next_historical_floor"]
     value["historical_max_effective"] = result["next_historical_effective"]
@@ -643,7 +656,7 @@ class TaskContractTemplateTests(unittest.TestCase):
                 path = self.root / name
                 text = path.read_text(encoding="utf-8")
                 path.write_text(
-                    text.replace("Legacy without v1", f"{restatement}\nLegacy without v1", 1),
+                    text.replace("Legacy v1", f"{restatement}\nLegacy v1", 1),
                     encoding="utf-8",
                 )
                 errors = VALIDATOR.validate_contracts(self.root)
@@ -664,7 +677,7 @@ class TaskContractTemplateTests(unittest.TestCase):
                 path = self.root / name
                 text = path.read_text(encoding="utf-8")
                 path.write_text(
-                    text.replace("Legacy without v1", f"{restatement}\nLegacy without v1", 1),
+                    text.replace("Legacy v1", f"{restatement}\nLegacy v1", 1),
                     encoding="utf-8",
                 )
                 errors = VALIDATOR.validate_contracts(self.root)
@@ -718,7 +731,7 @@ class TaskContractTemplateTests(unittest.TestCase):
     def test_retired_public_digest_language_is_rejected(self) -> None:
         implementation = self.root / "implementation-handoff-template.md"
         text = implementation.read_text(encoding="utf-8")
-        self.assertNotIn("digest", text.casefold())
+        self.assertNotIn("execution contract digest", text.casefold())
         self.assertEqual([], VALIDATOR.validate_contracts(self.root))
         implementation.write_text(
             text.replace(
@@ -739,30 +752,81 @@ class TaskContractTemplateTests(unittest.TestCase):
         self.assertNotIn("## Dependencies", text)
         self.assertEqual([], VALIDATOR.validate_contracts(self.root))
 
-    def test_direct_task_forbids_owner_or_verification_discovery(self) -> None:
+    def test_direct_task_distinguishes_unknown_boundary_from_bounded_confirmation(
+        self,
+    ) -> None:
         path = self.root / "direct-task-template.md"
         text = path.read_text(encoding="utf-8")
-        self.assertNotIn("Owner / Verification Discovery Allowed", text)
-        self.assertNotIn("bounded ownership discovery", text)
-        self.assertNotIn("Use only", text)
-        self.assertNotIn("may inspect only", text)
-        self.assertNotIn("must not discover", text)
+        for obsolete in (
+            "Owner / Verification Discovery Allowed",
+            "bounded ownership discovery",
+            "If ownership or\nverification needs discovery",
+            "without ownership/verification discovery",
+        ):
+            with self.subTest(obsolete=obsolete):
+                self.assertNotIn(obsolete, text)
         self.assertIn(
-            "If ownership or\nverification needs discovery, stop and route to Analyzed Work",
+            "An unknown owner/module/system/verification boundary routes to Analyzed Work",
             text,
         )
+        self.assertIn(
+            "Inside an already-known stable owner/test/consumer boundary, bounded\n"
+            "confirmation may inspect only the named checks below",
+            text,
+        )
+        for allowed in (
+            "exact owning symbol/file",
+            "relevant existing test",
+            "minimum local consumer",
+            "local reuse candidate",
+            "local validation command",
+            "placement within the already-known owner boundary",
+        ):
+            with self.subTest(allowed=allowed):
+                self.assertIn(allowed, text)
+        self.assertIn(
+            "route/risk invalidated -> stop\nbefore editing and return to Main for Analysis",
+            text,
+        )
+
+        discovery = CORE_CONTRACTS["task_contract"]["direct_bounded_discovery"]
+        self.assertEqual(
+            [
+                "exact-owning-symbol-or-file",
+                "relevant-existing-test",
+                "minimum-local-consumer",
+                "local-reuse-candidate",
+                "local-validation-command",
+                "placement-within-known-owner-boundary",
+            ],
+            discovery["allowed_checks"],
+        )
+
         path.write_text(
             text.replace(
-                "If ownership or\nverification needs discovery, stop and route to Analyzed Work",
-                "Task agents may discover ownership or verification before editing",
+                "An unknown owner/module/system/verification boundary routes to Analyzed Work.",
+                "If ownership or verification needs discovery, stop and route to "
+                "Analyzed Work.\n\nAn unknown owner/module/system/verification boundary "
+                "routes to Analyzed Work.",
                 1,
             ),
             encoding="utf-8",
         )
         errors = VALIDATOR.validate_contracts(self.root)
         self.assertTrue(
-            any("must not permit owner or verification discovery" in error for error in errors),
+            any("complete canonical-link-only preamble" in error for error in errors),
             errors,
+        )
+
+        escaped = copy.deepcopy(CORE_CONTRACTS)
+        escaped["task_contract"]["direct_bounded_discovery"]["outcomes"][
+            "route-or-risk-invalidated"
+        ] = "continue-editing-after-boundary-escape"
+        self.assertTrue(
+            any(
+                "Direct bounded discovery" in error
+                for error in validate_core_contracts(escaped)
+            )
         )
 
     def test_direct_task_accepts_meaningful_dependencies_at_canonical_position(self) -> None:
@@ -1054,21 +1118,24 @@ class TaskContractTemplateTests(unittest.TestCase):
                 self.assertEqual(expected_count, text.count(block))
 
     def test_execution_extension_order_mutations_fail(self) -> None:
+        level_line = public_execution_template_block(
+            CORE_CONTRACTS, "direct-task-template.md"
+        ).splitlines()[1]
         mutations = (
             (
                 "direct-task-template.md",
-                "Level: requested=unspecified / L1 / L5; automatic=L2 / L3 / L4; default=L3; effective=L1 / L2 / L3 / L4 / L5; edit=allowed / blocked\nBasis:",
-                "Basis:\nLevel: requested=unspecified / L1 / L5; automatic=L2 / L3 / L4; default=L3; effective=L1 / L2 / L3 / L4 / L5; edit=allowed / blocked",
+                level_line + "\nBasis:",
+                "Basis:\n" + level_line,
             ),
             (
                 "engineering-brief-template.md",
-                "Level: requested=unspecified / L1 / L5; automatic=L2 / L3 / L4; default=L3; effective=L1 / L2 / L3 / L4 / L5; edit=allowed / blocked\nBasis:",
-                "Basis:\nLevel: requested=unspecified / L1 / L5; automatic=L2 / L3 / L4; default=L3; effective=L1 / L2 / L3 / L4 / L5; edit=allowed / blocked",
+                level_line + "\nBasis:",
+                "Basis:\n" + level_line,
             ),
             (
                 "task-dag-template.md",
-                "Level: requested=unspecified / L1 / L5; automatic=L2 / L3 / L4; default=L3; effective=L1 / L2 / L3 / L4 / L5; edit=allowed / blocked\nBasis:",
-                "Basis:\nLevel: requested=unspecified / L1 / L5; automatic=L2 / L3 / L4; default=L3; effective=L1 / L2 / L3 / L4 / L5; edit=allowed / blocked",
+                level_line + "\nBasis:",
+                "Basis:\n" + level_line,
             ),
         )
         for name, old, new in mutations:
@@ -1093,15 +1160,15 @@ class TaskContractTemplateTests(unittest.TestCase):
             "missing execution-level fallback authority",
         )
         self.assertTrue(
-            any("missing public execution-level/v1 rule" in error for error in errors),
+            any("missing public execution-level/v2 rule" in error for error in errors),
             errors,
         )
         self.tearDown()
         self.setUp()
         errors = self._mutate(
             "implementation-handoff-template.md",
-            "requested=unspecified / L1 / L5; automatic=L2 / L3 / L4",
-            "automatic=L2 / L3 / L4; requested=unspecified / L1 / L5",
+            "requested=unspecified / L1 / L2 / L3 / L4 / L5; automatic=L1 / L2 / L3 / L4 / L5",
+            "automatic=L1 / L2 / L3 / L4 / L5; requested=unspecified / L1 / L2 / L3 / L4 / L5",
         )
         self.assertTrue(
             any("exact Core rendering" in error for error in errors),
@@ -1741,7 +1808,10 @@ class CoreContractModelTests(unittest.TestCase):
                     "plausible_critical": False,
                 }
             ],
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": ["high-risk pre-implementation evidence"],
             "unresolved": [],
             "edit_status": "allowed",
@@ -2041,6 +2111,42 @@ class CoreContractModelTests(unittest.TestCase):
                     ),
                     errors,
                 )
+
+    def test_active_route_decision_rejects_legacy_v1_in_all_execution_copies(
+        self,
+    ) -> None:
+        envelope, main_execution, authority = self._route_decision_fixture()
+        legacy_fields = {
+            "trigger_evaluations",
+            "l2_eligibility",
+            "obligations",
+            "unresolved",
+            "edit_status",
+        }
+        for context, basis in (
+            ("main execution input", main_execution["level_basis"]),
+            ("route_result", envelope["route_result"]["level_basis"]),
+            (
+                "main execution provenance",
+                envelope["main_execution_provenance"]["level_basis"],
+            ),
+        ):
+            for field in tuple(basis):
+                if field not in legacy_fields:
+                    del basis[field]
+            errors = self._validate_route_decision(
+                envelope,
+                main_execution,
+                authority,
+            )
+            self.assertTrue(
+                any(
+                    context in error
+                    and "level_basis fields must be exactly" in error
+                    for error in errors
+                ),
+                errors,
+            )
 
     def test_route_decision_rejects_bool_int_level_basis_alias(self) -> None:
         envelope, main_execution, authority = self._route_decision_fixture()
@@ -2898,7 +3004,7 @@ class CoreContractModelTests(unittest.TestCase):
     def test_execution_formula_covers_l1_through_l5_and_historical_floors(self) -> None:
         triggers, l2 = _execution_evidence()
         table = (
-            ("L1", None, "true", "L1", "L1", "L1", "L2", "L1"),
+            ("L1", None, "true", "L1", "L1", "L1", "L2", "L2"),
             ("unspecified", None, "true", "L1", "L1", "L1", "L2", "L2"),
             ("unspecified", None, "false", "L1", "L1", "L1", "L3", "L3"),
             ("unspecified", "multi-task-or-integration-ownership", "true", "L1", "L1", "L3", "L3", "L3"),
@@ -3412,17 +3518,26 @@ class CoreContractModelTests(unittest.TestCase):
         ]
         self.assertEqual(
             {
-                "version": "execution-level/v1",
+                "version": "execution-level/v2",
                 "ordered_labels": ["Level", "Basis", "L5 Evidence"],
                 "line_fields": {
                     "Level": [
                         "requested",
                         "automatic",
+                        "minimum",
                         "default",
                         "effective",
                         "edit",
                     ],
-                    "Basis": ["source", "triggers", "l2", "unresolved"],
+                    "Basis": [
+                        "source",
+                        "triggers",
+                        "l1",
+                        "l2",
+                        "l5",
+                        "confirmation",
+                        "unresolved",
+                    ],
                     "L5 Evidence": ["when", "requires"],
                 },
             },
@@ -3444,7 +3559,7 @@ class CoreContractModelTests(unittest.TestCase):
                     candidate["ordered_labels"].append("Identity")
                     candidate["line_fields"]["Identity"] = ["digest", "path"]
                 else:
-                    candidate["version"] = "execution-level/v2"
+                    candidate["version"] = "execution-level/v1"
                 errors = validate_core_contracts(model)
                 self.assertTrue(
                     any("public task extension" in error for error in errors), errors
@@ -3497,12 +3612,16 @@ class CoreContractModelTests(unittest.TestCase):
                         f"requested={extension['requested_level']}",
                         encoded.splitlines()[0],
                     )
-                self.assertEqual("execution-level/v1", decoded["version"])
+                self.assertEqual("execution-level/v2", decoded["version"])
                 self.assertEqual(
                     extension["requested_level"], decoded["level"]["requested"]
                 )
                 self.assertEqual(
                     extension["automatic_level"], decoded["level"]["automatic"]
+                )
+                self.assertEqual(
+                    extension["minimum_eligible_level"],
+                    decoded["level"]["minimum"],
                 )
                 self.assertEqual(
                     extension["effective_level"], decoded["level"]["effective"]
@@ -3517,7 +3636,9 @@ class CoreContractModelTests(unittest.TestCase):
                     self.assertNotIn("l5_evidence", decoded)
                 self.assertLessEqual(
                     count_o200k_base_tokens(encoded),
-                    180,
+                    CORE_CONTRACTS["context_budget_contract"]["budget_classes"][
+                        "task"
+                    ]["capacity_ceiling"],
                     (case["id"], count_o200k_base_tokens(encoded)),
                 )
         self.assertEqual(28, encoded_count)
@@ -3650,7 +3771,9 @@ class CoreContractModelTests(unittest.TestCase):
         minimal = {
             "requested_level": full["requested_level"],
             "automatic_level": full["automatic_level"],
+            "minimum_eligible_level": full["minimum_eligible_level"],
             "effective_level": full["effective_level"],
+            "l5_confirmation": full["l5_confirmation"],
             "level_basis": full["level_basis"],
         }
         self.assertEqual(encoded, encode_public_task_extension(minimal))
@@ -4106,6 +4229,90 @@ class CoreContractModelTests(unittest.TestCase):
                 )
                 self.assertTrue(errors)
                 self.assertTrue(any("extension is invalid" in error for error in errors), errors)
+
+    def test_v1_extension_is_read_only_and_cannot_bypass_active_actions(self) -> None:
+        task = _first_fixture_step("task")
+        v2_payload = copy.deepcopy(task["fixture_capsule"])
+        v2_extension = v2_payload["execution_level_extension"]
+        assert isinstance(v2_extension, dict)
+        legacy_extension = copy.deepcopy(v2_extension)
+        legacy_basis = legacy_extension["level_basis"]
+        assert isinstance(legacy_basis, dict)
+        for field in ("minimum_eligible_level", "l5_confirmation"):
+            legacy_extension.pop(field, None)
+        for field in (
+            "l1_eligibility",
+            "l5_assurance_eligibility",
+            "l5_confirmation",
+        ):
+            legacy_basis.pop(field, None)
+        legacy_payload = copy.deepcopy(v2_payload)
+        legacy_payload["execution_level_extension"] = legacy_extension
+        legacy_step = copy.deepcopy(task)
+        legacy_step["fixture_capsule"] = legacy_payload
+
+        self.assertEqual(
+            [],
+            execution_level_migration_errors(
+                legacy_payload,
+                lifecycle_status="completed",
+                next_action="read",
+                step=legacy_step,
+            ),
+        )
+        legacy_wire = "\n".join(
+            (
+                "Level: automatic=L2; effective=L2; edit=allowed",
+                "Basis: t=[]; l=[]; u=[]",
+            )
+        )
+        self.assertEqual(
+            decode_public_task_extension(legacy_wire),
+            decode_public_task_extension(legacy_wire),
+        )
+        self.assertEqual(
+            "execution-level/v1",
+            decode_public_task_extension(legacy_wire)["version"],
+        )
+
+        for lifecycle in ("in_progress", "blocked", "partial", "completed"):
+            for action in ("edit", "validation", "review"):
+                with self.subTest(lifecycle=lifecycle, action=action):
+                    errors = execution_level_migration_errors(
+                        legacy_payload,
+                        lifecycle_status=lifecycle,
+                        next_action=action,
+                        step=legacy_step,
+                    )
+                    self.assertTrue(errors)
+                    self.assertIn("execution-level/v1", errors[0])
+                    self.assertIn("reissue", errors[0])
+
+        with self.assertRaisesRegex(FixtureCapsuleError, "v1.*reissue"):
+            encode_public_task_extension(legacy_extension)
+        with self.assertRaisesRegex(FixtureCapsuleError, "v1.*reissue"):
+            render_fixture_capsule_payload(legacy_step, legacy_payload)
+
+        for lifecycle in ("in_progress", "blocked", "partial"):
+            for action in ("edit", "validation", "review"):
+                with self.subTest(v2_lifecycle=lifecycle, v2_action=action):
+                    self.assertEqual(
+                        [],
+                        execution_level_migration_errors(
+                            v2_payload,
+                            lifecycle_status=lifecycle,
+                            next_action=action,
+                            step=task,
+                        ),
+                    )
+
+        trace = [
+            legacy_step,
+            {"actor": "task-agent", "action": "edit", "path": "owner.py"},
+        ]
+        errors = trace_execution_level_migration_errors(trace, 0)
+        self.assertTrue(errors)
+        self.assertIn("execution-level/v1", errors[0])
 
     def test_trace_migration_classifier_uses_material_action_not_incidental_read(self) -> None:
         task = _first_fixture_step("task")
@@ -4854,10 +5061,19 @@ class CompletionReviewRequirementTests(unittest.TestCase):
                 row["id"]: {key: value for key, value in row.items() if key != "id"}
                 for row in basis["trigger_evaluations"]
             },
+            l1_evaluations={
+                row["id"]: {key: value for key, value in row.items() if key != "id"}
+                for row in basis["l1_eligibility"]
+            },
             l2_evaluations={
                 row["id"]: {key: value for key, value in row.items() if key != "id"}
                 for row in basis["l2_eligibility"]
             },
+            l5_assurance_evaluations={
+                row["id"]: {key: value for key, value in row.items() if key != "id"}
+                for row in basis["l5_assurance_eligibility"]
+            },
+            l5_confirmation=extension["l5_confirmation"],
             prior_historical_max_floor=extension["prior_historical_max_floor"],
             prior_historical_max_effective=extension[
                 "prior_historical_max_effective"
@@ -4866,7 +5082,9 @@ class CompletionReviewRequirementTests(unittest.TestCase):
         extension["computed_floor"] = result["computed_floor"]
         extension["mandatory_floor"] = result["mandatory_floor"]
         extension["automatic_level"] = result["automatic_level"]
+        extension["minimum_eligible_level"] = result["minimum_eligible_level"]
         extension["effective_level"] = result["effective_level"]
+        extension["l5_confirmation"] = result["l5_confirmation"]
         extension["historical_max_floor"] = result["next_historical_floor"]
         extension["historical_max_effective"] = result[
             "next_historical_effective"
@@ -4921,17 +5139,25 @@ class CompletionReviewRequirementTests(unittest.TestCase):
         self,
     ) -> None:
         authorities = []
+        for requested in ("L4", "L5"):
+            authority = self._authority()
+            extension = authority["task_dispatch"]["fixture_capsule"][
+                "execution_level_extension"
+            ]
+            extension["requested_level"] = requested
+            self._recompute_execution(authority)
+            self._refresh_task_digest(authority)
+            authorities.append(authority)
         for field, value in (
-            ("effective_level", "L4"),
-            ("effective_level", "L5"),
-            ("historical_max_floor", "L4"),
-            ("historical_max_effective", "L5"),
+            ("prior_historical_max_floor", "L4"),
+            ("prior_historical_max_effective", "L5"),
         ):
             authority = self._authority()
             extension = authority["task_dispatch"]["fixture_capsule"][
                 "execution_level_extension"
             ]
             extension[field] = value
+            self._recompute_execution(authority)
             self._refresh_task_digest(authority)
             authorities.append(authority)
         critical_trigger = next(

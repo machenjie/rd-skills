@@ -18,19 +18,7 @@ Official Apple Developer pages below were accessed on 2026-07-24.
 
 - Select the declared BackgroundTasks request or finite background allowance
   from work type, system eligibility, expiration, cancellation, and retry.
-- Persist only the minimum resumable work state and make repeated execution
-  idempotent.
-- Do not promise exact launch time, duration, or completion.
-
-## Failure Proof
-
-- Exercise scene creation, disconnection, process termination, multiple active
-  scenes, stale restoration, task expiration, duplicate scheduling, and no run.
-
-## Required Record
-
-Return the lifecycle matrix, state owner, restoration identity, task class,
-expiration/cancellation behavior, OS/SDK/device scope, non-inferences, and risk.
+- Treat exact launch time, duration, and completion as unsupported assumptions.
 
 ## Primary Sources
 

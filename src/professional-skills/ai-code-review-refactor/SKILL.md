@@ -7,8 +7,8 @@ description: "Use `review-agent` on implementation or repair diffs for hallucina
 
 ## Role
 
-Support `review-agent` in finding reachable defects in AI-generated code
-through API, dependency, and behavior evidence.
+Support `review-agent` in independently reviewing the actual implementation or
+repair diff. Review is non-mutating and cannot reroute.
 
 ## When To Use
 
@@ -22,70 +22,36 @@ through API, dependency, and behavior evidence.
 
 ## Required Inputs
 
-- Goal, Acceptance, and Non-goals
-- Write Scope and invariants
-- Effective Level and triggered professional gates
-- actual diff
-- validation evidence
+- fixed Goal/Acceptance/Non-goals, boundary, invariants, Level, actual diff and changed paths, and fresh evidence
 
 ## Professional Decision Rules
 
-- Limit the matrix to the Current Task Boundary (Goal + Acceptance + Non-goals), latest actual diff, and reachable impact; context reads grant no repair authority.
-- Prioritize correctness, security, data-loss, compatibility, concurrency, failure, and regression defects.
-- Classify relation before severity: only accepted `current-task` findings enter repair, `scope-blocker` returns through Main to analysis, and `adjacent` stays non-blocking with residual risk.
-- Apply Core `review_discipline_contract.effective_level_policy` for L1-L5
-  depth, independence, gates, and final-review requirements.
-- Never equate L5 with full CI, formal release, or cross-model review.
-- Delegate for concrete risk with Skill, Scope, and Reason; specialist review
-  supplements final implementation review.
-- Let the review owner merge specialist findings.
-- Apply Core `review_discipline_contract` for review boundaries, evidence reuse,
-  material findings, scoped repair, and obligation subsumption.
+- Inspect the actual diff within fixed acceptance and boundary.
+- When a finding is proposed, reject it unless current source evidence establishes a reachable failure path.
+- Classify adjacent risk separately.
+- Record reviewed/unreviewed scope, severity, repair boundary, freshness, proof limits, and residual risk.
+- Preserve the non-mutating, no-reroute review boundary.
 
 ## High-Value Gotchas
 
-- Self-review is not independent evidence.
-- Reviewing only the summary misses unmentioned changed files.
+- Pattern similarity without a reachable mechanism is calibration evidence, not a finding.
+- A no-finding verdict is bounded by the files, behaviors, consumers, and validation actually reviewed.
+- Re-review closes against the latest repair diff and fresh evidence, not the superseded implementation.
 
 ## Execution Checklist
 
-1. Compare the actual diff and every changed path with acceptance and preserved behavior.
-2. Verify referenced APIs, dependencies, ownership, invariants, and changed-code test coverage.
-3. Classify relation before severity and blocker, then route only accepted `current-task` blockers to repair.
-4. Stop approval when the diff, a changed path, or evidence freshness cannot be established.
-5. Re-review repaired findings and affected dependents with fresh targeted
-   validation; broaden at the Core contract's named shared-risk boundaries.
+- **Review mode:** Bind the actual diff to fixed acceptance, boundary, invariants, changed paths, and current evidence.
+- Inspect changed and reachable source, tests, contracts, and validation.
+- Reject a candidate without a concrete failure mechanism.
+- Record findings or non-findings, reviewed and unreviewed scope, severity, repair boundary, freshness, proof limits, and residual risk.
 
 ## Stop / Escalation Conditions
 
-- Escalate authentication, authorization, permissions, payments, sensitive
-  data, secrets, or credentials to `security-privacy-gate`.
-- Escalate unsafe logs, raw prompts, tokens, PII, or full command-output artifacts
-  to `security-privacy-gate`.
-- Escalate to `data-api-contract-changer` when a refactor silently alters API response shapes, error codes, or contract semantics.
-- Escalate to `architecture-impact-reviewer` when AI introduces a new service boundary, shared abstraction, or cross-module dependency.
-- Escalate to `data-middleware-change-builder` when a generated migration script, ORM query, or schema change is involved.
-- Escalate when AI has added or upgraded a dependency with known CVEs, GPL/AGPL license conflict, or broad transitive attack surface.
-- Escalate when the refactor is large enough that behavioral equivalence cannot be established without running the full integration test suite.
-- Keep missing or stale evidence required for the current diff, scope, or closure
-  as a blocking finding; name the unavailable evidence and unblock condition.
-- For repeated same-path failure, follow the Core `retry_policy`: return control
-  to the main agent or report the review blocked.
-- Return a new L4/L5 risk that invalidates Effective Level blocked through Main for Brief update and recomputation.
-- Return Effective Level changes through Main for analysis.
-- Route a known failure mechanism with material same-pattern regression exposure
-  to `regression-testing`; otherwise keep recurrence scope and exclusions in the
-  review finding.
-- Escalate to `code-element-professionalism` for generated local defaults, shadowing, hidden expression side effects, no-op statements, cleanup gaps, fallthrough, or event-before-commit ordering.
+- Block on inaccessible diff, stale evidence, or unbounded scope; return out-of-boundary risk to Main without rerouting.
 
 ## Output Contract
 
-- reviewed files
-- unreviewed files with reason and residual risk
-- reachable findings with relation, severity, blocker decision, path, failure scenario, evidence, correction, and adjacent residual risk
-- verified API, dependency, invariant, placement, and behavior decisions
-- changed-code test evidence and unverified AI-specific risk
-- explicit no-finding result when no reachable defect remains
+- reviewed/unreviewed scope, evidence-backed findings or non-findings, relation/severity, repair boundary, freshness, proof limits, and residual risk
 
 ## Targeted References
 

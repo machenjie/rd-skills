@@ -12,3 +12,14 @@
 - When scheduling or contention can starve an actor or invert priority, define accepted degradation, mitigation authority, and terminal outcome from representative wait, queue, and priority-interaction measurements.
 - Select deterministic overlap, stress, race, redelivery, cancellation, expiry, and starvation evidence from reachable risks; name command, outcome, exit status, and artifact or report when executed.
 - When ownership, expiry, or ordering depends on time, identify the authoritative lease or token state and relevant platform clock behavior. Require current ownership evidence before effects instead of inferring ownership from wall-clock order alone.
+
+## Anti-Patterns
+
+- A `read → decide → act` sequence is unsafe unless the store enforces the decision atomically.
+- Enqueue deduplication does not make consumer side effects exactly once.
+
+## Execution Checklist
+
+1. Identify resources, invariants, overlap, and atomicity gaps.
+2. Specify mechanism, conflict response, retry/idempotency, lock order, and fencing.
+3. Verify deterministic race outcomes and the forbidden stale or duplicate effect.

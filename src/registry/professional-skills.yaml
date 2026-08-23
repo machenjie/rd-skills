@@ -131,6 +131,51 @@ professional_skills:
         do_not_load_when: "engineering change analysis is executing another mode"
         required_by: ["analysis-agent"]
         required_output: ["mode-result", "proof-limit"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/checklist.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "checklist"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/diagnosis-only.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "diagnosis-only"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/evidence-patterns.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "evidence-patterns"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/implementation-preparation.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "implementation-preparation"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/solution-optimality.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "solution-optimality"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/source-backed-answer.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "source-backed-answer"
+          sequenced_after: []
+          must_co_trigger_with: []
     layer3_candidates: ["repository-context-map", "consumer-impact-analysis", "data-side-effect-flow-tracing", "failure-diagnosis", "release-rollback", "api-contract-design", "version-compatibility", "data-migration-design", "transaction-consistency", "concurrency-control", "failure-contract-design", "test-strategy", "permission-boundary-modeling", "threat-modeling", "web-security", "degradation-circuit-breaking", "observability", "idempotency-retry-design", "package-dependency-management", "minimal-correct-implementation", "refactoring", "web3-product-extension", "ai-product-extension", "bigdata-product-extension", "iot-embedded-extension", "payment-trading-extension", "low-level-systems-extension", "android-platform-extension", "cloud-platform-extension", "cross-platform-client-extension", "ios-ipados-platform-extension", "linux-desktop-platform-extension", "macos-platform-extension", "windows-platform-extension", "repository-impact-inspection", "configuration-runtime-policy", "dependency-vulnerability-scanning"]
     task_routable: true
   - name: acceptance-criteria-builder
@@ -330,12 +375,30 @@ professional_skills:
       review-agent: ["architecture verdict", "boundary findings", "unreviewed structural risk"]
     escalation_signals: ["scope, authority, or material risk exceeds the selected task contract"]
     reference_index:
-      - path: "references/architecture-output-and-gates.md"
+      - path: "references/placement-and-ownership.md"
         type: targeted
-        load_when: "L3-L5 analysis or review needs mode-specific closure and targeted gates for selected placement, consumer/data, topology/enforcement, or reversibility risk"
-        do_not_load_when: "The root result is sufficient and no selected risk needs the extended proof contract"
+        load_when: "Structure responsibility ownership reuse or placement remains open"
+        do_not_load_when: "Owner public/private surface and smallest viable placement are fixed by current evidence"
         required_by: ["analysis-agent", "review-agent"]
-        required_output: ["gate-decision", "residual-risk"]
+        required_output: ["boundary-decision", "selected-approach", "residual-risk"]
+      - path: "references/consumer-and-data-impact.md"
+        type: targeted
+        load_when: "Public or indirect consumer or authoritative-data impact remains open"
+        do_not_load_when: "No consumer contract compatibility versioning migration or data-owner boundary changes"
+        required_by: ["analysis-agent", "review-agent"]
+        required_output: ["boundary-decision", "validation-plan", "residual-risk"]
+      - path: "references/dependency-topology-and-enforcement.md"
+        type: targeted
+        load_when: "Dependency direction topology or durable enforcement remains open"
+        do_not_load_when: "Current source edges topology owner and enforcement evidence already fix the boundary"
+        required_by: ["analysis-agent", "review-agent"]
+        required_output: ["boundary-decision", "gate-decision", "validation-plan", "residual-risk"]
+      - path: "references/reversibility-evolution-and-proof-limits.md"
+        type: targeted
+        load_when: "Reversal coexistence migration evolution or architecture proof limits remain open"
+        do_not_load_when: "Current evidence fixes reversibility evolution residual risk and next owner"
+        required_by: ["analysis-agent", "review-agent"]
+        required_output: ["decision-record", "validation-plan", "proof-limit", "residual-risk"]
       - path: "references/checklist.md"
         type: decision-checklist
         load_when: "A bounded L2 mode needs compact checks for its triggered placement, ownership, dependency, consumer, data, topology, or reversibility risk"
@@ -354,6 +417,51 @@ professional_skills:
         do_not_load_when: "The change is owner-internal with no structural impact or current evidence already fixes placement"
         required_by: ["analysis-agent", "review-agent"]
         required_output: ["selected-approach", "residual-risk"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/placement-and-ownership.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "placement-and-ownership"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/consumer-and-data-impact.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "consumer-and-data-impact"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/dependency-topology-and-enforcement.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "dependency-topology-and-enforcement"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/reversibility-evolution-and-proof-limits.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "reversibility-evolution-and-proof-limits"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/checklist.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "checklist"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/solution-optimality.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "solution-optimality"
+          sequenced_after: []
+          must_co_trigger_with: []
     layer3_candidates: ["module-boundary-design", "implementation-structure-design", "design-pattern-selection", "architecture-tradeoff-analysis", "consumer-impact-analysis", "architecture-enforcement-tooling", "architecture-style-selection", "event-driven-architecture", "extensibility-design", "layered-architecture-design", "microservice-splitting", "technology-stack-selection"]
     task_routable: true
   - name: data-api-contract-changer
@@ -417,12 +525,42 @@ professional_skills:
         do_not_load_when: "The inline quality gate is enough or deeper gate/evidence mapping is required"
         required_by: ["task-agent"]
         required_output: ["checklist-result", "residual-risk"]
-      - path: "references/frontend-output-and-gates.md"
+      - path: "references/component-placement-and-reuse-gates.md"
         type: targeted
-        load_when: "Drafting or reviewing placement decisions, failure contracts, a11y/security gates, same-pattern scans, state-to-validation maps, or closure evidence"
-        do_not_load_when: "The body output contract and minimal verification are sufficient for the risk"
+        load_when: "Component, shared UI, hook, store, client, or reuse ownership remains open"
+        do_not_load_when: "Owner, current consumers, and reuse decision are fixed"
         required_by: ["task-agent"]
-        required_output: ["gate-decision", "residual-risk"]
+        required_output: ["boundary-decision", "selected-approach", "residual-risk"]
+      - path: "references/state-ownership-and-api-failure-gates.md"
+        type: targeted
+        load_when: "State ownership or API, failure, or retry contract remains open"
+        do_not_load_when: "Current contract fixes states, failures, recovery, and retry"
+        required_by: ["task-agent"]
+        required_output: ["decision-record", "failure-decision", "residual-risk"]
+      - path: "references/accessibility-closure-gates.md"
+        type: targeted
+        load_when: "Frontend accessibility closure decision remains open"
+        do_not_load_when: "Accepted accessibility contract already fixes the implementation"
+        required_by: ["task-agent"]
+        required_output: ["gate-decision", "validation-plan", "proof-limit"]
+      - path: "references/frontend-security-closure-gates.md"
+        type: targeted
+        load_when: "HTML, content, token, script, or browser-storage security decision remains open"
+        do_not_load_when: "No frontend security boundary changes"
+        required_by: ["task-agent"]
+        required_output: ["gate-decision", "validation-plan", "residual-risk"]
+      - path: "references/frontend-quality-and-validation-evidence.md"
+        type: evidence-pattern
+        load_when: "State, testability, reliability, performance, or quality claim needs proof"
+        do_not_load_when: "No changed frontend quality claim awaits validation"
+        required_by: ["task-agent"]
+        required_output: ["evidence-record", "validation-plan", "proof-limit", "residual-risk"]
+      - path: "references/same-pattern-scan-and-handoff-evidence.md"
+        type: evidence-pattern
+        load_when: "Same-pattern, tool-boundary, or final-handoff evidence is required"
+        do_not_load_when: "No scan or closure claim remains"
+        required_by: ["task-agent"]
+        required_output: ["evidence-record", "validation-plan", "proof-limit", "residual-risk"]
       - path: "references/index.md"
         type: index
         load_when: "competing frontend change builder references require dependency, conflict, or output-fragment selection"
@@ -447,6 +585,51 @@ professional_skills:
         do_not_load_when: "No visual reference is supplied, or visual polish and redesign do not require matching one"
         required_by: ["task-agent"]
         required_output: ["proof-limit", "selected-approach", "validation-plan"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/component-placement-and-reuse-gates.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "component-placement-and-reuse-gates"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/state-ownership-and-api-failure-gates.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "state-ownership-and-api-failure-gates"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/accessibility-closure-gates.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "accessibility-closure-gates"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/frontend-security-closure-gates.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "frontend-security-closure-gates"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/frontend-quality-and-validation-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "frontend-quality-and-validation-evidence"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/same-pattern-scan-and-handoff-evidence.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "same-pattern-scan-and-handoff-evidence"
+          sequenced_after: []
+          must_co_trigger_with: []
     layer3_candidates: ["page-component-decomposition", "state-management-design", "frontend-testing", "form-validation-design", "interaction-state-modeling", "typescript-professional-usage", "frontend-api-integration", "routing-navigation-design", "accessibility-inclusive-design", "web-platform-professional-usage", "ai-product-extension", "configuration-runtime-policy", "dependency-vulnerability-scanning"]
     task_routable: true
   - name: backend-change-builder
@@ -497,6 +680,37 @@ professional_skills:
         do_not_load_when: "No runtime/resource tradeoff is material or current system evidence already fixes the mechanism"
         required_by: ["task-agent"]
         required_output: ["selected-approach", "residual-risk"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/backend-output-and-gates.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "backend-output-and-gates"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/proactive-triggers.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: ["material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "proactive-triggers"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/professional-modes.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "professional-modes"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/solution-optimality.md:
+          gap_class: "route-or-material-unknown"
+          route_affecting_surfaces: ["acceptance", "scope", "material-risk-floor"]
+          conflicts_with: []
+          decision_problem: "solution-optimality"
+          sequenced_after: []
+          must_co_trigger_with: []
     layer3_candidates: ["service-business-logic", "domain-object-identification", "transaction-consistency", "concurrency-control", "idempotency-retry-design", "permission-boundary-modeling", "authentication-authorization", "regression-testing", "logging-error-handling", "message-queue-design", "observability", "failure-diagnosis", "failure-contract-design", "implementation-structure-design", "design-pattern-selection", "minimal-correct-implementation", "go-professional-usage", "java-jvm-professional-usage", "kotlin-professional-usage", "csharp-dotnet-professional-usage", "python-professional-usage", "language-idiom-enforcement", "language-performance-safety", "ai-product-extension", "payment-trading-extension", "low-level-systems-extension", "cloud-platform-extension", "windows-platform-extension", "async-job-design", "controller-api-implementation", "dependency-wiring-lifecycle", "domain-logic-implementation", "repository-persistence", "nodejs-runtime-professional-usage", "filesystem-process-safety", "configuration-runtime-policy", "dependency-vulnerability-scanning"]
     task_routable: true
   - name: data-middleware-change-builder
@@ -625,7 +839,7 @@ professional_skills:
         do_not_load_when: "No test-structure decision exists"
         required_by: ["analysis-agent", "task-agent", "review-agent"]
         required_output: ["validation-plan", "proof-limit"]
-    layer3_candidates: ["test-strategy", "regression-testing", "test-data-management", "unit-testing", "integration-testing", "contract-testing", "e2e-testing", "language-testing-strategy", "testability-seam-design", "targeted-validation-selection", "client-application-testing"]
+    layer3_candidates: ["test-strategy", "regression-testing", "test-data-management", "unit-testing", "integration-testing", "contract-testing", "e2e-testing", "language-testing-strategy", "testability-seam-design", "targeted-validation-selection", "client-application-testing", "bigdata-product-extension"]
     task_routable: true
   - name: security-privacy-gate
     routing_mode: evidence-only
@@ -867,7 +1081,38 @@ professional_skills:
         do_not_load_when: "The issue is already a concrete finding or no material implementation choice changed"
         required_by: ["review-agent"]
         required_output: ["selected-approach", "residual-risk"]
-    layer3_candidates: ["code-review", "accessibility-inclusive-design", "code-clarity-maintainability", "regression-testing", "domain-object-identification", "implementation-structure-design", "refactoring", "cpp-professional-usage", "rust-professional-usage", "cleanup-deletion-governance", "code-element-professionalism", "design-pattern-selection", "minimal-correct-implementation", "repeat-failure-analysis", "configuration-runtime-policy", "ai-product-extension", "android-platform-extension", "ios-ipados-platform-extension", "windows-platform-extension", "macos-platform-extension", "linux-desktop-platform-extension", "cross-platform-client-extension"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/ai-review-pattern-catalog.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: ["references/checklist.md"]
+          decision_problem: "ai-review-pattern-catalog"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/checklist.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: ["references/ai-review-pattern-catalog.md", "references/review-output-and-gates.md"]
+          decision_problem: "checklist"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/review-output-and-gates.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: ["references/checklist.md"]
+          decision_problem: "review-output-and-gates"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/solution-optimality.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "solution-optimality"
+          sequenced_after: []
+          must_co_trigger_with: []
+    layer3_candidates: ["code-review", "accessibility-inclusive-design", "code-clarity-maintainability", "regression-testing", "domain-object-identification", "implementation-structure-design", "refactoring", "cpp-professional-usage", "rust-professional-usage", "cleanup-deletion-governance", "code-element-professionalism", "design-pattern-selection", "minimal-correct-implementation", "repeat-failure-analysis", "configuration-runtime-policy", "ai-product-extension", "android-platform-extension", "ios-ipados-platform-extension", "windows-platform-extension", "macos-platform-extension", "linux-desktop-platform-extension", "cross-platform-client-extension", "web3-product-extension", "low-level-systems-extension"]
     task_routable: true
   - name: change-documentation-gate
     routing_mode: evidence-only
@@ -930,12 +1175,107 @@ professional_skills:
         do_not_load_when: "Only shared framework behavior changes and native target contracts remain untouched"
         required_by: ["task-agent"]
         required_output: ["boundary-decision", "proof-limit", "validation-plan"]
-      - path: "references/framework-contracts.md"
+      - path: "references/flutter-framework-contracts.md"
         type: targeted
-        load_when: "Flutter React Native Electron Tauri Qt .NET MAUI or Kotlin Multiplatform ownership bridge lifecycle or packaging behavior affects the change"
-        do_not_load_when: "The client is native-only or the framework layer is not affected"
+        load_when: "Flutter shared state platform-channel restoration link plugin or target packaging behavior affects the accepted change"
+        do_not_load_when: "No Flutter source channel plugin lifecycle link or packaging behavior changes"
         required_by: ["task-agent"]
         required_output: ["proof-limit", "selected-approach", "validation-plan"]
+      - path: "references/react-native-framework-contracts.md"
+        type: targeted
+        load_when: "React Native JavaScript state native state process recreation link or platform seam affects the accepted change"
+        do_not_load_when: "No React Native state lifecycle link native seam or packaging behavior changes"
+        required_by: ["task-agent"]
+        required_output: ["proof-limit", "selected-approach", "validation-plan"]
+      - path: "references/electron-framework-contracts.md"
+        type: targeted
+        load_when: "Electron main renderer operating-system privilege deep-link or packaged-artifact behavior affects the accepted change"
+        do_not_load_when: "No Electron process privilege deep-link operating-system or packaging behavior changes"
+        required_by: ["task-agent"]
+        required_output: ["proof-limit", "selected-approach", "validation-plan"]
+      - path: "references/tauri-framework-contracts.md"
+        type: targeted
+        load_when: "Tauri command plugin capability webview deep-link or bundle behavior affects the accepted change"
+        do_not_load_when: "No Tauri command capability plugin webview link or bundle behavior changes"
+        required_by: ["task-agent"]
+        required_output: ["proof-limit", "selected-approach", "validation-plan"]
+      - path: "references/qt-framework-contracts.md"
+        type: targeted
+        load_when: "Qt window ownership window-manager runtime library plugin QML or package behavior affects the accepted change"
+        do_not_load_when: "No Qt window runtime plugin QML platform or packaging behavior changes"
+        required_by: ["task-agent"]
+        required_output: ["proof-limit", "selected-approach", "validation-plan"]
+      - path: "references/dotnet-maui-framework-contracts.md"
+        type: targeted
+        load_when: ".NET MAUI window native lifecycle restoration permission workload or package target affects the accepted change"
+        do_not_load_when: "No .NET MAUI lifecycle restoration permission workload or package behavior changes"
+        required_by: ["task-agent"]
+        required_output: ["proof-limit", "selected-approach", "validation-plan"]
+      - path: "references/kotlin-multiplatform-framework-contracts.md"
+        type: targeted
+        load_when: "Kotlin Multiplatform source-set target support expected actual binary or host integration affects the accepted change"
+        do_not_load_when: "No Kotlin Multiplatform source-set target binary or host-integration behavior changes"
+        required_by: ["task-agent"]
+        required_output: ["proof-limit", "selected-approach", "validation-plan"]
+    context_admissibility:
+      contract: "changeforge.reference-context-admissibility/v3"
+      references:
+        references/native-platform-source-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "native-platform-source-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/flutter-framework-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "flutter-framework-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/react-native-framework-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "react-native-framework-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/electron-framework-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "electron-framework-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/tauri-framework-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "tauri-framework-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/qt-framework-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "qt-framework-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/dotnet-maui-framework-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "dotnet-maui-framework-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
+        references/kotlin-multiplatform-framework-contracts.md:
+          gap_class: "repo-resolvable-fact"
+          route_affecting_surfaces: []
+          conflicts_with: []
+          decision_problem: "kotlin-multiplatform-framework-contracts"
+          sequenced_after: []
+          must_co_trigger_with: []
     layer3_candidates: ["state-management-design", "client-lifecycle-state-restoration", "offline-sync-conflict-resolution", "client-application-testing", "accessibility-inclusive-design", "privacy-data-lifecycle", "kotlin-professional-usage", "swift-professional-usage", "csharp-dotnet-professional-usage", "ai-product-extension", "android-platform-extension", "ios-ipados-platform-extension", "windows-platform-extension", "macos-platform-extension", "linux-desktop-platform-extension", "cross-platform-client-extension", "filesystem-process-safety", "configuration-runtime-policy", "dependency-vulnerability-scanning"]
     task_routable: true
   - name: platform-infrastructure-change-builder

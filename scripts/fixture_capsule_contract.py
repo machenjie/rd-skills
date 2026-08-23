@@ -279,10 +279,17 @@ def execution_level_migration_errors(
                 "execution-level migration needs the dispatch step to validate full payload shape"
             ]
         try:
+            allow_legacy_read = lifecycle_status == "completed" and next_action == "read"
             _active_execution_decision(
-                payload[EXECUTION_LEVEL_EXTENSION_FIELD], EXECUTION_LEVEL_MODEL
+                payload[EXECUTION_LEVEL_EXTENSION_FIELD],
+                EXECUTION_LEVEL_MODEL,
+                allow_legacy_read=allow_legacy_read,
             )
-            _validate_payload_shape(step, payload)
+            _validate_payload_shape(
+                step,
+                payload,
+                allow_legacy_execution_read=allow_legacy_read,
+            )
         except FixtureCapsuleError as exc:
             return [f"execution-level migration extension is invalid: {exc}"]
         return []
@@ -1707,11 +1714,26 @@ def _active_public_schema(execution_contract: dict[str, Any]) -> dict[str, Any]:
     except (KeyError, TypeError) as exc:
         raise FixtureCapsuleError("public task extension schema is missing") from exc
     expected = {
-        "version": "execution-level/v1",
+        "version": "execution-level/v2",
         "ordered_labels": ["Level", "Basis", "L5 Evidence"],
         "line_fields": {
-            "Level": ["requested", "automatic", "default", "effective", "edit"],
-            "Basis": ["source", "triggers", "l2", "unresolved"],
+            "Level": [
+                "requested",
+                "automatic",
+                "minimum",
+                "default",
+                "effective",
+                "edit",
+            ],
+            "Basis": [
+                "source",
+                "triggers",
+                "l1",
+                "l2",
+                "l5",
+                "confirmation",
+                "unresolved",
+            ],
             "L5 Evidence": ["when", "requires"],
         },
     }
@@ -1736,9 +1758,12 @@ def _closed_execution_level_ranks(
 
 
 def _active_execution_decision(
-    value: object, execution_contract: dict[str, Any]
+    value: object,
+    execution_contract: dict[str, Any],
+    *,
+    allow_legacy_read: bool = False,
 ) -> dict[str, Any]:
-    """Validate only fields required by the active public decision projection."""
+    """Validate v2 for active work, with an explicit completed/read v1 exception."""
 
     if not isinstance(value, dict):
         raise FixtureCapsuleError("execution_level_extension must be a mapping")
@@ -1799,11 +1824,64 @@ def _active_execution_decision(
             field: row[field] for field in l2_fields if field != "id"
         }
 
+    def eligibility_rows(
+        basis_field: str, contract_field: str
+    ) -> dict[str, dict[str, object]] | None:
+        if basis_field not in basis:
+            return None
+        registry_ids = [row["id"] for row in execution_contract[contract_field]]
+        rows = basis[basis_field]
+        if not isinstance(rows, list) or len(rows) != len(registry_ids):
+            raise FixtureCapsuleError(
+                f"execution Level Basis must cover {basis_field}"
+            )
+        evaluations: dict[str, dict[str, object]] = {}
+        for index, row in enumerate(rows):
+            if not isinstance(row, dict) or tuple(row) != l2_fields:
+                raise FixtureCapsuleError(
+                    f"execution {basis_field} row {index} fields are invalid"
+                )
+            if row["id"] != registry_ids[index]:
+                raise FixtureCapsuleError(
+                    f"execution {basis_field} rows are out of order"
+                )
+            evaluations[row["id"]] = {
+                field: row[field] for field in l2_fields if field != "id"
+            }
+        return evaluations
+
+    l1_evaluations = eligibility_rows("l1_eligibility", "l1_eligibility")
+    l5_evaluations = eligibility_rows(
+        "l5_assurance_eligibility", "l5_assurance_eligibility"
+    )
+    v2_markers = (
+        l1_evaluations is not None,
+        l5_evaluations is not None,
+        "minimum_eligible_level" in value,
+        "l5_confirmation" in value,
+        "l5_confirmation" in basis,
+    )
+    if any(v2_markers) and not all(v2_markers):
+        raise FixtureCapsuleError(
+            "execution-level/v2 evidence is incomplete; reissue without fabricating fields"
+        )
+    legacy_v1 = not any(v2_markers)
+    if legacy_v1 and not allow_legacy_read:
+        raise FixtureCapsuleError(
+            "execution-level/v1 requires v2 reissue before active or resumed edit, validation, review, or routing"
+        )
+    confirmation = value.get(
+        "l5_confirmation", basis.get("l5_confirmation", "not-required")
+    )
+
     try:
         result = compute_execution_level(
             requested=value["requested_level"],
             trigger_evaluations=trigger_evaluations,
+            l1_evaluations=l1_evaluations,
             l2_evaluations=l2_evaluations,
+            l5_assurance_evaluations=l5_evaluations,
+            l5_confirmation=confirmation,
             prior_historical_max_floor=value.get("prior_historical_max_floor"),
             prior_historical_max_effective=value.get("prior_historical_max_effective"),
             contract=execution_contract,
@@ -1812,6 +1890,11 @@ def _active_execution_decision(
         raise FixtureCapsuleError(f"execution Level Basis is invalid: {exc}") from exc
     if value["automatic_level"] != result["automatic_level"]:
         raise FixtureCapsuleError("execution automatic_level is not canonical")
+    if (
+        "minimum_eligible_level" in value
+        and value["minimum_eligible_level"] != result["minimum_eligible_level"]
+    ):
+        raise FixtureCapsuleError("execution minimum_eligible_level is not canonical")
     if basis["unresolved"] != result["level_basis"]["unresolved"]:
         raise FixtureCapsuleError("execution unresolved Basis is not canonical")
     if basis["edit_status"] != result["level_basis"]["edit_status"]:
@@ -1821,6 +1904,8 @@ def _active_execution_decision(
     if effective not in ranks:
         raise FixtureCapsuleError("execution effective_level is invalid")
     floor_candidates = [value["automatic_level"], result["mandatory_floor"]]
+    if not legacy_v1:
+        floor_candidates.append(result["minimum_eligible_level"])
     if value["requested_level"] != "unspecified":
         floor_candidates.append(value["requested_level"])
     for field in (
@@ -1837,7 +1922,15 @@ def _active_execution_decision(
     decision_floor = max(floor_candidates, key=ranks.__getitem__)
     if ranks[effective] < ranks[decision_floor]:
         raise FixtureCapsuleError("execution effective_level is below its decision floor")
-    return value
+    if not legacy_v1 and effective != result["effective_level"]:
+        raise FixtureCapsuleError("execution effective_level is not canonical")
+    if legacy_v1:
+        return value
+    normalized = dict(value)
+    normalized["minimum_eligible_level"] = result["minimum_eligible_level"]
+    normalized["l5_confirmation"] = result["l5_confirmation"]
+    normalized["level_basis"] = result["level_basis"]
+    return normalized
 
 
 def _active_public_fields(payload: str, fields: tuple[str, ...]) -> dict[str, str]:
@@ -1867,10 +1960,13 @@ def _trusted_active_public_level(
     if not lines or not lines[0].startswith("Level: "):
         return None
     payload = lines[0][len("Level: ") :]
+    has_requested = payload.startswith("requested=")
+    has_minimum = "; minimum=" in payload
     fields = (
-        ("requested", "automatic", "effective", "edit")
-        if payload.startswith("requested=")
-        else ("automatic", "effective", "edit")
+        (("requested",) if has_requested else ())
+        + ("automatic",)
+        + (("minimum",) if has_minimum else ())
+        + ("effective", "edit")
     )
     try:
         level = _active_public_fields(payload, fields)
@@ -1966,7 +2062,54 @@ def encode_public_task_extension(
     extension = _active_execution_decision(value, execution_contract)
     basis = extension["level_basis"]
     trigger_rows = basis["trigger_evaluations"]
+    if "l1_eligibility" not in basis:
+        l2_rows = basis["l2_eligibility"]
+        decision_trigger_rows = [
+            row for row in trigger_rows if row["status"] in {"matched", "unknown"}
+        ]
+        decision_l2_rows = [
+            row for row in l2_rows if row["status"] in {"false", "unknown"}
+        ]
+        effective = extension["effective_level"]
+        level_fields: list[str] = []
+        if extension["requested_level"] != "unspecified":
+            level_fields.append(f"requested={extension['requested_level']}")
+        level_fields.extend(
+            (
+                f"automatic={extension['automatic_level']}",
+                f"effective={effective}",
+                f"edit={basis['edit_status']}",
+            )
+        )
+        lines = [
+            "Level: " + "; ".join(level_fields),
+            "Basis: "
+            + "; ".join(
+                (
+                    "t="
+                    + _public_json(
+                        [
+                            _active_public_bound_id(row)
+                            for row in decision_trigger_rows
+                        ]
+                    ),
+                    "l="
+                    + _public_json(
+                        [_active_public_bound_id(row) for row in decision_l2_rows]
+                    ),
+                    "u=" + _public_json(basis["unresolved"]),
+                )
+            ),
+        ]
+        if effective == "L5" or extension["requested_level"] == "L5":
+            lines.append(
+                "L5 Evidence: requires="
+                + _public_json(_active_l5_requirements(execution_contract))
+            )
+        return "\n".join(lines)
+    l1_rows = basis["l1_eligibility"]
     l2_rows = basis["l2_eligibility"]
+    l5_rows = basis["l5_assurance_eligibility"]
     decision_trigger_rows = [
         row
         for row in trigger_rows
@@ -1975,6 +2118,12 @@ def encode_public_task_extension(
     decision_l2_rows = [
         row for row in l2_rows if row["status"] in {"false", "unknown"}
     ]
+    decision_l1_rows = [
+        row for row in l1_rows if row["status"] in {"false", "unknown"}
+    ]
+    decision_l5_rows = [
+        row for row in l5_rows if row["status"] in {"false", "unknown"}
+    ]
     effective = extension["effective_level"]
     level_fields: list[str] = []
     if extension["requested_level"] != "unspecified":
@@ -1982,6 +2131,7 @@ def encode_public_task_extension(
     level_fields.extend(
         (
             f"automatic={extension['automatic_level']}",
+            f"minimum={extension['minimum_eligible_level']}",
             f"effective={effective}",
             f"edit={basis['edit_status']}",
         )
@@ -1995,10 +2145,19 @@ def encode_public_task_extension(
                 + _public_json(
                     [_active_public_bound_id(row) for row in decision_trigger_rows]
                 ),
+                "i="
+                + _public_json(
+                    [_active_public_bound_id(row) for row in decision_l1_rows]
+                ),
                 "l="
                 + _public_json(
                     [_active_public_bound_id(row) for row in decision_l2_rows]
                 ),
+                "a="
+                + _public_json(
+                    [_active_public_bound_id(row) for row in decision_l5_rows]
+                ),
+                "c=" + str(extension["l5_confirmation"]),
                 "u=" + _public_json(basis["unresolved"]),
             )
         ),
@@ -2039,10 +2198,13 @@ def decode_public_task_extension(
             payloads[label] = line[len(prefix) :]
 
         level_payload = payloads["Level"]
+        has_requested = level_payload.startswith("requested=")
+        is_v2 = "; minimum=" in level_payload
         level_fields = (
-            ("requested", "automatic", "effective", "edit")
-            if level_payload.startswith("requested=")
-            else ("automatic", "effective", "edit")
+            (("requested",) if has_requested else ())
+            + ("automatic",)
+            + (("minimum",) if is_v2 else ())
+            + ("effective", "edit")
         )
         level = _active_public_fields(level_payload, level_fields)
         requested = level.get("requested", "unspecified")
@@ -2051,10 +2213,15 @@ def decode_public_task_extension(
             "effective_level": level["effective"],
         }
         basis = _active_public_fields(
-            payloads["Basis"], ("t", "l", "u")
+            payloads["Basis"],
+            ("t", "i", "l", "a", "c", "u") if is_v2 else ("t", "l", "u"),
         )
         trigger_ids = [row["id"] for row in execution_contract["trigger_registry"]]
+        l1_ids = [row["id"] for row in execution_contract["l1_eligibility"]]
         l2_ids = [row["id"] for row in execution_contract["l2_eligibility"]]
+        l5_ids = [
+            row["id"] for row in execution_contract["l5_assurance_eligibility"]
+        ]
         triggers, trigger_sources = _parse_active_public_bound_ids(
             basis["t"],
             label="triggers",
@@ -2067,10 +2234,35 @@ def decode_public_task_extension(
             registry_ids=l2_ids,
             execution_contract=execution_contract,
         )
-        sources = list(dict.fromkeys((*trigger_sources, *l2_sources)))
+        l1: list[str] = []
+        l1_sources: list[str] = []
+        l5: list[str] = []
+        l5_sources: list[str] = []
+        confirmation = "not-required"
+        if is_v2:
+            l1, l1_sources = _parse_active_public_bound_ids(
+                basis["i"],
+                label="L1 exceptions",
+                registry_ids=l1_ids,
+                execution_contract=execution_contract,
+            )
+            l5, l5_sources = _parse_active_public_bound_ids(
+                basis["a"],
+                label="L5 exceptions",
+                registry_ids=l5_ids,
+                execution_contract=execution_contract,
+            )
+            confirmation = basis["c"]
+            if confirmation not in execution_contract["l5_confirmation"]["states"]:
+                raise FixtureCapsuleError("public L5 confirmation is invalid")
+        sources = list(
+            dict.fromkeys(
+                (*trigger_sources, *l1_sources, *l2_sources, *l5_sources)
+            )
+        )
         unresolved = json.loads(basis["u"])
-        unresolved_ids = [*trigger_ids, *l2_ids]
-        decision_ids = {*triggers, *l2}
+        unresolved_ids = [*trigger_ids, *l1_ids, *l2_ids, *l5_ids]
+        decision_ids = {*triggers, *l1, *l2, *l5}
         if (
             not isinstance(unresolved, list)
             or any(not _fixture_nonempty_text(item) for item in unresolved)
@@ -2082,6 +2274,7 @@ def decode_public_task_extension(
             raise FixtureCapsuleError("public unresolved IDs are invalid")
 
         automatic = level["automatic"]
+        minimum = level.get("minimum")
         effective = level["effective"]
         edit = level["edit"]
         levels = [row["id"] for row in execution_contract["levels"]]
@@ -2099,26 +2292,51 @@ def decode_public_task_extension(
         matched_triggers = [item for item in triggers if item not in unresolved]
         critical_id = "unknown-critical-boundary"
         critical = critical_id in unresolved
-        expected_automatic = "L2"
-        if l2 or any(
+        expected_minimum = "L2"
+        if is_v2 and not l1 and not l2:
+            expected_minimum = "L1"
+        elif l2 or any(
             trigger_floors[item] == "L3" for item in matched_triggers
         ):
-            expected_automatic = "L3"
+            expected_minimum = "L3"
         if critical or any(
             trigger_floors[item] == "L4" for item in matched_triggers
         ):
+            expected_minimum = "L4"
+        if is_v2 and minimum != expected_minimum:
+            raise FixtureCapsuleError("public minimum level contradicts its Basis")
+        expected_automatic = expected_minimum
+        material_l4 = any(
+            trigger_floors[item] == "L4"
+            and item not in {"formal-release-declared", "unknown-critical-boundary"}
+            for item in matched_triggers
+        )
+        l5_requirement = execution_contract["formula"]["l5_requirement"]
+        l5_exceptions = set(l5)
+        l5_eligible = (
+            is_v2
+            and material_l4
+            and not (set(l5_requirement["required_all"]) & l5_exceptions)
+            and bool(set(l5_requirement["required_any"]) - l5_exceptions)
+        )
+        if l5_eligible and confirmation == "confirmed":
+            expected_automatic = "L5"
+        elif l5_eligible:
             expected_automatic = "L4"
         if automatic != expected_automatic:
             raise FixtureCapsuleError("public automatic level contradicts its Basis")
-        minimum_candidates = [automatic]
+        minimum_candidates = [automatic, expected_minimum]
         if requested != "unspecified":
             minimum_candidates.append(requested)
         minimum_effective = max(minimum_candidates, key=ranks.__getitem__)
         if ranks[effective] < ranks[minimum_effective]:
             raise FixtureCapsuleError("public effective level is below its decision floor")
+        confirmation_pending = l5_eligible and confirmation == "pending"
         if critical and (ranks[effective] < ranks["L4"] or edit != "blocked"):
             raise FixtureCapsuleError("public critical unknown must fail closed")
-        if not critical and edit != "allowed":
+        if confirmation_pending and edit != "blocked":
+            raise FixtureCapsuleError("public pending L5 confirmation must block editing")
+        if not critical and not confirmation_pending and edit != "allowed":
             raise FixtureCapsuleError("public edit status is unsupported")
 
         l5_required = effective == "L5" or requested == "L5"
@@ -2133,17 +2351,26 @@ def decode_public_task_extension(
             if requirements != _active_l5_requirements(execution_contract):
                 raise FixtureCapsuleError("public L5 Evidence requirements are not exact")
         decoded: dict[str, object] = {
-            "version": public["version"],
+            "version": "execution-level/v2" if is_v2 else "execution-level/v1",
+            "requested_level": requested,
+            "automatic_level": automatic,
+            "minimum_eligible_level": expected_minimum,
+            "effective_level": effective,
+            "l5_confirmation": confirmation,
             "level": {
                 "requested": requested,
                 "automatic": automatic,
+                "minimum": expected_minimum,
                 "effective": effective,
                 "edit": edit,
             },
             "basis": {
                 "source": sources,
                 "triggers": triggers,
+                "l1": l1,
                 "l2": l2,
+                "l5": l5,
+                "confirmation": confirmation,
                 "unresolved": unresolved,
             },
         }
@@ -2163,6 +2390,163 @@ def decode_public_task_extension(
             fallback_value,
             execution_contract=execution_contract,
         )
+
+
+def engineering_brief_protected_fields() -> tuple[str, ...]:
+    """Return the source-owned Brief decision fields used by public projections."""
+
+    authority = TASK_CONTRACT_MODEL.get("analyzed_work_authority")
+    ownership = (
+        authority.get("decision_ownership")
+        if isinstance(authority, dict)
+        else None
+    )
+    fields = (
+        ownership.get("engineering_brief")
+        if isinstance(ownership, dict)
+        else None
+    )
+    if not isinstance(fields, list) or not fields:
+        raise FixtureCapsuleError(
+            "Core Engineering Brief decision ownership is unavailable"
+        )
+    projected: list[str] = []
+    for field in fields:
+        if not isinstance(field, str) or not field.strip():
+            raise FixtureCapsuleError(
+                "Core Engineering Brief decision ownership is malformed"
+            )
+        normalized = _fixture_field_name(field)
+        if normalized == "layer3":
+            projected.extend(("implementation_layer3", "domain"))
+        else:
+            projected.append(normalized)
+    if len(projected) != len(set(projected)):
+        raise FixtureCapsuleError(
+            "Core Engineering Brief decision ownership is not unique"
+        )
+    return tuple(projected)
+
+
+def project_engineering_brief_task_execution(
+    brief_semantics: object,
+    execution_result: object,
+) -> dict[str, object]:
+    """Project one accepted Brief plus Main execution through canonical owners."""
+
+    protected_fields = engineering_brief_protected_fields()
+    if (
+        not isinstance(brief_semantics, dict)
+        or tuple(brief_semantics) != protected_fields
+    ):
+        raise FixtureCapsuleError(
+            "accepted Engineering Brief must contain the exact source-owned "
+            "decision fields"
+        )
+    if not isinstance(execution_result, dict):
+        raise FixtureCapsuleError("Main execution result must be an object")
+    required_execution_fields = {
+        "requested",
+        "automatic_level",
+        "minimum_eligible_level",
+        "effective_level",
+        "l5_confirmation",
+        "level_basis",
+    }
+    if not required_execution_fields <= set(execution_result):
+        raise FixtureCapsuleError(
+            "Main execution result lacks the public execution projection"
+        )
+    try:
+        canonical_values = json.loads(
+            json.dumps(
+                brief_semantics,
+                ensure_ascii=False,
+                allow_nan=False,
+                sort_keys=True,
+            )
+        )
+    except (TypeError, ValueError) as exc:
+        raise FixtureCapsuleError(
+            f"accepted Engineering Brief must be canonical JSON: {exc}"
+        ) from exc
+    canonical_semantics = {
+        field: canonical_values[field] for field in protected_fields
+    }
+    extension = {
+        "requested_level": execution_result["requested"],
+        "automatic_level": execution_result["automatic_level"],
+        "minimum_eligible_level": execution_result["minimum_eligible_level"],
+        "effective_level": execution_result["effective_level"],
+        "l5_confirmation": execution_result["l5_confirmation"],
+        "level_basis": execution_result["level_basis"],
+    }
+    return {
+        "contract": "changeforge.engineering-brief-task-projection/v1",
+        "source_authority": "task_contract.analyzed_work_authority",
+        "brief_semantics": canonical_semantics,
+        "execution_level_extension": decode_public_task_extension(
+            encode_public_task_extension(extension)
+        ),
+    }
+
+
+def engineering_brief_execution_transition_errors(
+    before: object,
+    after: object,
+) -> list[str]:
+    """Reject protected Brief drift across an execution-only transition."""
+
+    expected_fields = {
+        "contract",
+        "source_authority",
+        "brief_semantics",
+        "execution_level_extension",
+    }
+    errors: list[str] = []
+    for label, projection in (("before", before), ("after", after)):
+        if not isinstance(projection, dict) or set(projection) != expected_fields:
+            errors.append(
+                f"{label} Engineering Brief projection fields are not exact"
+            )
+            continue
+        if (
+            projection.get("contract")
+            != "changeforge.engineering-brief-task-projection/v1"
+            or projection.get("source_authority")
+            != "task_contract.analyzed_work_authority"
+        ):
+            errors.append(
+                f"{label} Engineering Brief projection authority is invalid"
+            )
+        semantics = projection.get("brief_semantics")
+        if (
+            not isinstance(semantics, dict)
+            or tuple(semantics) != engineering_brief_protected_fields()
+        ):
+            errors.append(
+                f"{label} Engineering Brief protected fields are not exact"
+            )
+        extension = projection.get("execution_level_extension")
+        if (
+            not isinstance(extension, dict)
+            or extension.get("version") != "execution-level/v2"
+        ):
+            errors.append(
+                f"{label} Engineering Brief execution extension is not v2"
+            )
+    if errors or not isinstance(before, dict) or not isinstance(after, dict):
+        return errors
+    before_semantics = before["brief_semantics"]
+    after_semantics = after["brief_semantics"]
+    assert isinstance(before_semantics, dict)
+    assert isinstance(after_semantics, dict)
+    for field in engineering_brief_protected_fields():
+        if before_semantics[field] != after_semantics[field]:
+            errors.append(
+                f"protected Engineering Brief field changed: {field}"
+            )
+    return errors
 
 
 def _render_execution_level_extension(value: object) -> list[str]:
@@ -2200,6 +2584,31 @@ def _render_evidence_ledger(ledger: list[dict[str, Any]]) -> list[str]:
         lines.append("| " + " | ".join(cells) + " |")
     lines.append("")
     return lines
+
+
+def render_direct_discovery_extension(payload: object) -> str:
+    """Render the public Direct inspection boundary without routing authority."""
+
+    if not isinstance(payload, dict):
+        raise FixtureCapsuleError("Direct discovery extension must be an object")
+    expected = {"inspection_boundary", "inspection_stop_conditions"}
+    supplied = expected & set(payload)
+    if supplied != expected:
+        raise FixtureCapsuleError(
+            "Direct discovery extension requires inspection_boundary and "
+            "inspection_stop_conditions together"
+        )
+    boundary = _technical_or_prose_list(
+        payload["inspection_boundary"], "inspection_boundary"
+    )
+    stops = _technical_or_prose_list(
+        payload["inspection_stop_conditions"], "inspection_stop_conditions"
+    )
+    lines = [
+        *_render_list("Inspection Boundary", boundary),
+        *_render_list("Inspection Stop Conditions", stops),
+    ]
+    return "\n".join(lines).rstrip() + "\n"
 
 
 def _render_task(step: dict[str, Any], payload: dict[str, Any]) -> str:
@@ -2260,6 +2669,18 @@ def _render_task(step: dict[str, Any], payload: dict[str, Any]) -> str:
             lines.extend(_render_list(contract_field, value))
         else:
             lines.extend(_render_scalar(contract_field, value))
+        if (
+            contract_field == "Allowed Write Scope"
+            and payload.get("template") == "direct-task"
+            and (
+                "inspection_boundary" in payload
+                or "inspection_stop_conditions" in payload
+            )
+        ):
+            lines.extend(
+                render_direct_discovery_extension(payload).rstrip().splitlines()
+            )
+            lines.append("")
         if contract_field == "Status" and EXECUTION_LEVEL_EXTENSION_FIELD in payload:
             lines.extend(
                 _render_execution_level_extension(
@@ -2308,7 +2729,12 @@ def _render_skill_selection(step: dict[str, Any]) -> list[str]:
     return lines
 
 
-def _validate_payload_shape(step: dict[str, Any], payload: dict[str, Any]) -> str:
+def _validate_payload_shape(
+    step: dict[str, Any],
+    payload: dict[str, Any],
+    *,
+    allow_legacy_execution_read: bool = False,
+) -> str:
     if "dispatch_capsule" in step:
         raise FixtureCapsuleError(
             "dispatch_capsule free text is forbidden; use fixture_capsule fields"
@@ -2358,7 +2784,9 @@ def _validate_payload_shape(step: dict[str, Any], payload: dict[str, Any]) -> st
             )
     if EXECUTION_LEVEL_EXTENSION_FIELD in payload:
         _active_execution_decision(
-            payload[EXECUTION_LEVEL_EXTENSION_FIELD], EXECUTION_LEVEL_MODEL
+            payload[EXECUTION_LEVEL_EXTENSION_FIELD],
+            EXECUTION_LEVEL_MODEL,
+            allow_legacy_read=allow_legacy_execution_read,
         )
     if contract_type == "utility":
         if any(

@@ -7,10 +7,8 @@ description: "Use `analysis-agent` for module-boundary or dependency-direction a
 
 ## Role
 
-Support `analysis-agent` and `review-agent` for bounded structure, dependency, ownership, reuse, and scalability decisions.
-
-- **Analysis mode (`analysis-agent`):** Decide placement, ownership, and dependency direction.
-- **Review mode (`review-agent`):** Judge the artifact against its placement and boundary criteria.
+- **Analysis mode (`analysis-agent`):** select a source-backed placement without claiming edits or approval.
+- **Review mode (`review-agent`):** independently return `Approved`, `Returned`, or `Blocked`; never repair the artifact.
 
 ## When To Use
 
@@ -28,49 +26,46 @@ Support `analysis-agent` and `review-agent` for bounded structure, dependency, o
 - desired behavior
 - module and dependency boundary
 - **Analysis mode (`analysis-agent`):** candidate ownership, dependency, consumer, and reuse evidence.
-- **Review mode (`review-agent`):** bounded architecture artifact with its placement criteria and supporting evidence.
+- **Review mode (`review-agent`):** bounded architecture artifact, placement criteria and supporting evidence.
 
 ## Professional Decision Rules
 
-- When new structure or a boundary is proposed, place behavior with the owner of its reason to change and preserve the affected dependency direction.
-- Reuse an abstraction only when its contract and ownership match current evidence.
-- Similarity alone does not justify reuse.
-- Skip reuse proof for owner-internal edits without structural change.
-- Compare the smallest local design with broader alternatives using only material change-locality, coupling, compatibility, operability, and deletion constraints.
-- Require placement and ownership rationale only for proposed files, services, shared helpers, dependencies, public surfaces, or moved responsibilities that change structure.
+- Preserve placement with its declared owner.
+- Select named References for active consumer/data, dependency/enforcement, reversibility, or alternative risks.
+- Record public/private surface and authority.
 
 ## High-Value Gotchas
 
-- A shared helper without one owner becomes a coupling sink.
-- New abstraction before a second concrete use often raises change cost.
-- Generated output is not the source of truth.
+- Directory proximity, framework layers, and team names do not prove semantic ownership.
+- A local compile does not prove indirect-consumer, data-ownership, or dependency-direction safety.
+- An abstraction that obscures authority or deletion cost is not a safer boundary.
 
 ## Execution Checklist
 
-1. Trace the proposed responsibility to its current owner, consumers, and dependency direction.
-2. Compare the smallest local placement with only materially different structural alternatives.
-3. Verify compatibility, reversibility, deletion cost, and affected enforcement boundaries.
-4. **Analysis mode:** select one placement and record rejected alternatives.
-5. **Review mode:** judge placement, dependency direction, and enforcement boundaries.
-6. Stop when ownership, consumer, or dependency evidence cannot support one placement.
+- **Analysis mode:** Map the current owner, public/private surface, consumers, data authority, dependencies, and smallest viable placement.
+- **Review mode:** Verify placement, dependency direction, enforcement, reversibility, and unreviewed structural risk against current evidence.
+- Reject a boundary whose owner, affected consumers, evolution path, or material alternative remains unsupported.
 
 ## Stop / Escalation Conditions
 
-- Stop an architecture decision when a proposed structure or boundary lacks the applicable owner, public/private surface, dependency direction, data ownership, reversibility, or simpler-alternative evidence.
-- Stop new shared abstractions, plugins, services, queues, registries, or generic interfaces until current consumers, owner, reversibility, and rejected local alternative are proven.
-- Stop public or indirectly consumed boundary changes when affected-consumer and compatibility or versioning proof is missing. Topology, enforcement, rollout, or observability proof becomes required only for runtime, deployment, ownership, or dependency-direction changes.
-- Stop tool execution when graph tooling, production telemetry, external connectors, or release actions lack permission/sandbox, scope, rollback/revert path, and redaction evidence.
+- Stop structural decisions missing applicable owner, surface, dependency, data, reversibility, or smaller-alternative evidence.
+- Tool execution requires permission/sandbox, scope, rollback/revert, and redaction evidence.
+- A blocked review names the missing evidence, unblock condition, repair owner, and handoff.
 
 ## Output Contract
 
-- **Analysis mode (`analysis-agent`):** placement decision; rejected alternatives; dependency and consumer impact.
-- **Review mode (`review-agent`):** architecture verdict; boundary findings; unreviewed structural risk.
+- placement decision, architecture verdict, and structural risk
+- **Analysis mode (`analysis-agent`):** placement decision, rejected alternatives, and dependency and consumer impact.
+- **Review mode (`review-agent`):** architecture verdict, boundary findings, and unreviewed structural risk.
 
 ## Targeted References
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
-| [architecture output and gates](references/architecture-output-and-gates.md) | targeted | L3-L5 analysis or review needs mode-specific closure and targeted gates for selected placement, consumer/data, topology/enforcement, or reversibility risk | The root result is sufficient and no selected risk needs the extended proof contract | analysis-agent, review-agent | gate-decision, residual-risk |
+| [placement and ownership](references/placement-and-ownership.md) | targeted | Structure responsibility ownership reuse or placement remains open | Owner public/private surface and smallest viable placement are fixed by current evidence | analysis-agent, review-agent | boundary-decision, selected-approach, residual-risk |
+| [consumer and data impact](references/consumer-and-data-impact.md) | targeted | Public or indirect consumer or authoritative-data impact remains open | No consumer contract compatibility versioning migration or data-owner boundary changes | analysis-agent, review-agent | boundary-decision, validation-plan, residual-risk |
+| [dependency topology and enforcement](references/dependency-topology-and-enforcement.md) | targeted | Dependency direction topology or durable enforcement remains open | Current source edges topology owner and enforcement evidence already fix the boundary | analysis-agent, review-agent | boundary-decision, gate-decision, validation-plan, residual-risk |
+| [reversibility evolution and proof limits](references/reversibility-evolution-and-proof-limits.md) | targeted | Reversal coexistence migration evolution or architecture proof limits remain open | Current evidence fixes reversibility evolution residual risk and next owner | analysis-agent, review-agent | decision-record, validation-plan, proof-limit, residual-risk |
 | [checklist](references/checklist.md) | decision-checklist | A bounded L2 mode needs compact checks for its triggered placement, ownership, dependency, consumer, data, topology, or reversibility risk | The root contract is enough or targeted proof fields are required | analysis-agent, review-agent | checklist-result, residual-risk |
 | [index](references/index.md) | index | competing architecture impact reviewer references require dependency, conflict, or output-fragment selection | the architecture impact reviewer root or a task-named reference already resolves selection | analysis-agent, review-agent | reference-selection |
 | [solution optimality](references/solution-optimality.md) | targeted | An architecture boundary, ownership, dependency, topology, or operational-responsibility decision has a material alternative | The change is owner-internal with no structural impact or current evidence already fixes placement | analysis-agent, review-agent | selected-approach, residual-risk |

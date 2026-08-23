@@ -7,9 +7,8 @@ description: "Use `analysis-agent`: `implementation-preparation` for changes, `d
 
 ## Role
 
-Support `analysis-agent` in the selected source-backed mode. For Analyzed Work,
-the current Engineering Brief is the only operational analysis authority;
-Specialist work is input pending Brief incorporation.
+For `analysis-agent`, this root owns mode choice, evidence trust, read-only scope,
+and the no-reroute boundary; the mode contract owns output.
 
 ## When To Use
 
@@ -29,38 +28,34 @@ Specialist work is input pending Brief incorporation.
 
 - selected mode
 - bounded source evidence and constraints
+- proof boundary
 
 ## Professional Decision Rules
 
-- Bind the selected mode to its `mode-contract`.
-- Apply Core `task_contract.analyzed_work_authority` for initial closure,
-  decision-invalidated Delta Analysis, transitive impact, and Skill routing.
-- Prove its owner, impact, failure, validation, and proof limits.
-- Put source-proven placement and Specialist results in the Brief.
-- Route unresolved structural placement to `architecture-impact-reviewer`.
-- Put a complete Task Contract v2 that Main can dispatch verbatim in the Brief,
-  not a derived Task DAG or handoff.
+- Load exactly the selected mode contract and only active named References.
+- Never preload the index.
+- Separate source fact, supported inference, and unknown.
+- Prove ownership or placement from current source rather than proximity.
+- Keep Professional, Layer3, and mode fixed; never reroute.
+- Keep Core analyzed authority fixed; never create parallel authority.
 
 ## High-Value Gotchas
 
-- Proximity is not ownership.
+- Prior reports and nearby code are not current source ownership proof.
 
 ## Execution Checklist
 
-1. Load the selected mode contract and triggered guidance.
-2. Return its result and proof limit under Core.
+1. Confirm mode, evidence boundary, and current source.
+2. Return the mode contract's result, validation, and proof limits.
 
 ## Stop / Escalation Conditions
 
-- Stop for user decisions or result-invalidating gaps.
-- Brief conflict or protected change returns `blocked`.
-- Structural placement or dependency direction routes to `architecture-impact-reviewer`.
-- Foundational invalidation permits full analysis.
+- A mode conflict, user choice, or result-invalidating gap returns `blocked`
+  without changing mode or route.
 
 ## Output Contract
 
-- mode result, source evidence, and proof limit
-- implementation-preparation: authoritative Brief, dispatchable Slice, Specialist input
+- The selected mode contract's result, source evidence, and proof limit.
 
 ## Targeted References
 

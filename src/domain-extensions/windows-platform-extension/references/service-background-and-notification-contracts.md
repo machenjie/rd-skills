@@ -18,17 +18,6 @@ Official Microsoft Learn pages below were accessed on 2026-07-24.
 - Bind notifications to package/app identity, user session, activation, consent,
   expiration, duplicate suppression, and unavailable foreground state.
 
-## Failure Proof
-
-- Exercise start/stop/restart, crash recovery, shutdown, account denial, session
-  absence, background cancellation, notification activation, and upgrade.
-- Use the selected IPC and user-session handoff instead of interactive-service UI.
-
-## Required Record
-
-Return Professional owner, execution mechanism, principal/session, install and
-recovery behavior, notification contract, recurrence proof, and untested paths.
-
 ## Primary Sources
 
 - [About services](https://learn.microsoft.com/en-us/windows/win32/services/about-services)

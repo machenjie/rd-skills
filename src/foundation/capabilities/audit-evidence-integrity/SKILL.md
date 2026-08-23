@@ -22,40 +22,21 @@ description: "Use for audit coverage, identity/time fidelity, tamper evidence, r
 
 ## Skill Role
 
-Define post-emission audit trust, lifecycle, and verification contracts.
+Define audit coverage, identity/time/causality, integrity/storage/access, lifecycle/export/custody, and verification.
 
 ## High-Value Rules
 
-- Define the audit question, critical outcomes and sources, expected records, time window, and completeness reconciliation.
-- Preserve authoritative human/service identity, effective actor, delegation, session, tenant, purpose, and stable causation/correlation identities.
-- Record occurrence, commit, and receipt time with source, offset, sync health, precision, uncertainty, and no unsupported global order.
-- Preserve canonical records and schema versions while treating views and transformations as derived evidence with lineage.
-- Separate administration from producers and subjects, protecting records, integrity metadata, keys, policy, validation configuration, and privileged-use evidence.
-- Select one composition-specific verification contract and bind what sequences, checkpoints, signatures, hashes, storage controls, and reconciliation each cover. An isolated hash proves only its bound bytes and cannot by itself prove deletion, truncation, replay, or reordering.
-- Enforce retention and hold policy across records, indexes, replicas, backups, exports, and verification material without legal conclusions.
-- Bind access, export, and custody to selector, time range, schema, counts, integrity proof, actor, purpose, transfer, receipt, and verification.
+- Stop until question, consumer, outcomes, sources, time window, and owners are named.
+- Load only the Reference for the active attribution, integrity, or lifecycle/custody decision.
+- Return an evidence gap and residual risk for unresolved coverage, privileged bypass, composition, reconciliation, export, or custody.
 
 ## Anti-Patterns
 
-- A critical event is missing without a coverage alarm.
-- A mutable admin path alters protected evidence.
-- Shared actor identity hides who acted.
-- Clock skew is misrepresented as reliable order.
-- Broken correlation severs cause from outcome.
-- A retention gap silently removes evidence.
-- Export transformation changes meaning or integrity.
-- A custody gap leaves a handoff unverifiable.
-
-## Execution Checklist
-
-- Generate normal, denied, failed, delegated, administrative, and partial paths; reconcile expected records.
-- Delete, alter, replay, duplicate, reorder, skew clocks, break correlation, and exercise privileged access.
-- Verify exports across transformation/handoff; exercise retention, hold, expiry, and custody transitions.
+- Local success substituted for evidence of the audit evidence integrity contract.
 
 ## Stop Conditions
 
-- Stop without an audit consumer, coverage owner, authoritative identity, bounded time claim, or an independent composition-specific integrity and gap check.
-- Stop on unknown privileged bypass, silent lifecycle gap, unverifiable export/custody, or inaccessible verification material.
+- Stop without owners and current proof for coverage/attribution, integrity/bypass, and lifecycle/export/custody.
 - Route legal admissibility and compliance conclusions to accountable owners.
 
 ## Output Contract

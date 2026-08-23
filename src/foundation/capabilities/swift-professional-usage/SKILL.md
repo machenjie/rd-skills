@@ -9,42 +9,30 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use for Swift owners
 
 **Use when**
 
-- Swift code changes value/reference or copy-on-write semantics, Optional APIs, ARC, actor isolation, `Sendable`, cancellation, type erasure, Objective-C interop, SwiftUI state, or module visibility.
-- A compiler, deployment target, imported module, runtime, or UI lifecycle can change behavior beyond compilation.
+- Swift source changes identity, memory, type, concurrency, Objective-C, SwiftUI, or package behavior.
 
 **Do not use when**
 
-- Swift appears only in comments/generated output, or another-language change has no Swift source or imported boundary.
-- The change is only an iOS/macOS entitlement, signing, provisioning, packaging, or platform configuration with no Swift semantic decision.
+- Swift is incidental, or only entitlement, signing, provisioning, packaging, or platform configuration changes.
 
 ## Skill Role
 
-Own Swift language, memory, concurrency, type, interop, SwiftUI, and module semantics. Leave Apple platform/release contracts and generic concerns to their owners.
+Own Swift memory, concurrency, type, interop, SwiftUI, and module semantics; exclude Apple policy.
 
 ## High-Value Rules
 
-- Choose value/reference and copy-on-write semantics from identity, aliasing, mutation isolation, copy cost, concurrency, and nested-reference evidence.
-- Prove ARC teardown ownership across closures, delegates, callbacks, tasks, Objective-C edges, and cycle-breaking edges.
-- Treat actor isolation and `Sendable` as access contracts; identify hops, unsafe escapes, inherited isolation, and UI owner.
-- Preserve caller-visible cancellation semantics across task groups, unstructured tasks, continuations, and cleanup.
-- Choose generics, `some`, or `any` from identity, storage, dispatch, associated-type, and compatibility needs.
-- Define each Optional's absent-state meaning, safe unwrapping/defaulting, API exposure, and Objective-C import behavior.
-- At Objective-C boundaries, inspect nullability, selector exposure, ownership, bridging copies, availability, and exception limits.
-- In SwiftUI, bind state identity and lifetime to the correct view/model owner; prove observation, main-actor mutation, task cancellation, restoration, and package visibility.
+- Select `value-memory-and-type-contracts` for active identity, ownership, ARC, copy, Optional, generic/existential, or error decisions.
+- Select `concurrency-interop-and-ui-contracts` for active actor/Sendable, task/cancellation, continuation, Objective-C, SwiftUI, or package decisions.
+- Bind decisions to current compiler/mode, target, modules, SDK, package, caller, and owner evidence.
 
 ## Anti-Patterns
 
-- A `struct`, `let`, protocol, or `Sendable` conformance is treated as deep immutability or race-freedom proof.
-- `weak`, `unowned`, or `[weak self]` is applied mechanically without proving lifetime and required work completion.
-- `@MainActor` is treated as proof that every synchronous caller runs on the main thread.
-- A detached task, continuation, or SwiftUI task hides cancellation, double resume, retention, or repeated effects.
+- Compilation substituted for lifetime, isolation, imported-boundary, or package evidence.
 
 ## Stop Conditions
 
-- Stop until behavior-controlling compiler, deployment, OS, package, Objective-C, and observation versions are known.
-- Route entitlements, signing, lifecycle policy, notifications, background modes, and Apple platform APIs to their domain owner.
-- Route generic concurrency, API evolution, security, persistence, performance, and testing to their owners.
-- Stop on an unknown callback/continuation owner, isolation domain, Objective-C ownership annotation, or view identity.
+- Stop on unknown controlling version or boundary.
+- Route Apple policy and generic risks to their owners.
 
 ## Output Contract
 

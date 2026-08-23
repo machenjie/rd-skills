@@ -44,3 +44,7 @@ Repair / re-review status:
 
 ## Residual Risk and Recommended Next Step
 ```
+
+## Anti-Patterns
+
+- Edited-line-only review, speculative findings, or mock/retry/suppression-only proof cannot close a consequential path.

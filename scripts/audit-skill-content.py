@@ -161,35 +161,35 @@ THRESHOLDS = {
 }
 
 FOUNDATION_DERIVATION_SNAPSHOT = {
-    "date": "2026-08-02",
+    "date": "2026-08-21",
     "foundation_documents": 150,
-    "compact_documents": 124,
-    "complex_documents": 26,
-    "sum_tokens": 82758,
-    "min_tokens": 315,
-    "p25_tokens": 517,
-    "p50_tokens": 551,
-    "p75_tokens": 598,
-    "p90_tokens": 641,
-    "p95_tokens": 654,
-    "p99_tokens": 717,
-    "distribution_max_tokens": 730,
-    "mean_tokens": 551.720,
-    "sum_words": 58283,
-    "min_words": 238,
-    "p25_words": 368,
-    "p50_words": 392,
-    "p75_words": 413,
-    "p90_words": 445,
-    "p95_words": 459,
-    "p99_words": 489,
-    "max_words": 497,
-    "mean_words": 388.553,
-    "median_token_word_ratio": 1.411,
-    "p90_token_word_ratio": 1.505,
-    "p95_token_word_ratio": 1.543,
-    "max_token_word_ratio": 1.630,
-    "mean_token_word_ratio": 1.419,
+    "compact_documents": 128,
+    "complex_documents": 22,
+    "sum_tokens": 65538,
+    "min_tokens": 138,
+    "p25_tokens": 276,
+    "p50_tokens": 511,
+    "p75_tokens": 553,
+    "p90_tokens": 598,
+    "p95_tokens": 628,
+    "p99_tokens": 654,
+    "distribution_max_tokens": 663,
+    "mean_tokens": 436.92,
+    "sum_words": 45983,
+    "min_words": 94,
+    "p25_words": 182,
+    "p50_words": 357,
+    "p75_words": 393,
+    "p90_words": 419,
+    "p95_words": 436,
+    "p99_words": 454,
+    "max_words": 475,
+    "mean_words": 306.553,
+    "median_token_word_ratio": 1.414,
+    "p90_token_word_ratio": 1.552,
+    "p95_token_word_ratio": 1.593,
+    "max_token_word_ratio": 1.673,
+    "mean_token_word_ratio": 1.435,
 }
 
 
@@ -5801,7 +5801,11 @@ def _root_skill_documents(
     documents: list[dict] = []
     for kind, root in DESCRIPTION_ROOTS:
         for _kind, path in _safe_skill_files_for_root(kind, root):
-            raw_source = read_text_preserve_newlines(path)
+            source_record = _validation_utils.collect_skill_root_source(
+                path,
+                root=ROOT,
+            )
+            raw_source = source_record["raw_source"]
             metadata, raw_frontmatter, body = parse_frontmatter(path)
             owner = str(metadata.get("name") or path.parent.name)
             relative_path = _repository_relative_path(path)

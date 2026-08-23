@@ -17,27 +17,21 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when migration, 
 
 ## Skill Role
 
-Define data-state transitions, mixed-version compatibility, live-writer coordination, backfill behavior, resumability, validation, rollback or forward repair, and completion evidence. Exclude business-rule ownership and production operation.
+Own data-state transitions and cutover safety; exclude business rules and production operation.
 
 ## High-Value Rules
 
-- **Model source and target state before sequencing.** Name authoritative fields, invariants, volumes, writers, readers, derived data, constraints, and invalid or ambiguous source states that influence conversion.
-- **Design for mixed-version coexistence.** Select expand, bridge, dual-read or write, versioning, or coordinated transition from observed deployment skew and consumer control; avoid a fixed phase count detached from the actual compatibility boundary.
-- **Coordinate live writes with backfill.** Define writer authority, ordering, conflict resolution, capture point, replay, and cutover so late or concurrent updates cannot be overwritten or counted twice.
-- **Make execution resumable and bounded.** Use stable identity, checkpoints, idempotent conversion, controlled batching, pacing, cancellation, and restart semantics derived from current capacity and lock or log impact.
-- **Validate business meaning, not row movement alone.** Compare source and target counts plus domain invariants, null and exception classes, aggregates, relationships, samples, and consumer reads with explicit tolerance authority.
-- **State rollback and forward-repair limits.** Identify irreversible transformations, data written by new code, old-reader limits, backup dependencies, reconciliation, and the last safe exposure or cutover point.
-- **Define evidence-based completion.** Tie progress, errors, lag, reconciliation, and cleanup to queryable evidence and accountable owners; remove old paths only after current consumer and data evidence satisfies the exit condition.
+- Bind source and target authority plus mixed-version readers and writers to one cutover state.
+- Coordinate live writes and backfill through owned ordering, resumability, semantic validation, and recovery.
+- Load the named benchmark, checklist, or evidence Reference according to the open output.
 
 ## Anti-Patterns
 
-- Couple schema change, full backfill, consumer cutover, and destructive cleanup into one irreversible mutation.
-- Treat successful statements, copied row counts, or absence of errors as proof that business invariants survived.
-- Retry non-idempotent conversion blindly or let backfill and live writers race without an authority rule.
+- Do not treat moved rows or local success as semantic correctness, or race live writers with an unowned backfill.
 
 ## Stop Conditions
 
-Escalate when authoritative state or writers are unknown, destructive change lacks recoverability evidence, mixed-version behavior is unsafe, or concurrent-write ordering is unresolved. Also escalate when conversion is not resumable, validation cannot detect semantic loss, or regulated, financial, identity, or audit data lacks an accountable owner.
+- Stop on unknown authority or writers, unsafe mixed versions or ordering, non-resumable execution, unproved validation or recovery, or unowned sensitive data.
 
 ## Output Contract
 
