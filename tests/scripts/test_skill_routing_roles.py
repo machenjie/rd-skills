@@ -46,7 +46,10 @@ def _main_execution(task_id: str) -> dict[str, object]:
                     "plausible_critical": False,
                 }
             ],
+            "l1_eligibility": [],
             "l2_eligibility": [],
+            "l5_assurance_eligibility": [],
+            "l5_confirmation": "not-required",
             "obligations": ["high-risk pre-implementation evidence"],
             "unresolved": [],
             "edit_status": "allowed",
@@ -86,6 +89,46 @@ class SkillRoutingRoleTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.routing = _load("validate-skill-routing.py", "validate_skill_routing")
         cls.trajectory = _load("eval-agent-lightweight.py", "eval_agent_lightweight")
+
+    def test_global_router_has_no_layer3_payload(self) -> None:
+        router = (
+            ROOT
+            / "src/control-skills/engineering-control-plane/references/professional-skill-router.md"
+        ).read_text(encoding="utf-8")
+        table_lines = [line for line in router.splitlines() if line.startswith("|")]
+        header_index = next(
+            index for index, line in enumerate(table_lines) if "Task signal" in line
+        )
+        rows = table_lines[header_index:]
+        self.assertEqual(
+            ["Task signal", "Start profile", "Primary Professional Skill", "Review Skill"],
+            [cell.strip() for cell in rows[0].strip("|").split("|")],
+        )
+        self.assertNotIn("Optional Layer 3 Skills", router)
+        self.assertIn(
+            "Layer 3 is shard output and must be post-validated",
+            router,
+        )
+        self.assertIn(
+            "scenario and fixture case identifiers are provenance only",
+            router,
+        )
+        for row in rows[2:]:
+            with self.subTest(row=row[:80]):
+                self.assertEqual(4, len(row.strip("|").split("|")))
+
+        errors = self.routing.validate_router_row(
+            ["signal", "analysis-agent", "quality-test-gate", "test-strategy", "quality-test-gate"],
+            {
+                "quality-test-gate": {
+                    "task_routable": True,
+                    "role_support": ["analysis-agent", "review-agent"],
+                }
+            },
+            {},
+            source="test row",
+        )
+        self.assertTrue(any("four columns" in error for error in errors), errors)
 
     def test_structure_responsibility_routes_use_semantic_forces_and_negation(self) -> None:
         cases = {
@@ -2351,18 +2394,18 @@ class SkillRoutingRoleTests(unittest.TestCase):
         errors = self.routing.validate_router_row(
             [
                 "signal",
-                "analysis-agent",
+                "task-agent",
                 "primary-skill",
-                "allowed-layer3, outside-candidate",
                 "review-skill-extra",
             ],
             professional,
             layer3,
         )
         joined = "\n".join(errors)
-        self.assertIn("unsupported profile analysis-agent", joined)
-        self.assertIn("outside primary-skill.layer3_candidates", joined)
+        self.assertIn("unsupported profile task-agent", joined)
         self.assertIn("exactly one known Review Skill", joined)
+        self.assertEqual(["allowed-layer3"], professional["primary-skill"]["layer3_candidates"])
+        self.assertNotIn("outside-candidate", professional["primary-skill"]["layer3_candidates"])
 
     def test_domain_router_rows_preserve_registry_anti_triggers(self) -> None:
         domain_entries = self.routing.load_yaml_file(self.routing.DOMAIN)[
@@ -2387,11 +2430,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
                 domain,
             ),
         )
-        missing_ai = [
-            cells
-            for cells in router_rows
-            if "ai-product-extension" not in cells[3]
-        ]
+        missing_ai = [cells for cells in router_rows if not cells[0].startswith("model, prompt")]
         self.assertTrue(
             any(
                 "ai-product-extension" in error
@@ -2404,14 +2443,12 @@ class SkillRoutingRoleTests(unittest.TestCase):
         )
 
         stale_anti = copy.deepcopy(router_rows)
-        ai_row = next(
-            cells for cells in stale_anti if "ai-product-extension" in cells[3]
-        )
+        ai_row = next(cells for cells in stale_anti if cells[0].startswith("model, prompt"))
         ai_row[0] = "AI model retrieval or agent-tool authority decision"
         self.assertTrue(
             any(
                 "ai-product-extension" in error
-                and "Router omits anti-trigger atoms" in error
+                and "no authoritative router row" in error
                 for error in self.routing.domain_router_coverage_errors(
                     stale_anti,
                     domain,
@@ -2420,9 +2457,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
         )
 
         stale_trigger = copy.deepcopy(router_rows)
-        ai_row = next(
-            cells for cells in stale_trigger if "ai-product-extension" in cells[3]
-        )
+        ai_row = next(cells for cells in stale_trigger if cells[0].startswith("model, prompt"))
         ai_row[0] = (
             "AI retrieval boundary; excluding AI terminology, static algorithms, "
             "or ordinary search without a model decision"
@@ -2430,7 +2465,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
         self.assertTrue(
             any(
                 "ai-product-extension" in error
-                and "Router omits trigger atoms" in error
+                and "no authoritative router row" in error
                 for error in self.routing.domain_router_coverage_errors(
                     stale_trigger,
                     domain,
@@ -2457,7 +2492,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
         ai_row = next(
             cells
             for cells in positive_only_drift
-            if "ai-product-extension" in cells[3]
+            if cells[0].startswith("model, prompt")
         )
         ai_row[0] = ai_row[0].replace("model, ", "", 1)
         self.assertTrue(
@@ -2475,7 +2510,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
         bigdata_row = next(
             cells
             for cells in missing_partition
-            if "bigdata-product-extension" in cells[3]
+            if cells[0].startswith("batch, stream")
         )
         bigdata_row[0] = bigdata_row[0].replace("partition, ", "", 1)
         self.assertTrue(
@@ -2493,7 +2528,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
         web3_row = next(
             cells
             for cells in missing_recovery
-            if "web3-product-extension" in cells[3]
+            if cells[0].startswith("blockchain, smart contract")
         )
         web3_row[0] = web3_row[0].replace("recovery, ", "", 1)
         self.assertTrue(
@@ -3230,12 +3265,16 @@ class SkillRoutingRoleTests(unittest.TestCase):
             and cells[0].startswith("shared installed client")
         ]
         self.assertEqual(1, len(shared))
-        self.assertEqual(
-            "cross-platform-client-extension + proven concrete platform Domain(s)",
-            shared[0][3],
+        self.assertEqual("ai-code-review-refactor", shared[0][3])
+        professional = self.routing.load_yaml_file(self.routing.PROFESSIONAL)
+        installed = next(
+            row
+            for row in professional["professional_skills"]
+            if row["name"] == "installed-client-change-builder"
         )
-        self.assertNotIn("android-platform-extension", shared[0][3])
-        self.assertNotIn("ios-ipados-platform-extension", shared[0][3])
+        self.assertIn("cross-platform-client-extension", installed["layer3_candidates"])
+        self.assertNotIn("android-platform-extension", shared[0])
+        self.assertNotIn("ios-ipados-platform-extension", shared[0])
 
         cases = (
             (

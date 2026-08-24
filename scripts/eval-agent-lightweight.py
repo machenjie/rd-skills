@@ -25,6 +25,7 @@ from validation_utils import (
     ValidationProblem,
     classify_concrete_action_authority,
     compute_execution_level,
+    execution_level_role_projection,
     load_yaml_file,
     professional_review_skill_ids,
     reference_paths,
@@ -66,6 +67,15 @@ RETIRED_EVIDENCE_LEDGER_FIELDS = (
 EVIDENCE_PATH_RE = re.compile(
     r"(?<![A-Za-z0-9_.-])(?:[A-Za-z0-9_.-]+/)*[A-Za-z0-9_-]+\.[A-Za-z0-9]+"
 )
+
+
+def _configure_subject_paths(root: Path, fixtures: Path | None = None) -> None:
+    global ROOT, FIXTURES, REPORT_JSON, REPORT_MD, DIST_SKILLS
+    ROOT = root.resolve()
+    FIXTURES = (fixtures or ROOT / "evals/agent-light-trajectories/cases.yaml").resolve()
+    REPORT_JSON = ROOT / "reports/hookless-control-plane-eval.json"
+    REPORT_MD = ROOT / "reports/hookless-control-plane-eval.md"
+    DIST_SKILLS = ROOT / "dist/universal/skills"
 
 PRODUCTIVE_ACTIONS = {
     "search",
@@ -544,6 +554,34 @@ IMPLEMENTATION_HANDOFF_FIELDS = (
     "task_id",
     *REVIEW_INPUT_REQUIRED_FIELDS,
 )
+MINIMAL_HANDOFF_FIELDS = {
+    "analysis-handoff": (
+        "actor",
+        "action",
+        "task_id",
+        "executable_slice",
+    ),
+    "review-handoff": (
+        "actor",
+        "action",
+        "task_id",
+        "blocking_findings",
+        "affected_scope",
+        "invalidated_evidence",
+        "required_validation",
+        "re_review",
+    ),
+    "repair-handoff": (
+        "actor",
+        "action",
+        "task_id",
+        "blocking_findings",
+        "affected_scope",
+        "invalidated_evidence",
+        "required_validation",
+        "re_review",
+    ),
+}
 EXACT_CHANGE_EVIDENCE_FIELDS = ("kind", "artifact", "generation")
 REVIEWER_CAPABILITY_ACCESSIBILITY_FIELDS = (
     "native-change-read",
@@ -1321,6 +1359,229 @@ def _duplicate_reads(steps: list[dict[str, Any]]) -> int:
             duplicate += 1
         seen.add(key)
     return duplicate
+
+
+def _same_assignment_duplicate_reads(steps: list[dict[str, Any]]) -> int:
+    seen: set[tuple[str, str, str, str]] = set()
+    duplicate = 0
+    for step in steps:
+        action = str(step.get("action") or "")
+        if action not in {"read", "search"}:
+            continue
+        target = str(step.get("path") or step.get("query") or "").strip()
+        if not target:
+            continue
+        actor = str(step.get("actor") or "<unknown>")
+        assignment = str(step.get("task_id") or "<trajectory>")
+        key = (actor, assignment, action, target)
+        if key in seen:
+            duplicate += 1
+        seen.add(key)
+    return duplicate
+
+
+def _selector_load_count(steps: list[dict[str, Any]]) -> int:
+    seen: set[tuple[str, str, str, str]] = set()
+    count = 0
+    for index, step in enumerate(steps):
+        if step.get("action") != "dispatch" or not (
+            step.get("primary_skill") or step.get("layer3_skills")
+        ):
+            continue
+        capsule = step.get("fixture_capsule") or step.get("utility_capsule")
+        assignment = None
+        if isinstance(capsule, dict):
+            assignment = next(
+                (
+                    str(capsule[field])
+                    for field in (
+                        "task_id",
+                        "review_round_id",
+                        "analysis_id",
+                        "canonical_sha256",
+                    )
+                    if isinstance(capsule.get(field), str) and capsule[field]
+                ),
+                None,
+            )
+        key = (
+            str(step.get("actor") or "<unknown>"),
+            assignment or f"dispatch:{index}",
+            str(step.get("profile") or ""),
+            str(step.get("primary_skill") or ""),
+        )
+        if key not in seen:
+            seen.add(key)
+            count += 1
+    return count
+
+
+def _reference_load_count(steps: list[dict[str, Any]]) -> int:
+    return sum(
+        len(step.get("professional_references", []))
+        + len(step.get("layer3_references", []))
+        for step in steps
+        if step.get("action") == "dispatch"
+    )
+
+
+def _handoff_count(steps: list[dict[str, Any]]) -> int:
+    return sum(
+        step.get("action")
+        in {
+            "analysis-handoff",
+            "implementation-handoff",
+            "review-handoff",
+            "repair-handoff",
+        }
+        or (
+            step.get("action") == "dispatch"
+            and isinstance(
+                step.get("fixture_capsule") or step.get("utility_capsule"), dict
+            )
+        )
+        for step in steps
+    )
+
+
+def _minimal_dispatch_partition(
+    step: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Split one dispatch into selector facts and role-minimal instructions."""
+
+    if step.get("action") != "dispatch":
+        raise ValueError("minimal dispatch projection requires dispatch")
+    profile = step.get("profile")
+    if not isinstance(profile, str) or not profile:
+        raise ValueError("minimal dispatch projection requires profile")
+    capsule_fields = [
+        name for name in ("fixture_capsule", "utility_capsule") if name in step
+    ]
+    if not capsule_fields:
+        raise ValueError("minimal dispatch projection requires capsule")
+    selector = {
+        key: copy.deepcopy(value)
+        for key, value in step.items()
+        if key not in capsule_fields
+    }
+    instructions: dict[str, Any] = {}
+    for field in capsule_fields:
+        capsule = step[field]
+        if not isinstance(capsule, dict):
+            raise ValueError("minimal dispatch capsule must be an object")
+        projected = {
+            key: copy.deepcopy(value)
+            for key, value in capsule.items()
+            if key != "execution_level_extension"
+        }
+        extension = capsule.get("execution_level_extension")
+        if profile in {"task-agent", "review-agent"}:
+            utility_fixture = (
+                profile == "task-agent"
+                and step.get("mode") in UTILITY_MODES
+                and step.get("primary_skill") is None
+                and field == "fixture_capsule"
+                and capsule.get("contract_version")
+                in {
+                    "changeforge.fixture-capsule.v1",
+                    "changeforge.fixture-capsule.v2",
+                }
+                and capsule.get("contract_type") == "utility"
+                and capsule.get("template") == "utility-capsule"
+            )
+            utility_contract = (
+                profile == "task-agent"
+                and step.get("mode") in UTILITY_MODES
+                and step.get("primary_skill") is None
+                and field == "utility_capsule"
+                and capsule.get("mode") == step.get("mode")
+                and capsule.get("no_edit_enforcement") == "supported"
+            )
+            if extension is None and (
+                utility_fixture
+                or utility_contract
+                or capsule.get("contract_version")
+                == "changeforge.fixture-capsule.v1"
+            ):
+                instructions[field] = projected
+                continue
+            if not isinstance(extension, dict):
+                raise ValueError("worker dispatch requires Main Level projection source")
+            projected["execution_level_role_projection"] = (
+                execution_level_role_projection(extension, role=profile)
+            )
+        elif extension is not None:
+            raise ValueError("non-worker dispatch must not receive execution Level data")
+        instructions[field] = projected
+    return selector, instructions
+
+
+def _minimal_transfer_projection(step: dict[str, Any]) -> dict[str, Any]:
+    """Return the exact minimal payload crossing one agent boundary."""
+
+    action = step.get("action")
+    if action == "dispatch":
+        selector, instructions = _minimal_dispatch_partition(step)
+        return {**selector, **instructions}
+    if action == "implementation-handoff":
+        if tuple(step) != IMPLEMENTATION_HANDOFF_FIELDS:
+            raise ValueError("Implementation Handoff fields drift from Core readiness")
+        return copy.deepcopy(step)
+    if action in MINIMAL_HANDOFF_FIELDS:
+        fields = MINIMAL_HANDOFF_FIELDS[action]
+        missing = [field for field in fields if field not in step]
+        if missing:
+            raise ValueError(
+                f"{action} lacks minimal transfer fields: {', '.join(missing)}"
+            )
+        return {field: copy.deepcopy(step[field]) for field in fields}
+    raise ValueError("step is not an agent transfer")
+
+
+def _native_structural_metrics(case: dict[str, Any]) -> dict[str, int]:
+    case_id = case.get("id")
+    steps = case.get("steps")
+    if not isinstance(case_id, str) or not case_id or not isinstance(steps, list):
+        raise ValueError("native trajectory requires an id and steps")
+    if any(not isinstance(step, dict) or not step.get("action") for step in steps):
+        raise ValueError(f"{case_id}: native trajectory has a malformed step")
+    for index, step in enumerate(steps):
+        if step.get("action") != "dispatch":
+            continue
+        if not isinstance(step.get("profile"), str) or not step["profile"]:
+            raise ValueError(f"{case_id}: dispatch {index} has no native profile")
+        capsules = [
+            step.get(name)
+            for name in ("fixture_capsule", "utility_capsule")
+            if name in step
+        ]
+        if not capsules or any(not isinstance(capsule, dict) for capsule in capsules):
+            raise ValueError(
+                f"{case_id}: dispatch {index} needs complete native capsule data"
+            )
+        for field in (
+            "layer3_skills",
+            "professional_references",
+            "layer3_references",
+        ):
+            if field in step and not isinstance(step[field], list):
+                raise ValueError(
+                    f"{case_id}: dispatch {index} {field} must be a list"
+                )
+    selector_load_count = _selector_load_count(steps)
+    reference_load_count = _reference_load_count(steps)
+    handoff_count = _handoff_count(steps)
+    return {
+        "selector_load_count": selector_load_count,
+        "reference_load_count": reference_load_count,
+        "handoff_count": handoff_count,
+        "same_assignment_duplicate_read_count": (
+            _same_assignment_duplicate_reads(steps)
+        ),
+        "end_to_end_context_occurrence_count": (
+            selector_load_count + reference_load_count + handoff_count
+        ),
+    }
 
 
 def _loaded_skill_count(steps: list[dict[str, Any]]) -> int:
@@ -7927,6 +8188,9 @@ def _metrics(
     repair_requires_rereview = not repair_indexes or any(
         review_index > max(repair_indexes) for review_index in rereview_indexes
     )
+    selector_load_count = _selector_load_count(operational_steps)
+    reference_load_count = _reference_load_count(operational_steps)
+    handoff_count = _handoff_count(operational_steps)
     parallel_conflict, parallel_reduction = _parallel_metrics(operational_steps)
     progress = _progress_metrics(case, operational_steps)
     shared_serial = _shared_workspace_writes_serial(operational_steps)
@@ -7950,6 +8214,15 @@ def _metrics(
             step.get("action") == "dispatch" for step in operational_steps
         ),
         "duplicate_read_count": _duplicate_reads(operational_steps),
+        "same_assignment_duplicate_read_count": _same_assignment_duplicate_reads(
+            operational_steps
+        ),
+        "selector_load_count": selector_load_count,
+        "reference_load_count": reference_load_count,
+        "handoff_count": handoff_count,
+        "end_to_end_context_occurrence_count": (
+            selector_load_count + reference_load_count + handoff_count
+        ),
         "verification_action_count": sum(
             step.get("action") in {"validate", "review", "re-review"}
             for step in operational_steps
@@ -8692,6 +8965,11 @@ def _aggregate(results: list[dict[str, Any]]) -> dict[str, Any]:
         "control_turn_count",
         "subagent_count",
         "duplicate_read_count",
+        "same_assignment_duplicate_read_count",
+        "selector_load_count",
+        "reference_load_count",
+        "handoff_count",
+        "end_to_end_context_occurrence_count",
         "verification_action_count",
         "loaded_skill_count",
         "loaded_layer3_reference_count",
@@ -8770,11 +9048,15 @@ def _args(argv: list[str] | None) -> argparse.Namespace:
     )
     parser.add_argument("--release-projection", action="store_true")
     parser.add_argument("--reports-dir", type=Path, default=REPORT_JSON.parent)
+    parser.add_argument("--subject-root", type=Path)
+    parser.add_argument("--fixtures", type=Path)
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _args(argv)
+    if args.subject_root is not None:
+        _configure_subject_paths(args.subject_root, args.fixtures)
     try:
         professional, layer3_entries = _skill_registries()
         document = _load_json(FIXTURES)
@@ -8849,9 +9131,9 @@ def main(argv: list[str] | None = None) -> int:
                 "review discipline fixture count must remain exactly 30, found "
                 f"{len(review_discipline_results)}"
             )
-        if len(task_focus_results) != 42:
+        if len(task_focus_results) != 46:
             errors.append(
-                "task-focus fixture count must remain exactly 42, found "
+                "task-focus fixture count must remain exactly 46, found "
                 f"{len(task_focus_results)}"
             )
         if len(combined_review_results) != 15:

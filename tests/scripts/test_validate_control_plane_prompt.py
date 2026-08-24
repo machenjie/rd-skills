@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import importlib.util
 import re
 import shutil
@@ -55,6 +56,30 @@ class ControlPromptProjectionTests(unittest.TestCase):
                 VALIDATOR.CORE_CONTRACTS,
                 document_bytes=raw,
             ),
+        )
+
+    def test_prompt_document_sha_rejects_reversible_projection_normalization(self) -> None:
+        raw = VALIDATOR.PROMPT.read_bytes()
+        self.assertEqual(
+            VALIDATOR.CORE_CONTRACTS["prompt_contract"]["document_sha256"],
+            hashlib.sha256(raw).hexdigest(),
+        )
+        text = raw.decode("utf-8")
+        mutated = text.replace(
+            "`generic_capability_contract` branches JIT-load from "
+            "references/implementation-handoff-template.md.",
+            "Injected Main capability projection decides exact evidence.",
+            1,
+        )
+        self.assertTrue(
+            any(
+                "whole-document SHA-256" in error
+                for error in VALIDATOR.prompt_projection_errors(
+                    mutated,
+                    VALIDATOR.CORE_CONTRACTS,
+                    document_bytes=mutated.encode("utf-8"),
+                )
+            )
         )
 
     def test_prompt_has_no_readability_findings(self) -> None:

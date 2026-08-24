@@ -321,7 +321,7 @@ class DocsCoreProjectionTests(unittest.TestCase):
             profiles = root / "docs/BUILD_PROFILES.md"
             changed, replacements = re.subn(
                 r"\d+ registry-indexed Markdown files",
-                "526 registry-indexed Markdown files",
+                "610 registry-indexed Markdown files",
                 profiles.read_text(encoding="utf-8"),
                 count=1,
             )
@@ -332,7 +332,7 @@ class DocsCoreProjectionTests(unittest.TestCase):
 
             self.assertIn(
                 "docs/BUILD_PROFILES.md: missing authority-derived current fact "
-                "'527 registry-indexed Markdown files and 528 physical Markdown files'",
+                "'611 registry-indexed Markdown files and 612 physical Markdown files'",
                 errors,
             )
 
@@ -343,7 +343,7 @@ class DocsCoreProjectionTests(unittest.TestCase):
             profiles = root / "docs/BUILD_PROFILES.md"
             changed, replacements = re.subn(
                 r"\d+(\s+physical Markdown files)",
-                r"527\1",
+                r"611\1",
                 profiles.read_text(encoding="utf-8"),
                 count=1,
             )
@@ -354,7 +354,7 @@ class DocsCoreProjectionTests(unittest.TestCase):
 
             self.assertIn(
                 "docs/BUILD_PROFILES.md: missing authority-derived current fact "
-                "'527 registry-indexed Markdown files and 528 physical Markdown files'",
+                "'611 registry-indexed Markdown files and 612 physical Markdown files'",
                 errors,
             )
 

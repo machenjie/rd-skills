@@ -234,7 +234,7 @@ class LightweightLayer3ReferenceTests(unittest.TestCase):
             },
         )
         self.assertEqual(
-            "b64be0d79187a08cf0b5855f1d0fa92071b1fb9c2fc3a9a56d21f6bed3e7c698",
+            "065d07de9cff56cc7866265bc3d593eac4057cc21a8368b1043d5beb80400008",
             review["fixture_capsule"]["canonical_sha256"],
         )
         self.assertEqual(

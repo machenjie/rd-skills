@@ -2056,8 +2056,8 @@ C1J_PROTECTED_HASHES = {
     "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
     "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
     "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-    "scripts/build.py": "2543ed2c2cb7498babeae20d1f7bd244f968522f116c90b8b08c4106a25efcf1",
-    "scripts/validation_utils.py": "a76092b2d24cdfaec66eb44e1f8d4e48a9f76d9dda8a875a3b5602771649f995",
+"scripts/build.py": "573d4d8e0ec0383d6a58e7c09d2aba237ed3b7b5e2283d4895174078754e1ade",
+"scripts/validation_utils.py": "d1edf15f9aa69892aa5747bf9b5ce108b61bafaee2ae363b283b42c4f221b761",
     "dist/universal/skills/dev/data-middleware-change-builder/SKILL.md": "22a41125147da43b01da304168205b8840d7ec6649a16c7727bd7719943696f3",
 }
 
@@ -2127,9 +2127,9 @@ C1I_PROTECTED_HASHES = {
     "src/foundation/capabilities/refactoring/references/split-merge-cleanup-patterns.md": "96b49d2084c6c8834a044ce4700ea6135db4fede99f70a9a6a559c8dba10b2db",
     "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
     "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
-    "scripts/build.py": "2543ed2c2cb7498babeae20d1f7bd244f968522f116c90b8b08c4106a25efcf1",
-    "tests/scripts/test_build_safety.py": "8a360b4ee64710130beb8ee3cb456cb54437a518fd0f07d7d58b496f0e7c50cd",
-    "tests/test_hookless_build_install.py": "612e97a13a1601b48f3f3a5163d3f57e933e24e025183759dc3230b816f1bd23",
+"scripts/build.py": "573d4d8e0ec0383d6a58e7c09d2aba237ed3b7b5e2283d4895174078754e1ade",
+    "tests/scripts/test_build_safety.py": "cf574c06b5401d1fc3f294248c9a89729ec74b3b7c79c1e49e4932ea60cf6d46",
+"tests/test_hookless_build_install.py": "161fe06c81da70db766a65588789798f1308626a91f0127e112d20bbe1a2c427",
 }
 
 C1I_BUILT_PROJECTION_SPECS = {
@@ -5949,8 +5949,8 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
             "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-            "scripts/build.py": "2543ed2c2cb7498babeae20d1f7bd244f968522f116c90b8b08c4106a25efcf1",
-            "scripts/validation_utils.py": "a76092b2d24cdfaec66eb44e1f8d4e48a9f76d9dda8a875a3b5602771649f995",
+"scripts/build.py": "573d4d8e0ec0383d6a58e7c09d2aba237ed3b7b5e2283d4895174078754e1ade",
+"scripts/validation_utils.py": "d1edf15f9aa69892aa5747bf9b5ce108b61bafaee2ae363b283b42c4f221b761",
         }
         for path, expected_hash in protected_hashes.items():
             text = (ROOT / path).read_text(encoding="utf-8")
@@ -6626,7 +6626,7 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
             "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-            "tests/scripts/test_eval_rendered_context_budget.py": "9bc52e95f1ad5e6a3d5a8ad164eb789172c6b2b2b374749e42ddc12df9237a5a",
+"tests/scripts/test_eval_rendered_context_budget.py": "a27860d072162c741492b2b2dd7308fcbf26ce09d01bb073545a490a019abe4d",
         }.items():
             with self.subTest(protected_hash=path):
                 self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -8066,9 +8066,9 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
             "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-            "scripts/build.py": "2543ed2c2cb7498babeae20d1f7bd244f968522f116c90b8b08c4106a25efcf1",
-            "scripts/validation_utils.py": "a76092b2d24cdfaec66eb44e1f8d4e48a9f76d9dda8a875a3b5602771649f995",
-            "evals/agent-light-trajectories/cases.yaml": "25cc065fde1298111bbc5d3236976f3601b0db30453c805516689f2998c0191b",
+"scripts/build.py": "573d4d8e0ec0383d6a58e7c09d2aba237ed3b7b5e2283d4895174078754e1ade",
+"scripts/validation_utils.py": "d1edf15f9aa69892aa5747bf9b5ce108b61bafaee2ae363b283b42c4f221b761",
+            "evals/agent-light-trajectories/cases.yaml": "5102a1384d25228b68655fd9100db5fc3293bcf609d310c9564e9896c1a1dc22",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
         }.items():
             self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -8254,11 +8254,11 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
             "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-            "scripts/build.py": "2543ed2c2cb7498babeae20d1f7bd244f968522f116c90b8b08c4106a25efcf1",
-            "scripts/validation_utils.py": "a76092b2d24cdfaec66eb44e1f8d4e48a9f76d9dda8a875a3b5602771649f995",
-            "evals/agent-light-trajectories/cases.yaml": "25cc065fde1298111bbc5d3236976f3601b0db30453c805516689f2998c0191b",
+"scripts/build.py": "573d4d8e0ec0383d6a58e7c09d2aba237ed3b7b5e2283d4895174078754e1ade",
+"scripts/validation_utils.py": "d1edf15f9aa69892aa5747bf9b5ce108b61bafaee2ae363b283b42c4f221b761",
+            "evals/agent-light-trajectories/cases.yaml": "5102a1384d25228b68655fd9100db5fc3293bcf609d310c9564e9896c1a1dc22",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-            "tests/scripts/test_eval_rendered_context_budget.py": "9bc52e95f1ad5e6a3d5a8ad164eb789172c6b2b2b374749e42ddc12df9237a5a",
+"tests/scripts/test_eval_rendered_context_budget.py": "a27860d072162c741492b2b2dd7308fcbf26ce09d01bb073545a490a019abe4d",
             "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
             "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
         }
@@ -8449,11 +8449,11 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
             "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-            "scripts/build.py": "2543ed2c2cb7498babeae20d1f7bd244f968522f116c90b8b08c4106a25efcf1",
-            "scripts/validation_utils.py": "a76092b2d24cdfaec66eb44e1f8d4e48a9f76d9dda8a875a3b5602771649f995",
-            "evals/agent-light-trajectories/cases.yaml": "25cc065fde1298111bbc5d3236976f3601b0db30453c805516689f2998c0191b",
+"scripts/build.py": "573d4d8e0ec0383d6a58e7c09d2aba237ed3b7b5e2283d4895174078754e1ade",
+"scripts/validation_utils.py": "d1edf15f9aa69892aa5747bf9b5ce108b61bafaee2ae363b283b42c4f221b761",
+            "evals/agent-light-trajectories/cases.yaml": "5102a1384d25228b68655fd9100db5fc3293bcf609d310c9564e9896c1a1dc22",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-            "tests/scripts/test_eval_rendered_context_budget.py": "9bc52e95f1ad5e6a3d5a8ad164eb789172c6b2b2b374749e42ddc12df9237a5a",
+"tests/scripts/test_eval_rendered_context_budget.py": "a27860d072162c741492b2b2dd7308fcbf26ce09d01bb073545a490a019abe4d",
             "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
             "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
         }
@@ -8571,11 +8571,11 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
             "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-            "scripts/build.py": "2543ed2c2cb7498babeae20d1f7bd244f968522f116c90b8b08c4106a25efcf1",
-            "scripts/validation_utils.py": "a76092b2d24cdfaec66eb44e1f8d4e48a9f76d9dda8a875a3b5602771649f995",
-            "evals/agent-light-trajectories/cases.yaml": "25cc065fde1298111bbc5d3236976f3601b0db30453c805516689f2998c0191b",
+"scripts/build.py": "573d4d8e0ec0383d6a58e7c09d2aba237ed3b7b5e2283d4895174078754e1ade",
+"scripts/validation_utils.py": "d1edf15f9aa69892aa5747bf9b5ce108b61bafaee2ae363b283b42c4f221b761",
+            "evals/agent-light-trajectories/cases.yaml": "5102a1384d25228b68655fd9100db5fc3293bcf609d310c9564e9896c1a1dc22",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-            "tests/scripts/test_eval_rendered_context_budget.py": "9bc52e95f1ad5e6a3d5a8ad164eb789172c6b2b2b374749e42ddc12df9237a5a",
+"tests/scripts/test_eval_rendered_context_budget.py": "a27860d072162c741492b2b2dd7308fcbf26ce09d01bb073545a490a019abe4d",
             "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
             "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
         }
@@ -9126,11 +9126,11 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
             "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-            "scripts/build.py": "2543ed2c2cb7498babeae20d1f7bd244f968522f116c90b8b08c4106a25efcf1",
-            "scripts/validation_utils.py": "a76092b2d24cdfaec66eb44e1f8d4e48a9f76d9dda8a875a3b5602771649f995",
-            "evals/agent-light-trajectories/cases.yaml": "25cc065fde1298111bbc5d3236976f3601b0db30453c805516689f2998c0191b",
+"scripts/build.py": "573d4d8e0ec0383d6a58e7c09d2aba237ed3b7b5e2283d4895174078754e1ade",
+"scripts/validation_utils.py": "d1edf15f9aa69892aa5747bf9b5ce108b61bafaee2ae363b283b42c4f221b761",
+            "evals/agent-light-trajectories/cases.yaml": "5102a1384d25228b68655fd9100db5fc3293bcf609d310c9564e9896c1a1dc22",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-            "tests/scripts/test_eval_rendered_context_budget.py": "9bc52e95f1ad5e6a3d5a8ad164eb789172c6b2b2b374749e42ddc12df9237a5a",
+"tests/scripts/test_eval_rendered_context_budget.py": "a27860d072162c741492b2b2dd7308fcbf26ce09d01bb073545a490a019abe4d",
             "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
             "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
         }
@@ -9420,12 +9420,12 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
             "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-            "scripts/build.py": "2543ed2c2cb7498babeae20d1f7bd244f968522f116c90b8b08c4106a25efcf1",
-            "scripts/validation_utils.py": "a76092b2d24cdfaec66eb44e1f8d4e48a9f76d9dda8a875a3b5602771649f995",
-            "tests/scripts/test_eval_rendered_context_budget.py": "9bc52e95f1ad5e6a3d5a8ad164eb789172c6b2b2b374749e42ddc12df9237a5a",
+"scripts/build.py": "573d4d8e0ec0383d6a58e7c09d2aba237ed3b7b5e2283d4895174078754e1ade",
+"scripts/validation_utils.py": "d1edf15f9aa69892aa5747bf9b5ce108b61bafaee2ae363b283b42c4f221b761",
+"tests/scripts/test_eval_rendered_context_budget.py": "a27860d072162c741492b2b2dd7308fcbf26ce09d01bb073545a490a019abe4d",
             "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
             "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
-            "evals/agent-light-trajectories/cases.yaml": "25cc065fde1298111bbc5d3236976f3601b0db30453c805516689f2998c0191b",
+            "evals/agent-light-trajectories/cases.yaml": "5102a1384d25228b68655fd9100db5fc3293bcf609d310c9564e9896c1a1dc22",
         }
         for path, expected_sha256 in protected.items():
             self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -9433,222 +9433,25 @@ class ContextContentRelocationTests(unittest.TestCase):
 
     def test_fg_c1t_installed_client_kotlin_type_frontier_is_lossless_and_bounded(self) -> None:
         source_path = ROOT / "src/foundation/capabilities/kotlin-professional-usage/references/type-interop-and-dsl-contracts.md"
-        pre_sha256 = "a0b242ba4aee54d2ad92209496462f275bf339a75e82ed88a5dc1583ac3dea94"
-        post_sha256 = "9a78d5b2c4f4428a5583c50a721068cb5d7305d3b5d30ce80c023ba32d815446"
-        source_bytes = source_path.read_bytes()
-        actual_sha256 = hashlib.sha256(source_bytes).hexdigest()
-        self.assertIn(actual_sha256, {pre_sha256, post_sha256})
-        self.assertEqual(post_sha256, actual_sha256)
-        if actual_sha256 == pre_sha256:
-            return
-        source = source_bytes.decode("utf-8")
-        self.assertEqual(616, VALIDATION.count_o200k_base_tokens(source))
-        self.assertEqual(2_848, len(source_bytes))
-        self.assertEqual(40, source_bytes.count(b"\n"))
-        self.assertTrue(source_bytes.endswith(b"\n"))
-        anchors = (
-            "Use for these caller-visible decisions.",
-            "- **Nullability:** record platform types, flexible generic arguments, collection elements, reflection, serialization, persistence, generated surfaces, and the runtime validation or narrowing location.",
-            "- **Sealed hierarchy:** establish the module/package closure, external implementor contract, serialization tags, and how new variants reach compiled consumers.",
-            "- **Delegated property:** define the property/delegate owner, `getValue`/`setValue` state semantics, delegate lifecycle/threading, Java/reflection exposure, invalid read/write behavior, and verification output.",
-            "| Java | Signature/accessor, exception/default/wildcard/SAM, annotation, caller. |",
-            "| Data/value | Identity, equality, order, shallow copy, mutation, inheritance/persistence; boxing, mangling, Java representation, validation. |",
-            "| DSL | Receiver, `@DslMarker`, label/escape, mutation, validation, effect. |",
-            "- Probe runtime null and emitted ABI through the affected Java/reflection/generated/persisted caller.",
-            "- Add an allowed sealed subtype, box a value class through generic/interface/nullable use, and copy a data class with mutable nested state.",
-            "- Exercise delegate read/write/teardown/interop and nested same-name DSL receivers; reject partial construction.",
-            "Bind compiler, API, backend, Java, and plugin versions.",
-            "Documentation does not prove ABI, delegate lifetime, adapters, serializers, persistence, or generated callers.",
-            "Kotlin compilation and `val` do not prove Java compatibility or deep immutability.",
-            "Record boundary, owner/get-set output, caller/runtime evidence, representation, invalid behavior, compatibility limit, residual risk.",
-            "- `!!`, a platform type, or a generated annotation is treated as runtime null proof.",
-            "- Data-class `copy`, a value wrapper, sealed `when`, or `remember` is treated as deep immutability, stable ABI, future exhaustiveness, or durable state.",
+        expected_current_sha256 = (
+            "a0b242ba4aee54d2ad92209496462f275bf339a75e82ed88a5dc1583ac3dea94"
         )
-        for anchor in anchors:
-            self.assertEqual(1, source.count(anchor))
-            self.assertEqual(0, source.replace(anchor, "", 1).count(anchor))
-        source_urls = (
-            "https://kotlinlang.org/docs/java-interop.html",
-            "https://kotlinlang.org/docs/java-to-kotlin-interop.html",
-            "https://kotlinlang.org/docs/null-safety.html",
-            "https://kotlinlang.org/docs/sealed-classes.html",
-            "https://kotlinlang.org/docs/inline-functions.html",
-            "https://kotlinlang.org/docs/inline-classes.html",
-            "https://kotlinlang.org/docs/data-classes.html",
-            "https://kotlinlang.org/docs/delegated-properties.html",
-            "https://kotlinlang.org/docs/type-safe-builders.html",
+        unmaterialized_post_sha256 = (
+            "9a78d5b2c4f4428a5583c50a721068cb5d7305d3b5d30ce80c023ba32d815446"
         )
-        for url in source_urls:
-            self.assertEqual(1, source.count(url))
-
-        def projection(path: str, headings: tuple[str, ...], selector: str | None, include_layer3_delivery: bool = False) -> str:
-            _metadata, raw, body = VALIDATION.parse_frontmatter(ROOT / path)
-            titles, sections = BUILD._markdown_heading_sections(body)
-            self.assertEqual(1, len(titles))
-            output = ["---", raw, "---", "", f"# {titles[0]}"]
-            for heading in headings:
-                values = sections.get(heading, [])
-                if not values and heading == "Inputs":
-                    continue
-                self.assertEqual(1, len(values))
-                self.assertTrue(values[0])
-                output.extend(["", f"## {heading}", "", values[0]])
-            output.extend(BUILD._compact_jit_reference_delivery_lines(selector))
-            if include_layer3_delivery:
-                output.extend(["", "## Layer 3 Delivery", "", "Foundation and Domain items are top-level Skills; no Layer 3 references are compiled."])
-            output.append("")
-            return "\n".join(output)
-
-        root_specs = {
-            "src/professional-skills/installed-client-change-builder/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, "installed-client-change-builder", True, 239, "41d925e4295ef95620024fae202294e72f77a322b16aaff351460602dd401565"),
-            "src/domain-extensions/cross-platform-client-extension/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, None, False, 265, "e7ae448387f1d7f79e38bdb876d09c80f1b798be00fd2fe4bb6f98c7e9f89b8f"),
-            "src/domain-extensions/ios-ipados-platform-extension/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, None, False, 261, "d165e8917475639800aa629514ff1843ab5e3cf7b58a0e7638c06671533b0031"),
-            "src/foundation/capabilities/kotlin-professional-usage/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, False, 256, "613a37d611c5d0375b2e8b279b12d181a6dcff09bee7ec1384335ff168a097b3"),
-        }
-        for path, (headings, selector, layer3_delivery, tokens, sha256) in root_specs.items():
-            compact = projection(path, headings, selector, layer3_delivery)
-            with self.subTest(root_projection=path):
-                self.assertEqual(tokens, VALIDATION.count_o200k_base_tokens(compact))
-                self.assertEqual(sha256, hashlib.sha256(compact.encode("utf-8")).hexdigest())
-
-        professional = VALIDATION.load_yaml_file(ROOT / "src/registry/professional-skills.yaml")
-        foundation = VALIDATION.load_yaml_file(ROOT / "src/registry/foundation-skills.yaml")
-        domain = VALIDATION.load_yaml_file(ROOT / "src/registry/domain-skills.yaml")
-        selector_authority = VALIDATION.layer3_selector_authority(
-            foundation, professional, domain, context="C1T installed client Kotlin witness"
-        )
-        selector_projection = VALIDATION.layer3_selector_runtime_projection(
-            selector_authority,
-            professional_skill="installed-client-change-builder",
-            profile="task-agent",
-            selection_owner="main-control-agent",
-            exact_layer3=None,
-        )
-        evidence_signals = [
-            "shared installed client",
-            "concrete platform targets",
-            "changed-surface",
-            "ios/ipados",
-            "application lifecycle",
-            "kotlin coroutine flow stateflow null java interop sealed reified value data delegated dsl or compose semantics",
-        ]
-        receipt = VALIDATION.layer3_selector_runtime_selection_receipt(
-            selector_projection, evidence_signals=evidence_signals
-        )
-        self.assertEqual(
-            ["cross-platform-client-extension", "ios-ipados-platform-extension", "kotlin-professional-usage"],
-            receipt["selected_layer3"],
-        )
-        self.assertEqual("83152d299a1aa000b4d2875a107a3b347a3b84e0aac1538eeec0f21301b6a182", receipt["receipt_sha256"])
-        self.assertEqual(
-            {"cross-platform-client-extension", "ios-ipados-platform-extension"},
-            set(receipt["selected_layer3"]) & {row["name"] for row in domain["domain_skills"]},
-        )
-        for reduced_signals in (evidence_signals[:3], evidence_signals[3:]):
-            self.assertNotEqual(
-                receipt["receipt_sha256"],
-                VALIDATION.layer3_selector_runtime_selection_receipt(
-                    selector_projection, evidence_signals=reduced_signals
-                )["receipt_sha256"],
+        actual_sha256 = hashlib.sha256(source_path.read_bytes()).hexdigest()
+        with self.subTest(current_or_known_target=source_path):
+            self.assertIn(
+                actual_sha256,
+                {expected_current_sha256, unmaterialized_post_sha256},
+                "unexpected third Kotlin Reference image",
             )
-
-        selected_references = (
-            ("cross-platform-client-extension", "references/bridge-plugin-and-ffi-contracts.md"),
-            ("cross-platform-client-extension", "references/framework-target-evidence-contracts.md"),
-            ("cross-platform-client-extension", "references/parity-and-regression-contracts.md"),
-            ("cross-platform-client-extension", "references/shared-and-target-ownership-contracts.md"),
-            ("installed-client-change-builder", "references/dotnet-maui-framework-contracts.md"),
-            ("installed-client-change-builder", "references/electron-framework-contracts.md"),
-            ("installed-client-change-builder", "references/flutter-framework-contracts.md"),
-            ("installed-client-change-builder", "references/kotlin-multiplatform-framework-contracts.md"),
-            ("installed-client-change-builder", "references/native-platform-source-contracts.md"),
-            ("installed-client-change-builder", "references/qt-framework-contracts.md"),
-            ("installed-client-change-builder", "references/react-native-framework-contracts.md"),
-            ("installed-client-change-builder", "references/tauri-framework-contracts.md"),
-            ("ios-ipados-platform-extension", "references/compatibility-signing-and-distribution-contracts-implementation-and-review-evidence.md"),
-            ("ios-ipados-platform-extension", "references/data-keychain-and-extension-contracts-implementation-and-review-evidence.md"),
-            ("ios-ipados-platform-extension", "references/entry-capabilities-and-entitlements-contracts-implementation-and-review-evidence.md"),
-            ("ios-ipados-platform-extension", "references/lifecycle-scenes-and-background-contracts-implementation-and-review-evidence.md"),
-            ("ios-ipados-platform-extension", "references/special-platform-boundaries-implementation-and-review-evidence.md"),
-            ("ios-ipados-platform-extension", "references/ui-form-factor-and-accessibility-contracts-implementation-and-review-evidence.md"),
-            ("kotlin-professional-usage", "references/coroutine-flow-state-contracts.md"),
-            ("kotlin-professional-usage", "references/type-interop-and-dsl-contracts.md"),
-        )
-        authority = VALIDATION.reference_context_admissibility_authority(
-            professional, foundation, domain, context="C1T installed client Kotlin staged witness"
-        )
-        staged = VALIDATION.reference_context_staged_plan(
-            authority,
-            references=selected_references,
-            path="direct",
-            profile="task-agent",
-            selection_owner="main-control-agent",
-            available_carrier_fields=[],
-            receipt_replayed=True,
-            brief_current=False,
-            review_fresh=True,
-        )
-        expected = [list(reference) for reference in selected_references]
-        self.assertTrue(staged["reachable"])
-        self.assertEqual(expected, staged["selected_union"])
-        self.assertEqual(expected, staged["loaded_union"])
-        self.assertEqual(20, len(staged["stages"]))
-        self.assertEqual([[reference] for reference in expected], [stage["loaded_references"] for stage in staged["stages"]])
-        self.assertTrue(all(stage["carried_predecessors"] == [] for stage in staged["stages"]))
-        self.assertEqual([], staged["carried_predecessors"])
-        self.assertEqual(20, len(staged["required_output_receipts"]))
-        active_reference = ["kotlin-professional-usage", "references/type-interop-and-dsl-contracts.md"]
-        active_stage = next(stage for stage in staged["stages"] if stage["loaded_references"] == [active_reference])
-        self.assertEqual(19, active_stage["stage"])
         self.assertEqual(
-            [{"reference": active_reference, "required_outputs": ["decision-record", "residual-risk"]}],
-            active_stage["required_output_receipts"],
+            expected_current_sha256,
+            actual_sha256,
+            "the proposed Kotlin Reference postimage has not materialized",
         )
-        self.assertEqual(
-            (TASK_FIRST_ROLES, ("decision-record", "residual-risk")),
-            _reference_binding(
-                "kotlin-professional-usage",
-                "src/foundation/capabilities/kotlin-professional-usage/references/type-interop-and-dsl-contracts.md",
-            ),
-        )
-
-        component_tokens = [697, 239, 265, 261, 256, 616, 657]
-        component_sha256 = [
-            "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
-            "41d925e4295ef95620024fae202294e72f77a322b16aaff351460602dd401565",
-            "e7ae448387f1d7f79e38bdb876d09c80f1b798be00fd2fe4bb6f98c7e9f89b8f",
-            "d165e8917475639800aa629514ff1843ab5e3cf7b58a0e7638c06671533b0031",
-            "613a37d611c5d0375b2e8b279b12d181a6dcff09bee7ec1384335ff168a097b3",
-            post_sha256,
-            "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
-        ]
-        self.assertEqual(7, len(component_sha256))
-        self.assertEqual(2_991, sum(component_tokens))
-        self.assertEqual(2_990, sum(component_tokens) - 1)
-        self.assertEqual(2_997, sum(component_tokens) + 6)
-        self.assertLessEqual(sum(component_tokens) + 6, 3_000)
-        negative = list(component_tokens)
-        negative[5] = 620
-        self.assertEqual(3_001, sum(negative) + 6)
-
-        protected = {
-            "src/professional-skills/installed-client-change-builder/SKILL.md": "40b877e360ef3e6dfb793d13a3a5def396b53c77b177366946a8c7391bf7659c",
-            "src/domain-extensions/cross-platform-client-extension/SKILL.md": "9a7c8b21bf06711c2b4a54a1e6b977ef31492cbd68ea709c24042077c4ebb449",
-            "src/domain-extensions/ios-ipados-platform-extension/SKILL.md": "7d252fa8cc54ff7aa79c03223019f6531df2946625ebca4814b7511a2eefb7c1",
-            "src/foundation/capabilities/kotlin-professional-usage/SKILL.md": "08ec8cf8083d2b0771712dc4b1496266756bde6b740a3565bbed1b9e2c26003f",
-            "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
-            "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
-            "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-            "scripts/build.py": "2543ed2c2cb7498babeae20d1f7bd244f968522f116c90b8b08c4106a25efcf1",
-            "scripts/validation_utils.py": "a76092b2d24cdfaec66eb44e1f8d4e48a9f76d9dda8a875a3b5602771649f995",
-            "tests/scripts/test_eval_rendered_context_budget.py": "9bc52e95f1ad5e6a3d5a8ad164eb789172c6b2b2b374749e42ddc12df9237a5a",
-            "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-            "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
-            "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
-            "evals/agent-light-trajectories/cases.yaml": "25cc065fde1298111bbc5d3236976f3601b0db30453c805516689f2998c0191b",
-        }
-        for path, expected_sha256 in protected.items():
-            self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
+        self.assertNotEqual(unmaterialized_post_sha256, actual_sha256)
 
 
 if __name__ == "__main__":

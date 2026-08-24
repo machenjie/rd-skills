@@ -57,7 +57,7 @@ def _release_routing_projection_errors(
     for line in router_text.splitlines():
         if line.startswith("|") and not line.startswith("| ---") and "Task signal" not in line:
             cells = [cell.strip() for cell in line.strip("|").split("|")]
-            if len(cells) == 5:
+            if len(cells) == 4:
                 router_rows[cells[0]] = cells
     light_rows = {row["id"]: row for row in json.loads(LIGHT.read_text())["cases"]}
     expected_light_ids = {
@@ -70,7 +70,7 @@ def _release_routing_projection_errors(
         router = row["router"]
         expected = router["expected"]
         cells = router_rows.get(router["trigger"])
-        projected = [expected["profile"], expected["primary"], ", ".join(expected["layer3"]) or "none", expected["review"]]
+        projected = [expected["profile"], expected["primary"], expected["review"]]
         if cells is None or cells[1:] != projected:
             errors.append(f"{label}: router Markdown row drifts from release routing projection")
         light = light_rows.get(row["light_case_id"])
@@ -119,11 +119,11 @@ def validate_router_row(
     *,
     source: str = "<router row>",
 ) -> list[str]:
-    """Validate one five-cell router row against exact registry contracts."""
+    """Validate one four-cell global router row against exact registries."""
 
     errors: list[str] = []
-    if len(cells) != 5:
-        return [f"router row must have five columns: {source}"]
+    if len(cells) != 4:
+        return [f"router row must have four columns: {source}"]
     start_profile = cells[1]
     if start_profile not in PROFILES:
         errors.append(f"router row must select exactly one supported profile: {source}")
@@ -137,41 +137,7 @@ def validate_router_row(
         if start_profile not in primary.get("role_support", []):
             errors.append(f"router row assigns {primary_name} to unsupported profile {start_profile}")
 
-    selected_layer3, parse_error = parse_layer3_cell(cells[3])
-    if parse_error:
-        errors.append(f"router row Layer 3 cell {parse_error}: {source}")
-    dynamic_client_targets = cells[3] == DYNAMIC_CLIENT_LAYER3_CELL
-    if dynamic_client_targets and (
-        primary_name != "installed-client-change-builder"
-        or not cells[0].startswith("shared installed client")
-    ):
-        errors.append(
-            "dynamic installed-client Layer 3 selection is only valid for the "
-            f"shared installed-client router row: {source}"
-        )
-    validated_layer3 = [
-        *selected_layer3,
-        *(
-            CONCRETE_CLIENT_PLATFORM_ORDER
-            if dynamic_client_targets
-            else ()
-        ),
-    ]
-    for selected in validated_layer3:
-        layer3_entry = layer3.get(selected)
-        if layer3_entry is None:
-            errors.append(f"router row selects unknown Layer 3 Skill {selected!r}: {source}")
-            continue
-        if primary is not None and selected not in primary.get("layer3_candidates", []):
-            errors.append(
-                f"router row selects {selected} outside {primary_name}.layer3_candidates"
-            )
-        if start_profile not in layer3_entry.get("role_support", []):
-            errors.append(
-                f"router row assigns Layer 3 Skill {selected} to unsupported profile {start_profile}"
-            )
-
-    review_name = cells[4]
+    review_name = cells[3]
     review = professional.get(review_name)
     if review is None:
         errors.append(f"router row must select exactly one known Review Skill: {source}")
@@ -195,14 +161,36 @@ def domain_router_coverage_errors(
         if entry.get("routing_mode") == DOMAIN_MODIFIER_ONLY_ROUTING_MODE
     }
     routes: dict[object, list[str]] = {name: [] for name in modifier_domain}
-    for cells in router_rows:
-        if len(cells) != 5:
-            continue
-        selected, parse_error = parse_layer3_cell(cells[3])
-        if parse_error:
-            continue
-        for name in selected:
-            if name in routes:
+    for name in routes:
+        spec = DOMAIN_ROUTE_SPECS.get(str(name), {})
+        families = spec.get("families", {}) if isinstance(spec, dict) else {}
+        anti_atoms = {
+            str(atom).casefold() for atom in spec.get("anti_atoms", ())
+        } if isinstance(spec, dict) else set()
+        for cells in router_rows:
+            if len(cells) != 4 or cells[0].count("; excluding ") != 1:
+                continue
+            positive, negative = cells[0].split("; excluding ", 1)
+            if positive.count(" with ") != 1:
+                continue
+            trigger_signal, boundary_signal = positive.split(" with ", 1)
+            family_match = any(
+                isinstance(contract, dict)
+                and contract.get("trigger_atoms")
+                and contract.get("boundary_atoms")
+                and all(
+                    _contains_contract_atom(trigger_signal, str(atom).casefold())
+                    for atom in contract["trigger_atoms"]
+                )
+                and all(
+                    _contains_contract_atom(boundary_signal, str(atom).casefold())
+                    for atom in contract["boundary_atoms"]
+                )
+                for contract in families.values()
+            )
+            if family_match and anti_atoms and all(
+                _contains_contract_atom(negative, atom) for atom in anti_atoms
+            ):
                 routes[name].append(cells[0])
 
     errors: list[str] = []
@@ -494,7 +482,7 @@ def main() -> int:
         return fail_many("validate-skill-routing", errors)
     text = ROUTER.read_text(encoding="utf-8")
     folded = text.casefold()
-    for phrase in ("route once per task", "one primary professional skill", "zero to three", "engineering-change-analysis", "ordinary multi-task work uses combined final diff review", "do not load the full foundation or domain catalog"):
+    for phrase in ("route once per task", "one primary professional skill", "zero to three", "engineering-change-analysis", "layer 3 is shard output and must be post-validated", "scenario and fixture case identifiers are provenance only", "ordinary multi-task work uses combined final diff review", "do not load the full foundation or domain catalog"):
         if phrase not in folded:
             errors.append(f"router missing {phrase!r}")
     router_rows: list[list[str]] = []
@@ -504,7 +492,9 @@ def main() -> int:
         cells = [cell.strip() for cell in line.strip("|").split("|")]
         router_rows.append(cells)
         errors.extend(validate_router_row(cells, by_name, layer3, source=line))
-        signal, _profile, primary, _selected, review = cells
+        if len(cells) != 4:
+            continue
+        signal, _profile, primary, review = cells
         folded_signal = signal.casefold()
         if "ordinary multiple" in folded_signal:
             if primary != "engineering-change-analysis" or review == "high-risk-design-review":

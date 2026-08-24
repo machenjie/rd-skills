@@ -1,6 +1,6 @@
 # Rendered Context Budget Evaluation
 
-Status: **fail**
+Status: **pass**
 
 Evidence scope: **deterministic-rendered-artifacts**
 
@@ -22,36 +22,49 @@ Capacity ceilings, minimum headroom ratios, and minimum release margins come fro
 
 | Context | Capacity ceiling | Required reserve | Release target | Minimum release margin | Evolution target | Observed maximum | Release margin | Evolution margin | Capacity headroom ratio |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Main always-loaded | 2200 | 220 | 1980 | 80 | 1900 | 1800 | 180 | 100 | 0.181818 |
-| Direct Task dispatch | 3200 | 0 | 3200 | 0 | 3200 | 2281 | 919 | 919 | 0.287187 |
-| Analyzed Task dispatch | 6500 | 0 | 6500 | 0 | 6500 | 4876 | 1624 | 1624 | 0.249846 |
-| Analysis dispatch | 5000 | 0 | 5000 | 0 | 5000 | 3036 | 1964 | 1964 | 0.3928 |
-| Review dispatch | 4000 | 0 | 4000 | 0 | 4000 | 2961 | 1039 | 1039 | 0.25975 |
-| Utility dispatch | 2500 | 0 | 2500 | 0 | 2500 | 1030 | 1470 | 1470 | 0.588 |
+| Main always-loaded | 2200 | 220 | 1980 | 80 | 1900 | 1874 | 106 | 26 | 0.148182 |
+| Direct Task dispatch | 3200 | 0 | 3200 | 0 | 3200 | 2024 | 1176 | 1176 | 0.3675 |
+| Analyzed Task dispatch | 6500 | 0 | 6500 | 0 | 6500 | 3830 | 2670 | 2670 | 0.410769 |
+| Analysis dispatch | 5000 | 0 | 5000 | 0 | 5000 | 2481 | 2519 | 2519 | 0.5038 |
+| Review dispatch | 4000 | 0 | 4000 | 0 | 4000 | 2230 | 1770 | 1770 | 0.4425 |
+| Utility dispatch | 2500 | 0 | 2500 | 0 | 2500 | 827 | 1673 | 1673 | 0.6692 |
 
 ## Admissible Context Composition Gate
 
-Contract: **changeforge.admissible-context-composition-eval/v1**; selector owner surfaces: **65**; canonical legal selection equivalence classes: **14035**; exact measurements: **8**.
+Contract: **changeforge.admissible-context-composition-eval/v1**; selector owner surfaces: **65**; canonical legal selection equivalence classes: **14035**; exact measurements: **6**.
 
 | Context | Phase 3 target | Reachable maximum | Professional | Layer 3 | Owner | Build | Host |
 | --- | ---: | ---: | --- | --- | --- | --- | --- |
-| task | 3000 | 4456 | frontend-change-builder | interaction-state-modeling, accessibility-inclusive-design, web-platform-professional-usage | main-control-agent | dev | copilot |
-| analyzed_task | 6000 | 4897 | repository-tooling-change-builder | implementation-structure-design, build-tool-professional-usage, filesystem-process-safety | engineering-brief | dev | copilot |
-| analysis | 4500 | 3998 | engineering-change-analysis | package-dependency-management, repository-context-map, minimal-correct-implementation | main-control-agent | dev | claude |
-| review | 3700 | 4724 | architecture-impact-reviewer | module-boundary-design, implementation-structure-design, technology-stack-selection | engineering-brief | dev | copilot |
+## End-to-End Cost Gate
+
+Contract: **changeforge.end-to-end-cost-projection/v1**.
+Comparison SHA-256: `3743f533ba98ddd2d6ccc075e4de1263799c482e566cc1139ce0def48a008f59`.
+Subject identity SHA-256: `43b2a9eb6373c9ac1469d12f8c57160650160d3b73bcb1c5f80860f8196ad656`.
+Comparable cases: **186**; status: **pass**.
+Host matrix logical/physical rows: **62 / 186**; digest `ec3416d569bf87686d63c2b18cac9e7a9faf1f32969e2fa86e1cff5cc95b5554`.
+Host matrix reconciliation baseline/candidate/rows: **0 / 0 / 0**.
+Selection authority bundle digests: baseline `083344588e220b0777aa7b5abf723ec55db3bc24115b9a273afc5cba3aaf00bd`; candidate `8ce2742641c0073620ab7d5eeb4457472592e73783045d445d09e22da0ac3d64`.
+Selection authority baseline: bundles **108**; schemas **combined-router/v1=108**; selector/partition/reference loads **45 / 0 / 129**.
+Selection authority candidate: bundles **108**; schemas **split-professional-selector/v1=108**; selector/partition/reference loads **141 / 0 / 129**.
+Ordinary raw-route-equal gate regressions/digest: **0** / `4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945`.
+Aggregate baseline/candidate/delta: **802232 / 717053 / -85179**.
+| task | 3000 | 3000 | installed-client-change-builder | cross-platform-client-extension, ios-ipados-platform-extension, kotlin-professional-usage | main-control-agent | dev | copilot |
+| analyzed_task | 6000 | 4099 | backend-change-builder | failure-diagnosis, filesystem-process-safety, nodejs-runtime-professional-usage | engineering-brief | dev | copilot |
+| analysis | 4500 | 3526 | engineering-change-analysis | iot-embedded-extension, failure-diagnosis, package-dependency-management | main-control-agent | dev | claude |
+| review | 3700 | 3431 | ai-code-review-refactor | domain-object-identification, implementation-structure-design, refactoring | engineering-brief | dev | codex |
 
 ### Dominance Frontier Projection
 
 | Context | Canonical candidates | Exact render signatures | Over target |
 | --- | ---: | ---: | ---: |
-| analysis | 112735 | 46065 | 0 |
-| task | 22529 | 22529 | 18843 |
-| analyzed_task | 65028 | 65028 | 0 |
-| review | 41203 | 16079 | 5208 |
+| analysis | 112828 | 46158 | 0 |
+| task | 19281 | 19281 | 0 |
+| analyzed_task | 66150 | 66150 | 0 |
+| review | 37819 | 16546 | 0 |
 
-Global Task/Review frontier counts: professional=16, layer3=70, active_reference=227; safe complement: professional=2, layer3=0, active_reference=43.
+Global Task/Review frontier counts: professional=0, layer3=0, active_reference=0; safe complement: professional=17, layer3=68, active_reference=267.
 
-Mapping digest: `3be8e358015548cd26e175e7868b8eacfb83f730d76902a8fdc3c798a66d7ed5`; runtime consumers: **0**; build consumers: **0**.
+Mapping digest: `bf359ae8515e1f118ae9a04aa6e1e484203eed0cbc9ea7c94a5fd818d71b4525`; runtime consumers: **0**; build consumers: **0**.
 
 Coverage: analysis_foundation_domain=yes, analyzed_task_three_layer3=yes, review_domain_foundation=yes, nested_targeted_references=yes, direct_main_owner=yes, initial_analysis_main_owner=yes, analyzed_brief_owner=yes, direct_false_worst_excluded=yes.
 
@@ -66,15 +79,15 @@ Forbidden-combination evidence: >3 rejected=47; unauthorized exact rejected=65; 
 - Sequenced Reference stages are source-owned; only canonically replayed engineering-brief Task/Review carriers may replace a predecessor body, while other owner surfaces conservatively co-load.
 - Reported maxima are exact for the deterministic canonical representatives; the full inventory count and dominance mapping remain available separately.
 
-Maximum exact normalized duplicate-rule ratio: **0.021361** (gate: **0.03**; margin: **0.008639**).
+Maximum exact normalized duplicate-rule ratio: **0.022204** (gate: **0.03**; margin: **0.007796**).
 
 Discovery metadata is reported separately because actual host discovery injection is not observed.
 
 ## Transferred Context Measurement
 
-Gross exclusive transferred-context tokens: **14344**; non-compressible: **14344**; compressible: **0**; ratio: **0.0**.
+Gross exclusive transferred-context tokens: **14358**; non-compressible: **14358**; compressible: **0**; ratio: **0.0**.
 
-Long tasks joined from lightweight required progress: **9**; conservative ratio: **0.551552**.
+Long tasks joined from lightweight required progress: **9**. Candidate-only transfer measurements carry no baseline claim.
 
 Overlap views (Evidence Ledger, Diff, Validation, duplicate context, and superseded evidence) are reported outside the gross denominator.
 
@@ -95,8 +108,3 @@ Overlap views (Evidence Ledger, Diff, Validation, duplicate context, and superse
 - Token counts do not prove wall-clock performance, production accuracy, Profile startup, or the installed user experience.
 - Duplicate-token measurement detects exact normalized Markdown rule blocks, not semantic paraphrases.
 - Nested Layer 3 Reference counts include only explicitly named fixture files; directories, indexes, catalogs, and recursively linked files are never loaded.
-
-## Errors
-
-- admissible composition task maximum 4456 exceeds Phase 3 target 3000
-- admissible composition review maximum 4724 exceeds Phase 3 target 3700

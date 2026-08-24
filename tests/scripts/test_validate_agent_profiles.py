@@ -46,6 +46,49 @@ INVALID_JSON_OBJECT_PAYLOADS = (
 
 
 class AgentProfileReadabilityTests(unittest.TestCase):
+    def test_role_reference_consumers_are_source_declared_and_cross_role_safe(self) -> None:
+        self.assertEqual(
+            [],
+            VALIDATOR.role_control_reference_errors(
+                "main-control-agent",
+                "Load references/direct-task-template.md when Direct Task is selected.",
+            ),
+        )
+        self.assertEqual(
+            [],
+            VALIDATOR.role_control_reference_errors(
+                "task-agent",
+                "Load references/implementation-handoff-template.md at closure.",
+            ),
+        )
+        errors = VALIDATOR.role_control_reference_errors(
+            "main-control-agent",
+            "Load references/implementation-handoff-template.md for capability facts.",
+        )
+        self.assertTrue(any("owned by task-agent" in error for error in errors), errors)
+        errors = VALIDATOR.role_control_reference_errors(
+            "review-agent", "Load references/not-registered.md."
+        )
+        self.assertTrue(any("undeclared control Reference" in error for error in errors), errors)
+
+    def test_task_and_review_profiles_are_role_minimal_consumers(self) -> None:
+        source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
+        profiles = {profile["name"]: profile for profile in source["profiles"]}
+        task = profiles["task-agent"]["instructions"]
+        review = profiles["review-agent"]["instructions"]
+        required_task_reduction = 3_195 - 3_000
+        self.assertLessEqual(
+            count_o200k_base_tokens(task), 635 - required_task_reduction
+        )
+        self.assertLessEqual(count_o200k_base_tokens(review), 568)
+        self.assertIn("Consume Main's bound effective Level", task)
+        self.assertIn("Consume Main's bound effective Level", review)
+        self.assertIn("never calculate or recompute", task)
+        self.assertIn("never calculate or recompute", review)
+        self.assertIn("final edit", task)
+        self.assertIn("exact change capture", task)
+        self.assertIn("delivered current", review)
+        self.assertIn("fresh re-review", review)
     def _mutated_source_result(
         self,
         role: str,
@@ -282,7 +325,7 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         self.assertEqual(1, len(errors))
         self.assertIn("exactly one instruction bullet", errors[0])
 
-    def test_every_normal_task_agent_receives_universal_implementation_discipline(
+    def test_every_normal_task_agent_receives_source_bound_minimal_kernel(
         self,
     ) -> None:
         core = json.loads(
@@ -290,354 +333,92 @@ class AgentProfileReadabilityTests(unittest.TestCase):
                 encoding="utf-8"
             )
         )
-        contract = core.get("implementation_discipline_contract")
-        self.assertIsInstance(contract, dict)
+        contract = core["implementation_discipline_contract"]
         self.assertEqual(2, contract["schema_version"])
         self.assertEqual("every normal implementation task-agent", contract["applies_to"])
-        projection = contract["profile_projection"]
-        self.assertLessEqual(
-            count_o200k_base_tokens(
-                "\n".join(rule["exact_rule"] for rule in projection)
-            ),
-            330,
-        )
         self.assertEqual(
-            [
-                "inspect-before-edit",
-                "inspection-stop-conditions",
-                "observable-acceptance",
-                "verified-bugfix-cause",
-                "owner-first-placement",
-                "placement-stop-conditions",
-                "no-test-only-public-api",
-                "smallest-complete-change",
-                "adaptive-method-selection",
-                "test-first-required",
-                "red-proof-classification",
-                "validation-integrity",
-                "test-after-boundary",
-                "existing-proof-only-boundary",
-                "non-test-validation-boundary",
-                "material-edit-staleness",
-                "final-edit-rerun",
-                "validation-outcome-reporting",
-                "changed-behavior-proof",
-            ],
-            [rule["rule_id"] for rule in projection],
-        )
-        self.assertEqual(
-            [
-                "inspect-before-edit",
-                "observable-acceptance",
-                "verified-bugfix-cause",
-                "owner-first-placement",
-                "smallest-complete-change",
-                "adaptive-testing",
-                "universal-validation",
-            ],
-            [group["guard_group_id"] for group in contract["guard_groups"]],
-        )
-        self.assertIn(
-            contract["profile_capability_id"],
-            core["profile_contract"]["role_capabilities"]["task-agent"][
-                "required_capability_ids"
+            ["task-agent"],
+            core["reference_contract"]["control_required_by"][
+                "references/implementation-handoff-template.md"
             ],
         )
-
         source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
-        task_profile = next(
-            profile for profile in source["profiles"] if profile["name"] == "task-agent"
-        )
-        self.assertLessEqual(
-            count_o200k_base_tokens(task_profile["instructions"]),
-            854,
-        )
-        source_rules = task_profile["instructions"].splitlines()
-        for rule in projection:
-            with self.subTest(rule=rule["rule_id"]):
-                self.assertEqual(1, source_rules.count(rule["exact_rule"]))
+        profiles = {profile["name"]: profile for profile in source["profiles"]}
+        task = profiles["task-agent"]["instructions"]
+        review = profiles["review-agent"]["instructions"]
+        self.assertLessEqual(count_o200k_base_tokens(task), 440)
+        self.assertLessEqual(count_o200k_base_tokens(review), 568)
+        for role, text in (("task-agent", task), ("review-agent", review)):
+            rules = text.splitlines()
+            errors: list[str] = []
+            VALIDATOR._validate_minimal_role_projection(role, rules, errors)
+            self.assertEqual([], errors)
+            for terms in VALIDATOR.ROLE_MINIMAL_REQUIRED_GROUPS[role]:
+                self.assertEqual(1, len(VALIDATOR._rule_group_matches(rules, list(terms))))
 
-        first_rule = projection[0]["exact_rule"]
-        for platform in ("codex", "claude", "copilot"):
-            with self.subTest(platform=platform):
-                result, output = self._mutated_built_result(
-                    platform,
-                    "task-agent",
-                    first_rule,
-                    first_rule,
-                )
-                self.assertEqual(0, result, output)
-
-    def test_ordinary_direct_task_without_layer3_receives_resident_validation_rules(
-        self,
-    ) -> None:
         fixture = json.loads(
-            (
-                ROOT / "evals/agent-light-trajectories/cases.yaml"
-            ).read_text(encoding="utf-8")
+            (ROOT / "evals/agent-light-trajectories/cases.yaml").read_text(
+                encoding="utf-8"
+            )
         )
-        direct_case = next(
-            case for case in fixture["cases"] if case["id"] == "single-file-bug-fix"
-        )
-        self.assertEqual("direct", direct_case["kind"])
+        direct_case = next(case for case in fixture["cases"] if case["id"] == "single-file-bug-fix")
         dispatch = next(
             step
             for step in direct_case["steps"]
-            if step.get("action") == "dispatch"
-            and step.get("profile") == "task-agent"
+            if step.get("action") == "dispatch" and step.get("profile") == "task-agent"
         )
         self.assertEqual([], dispatch["layer3_skills"])
         self.assertEqual([], dispatch["layer3_references"])
+        for term in ("fresh targeted validation", "exact change capture", "missing or stale facts block"):
+            self.assertIn(term, task)
 
-        source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
-        enforcement = json.loads(
-            VALIDATOR.ENFORCEMENT_SOURCE.read_text(encoding="utf-8")
-        )
-        task_profile = next(
-            profile for profile in source["profiles"] if profile["name"] == "task-agent"
-        )
-        resident_ids = {
-            "adaptive-method-selection",
-            "test-first-required",
-            "red-proof-classification",
-            "validation-integrity",
-            "test-after-boundary",
-            "existing-proof-only-boundary",
-            "non-test-validation-boundary",
-            "material-edit-staleness",
-            "final-edit-rerun",
-            "validation-outcome-reporting",
-            "changed-behavior-proof",
-        }
-        resident_rules = [
-            rule["exact_rule"]
-            for rule in VALIDATOR.IMPLEMENTATION_DISCIPLINE_MODEL[
-                "profile_projection"
-            ]
-            if rule["rule_id"] in resident_ids
-        ]
-        self.assertEqual(11, len(resident_rules))
+        enforcement = json.loads(VALIDATOR.ENFORCEMENT_SOURCE.read_text(encoding="utf-8"))
         for renderer in (
             BUILDER._render_codex_profile,
             BUILDER._render_claude_profile,
             BUILDER._render_copilot_profile,
         ):
-            rendered = renderer(task_profile, enforcement)
-            for rule in resident_rules:
+            rendered = renderer(profiles["task-agent"], enforcement)
+            for rule in task.splitlines():
                 self.assertEqual(1, rendered.count(rule))
 
-    def test_universal_implementation_discipline_rejects_projection_drift(
-        self,
-    ) -> None:
-        projection = VALIDATOR.IMPLEMENTATION_DISCIPLINE_MODEL[
-            "profile_projection"
-        ]
-        for rule in projection:
-            with self.subTest(surface="source", rule=rule["rule_id"]):
-                result, output = self._mutated_source_result(
-                    "task-agent",
-                    rule["exact_rule"],
-                    "- This universal implementation guard is missing.",
-                )
-                self.assertEqual(1, result)
-                self.assertIn("exact canonical bullet", output)
-
-        first_rule = projection[0]
-        for platform in ("codex", "claude", "copilot"):
-            with self.subTest(surface=platform, rule=first_rule["rule_id"]):
-                result, output = self._mutated_built_result(
-                    platform,
-                    "task-agent",
-                    first_rule["exact_rule"],
-                    "- This universal implementation guard is missing.",
-                )
-                self.assertEqual(1, result)
-                self.assertIn("exact canonical bullet", output)
-
-    def test_resident_validation_rules_reject_semantic_drift(self) -> None:
-        projection = {
-            rule["rule_id"]: rule["exact_rule"]
-            for rule in VALIDATOR.IMPLEMENTATION_DISCIPLINE_MODEL[
-                "profile_projection"
-            ]
-        }
-        mutations = {
-            "red-proof-classification": (
-                "absent target behavior, never environment/fixture/import/syntax/unrelated failure",
-                "environment failure",
-            ),
-            "validation-integrity": ("Preserve", "Weaken"),
-            "final-edit-rerun": ("Rerun", "Skip"),
-            "changed-behavior-proof": ("alone never prove", "alone can prove"),
-        }
-        for rule_id, replacement in mutations.items():
-            with self.subTest(rule=rule_id):
-                exact_rule = projection[rule_id]
-                result, output = self._mutated_source_result(
-                    "task-agent",
-                    exact_rule,
-                    exact_rule.replace(*replacement, 1),
-                )
-                self.assertEqual(1, result)
-                self.assertIn("exact canonical bullet", output)
-
-    def test_safety_critical_rules_match_exact_canonical_bullets(self) -> None:
+    def test_role_minimal_kernels_reject_source_and_built_drift(self) -> None:
         source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
-        profiles = {item["name"]: item for item in source["profiles"]}
-        bindings = (
-            ("task-agent", "task-normal-mode", "bounded-validation-retry"),
-            ("task-agent", "task-normal-mode", "bounded-validation-stop"),
-            ("review-agent", "review-target-modes", "implementation-review"),
-        )
-        for role, capability_id, rule_id in bindings:
-            with self.subTest(role=role, rule=rule_id):
-                rule = next(
-                    item
-                    for item in VALIDATOR.PROFILE_CONTRACT_MODEL["capability_terms"][
-                        capability_id
-                    ]
-                    if item["rule_id"] == rule_id
+        profiles = {profile["name"]: profile for profile in source["profiles"]}
+        for role in ("task-agent", "review-agent"):
+            instructions = profiles[role]["instructions"]
+            rules = instructions.splitlines()
+            for terms in VALIDATOR.ROLE_MINIMAL_REQUIRED_GROUPS[role]:
+                exact_rule = next(
+                    rule for rule in rules if all(term in rule for term in terms)
                 )
-                self.assertEqual(
-                    1,
-                    profiles[role]["instructions"].splitlines().count(
-                        rule["exact_rule"]
-                    ),
-                )
-
-    def test_safety_critical_exact_rules_reject_semantic_drift(self) -> None:
-        bindings = (
-            (
-                "task-agent",
-                "task-normal-mode",
-                "bounded-validation-retry",
-                "An unchanged retry is allowed.",
-                ("After 2 same-path failures", "After 3 same-path failures"),
-            ),
-            (
-                "task-agent",
-                "task-normal-mode",
-                "bounded-validation-stop",
-                "Rerouting is allowed.",
-                ("never reroute", "reroute"),
-            ),
-            (
-                "review-agent",
-                "review-target-modes",
-                "implementation-review",
-                "A summary may replace the evidence.",
-                ("delivered current", "unavailable"),
-            ),
-        )
-        for role, capability_id, rule_id, contradiction, wrong_replacement in bindings:
-            exact_rule = next(
-                item["exact_rule"]
-                for item in VALIDATOR.PROFILE_CONTRACT_MODEL["capability_terms"][
-                    capability_id
-                ]
-                if item["rule_id"] == rule_id
-            )
-            mutations = {
-                "missing": "- This safety-critical rule is missing.",
-                "extra-contradiction": f"{exact_rule} {contradiction}",
-                "wrong-semantics": exact_rule.replace(*wrong_replacement, 1),
-                "appended-text": f"{exact_rule} Additional text.",
-            }
-            for mutation_kind, mutation in mutations.items():
-                with self.subTest(
-                    role=role,
-                    rule=rule_id,
-                    mutation=mutation_kind,
-                ):
-                    result, output = self._mutated_source_result(
-                        role,
-                        exact_rule,
-                        mutation,
-                    )
+                mutation = exact_rule.replace(terms[0], "REMOVED_ROLE_BOUND_TERM", 1)
+                with self.subTest(surface="source", role=role, term=terms[0]):
+                    result, output = self._mutated_source_result(role, exact_rule, mutation)
                     self.assertEqual(1, result)
-                    self.assertIn("exact canonical bullet", output)
+                    self.assertIn("role-minimal projection terms", output)
 
-    def test_decoded_built_instructions_reject_exact_rule_drift(self) -> None:
-        bindings = (
-            (
-                "task-agent",
-                "task-normal-mode",
-                "bounded-validation-retry",
-                "contradiction",
-                0,
-                lambda rule: f"{rule} A third unchanged retry is allowed.",
-            ),
-            (
-                "task-agent",
-                "task-normal-mode",
-                "bounded-validation-stop",
-                "contradiction",
-                0,
-                lambda rule: f"{rule} Rerouting is allowed.",
-            ),
-            (
-                "review-agent",
-                "review-target-modes",
-                "implementation-review",
-                "extra",
-                2,
-                lambda rule: f"{rule}\n{rule}",
-            ),
-            (
-                "review-agent",
-                "review-target-modes",
-                "implementation-review",
-                "contradiction",
-                0,
-                lambda rule: f"{rule} Re-review may be skipped after repair.",
-            ),
-        )
-        for (
-            role,
-            capability_id,
-            rule_id,
-            mutation_kind,
-            expected_exact_count,
-            mutate,
-        ) in bindings:
+            first_terms = VALIDATOR.ROLE_MINIMAL_REQUIRED_GROUPS[role][0]
             exact_rule = next(
-                item["exact_rule"]
-                for item in VALIDATOR.PROFILE_CONTRACT_MODEL["capability_terms"][
-                    capability_id
-                ]
-                if item["rule_id"] == rule_id
+                rule for rule in rules if all(term in rule for term in first_terms)
             )
+            mutation = exact_rule.replace(first_terms[0], "REMOVED_ROLE_BOUND_TERM", 1)
             for platform in ("codex", "claude", "copilot"):
-                with self.subTest(
-                    platform=platform,
-                    role=role,
-                    mutation=mutation_kind,
-                ):
+                with self.subTest(surface=platform, role=role):
                     result, output = self._mutated_built_result(
-                        platform,
-                        role,
-                        exact_rule,
-                        mutate(exact_rule),
+                        platform, role, exact_rule, mutation
                     )
                     self.assertEqual(1, result)
-                    self.assertIn("exact canonical bullet", output)
-                    self.assertIn(f"found {expected_exact_count}", output)
+                    self.assertIn("role-minimal projection terms", output)
 
     def test_decoded_built_instructions_accept_current_profiles(self) -> None:
-        exact_rule = next(
-            item["exact_rule"]
-            for item in VALIDATOR.IMPLEMENTATION_DISCIPLINE_MODEL[
-                "profile_projection"
-            ]
-            if item["rule_id"] == "final-edit-rerun"
-        )
+        source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
+        profiles = {profile["name"]: profile for profile in source["profiles"]}
+        exact_rule = profiles["task-agent"]["instructions"].splitlines()[0]
         for platform in ("codex", "claude", "copilot"):
             with self.subTest(platform=platform):
                 result, output = self._mutated_built_result(
-                    platform,
-                    "task-agent",
-                    exact_rule,
-                    exact_rule,
+                    platform, "task-agent", exact_rule, exact_rule
                 )
                 self.assertEqual(0, result, output)
 
@@ -815,15 +596,21 @@ class AgentProfileReadabilityTests(unittest.TestCase):
             for item in proof["projections"]
             if item["target"] == "profile:review-agent"
         )
+        handoff = (
+            ROOT
+            / "src/control-skills/engineering-control-plane/references/review-handoff-template.md"
+        ).read_text(encoding="utf-8")
+        profile = next(
+            item["instructions"]
+            for item in json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))["profiles"]
+            if item["name"] == "review-agent"
+        )
         for term in projection["terms"]:
             with self.subTest(term=term):
-                result, output = self._mutated_source_result(
-                    "review-agent",
-                    term,
-                    "REMOVED_REVIEW_PROOF_TERM",
-                )
-                self.assertEqual(1, result)
-                self.assertIn("independent review evidence projection", output)
+                self.assertIn(term.casefold(), handoff.casefold())
+                self.assertNotIn(term, profile)
+        self.assertIn("current evidence", profile)
+        self.assertIn("reviewed/unreviewed scope", profile)
 
     def test_task_agent_requires_exact_validation_evidence_claim(self) -> None:
         proof = VALIDATOR.EVIDENCE_LEDGER_MODEL["completion_proof"][
@@ -834,20 +621,20 @@ class AgentProfileReadabilityTests(unittest.TestCase):
             for item in proof["projections"]
             if item["target"] == "profile:task-agent"
         )
+        handoff = (
+            ROOT
+            / "src/control-skills/engineering-control-plane/references/implementation-handoff-template.md"
+        ).read_text(encoding="utf-8")
+        profile_owned_terms = {"latest material edit", "latest-material-edit", "validation-passed"}
         for term in projection["terms"]:
             with self.subTest(term=term):
-                expected_error = (
-                    "exact canonical bullet"
-                    if term == "latest material edit"
-                    else "independent review evidence projection"
-                )
-                result, output = self._mutated_source_result(
-                    "task-agent",
-                    term,
-                    "REMOVED_TASK_VALIDATION_PROOF_TERM",
-                )
-                self.assertEqual(1, result)
-                self.assertIn(expected_error, output)
+                self.assertIn(term.casefold(), handoff.casefold())
+                if term in profile_owned_terms:
+                    result, output = self._mutated_source_result(
+                        "task-agent", term, "REMOVED_TASK_VALIDATION_PROOF_TERM"
+                    )
+                    self.assertEqual(1, result)
+                    self.assertIn("role-minimal projection terms", output)
 
     def test_each_task_forbidden_storage_projection_is_required(self) -> None:
         for rule in VALIDATOR.EVIDENCE_LEDGER_MODEL["forbidden_storage"]:
@@ -859,23 +646,22 @@ class AgentProfileReadabilityTests(unittest.TestCase):
                     "REMOVED_STORAGE_TERM",
                 )
                 self.assertEqual(1, result)
-                self.assertIn(
-                    f"forbidden storage projection {rule['id']!r}",
-                    output,
-                )
+                self.assertIn("role-minimal projection terms", output)
 
     def test_role_boundaries_are_required_for_analysis_task_and_review(self) -> None:
         mutations = (
             ("analysis-agent", "perform final review", "summarize review"),
-            ("task-agent", "perform final review", "summarize review"),
+            ("task-agent", "review your work", "perform final review"),
             ("review-agent", "Never edit", "Never change files"),
         )
         for role, old, new in mutations:
             with self.subTest(role=role):
                 result, output = self._mutated_source_result(role, old, new)
                 self.assertEqual(1, result)
-                self.assertIn("capability", output)
-                self.assertIn("boundary", output)
+                self.assertTrue(
+                    "capability" in output or "role-minimal projection" in output,
+                    output,
+                )
 
     def test_analysis_and_review_profiles_load_relocated_decision_owners(self) -> None:
         source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))

@@ -33,15 +33,19 @@ from validation_utils import (
     foundation_ownership_errors,
     foundation_registry_field_errors,
     layer3_selector_authority,
-    layer3_selector_control_projections,
+    layer3_selector_normalized_control_projections,
     execution_level_runtime_reference_errors,
     load_yaml_file,
+    main_capability_projection as _main_capability_projection,
+    main_capability_projection_from_facts as _main_capability_projection_from_facts,
+    normalized_decision_capabilities as _normalized_decision_capabilities,
     parse_frontmatter,
     prompt_projection_errors,
     reference_contracts,
     reference_type_for_path,
     required_expertise_tag_errors,
     render_compact_markdown_table,
+    render_decision_capability_facts as _render_decision_capability_facts,
     render_targeted_reference_section,
     role_contract_map_errors,
 )
@@ -125,6 +129,12 @@ GENERIC_CAPABILITY_CONTRACT = CORE_CONTRACTS["review_discipline_contract"][
 ]
 DECISION_CAPABILITY_FIELDS = tuple(GENERIC_CAPABILITY_CONTRACT["injected_fields"])
 DECISION_CAPABILITY_STATES = tuple(GENERIC_CAPABILITY_CONTRACT["states"])
+MAIN_DECISION_CAPABILITY_FIELDS = (
+    "exact-change-evidence-read",
+    "reviewer-accessible-change-reference",
+    "non-mutating-validation",
+    "not-required",
+)
 HOST_MODE_VALUES = {
     "diff_input_mode": ("native", "supplied-artifact", "unsupported"),
     "validation_mode": ("native-read-only", "task-no-edit", "unsupported"),
@@ -922,15 +932,36 @@ def _write_control_layer3_selector_projections(destination: Path) -> None:
             domain,
             context="build Control selector authority",
         )
-        projections = layer3_selector_control_projections(authority)
+        projections, reference_partitions = (
+            layer3_selector_normalized_control_projections(authority)
+        )
     except ValidationProblem as exc:
         raise BuildError(str(exc)) from exc
     root = destination / "references" / "selectors"
+    partition_root = destination / "references" / "reference-records"
     if root.exists():
         shutil.rmtree(root)
+    if partition_root.exists():
+        shutil.rmtree(partition_root)
     root.mkdir(parents=True, exist_ok=True)
+    partition_root.mkdir(parents=True, exist_ok=True)
     for filename, payload in projections.items():
-        (root / filename).write_text(
+        output = root / filename
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(
+            json.dumps(
+                payload,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+    for filename, payload in reference_partitions.items():
+        output = partition_root / filename
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(
             json.dumps(
                 payload,
                 ensure_ascii=False,
@@ -1350,67 +1381,6 @@ def _load_agent_profiles() -> list[dict[str, Any]]:
     return normalized
 
 
-def _normalized_decision_capabilities(entry: dict[str, Any]) -> dict[str, str]:
-    """Project adapter metadata to generic capability facts."""
-
-    profile_supported = entry.get("profile_delivery") in ENFORCEMENT_STATUSES[:-1]
-    roles = entry.get("roles")
-    roles = roles if isinstance(roles, dict) else {}
-
-    def rendered_tools(role: str) -> set[str]:
-        facts = roles.get(role)
-        tools = facts.get("rendered_tools") if isinstance(facts, dict) else None
-        return set(tools) if isinstance(tools, list) else set()
-
-    diff_input_mode = entry.get("diff_input_mode")
-    native_change_read = profile_supported and diff_input_mode == "native"
-    change_evidence_export = profile_supported and bool(
-        rendered_tools("task-agent") & {"execute", "Bash"}
-    )
-    supplied_change_delivery = (
-        profile_supported and diff_input_mode == "supplied-artifact"
-    )
-    reviewer_change_consume = profile_supported and bool(
-        rendered_tools("review-agent")
-        & {"read", "Read", "search", "Grep", "Glob", "execute-read-only"}
-    )
-    validation_supported = entry.get("validation_mode") in {
-        "native-read-only",
-        "task-no-edit",
-    }
-    observation_supported = entry.get("utility_no_edit") in ENFORCEMENT_STATUSES[:-1]
-    supported = "supported"
-    unsupported = "unsupported"
-    return {
-        "bounded-source-read": supported if profile_supported else unsupported,
-        "workspace-mutation": supported if profile_supported else unsupported,
-        "non-mutating-validation": supported if validation_supported else unsupported,
-        "native-change-read": supported if native_change_read else unsupported,
-        "change-evidence-export": supported if change_evidence_export else unsupported,
-        "supplied-change-delivery": supported if supplied_change_delivery else unsupported,
-        "reviewer-change-consume": supported if reviewer_change_consume else unsupported,
-        "workspace-state-observation": supported if observation_supported else unsupported,
-    }
-
-
-def _render_decision_capability_facts(capabilities: dict[str, str]) -> str:
-    groups = {
-        state: [
-            field
-            for field in DECISION_CAPABILITY_FIELDS
-            if capabilities[field] == state
-        ]
-        for state in DECISION_CAPABILITY_STATES
-    }
-    return (
-        "Current capability facts: supported "
-        + ("/".join(groups["supported"]) or "none")
-        + "; unsupported "
-        + ("/".join(groups["unsupported"]) or "none")
-        + "."
-    )
-
-
 def _load_host_enforcement() -> dict[str, Any]:
     if not HOST_ENFORCEMENT_SOURCE.is_file():
         raise BuildError(f"missing {HOST_ENFORCEMENT_SOURCE.relative_to(ROOT)}")
@@ -1617,7 +1587,7 @@ def _profile_instructions(
     if host is not None and profile.get("name") == "main-control-agent":
         matrix = enforcement or _load_host_enforcement()
         host_entry = matrix["hosts"][host]
-        capability_facts = _normalized_decision_capabilities(host_entry)
+        capability_facts = _main_capability_projection(host_entry)
         capability_projection = "\n\n" + _render_decision_capability_facts(capability_facts)
     elif host is not None and profile.get("name") == "analysis-agent":
         matrix = enforcement or _load_host_enforcement()

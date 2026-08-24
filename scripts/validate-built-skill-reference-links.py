@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import re
 import sys
@@ -19,6 +20,8 @@ from validation_utils import (
     FOUNDATION_DELIVERY_SCOPES,
     ValidationProblem,
     fail_many,
+    layer3_selector_expand_runtime_projection,
+    layer3_selector_resolve_control_projection,
     load_yaml_file,
     parse_frontmatter,
     relpath,
@@ -548,25 +551,137 @@ def _validate_compiled_layer3_projection(
             f"selector projection: {exc}"
         )
         return
-    surfaces = selector.get("selection_surfaces")
+    if (
+        isinstance(selector, dict)
+        and selector.get("contract")
+        == "changeforge.layer3-selector-decision-envelope/v1"
+    ):
+        complete = selector.get("complete")
+        if not isinstance(complete, dict) or not isinstance(
+            complete.get("path"), str
+        ):
+            errors.append(
+                f"{_display_path(selector_path)}: selector decision fallback is invalid"
+            )
+            return
+        complete_path = selector_path.parent / complete["path"]
+        try:
+            complete_document = json.loads(
+                complete_path.read_text(encoding="utf-8")
+            )
+            decisions = selector.get("decisions")
+            if not isinstance(decisions, list) or not decisions:
+                raise ValidationProblem("selector decision bindings are unavailable")
+            fallback_key = copy.deepcopy(decisions[0].get("runtime_key"))
+            if not isinstance(fallback_key, dict) or not isinstance(
+                fallback_key.get("route_source"), dict
+            ):
+                raise ValidationProblem("selector runtime key is unavailable")
+            fallback_key["route_source"]["pointer"] = (
+                "#built-reference-link-validation-complete-fallback"
+            )
+            resolution = layer3_selector_resolve_control_projection(
+                selector,
+                {complete["path"]: complete_document},
+                runtime_key=fallback_key,
+            )
+        except (OSError, json.JSONDecodeError, ValidationProblem) as exc:
+            errors.append(
+                f"{_display_path(selector_path)}: selector complete fallback failed closed: {exc}"
+            )
+            return
+        for decision in selector.get("decisions", []):
+            if not isinstance(decision, dict) or not isinstance(
+                decision.get("path"), str
+            ):
+                errors.append(
+                    f"{_display_path(selector_path)}: selector decision binding is invalid"
+                )
+                return
+            decision_path = selector_path.parent / decision["path"]
+            try:
+                decision_document = json.loads(
+                    decision_path.read_text(encoding="utf-8")
+                )
+                layer3_selector_resolve_control_projection(
+                    selector,
+                    {decision["path"]: decision_document},
+                    runtime_key=decision.get("runtime_key"),
+                )
+            except (OSError, json.JSONDecodeError, ValidationProblem) as exc:
+                errors.append(
+                    f"{_display_path(decision_path)}: selector decision failed closed: {exc}"
+                )
+                return
+        selector = resolution["projection"]
+    partition_link = selector.get("reference_records_partition")
     if (
         selector.get("professional_skill") != professional
-        or not isinstance(surfaces, list)
-        or not surfaces
+        or not isinstance(partition_link, dict)
+        or partition_link.get("contract")
+        != "changeforge.layer3-selector-reference-records-partition/v1"
+        or not isinstance(partition_link.get("path_template"), str)
     ):
         errors.append(
-            f"{_display_path(selector_path)}: selector owner or surfaces are invalid"
+            f"{_display_path(selector_path)}: selector owner or Reference partition template is invalid"
+        )
+        return
+    partitions: dict[str, dict[str, object]] = {}
+    for owner in (professional, candidate):
+        partition_path = selector_path.parent / partition_link["path_template"].format(
+            owner_skill=owner
+        )
+        try:
+            partition = json.loads(partition_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            errors.append(
+                f"{_display_path(partition_path)}: missing or invalid current-Professional "
+                f"Reference partition: {exc}"
+            )
+            return
+        partitions[owner] = partition
+    surfaces = selector.get("owner_surfaces")
+    if not isinstance(surfaces, list) or not surfaces:
+        errors.append(
+            f"{_display_path(selector_path)}: normalized selector owner surfaces are invalid"
         )
         return
     observed_records: dict[tuple[str, str], dict[str, object]] = {}
     for surface in surfaces:
-        records = surface.get("reference_records") if isinstance(surface, dict) else None
-        if not isinstance(records, list):
+        profile = surface.get("profile") if isinstance(surface, dict) else ""
+        profile_authority = selector.get("profile_authority")
+        matching_profiles = [
+            row
+            for row in profile_authority
+            if isinstance(row, dict) and row.get("profile") == profile
+        ] if isinstance(profile_authority, list) else []
+        if len(matching_profiles) != 1:
             errors.append(
-                f"{_display_path(selector_path)}: selector surface lacks Reference records"
+                f"{_display_path(selector_path)}: selector Profile authority is invalid"
             )
             continue
-        for record in records:
+        if candidate not in matching_profiles[0].get("authorized_layer3", []):
+            continue
+        try:
+            expanded = layer3_selector_expand_runtime_projection(
+                selector,
+                partitions,
+                profile=profile,
+                selection_owner=(
+                    surface.get("selection_owner")
+                    if isinstance(surface, dict)
+                    else ""
+                ),
+                exact_layer3=None,
+                selected_layer3=[candidate],
+                exact_references=None,
+            )
+        except ValidationProblem as exc:
+            errors.append(
+                f"{_display_path(selector_path)}: selector expansion failed closed: {exc}"
+            )
+            continue
+        for record in expanded["reference_records"]:
             if not isinstance(record, dict) or record.get("owner_skill") != candidate:
                 continue
             record_path = record.get("path")

@@ -305,12 +305,20 @@ class SelectorJitDomainParityTests(unittest.TestCase):
         self,
     ) -> None:
         authority = self._authority()
-        projections = VALIDATION.layer3_selector_control_projections(authority)
+        projections, partitions = (
+            VALIDATION.layer3_selector_normalized_control_projections(authority)
+        )
         self.assertIn("data-api-contract-changer.json", projections)
+        self.assertIn(
+            "data-api-contract-changer/data-api-contract-changer.json",
+            partitions,
+        )
         self.assertNotIn("index.json", projections)
         payload = projections["data-api-contract-changer.json"]
         self.assertEqual("data-api-contract-changer", payload["professional_skill"])
-        self.assertTrue(payload["selection_surfaces"])
+        self.assertTrue(payload["owner_surfaces"])
+        self.assertTrue(payload["profile_authority"])
+        self.assertNotIn("reference_records", payload)
         rendered = json.dumps(payload, sort_keys=True)
         for forbidden in (
             "_route_impl",

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import shutil
@@ -234,6 +235,63 @@ class CompiledLayer3ReadabilityTests(unittest.TestCase):
             physical = path.parent / "sample-foundation/references/checklist.md"
             physical.parent.mkdir(parents=True)
             physical.write_text("# Sample Checklist\n", encoding="utf-8")
+            partition = (
+                root
+                / "engineering-control-plane/references/reference-records/"
+                "sample-professional/sample-foundation.json"
+            )
+            partition.parent.mkdir(parents=True)
+            records = [
+                {
+                    "owner_skill": "sample-foundation",
+                    "owner_layer": "foundation",
+                    "path": "references/checklist.md",
+                    "type": "decision-checklist",
+                    "load_when": "A checklist decision is required.",
+                    "do_not_load_when": "No checklist decision is required.",
+                    "required_by": ["task-agent"],
+                    "required_output": ["checklist-result"],
+                    "context_admissibility": None,
+                    "residency": "singleton",
+                }
+            ]
+            partition_document = {
+                "contract": "changeforge.layer3-selector-reference-records-partition/v1",
+                "authority_contract": "changeforge.layer3-selector-authority/v1",
+                "professional_skill": "sample-professional",
+                "owner_skill": "sample-foundation",
+                "records_sha256": hashlib.sha256(
+                    (json.dumps(records, sort_keys=True, separators=(",", ":")) + "\n").encode()
+                ).hexdigest(),
+                "reference_records": records,
+            }
+            partition_bytes = (
+                json.dumps(
+                    partition_document,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                )
+                + "\n"
+            ).encode()
+            partition.write_bytes(partition_bytes)
+            professional_partition = partition.parent / "sample-professional.json"
+            empty_records: list[dict[str, object]] = []
+            professional_partition.write_text(
+                json.dumps(
+                    {
+                        "contract": "changeforge.layer3-selector-reference-records-partition/v1",
+                        "authority_contract": "changeforge.layer3-selector-authority/v1",
+                        "professional_skill": "sample-professional",
+                        "owner_skill": "sample-professional",
+                        "records_sha256": hashlib.sha256(b"[]\n").hexdigest(),
+                        "reference_records": empty_records,
+                    },
+                    sort_keys=True,
+                    separators=(",", ":"),
+                )
+                + "\n",
+                encoding="utf-8",
+            )
             selector = (
                 root
                 / "engineering-control-plane/references/selectors/sample-professional.json"
@@ -242,20 +300,33 @@ class CompiledLayer3ReadabilityTests(unittest.TestCase):
             selector.write_text(
                 json.dumps(
                     {
-                        "contract": "changeforge.layer3-selector-control/v1",
+                        "contract": "changeforge.layer3-selector-normalized-control/v1",
+                        "authority_contract": "changeforge.layer3-selector-authority/v1",
                         "professional_skill": "sample-professional",
-                        "selection_surfaces": [
+                        "maximum_layer3": 3,
+                        "exact_layer3_bypass": True,
+                        "profile_authority": [
                             {
-                                "reference_records": [
-                                    {
-                                        "owner_skill": "sample-foundation",
-                                        "path": "references/checklist.md",
-                                        "required_output": ["checklist-result"],
-                                        "type": "decision-checklist",
-                                    }
-                                ]
+                                "profile": "task-agent",
+                                "selection_basis": "professional-risk",
+                                "authorized_layer3": ["sample-foundation"],
+                                "domain_authorization": [],
+                                "selectors": [],
                             }
                         ],
+                        "owner_surfaces": [
+                            {
+                                "profile": "task-agent",
+                                "selection_owner": "main-control-agent",
+                            }
+                        ],
+                        "reference_records_partition": {
+                            "contract": "changeforge.layer3-selector-reference-records-partition/v1",
+                            "path_template": (
+                                "../reference-records/sample-professional/"
+                                "{owner_skill}.json"
+                            ),
+                        },
                     },
                     sort_keys=True,
                     separators=(",", ":"),

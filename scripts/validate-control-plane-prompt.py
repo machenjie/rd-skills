@@ -403,13 +403,23 @@ def _validate_capability_branches(text: str, errors: list[str]) -> None:
     if prompt_section is None:
         errors.append("cannot validate capability branches: missing Direct Task Routing")
         return
-    for anchor in (
-        "generic_capability_contract",
-        "references/implementation-handoff-template.md",
+    core_projection = (
+        "`generic_capability_contract` branches JIT-load from "
+        "references/implementation-handoff-template.md."
+    )
+    if prompt_section.count(core_projection) != 1:
+        errors.append(
+            "Direct Task Routing must contain the exact Core capability owner projection"
+        )
+    for field in (
+        "exact-change-evidence-read",
+        "reviewer-accessible-change-reference",
+        "non-mutating-validation",
+        "not-required",
     ):
-        if anchor not in prompt_section:
+        if field in prompt_section:
             errors.append(
-                f"Direct Task Routing is missing capability JIT owner anchor {anchor!r}"
+                f"Direct Task Routing must not duplicate build-derived capability {field!r}"
             )
     if not CAPABILITY_BRANCH_OWNER.is_file():
         errors.append("missing generic capability branch JIT owner")

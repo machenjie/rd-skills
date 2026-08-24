@@ -4,12 +4,18 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
+import importlib.util
 import json
+import os
 import re
+import subprocess
 import sys
+import tempfile
 import unicodedata
-from collections import defaultdict
+from collections import Counter, defaultdict
+from contextlib import contextmanager
 from itertools import combinations
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -18,10 +24,13 @@ from validation_utils import (
     COMPILED_LAYER3_FORMAT,
     CONTEXT_BUDGET_MODEL,
     ValidationProblem,
+    authoritative_build_input_snapshot,
     count_o200k_base_tokens,
     derived_context_budget_limits,
     layer3_selector_authority,
     layer3_selector_control_projections,
+    layer3_selector_expand_runtime_projection,
+    layer3_selector_resolve_control_projection,
     layer3_selector_runtime_projection,
     layer3_selector_runtime_selection_receipt,
     layer3_selector_runtime_selection_receipt_errors,
@@ -75,6 +84,56 @@ HOST_PROFILE_SUFFIXES = {
     "claude": ".md",
     "copilot": ".agent.md",
 }
+
+
+@contextmanager
+def _subject_configuration(
+    root: Path,
+    fixtures: Path,
+    lightweight_report: Path,
+):
+    global ROOT, FIXTURES, DIST_SKILLS, CONTROL_PROMPT, LIGHTWEIGHT_REPORT
+    global IMPLEMENTATION_HANDOFF_TEMPLATE, REVIEW_HANDOFF_TEMPLATE
+    global PROFESSIONAL_REGISTRY, FOUNDATION_REGISTRY, DOMAIN_REGISTRY
+    global HOST_PROFILE_ROOTS
+    names = (
+        "ROOT",
+        "FIXTURES",
+        "DIST_SKILLS",
+        "CONTROL_PROMPT",
+        "LIGHTWEIGHT_REPORT",
+        "IMPLEMENTATION_HANDOFF_TEMPLATE",
+        "REVIEW_HANDOFF_TEMPLATE",
+        "PROFESSIONAL_REGISTRY",
+        "FOUNDATION_REGISTRY",
+        "DOMAIN_REGISTRY",
+        "HOST_PROFILE_ROOTS",
+    )
+    saved = {name: globals()[name] for name in names}
+    ROOT = root.resolve()
+    FIXTURES = fixtures.resolve()
+    DIST_SKILLS = ROOT / "dist/universal/skills"
+    CONTROL_PROMPT = ROOT / "src/control-prompts/main-control-agent.md"
+    LIGHTWEIGHT_REPORT = lightweight_report.resolve()
+    IMPLEMENTATION_HANDOFF_TEMPLATE = ROOT / (
+        "src/control-skills/engineering-control-plane/references/"
+        "implementation-handoff-template.md"
+    )
+    REVIEW_HANDOFF_TEMPLATE = IMPLEMENTATION_HANDOFF_TEMPLATE.with_name(
+        "review-handoff-template.md"
+    )
+    PROFESSIONAL_REGISTRY = ROOT / "src/registry/professional-skills.yaml"
+    FOUNDATION_REGISTRY = ROOT / "src/registry/foundation-skills.yaml"
+    DOMAIN_REGISTRY = ROOT / "src/registry/domain-skills.yaml"
+    HOST_PROFILE_ROOTS = {
+        "codex": ROOT / "dist/codex/project/.codex/agents",
+        "claude": ROOT / "dist/claude/project/.claude/agents",
+        "copilot": ROOT / "dist/copilot/project/.github/agents",
+    }
+    try:
+        yield
+    finally:
+        globals().update(saved)
 CONTEXT_BUDGET_LIMITS = derived_context_budget_limits(CONTEXT_BUDGET_MODEL)
 FROZEN_GATES = {
     budget_class: limit["evolution_target"]
@@ -146,34 +205,78 @@ TRANSFER_EXCLUSIVE_CATEGORIES = (
 TRANSFER_OVERLAP_VIEWS = tuple(
     item for item in TRANSFER_CATEGORY_ORDER if item not in TRANSFER_EXCLUSIVE_CATEGORIES
 )
+COST_GATE_MINIMUM_REDUCTION_RATIO = 0.25
+COST_GATE_TARGET_REDUCTION_RATIO = 0.30
+END_TO_END_COMPONENTS = (
+    "always_loaded",
+    "dispatch_instructions",
+    "professional",
+    "layer3",
+    "selector",
+    "reference_partition",
+    "targeted_reference",
+    "cross_agent_transfer",
+)
+END_TO_END_STRUCTURAL_COUNTERS = (
+    "selector_load_count",
+    "reference_partition_load_count",
+    "envelope_count",
+    "reference_load_count",
+    "reference_tokens",
+    "handoff_count",
+    "handoff_tokens",
+    "same_assignment_duplicate_read_count",
+    "end_to_end_context_occurrence_count",
+)
+END_TO_END_COVERAGE_COUNTERS = (
+    "envelope_count",
+    "reference_load_count",
+    "handoff_count",
+    "same_assignment_duplicate_read_count",
+    "end_to_end_context_occurrence_count",
+)
+FOCUS_CURRENT_ONLY_MAP = {
+    "focus-review-digest-placeholder-blocked": "focus-review-summary-is-not-evidence",
+    "focus-review-command-output-placeholder-blocked": "focus-review-summary-is-not-evidence",
+    "focus-review-opaque-reference-blocked": "focus-review-summary-is-not-evidence",
+    "focus-review-path-only-blocked": "focus-review-summary-is-not-evidence",
+}
+FOCUS_SCENARIO_ACTORS = {
+    "finding": "review-agent",
+    "same-pattern": "task-agent",
+    "repair": "task-agent",
+    "review-level": "review-agent",
+    "analysis-level": "main-control-agent",
+    "review-readiness": "main-control-agent",
+    "capability-equivalence": "main-control-agent",
+    "cost": "task-agent",
+}
+FOCUS_PROFILE_HOSTS = ("codex", "claude", "copilot")
+REFERENCE_SEMANTIC_EQUIVALENCE = {
+    (
+        "api-contract-change",
+        "architecture-impact-reviewer",
+        "references/architecture-output-and-gates.md",
+    ): "architecture-consumer-and-data-impact",
+    (
+        "api-contract-change",
+        "architecture-impact-reviewer",
+        "references/consumer-and-data-impact.md",
+    ): "architecture-consumer-and-data-impact",
+    (
+        "single-module-feature",
+        "architecture-impact-reviewer",
+        "references/architecture-output-and-gates.md",
+    ): "architecture-placement-and-ownership",
+    (
+        "single-module-feature",
+        "architecture-impact-reviewer",
+        "references/placement-and-ownership.md",
+    ): "architecture-placement-and-ownership",
+}
 TRANSFER_MEASUREMENT_CONTRACT = {
-    "baseline_gross_tokens": 47_302,
-    "category_baseline_gross_tokens": {
-        "authority": 7_148,
-        "skill_reference": 1_421,
-        "task_capsule": 4_348,
-        "implementation_handoff": 11_200,
-        "evidence_ledger": 2_551,
-        "diff": 618,
-        "validation": 915,
-        "review_handoff": 27_118,
-        "repair_context": 329,
-        "duplicate_context": 3_297,
-        "superseded_evidence": 876,
-    },
-    "long_task_baseline_gross_tokens": {
-        "api-contract-change": 3_664,
-        "cache-stampede-reliability": 3_670,
-        "data-migration": 3_750,
-        "isolated-write-parallel-contract": 6_023,
-        "release-rollback": 3_671,
-        "repair-and-rereview": 6_434,
-        "security-ssrf-boundary": 3_647,
-        "shared-workspace-serial-write": 4_957,
-        "single-module-feature": 3_460,
-    },
-    "minimum_realized_reduction_ratio": 0.25,
-    "target_realized_reduction_ratio": 0.30,
+    "minimum_realized_reduction_ratio": COST_GATE_MINIMUM_REDUCTION_RATIO,
+    "target_realized_reduction_ratio": COST_GATE_TARGET_REDUCTION_RATIO,
 }
 TRANSFER_PROJECTION_FIELDS = {
     "task_to_implementation": (
@@ -500,28 +603,3645 @@ def _load_lightweight_long_task_ids(expected_case_ids: set[str]) -> set[str]:
     return _load_lightweight_prerequisite(expected_case_ids)[0]
 
 
-def _registered_long_task_baselines(
-    long_task_ids: set[str],
-) -> dict[str, int]:
-    baselines = TRANSFER_MEASUREMENT_CONTRACT[
-        "long_task_baseline_gross_tokens"
-    ]
-    missing = sorted(long_task_ids - set(baselines))
-    if missing:
-        raise ValueError(f"unregistered long-task transfer baseline: {missing}")
-    return {case_id: int(baselines[case_id]) for case_id in sorted(long_task_ids)}
-
-
 def _context_compaction_classification(ratio: float) -> str:
-    minimum = TRANSFER_MEASUREMENT_CONTRACT[
-        "minimum_realized_reduction_ratio"
-    ]
-    target = TRANSFER_MEASUREMENT_CONTRACT["target_realized_reduction_ratio"]
+    minimum = COST_GATE_MINIMUM_REDUCTION_RATIO
+    target = COST_GATE_TARGET_REDUCTION_RATIO
     if ratio < minimum:
         return "stop-below-threshold"
     if ratio < target:
         return "marginal"
     return "continue"
+
+
+def _manifest_input_identity(
+    dist_root: Path, expected_input: dict[str, Any]
+) -> tuple[dict[str, Any], list[str]]:
+    manifests: dict[str, dict[str, Any]] = {}
+    errors: list[str] = []
+    for profile in BUILD_PROFILES:
+        path = dist_root / profile / ".changeforge-build-manifest.json"
+        try:
+            raw = path.read_bytes()
+            manifest = json.loads(raw)
+        except (OSError, json.JSONDecodeError) as exc:
+            errors.append(f"{profile} manifest unavailable or malformed: {exc}")
+            continue
+        if not isinstance(manifest, dict) or manifest.get("profile") != profile:
+            errors.append(f"{profile} manifest profile identity mismatch")
+            continue
+        if manifest.get("compiled_layer3_format") != COMPILED_LAYER3_FORMAT:
+            errors.append(f"{profile} manifest compiled Layer 3 format mismatch")
+            continue
+        actual_input = manifest.get("authoritative_build_inputs")
+        if actual_input != expected_input:
+            errors.append(f"{profile} manifest authoritative input mismatch")
+            continue
+        manifests[profile] = {
+            "sha256": hashlib.sha256(raw).hexdigest(),
+            "authoritative_build_inputs": actual_input,
+        }
+    if errors:
+        return {}, errors
+    return manifests, []
+
+
+def _require_native_validator_report(
+    report: dict[str, Any], *, subject: str, expected_fixture_schema: int
+) -> None:
+    if (
+        report.get("status") != "pass"
+        or report.get("errors") != []
+        or report.get("fixture_schema_version") != expected_fixture_schema
+        or report.get("evidence_scope") != "deterministic-fixtures"
+    ):
+        raise ValueError(
+            f"{subject} native trajectory validation is not current and passing"
+        )
+
+
+def _native_dispatch_partition(
+    step: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    if step.get("action") != "dispatch":
+        raise ValueError("native dispatch partition requires a dispatch step")
+    if not isinstance(step.get("profile"), str) or not step["profile"]:
+        raise ValueError("native dispatch has no profile")
+    capsule_fields = [
+        name
+        for name in ("fixture_capsule", "utility_capsule")
+        if name in step
+    ]
+    if not capsule_fields:
+        raise ValueError("native dispatch requires capsule data")
+    instructions = {
+        name: copy.deepcopy(step[name]) for name in capsule_fields
+    }
+    if any(not isinstance(value, dict) for value in instructions.values()):
+        raise ValueError("native dispatch capsules must be mappings")
+    selector = {
+        key: copy.deepcopy(value)
+        for key, value in step.items()
+        if key not in capsule_fields
+    }
+    return selector, instructions
+
+
+def _subject_case_cost(
+    case: dict[str, Any],
+    transfer: dict[str, Any],
+    metrics: dict[str, Any],
+    route_obligations: dict[str, Any],
+) -> dict[str, Any]:
+    measurements = [
+        item
+        for item in case.get("measurements", [])
+        if item.get("host") == "codex"
+        and item.get("build_profile") == "recommended"
+    ]
+    if not measurements:
+        raise ValueError(
+            f"{case.get('id', '<missing>')}: a codex/recommended measurement is required"
+        )
+    components = {name: 0 for name in END_TO_END_COMPONENTS}
+    component_kind = {
+        "worker_profile": "always_loaded",
+        "analysis_profile": "always_loaded",
+        "task_profile": "always_loaded",
+        "review_profile": "always_loaded",
+        "utility_profile": "always_loaded",
+        "dispatch_capsule": "dispatch_instructions",
+        "primary_skill": "professional",
+        "layer3": "layer3",
+        "selector": "selector",
+        "layer3_reference": "targeted_reference",
+        "targeted_reference": "targeted_reference",
+    }
+    measured_total = 0
+    for measurement in measurements:
+        classified = 0
+        for item in measurement.get("components", []):
+            tokens = int(item.get("tokens", 0))
+            bucket = component_kind.get(str(item.get("kind") or ""))
+            if bucket is None:
+                components["always_loaded"] += tokens
+            else:
+                components[bucket] += tokens
+            classified += tokens
+        dispatch_total = int(measurement.get("total_tokens", classified))
+        if classified < dispatch_total:
+            components["always_loaded"] += dispatch_total - classified
+        measured_total += dispatch_total
+    transfer_tokens = int(transfer.get("gross_tokens", 0))
+    categories = transfer.get("categories", {})
+    selector_tokens = int(categories.get("skill_reference", {}).get("gross_tokens", 0))
+    components["selector"] += selector_tokens
+    components["cross_agent_transfer"] = transfer_tokens - selector_tokens
+    handoff_tokens = sum(
+        int(categories.get(name, {}).get("gross_tokens", 0))
+        for name in (
+            "implementation_handoff",
+            "review_handoff",
+            "repair_context",
+        )
+    )
+    handoff_count = int(
+        metrics.get("handoff_count", len(transfer.get("boundary_rows", [])))
+    )
+    selector_load_count = int(metrics.get("selector_load_count", 0))
+    reference_load_count = int(metrics.get("reference_load_count", 0))
+    structural = {
+        "selector_load_count": selector_load_count,
+        "reference_partition_load_count": 0,
+        "envelope_count": selector_load_count,
+        "reference_load_count": reference_load_count,
+        "reference_tokens": components["targeted_reference"],
+        "handoff_count": handoff_count,
+        "handoff_tokens": handoff_tokens,
+        "same_assignment_duplicate_read_count": int(
+            metrics.get("same_assignment_duplicate_read_count", 0)
+        ),
+        "end_to_end_context_occurrence_count": int(
+            metrics.get(
+                "end_to_end_context_occurrence_count",
+                selector_load_count + reference_load_count + handoff_count,
+            )
+        ),
+    }
+    return {
+        "id": str(case.get("id") or "<missing>"),
+        "route_obligations": route_obligations,
+        "component_tokens": components,
+        "structural": structural,
+        "total_task_tokens": measured_total + transfer_tokens,
+    }
+
+
+def _comparison_value(baseline: int, candidate: int) -> dict[str, int]:
+    return {
+        "baseline": baseline,
+        "candidate": candidate,
+        "delta": candidate - baseline,
+    }
+
+
+def _focus_semantic_obligation(case: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "scenario": case.get("scenario"),
+        "decision": case.get("decision"),
+        "expected_valid": case.get("expected_valid"),
+        "expected_error": case.get("expected_error"),
+    }
+
+
+def _canonical_focus_mapping(
+    candidate_document: dict[str, Any],
+    baseline_document: dict[str, Any],
+    *,
+    overrides: dict[str, str | list[str]] | None = None,
+) -> dict[str, Any]:
+    candidate_cases = {
+        str(item.get("id")): item
+        for item in candidate_document.get("task_focus_cases", [])
+        if isinstance(item, dict) and item.get("id")
+    }
+    baseline_cases = {
+        str(item.get("id")): item
+        for item in baseline_document.get("task_focus_cases", [])
+        if isinstance(item, dict) and item.get("id")
+    }
+    mapping = FOCUS_CURRENT_ONLY_MAP if overrides is None else overrides
+    rows: list[dict[str, Any]] = []
+    errors: list[str] = []
+    for canonical_id, candidate in candidate_cases.items():
+        native: str | list[str] | None = (
+            canonical_id if canonical_id in baseline_cases else mapping.get(canonical_id)
+        )
+        if native is None:
+            errors.append(f"{canonical_id}: unmapped current task-focus case")
+            continue
+        if isinstance(native, list):
+            errors.append(f"{canonical_id}: ambiguous native mapping {native}")
+            continue
+        baseline = baseline_cases.get(native)
+        if baseline is None:
+            errors.append(f"{canonical_id}: missing-native-binding {native}")
+            continue
+        candidate_obligation = _focus_semantic_obligation(candidate)
+        baseline_obligation = _focus_semantic_obligation(baseline)
+        if candidate_obligation != baseline_obligation:
+            errors.append(f"{canonical_id}: semantic-mismatch")
+            continue
+        candidate_text = json.dumps(
+            candidate, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        )
+        baseline_text = json.dumps(
+            baseline, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        )
+        state = (
+            "raw-route-equal"
+            if canonical_id == native and candidate_text == baseline_text
+            else "source-derived-semantic-equivalent"
+        )
+        rows.append(
+            {
+                "canonical_id": canonical_id,
+                "candidate_native_id": canonical_id,
+                "baseline_native_id": native,
+                "state": state,
+                "semantic_obligation": candidate_obligation,
+                "route_obligations": {
+                    "professional": [],
+                    "layer3": [],
+                    "domain": [],
+                    "review": [],
+                    "references": [],
+                    "not_applicable_basis": "task-focus case contains no Task dispatch",
+                },
+                "candidate_native_sha256": _sha256_text(candidate_text),
+                "baseline_native_sha256": _sha256_text(baseline_text),
+                "raw_physical_route_equal": state == "raw-route-equal",
+            }
+        )
+    if len(rows) != len(candidate_cases):
+        errors.append(
+            f"canonical focus coverage is incomplete: {len(rows)}/{len(candidate_cases)}"
+        )
+    digest = hashlib.sha256(
+        json.dumps(rows, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode(
+            "utf-8"
+        )
+    ).hexdigest()
+    return {
+        "status": "pass" if not errors else "fail",
+        "rows": rows,
+        "mapping_digest": digest,
+        "errors": errors,
+    }
+
+
+def _canonical_trajectory_mapping(
+    candidate_document: dict[str, Any],
+    baseline_document: dict[str, Any],
+    *,
+    candidate_root: Path,
+    baseline_root: Path,
+) -> dict[str, Any]:
+    candidate_cases = {
+        str(case.get("id") or ""): case
+        for _group, case in _fixture_cases(candidate_document)
+    }
+    baseline_cases = {
+        str(case.get("id") or ""): case
+        for _group, case in _fixture_cases(baseline_document)
+    }
+    errors: list[str] = []
+    if "" in candidate_cases or "" in baseline_cases:
+        errors.append("native trajectory mapping contains a missing case id")
+    if set(candidate_cases) != set(baseline_cases):
+        errors.append("native trajectory case coverage differs")
+    rows: list[dict[str, Any]] = []
+    for case_id in sorted(set(candidate_cases) & set(baseline_cases)):
+        candidate_route, candidate_raw = _route_obligations(
+            candidate_cases[case_id], candidate_root
+        )
+        baseline_route, baseline_raw = _route_obligations(
+            baseline_cases[case_id], baseline_root
+        )
+        if candidate_route != baseline_route:
+            errors.append(f"{case_id}: native trajectory obligation-mismatch")
+            continue
+        candidate_text = _canonical_json_text(candidate_cases[case_id])
+        baseline_text = _canonical_json_text(baseline_cases[case_id])
+        raw_equal = candidate_raw == baseline_raw and candidate_text == baseline_text
+        rows.append(
+            {
+                "canonical_id": case_id,
+                "candidate_native_id": case_id,
+                "baseline_native_id": case_id,
+                "state": (
+                    "raw-route-equal"
+                    if raw_equal
+                    else "source-derived-semantic-equivalent"
+                ),
+                "semantic_obligation": candidate_route,
+                "candidate_native_sha256": _sha256_text(candidate_text),
+                "baseline_native_sha256": _sha256_text(baseline_text),
+                "raw_physical_route_equal": raw_equal,
+                "raw_route_difference": {
+                    "baseline": baseline_raw,
+                    "candidate": candidate_raw,
+                },
+            }
+        )
+    if len(rows) != len(candidate_cases):
+        errors.append(
+            "canonical trajectory coverage is incomplete: "
+            f"{len(rows)}/{len(candidate_cases)}"
+        )
+    digest = hashlib.sha256(
+        _canonical_json_text(rows).encode("utf-8")
+    ).hexdigest()
+    return {
+        "status": "pass" if not errors else "fail",
+        "rows": rows,
+        "mapping_digest": digest,
+        "errors": errors,
+    }
+
+
+def _role_for_core_capability(core: dict[str, Any], capability_id: str) -> str:
+    role_capabilities = core.get("profile_contract", {}).get(
+        "role_capabilities", {}
+    )
+    matches = [
+        role
+        for role, contract in role_capabilities.items()
+        if isinstance(contract, dict)
+        and capability_id in contract.get("required_capability_ids", [])
+    ]
+    if len(matches) != 1:
+        raise ValueError(
+            f"Core capability {capability_id!r} has ambiguous actor binding: {matches}"
+        )
+    return str(matches[0])
+
+
+def _focus_case_actor_authority(
+    native_case: dict[str, Any], core: dict[str, Any]
+) -> tuple[str, str, Any]:
+    scenario = native_case.get("scenario")
+    expected_actor = FOCUS_SCENARIO_ACTORS.get(str(scenario))
+    if expected_actor is None:
+        raise ValueError(f"unknown task-focus consumer scenario {scenario!r}")
+    implementation_capability = core.get("implementation_discipline_contract", {}).get(
+        "profile_capability_id"
+    )
+    review_contract = core.get("review_discipline_contract", {})
+    review_policy = review_contract.get("effective_level_policy", {})
+    readiness = review_contract.get("review_input_readiness", {})
+    authority_pointer: str
+    authority_value: Any
+    if scenario == "finding":
+        authority_pointer = (
+            "/review_discipline_contract/effective_level_policy/"
+            "finding_merge_owner"
+        )
+        authority_value = review_policy.get("finding_merge_owner")
+        actor = authority_value
+    elif scenario == "review-level":
+        authority_pointer = (
+            "/review_discipline_contract/effective_level_policy/"
+            "final_review_profile"
+        )
+        authority_value = review_policy.get("final_review_profile")
+        actor = authority_value
+    elif scenario in {"review-readiness", "capability-equivalence"}:
+        authority_pointer = (
+            "/review_discipline_contract/review_input_readiness/consumer"
+        )
+        authority_value = readiness.get("consumer")
+        actor = (
+            authority_value.removesuffix("-before-review-dispatch")
+            if isinstance(authority_value, str)
+            else None
+        )
+        if scenario == "capability-equivalence":
+            capability_contract = review_contract.get(
+                "generic_capability_contract"
+            )
+            if (
+                not isinstance(capability_contract, dict)
+                or not isinstance(capability_contract.get("fields"), list)
+                or not capability_contract["fields"]
+            ):
+                raise ValueError(
+                    "capability-equivalence lacks a closed Core capability contract"
+                )
+    elif scenario == "analysis-level":
+        authority_pointer = (
+            "/execution_level_contract/lifecycle/first_computation_point"
+        )
+        authority_value = core.get("execution_level_contract", {}).get(
+            "lifecycle", {}
+        ).get("first_computation_point")
+        if authority_value != "first-executable-slice-or-direct-executable-task":
+            raise ValueError("analysis-level Core computation authority is unknown")
+        actor = _role_for_core_capability(core, "main-prompt-single-load")
+        inputs = native_case.get("inputs", {})
+        decision = native_case.get("decision", {})
+        expected_points = {
+            "analyzed": "first-executable-slice",
+            "direct": "direct-executable-task",
+        }
+        route_path = inputs.get("route_path") if isinstance(inputs, dict) else None
+        if (
+            route_path not in expected_points
+            or not isinstance(decision, dict)
+            or decision.get("level_computation_point")
+            != expected_points[route_path]
+        ):
+            raise ValueError(
+                "analysis-level route path disagrees with Core computation point"
+            )
+    else:
+        authority_pointer = (
+            "/implementation_discipline_contract/profile_capability_id"
+        )
+        authority_value = implementation_capability
+        if not isinstance(authority_value, str) or not authority_value:
+            raise ValueError("task-focus implementation consumer authority is missing")
+        actor = _role_for_core_capability(core, authority_value)
+        if scenario == "same-pattern":
+            same_pattern = core.get("task_contract", {}).get(
+                "same_pattern_scan", {}
+            )
+            if same_pattern.get("required") is not True or not same_pattern.get(
+                "routes"
+            ):
+                raise ValueError("same-pattern Core authority is incomplete")
+        elif scenario == "repair":
+            if (
+                core.get("task_contract", {})
+                .get("repair_routing", {})
+                .get("current_task_blocking")
+                != "task-agent-repair"
+            ):
+                raise ValueError("repair Core actor authority disagrees")
+        elif scenario == "cost":
+            if (
+                review_policy.get("ordinary_l1_l3_agent_count_increase") is not False
+                or review_policy.get("ordinary_l1_l3_review_round_increase") is not False
+            ):
+                raise ValueError("ordinary-cost Core conservation authority disagrees")
+    if actor != expected_actor:
+        raise ValueError(
+            f"{scenario} Core actor disagreement: expected {expected_actor}, got {actor}"
+        )
+    return expected_actor, authority_pointer, authority_value
+
+
+def _focus_actor_profile_binding(
+    native_case: dict[str, Any], subject_root: Path
+) -> dict[str, Any]:
+    core_path = subject_root / "src/control-model/core-contracts.json"
+    profile_authority_path = subject_root / "src/agent-profiles/role-agents.json"
+    try:
+        core_raw = core_path.read_bytes()
+        core = json.loads(core_raw)
+        profile_authority_raw = profile_authority_path.read_bytes()
+        profile_authority = json.loads(profile_authority_raw)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"task-focus subject authority is unavailable: {exc}") from exc
+    if not isinstance(core, dict) or not isinstance(profile_authority, dict):
+        raise ValueError("task-focus subject authority must be an object")
+    actor, authority_pointer, authority_value = _focus_case_actor_authority(
+        native_case, core
+    )
+    profiles = profile_authority.get("profiles")
+    matches = [
+        item
+        for item in profiles if isinstance(item, dict) and item.get("name") == actor
+    ] if isinstance(profiles, list) else []
+    if len(matches) != 1:
+        raise ValueError(
+            f"task-focus actor {actor!r} has no unique source Profile binding"
+        )
+    host_paths = {
+        "codex": subject_root
+        / "dist/codex/project/.codex/agents"
+        / f"{actor}.toml",
+        "claude": subject_root
+        / "dist/claude/project/.claude/agents"
+        / f"{actor}.md",
+        "copilot": subject_root
+        / "dist/copilot/project/.github/agents"
+        / f"{actor}.agent.md",
+    }
+    generated_profiles: list[dict[str, Any]] = []
+    for host in FOCUS_PROFILE_HOSTS:
+        generated_path = host_paths[host]
+        if not generated_path.is_file() or _uses_symlink(generated_path, subject_root):
+            raise ValueError(
+                f"task-focus actor {actor!r} generated {host} Profile is missing "
+                "or symlinked"
+            )
+        try:
+            generated_raw = generated_path.read_bytes()
+        except OSError as exc:
+            raise ValueError(
+                f"task-focus actor {actor!r} generated {host} Profile is missing"
+            ) from exc
+        generated_profiles.append(
+            {
+                "host": host,
+                "path": generated_path.relative_to(subject_root).as_posix(),
+                "sha256": hashlib.sha256(generated_raw).hexdigest(),
+                "tokens": count_o200k_base_tokens(
+                    generated_raw.decode("utf-8")
+                ),
+                "content_scope": "complete-subject-native-profile",
+            }
+        )
+    manifest_bindings: dict[str, dict[str, dict[str, str]]] = {}
+    for build_profile in BUILD_PROFILES:
+        manifest_path = subject_root / (
+            "dist/universal/skills/"
+            f"{build_profile}/.changeforge-build-manifest.json"
+        )
+        try:
+            manifest_raw = manifest_path.read_bytes()
+            manifest = json.loads(manifest_raw)
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError(
+                f"task-focus {build_profile} manifest is unavailable"
+            ) from exc
+        if manifest.get("profile") != build_profile:
+            raise ValueError(
+                f"task-focus {build_profile} manifest identity is stale"
+            )
+        host_bindings: dict[str, dict[str, str]] = {}
+        for generated in generated_profiles:
+            host = generated["host"]
+            expected_sha256 = (
+                manifest.get("agent_profile_sha256", {})
+                .get(host, {})
+                .get(actor)
+                if isinstance(manifest, dict)
+                else None
+            )
+            if expected_sha256 != generated["sha256"]:
+                raise ValueError(
+                    f"task-focus {build_profile} manifest has stale "
+                    f"{host}/{actor} Profile binding"
+                )
+            host_bindings[str(host)] = {
+                "manifest_sha256": hashlib.sha256(manifest_raw).hexdigest(),
+                "profile_sha256": str(expected_sha256),
+            }
+        manifest_bindings[build_profile] = host_bindings
+    return {
+        "actor": actor,
+        "profile": actor,
+        "scenario": native_case["scenario"],
+        "core_authority": {
+            "path": core_path.relative_to(subject_root).as_posix(),
+            "sha256": hashlib.sha256(core_raw).hexdigest(),
+            "pointer": authority_pointer,
+            "value": authority_value,
+        },
+        "profile_authority": {
+            "path": profile_authority_path.relative_to(subject_root).as_posix(),
+            "sha256": hashlib.sha256(profile_authority_raw).hexdigest(),
+            "source_profile_sha256": _sha256_text(
+                _canonical_json_text(matches[0])
+            ),
+        },
+        "host_order": list(FOCUS_PROFILE_HOSTS),
+        "generated_profiles": generated_profiles,
+        "manifest_bindings": manifest_bindings,
+    }
+
+
+def _focus_case_cost(
+    row: dict[str, Any],
+    native_case: dict[str, Any],
+    subject_root: Path,
+    *,
+    subject: str,
+    host: str,
+) -> dict[str, Any]:
+    if host not in FOCUS_PROFILE_HOSTS:
+        raise ValueError(f"task-focus host binding is invalid: {host!r}")
+    binding = _focus_actor_profile_binding(native_case, subject_root)
+    binding = {**binding, "measured_host": host}
+    native_bytes_case = copy.deepcopy(native_case)
+    if native_bytes_case.get("native_case_id"):
+        native_bytes_case["id"] = native_bytes_case.pop("native_case_id")
+    case_text = json.dumps(
+        native_bytes_case, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    )
+    components = {name: 0 for name in END_TO_END_COMPONENTS}
+    generated_profile = next(
+        item for item in binding["generated_profiles"] if item["host"] == host
+    )
+    components["always_loaded"] = generated_profile["tokens"]
+    logical_case_id = str(row["canonical_id"])
+    return {
+        "id": f"{logical_case_id}::{host}",
+        "logical_case_id": logical_case_id,
+        "host": host,
+        "native_case_id": str(row[f"{subject}_native_id"]),
+        "mapping_state": row["state"],
+        "semantic_obligation": row["semantic_obligation"],
+        "route_obligations": row["route_obligations"],
+        "raw_route_obligations": row["route_obligations"],
+        "native_reference_bindings": [],
+        "actor_profile_binding": binding,
+        "component_tokens": components,
+        "structural": {
+            "selector_load_count": 0,
+            "reference_partition_load_count": 0,
+            "envelope_count": 0,
+            "reference_load_count": 0,
+            "reference_tokens": 0,
+            "handoff_count": 0,
+            "handoff_tokens": 0,
+            "same_assignment_duplicate_read_count": 0,
+            "end_to_end_context_occurrence_count": 1,
+        },
+        "total_task_tokens": components["always_loaded"],
+        "native_sources": {
+            "fixture_case": {
+                "path": f"fixture:{row[f'{subject}_native_id']}",
+                "sha256": row[f"{subject}_native_sha256"],
+                "tokens": count_o200k_base_tokens(case_text),
+                "content_scope": "oracle-only-not-loaded",
+            },
+            "core": {
+                **binding["core_authority"],
+                "content_scope": "authority-only-not-loaded",
+            },
+            "profiles": [generated_profile],
+        },
+    }
+
+
+def _native_reference_differences(
+    case_id: str,
+    baseline: object,
+    candidate: object,
+    errors: list[str],
+) -> list[dict[str, Any]]:
+    baseline_rows = baseline if isinstance(baseline, list) else []
+    candidate_rows = candidate if isinstance(candidate, list) else []
+    required = {
+        "semantic_obligation",
+        "physical_path",
+        "reference_type",
+        "required_outputs",
+        "registry_sha256",
+        "source_sha256",
+        "tokens",
+        "content_scope",
+    }
+    for label, rows in (("baseline", baseline_rows), ("candidate", candidate_rows)):
+        for row in rows:
+            if not isinstance(row, dict) or not required <= set(row):
+                errors.append(f"{case_id}: hidden physical {label} Reference difference")
+            elif row.get("content_scope") != "complete-native-bytes":
+                errors.append(f"{case_id}: extracted span cannot replace native bytes")
+
+    def by_semantic(rows: list[object]) -> dict[str, list[dict[str, Any]]]:
+        grouped: dict[str, list[dict[str, Any]]] = {}
+        for row in rows:
+            if isinstance(row, dict) and required <= set(row):
+                grouped.setdefault(str(row["semantic_obligation"]), []).append(row)
+        return grouped
+
+    baseline_by_semantic = by_semantic(baseline_rows)
+    candidate_by_semantic = by_semantic(candidate_rows)
+    if set(baseline_by_semantic) != set(candidate_by_semantic):
+        errors.append(f"{case_id}: native Reference semantic obligations differ")
+    result: list[dict[str, Any]] = []
+    for semantic in sorted(set(baseline_by_semantic) & set(candidate_by_semantic)):
+        before_rows = baseline_by_semantic[semantic]
+        after_rows = candidate_by_semantic[semantic]
+        if len(before_rows) != len(after_rows):
+            errors.append(
+                f"{case_id}: native Reference occurrence cardinality differs for "
+                f"{semantic}: baseline={len(before_rows)} candidate={len(after_rows)}"
+            )
+        for occurrence, (before, after) in enumerate(zip(before_rows, after_rows)):
+            result.append(
+                {
+                    "semantic_obligation": semantic,
+                    "occurrence": occurrence,
+                    "state": (
+                        "raw-route-equal"
+                        if before == after
+                        else "source-derived-semantic-equivalent"
+                    ),
+                    "baseline": before,
+                    "candidate": after,
+                    "raw_physical_route_equal": before == after,
+                }
+            )
+    return result
+
+
+def _actor_profile_differences(
+    case_id: str,
+    host: str,
+    baseline: object,
+    candidate: object,
+    before_components: dict[str, Any],
+    after_components: dict[str, Any],
+    errors: list[str],
+) -> list[dict[str, Any]]:
+    if baseline is None and candidate is None:
+        return []
+    if not isinstance(baseline, dict) or not isinstance(candidate, dict):
+        errors.append(f"{case_id}: actor/Profile binding differs between subjects")
+        return []
+    required_binding_fields = {
+        "actor",
+        "profile",
+        "scenario",
+        "core_authority",
+        "profile_authority",
+        "host_order",
+        "generated_profiles",
+        "manifest_bindings",
+        "measured_host",
+    }
+    for label, binding in (("baseline", baseline), ("candidate", candidate)):
+        if not required_binding_fields <= set(binding):
+            errors.append(f"{case_id}: {label} actor/Profile authority is incomplete")
+        manifest_bindings = binding.get("manifest_bindings")
+        if not isinstance(manifest_bindings, dict) or list(
+            manifest_bindings
+        ) != list(BUILD_PROFILES):
+            errors.append(f"{case_id}: {label} actor/Profile manifests are incomplete")
+        elif any(
+            list(host_bindings) != list(FOCUS_PROFILE_HOSTS)
+            for host_bindings in manifest_bindings.values()
+            if isinstance(host_bindings, dict)
+        ) or any(
+            not isinstance(host_bindings, dict)
+            for host_bindings in manifest_bindings.values()
+        ):
+            errors.append(
+                f"{case_id}: {label} actor/Profile manifest host coverage is incomplete"
+            )
+    for field in ("actor", "profile", "scenario", "host_order", "measured_host"):
+        if baseline.get(field) != candidate.get(field):
+            errors.append(
+                f"{case_id}: actor/Profile {field} differs between subjects"
+            )
+    expected_hosts = list(FOCUS_PROFILE_HOSTS)
+    result: list[dict[str, Any]] = []
+    selected_tokens: list[int] = []
+    for label, binding in (("baseline", baseline), ("candidate", candidate)):
+        if binding.get("measured_host") != host:
+            errors.append(f"{case_id}: {label} actor/Profile host binding is invalid")
+        if binding.get("host_order") != expected_hosts:
+            errors.append(f"{case_id}: {label} actor/Profile host order is invalid")
+        rows = binding.get("generated_profiles")
+        if not isinstance(rows, list) or [
+            item.get("host") if isinstance(item, dict) else None for item in rows
+        ] != expected_hosts:
+            errors.append(
+                f"{case_id}: {label} actor/Profile host coverage is incomplete"
+            )
+            selected_tokens.append(-1)
+            continue
+        valid_selected = -1
+        for item in rows:
+            if (
+                set(item)
+                != {"host", "path", "sha256", "tokens", "content_scope"}
+                or type(item.get("tokens")) is not int
+                or item["tokens"] < 0
+                or item.get("content_scope")
+                != "complete-subject-native-profile"
+            ):
+                errors.append(
+                    f"{case_id}: {label} actor/Profile host row is malformed"
+                )
+                valid_selected = -1
+                break
+            if item["host"] == host:
+                valid_selected = item["tokens"]
+        selected_tokens.append(valid_selected)
+    if len(selected_tokens) == 2:
+        if selected_tokens[0] != before_components.get("always_loaded"):
+            errors.append(
+                f"{case_id}: baseline actor/Profile total is not fully accounted"
+            )
+        if selected_tokens[1] != after_components.get("always_loaded"):
+            errors.append(
+                f"{case_id}: candidate actor/Profile total is not fully accounted"
+            )
+    baseline_rows = baseline.get("generated_profiles", [])
+    candidate_rows = candidate.get("generated_profiles", [])
+    if (
+        isinstance(baseline_rows, list)
+        and isinstance(candidate_rows, list)
+        and len(baseline_rows) == len(candidate_rows) == len(expected_hosts)
+    ):
+        for row_host, before, after in zip(
+            expected_hosts, baseline_rows, candidate_rows
+        ):
+            if row_host != host:
+                continue
+            if not isinstance(before, dict) or not isinstance(after, dict):
+                continue
+            result.append(
+                {
+                    "host": row_host,
+                    "baseline_path": before.get("path"),
+                    "candidate_path": after.get("path"),
+                    "tokens": _comparison_value(
+                        int(before.get("tokens", 0)),
+                        int(after.get("tokens", 0)),
+                    ),
+                }
+            )
+    return result
+
+
+def _host_complete_case_matrix(
+    label: str,
+    cases: object,
+    identity: object,
+    errors: list[str],
+) -> dict[str, Any]:
+    if not isinstance(cases, list):
+        errors.append(f"{label} measured subject cases are not a list")
+        return {"logical_case_count": 0, "host_pair_count": 0}
+    grouped: dict[str, list[str]] = {}
+    for case in cases:
+        if not isinstance(case, dict):
+            errors.append(f"{label} measured subject contains a non-object case")
+            continue
+        logical_case_id = case.get("logical_case_id")
+        host = case.get("host")
+        if not isinstance(logical_case_id, str) or not logical_case_id:
+            errors.append(f"{label} measured subject case lacks logical host binding")
+            continue
+        if host not in FOCUS_PROFILE_HOSTS:
+            errors.append(
+                f"{logical_case_id}: {label} measured subject host binding is invalid"
+            )
+            continue
+        if case.get("id") != f"{logical_case_id}::{host}":
+            errors.append(
+                f"{logical_case_id}: {label} measured subject cross-host id binding"
+            )
+        grouped.setdefault(logical_case_id, []).append(str(host))
+        native_sources = case.get("native_sources")
+        source_rows = (
+            native_sources.get("components", [])
+            if isinstance(native_sources, dict)
+            else []
+        )
+        if not isinstance(source_rows, list):
+            errors.append(f"{case['id']}: {label} native component rows are invalid")
+            continue
+        for source in source_rows:
+            if not isinstance(source, dict):
+                errors.append(f"{case['id']}: {label} native component row is invalid")
+                continue
+            if source.get("host") != host:
+                errors.append(f"{case['id']}: {label} cross-host component binding")
+            if (
+                source.get("kind") == "native-selector-envelope"
+                and source.get("bucket") != "cross_agent_transfer"
+            ):
+                errors.append(
+                    f"{case['id']}: {label} selector envelope component overlap"
+                )
+        if source_rows:
+            component_tokens = case.get("component_tokens")
+            structural = case.get("structural")
+            if not isinstance(component_tokens, dict) or not isinstance(structural, dict):
+                errors.append(f"{case['id']}: {label} native row accounting is incomplete")
+            else:
+                source_totals = {name: 0 for name in END_TO_END_COMPONENTS}
+                valid_sources = True
+                for source in source_rows:
+                    if not isinstance(source, dict):
+                        valid_sources = False
+                        continue
+                    bucket = source.get("bucket")
+                    tokens = source.get("tokens")
+                    load_count = source.get("load_count")
+                    if (
+                        bucket not in END_TO_END_COMPONENTS
+                        or type(tokens) is not int
+                        or tokens < 0
+                        or type(load_count) is not int
+                        or load_count < 1
+                    ):
+                        valid_sources = False
+                        continue
+                    source_totals[str(bucket)] += tokens * load_count
+                handoffs = native_sources.get("handoffs", [])
+                if not isinstance(handoffs, list):
+                    valid_sources = False
+                    handoffs = []
+                for handoff in handoffs:
+                    if (
+                        not isinstance(handoff, dict)
+                        or handoff.get("host") != host
+                        or type(handoff.get("tokens")) is not int
+                        or handoff["tokens"] < 0
+                    ):
+                        valid_sources = False
+                        continue
+                    source_totals["cross_agent_transfer"] += handoff["tokens"]
+                if not valid_sources or any(
+                    component_tokens.get(bucket) != total
+                    for bucket, total in source_totals.items()
+                ):
+                    errors.append(
+                        f"{case['id']}: {label} native component rows do not reconcile"
+                    )
+                expected_counters = {
+                    "selector_load_count": sum(
+                        int(source.get("load_count", 0))
+                        for source in source_rows
+                        if isinstance(source, dict) and source.get("bucket") == "selector"
+                    ),
+                    "reference_partition_load_count": sum(
+                        int(source.get("load_count", 0))
+                        for source in source_rows
+                        if isinstance(source, dict)
+                        and source.get("bucket") == "reference_partition"
+                    ),
+                    "envelope_count": sum(
+                        source.get("kind") == "native-selector-envelope"
+                        for source in source_rows
+                        if isinstance(source, dict)
+                    ),
+                    "reference_load_count": sum(
+                        source.get("kind")
+                        in {"professional-reference", "layer3-reference"}
+                        for source in source_rows
+                        if isinstance(source, dict)
+                    ),
+                    "reference_tokens": source_totals["targeted_reference"],
+                    "handoff_count": len(handoffs)
+                    + sum(
+                        source.get("kind") == "native-selector-envelope"
+                        for source in source_rows
+                        if isinstance(source, dict)
+                    ),
+                    "handoff_tokens": sum(
+                        int(item.get("tokens", 0))
+                        for item in handoffs
+                        if isinstance(item, dict)
+                    ),
+                }
+                if any(
+                    structural.get(field) != expected
+                    for field, expected in expected_counters.items()
+                ):
+                    errors.append(
+                        f"{case['id']}: {label} native structural rows do not reconcile"
+                    )
+        actor_binding = case.get("actor_profile_binding")
+        if isinstance(actor_binding, dict) and actor_binding.get("measured_host") != host:
+            errors.append(f"{case['id']}: {label} actor/Profile cross-host binding")
+    for logical_case_id, hosts in grouped.items():
+        if hosts != list(FOCUS_PROFILE_HOSTS):
+            errors.append(
+                f"{logical_case_id}: {label} host matrix is incomplete or unordered"
+            )
+    logical_case_count = len(grouped)
+    host_pair_count = len(cases)
+    if not isinstance(identity, dict):
+        errors.append(f"{label} measured subject identity is invalid")
+    else:
+        expected_identity = {
+            "logical_case_count": logical_case_count,
+            "host_pair_count": host_pair_count,
+            "host_order": list(FOCUS_PROFILE_HOSTS),
+        }
+        for field, expected in expected_identity.items():
+            if identity.get(field) != expected:
+                errors.append(f"{label} measured subject {field} identity mismatch")
+    return {
+        "logical_case_count": logical_case_count,
+        "host_pair_count": host_pair_count,
+        "host_order": list(FOCUS_PROFILE_HOSTS),
+    }
+
+
+def _compare_end_to_end_subjects(
+    baseline: dict[str, Any], candidate: dict[str, Any]
+) -> dict[str, Any]:
+    errors: list[str] = []
+    baseline_identity = baseline.get("identity", {})
+    candidate_identity = candidate.get("identity", {})
+    for label, identity in (
+        ("baseline", baseline_identity),
+        ("candidate", candidate_identity),
+    ):
+        if identity.get("measurement_source") != "isolated-built-subject":
+            errors.append(f"{label} is not an isolated measured subject")
+        for field in (
+            "evaluator_sha256",
+            "lightweight_evaluator_sha256",
+            "canonical_corpus_digest",
+            "tokenizer",
+        ):
+            if not identity.get(field):
+                errors.append(f"{label} measured subject lacks {field}")
+        if not identity.get("native_fixture_sha256"):
+            errors.append(f"{label} measured subject lacks native fixture identity")
+        if not isinstance(identity.get("native_schema"), dict):
+            errors.append(f"{label} measured subject lacks native schema identity")
+        if not identity.get("native_validator_sha256"):
+            errors.append(f"{label} measured subject lacks native validator identity")
+        authoritative = identity.get("authoritative_build_inputs")
+        manifests = identity.get("manifests")
+        if not isinstance(authoritative, dict) or not isinstance(manifests, dict):
+            errors.append(f"{label} measured subject lacks manifest identity")
+            continue
+        if set(manifests) != set(BUILD_PROFILES):
+            errors.append(f"{label} measured subject lacks all build manifests")
+        for profile, manifest in manifests.items():
+            if manifest.get("authoritative_build_inputs") != authoritative:
+                errors.append(
+                    f"{label} {profile} manifest authoritative input mismatch"
+                )
+    for field in (
+        "evaluator_sha256",
+        "lightweight_evaluator_sha256",
+        "canonical_corpus_digest",
+        "tokenizer",
+    ):
+        if baseline_identity.get(field) != candidate_identity.get(field):
+            errors.append(f"subjects do not use the same {field}")
+
+    baseline_matrix = _host_complete_case_matrix(
+        "baseline", baseline.get("cases"), baseline_identity, errors
+    )
+    candidate_matrix = _host_complete_case_matrix(
+        "candidate", candidate.get("cases"), candidate_identity, errors
+    )
+    if baseline_matrix != candidate_matrix:
+        errors.append("measured subject host matrices differ")
+
+    baseline_cases = {
+        str(item.get("id")): item for item in baseline.get("cases", [])
+    }
+    candidate_cases = {
+        str(item.get("id")): item for item in candidate.get("cases", [])
+    }
+    if set(baseline_cases) != set(candidate_cases):
+        errors.append("measured subject case coverage differs")
+    rows: list[dict[str, Any]] = []
+    baseline_total = 0
+    candidate_total = 0
+    baseline_by_host = {host: 0 for host in FOCUS_PROFILE_HOSTS}
+    candidate_by_host = {host: 0 for host in FOCUS_PROFILE_HOSTS}
+    component_baseline = {name: 0 for name in END_TO_END_COMPONENTS}
+    component_candidate = {name: 0 for name in END_TO_END_COMPONENTS}
+    component_by_host = {
+        host: {
+            "baseline": {name: 0 for name in END_TO_END_COMPONENTS},
+            "candidate": {name: 0 for name in END_TO_END_COMPONENTS},
+        }
+        for host in FOCUS_PROFILE_HOSTS
+    }
+    ordinary_route_regressions: list[dict[str, Any]] = []
+    ordinary_route_errors: list[str] = []
+    for case_id in sorted(set(baseline_cases) & set(candidate_cases)):
+        before = baseline_cases[case_id]
+        after = candidate_cases[case_id]
+        host = before.get("host")
+        if host != after.get("host") or host not in FOCUS_PROFILE_HOSTS:
+            errors.append(f"{case_id}: subject host bindings differ")
+        if before.get("route_obligations") != after.get("route_obligations"):
+            errors.append(f"{case_id}: route obligations differ between subjects")
+        before_mapping_state = before.get("mapping_state")
+        after_mapping_state = after.get("mapping_state")
+        if before_mapping_state != after_mapping_state:
+            errors.append(f"{case_id}: mapping states differ between subjects")
+        before_structural = before.get("structural", {})
+        after_structural = after.get("structural", {})
+        for field in END_TO_END_COVERAGE_COUNTERS:
+            if before_structural.get(field) != after_structural.get(field):
+                errors.append(f"{case_id}: coverage counter {field} differs")
+        before_components = before.get("component_tokens", {})
+        after_components = after.get("component_tokens", {})
+        complete = True
+        for label, components, structural, case in (
+            ("baseline", before_components, before_structural, before),
+            ("candidate", after_components, after_structural, after),
+        ):
+            if not isinstance(components, dict) or set(components) != set(
+                END_TO_END_COMPONENTS
+            ):
+                errors.append(
+                    f"{case_id}: {label} lacks the complete component breakdown"
+                )
+                complete = False
+            elif any(type(components[name]) is not int or components[name] < 0 for name in END_TO_END_COMPONENTS):
+                errors.append(
+                    f"{case_id}: {label} component breakdown contains invalid tokens"
+                )
+                complete = False
+            if not isinstance(structural, dict) or set(structural) != set(
+                END_TO_END_STRUCTURAL_COUNTERS
+            ):
+                errors.append(
+                    f"{case_id}: {label} lacks the complete structural breakdown"
+                )
+                complete = False
+            elif any(type(structural[name]) is not int or structural[name] < 0 for name in END_TO_END_STRUCTURAL_COUNTERS):
+                errors.append(
+                    f"{case_id}: {label} structural breakdown contains invalid values"
+                )
+                complete = False
+            declared_total = case.get("total_task_tokens")
+            if type(declared_total) is not int or declared_total < 0:
+                errors.append(f"{case_id}: {label} total task tokens are invalid")
+                complete = False
+            elif isinstance(components, dict) and set(components) == set(
+                END_TO_END_COMPONENTS
+            ) and declared_total != sum(components.values()):
+                errors.append(
+                    f"{case_id}: {label} total task tokens differ from component sum"
+                )
+                complete = False
+            if (
+                isinstance(components, dict)
+                and isinstance(structural, dict)
+                and components.get("targeted_reference")
+                != structural.get("reference_tokens")
+            ):
+                errors.append(
+                    f"{case_id}: {label} Reference token accounting differs"
+                )
+                complete = False
+        if not complete:
+            continue
+        component_comparison = {
+            name: _comparison_value(
+                before_components[name],
+                after_components[name],
+            )
+            for name in END_TO_END_COMPONENTS
+        }
+        structural_comparison = {
+            name: _comparison_value(
+                before_structural[name],
+                after_structural[name],
+            )
+            for name in END_TO_END_STRUCTURAL_COUNTERS
+        }
+        native_reference_differences = _native_reference_differences(
+            case_id,
+            before.get("native_reference_bindings", []),
+            after.get("native_reference_bindings", []),
+            errors,
+        )
+        actor_profile_differences = _actor_profile_differences(
+            case_id,
+            str(host),
+            before.get("actor_profile_binding"),
+            after.get("actor_profile_binding"),
+            before_components,
+            after_components,
+            errors,
+        )
+        authority_bundles: dict[str, list[dict[str, Any]]] = {}
+        selection_asset_rows: dict[str, list[dict[str, Any]]] = {}
+        selection_asset_reconciliation: dict[str, int] = {}
+        for label, case, structural in (
+            ("baseline", before, before_structural),
+            ("candidate", after, after_structural),
+        ):
+            native_sources = case.get("native_sources")
+            bundles = (
+                native_sources.get("selection_authority_bundles")
+                if isinstance(native_sources, dict)
+                else None
+            )
+            if structural.get("selector_load_count", 0) > 0 and (
+                not isinstance(bundles, list) or not bundles
+            ):
+                errors.append(
+                    f"{case_id}: {label} loses measured selection authority bundles"
+                )
+                bundles = []
+            if isinstance(bundles, list) and any(
+                not isinstance(bundle, dict) or bundle.get("host") != host
+                for bundle in bundles
+            ):
+                errors.append(
+                    f"{case_id}: {label} selection authority cross-host binding"
+                )
+            authority_bundles[label] = copy.deepcopy(
+                bundles if isinstance(bundles, list) else []
+            )
+            component_rows = (
+                native_sources.get("components", [])
+                if isinstance(native_sources, dict)
+                else []
+            )
+            if not isinstance(component_rows, list):
+                errors.append(f"{case_id}: {label} selection asset rows are invalid")
+                component_rows = []
+            for source in component_rows:
+                if not isinstance(source, dict):
+                    continue
+                if source.get("host") != host:
+                    errors.append(f"{case_id}: {label} cross-host component binding")
+                if (
+                    source.get("kind") == "native-selector-envelope"
+                    and source.get("bucket") != "cross_agent_transfer"
+                ):
+                    errors.append(
+                        f"{case_id}: {label} selector envelope component overlap"
+                    )
+            retained = [
+                copy.deepcopy(row)
+                for row in component_rows
+                if isinstance(row, dict)
+                and row.get("kind")
+                in {
+                    "main-profile",
+                    "control-owner",
+                    "global-professional-router",
+                    "professional-selector",
+                    "professional-selector-envelope",
+                    "professional-selector-decision",
+                    "professional-selector-complete",
+                    "reference-records-partition",
+                }
+            ]
+            seen_selection_assets: set[tuple[str, str, str, str]] = set()
+            for row in retained:
+                key = (
+                    str(row.get("assignment_key") or ""),
+                    str(row.get("host") or ""),
+                    str(row.get("physical_path") or ""),
+                    str(row.get("sha256") or ""),
+                )
+                if not all(key) or key in seen_selection_assets:
+                    errors.append(
+                        f"{case_id}: {label} selection asset rows contain an "
+                        "unbound or duplicate assignment occurrence"
+                    )
+                seen_selection_assets.add(key)
+            actual_selection_tokens = {
+                bucket: sum(
+                    int(row.get("tokens", 0)) * int(row.get("load_count", 0))
+                    for row in retained
+                    if row.get("bucket") == bucket
+                )
+                for bucket in ("always_loaded", "selector", "reference_partition")
+            }
+            expected_selection_tokens = (
+                native_sources.get("selection_asset_component_tokens", {})
+                if isinstance(native_sources, dict)
+                else {}
+            )
+            if not isinstance(expected_selection_tokens, dict):
+                expected_selection_tokens = {}
+            if retained and set(expected_selection_tokens) != {
+                "always_loaded",
+                "selector",
+                "reference_partition",
+            }:
+                errors.append(
+                    f"{case_id}: {label} selection asset rows lack component binding"
+                )
+            reconciliation = sum(
+                actual_selection_tokens[bucket]
+                - int(expected_selection_tokens.get(bucket, 0))
+                for bucket in actual_selection_tokens
+            )
+            if any(
+                actual_selection_tokens[bucket]
+                != int(expected_selection_tokens.get(bucket, 0))
+                for bucket in actual_selection_tokens
+            ):
+                errors.append(
+                    f"{case_id}: {label} selection asset rows do not reconcile"
+                )
+            selection_asset_rows[label] = retained
+            selection_asset_reconciliation[label] = reconciliation
+        before_total = before["total_task_tokens"]
+        after_total = after["total_task_tokens"]
+        raw_route_equal = (
+            before.get("raw_route_obligations")
+            == after.get("raw_route_obligations")
+        )
+        route_obligations = before.get("route_obligations")
+        ordinary_raw_route_equal = (
+            before_mapping_state == "raw-route-equal"
+            and after_mapping_state == "raw-route-equal"
+            and raw_route_equal
+            and isinstance(route_obligations, dict)
+            and "not_applicable_basis" not in route_obligations
+        )
+        if ordinary_raw_route_equal and after_total > before_total:
+            regression = {
+                "id": case_id,
+                "logical_case_id": before.get("logical_case_id"),
+                "host": host,
+                "classification": "ordinary-raw-route-equal",
+                "source_authority": "canonical-trajectory-mapping/raw-route-equal",
+                "total_task_tokens": _comparison_value(before_total, after_total),
+            }
+            ordinary_route_regressions.append(regression)
+            ordinary_route_errors.append(
+                f"{case_id}: ordinary raw-route-equal candidate exceeds baseline by "
+                f"{after_total - before_total} token(s)"
+            )
+        baseline_total += before_total
+        candidate_total += after_total
+        if host in FOCUS_PROFILE_HOSTS:
+            baseline_by_host[str(host)] += before_total
+            candidate_by_host[str(host)] += after_total
+            for name in END_TO_END_COMPONENTS:
+                component_baseline[name] += before_components[name]
+                component_candidate[name] += after_components[name]
+                component_by_host[str(host)]["baseline"][name] += before_components[name]
+                component_by_host[str(host)]["candidate"][name] += after_components[name]
+        rows.append(
+            {
+                "id": case_id,
+                "logical_case_id": before.get("logical_case_id"),
+                "host": host,
+                "mapping_state": before_mapping_state,
+                "cost_classification": (
+                    "ordinary-raw-route-equal"
+                    if ordinary_raw_route_equal
+                    else "source-classified-non-ordinary"
+                ),
+                "route_obligations": before.get("route_obligations", {}),
+                "raw_route_difference": {
+                    "baseline": before.get("raw_route_obligations"),
+                    "candidate": after.get("raw_route_obligations"),
+                    "equal": before.get("raw_route_obligations")
+                    == after.get("raw_route_obligations"),
+                },
+                "component_tokens": component_comparison,
+                "structural": structural_comparison,
+                "native_reference_differences": native_reference_differences,
+                "actor_profile_differences": actor_profile_differences,
+                "selection_authority_bundles": authority_bundles,
+                "selection_asset_rows": selection_asset_rows,
+                "selection_asset_reconciliation": selection_asset_reconciliation,
+                "total_task_tokens": _comparison_value(before_total, after_total),
+            }
+        )
+    comparison_blocked = bool(errors)
+    reduction_ratio = None
+    if not comparison_blocked:
+        reduction_ratio = (
+            round((baseline_total - candidate_total) / baseline_total, 6)
+            if baseline_total
+            else 0.0
+        )
+        if baseline_total <= 0:
+            errors.append("baseline measured subject total must be positive")
+        elif candidate_total > baseline_total:
+            errors.append(
+                "measured candidate aggregate exceeds baseline"
+            )
+        for host in FOCUS_PROFILE_HOSTS:
+            if candidate_by_host[host] > baseline_by_host[host]:
+                errors.append(
+                    f"measured candidate {host} aggregate exceeds baseline"
+                )
+    errors.extend(ordinary_route_errors)
+    component_aggregate = {
+        name: _comparison_value(component_baseline[name], component_candidate[name])
+        for name in END_TO_END_COMPONENTS
+    }
+    host_aggregates = {
+        host: {
+            "total_task_tokens": _comparison_value(
+                baseline_by_host[host], candidate_by_host[host]
+            ),
+            "component_tokens": {
+                name: _comparison_value(
+                    component_by_host[host]["baseline"][name],
+                    component_by_host[host]["candidate"][name],
+                )
+                for name in END_TO_END_COMPONENTS
+            },
+        }
+        for host in FOCUS_PROFILE_HOSTS
+    }
+    return {
+        "status": "pass" if not errors else "fail",
+        "comparison_rule": "candidate-total-not-greater-than-baseline",
+        "ordinary_route_comparison_rule": (
+            "source-classified-raw-route-equal-candidate-not-greater-than-baseline"
+        ),
+        "ordinary_route_regressions": ordinary_route_regressions,
+        "subjects": {
+            "baseline": baseline_identity,
+            "candidate": candidate_identity,
+        },
+        "cases": rows,
+        "host_matrix": {
+            **baseline_matrix,
+            "component_tokens": component_aggregate,
+            "hosts": host_aggregates,
+            "reconciliation": {
+                "baseline": baseline_total
+                - sum(item["baseline"] for item in component_aggregate.values()),
+                "candidate": candidate_total
+                - sum(item["candidate"] for item in component_aggregate.values()),
+                "host_pair_count": len(rows) - baseline_matrix["host_pair_count"],
+            },
+        },
+        "aggregate": {
+            **(
+                _comparison_value(baseline_total, candidate_total)
+                if not comparison_blocked
+                else {"baseline": None, "candidate": None, "delta": None}
+            ),
+            "reduction_ratio": reduction_ratio,
+            "comparable": not comparison_blocked,
+        },
+        "errors": errors,
+    }
+
+
+AB_S1_WRITE_PATHS = frozenset(
+    {
+        "scripts/eval-rendered-context-budget.py",
+        "scripts/eval-agent-lightweight.py",
+        "evals/agent-light-trajectories/cases.yaml",
+        "tests/scripts/test_eval_rendered_context_budget.py",
+        "tests/scripts/test_eval_agent_lightweight_utility.py",
+        "tests/scripts/test_eval_agent_lightweight_layer3_references.py",
+        "reports/rendered-context-budget.json",
+        "reports/hookless-control-plane-eval.json",
+    }
+)
+
+AB_S2_WRITE_PATHS = frozenset(
+    {
+        "docs/BUILD_PROFILES.md",
+        "scripts/build.py",
+        "scripts/validation_utils.py",
+        "scripts/validate-agent-profiles.py",
+        "scripts/validate-control-plane-prompt.py",
+        "scripts/validate-control-skills.py",
+        "scripts/validate-skill-routing.py",
+        "src/control-prompts/main-control-agent.md",
+        "src/agent-profiles/role-agents.json",
+        "src/control-skills/engineering-control-plane/references/professional-skill-router.md",
+        "src/control-skills/engineering-control-plane/references/implementation-handoff-template.md",
+        "src/control-skills/engineering-control-plane/references/review-handoff-template.md",
+        "evals/agent-light-trajectories/cases.yaml",
+        "scripts/eval-agent-lightweight.py",
+        "scripts/eval-rendered-context-budget.py",
+        "tests/scripts/test_eval_agent_lightweight_utility.py",
+        "tests/scripts/test_eval_rendered_context_budget.py",
+        "reports/hookless-control-plane-eval.json",
+        "reports/rendered-context-budget.json",
+        "reports/rendered-context-budget.md",
+        "tests/scripts/test_build_safety.py",
+        "tests/test_hookless_build_install.py",
+        "tests/scripts/test_validate_agent_profiles.py",
+        "tests/scripts/test_validate_control_plane_prompt.py",
+        "tests/scripts/test_validate_control_skills.py",
+        "tests/scripts/test_validate_docs_consistency.py",
+        "tests/scripts/test_authority_delivery_repair.py",
+        "tests/scripts/test_rds_005_public_projection.py",
+        "tests/scripts/test_validate_task_contracts.py",
+        "tests/scripts/test_rds_006_agent_execution_discipline.py",
+        "tests/scripts/test_rds_006_task_handoff_context.py",
+        "tests/scripts/test_skill_routing_roles.py",
+        "tests/scripts/test_selector_jit_domain_parity.py",
+        "tests/scripts/test_foundation_selector_authority.py",
+        "tests/scripts/test_eval_agent_lightweight_layer3_references.py",
+    }
+)
+
+AB_S3_WRITE_PATHS = frozenset(
+    {
+        "scripts/build.py",
+        "scripts/validation_utils.py",
+        "scripts/validate-built-skill-reference-links.py",
+        "scripts/eval-rendered-context-budget.py",
+        "tests/scripts/test_built_professional_root_projection.py",
+        "tests/scripts/test_selector_jit_domain_parity.py",
+        "tests/scripts/test_validate_built_skill_reference_links.py",
+        "tests/scripts/test_eval_rendered_context_budget.py",
+        "tests/test_hookless_build_install.py",
+        "tests/scripts/test_context_content_relocation.py",
+        "tests/scripts/test_authority_delivery_repair.py",
+        "reports/rendered-context-budget.json",
+        "reports/rendered-context-budget.md",
+    }
+)
+
+AB_ALLOWED_WRITE_PATHS = AB_S1_WRITE_PATHS | AB_S2_WRITE_PATHS | AB_S3_WRITE_PATHS
+
+
+def _run_checked(
+    command: list[str],
+    *,
+    cwd: Path,
+    input_bytes: bytes | None = None,
+) -> subprocess.CompletedProcess[bytes]:
+    result = subprocess.run(
+        command,
+        cwd=cwd,
+        input=input_bytes,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        check=False,
+    )
+    if result.returncode:
+        stderr = result.stderr.decode("utf-8", errors="replace").strip()
+        raise RuntimeError(f"{' '.join(command)} failed: {stderr}")
+    return result
+
+
+def _load_current_lightweight_module(path: Path) -> Any:
+    module_name = f"changeforge_native_structure_{hashlib.sha256(path.read_bytes()).hexdigest()}"
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        raise ValueError(f"cannot load current lightweight evaluator {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    if not callable(getattr(module, "_native_structural_metrics", None)):
+        raise ValueError("current lightweight evaluator lacks native structural metrics")
+    if not callable(getattr(module, "_minimal_dispatch_partition", None)):
+        raise ValueError("current lightweight evaluator lacks minimal dispatch projection")
+    if not callable(getattr(module, "_minimal_transfer_projection", None)):
+        raise ValueError("current lightweight evaluator lacks minimal transfer projection")
+    return module
+
+
+def _git_text(root: Path, *arguments: str) -> str:
+    return _run_checked(["git", *arguments], cwd=root).stdout.decode("utf-8").strip()
+
+
+def _native_contract_identity(document: dict[str, Any]) -> dict[str, Any]:
+    schema_version = document.get("schema_version")
+    if type(schema_version) is not int:
+        raise ValueError("native fixture schema_version is missing or ambiguous")
+    capsule_contracts: Counter[tuple[str, str | None, str | None, str]] = Counter()
+    trajectory_count = 0
+    for _group, case in _fixture_cases(document):
+        trajectory_count += 1
+        for step in case.get("steps", []):
+            if not isinstance(step, dict) or step.get("action") != "dispatch":
+                continue
+            _selector, capsules = _native_dispatch_partition(step)
+            for capsule_field, capsule in capsules.items():
+                contract_version = capsule.get("contract_version")
+                contract_type = capsule.get("contract_type")
+                if capsule_field == "fixture_capsule":
+                    if not isinstance(contract_version, str) or not contract_version:
+                        raise ValueError(
+                            f"{case.get('id')}: native capsule contract_version is missing"
+                        )
+                    if not isinstance(contract_type, str) or not contract_type:
+                        raise ValueError(
+                            f"{case.get('id')}: native capsule contract_type is missing"
+                        )
+                    version_state = "versioned-native-envelope"
+                else:
+                    if contract_version is not None and (
+                        not isinstance(contract_version, str) or not contract_version
+                    ):
+                        raise ValueError(
+                            f"{case.get('id')}: native utility capsule version is malformed"
+                        )
+                    if contract_type is not None and (
+                        not isinstance(contract_type, str) or not contract_type
+                    ):
+                        raise ValueError(
+                            f"{case.get('id')}: native utility capsule type is malformed"
+                        )
+                    version_state = (
+                        "versioned-native-auxiliary"
+                        if contract_version
+                        else "unversioned-native-auxiliary"
+                    )
+                capsule_contracts[
+                    (capsule_field, contract_version, contract_type, version_state)
+                ] += 1
+    return {
+        "fixture_schema_version": schema_version,
+        "trajectory_case_count": trajectory_count,
+        "task_focus_case_count": len(document.get("task_focus_cases", [])),
+        "capsule_contracts": [
+            {
+                "capsule_field": capsule_field,
+                "contract_version": version,
+                "contract_type": contract_type,
+                "version_state": version_state,
+                "count": count,
+            }
+            for (
+                capsule_field,
+                version,
+                contract_type,
+                version_state,
+            ), count in sorted(
+                capsule_contracts.items(), key=lambda item: repr(item[0])
+            )
+        ],
+    }
+
+
+def _registry_documents(subject_root: Path) -> list[tuple[Path, str, dict[str, Any]]]:
+    specs = (
+        (subject_root / "src/registry/professional-skills.yaml", "professional_skills"),
+        (subject_root / "src/registry/foundation-skills.yaml", "foundation_skills"),
+        (subject_root / "src/registry/domain-skills.yaml", "domain_skills"),
+    )
+    return [(path, key, load_yaml_file(path)) for path, key in specs]
+
+
+def _reference_native_binding(
+    subject_root: Path,
+    owner: str,
+    relative_path: str,
+    *,
+    semantic_obligation: str | None = None,
+) -> dict[str, Any]:
+    matches: list[tuple[Path, dict[str, Any], dict[str, Any]]] = []
+    for registry_path, key, document in _registry_documents(subject_root):
+        for row in document.get(key, []):
+            if not isinstance(row, dict) or row.get("name") != owner:
+                continue
+            reference = next(
+                (
+                    item
+                    for item in row.get("reference_index", [])
+                    if isinstance(item, dict) and item.get("path") == relative_path
+                ),
+                None,
+            )
+            if reference is not None:
+                matches.append((registry_path, row, reference))
+    if len(matches) != 1:
+        raise ValueError(
+            f"{owner}/{relative_path}: expected one native registry binding, got {len(matches)}"
+        )
+    registry_path, owner_row, reference = matches[0]
+    source_path = subject_root / str(owner_row["path"]) / relative_path
+    source_bytes = source_path.read_bytes()
+    return {
+        "semantic_obligation": semantic_obligation or f"{owner}/{relative_path}",
+        "owner": owner,
+        "physical_path": source_path.relative_to(subject_root).as_posix(),
+        "reference_type": str(reference.get("type") or ""),
+        "required_outputs": [str(item) for item in reference.get("required_output", [])],
+        "registry_path": registry_path.relative_to(subject_root).as_posix(),
+        "registry_sha256": hashlib.sha256(registry_path.read_bytes()).hexdigest(),
+        "source_sha256": hashlib.sha256(source_bytes).hexdigest(),
+        "tokens": count_o200k_base_tokens(source_bytes.decode("utf-8")),
+        "content_scope": "complete-native-bytes",
+    }
+
+
+def _canonical_reference_obligation(
+    case_id: str, owner: str, relative_path: str
+) -> str:
+    if (
+        owner == "payment-trading-extension"
+        and relative_path
+        in {
+            "references/checklist.md",
+            "references/duplicate-financial-effect-control.md",
+        }
+    ):
+        return "payment-duplicate-financial-effect-control"
+    return REFERENCE_SEMANTIC_EQUIVALENCE.get(
+        (case_id, owner, relative_path), f"{owner}/{relative_path}"
+    )
+
+
+def _case_native_reference_bindings(
+    case: dict[str, Any], subject_root: Path
+) -> list[dict[str, Any]]:
+    result: list[dict[str, Any]] = []
+    case_id = str(case.get("id") or "")
+    for step in case.get("steps", []):
+        if not isinstance(step, dict) or step.get("action") != "dispatch":
+            continue
+        primary = str(step.get("primary_skill") or "")
+        for relative_path in step.get("professional_references", []):
+            result.append(
+                _reference_native_binding(
+                    subject_root,
+                    primary,
+                    str(relative_path),
+                    semantic_obligation=_canonical_reference_obligation(
+                        case_id, primary, str(relative_path)
+                    ),
+                )
+            )
+        for logical_id in step.get("layer3_references", []):
+            owner, relative_path = str(logical_id).split("/", 1)
+            result.append(
+                _reference_native_binding(
+                    subject_root,
+                    owner,
+                    relative_path,
+                    semantic_obligation=_canonical_reference_obligation(
+                        case_id, owner, relative_path
+                    ),
+                )
+            )
+    return result
+
+
+def _trajectory_exact_reference_selection(
+    step: dict[str, Any], subject_root: Path
+) -> tuple[list[str] | None, list[dict[str, Any]]]:
+    """Bind the two native trajectory Reference fields or remain unresolved."""
+
+    if not all(
+        field in step for field in ("professional_references", "layer3_references")
+    ):
+        return None, []
+    professional_references = step.get("professional_references")
+    layer3_references = step.get("layer3_references")
+    if (
+        not isinstance(professional_references, list)
+        or not isinstance(layer3_references, list)
+        or any(
+            not isinstance(item, str) or not item
+            for item in [*professional_references, *layer3_references]
+        )
+        or len(professional_references) != len(set(professional_references))
+        or len(layer3_references) != len(set(layer3_references))
+    ):
+        raise ValueError(
+            "trajectory exact References require two ordered unique string lists"
+        )
+    primary = str(step.get("primary_skill") or "")
+    selected_layer3 = step.get("layer3_skills")
+    if not primary or not isinstance(selected_layer3, list):
+        raise ValueError("trajectory exact References require current route authority")
+    exact: list[str] = []
+    bindings: list[dict[str, Any]] = []
+    for relative_path in professional_references:
+        native = _reference_native_binding(subject_root, primary, relative_path)
+        exact.append(relative_path)
+        bindings.append(
+            {"owner_skill": primary, "path": relative_path, **native}
+        )
+    for logical_id in layer3_references:
+        try:
+            owner, relative_path = logical_id.split("/", 1)
+        except ValueError as exc:
+            raise ValueError(
+                "trajectory Layer 3 Reference lacks owner/path binding"
+            ) from exc
+        if owner not in selected_layer3:
+            raise ValueError(
+                "trajectory Layer 3 Reference owner is not in ordered selected Layer 3"
+            )
+        native = _reference_native_binding(subject_root, owner, relative_path)
+        exact.append(logical_id)
+        bindings.append(
+            {"owner_skill": owner, "path": relative_path, **native}
+        )
+    if len({(row["owner_skill"], row["path"]) for row in bindings}) != len(bindings):
+        raise ValueError("trajectory exact References contain duplicate bindings")
+    return exact, bindings
+
+
+def _route_obligations(
+    case: dict[str, Any], subject_root: Path
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    domain_document = load_yaml_file(
+        subject_root / "src/registry/domain-skills.yaml"
+    )
+    domain_names = {
+        str(row.get("name") or "")
+        for row in domain_document.get("domain_skills", [])
+        if isinstance(row, dict)
+    }
+    professional: list[str] = []
+    layer3: list[str] = []
+    references: list[str] = []
+    canonical_references: list[str] = []
+    review: list[str] = []
+    case_id = str(case.get("id") or "")
+    for step in case.get("steps", []):
+        if not isinstance(step, dict) or step.get("action") != "dispatch":
+            continue
+        primary = str(step.get("primary_skill") or "")
+        if primary:
+            professional.append(primary)
+        layer3.extend(str(item) for item in step.get("layer3_skills", []))
+        for item in step.get("professional_references", []):
+            relative_path = str(item)
+            references.append(relative_path)
+            canonical_references.append(
+                _canonical_reference_obligation(case_id, primary, relative_path)
+            )
+        for item in step.get("layer3_references", []):
+            logical_id = str(item)
+            references.append(logical_id)
+            owner, relative_path = logical_id.split("/", 1)
+            canonical_references.append(
+                _canonical_reference_obligation(case_id, owner, relative_path)
+            )
+        if step.get("profile") == "review-agent" and primary:
+            review.append(primary)
+        capsule = step.get("fixture_capsule")
+        if isinstance(capsule, dict):
+            review.extend(
+                str(item) for item in capsule.get("required_review_skills", [])
+            )
+    raw = {
+        "professional": professional,
+        "layer3": layer3,
+        "domain": [item for item in layer3 if item in domain_names],
+        "review": review,
+        "references": references,
+    }
+    canonical = copy.deepcopy(raw)
+    canonical["references"] = canonical_references
+    return canonical, raw
+
+
+def _native_transfer_measurement(
+    case: dict[str, Any], lightweight_module: Any
+) -> dict[str, Any]:
+    case_id = case.get("id")
+    steps = case.get("steps")
+    if not isinstance(case_id, str) or not case_id or not isinstance(steps, list):
+        raise ValueError("native transfer requires a case id and steps")
+    handoff_actions = {
+        "analysis-handoff",
+        "implementation-handoff",
+        "review-handoff",
+        "repair-handoff",
+    }
+    rows: list[dict[str, Any]] = []
+    total = 0
+    for index, step in enumerate(steps):
+        if not isinstance(step, dict) or not step.get("action"):
+            raise ValueError(f"{case_id}: malformed native transfer step {index}")
+        if step.get("action") not in handoff_actions:
+            continue
+        projected = lightweight_module._minimal_transfer_projection(step)
+        text = _canonical_json_text(projected)
+        tokens = count_o200k_base_tokens(text)
+        total += tokens
+        rows.append(
+            {
+                "step": index,
+                "action": step["action"],
+                "sha256": _sha256_text(text),
+                "tokens": tokens,
+                "content_scope": "core-derived-minimal-handoff",
+            }
+        )
+    return {
+        "gross_tokens": total,
+        "handoff_tokens": total,
+        "handoff_rows": rows,
+    }
+
+
+_COMBINED_ROUTER_HEADER = (
+    "| Task signal | Start profile | Primary Professional Skill | "
+    "Optional Layer 3 Skills | Review Skill |"
+)
+_SPLIT_ROUTER_HEADER = (
+    "| Task signal | Start profile | Primary Professional Skill | Review Skill |"
+)
+
+
+def _professional_router_authority(path: Path) -> dict[str, Any]:
+    try:
+        raw = path.read_bytes()
+        text = raw.decode("utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        raise ValueError("professional router authority is unavailable") from exc
+    headers = [
+        header for header in (_COMBINED_ROUTER_HEADER, _SPLIT_ROUTER_HEADER)
+        if header in text.splitlines()
+    ]
+    if len(headers) != 1:
+        raise ValueError("professional router schema header is missing or ambiguous")
+    schema = (
+        "combined-router/v1"
+        if headers[0] == _COMBINED_ROUTER_HEADER
+        else "split-professional-selector/v1"
+    )
+    rows: list[dict[str, Any]] = []
+    expected_columns = 5 if schema == "combined-router/v1" else 4
+    for line_number, line in enumerate(text.splitlines(), 1):
+        if not line.startswith("|") or line.startswith("| ---") or line == headers[0]:
+            continue
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        if len(cells) != expected_columns:
+            continue
+        layer3 = []
+        if schema == "combined-router/v1" and cells[3] != "none":
+            layer3 = [item.strip() for item in cells[3].split(",")]
+        rows.append(
+            {
+                "pointer": f"#L{line_number}",
+                "signal": cells[0],
+                "profile": cells[1],
+                "professional_skill": cells[2],
+                "layer3_skills": layer3,
+                "review_skill": cells[-1],
+            }
+        )
+    if not rows:
+        raise ValueError("professional router has no declared route rows")
+    return {
+        "schema": schema,
+        "path": path,
+        "sha256": hashlib.sha256(raw).hexdigest(),
+        "header": headers[0],
+        "rows": rows,
+    }
+
+
+def _native_combined_dispatch_binding(
+    case_id: str,
+    step_index: int,
+    step: dict[str, Any],
+    subject_root: Path,
+    router_authority: dict[str, Any],
+) -> dict[str, Any]:
+    """Bind a historical dispatch to one source-owned combined-router trigger."""
+
+    fixture_path = subject_root / "evals/agent-light-trajectories/cases.yaml"
+    if not fixture_path.is_file():
+        fixture_path = FIXTURES
+    try:
+        fixture_raw = fixture_path.read_bytes()
+        fixture_document = json.loads(fixture_raw)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError("combined router native fixture authority is unavailable") from exc
+    native_cases = [
+        case
+        for _group, case in _fixture_cases(fixture_document)
+        if case.get("id") == case_id
+    ]
+    if len(native_cases) != 1:
+        raise ValueError("combined router native case authority is missing or ambiguous")
+    native_steps = native_cases[0].get("steps")
+    if (
+        not isinstance(native_steps, list)
+        or step_index >= len(native_steps)
+        or native_steps[step_index] != step
+    ):
+        raise ValueError("combined router native dispatch authority disagrees")
+
+    profile = str(step.get("profile") or "")
+    primary = str(step.get("primary_skill") or "")
+    effective = step.get("layer3_skills")
+    if not profile or not primary or not isinstance(effective, list):
+        raise ValueError("combined router native dispatch is malformed")
+    fixture_relative = (
+        fixture_path.relative_to(subject_root).as_posix()
+        if fixture_path.is_relative_to(subject_root)
+        else fixture_path.as_posix()
+    )
+    fixture_authority = {
+        "path": fixture_relative,
+        "sha256": hashlib.sha256(fixture_raw).hexdigest(),
+        "pointer": f"#/case/{case_id}/steps/{step_index}",
+        "profile": profile,
+        "primary_skill": primary,
+        "layer3_skills": list(effective),
+    }
+
+    scenario_path = subject_root / "src/registry/release-routing-scenarios.yaml"
+    scenario_raw = b""
+    scenarios: list[dict[str, Any]] = []
+    if scenario_path.is_file():
+        scenario_raw = scenario_path.read_bytes()
+        scenario_document = load_yaml_file(scenario_path)
+        scenarios = [
+            row
+            for row in scenario_document.get("scenarios", [])
+            if isinstance(row, dict) and row.get("light_case_id") == case_id
+        ]
+    if len(scenarios) > 1:
+        raise ValueError("combined router release scenario authority is ambiguous")
+
+    route_expectation: dict[str, Any] | None = None
+    dispatch_authority = dict(fixture_authority)
+    augmentation_source = dict(fixture_authority)
+    if scenarios:
+        scenario = scenarios[0]
+        router = scenario.get("router")
+        expected = router.get("expected") if isinstance(router, dict) else None
+        if (
+            not isinstance(router, dict)
+            or not isinstance(router.get("trigger"), str)
+            or not isinstance(expected, dict)
+        ):
+            raise ValueError("combined router release scenario is malformed")
+        route_expectation = {
+            "trigger": router["trigger"],
+            "profile": expected.get("profile"),
+            "primary": expected.get("primary"),
+            "layer3": expected.get("layer3"),
+            "review": expected.get("review"),
+        }
+        if (
+            not isinstance(route_expectation["profile"], str)
+            or not isinstance(route_expectation["primary"], str)
+            or not isinstance(route_expectation["review"], str)
+            or not isinstance(route_expectation["layer3"], list)
+        ):
+            raise ValueError("combined router release scenario route is incomplete")
+        scenario_sha = hashlib.sha256(scenario_raw).hexdigest()
+        scenario_index = scenario_document["scenarios"].index(scenario)
+        scenario_pointer = f"#/scenarios/{scenario_index}"
+        scenario_dispatches: list[tuple[str, int, dict[str, Any]]] = []
+        analysis = scenario.get("analysis")
+        if isinstance(analysis, dict):
+            scenario_dispatches.append(("analysis-agent", 0, analysis))
+        scenario_dispatches.extend(
+            ("task-agent", index, row)
+            for index, row in enumerate(scenario.get("tasks", []))
+            if isinstance(row, dict)
+        )
+        review = scenario.get("review")
+        if isinstance(review, dict):
+            scenario_dispatches.append(("review-agent", 0, review))
+        matching = [
+            (role, index, row)
+            for role, index, row in scenario_dispatches
+            if role == profile
+            and row.get("primary") == primary
+            and row.get("layer3", []) == effective
+        ]
+        if profile == route_expectation["profile"] and primary == route_expectation["primary"] and effective == route_expectation["layer3"]:
+            matching.append((profile, -1, expected))
+        if not matching:
+            raise ValueError("combined router dispatch disagrees with release scenario")
+        role_matches = [
+            (index, item)
+            for index, native_step in enumerate(native_steps[: step_index + 1])
+            if isinstance(native_step, dict)
+            and native_step.get("action") == "dispatch"
+            and native_step.get("profile") == profile
+            and native_step.get("primary_skill") == primary
+            and native_step.get("layer3_skills") == effective
+            for item in [native_step]
+        ]
+        occurrence = len(role_matches) - 1
+        chosen = matching[min(occurrence, len(matching) - 1)]
+        source_kind, source_index, source_row = chosen
+        source_pointer = (
+            f"{scenario_pointer}/router/expected"
+            if source_index == -1
+            else (
+                f"{scenario_pointer}/analysis"
+                if source_kind == "analysis-agent"
+                else (
+                    f"{scenario_pointer}/tasks/{source_index}"
+                    if source_kind == "task-agent"
+                    else f"{scenario_pointer}/review"
+                )
+            )
+        )
+        dispatch_review = (
+            primary
+            if profile == "review-agent"
+            else source_row.get("review", route_expectation["review"])
+        )
+        dispatch_authority = {
+            "path": scenario_path.relative_to(subject_root).as_posix(),
+            "sha256": scenario_sha,
+            "pointer": source_pointer,
+            "profile": profile,
+            "primary_skill": primary,
+            "review_skill": dispatch_review,
+            "layer3_skills": list(effective),
+        }
+        augmentation_source = dict(dispatch_authority)
+
+    rows = router_authority.get("rows")
+    if not isinstance(rows, list):
+        raise ValueError("combined router rows are unavailable")
+    if route_expectation is None:
+        if _has_authoritative_task_dag_provenance(
+            step,
+            str(native_cases[0].get("kind") or ""),
+            native_steps,
+        ):
+            dag_rows = [
+                row
+                for row in rows
+                if "authoritative Task DAG downstream integration tasks"
+                in str(row.get("signal") or "")
+            ]
+            if len(dag_rows) != 1:
+                raise ValueError(
+                    "combined router authoritative Task DAG trigger is missing or ambiguous"
+                )
+            dag_row = dag_rows[0]
+            route_expectation = {
+                "trigger": dag_row["signal"],
+                "profile": dag_row["profile"],
+                "primary": dag_row["professional_skill"],
+                "layer3": dag_row["layer3_skills"],
+                "review": dag_row["review_skill"],
+            }
+        elif profile == "review-agent":
+            prior = next(
+                (
+                    (index, native_step)
+                    for index, native_step in reversed(
+                        list(enumerate(native_steps[:step_index]))
+                    )
+                    if isinstance(native_step, dict)
+                    and native_step.get("action") == "dispatch"
+                    and native_step.get("primary_skill") == primary
+                ),
+                None,
+            )
+            if prior is not None:
+                prior_index, prior_step = prior
+                prior_binding = _native_combined_dispatch_binding(
+                    case_id,
+                    prior_index,
+                    prior_step,
+                    subject_root,
+                    router_authority,
+                )
+                route_expectation = {
+                    "trigger": prior_binding["router_trigger"],
+                    "profile": prior_binding["router_profile"],
+                    "primary": prior_binding["router_primary_skill"],
+                    "layer3": prior_binding["router_layer3_skills"],
+                    "review": prior_binding["review_skill"],
+                }
+    if route_expectation is None:
+        candidates = []
+        for row in rows:
+            row_layer3 = row.get("layer3_skills", [])
+            if not isinstance(row_layer3, list):
+                continue
+            direct = row.get("profile") == profile and row.get("professional_skill") == primary
+            professional = row.get("professional_skill") == primary
+            review = profile == "review-agent" and row.get("review_skill") == primary
+            if not (direct or professional or review):
+                continue
+            overlap = sum(item in row_layer3 for item in effective)
+            candidates.append(((int(direct), overlap, int(professional), int(review)), row))
+        if not candidates:
+            raise ValueError("combined router native trigger authority is missing")
+        maximum = max(score for score, _row in candidates)
+        selected = [row for score, row in candidates if score == maximum]
+        if len(selected) != 1:
+            raise ValueError("combined router native trigger authority is ambiguous")
+        selected_row = selected[0]
+        route_expectation = {
+            "trigger": selected_row["signal"],
+            "profile": selected_row["profile"],
+            "primary": selected_row["professional_skill"],
+            "layer3": selected_row["layer3_skills"],
+            "review": selected_row["review_skill"],
+        }
+        dispatch_authority["review_skill"] = (
+            primary if profile == "review-agent" else selected_row["review_skill"]
+        )
+    exact_rows = [
+        row
+        for row in rows
+        if row.get("signal") == route_expectation["trigger"]
+        and row.get("profile") == route_expectation["profile"]
+        and row.get("professional_skill") == route_expectation["primary"]
+        and row.get("review_skill") == route_expectation["review"]
+        and row.get("layer3_skills") == route_expectation["layer3"]
+    ]
+    if len(exact_rows) != 1:
+        raise ValueError("combined router scenario trigger has no exact native row")
+    base = [item for item in effective if item in route_expectation["layer3"]]
+    augmentation = [item for item in effective if item not in base]
+    return {
+        "router_trigger": route_expectation["trigger"],
+        "router_profile": route_expectation["profile"],
+        "router_primary_skill": route_expectation["primary"],
+        "router_layer3_skills": list(route_expectation["layer3"]),
+        "review_skill": route_expectation["review"],
+        "dispatch_authority": dispatch_authority,
+        "handoff_augmentation_authority": (
+            {
+                **augmentation_source,
+                "layer3_skills": augmentation,
+            }
+            if augmentation
+            else None
+        ),
+    }
+
+
+def _selection_authority_bundle(
+    *,
+    schema: str,
+    router_rows: list[dict[str, Any]],
+    step: dict[str, Any],
+    selector: dict[str, Any] | None,
+    selector_resolution: dict[str, Any] | None = None,
+    reference_partitions: dict[str, dict[str, Any]] | None = None,
+    exact_references: object = None,
+    exact_reference_bindings: object = None,
+    envelope_pointer: str,
+    envelope_sha256: str,
+    selection_owner: str = "main-control-agent",
+) -> dict[str, Any]:
+    profile = str(step.get("profile") or "")
+    primary = str(step.get("primary_skill") or "")
+    effective = step.get("layer3_skills")
+    if (
+        not profile
+        or not primary
+        or not isinstance(effective, list)
+        or any(not isinstance(item, str) or not item for item in effective)
+        or len(effective) != len(set(effective))
+        or len(effective) > 3
+    ):
+        raise ValueError("native dispatch selection envelope is malformed")
+    direct = [
+        row
+        for row in router_rows
+        if row.get("profile") == profile
+        and row.get("professional_skill") == primary
+    ]
+    relevant = direct or [
+        row for row in router_rows if row.get("professional_skill") == primary
+    ]
+    if not relevant and profile == "review-agent":
+        relevant = [
+            row for row in router_rows if row.get("review_skill") == primary
+        ]
+    if schema == "split-professional-selector/v1" and not relevant:
+        raise ValueError("native dispatch Professional route lacks router authority")
+
+    if schema == "split-professional-selector/v1":
+        if not isinstance(selector, dict):
+            raise ValueError("split router requires Professional selector authority")
+        if (
+            selector.get("contract")
+            != "changeforge.layer3-selector-normalized-control/v1"
+            or selector.get("professional_skill") != primary
+        ):
+            raise ValueError("Professional selector authority mismatch")
+        surfaces = selector.get("owner_surfaces")
+        matches = [
+            (index, surface)
+            for index, surface in enumerate(surfaces if isinstance(surfaces, list) else [])
+            if isinstance(surface, dict)
+            and surface.get("profile") == profile
+            and surface.get("selection_owner") == selection_owner
+        ]
+        if len(matches) != 1:
+            raise ValueError("Professional selector has no unique Profile surface")
+        surface_index, _surface = matches[0]
+        try:
+            exact_layer3 = (
+                effective
+                if selector_resolution is not None
+                and selector_resolution.get("selection_kind") == "exact"
+                else None
+            )
+            expanded = layer3_selector_expand_runtime_projection(
+                selector,
+                reference_partitions,
+                profile=profile,
+                selection_owner=selection_owner,
+                exact_layer3=exact_layer3,
+                selected_layer3=effective,
+                exact_references=exact_references,
+                exact_reference_bindings=exact_reference_bindings,
+            )
+        except ValidationProblem as exc:
+            raise ValueError(
+                "Professional selector expansion failed closed"
+            ) from exc
+        authorized = expanded.get("authorized_layer3")
+        if (
+            not isinstance(authorized, list)
+            or any(item not in authorized for item in effective)
+        ):
+            raise ValueError("effective Layer 3 disagrees with Professional selector")
+        receipt = None
+        if exact_layer3 is not None:
+            receipt = layer3_selector_runtime_selection_receipt(
+                expanded,
+                evidence_signals=[],
+            )
+            if receipt["selected_layer3"] != effective:
+                raise ValueError("selector receipt disagrees with effective Layer 3")
+        return {
+            "schema": schema,
+            "router_pointers": [row["pointer"] for row in relevant],
+            "router_declared_layer3": [],
+            "professional_selector_pointer": f"#/owner_surfaces/{surface_index}",
+            "professional_selector_resolution": copy.deepcopy(selector_resolution),
+            "professional_selector_receipt": receipt,
+            "selection_owner": selection_owner,
+            "professional_selector_declared_layer3": list(authorized),
+            "reference_partitions_loaded": (
+                [primary, *effective] if exact_references is None else []
+            ),
+            "reference_partition_pointers": (
+                [
+                    selector["reference_records_partition"]["path_template"].format(
+                        owner_skill=owner
+                    )
+                    for owner in [primary, *effective]
+                ]
+                if exact_references is None
+                else []
+            ),
+            "native_envelope": {
+                "pointer": envelope_pointer,
+                "sha256": envelope_sha256,
+            },
+            "handoff_augmentation": {
+                "pointer": envelope_pointer,
+                "sha256": envelope_sha256,
+                "layer3_skills": [],
+                "tokens_added": 0,
+                "accounting": "already-counted-native-selector-envelope",
+            },
+            "effective_ordered_layer3": list(effective),
+        }
+
+    if schema != "combined-router/v1" or selector is not None:
+        raise ValueError("selection authority schema disagrees with supplied assets")
+    route_profile = str(step.get("router_profile") or profile)
+    route_primary = str(step.get("router_primary_skill") or primary)
+    route_trigger = str(step.get("router_trigger") or "")
+    review_skill = str(step.get("review_skill") or "")
+    if not route_trigger or not review_skill:
+        raise ValueError("combined router dispatch lacks source route authority")
+    exact_rows = [
+        row
+        for row in router_rows
+        if row.get("signal") == route_trigger
+        and row.get("profile") == route_profile
+        and row.get("professional_skill") == route_primary
+        and row.get("review_skill") == review_skill
+    ]
+    if len(exact_rows) != 1:
+        raise ValueError("combined router trigger authority is missing or ambiguous")
+    route_row = exact_rows[0]
+    declared = route_row.get("layer3_skills")
+    if not isinstance(declared, list) or any(
+        not isinstance(item, str) or not item for item in declared
+    ):
+        raise ValueError("combined router trigger Layer 3 authority is malformed")
+    base = [item for item in effective if item in declared]
+    augmentation = [item for item in effective if item not in base]
+    augmentation_authority = step.get("handoff_augmentation_authority")
+    if augmentation:
+        required = {"path", "sha256", "pointer", "layer3_skills"}
+        if (
+            not isinstance(augmentation_authority, dict)
+            or set(augmentation_authority) < required
+            or not isinstance(augmentation_authority.get("path"), str)
+            or not isinstance(augmentation_authority.get("pointer"), str)
+            or not isinstance(augmentation_authority.get("sha256"), str)
+            or len(augmentation_authority["sha256"]) != 64
+            or augmentation_authority.get("layer3_skills") != augmentation
+        ):
+            raise ValueError("combined router handoff augmentation authority mismatch")
+    elif augmentation_authority not in (None, {}):
+        if not isinstance(augmentation_authority, dict) or augmentation_authority.get(
+            "layer3_skills"
+        ) not in (None, []):
+            raise ValueError("combined router has unexpected augmentation authority")
+    dispatch_authority = step.get("dispatch_authority")
+    if route_profile != profile or route_primary != primary:
+        if (
+            not isinstance(dispatch_authority, dict)
+            or dispatch_authority.get("profile") != profile
+            or dispatch_authority.get("primary_skill") != primary
+            or dispatch_authority.get("layer3_skills") != effective
+            or not dispatch_authority.get("path")
+            or not dispatch_authority.get("sha256")
+            or not dispatch_authority.get("pointer")
+        ):
+            raise ValueError("combined router downstream dispatch authority mismatch")
+    return {
+        "schema": schema,
+        "router_pointers": [str(route_row["pointer"])],
+        "router_trigger": route_trigger,
+        "router_profile": route_profile,
+        "router_primary_skill": route_primary,
+        "router_review_skill": review_skill,
+        "router_declared_layer3": base,
+        "professional_selector_pointer": None,
+        "selection_owner": "native-dispatch-envelope",
+        "professional_selector_declared_layer3": [],
+        "reference_partitions_loaded": [],
+        "reference_partition_pointers": [],
+        "native_envelope": {
+            "pointer": envelope_pointer,
+            "sha256": envelope_sha256,
+        },
+        "handoff_augmentation": {
+            "pointer": (
+                augmentation_authority["pointer"]
+                if augmentation
+                else envelope_pointer
+            ),
+            "sha256": (
+                augmentation_authority["sha256"]
+                if augmentation
+                else envelope_sha256
+            ),
+            "authority_path": (
+                augmentation_authority["path"] if augmentation else None
+            ),
+            "layer3_skills": augmentation,
+            "tokens_added": 0,
+            "accounting": "already-counted-native-selector-envelope",
+        },
+        "dispatch_authority": copy.deepcopy(dispatch_authority),
+        "effective_ordered_layer3": list(effective),
+    }
+
+
+def _native_selector_decision_context(
+    case_id: str,
+    step: dict[str, Any],
+    subject_root: Path,
+    router_authority: dict[str, Any],
+) -> dict[str, Any]:
+    """Derive a runtime tuple from Router authority and provenance independently."""
+
+    profile = str(step.get("profile") or "")
+    professional = str(step.get("primary_skill") or "")
+    mode = str(step.get("mode") or "")
+    if not profile or not professional or not mode:
+        raise ValueError("Professional selector dispatch lacks a runtime route tuple")
+    all_router_rows = [
+        row
+        for row in router_authority["rows"]
+        if row.get("profile") == profile
+        and row.get("professional_skill") == professional
+    ]
+    route_rows = [
+        row
+        for row in all_router_rows
+        if f"(`{mode}`)" in str(row.get("signal") or "")
+    ]
+    if len(route_rows) != 1:
+        scenario_path = subject_root / "src/registry/release-routing-scenarios.yaml"
+        scenario_document = load_yaml_file(scenario_path)
+        scenario_rows = [
+            row
+            for row in scenario_document.get("scenarios", [])
+            if isinstance(row, dict) and row.get("light_case_id") == case_id
+        ]
+        scenario_router = (
+            scenario_rows[0].get("router") if len(scenario_rows) == 1 else None
+        )
+        scenario_expected = (
+            scenario_router.get("expected")
+            if isinstance(scenario_router, dict)
+            else None
+        )
+        route_rows = [
+            row
+            for row in all_router_rows
+            if isinstance(scenario_expected, dict)
+            and row.get("signal") == scenario_router.get("trigger")
+            and row.get("review_skill") == scenario_expected.get("review")
+        ]
+    if len(route_rows) != 1:
+        raise ValueError("Professional selector Router tuple is missing or ambiguous")
+    route_row = route_rows[0]
+    source_router_path = (
+        subject_root
+        / "src/control-skills/engineering-control-plane/references/"
+        "professional-skill-router.md"
+    )
+    try:
+        source_router_raw = source_router_path.read_bytes()
+        source_router_text = source_router_raw.decode("utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        raise ValueError("Professional selector source Router is unavailable") from exc
+    route_pointer = (
+        f"| {route_row['signal']} | {profile} | {professional} | "
+        f"{route_row['review_skill']} |"
+    )
+    if source_router_text.count(route_pointer) != 1:
+        raise ValueError("Professional selector source Router tuple is stale or ambiguous")
+    runtime_key = {
+        "route_source": {
+            "path": source_router_path.relative_to(subject_root).as_posix(),
+            "sha256": hashlib.sha256(source_router_raw).hexdigest(),
+            "pointer": route_pointer,
+        },
+        "trigger": route_row["signal"],
+        "start_profile": profile,
+        "primary_professional_skill": professional,
+        "review_skill": route_row["review_skill"],
+        "selection_owner": "main-control-agent",
+    }
+
+    scenarios_path = subject_root / "src/registry/release-routing-scenarios.yaml"
+    scenarios = load_yaml_file(scenarios_path)
+    if (
+        not isinstance(scenarios, dict)
+        or scenarios.get("schema_version") != 2
+        or scenarios.get("kind") != "changeforge.release_routing_scenarios"
+        or not isinstance(scenarios.get("scenarios"), list)
+    ):
+        raise ValueError("Professional selector release-scenario authority is malformed")
+    matches = []
+    for row in scenarios["scenarios"]:
+        router = row.get("router") if isinstance(row, dict) else None
+        expected = router.get("expected") if isinstance(router, dict) else None
+        if (
+            isinstance(expected, dict)
+            and router.get("trigger") == runtime_key["trigger"]
+            and expected.get("profile") == runtime_key["start_profile"]
+            and expected.get("primary")
+            == runtime_key["primary_professional_skill"]
+            and expected.get("review") == runtime_key["review_skill"]
+            and expected.get("layer3") == step.get("layer3_skills")
+        ):
+            matches.append(row)
+    if len(matches) > 1 or (mode == "diagnosis-only" and len(matches) != 1):
+        raise ValueError("Professional selector release provenance is missing or ambiguous")
+    scenario_raw = scenarios_path.read_bytes()
+    if not matches:
+        return {
+            "runtime_key": runtime_key,
+            "source_authorities": {
+                "router": copy.deepcopy(runtime_key["route_source"]),
+                "release_scenario": None,
+                "selector_registry": None,
+            },
+            "provenance": {"scenario_id": None, "light_case_id": None},
+        }
+    scenario = matches[0]
+    foundation_path = subject_root / "src/registry/foundation-skills.yaml"
+    foundation = load_yaml_file(foundation_path)
+    aliases = (
+        foundation.get("selector_authority", {}).get("aliases", [])
+        if isinstance(foundation, dict)
+        else []
+    )
+    alias = [
+        row
+        for row in aliases
+        if isinstance(row, dict)
+        and row.get("candidate_id") == "failure-diagnosis-analysis"
+        and row.get("primary_skill") == professional
+        and row.get("review_skill") == runtime_key["review_skill"]
+    ]
+    if mode == "diagnosis-only" and len(alias) != 1:
+        raise ValueError("Professional selector registry provenance is missing or ambiguous")
+    try:
+        foundation_raw = foundation_path.read_bytes()
+    except OSError as exc:
+        raise ValueError("Professional selector registry provenance is unavailable") from exc
+    return {
+        "runtime_key": runtime_key,
+        "source_authorities": {
+            "router": copy.deepcopy(runtime_key["route_source"]),
+            "release_scenario": {
+                "path": scenarios_path.relative_to(subject_root).as_posix(),
+                "sha256": hashlib.sha256(scenario_raw).hexdigest(),
+                "pointer": f"scenarios[id={scenario.get('id')}]",
+            },
+            "selector_registry": (
+                {
+                    "path": foundation_path.relative_to(subject_root).as_posix(),
+                    "sha256": hashlib.sha256(foundation_raw).hexdigest(),
+                    "pointer": (
+                        "selector_authority.aliases[candidate_id="
+                        "failure-diagnosis-analysis]"
+                    ),
+                }
+                if mode == "diagnosis-only"
+                else None
+            ),
+        },
+        "provenance": {
+            "scenario_id": scenario.get("id"),
+            "light_case_id": scenario.get("light_case_id"),
+        },
+    }
+
+
+def _validate_selection_asset_occurrences(rows: list[dict[str, Any]]) -> None:
+    seen_paths: set[tuple[str, str]] = set()
+    seen_hashes: set[tuple[str, str]] = set()
+    for row in rows:
+        host = str(row.get("host") or "")
+        path_key = (host, str(row.get("physical_path") or ""))
+        hash_key = (host, str(row.get("sha256") or ""))
+        if path_key in seen_paths or hash_key in seen_hashes:
+            raise ValueError("duplicate selection asset in one host assignment")
+        seen_paths.add(path_key)
+        seen_hashes.add(hash_key)
+
+
+def _native_dispatch_selection_assets(
+    case_id: str,
+    step_index: int,
+    step: dict[str, Any],
+    subject_root: Path,
+    manifests: dict[str, dict[str, Any]],
+    *,
+    envelope_pointer: str | None = None,
+    envelope_sha256: str | None = None,
+    selection_owner: str = "main-control-agent",
+    loaded_assignment_keys: set[tuple[str, ...]] | None = None,
+    global_router_loaded_hosts: set[str] | None = None,
+) -> dict[str, Any]:
+    """Measure one dispatch without reloading case or assignment authority."""
+
+    if set(manifests) != set(BUILD_PROFILES):
+        raise ValueError(f"{case_id}: dispatch {step_index} requires all three manifests")
+    manifest_bindings: dict[str, dict[str, Any]] = {}
+    expected_input: dict[str, Any] | None = None
+    for profile in BUILD_PROFILES:
+        path = (
+            subject_root
+            / "dist/universal/skills"
+            / profile
+            / ".changeforge-build-manifest.json"
+        )
+        try:
+            raw = path.read_bytes()
+            current = json.loads(raw)
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError(
+                f"{case_id}: {profile} manifest is unavailable or malformed"
+            ) from exc
+        if current != manifests[profile] or current.get("profile") != profile:
+            raise ValueError(f"{case_id}: {profile} manifest identity mismatch")
+        if current.get("compiled_layer3_format") != COMPILED_LAYER3_FORMAT:
+            raise ValueError(f"{case_id}: {profile} manifest Layer 3 format mismatch")
+        current_input = current.get("authoritative_build_inputs")
+        if not isinstance(current_input, dict) or not current_input.get("sha256"):
+            raise ValueError(f"{case_id}: {profile} manifest lacks build input")
+        if expected_input is None:
+            expected_input = current_input
+        elif current_input != expected_input:
+            raise ValueError(f"{case_id}: manifest authoritative inputs disagree")
+        manifest_bindings[profile] = {
+            "sha256": hashlib.sha256(raw).hexdigest(),
+            "authoritative_build_inputs": current_input,
+        }
+    assert expected_input is not None
+
+    primary = str(step.get("primary_skill") or "")
+    if not primary:
+        raise ValueError(f"{case_id}: dispatch {step_index} lacks Professional Skill")
+    hosts = ("codex", "claude", "copilot")
+    host_profiles = {
+        "codex": subject_root
+        / "dist/codex/project/.codex/agents/main-control-agent.toml",
+        "claude": subject_root
+        / "dist/claude/project/.claude/agents/main-control-agent.md",
+        "copilot": subject_root
+        / "dist/copilot/project/.github/agents/main-control-agent.agent.md",
+    }
+    recommended = subject_root / "dist/universal/skills/recommended"
+    router_path = recommended / (
+        "engineering-control-plane/references/professional-skill-router.md"
+    )
+    router_authority = _professional_router_authority(router_path)
+    selector_path = recommended / (
+        f"engineering-control-plane/references/selectors/{primary}.json"
+    )
+    selector: dict[str, Any] | None = None
+    selector_resolution: dict[str, Any] | None = None
+    selector_asset_specs: list[tuple[str, Path, str]] = []
+    reference_partitions: dict[str, dict[str, Any]] = {}
+    reference_partition_paths: dict[str, Path] = {}
+    exact_references, exact_reference_bindings = (
+        _trajectory_exact_reference_selection(step, subject_root)
+    )
+    effective = step.get("layer3_skills")
+    assert isinstance(effective, list)
+    if router_authority["schema"] == "split-professional-selector/v1":
+        try:
+            selector_raw = selector_path.read_bytes()
+            selector_document = json.loads(selector_raw)
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError(
+                f"{case_id}: dispatch {step_index} professional-selector authority is missing"
+            ) from exc
+        if (
+            isinstance(selector_document, dict)
+            and selector_document.get("contract")
+            == "changeforge.layer3-selector-decision-envelope/v1"
+        ):
+            decision_context = _native_selector_decision_context(
+                case_id,
+                step,
+                subject_root,
+                router_authority,
+            )
+            exact_bindings = [
+                row
+                for row in selector_document.get("decisions", [])
+                if isinstance(row, dict)
+                and row.get("runtime_key") == decision_context["runtime_key"]
+            ]
+            selected_binding = (
+                exact_bindings[0]
+                if exact_bindings
+                else selector_document.get("complete")
+            )
+            if (
+                not isinstance(selected_binding, dict)
+                or not isinstance(selected_binding.get("path"), str)
+                or not selected_binding["path"]
+            ):
+                raise ValueError("Professional selector decision binding is malformed")
+            selected_path = selector_path.parent / selected_binding["path"]
+            try:
+                selected_document = json.loads(
+                    selected_path.read_text(encoding="utf-8")
+                )
+                resolved = layer3_selector_resolve_control_projection(
+                    selector_document,
+                    {selected_binding["path"]: selected_document},
+                    runtime_key=decision_context["runtime_key"],
+                )
+            except (OSError, json.JSONDecodeError, ValidationProblem) as exc:
+                raise ValueError(
+                    "Professional selector decision resolution failed closed"
+                ) from exc
+            if (
+                resolved["selection_kind"] == "exact"
+                and resolved["selected_layer3"] != effective
+            ):
+                raise ValueError(
+                    "Professional selector decision output disagrees with dispatch"
+                )
+            provenance = resolved.get("provenance")
+            if resolved["selection_kind"] == "exact" and (
+                not isinstance(provenance, dict)
+                or provenance.get("release_scenario")
+                != decision_context["source_authorities"]["release_scenario"]
+                or provenance.get("selector_registry")
+                != decision_context["source_authorities"]["selector_registry"]
+            ):
+                raise ValueError(
+                    "Professional selector decision provenance disagrees with source"
+                )
+            selector = resolved["projection"]
+            selector_resolution = {
+                key: copy.deepcopy(resolved[key])
+                for key in (
+                    "selection_kind",
+                    "decision_id",
+                    "path",
+                    "sha256",
+                    "runtime_key",
+                    "provenance",
+                    "selected_layer3",
+                )
+            }
+            selector_resolution["source_authorities"] = copy.deepcopy(
+                decision_context["source_authorities"]
+            )
+            selector_asset_specs = [
+                ("professional-selector-envelope", selector_path, "selector-envelope"),
+                (
+                    (
+                        "professional-selector-decision"
+                        if resolved["selection_kind"] == "exact"
+                        else "professional-selector-complete"
+                    ),
+                    selected_path,
+                    f"selector-{resolved['selection_kind']}",
+                ),
+            ]
+        else:
+            selector = selector_document
+            selector_asset_specs = [
+                ("professional-selector", selector_path, "professional-selector")
+            ]
+        if exact_references is None:
+            owners = [primary, *effective]
+            if len(owners) > 4 or len(owners) != len(set(owners)):
+                raise ValueError(
+                    f"{case_id}: dispatch {step_index} Reference partition owners exceed the bounded route"
+                )
+            for owner in owners:
+                path = recommended / (
+                    "engineering-control-plane/references/reference-records/"
+                    f"{primary}/{owner}.json"
+                )
+                try:
+                    reference_partitions[owner] = json.loads(path.read_text(encoding="utf-8"))
+                except (OSError, json.JSONDecodeError) as exc:
+                    raise ValueError(
+                        f"{case_id}: dispatch {step_index} Reference partition authority is missing"
+                    ) from exc
+                reference_partition_paths[owner] = path
+    pointer = envelope_pointer or f"fixture:{case_id}:step:{step_index}:selector"
+    envelope_sha = envelope_sha256 or _sha256_text(_canonical_json_text(step))
+    authority_step = step
+    if router_authority["schema"] == "combined-router/v1":
+        authority_step = {
+            **step,
+            **_native_combined_dispatch_binding(
+                case_id,
+                step_index,
+                step,
+                subject_root,
+                router_authority,
+            ),
+        }
+    authority_bundle = _selection_authority_bundle(
+        schema=router_authority["schema"],
+        router_rows=router_authority["rows"],
+        step=authority_step,
+        selector=selector,
+        selector_resolution=selector_resolution,
+        reference_partitions=(reference_partitions or None),
+        exact_references=exact_references,
+        exact_reference_bindings=exact_reference_bindings,
+        envelope_pointer=pointer,
+        envelope_sha256=envelope_sha,
+        selection_owner=selection_owner,
+    )
+    if loaded_assignment_keys is None:
+        loaded_assignment_keys = set()
+    if global_router_loaded_hosts is None:
+        global_router_loaded_hosts = set()
+    capsule = step.get("fixture_capsule") or step.get("utility_capsule")
+    assignment = None
+    if isinstance(capsule, dict):
+        assignment = next(
+            (
+                str(capsule[field])
+                for field in (
+                    "task_id",
+                    "review_round_id",
+                    "analysis_id",
+                    "canonical_sha256",
+                )
+                if isinstance(capsule.get(field), str) and capsule[field]
+            ),
+            None,
+        )
+    assignment = assignment or f"{case_id}:dispatch:{step_index}"
+    assignment_prefix = (
+        case_id,
+        assignment,
+        str(step.get("profile") or ""),
+        primary,
+        selection_owner,
+    )
+    components: list[dict[str, Any]] = []
+    component_tokens = {
+        "always_loaded": 0,
+        "selector": 0,
+        "reference_partition": 0,
+    }
+    for host in hosts:
+        assets: list[tuple[str, str, Path, tuple[str, ...]]] = []
+        if selection_owner == "main-control-agent" and host not in global_router_loaded_hosts:
+            assets.extend(
+                [
+                    (
+                        "main-profile",
+                        "always_loaded",
+                        host_profiles[host],
+                        (case_id, host, "initial-main-profile"),
+                    ),
+                    (
+                        "control-owner",
+                        "always_loaded",
+                        recommended / "engineering-control-plane/SKILL.md",
+                        (case_id, host, "initial-control-owner"),
+                    ),
+                    (
+                        "global-professional-router",
+                        "selector",
+                        router_path,
+                        (case_id, host, "initial-global-router"),
+                    ),
+                ]
+            )
+            global_router_loaded_hosts.add(host)
+        for selector_kind, physical_path, key_suffix in selector_asset_specs:
+            selector_key = (*assignment_prefix, host, key_suffix)
+            if (
+                selector is not None
+                and selection_owner == "main-control-agent"
+                and selector_key not in loaded_assignment_keys
+            ):
+                assets.append(
+                    (selector_kind, "selector", physical_path, selector_key)
+                )
+                loaded_assignment_keys.add(selector_key)
+        for owner, path in reference_partition_paths.items():
+            partition_key = (*assignment_prefix, host, "reference-partition", owner)
+            if partition_key in loaded_assignment_keys:
+                continue
+            assets.append(
+                ("reference-records-partition", "reference_partition", path, partition_key)
+            )
+            loaded_assignment_keys.add(partition_key)
+        for kind, bucket, path, asset_key in assets:
+            if not path.is_file() or path.is_symlink():
+                raise ValueError(
+                    f"{case_id}: dispatch {step_index} {host} {kind} authority is missing"
+                )
+            raw = path.read_bytes()
+            sha256 = hashlib.sha256(raw).hexdigest()
+            if kind == "main-profile":
+                for profile in BUILD_PROFILES:
+                    expected_sha = manifests[profile].get(
+                        "agent_profile_sha256", {}
+                    ).get(host, {}).get("main-control-agent")
+                    if expected_sha != sha256:
+                        raise ValueError(
+                            f"{case_id}: {host} main-profile manifest binding mismatch"
+                        )
+            tokens = count_o200k_base_tokens(raw.decode("utf-8"))
+            component_tokens[bucket] += tokens
+            components.append(
+                {
+                    "host": host,
+                    "kind": kind,
+                    "bucket": bucket,
+                    "physical_path": path.relative_to(subject_root).as_posix(),
+                    "sha256": sha256,
+                    "tokens": tokens,
+                    "load_count": 1,
+                    "content_scope": "complete-native-bytes",
+                    "assignment_key": "/".join(asset_key),
+                }
+            )
+    _validate_selection_asset_occurrences(components)
+    return {
+        **authority_bundle,
+        "selector_resolution": (
+            selector_resolution["selection_kind"]
+            if selector_resolution is not None
+            else "complete-legacy"
+        ),
+        "professional_selector_decision_path": (
+            selector_resolution["path"]
+            if selector_resolution is not None
+            else selector_path.relative_to(subject_root).as_posix()
+        ),
+        "host_order": list(hosts),
+        "physical_selector_kinds": sorted(
+            {row["kind"] for row in components if row["bucket"] == "selector"}
+        ),
+        "components": components,
+        "component_tokens": component_tokens,
+        "selector_load_count": sum(
+            row["load_count"] for row in components if row["bucket"] == "selector"
+        ),
+        "reference_partition_load_count": sum(
+            row["load_count"]
+            for row in components
+            if row["bucket"] == "reference_partition"
+        ),
+        "manifest_bindings": manifest_bindings,
+        "authoritative_build_inputs": expected_input,
+        "authority": {
+            "router": {
+                "path": router_path.relative_to(subject_root).as_posix(),
+                "sha256": router_authority["sha256"],
+                "header": router_authority["header"],
+            },
+            "professional_selector": (
+                {
+                    "path": selector_path.relative_to(subject_root).as_posix(),
+                    "sha256": hashlib.sha256(selector_path.read_bytes()).hexdigest(),
+                    "pointer": authority_bundle["professional_selector_pointer"],
+                }
+                if selector is not None
+                else None
+            ),
+            "professional_selector_assets": [
+                {
+                    "kind": kind,
+                    "path": path.relative_to(subject_root).as_posix(),
+                    "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                }
+                for kind, path, _key in selector_asset_specs
+            ],
+            "reference_partitions": [
+                {
+                    "owner_skill": owner,
+                    "path": path.relative_to(subject_root).as_posix(),
+                    "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                    "pointer": pointer,
+                }
+                for owner, path, pointer in zip(
+                    reference_partition_paths,
+                    reference_partition_paths.values(),
+                    authority_bundle["reference_partition_pointers"],
+                    strict=True,
+                )
+            ],
+        },
+    }
+
+
+def _native_trajectory_case_cost(
+    case: dict[str, Any],
+    subject_root: Path,
+    manifests: dict[str, dict[str, Any]],
+    lightweight_module: Any,
+    *,
+    native_schema: dict[str, Any],
+    host: str,
+) -> dict[str, Any]:
+    case_id = case.get("id")
+    if not isinstance(case_id, str) or not case_id:
+        raise ValueError("native trajectory case has no id")
+    if host not in FOCUS_PROFILE_HOSTS:
+        raise ValueError(f"{case_id}: native trajectory host binding is invalid")
+    steps = case.get("steps")
+    if not isinstance(steps, list):
+        raise ValueError(f"{case_id}: native trajectory steps are missing")
+    metrics = lightweight_module._native_structural_metrics(case)
+    components = {name: 0 for name in END_TO_END_COMPONENTS}
+    component_sources: list[dict[str, Any]] = []
+    manifest_bindings: dict[str, Any] | None = None
+    authoritative_build_inputs: dict[str, Any] | None = None
+    selector_asset_load_count = 0
+    reference_partition_load_count = 0
+    envelope_count = 0
+    selection_authority_bundles: list[dict[str, Any]] = []
+    selection_asset_component_tokens = {
+        "always_loaded": 0,
+        "selector": 0,
+        "reference_partition": 0,
+    }
+    loaded_assignment_keys: set[tuple[str, ...]] = set()
+    global_router_loaded_hosts: set[str] = set()
+    accepted_brief_seen = False
+
+    def add_file(bucket: str, kind: str, path: Path) -> None:
+        if not path.is_file() or _uses_symlink(
+            path, subject_root
+        ):
+            raise ValueError(
+                f"{case_id}: missing complete native {kind} component "
+                f"{path.relative_to(subject_root)}"
+            )
+        raw = path.read_bytes()
+        tokens = count_o200k_base_tokens(raw.decode("utf-8"))
+        components[bucket] += tokens
+        component_sources.append(
+            {
+                "host": host,
+                "kind": kind,
+                "bucket": bucket,
+                "physical_path": path.relative_to(subject_root).as_posix(),
+                "sha256": hashlib.sha256(raw).hexdigest(),
+                "tokens": tokens,
+                "load_count": 1,
+                "content_scope": "complete-native-bytes",
+            }
+        )
+
+    for index, step in enumerate(steps):
+        if not isinstance(step, dict) or not step.get("action"):
+            raise ValueError(f"{case_id}: malformed native step {index}")
+        if (
+            step.get("action") == "first_executable_slice"
+            and step.get("brief_status") == "accepted"
+        ):
+            accepted_brief_seen = True
+        if step.get("action") != "dispatch":
+            continue
+        selector, instructions = lightweight_module._minimal_dispatch_partition(step)
+        selector_text = _canonical_json_text(selector)
+        instruction_text = _canonical_json_text(instructions)
+        selector_tokens = count_o200k_base_tokens(selector_text)
+        components["cross_agent_transfer"] += selector_tokens
+        envelope_count += 1
+        components["dispatch_instructions"] += count_o200k_base_tokens(
+            instruction_text
+        )
+        component_sources.extend(
+            [
+                {
+                    "host": host,
+                    "kind": "native-selector-envelope",
+                    "bucket": "cross_agent_transfer",
+                    "physical_path": f"fixture:{case_id}:step:{index}:selector",
+                    "sha256": _sha256_text(selector_text),
+                    "tokens": selector_tokens,
+                    "load_count": 1,
+                    "content_scope": "complete-native-dispatch-partition",
+                },
+                {
+                    "host": host,
+                    "kind": "native-dispatch-instructions",
+                    "bucket": "dispatch_instructions",
+                    "physical_path": f"fixture:{case_id}:step:{index}:capsule",
+                    "sha256": _sha256_text(instruction_text),
+                    "tokens": count_o200k_base_tokens(instruction_text),
+                    "load_count": 1,
+                    "content_scope": "complete-native-dispatch-partition",
+                },
+            ]
+        )
+        role = str(step["profile"])
+        worker_path = _profile_path(host, role)
+        add_file("always_loaded", "worker-profile", worker_path)
+        worker_sha256 = hashlib.sha256(worker_path.read_bytes()).hexdigest()
+        if any(
+            manifest.get("agent_profile_sha256", {}).get(host, {}).get(role)
+            != worker_sha256
+            for manifest in manifests.values()
+        ):
+            raise ValueError(
+                f"{case_id}: {host}/{role} worker Profile manifest binding mismatch"
+            )
+        primary = str(step.get("primary_skill") or "")
+        if primary:
+            assets = _native_dispatch_selection_assets(
+                case_id,
+                index,
+                step,
+                subject_root,
+                manifests,
+                envelope_pointer=f"fixture:{case_id}:step:{index}:selector",
+                envelope_sha256=_sha256_text(selector_text),
+                selection_owner=(
+                    "engineering-brief"
+                    if accepted_brief_seen
+                    and step.get("profile") in {"task-agent", "review-agent"}
+                    else "main-control-agent"
+                ),
+                loaded_assignment_keys=loaded_assignment_keys,
+                global_router_loaded_hosts=global_router_loaded_hosts,
+            )
+            host_assets = [
+                item for item in assets["components"] if item.get("host") == host
+            ]
+            for item in host_assets:
+                bucket = str(item["bucket"])
+                tokens = int(item["tokens"]) * int(item["load_count"])
+                components[bucket] += tokens
+                selection_asset_component_tokens[bucket] += tokens
+            component_sources.extend(host_assets)
+            selector_asset_load_count += sum(
+                int(item["load_count"])
+                for item in host_assets
+                if item["bucket"] == "selector"
+            )
+            reference_partition_load_count += sum(
+                int(item["load_count"])
+                for item in host_assets
+                if item["bucket"] == "reference_partition"
+            )
+            selection_authority_bundles.append(
+                {
+                    "host": host,
+                    **{
+                        key: assets[key]
+                        for key in (
+                            "schema",
+                            "authority",
+                            "router_pointers",
+                            "router_declared_layer3",
+                            "professional_selector_pointer",
+                            "selection_owner",
+                            "professional_selector_declared_layer3",
+                            "reference_partitions_loaded",
+                            "reference_partition_pointers",
+                            "native_envelope",
+                            "handoff_augmentation",
+                            "effective_ordered_layer3",
+                            "manifest_bindings",
+                            "authoritative_build_inputs",
+                        )
+                    },
+                    "professional_selector_resolution": copy.deepcopy(
+                        assets.get("professional_selector_resolution")
+                    ),
+                    "professional_selector_receipt": copy.deepcopy(
+                        assets.get("professional_selector_receipt")
+                    ),
+                }
+            )
+            if manifest_bindings is None:
+                manifest_bindings = assets["manifest_bindings"]
+                authoritative_build_inputs = assets["authoritative_build_inputs"]
+            elif (
+                manifest_bindings != assets["manifest_bindings"]
+                or authoritative_build_inputs != assets["authoritative_build_inputs"]
+            ):
+                raise ValueError(f"{case_id}: dispatch asset bindings disagree")
+            add_file(
+                "professional",
+                "professional-skill",
+                DIST_SKILLS / "recommended" / primary / "SKILL.md",
+            )
+        for reference in step.get("professional_references", []):
+            add_file(
+                "targeted_reference",
+                "professional-reference",
+                _professional_reference_path(
+                    "recommended", primary, str(reference)
+                ),
+            )
+        for name in step.get("layer3_skills", []):
+            add_file(
+                "layer3",
+                "layer3-skill",
+                _layer3_path(
+                    "recommended", primary, str(name), manifests["recommended"]
+                ),
+            )
+        for logical_id in step.get("layer3_references", []):
+            add_file(
+                "targeted_reference",
+                "layer3-reference",
+                _layer3_reference_path(
+                    "recommended", primary, str(logical_id), manifests["recommended"]
+                ),
+            )
+
+    transfer = _native_transfer_measurement(case, lightweight_module)
+    components["cross_agent_transfer"] += transfer["gross_tokens"]
+    handoff_tokens = transfer["handoff_tokens"]
+    route, raw_route = _route_obligations(case, subject_root)
+    case_text = _canonical_json_text(case)
+    return {
+        "id": f"{case_id}::{host}",
+        "logical_case_id": case_id,
+        "host": host,
+        "mapping_state": "raw-route-equal-pending-subject-comparison",
+        "route_obligations": route,
+        "raw_route_obligations": raw_route,
+        "native_reference_bindings": _case_native_reference_bindings(
+            case, subject_root
+        ),
+        "component_tokens": components,
+        "structural": {
+            **metrics,
+            "selector_load_count": selector_asset_load_count,
+            "reference_partition_load_count": reference_partition_load_count,
+            "envelope_count": envelope_count,
+            "reference_tokens": components["targeted_reference"],
+            "handoff_tokens": handoff_tokens,
+        },
+        "total_task_tokens": sum(components.values()),
+        "native_schema": native_schema,
+        "native_sources": {
+            "fixture_case_sha256": _sha256_text(case_text),
+            "fixture_case_tokens": count_o200k_base_tokens(case_text),
+            "content_scope": "complete-native-case",
+            "components": component_sources,
+            "handoffs": [
+                {**item, "host": host} for item in transfer["handoff_rows"]
+            ],
+            "selection_asset_manifest_bindings": manifest_bindings or {},
+            "selection_asset_authoritative_build_inputs": (
+                authoritative_build_inputs or {}
+            ),
+            "selection_authority_bundles": selection_authority_bundles,
+            "selection_asset_component_tokens": selection_asset_component_tokens,
+        },
+    }
+
+
+def _build_isolated_subject(subject_root: Path) -> None:
+    for profile in BUILD_PROFILES:
+        _run_checked(
+            ["python3", "scripts/build.py", "--profile", profile],
+            cwd=subject_root,
+        )
+
+
+def _measure_isolated_subject(
+    *,
+    subject_root: Path,
+    subject_fixtures: Path,
+    focus_mapping: dict[str, Any],
+    trajectory_mapping: dict[str, Any],
+    subject: str,
+    evaluator_path: Path,
+    lightweight_evaluator_path: Path,
+    reports_root: Path,
+) -> dict[str, Any]:
+    fixture_document = json.loads(subject_fixtures.read_text(encoding="utf-8"))
+    if not isinstance(fixture_document, dict):
+        raise ValueError(f"{subject} native fixture is not a mapping")
+    native_schema = _native_contract_identity(fixture_document)
+    snapshot = authoritative_build_input_snapshot(subject_root)
+    manifests, manifest_errors = _manifest_input_identity(
+        subject_root / "dist/universal/skills", snapshot
+    )
+    if manifest_errors:
+        raise ValueError("; ".join(manifest_errors))
+    lightweight_reports = reports_root / "native-lightweight"
+    native_lightweight = subject_root / "scripts/eval-agent-lightweight.py"
+    _run_checked(
+        [
+            "python3",
+            str(native_lightweight),
+            "--reports-dir",
+            str(lightweight_reports),
+        ],
+        cwd=subject_root,
+    )
+    lightweight_path = lightweight_reports / "hookless-control-plane-eval.json"
+    lightweight = json.loads(lightweight_path.read_text(encoding="utf-8"))
+    _require_native_validator_report(
+        lightweight,
+        subject=subject,
+        expected_fixture_schema=native_schema["fixture_schema_version"],
+    )
+    lightweight_module = _load_current_lightweight_module(
+        lightweight_evaluator_path
+    )
+    fixture_cases = {
+        str(case.get("id") or ""): case
+        for _group, case in _fixture_cases(fixture_document)
+    }
+    if "" in fixture_cases:
+        raise ValueError(f"{subject} native trajectory has a missing case id")
+    subject_manifests = {
+        profile: json.loads(
+            (
+                subject_root
+                / "dist/universal/skills"
+                / profile
+                / ".changeforge-build-manifest.json"
+            ).read_text(encoding="utf-8")
+        )
+        for profile in BUILD_PROFILES
+    }
+    cases: list[dict[str, Any]] = []
+    trajectory_rows = {
+        str(row["canonical_id"]): row
+        for row in trajectory_mapping.get("rows", [])
+    }
+    with _subject_configuration(subject_root, subject_fixtures, lightweight_path):
+        for case_id in sorted(fixture_cases):
+            row = trajectory_rows.get(case_id)
+            if row is None:
+                raise ValueError(
+                    f"{subject} native trajectory {case_id} lacks canonical mapping"
+                )
+            for host in FOCUS_PROFILE_HOSTS:
+                measured = _native_trajectory_case_cost(
+                    fixture_cases[case_id],
+                    subject_root,
+                    subject_manifests,
+                    lightweight_module,
+                    native_schema=native_schema,
+                    host=host,
+                )
+                measured["mapping_state"] = row["state"]
+                measured["semantic_obligation"] = row["semantic_obligation"]
+                cases.append(measured)
+        rendered = evaluate() if subject == "candidate" else None
+    native_focus_cases = {
+        str(item.get("id")): item
+        for item in fixture_document.get("task_focus_cases", [])
+        if isinstance(item, dict) and item.get("id")
+    }
+    for row in focus_mapping.get("rows", []):
+        native_id = str(row[f"{subject}_native_id"])
+        if native_id not in native_focus_cases:
+            raise ValueError(
+                f"{subject} task-focus mapping lacks native case {native_id}"
+            )
+        for host in FOCUS_PROFILE_HOSTS:
+            cases.append(
+                _focus_case_cost(
+                    row,
+                    native_focus_cases[native_id],
+                    subject_root,
+                    subject=subject,
+                    host=host,
+                )
+            )
+            cases[-1]["native_schema"] = native_schema
+    return {
+        "identity": {
+            "measurement_source": "isolated-built-subject",
+            "evaluator_sha256": hashlib.sha256(evaluator_path.read_bytes()).hexdigest(),
+            "lightweight_evaluator_sha256": hashlib.sha256(
+                lightweight_evaluator_path.read_bytes()
+            ).hexdigest(),
+            "native_fixture_sha256": hashlib.sha256(
+                subject_fixtures.read_bytes()
+            ).hexdigest(),
+            "native_schema": native_schema,
+            "native_validator_sha256": hashlib.sha256(
+                native_lightweight.read_bytes()
+            ).hexdigest(),
+            "canonical_corpus_digest": focus_mapping.get(
+                "canonical_corpus_digest", focus_mapping["mapping_digest"]
+            ),
+            "tokenizer": "o200k_base",
+            "source_commit": _git_text(subject_root, "rev-parse", "HEAD"),
+            "authoritative_build_inputs": snapshot,
+            "manifests": manifests,
+            "logical_case_count": len(cases) // len(FOCUS_PROFILE_HOSTS),
+            "host_pair_count": len(cases),
+            "host_order": list(FOCUS_PROFILE_HOSTS),
+        },
+        "cases": cases,
+        "lightweight_subject_status": lightweight.get("status"),
+        "lightweight_subject_errors": lightweight.get("errors", []),
+        "rendered_report": rendered,
+    }
+
+
+def evaluate_end_to_end_ab(
+    *,
+    baseline_ref: str,
+    expected_baseline_commit: str | None = None,
+) -> dict[str, Any]:
+    repository_root = ROOT.resolve()
+    evaluator_path = Path(__file__).resolve()
+    lightweight_evaluator_path = repository_root / "scripts/eval-agent-lightweight.py"
+    candidate_commit = _git_text(repository_root, "rev-parse", "HEAD")
+    baseline_commit = _git_text(repository_root, "rev-parse", baseline_ref)
+    if expected_baseline_commit and baseline_commit != expected_baseline_commit:
+        raise ValueError(
+            f"baseline ref moved: expected {expected_baseline_commit}, got {baseline_commit}"
+        )
+    changed_paths = {
+        line
+        for line in _git_text(repository_root, "diff", "--name-only", "HEAD").splitlines()
+        if line
+    }
+    untracked = {
+        line
+        for line in _git_text(
+            repository_root, "ls-files", "--others", "--exclude-standard"
+        ).splitlines()
+        if line
+    }
+    unexpected = sorted((changed_paths | untracked) - AB_ALLOWED_WRITE_PATHS)
+    if unexpected:
+        raise ValueError(f"A/B candidate contains out-of-scope paths: {unexpected}")
+    if untracked:
+        raise ValueError("A/B candidate snapshot does not accept untracked inputs")
+    candidate_patch = _run_checked(
+        ["git", "diff", "--binary", "HEAD"], cwd=repository_root
+    ).stdout
+    with tempfile.TemporaryDirectory(
+        prefix="changeforge-token-ab-", dir="/private/tmp"
+    ) as raw:
+        workspace = Path(raw)
+        baseline_root = workspace / "baseline"
+        candidate_root = workspace / "candidate"
+        added: list[Path] = []
+        try:
+            for root, commit in (
+                (baseline_root, baseline_commit),
+                (candidate_root, candidate_commit),
+            ):
+                _run_checked(
+                    ["git", "worktree", "add", "--detach", str(root), commit],
+                    cwd=repository_root,
+                )
+                added.append(root)
+            if candidate_patch:
+                _run_checked(
+                    ["git", "apply", "--binary", "-"],
+                    cwd=candidate_root,
+                    input_bytes=candidate_patch,
+                )
+            baseline_document = json.loads(
+                (baseline_root / "evals/agent-light-trajectories/cases.yaml").read_text(
+                    encoding="utf-8"
+                )
+            )
+            candidate_document = json.loads(
+                (candidate_root / "evals/agent-light-trajectories/cases.yaml").read_text(
+                    encoding="utf-8"
+                )
+            )
+            focus_mapping = _canonical_focus_mapping(
+                candidate_document, baseline_document
+            )
+            if focus_mapping["errors"]:
+                raise ValueError("; ".join(focus_mapping["errors"]))
+            trajectory_mapping = _canonical_trajectory_mapping(
+                candidate_document,
+                baseline_document,
+                candidate_root=candidate_root,
+                baseline_root=baseline_root,
+            )
+            if trajectory_mapping["errors"]:
+                raise ValueError("; ".join(trajectory_mapping["errors"]))
+            baseline_fixtures = (
+                baseline_root / "evals/agent-light-trajectories/cases.yaml"
+            )
+            candidate_fixtures = (
+                candidate_root / "evals/agent-light-trajectories/cases.yaml"
+            )
+            baseline_native_fixture_sha256 = hashlib.sha256(
+                (baseline_root / "evals/agent-light-trajectories/cases.yaml").read_bytes()
+            ).hexdigest()
+            candidate_native_fixture_sha256 = hashlib.sha256(
+                (candidate_root / "evals/agent-light-trajectories/cases.yaml").read_bytes()
+            ).hexdigest()
+            focus_mapping["canonical_corpus_digest"] = hashlib.sha256(
+                json.dumps(
+                    {
+                        "focus_mapping_digest": focus_mapping["mapping_digest"],
+                        "trajectory_mapping_digest": trajectory_mapping[
+                            "mapping_digest"
+                        ],
+                        "baseline_native_fixture_sha256": baseline_native_fixture_sha256,
+                        "candidate_native_fixture_sha256": candidate_native_fixture_sha256,
+                    },
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode("utf-8")
+            ).hexdigest()
+            _build_isolated_subject(baseline_root)
+            _build_isolated_subject(candidate_root)
+            baseline = _measure_isolated_subject(
+                subject_root=baseline_root,
+                subject_fixtures=baseline_fixtures,
+                focus_mapping=focus_mapping,
+                trajectory_mapping=trajectory_mapping,
+                subject="baseline",
+                evaluator_path=evaluator_path,
+                lightweight_evaluator_path=lightweight_evaluator_path,
+                reports_root=workspace / "baseline-reports",
+            )
+            candidate = _measure_isolated_subject(
+                subject_root=candidate_root,
+                subject_fixtures=candidate_fixtures,
+                focus_mapping=focus_mapping,
+                trajectory_mapping=trajectory_mapping,
+                subject="candidate",
+                evaluator_path=evaluator_path,
+                lightweight_evaluator_path=lightweight_evaluator_path,
+                reports_root=workspace / "candidate-reports",
+            )
+            comparison = _compare_end_to_end_subjects(baseline, candidate)
+            comparison["fixed_baseline_ref"] = baseline_ref
+            comparison["fixed_baseline_commit"] = baseline_commit
+            comparison["candidate_start_commit"] = candidate_commit
+            comparison["candidate_changed_paths"] = sorted(changed_paths)
+            comparison["canonical_corpus"] = {
+                "focus_mapping_digest": focus_mapping["mapping_digest"],
+                "trajectory_mapping_digest": trajectory_mapping[
+                    "mapping_digest"
+                ],
+                "canonical_corpus_digest": focus_mapping[
+                    "canonical_corpus_digest"
+                ],
+                "task_focus_mapping_row_count": len(focus_mapping["rows"]),
+                "task_focus_mapping_rows": focus_mapping["rows"],
+                "trajectory_mapping_row_count": len(trajectory_mapping["rows"]),
+                "trajectory_mapping_rows": trajectory_mapping["rows"],
+                "total_case_count": (
+                    len(focus_mapping["rows"]) + len(trajectory_mapping["rows"])
+                ),
+                "baseline_native_fixture_sha256": baseline_native_fixture_sha256,
+                "candidate_native_fixture_sha256": candidate_native_fixture_sha256,
+            }
+            expected_logical_cases = comparison["canonical_corpus"][
+                "total_case_count"
+            ]
+            expected_host_pairs = expected_logical_cases * len(FOCUS_PROFILE_HOSTS)
+            matrix = comparison.get("host_matrix")
+            if not isinstance(matrix, dict) or (
+                matrix.get("logical_case_count") != expected_logical_cases
+                or matrix.get("host_pair_count") != expected_host_pairs
+                or matrix.get("host_order") != list(FOCUS_PROFILE_HOSTS)
+            ):
+                comparison["errors"].append(
+                    "end-to-end host matrix does not bind every canonical case"
+                )
+            comparison["_candidate_rendered_report"] = candidate["rendered_report"]
+            if baseline.get("lightweight_subject_errors"):
+                comparison["errors"].append("baseline lightweight subject is invalid")
+            if candidate.get("lightweight_subject_errors"):
+                comparison["errors"].append("candidate lightweight subject is invalid")
+            comparison["status"] = "pass" if not comparison["errors"] else "fail"
+        finally:
+            for root in reversed(added):
+                subprocess.run(
+                    ["git", "worktree", "remove", "--force", str(root)],
+                    cwd=repository_root,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    check=False,
+                )
+        if _git_text(repository_root, "rev-parse", baseline_ref) != baseline_commit:
+            raise RuntimeError("baseline ref moved after measurement")
+        return comparison
 
 
 def _markdown_h2_sections(text: str) -> list[tuple[str, str]]:
@@ -3413,7 +7133,6 @@ def evaluate() -> dict[str, Any]:
     long_task_ids, semantic_equality = _load_lightweight_prerequisite(
         expected_case_ids
     )
-    long_task_baselines = _registered_long_task_baselines(long_task_ids)
     layer3_entries = _layer3_registry_entries()
     manifests = _load_manifests(errors)
     if set(manifests) != set(BUILD_PROFILES):
@@ -3730,52 +7449,11 @@ def evaluate() -> dict[str, Any]:
             f"{missing}"
         )
     transfer_aggregate = _aggregate_transfer_rows(transfer_rows)
-    category_baselines = TRANSFER_MEASUREMENT_CONTRACT[
-        "category_baseline_gross_tokens"
-    ]
-    for category, measurement in transfer_aggregate["categories"].items():
-        before = category_baselines[category]
-        after = measurement["gross_tokens"]
-        measurement["before_gross_tokens"] = before
-        measurement["after_gross_tokens"] = after
-        measurement["realized_reduction_tokens"] = before - after
-        measurement["realized_reduction_ratio"] = round((before - after) / before, 6)
     long_task_rows = []
     for case_id in sorted(long_task_ids):
         row = dict(transfer_by_id[case_id])
         row["required_progress_for_multi_agent"] = True
-        row["after_gross_tokens"] = row["gross_tokens"]
-        row["before_gross_tokens"] = long_task_baselines[case_id]
-        row["realized_reduction_tokens"] = (
-            row["before_gross_tokens"] - row["after_gross_tokens"]
-        )
-        row["realized_reduction_ratio"] = round(
-            row["realized_reduction_tokens"] / row["before_gross_tokens"], 6
-        )
         long_task_rows.append(row)
-    conservative_long_task_ratio = min(
-        row["realized_reduction_ratio"] for row in long_task_rows
-    )
-    after_gross_tokens = transfer_aggregate["gross_tokens"]
-    before_gross_tokens = TRANSFER_MEASUREMENT_CONTRACT["baseline_gross_tokens"]
-    realized_reduction_tokens = before_gross_tokens - after_gross_tokens
-    realized_reduction_ratio = round(
-        realized_reduction_tokens / before_gross_tokens, 6
-    )
-    minimum_reduction = TRANSFER_MEASUREMENT_CONTRACT[
-        "minimum_realized_reduction_ratio"
-    ]
-    target_reduction = TRANSFER_MEASUREMENT_CONTRACT[
-        "target_realized_reduction_ratio"
-    ]
-    compaction_decision = {
-        "classification": _context_compaction_classification(
-            conservative_long_task_ratio
-        ),
-        "observed_conservative_ratio": conservative_long_task_ratio,
-        "minimum_realized_reduction_ratio": minimum_reduction,
-        "target_realized_reduction_ratio": target_reduction,
-    }
     transferred_context = {
         "source_scope": {
             "trajectory_fixture": _relative(FIXTURES),
@@ -3801,44 +7479,13 @@ def evaluate() -> dict[str, Any]:
             ),
         },
         "semantic_baseline": semantic_equality,
+        "measurement_kind": "candidate-subject-only",
         **transfer_aggregate,
-        "before_gross_tokens": before_gross_tokens,
-        "after_gross_tokens": after_gross_tokens,
-        "realized_reduction_tokens": realized_reduction_tokens,
-        "realized_reduction_ratio": realized_reduction_ratio,
-        "minimum_realized_reduction_ratio": minimum_reduction,
-        "target_realized_reduction_ratio": target_reduction,
-        "context_compaction_decision": compaction_decision,
         "measured_case_count": len(transfer_rows),
         "long_task_selector_join_count": len(long_task_rows),
         "long_task_rows": long_task_rows,
-        "conservative_long_task_ratio": conservative_long_task_ratio,
         "proof_limits": list(TRANSFER_PROOF_LIMITS),
     }
-    if realized_reduction_ratio < minimum_reduction:
-        errors.append("aggregate transferred-context realized reduction is below 0.25")
-    for row in long_task_rows:
-        if row["realized_reduction_ratio"] < minimum_reduction:
-            errors.append(
-                f"{row['id']}: long-task realized reduction is below 0.25"
-            )
-    for protected_category in ("authority", "skill_reference", "task_capsule"):
-        if transfer_aggregate["categories"][protected_category]["gross_tokens"] != (
-            category_baselines[protected_category]
-        ):
-            errors.append(
-                f"{TRANSFER_CATEGORY_LABELS[protected_category]} transfer changed "
-                "during derived-context compaction"
-            )
-    duplicate_before = category_baselines["duplicate_context"]
-    duplicate_after = transfer_aggregate["categories"]["duplicate_context"][
-        "gross_tokens"
-    ]
-    duplicate_reduction_ratio = round(
-        (duplicate_before - duplicate_after) / duplicate_before, 6
-    )
-    if duplicate_reduction_ratio < minimum_reduction:
-        errors.append("duplicate context did not decrease by at least 25 percent")
     if transfer_aggregate["categories"]["superseded_evidence"]["gross_tokens"]:
         errors.append("superseded evidence must not cross a transfer boundary")
     admissible_context_compositions = _evaluate_admissible_context_compositions(
@@ -3940,6 +7587,167 @@ def evaluate() -> dict[str, Any]:
     }
 
 
+def _selection_authority_projection_summary(
+    cases: list[dict[str, Any]], subject: str
+) -> dict[str, Any]:
+    bundles: list[dict[str, Any]] = []
+    loads = {
+        "selector_load_count": 0,
+        "reference_partition_load_count": 0,
+        "reference_load_count": 0,
+    }
+    for case in cases:
+        subject_bundles = case.get("selection_authority_bundles", {}).get(subject)
+        structural = case.get("structural")
+        if not isinstance(subject_bundles, list) or not isinstance(structural, dict):
+            raise ValueError(
+                f"end-to-end case omits {subject} selection authority projection"
+            )
+        for bundle in subject_bundles:
+            if not isinstance(bundle, dict) or not isinstance(bundle.get("schema"), str):
+                raise ValueError(
+                    f"end-to-end case has invalid {subject} selection authority bundle"
+                )
+            bundles.append(bundle)
+        for field in loads:
+            values = structural.get(field)
+            value = values.get(subject) if isinstance(values, dict) else None
+            if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+                raise ValueError(
+                    f"end-to-end case omits {subject} structural field {field}"
+                )
+            loads[field] += value
+    schemas: dict[str, int] = {}
+    for bundle in bundles:
+        schema = bundle["schema"]
+        schemas[schema] = schemas.get(schema, 0) + 1
+    return {
+        "bundle_count": len(bundles),
+        "bundle_digest": _sha256_text(_canonical_json_text(bundles)),
+        "schemas": dict(sorted(schemas.items())),
+        **loads,
+    }
+
+
+def _end_to_end_projection_binding(comparison: dict[str, Any]) -> dict[str, Any]:
+    payload = _canonical_json_text(comparison)
+    aggregate = comparison.get("aggregate")
+    cases = comparison.get("cases")
+    subjects = comparison.get("subjects")
+    host_matrix = comparison.get("host_matrix")
+    if (
+        not isinstance(aggregate, dict)
+        or not isinstance(cases, list)
+        or not isinstance(subjects, dict)
+        or not isinstance(host_matrix, dict)
+    ):
+        raise ValueError("end-to-end comparison projection is incomplete")
+    normalized_cases: list[dict[str, Any]] = []
+    for case in cases:
+        if not isinstance(case, dict):
+            raise ValueError("end-to-end comparison case is not an object")
+        normalized_cases.append(case)
+    ordinary_regressions = comparison.get("ordinary_route_regressions", [])
+    if not isinstance(ordinary_regressions, list) or any(
+        not isinstance(row, dict) for row in ordinary_regressions
+    ):
+        raise ValueError("end-to-end ordinary route regressions are malformed")
+    return {
+        "contract": "changeforge.end-to-end-cost-projection/v1",
+        "comparison_sha256": _sha256_text(payload),
+        "case_count": len(cases),
+        "status": comparison.get("status"),
+        "aggregate": dict(aggregate),
+        "host_matrix": copy.deepcopy(host_matrix),
+        "host_matrix_sha256": _sha256_text(_canonical_json_text(host_matrix)),
+        "subject_identity_sha256": _sha256_text(_canonical_json_text(subjects)),
+        "selection_authority_summary": {
+            subject: _selection_authority_projection_summary(
+                normalized_cases, subject
+            )
+            for subject in ("baseline", "candidate")
+        },
+        "ordinary_route_gate": {
+            "rule": comparison.get("ordinary_route_comparison_rule"),
+            "regression_count": len(ordinary_regressions),
+            "regression_digest": _sha256_text(
+                _canonical_json_text(ordinary_regressions)
+            ),
+            "regressions": copy.deepcopy(ordinary_regressions),
+        },
+    }
+
+
+def _render_end_to_end_projection_markdown(comparison: dict[str, Any]) -> str:
+    binding = _end_to_end_projection_binding(comparison)
+    aggregate = binding["aggregate"]
+    authority = binding["selection_authority_summary"]
+    host_matrix = binding["host_matrix"]
+    ordinary_gate = binding["ordinary_route_gate"]
+    authority_lines: list[str] = []
+    for subject in ("baseline", "candidate"):
+        summary = authority[subject]
+        schemas = ", ".join(
+            f"{schema}={count}" for schema, count in summary["schemas"].items()
+        ) or "none"
+        authority_lines.append(
+            f"Selection authority {subject}: bundles **{summary['bundle_count']}**; "
+            f"schemas **{schemas}**; selector/partition/reference loads "
+            f"**{summary['selector_load_count']} / "
+            f"{summary['reference_partition_load_count']} / "
+            f"{summary['reference_load_count']}**."
+        )
+    ordinary_lines = [
+        "Ordinary raw-route-equal regression "
+        f"`{row.get('id')}` ({row.get('host')}): "
+        f"**{row.get('total_task_tokens', {}).get('delta')} token(s)**."
+        for row in ordinary_gate["regressions"]
+    ]
+    return "\n".join(
+        [
+            "## End-to-End Cost Gate",
+            "",
+            f"Contract: **{binding['contract']}**.",
+            f"Comparison SHA-256: `{binding['comparison_sha256']}`.",
+            f"Subject identity SHA-256: `{binding['subject_identity_sha256']}`.",
+            f"Comparable cases: **{binding['case_count']}**; status: **{binding['status']}**.",
+            "Host matrix logical/physical rows: "
+            f"**{host_matrix.get('logical_case_count')} / "
+            f"{host_matrix.get('host_pair_count')}**; digest "
+            f"`{binding['host_matrix_sha256']}`.",
+            "Host matrix reconciliation baseline/candidate/rows: "
+            f"**{host_matrix.get('reconciliation', {}).get('baseline')} / "
+            f"{host_matrix.get('reconciliation', {}).get('candidate')} / "
+            f"{host_matrix.get('reconciliation', {}).get('host_pair_count')}**.",
+            "Selection authority bundle digests: "
+            f"baseline `{authority['baseline']['bundle_digest']}`; "
+            f"candidate `{authority['candidate']['bundle_digest']}`.",
+            *authority_lines,
+            "Ordinary raw-route-equal gate regressions/digest: "
+            f"**{ordinary_gate['regression_count']}** / "
+            f"`{ordinary_gate['regression_digest']}`.",
+            *ordinary_lines,
+            "Aggregate baseline/candidate/delta: "
+            f"**{aggregate.get('baseline')} / {aggregate.get('candidate')} / "
+            f"{aggregate.get('delta')}**.",
+            "",
+        ]
+    )
+
+
+def _end_to_end_projection_binding_errors(
+    comparison: dict[str, Any], markdown: str, binding: object
+) -> list[str]:
+    expected = _end_to_end_projection_binding(comparison)
+    errors: list[str] = []
+    if binding != expected:
+        errors.append("rendered-context JSON end-to-end binding is stale")
+    expected_markdown = _render_end_to_end_projection_markdown(comparison)
+    if expected_markdown not in markdown:
+        errors.append("rendered-context Markdown end-to-end binding is stale")
+    return errors
+
+
 def _write_reports(
     report: dict[str, Any],
     *,
@@ -3950,6 +7758,13 @@ def _write_reports(
         reports_dir, REPORT_JSON.name, REPORT_MD.name
     )
     reports_dir.mkdir(parents=True, exist_ok=True)
+    comparison = report.get("end_to_end_cost_gate")
+    if comparison is not None:
+        if not isinstance(comparison, dict):
+            raise ValueError("end-to-end cost gate must be an object")
+        report["end_to_end_projection_binding"] = _end_to_end_projection_binding(
+            comparison
+        )
     report_json.write_text(
         json.dumps(report, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
@@ -4033,6 +7848,10 @@ def _write_reports(
             "| --- | ---: | ---: | --- | --- | --- | --- | --- |",
         ]
     )
+    if comparison is not None:
+        lines.extend(
+            _render_end_to_end_projection_markdown(comparison).splitlines()
+        )
     for budget_class in ("task", "analyzed_task", "analysis", "review"):
         maximum = admissible["max_by_budget_class"].get(budget_class)
         lines.append(
@@ -4122,9 +7941,8 @@ def _write_reports(
             f"ratio: **{report['transferred_context']['compressible_ratio']}**.",
             "",
             f"Long tasks joined from lightweight required progress: "
-            f"**{report['transferred_context']['long_task_selector_join_count']}**; "
-            f"conservative ratio: "
-            f"**{report['transferred_context']['conservative_long_task_ratio']}**.",
+            f"**{report['transferred_context']['long_task_selector_join_count']}**. "
+            "Candidate-only transfer measurements carry no baseline claim.",
             "",
             "Overlap views (Evidence Ledger, Diff, Validation, duplicate context, and superseded evidence) are reported outside the gross denominator.",
             "",
@@ -4144,20 +7962,39 @@ def _write_reports(
     if report["errors"]:
         lines.extend(["## Errors", "", *[f"- {item}" for item in report["errors"]], ""])
     if release_projection:
-        report_markdown.write_text("\n".join(lines), encoding="utf-8")
+        markdown = "\n".join(lines)
+        binding_errors = _end_to_end_projection_binding_errors(
+            comparison,
+            markdown,
+            report.get("end_to_end_projection_binding"),
+        ) if comparison is not None else []
+        if binding_errors:
+            raise ValueError("; ".join(binding_errors))
+        report_markdown.write_text(markdown, encoding="utf-8")
 
 
 def _args(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--release-projection", action="store_true")
     parser.add_argument("--reports-dir", type=Path, default=REPORT_JSON.parent)
+    parser.add_argument("--ab-baseline-ref")
+    parser.add_argument("--expected-baseline-commit")
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _args(argv)
     try:
-        report = evaluate()
+        comparison = None
+        if args.ab_baseline_ref:
+            comparison = evaluate_end_to_end_ab(
+                baseline_ref=args.ab_baseline_ref,
+                expected_baseline_commit=args.expected_baseline_commit,
+            )
+            report = comparison.pop("_candidate_rendered_report")
+            report["end_to_end_cost_gate"] = comparison
+        else:
+            report = evaluate()
     except (OSError, RuntimeError, ValueError) as exc:
         print(f"eval-rendered-context-budget: ERROR: {exc}", file=sys.stderr)
         return 1
@@ -4169,6 +8006,10 @@ def main(argv: list[str] | None = None) -> int:
     if report["errors"]:
         for error in report["errors"]:
             print(f"eval-rendered-context-budget: ERROR: {error}", file=sys.stderr)
+        return 1
+    if comparison is not None and comparison["status"] != "pass":
+        for error in comparison["errors"]:
+            print(f"eval-rendered-context-budget: COST-GATE: {error}", file=sys.stderr)
         return 1
     print(
         "eval-rendered-context-budget: validated "

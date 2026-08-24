@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import tomllib
 from pathlib import Path
 
@@ -19,12 +20,16 @@ from validation_utils import (
     PROMPT_CONTRACT_MODEL,
     ROLE_CONTRACT_MODEL,
     fail_many,
+    main_capability_projection as _main_capability_projection,
+    normalized_decision_capabilities as _normalized_decision_capabilities,
+    render_decision_capability_facts as _render_decision_capability_facts,
     validate_ai_readability,
 )
 
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / PROFILE_CONTRACT_MODEL["source_path"]
+PROMPT = ROOT / PROMPT_CONTRACT_MODEL["path"]
 ENFORCEMENT_SOURCE = ROOT / "src" / "agent-profiles" / "host-enforcement.json"
 ENFORCEMENT_STATUSES = {
     "native-enforced",
@@ -49,6 +54,12 @@ HOST_ENFORCEMENT_CAPABILITIES = {
 GENERIC_CAPABILITY_CONTRACT = REVIEW_DISCIPLINE_MODEL["generic_capability_contract"]
 DECISION_CAPABILITY_FIELDS = tuple(GENERIC_CAPABILITY_CONTRACT["injected_fields"])
 DECISION_CAPABILITY_STATES = set(GENERIC_CAPABILITY_CONTRACT["states"])
+MAIN_DECISION_CAPABILITY_FIELDS = (
+    "exact-change-evidence-read",
+    "reviewer-accessible-change-reference",
+    "non-mutating-validation",
+    "not-required",
+)
 HOST_MODE_VALUES = {
     "diff_input_mode": ("native", "supplied-artifact", "unsupported"),
     "validation_mode": ("native-read-only", "task-no-edit", "unsupported"),
@@ -68,60 +79,123 @@ OLD_NAMES = {
     "integration-worker", "pdd-freezer", "ddd-freezer", "sdd-contract-freezer",
     "tdd-behavior-freezer", "task-implementer", "phase-reviewer",
 }
+CONTROL_REFERENCE_RE = re.compile(r"(?<![A-Za-z0-9_.-])references/([a-z0-9-]+\.md)")
+ROLE_MINIMAL_REQUIRED_GROUPS = {
+    "task-agent": (
+        ("Task Capsule", "Professional Skill", "Layer 3 Delivery", "capsule-named"),
+        ("Consume Main's bound effective Level", "never calculate or recompute"),
+        ("inspect the owner", "tests", "minimum consumer", "authorized scope"),
+        ("observable normal", "invalid", "boundary", "forbidden", "validation signal"),
+        ("smallest complete change", "test-only API widening", "unrelated refactors"),
+        ("Test-first is required",),
+        ("valid RED", "absent target behavior", "environment", "unrelated failure"),
+        ("latest material edit invalidates", "fresh targeted validation", "latest-material-edit", "validation-passed"),
+        ("two same-path failures", "never a third unchanged retry"),
+        ("final edit", "fresh validation", "exact change capture", "Implementation Handoff"),
+        ("latest changed paths", "exact change evidence", "reviewer accessibility", "fixed review scope"),
+        ("Utility mode", "daemon", "database", "private evidence storage", "runtime task state engine", "hidden protocol record"),
+        ("Never dispatch", "reroute", "review your work"),
+        ("Leave external-source-read to analysis-agent",),
+        ("current authority", "new material risk", "returns Main", "self-authorizing"),
+    ),
+    "review-agent": (
+        ("assigned Review Skill", "Layer 3 Delivery"),
+        ("capsule-named", "never a Layer 3 index/catalog or preload"),
+        ("Consume Main's bound effective Level", "review depth", "assurance obligations", "never calculate or recompute"),
+        ("delivered current", "every changed file", "missing evidence block"),
+        ("never generates or exports change evidence", "pre-implementation artifact review"),
+        ("At every Level inspect acceptance", "validation freshness", "professional-risk dimension"),
+        ("fresh scope-correct validation", "rerun read-only checks only"),
+        ("material current-task findings", "PASS requires the full changed scope"),
+        ("After repair", "fresh validation", "latest actual diff", "fresh re-review"),
+        ("selection stays independent",),
+        ("Never reroute", "copy/union"),
+        ("Never edit", "repair", "dispatch agents"),
+        ("Leave external-source-read to analysis-agent",),
+        ("assigned Review Handoff", "reviewed/unreviewed scope", "residual risk"),
+    ),
+}
+ROLE_MINIMAL_DETAIL_OWNERS = {
+    "task-agent": (
+        "references/implementation-handoff-template.md",
+        "references/utility-capsule-template.md",
+    ),
+    "review-agent": ("references/review-handoff-template.md",),
+}
+MAIN_SOURCE_DERIVED_REFERENCE_PROJECTIONS = {
+    "utility-capsule-template.md": (
+        "references/utility-capsule-template.md compares workspace before/after"
+    ),
+    "engineering-brief-template.md": (
+        "references/engineering-brief-template.md JIT-owns protected semantics"
+    ),
+    "implementation-handoff-template.md": (
+        "references/implementation-handoff-template.md JIT-owns Ledger State/currentness"
+    ),
+}
+MAIN_CORE_CAPABILITY_REFERENCE_PROJECTION = (
+    "`generic_capability_contract` branches JIT-load from "
+    "references/implementation-handoff-template.md."
+)
 
 
-def _normalized_decision_capabilities(entry: dict[str, object]) -> dict[str, str]:
-    profile_supported = entry.get("profile_delivery") in ENFORCEMENT_STATUSES - {"unsupported"}
-    roles = entry.get("roles")
-    roles = roles if isinstance(roles, dict) else {}
+def role_control_reference_errors(role: str, text: str) -> list[str]:
+    """Reject undeclared or cross-role control Reference consumption."""
 
-    def rendered_tools(role: str) -> set[str]:
-        facts = roles.get(role)
-        tools = facts.get("rendered_tools") if isinstance(facts, dict) else None
-        return set(tools) if isinstance(tools, list) else set()
+    contracts = CORE_CONTRACTS["reference_contract"]["control_required_by"]
+    errors: list[str] = []
+    for line in text.splitlines():
+        names = sorted(set(CONTROL_REFERENCE_RE.findall(line)))
+        if not names or line.strip().casefold().startswith(("- never reload", "never reload")):
+            continue
+        if role == "main-control-agent":
+            # These source-derived projection lines name another role's owner
+            # while keeping its detailed schema JIT-owned by that role.
+            names = [
+                name
+                for name in names
+                if not (
+                    MAIN_SOURCE_DERIVED_REFERENCE_PROJECTIONS.get(name)
+                    and MAIN_SOURCE_DERIVED_REFERENCE_PROJECTIONS[name] in line
+                )
+            ]
+            if line.strip() == MAIN_CORE_CAPABILITY_REFERENCE_PROJECTION:
+                names = [
+                    name
+                    for name in names
+                    if name != "implementation-handoff-template.md"
+                ]
+        for name in names:
+            path = f"references/{name}"
+            owners = contracts.get(path)
+            if not isinstance(owners, list):
+                errors.append(f"{role}: undeclared control Reference {path}")
+                continue
+            if role not in owners:
+                errors.append(
+                    f"{role}: control Reference {path} is owned by {', '.join(owners)}"
+                )
+    return errors
 
-    diff_input_mode = entry.get("diff_input_mode")
-    native_change_read = profile_supported and diff_input_mode == "native"
-    change_evidence_export = profile_supported and bool(
-        rendered_tools("task-agent") & {"execute", "Bash"}
-    )
-    supplied_change_delivery = (
-        profile_supported and diff_input_mode == "supplied-artifact"
-    )
-    reviewer_change_consume = profile_supported and bool(
-        rendered_tools("review-agent")
-        & {"read", "Read", "search", "Grep", "Glob", "execute-read-only"}
-    )
-    validation_supported = entry.get("validation_mode") in {"native-read-only", "task-no-edit"}
-    observation_supported = entry.get("utility_no_edit") in ENFORCEMENT_STATUSES - {"unsupported"}
-    return {
-        "bounded-source-read": "supported" if profile_supported else "unsupported",
-        "workspace-mutation": "supported" if profile_supported else "unsupported",
-        "non-mutating-validation": "supported" if validation_supported else "unsupported",
-        "native-change-read": "supported" if native_change_read else "unsupported",
-        "change-evidence-export": "supported" if change_evidence_export else "unsupported",
-        "supplied-change-delivery": "supported" if supplied_change_delivery else "unsupported",
-        "reviewer-change-consume": "supported" if reviewer_change_consume else "unsupported",
-        "workspace-state-observation": "supported" if observation_supported else "unsupported",
-    }
+
+def _validate_minimal_role_projection(
+    role: str, rules: list[str], errors: list[str]
+) -> None:
+    for terms in ROLE_MINIMAL_REQUIRED_GROUPS[role]:
+        matches = _rule_group_matches(rules, list(terms))
+        if len(matches) != 1:
+            errors.append(
+                f"{role}: role-minimal projection terms {list(terms)!r} must "
+                f"appear in one instruction bullet, found {len(matches)}"
+            )
+    contracts = CORE_CONTRACTS["reference_contract"]["control_required_by"]
+    for path in ROLE_MINIMAL_DETAIL_OWNERS[role]:
+        if contracts.get(path) != [role]:
+            errors.append(
+                f"{role}: role-minimal detail owner {path} is not source-declared"
+            )
 
 
-def _render_decision_capability_facts(capabilities: dict[str, str]) -> str:
-    groups = {
-        state: [
-            field
-            for field in DECISION_CAPABILITY_FIELDS
-            if capabilities[field] == state
-        ]
-        for state in ("supported", "unsupported")
-    }
-    return (
-        "Current capability facts: supported "
-        + ("/".join(groups["supported"]) or "none")
-        + "; unsupported "
-        + ("/".join(groups["unsupported"]) or "none")
-        + "."
-    )
 OUTPUTS = (
     ("codex", ROOT / "dist" / "codex" / "project" / ".codex" / "agents", ".toml"),
     ("claude", ROOT / "dist" / "claude" / "project" / ".claude" / "agents", ".md"),
@@ -247,6 +321,10 @@ def _validate_profile_instruction_contract(
             errors.append(
                 f"{error_label}: instructions contain forbidden term {obsolete!r}"
             )
+
+    if role_name in ROLE_MINIMAL_REQUIRED_GROUPS:
+        _validate_minimal_role_projection(role_name, rules, errors)
+        return
 
     capability_groups = dict(PROFILE_CONTRACT_MODEL["capability_terms"])
     capability_groups[IMPLEMENTATION_DISCIPLINE_MODEL["profile_capability_id"]] = (
@@ -510,7 +588,7 @@ def _expected_built_instruction_surface(
         host_entry = hosts.get(platform)
         if not isinstance(host_entry, dict):
             return None
-        capability_facts = _normalized_decision_capabilities(host_entry)
+        capability_facts = _main_capability_projection(host_entry)
         sections.append(_render_decision_capability_facts(capability_facts))
     elif name == "analysis-agent":
         host_entry = hosts.get(platform)
@@ -610,6 +688,10 @@ def main(argv: list[str] | None = None) -> int:
             errors.append(f"{name}: instructions must be non-empty")
             continue
         instructions = profile["instructions"]
+        reference_surface = instructions
+        if name == "main-control-agent" and PROMPT.is_file():
+            reference_surface += "\n" + PROMPT.read_text(encoding="utf-8")
+        errors.extend(role_control_reference_errors(name, reference_surface))
         _validate_profile_instruction_contract(
             role_name=name,
             error_label=name,
@@ -798,6 +880,7 @@ def main(argv: list[str] | None = None) -> int:
                 platform, name, instruction_surface, errors
             )
             if instruction_block:
+                errors.extend(role_control_reference_errors(name, instruction_block))
                 _validate_profile_instruction_contract(
                     role_name=name,
                     error_label=f"{platform}:{name}",
@@ -856,7 +939,7 @@ def main(argv: list[str] | None = None) -> int:
                     errors.append("copilot:review-agent must omit execute and use read/search")
             if name == "main-control-agent":
                 host_entry = hosts.get(platform, {})
-                capability_facts = _normalized_decision_capabilities(host_entry)
+                capability_facts = _main_capability_projection(host_entry)
                 expected_modes = _render_decision_capability_facts(capability_facts)
                 if expected_modes not in text:
                     errors.append(f"{platform}:{name}: missing exact capability facts")

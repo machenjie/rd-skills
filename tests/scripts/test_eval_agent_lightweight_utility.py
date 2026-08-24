@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import importlib.util
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -2892,6 +2893,208 @@ class LightweightUtilityContractTests(unittest.TestCase):
         self.assertEqual(2, metrics["duplicate_read_count"])
         self.assertEqual(6, metrics["max_silent_steps"])
         self.assertFalse(metrics["required_multi_agent_progress_satisfied"])
+
+    def test_structural_load_transfer_counters_are_derived_from_trajectory(self) -> None:
+        case = self._release_case("single-module-feature")
+        metrics, errors = self._trajectory_metrics(case)
+        self.assertEqual([], errors)
+        dispatches = [
+            step for step in case["steps"] if step.get("action") == "dispatch"
+        ]
+        expected_selectors = sum(
+            bool(step.get("primary_skill") or step.get("layer3_skills"))
+            for step in dispatches
+        )
+        expected_references = sum(
+            len(step.get("professional_references", []))
+            + len(step.get("layer3_references", []))
+            for step in dispatches
+        )
+        self.assertEqual(expected_selectors, metrics["selector_load_count"])
+        self.assertEqual(expected_references, metrics["reference_load_count"])
+        self.assertEqual(0, metrics["same_assignment_duplicate_read_count"])
+        self.assertGreater(metrics["handoff_count"], 0)
+        self.assertEqual(
+            metrics["selector_load_count"]
+            + metrics["reference_load_count"]
+            + metrics["handoff_count"],
+            metrics["end_to_end_context_occurrence_count"],
+        )
+
+    def test_minimal_transfer_projection_omits_recomputable_policy_payloads(self) -> None:
+        case = self._release_case("single-module-feature")
+        task_dispatch = next(
+            step
+            for step in case["steps"]
+            if step.get("action") == "dispatch" and step.get("profile") == "task-agent"
+        )
+        task_transfer = EVAL._minimal_transfer_projection(task_dispatch)
+        self.assertEqual("task-agent", task_transfer["profile"])
+        serialized = json.dumps(task_transfer, sort_keys=True)
+        for forbidden in (
+            "trigger_evaluations",
+            "l1_eligibility",
+            "l2_eligibility",
+            "l5_assurance_eligibility",
+            "engineering_brief",
+            "task_dag",
+            "superseded_evidence",
+        ):
+            self.assertNotIn(forbidden, serialized)
+        self.assertIn("execution_level_role_projection", serialized)
+
+        handoff = next(
+            step
+            for step in case["steps"]
+            if step.get("actor") == "task-agent"
+            and step.get("action") == "implementation-handoff"
+        )
+        projected_handoff = EVAL._minimal_transfer_projection(handoff)
+        self.assertEqual(
+            {
+                "actor",
+                "action",
+                "handoff_id",
+                "task_id",
+                "latest_changed_paths",
+                "exact_change_evidence",
+                "reviewer_capability_accessibility",
+                "validation_after_latest_material_edit",
+                "fixed_review_scope",
+            },
+            set(projected_handoff),
+        )
+
+    def test_utility_dispatch_omits_execution_level_projection_only_for_typed_modes(self) -> None:
+        for case in self.utility_cases:
+            dispatch = next(
+                step
+                for step in case["steps"]
+                if step.get("action") == "dispatch"
+                and step.get("profile") == "task-agent"
+            )
+            projected = EVAL._minimal_transfer_projection(dispatch)
+            capsule = projected["fixture_capsule"]
+            with self.subTest(case=case["id"]):
+                self.assertEqual("utility", capsule["contract_type"])
+                self.assertNotIn("execution_level_role_projection", capsule)
+                self.assertEqual(
+                    dispatch["mode"], projected["utility_capsule"]["mode"]
+                )
+                self.assertNotIn(
+                    "execution_level_role_projection", projected["utility_capsule"]
+                )
+
+            for mutation in (
+                "implementation-mode",
+                "task-contract",
+                "task-template",
+                "primary-skill",
+            ):
+                changed = copy.deepcopy(dispatch)
+                if mutation == "implementation-mode":
+                    changed["mode"] = "implementation"
+                elif mutation == "task-contract":
+                    changed["fixture_capsule"]["contract_type"] = "task"
+                elif mutation == "task-template":
+                    changed["fixture_capsule"]["template"] = "implementation-task"
+                else:
+                    changed["primary_skill"] = "repository-tooling-change-builder"
+                with self.subTest(case=case["id"], mutation=mutation):
+                    with self.assertRaisesRegex(
+                        ValueError,
+                        "worker dispatch requires Main Level projection source",
+                    ):
+                        EVAL._minimal_transfer_projection(changed)
+
+            changed = copy.deepcopy(dispatch)
+            changed["utility_capsule"]["mode"] = "unknown/no-edit"
+            with self.subTest(case=case["id"], mutation="capsule-mode-mismatch"):
+                with self.assertRaisesRegex(
+                    ValueError,
+                    "worker dispatch requires Main Level projection source",
+                ):
+                    EVAL._minimal_transfer_projection(changed)
+
+    def test_native_structural_measurement_fails_closed_on_incomplete_dispatch(self) -> None:
+        case = self._release_case("single-module-feature")
+        metrics = EVAL._native_structural_metrics(case)
+        self.assertEqual(
+            metrics["selector_load_count"]
+            + metrics["reference_load_count"]
+            + metrics["handoff_count"],
+            metrics["end_to_end_context_occurrence_count"],
+        )
+
+        for mutation in ("missing-profile", "missing-capsule", "malformed-capsule"):
+            with self.subTest(mutation=mutation):
+                changed = copy.deepcopy(case)
+                dispatch = next(
+                    step for step in changed["steps"] if step.get("action") == "dispatch"
+                )
+                if mutation == "missing-profile":
+                    dispatch.pop("profile")
+                elif mutation == "missing-capsule":
+                    dispatch.pop("fixture_capsule", None)
+                    dispatch.pop("utility_capsule", None)
+                else:
+                    dispatch["utility_capsule"] = "not-a-native-capsule"
+                with self.assertRaises(ValueError):
+                    EVAL._native_structural_metrics(changed)
+
+    def test_same_assignment_duplicate_reads_do_not_cross_task_boundaries(self) -> None:
+        base = [
+            {
+                "actor": "task-agent",
+                "action": "read",
+                "task_id": "task-a",
+                "path": "owner.py",
+            },
+            {
+                "actor": "task-agent",
+                "action": "read",
+                "task_id": "task-b",
+                "path": "owner.py",
+            },
+        ]
+        self.assertEqual(1, EVAL._duplicate_reads(base))
+        self.assertEqual(0, EVAL._same_assignment_duplicate_reads(base))
+        base[1]["task_id"] = "task-a"
+        self.assertEqual(1, EVAL._same_assignment_duplicate_reads(base))
+
+    def test_native_structural_selection_requires_reference_pair_and_deduplicates_assignment(self) -> None:
+        case = self._release_case("single-module-feature")
+        dispatch = next(
+            step for step in case["steps"] if step.get("action") == "dispatch"
+        )
+        for missing in ("professional_references", "layer3_references"):
+            changed = copy.deepcopy(case)
+            target = next(
+                step
+                for step in changed["steps"]
+                if step.get("action") == "dispatch"
+            )
+            target.pop(missing)
+            with self.subTest(missing=missing):
+                self.assertEqual(
+                    EVAL._selector_load_count(changed["steps"]),
+                    EVAL._native_structural_metrics(changed)["selector_load_count"],
+                )
+
+        repeated = [copy.deepcopy(dispatch), copy.deepcopy(dispatch)]
+        self.assertEqual(1, EVAL._selector_load_count(repeated))
+        assignment_field = next(
+            field
+            for field in (
+                "task_id",
+                "review_round_id",
+                "analysis_id",
+                "canonical_sha256",
+            )
+            if field in repeated[1]["fixture_capsule"]
+        )
+        repeated[1]["fixture_capsule"][assignment_field] += "-next"
+        self.assertEqual(2, EVAL._selector_load_count(repeated))
 
     def test_all_normal_edit_trajectories_have_typed_discipline(self) -> None:
         for original in self.release_cases:

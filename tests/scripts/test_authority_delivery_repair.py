@@ -229,7 +229,7 @@ class AuthorityDeliveryRepairTests(unittest.TestCase):
             projection = consumed["projection"]
             surfaces = [
                 row
-                for row in projection["selection_surfaces"]
+                for row in projection["owner_surfaces"]
                 if row["selection_owner"] == "engineering-brief"
             ]
             self.assertEqual(

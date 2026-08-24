@@ -223,16 +223,17 @@ class AgentExecutionDisciplineContractTests(unittest.TestCase):
         normalized_source = re.sub(r"\s+", " ", source)
         self.assertNotIn("agent-execution-discipline", source)
         self.assertNotIn("twice-failed route", source)
-        self.assertIn("missing or stale evidence", source)
-        self.assertIn("blocking finding", source)
-        self.assertIn("core `retry_policy`", source)
-        self.assertIn("return control to the main agent", normalized_source)
-        self.assertIn("report the review blocked", normalized_source)
+        self.assertIn("inaccessible diff", source)
+        self.assertIn("stale evidence", source)
+        self.assertIn("reachable failure path", source)
+        self.assertNotIn("core `retry_policy`", source)
+        self.assertIn("return out-of-boundary risk to main", normalized_source)
+        self.assertIn("block on inaccessible diff", normalized_source)
         self.assertIn(
             '"unchanged_retry_after_limit":"return-to-main-or-block"',
             self.core_execution_contract,
         )
-        self.assertIn("`regression-testing`", source)
+        self.assertNotIn("`regression-testing`", source)
 
         candidates = self.ai_review_entry["layer3_candidates"]
         self.assertIn("regression-testing", candidates)

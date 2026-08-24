@@ -8527,11 +8527,295 @@ IMPLEMENTATION_DISCIPLINE_MODEL = CORE_CONTRACTS[
     "implementation_discipline_contract"
 ]
 REVIEW_DISCIPLINE_MODEL = CORE_CONTRACTS["review_discipline_contract"]
+
+
+def normalized_decision_capabilities(entry: dict[str, Any]) -> dict[str, str]:
+    """Project one host declaration to the Core generic capability ceilings."""
+
+    supported_enforcement = {
+        "native-enforced",
+        "sandbox-enforced",
+        "prompt-enforced",
+    }
+    profile_supported = entry.get("profile_delivery") in supported_enforcement
+    roles = entry.get("roles")
+    roles = roles if isinstance(roles, dict) else {}
+
+    def rendered_tools(role: str) -> set[str]:
+        role_facts = roles.get(role)
+        tools = role_facts.get("rendered_tools") if isinstance(role_facts, dict) else None
+        return set(tools) if isinstance(tools, list) else set()
+
+    diff_input_mode = entry.get("diff_input_mode")
+    native_change_read = profile_supported and diff_input_mode == "native"
+    change_evidence_export = profile_supported and bool(
+        rendered_tools("task-agent") & {"execute", "Bash"}
+    )
+    supplied_change_delivery = (
+        profile_supported and diff_input_mode == "supplied-artifact"
+    )
+    reviewer_change_consume = profile_supported and bool(
+        rendered_tools("review-agent")
+        & {"read", "Read", "search", "Grep", "Glob", "execute-read-only"}
+    )
+    validation_supported = entry.get("validation_mode") in {
+        "native-read-only",
+        "task-no-edit",
+    }
+    observation_supported = entry.get("utility_no_edit") in supported_enforcement
+    return {
+        "bounded-source-read": "supported" if profile_supported else "unsupported",
+        "workspace-mutation": "supported" if profile_supported else "unsupported",
+        "non-mutating-validation": (
+            "supported" if validation_supported else "unsupported"
+        ),
+        "native-change-read": "supported" if native_change_read else "unsupported",
+        "change-evidence-export": (
+            "supported" if change_evidence_export else "unsupported"
+        ),
+        "supplied-change-delivery": (
+            "supported" if supplied_change_delivery else "unsupported"
+        ),
+        "reviewer-change-consume": (
+            "supported" if reviewer_change_consume else "unsupported"
+        ),
+        "workspace-state-observation": (
+            "supported" if observation_supported else "unsupported"
+        ),
+    }
+
+
+def _current_handoff_selected_capabilities(
+    handoff: dict[str, Any] | None,
+    facts: dict[str, str],
+    authority: dict[str, Any],
+) -> tuple[str, ...] | None:
+    """Return the selected evidence path only for a current complete handoff."""
+
+    if not isinstance(handoff, dict):
+        return None
+    try:
+        readiness = authority["review_discipline_contract"][
+            "review_input_readiness"
+        ]
+        required_fields = tuple(readiness["required_fields"])
+        exact_kinds = set(readiness["exact_change_evidence_kinds"])
+    except (KeyError, TypeError):
+        return None
+    if any(field not in handoff for field in required_fields):
+        return None
+    latest = handoff.get("latest_changed_paths")
+    fixed = handoff.get("fixed_review_scope")
+    evidence = handoff.get("exact_change_evidence")
+    access = handoff.get("reviewer_capability_accessibility")
+    validation = handoff.get("validation_after_latest_material_edit")
+    if (
+        not isinstance(latest, list)
+        or not latest
+        or not all(isinstance(path, str) and path for path in latest)
+        or fixed != latest
+        or not isinstance(evidence, dict)
+        or evidence.get("kind") not in exact_kinds
+        or type(evidence.get("generation")) is not int
+        or not isinstance(access, dict)
+        or not isinstance(validation, dict)
+        or validation.get("result") != "passed"
+        or validation.get("generation") != evidence["generation"]
+    ):
+        return None
+    kind = evidence["kind"]
+    artifact = evidence.get("artifact")
+    if kind == "reviewer-accessible-native-reference":
+        selected = (
+            "native-change-read",
+            "reviewer-change-consume",
+            "non-mutating-validation",
+        )
+        if (
+            not isinstance(artifact, dict)
+            or set(readiness.get("native_evidence_fields", [])) - set(artifact)
+            or artifact.get("generation") != evidence["generation"]
+            or artifact.get("reviewer") != "review-agent"
+            or artifact.get("changed_paths") != latest
+            or artifact.get("readable") is not True
+            or not isinstance(artifact.get("reference"), str)
+            or not artifact["reference"].startswith("native-change://")
+        ):
+            return None
+    else:
+        selected = (
+            "change-evidence-export",
+            "supplied-change-delivery",
+            "reviewer-change-consume",
+            "non-mutating-validation",
+        )
+        if not isinstance(artifact, str) or not artifact.startswith("diff --git "):
+            return None
+    if any(
+        facts.get(field) != "supported" or access.get(field) != "supported"
+        for field in selected
+    ):
+        return None
+    return selected
+
+
+def main_capability_projection_from_facts(
+    facts: dict[str, str],
+    *,
+    handoff: dict[str, Any] | None = None,
+    core: dict[str, Any] | None = None,
+) -> dict[str, str]:
+    """Derive Main's four current decisions from Core, ceilings, and one handoff."""
+
+    authority = CORE_CONTRACTS if core is None else core
+    try:
+        contract = authority["review_discipline_contract"][
+            "generic_capability_contract"
+        ]
+    except (KeyError, TypeError) as exc:
+        raise ValueError("Core capability projection authority is incomplete") from exc
+    required = {
+        "native-change-read",
+        "change-evidence-export",
+        "supplied-change-delivery",
+        "reviewer-change-consume",
+        "non-mutating-validation",
+    }
+    if not required <= set(contract.get("injected_fields", [])):
+        raise ValueError("Core capability projection fields are incomplete")
+    selected = None
+    if all(facts.get(field) in {"supported", "unsupported"} for field in required):
+        selected = _current_handoff_selected_capabilities(
+            handoff, facts, authority
+        )
+    ready = selected is not None
+    return {
+        "exact-change-evidence-read": "supported" if ready else "unsupported",
+        "reviewer-accessible-change-reference": (
+            "supported" if ready else "unsupported"
+        ),
+        "non-mutating-validation": facts.get(
+            "non-mutating-validation", "unsupported"
+        ),
+        "not-required": "supported" if ready else "unsupported",
+    }
+
+
+def main_capability_projection(
+    entry: dict[str, Any],
+    *,
+    handoff: dict[str, Any] | None = None,
+    core: dict[str, Any] | None = None,
+) -> dict[str, str]:
+    return main_capability_projection_from_facts(
+        normalized_decision_capabilities(entry), handoff=handoff, core=core
+    )
+
+
+def render_decision_capability_facts(capabilities: dict[str, str]) -> str:
+    authority = REVIEW_DISCIPLINE_MODEL["generic_capability_contract"]
+    ceiling_fields = tuple(authority["injected_fields"])
+    main_fields = (
+        "exact-change-evidence-read",
+        "reviewer-accessible-change-reference",
+        "non-mutating-validation",
+        "not-required",
+    )
+    if tuple(capabilities) == ceiling_fields:
+        capabilities = main_capability_projection_from_facts(capabilities)
+    if tuple(capabilities) != main_fields:
+        raise ValueError("decision capability projection has unexpected fields")
+    groups = {
+        state: [field for field in main_fields if capabilities[field] == state]
+        for state in authority["states"]
+    }
+    return (
+        "Current capability facts: supported "
+        + ("/".join(groups["supported"]) or "none")
+        + "; unsupported "
+        + ("/".join(groups["unsupported"]) or "none")
+        + "."
+    )
 CONTEXT_BUDGET_MODEL = CORE_CONTRACTS["context_budget_contract"]
 PROMPT_CONTRACT_MODEL = CORE_CONTRACTS["prompt_contract"]
 PROFILE_CONTRACT_MODEL = CORE_CONTRACTS["profile_contract"]
 CONTROL_SKILL_CONTRACT_MODEL = CORE_CONTRACTS["control_skill_contract"]
 DOCS_CONTRACT_MODEL = CORE_CONTRACTS["docs_contract"]
+
+
+def execution_level_role_projection(
+    extension: dict[str, object], *, role: str
+) -> dict[str, object]:
+    """Project Main's complete Level decision to one non-calculating worker role."""
+
+    if role not in {"task-agent", "review-agent"}:
+        raise ExecutionLevelError(
+            "execution Level role projection is only for Task and Review"
+        )
+    if not isinstance(extension, dict):
+        raise ExecutionLevelError("execution Level extension must be an object")
+    level = extension.get("effective_level")
+    levels = {
+        row["id"]: row
+        for row in EXECUTION_LEVEL_MODEL["levels"]
+        if isinstance(row, dict) and isinstance(row.get("id"), str)
+    }
+    if level not in levels:
+        raise ExecutionLevelError("execution Level projection has unknown effective level")
+    basis = extension.get("level_basis")
+    fallback = (
+        extension.get("integrity_status") == "blocked"
+        and extension.get("edit_status") == "blocked"
+        and "implementation" in extension.get("forbidden_actions", [])
+    )
+    if not isinstance(basis, dict) and not fallback:
+        raise ExecutionLevelError("execution Level projection has no complete basis")
+    obligations = basis.get("obligations") if isinstance(basis, dict) else [
+        *levels[level]["obligations"],
+        *EXECUTION_LEVEL_MODEL["non_bypassable"],
+    ]
+    if not isinstance(obligations, list) or any(
+        not isinstance(value, str) or not value for value in obligations
+    ):
+        raise ExecutionLevelError("execution Level projection obligations are invalid")
+    edit_status = (
+        basis.get("edit_status")
+        if isinstance(basis, dict)
+        else extension.get("edit_status")
+    )
+    if not isinstance(edit_status, str) or not edit_status:
+        raise ExecutionLevelError("execution Level projection edit status is invalid")
+    payload = json.dumps(
+        extension, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    common = {
+        "version": EXECUTION_LEVEL_MODEL["schema_version"],
+        "effective_level": level,
+        "source_sha256": hashlib.sha256(payload).hexdigest(),
+    }
+    if role == "task-agent":
+        return {
+            **common,
+            "edit_status": edit_status,
+            "current_obligations": list(obligations),
+        }
+
+    review_obligations: list[str] = []
+    for value in [
+        *levels[level]["obligations"],
+        *(
+            item
+            for item in EXECUTION_LEVEL_MODEL["non_bypassable"]
+            if "review" in item or "evidence" in item
+        ),
+    ]:
+        if value in obligations and value not in review_obligations:
+            review_obligations.append(value)
+    return {
+        **common,
+        "review_depth": levels[level]["rank"],
+        "assurance_obligations": review_obligations,
+    }
 
 
 def evidence_resolution_authority(data: object) -> dict[str, Any]:
@@ -12828,6 +13112,18 @@ LAYER3_SELECTOR_RUNTIME_CONTRACT = (
 LAYER3_SELECTOR_CONTROL_CONTRACT = (
     "changeforge.layer3-selector-control/v1"
 )
+LAYER3_SELECTOR_NORMALIZED_CONTROL_CONTRACT = (
+    "changeforge.layer3-selector-normalized-control/v1"
+)
+LAYER3_SELECTOR_DECISION_ENVELOPE_CONTRACT = (
+    "changeforge.layer3-selector-decision-envelope/v1"
+)
+LAYER3_SELECTOR_DECISION_PARTITION_CONTRACT = (
+    "changeforge.layer3-selector-decision-partition/v1"
+)
+LAYER3_SELECTOR_REFERENCE_RECORDS_CONTRACT = (
+    "changeforge.layer3-selector-reference-records-partition/v1"
+)
 _LAYER3_SELECTOR_SOURCE_KINDS = (
     "direct-static",
     "dynamic-helper-only",
@@ -13498,7 +13794,6 @@ def layer3_selector_runtime_projection(
     if exact_references is not None:
         if (
             not isinstance(exact_references, list)
-            or not exact_references
             or len(exact_references) != len(set(exact_references))
             or not all(
                 isinstance(path, str) and path for path in exact_references
@@ -13747,6 +14042,928 @@ def layer3_selector_control_projections(
             "selection_surfaces": surfaces,
         }
     return projections
+
+
+def _canonical_selector_document_bytes(document: object) -> bytes:
+    """Serialize one generated selector document with its required final LF."""
+
+    return (
+        json.dumps(
+            document,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        + "\n"
+    ).encode("utf-8")
+
+
+def _engineering_change_diagnosis_decision_authority(
+    authority: object,
+    release_scenarios: object,
+) -> dict[str, Any]:
+    """Bind the one source-owned diagnosis decision to selector authority."""
+
+    if (
+        not isinstance(authority, dict)
+        or authority.get("contract") != LAYER3_SELECTOR_AUTHORITY_CONTRACT
+    ):
+        raise ValidationProblem("diagnosis selector decision lacks canonical authority")
+    if (
+        not isinstance(release_scenarios, dict)
+        or release_scenarios.get("schema_version") != 2
+        or release_scenarios.get("kind")
+        != "changeforge.release_routing_scenarios"
+        or not isinstance(release_scenarios.get("scenarios"), list)
+    ):
+        raise ValidationProblem("diagnosis selector decision lacks release scenarios")
+    scenarios = [
+        row
+        for row in release_scenarios["scenarios"]
+        if isinstance(row, dict) and row.get("id") == "diagnosis"
+    ]
+    if len(scenarios) != 1:
+        raise ValidationProblem("diagnosis selector decision scenario is missing or ambiguous")
+    scenario = scenarios[0]
+    router = scenario.get("router")
+    expected = router.get("expected") if isinstance(router, dict) else None
+    expected_route = {
+        "profile": "analysis-agent",
+        "primary": "engineering-change-analysis",
+        "layer3": ["failure-diagnosis"],
+        "review": "reliability-observability-gate",
+    }
+    if (
+        not isinstance(router, dict)
+        or router.get("trigger") != "failure diagnosis (`diagnosis-only`)"
+        or expected != expected_route
+        or scenario.get("light_case_id") != "diagnosis-only"
+        or scenario.get("control_path") != "diagnosis"
+        or scenario.get("analysis")
+        != {
+            "primary": "engineering-change-analysis",
+            "layer3": ["failure-diagnosis"],
+        }
+        or scenario.get("tasks") != []
+        or scenario.get("review") is not None
+        or scenario.get("review_exemption") != "diagnosis-only"
+    ):
+        raise ValidationProblem("diagnosis selector decision scenario is not canonical")
+
+    aliases = [
+        row
+        for row in authority.get("aliases", [])
+        if isinstance(row, dict)
+        and row.get("candidate_id") == "failure-diagnosis-analysis"
+    ]
+    if len(aliases) != 1:
+        raise ValidationProblem("diagnosis selector decision alias is missing or ambiguous")
+    alias = aliases[0]
+    if (
+        alias.get("source_selector_ids") != ["incident-response-coordination"]
+        or alias.get("primary_skill") != expected_route["primary"]
+        or alias.get("review_skill") != expected_route["review"]
+    ):
+        raise ValidationProblem("diagnosis selector decision alias is not reciprocal")
+    selectors = [
+        row
+        for row in authority.get("selectors", [])
+        if isinstance(row, dict)
+        and row.get("selector_id") == "incident-response-coordination"
+    ]
+    if len(selectors) != 1:
+        raise ValidationProblem("diagnosis selector decision source is missing or ambiguous")
+    selector = selectors[0]
+    owner_pairs = {
+        (row.get("primary_skill"), row.get("review_skill"))
+        for row in selector.get("owner_bindings", [])
+        if isinstance(row, dict)
+    }
+    if (
+        selector.get("selectable_layer3") != expected_route["layer3"]
+        or (expected_route["primary"], expected_route["review"])
+        not in owner_pairs
+        or "analysis-agent" not in selector.get("role_support", [])
+    ):
+        raise ValidationProblem("diagnosis selector decision owner is not reciprocal")
+
+    router_path = (
+        ROOT
+        / "src/control-skills/engineering-control-plane/references/"
+        "professional-skill-router.md"
+    )
+    scenario_path = ROOT / "src/registry/release-routing-scenarios.yaml"
+    foundation_path = ROOT / "src/registry/foundation-skills.yaml"
+    expected_router_row = (
+        "| failure diagnosis (`diagnosis-only`) | analysis-agent | "
+        "engineering-change-analysis | reliability-observability-gate |"
+    )
+    try:
+        router_bytes = router_path.read_bytes()
+        scenario_bytes = scenario_path.read_bytes()
+        foundation_bytes = foundation_path.read_bytes()
+    except OSError as exc:
+        raise ValidationProblem("diagnosis selector source authority is unavailable") from exc
+    if router_bytes.decode("utf-8").count(expected_router_row) != 1:
+        raise ValidationProblem("diagnosis selector Router trigger is missing or ambiguous")
+    return {
+        "decision_id": "failure-diagnosis-analysis",
+        "route_trigger": router["trigger"],
+        "scenario_id": scenario["id"],
+        "light_case_id": scenario["light_case_id"],
+        "profile": expected_route["profile"],
+        "selection_owner": "main-control-agent",
+        "professional_skill": expected_route["primary"],
+        "review_skill": expected_route["review"],
+        "selected_layer3": list(expected_route["layer3"]),
+        "selector_ids": [selector["selector_id"]],
+        "source_authority": {
+            "router": {
+                "path": router_path.relative_to(ROOT).as_posix(),
+                "sha256": hashlib.sha256(router_bytes).hexdigest(),
+                "pointer": expected_router_row,
+            },
+            "release_scenario": {
+                "path": scenario_path.relative_to(ROOT).as_posix(),
+                "sha256": hashlib.sha256(scenario_bytes).hexdigest(),
+                "pointer": "scenarios[id=diagnosis]",
+            },
+            "selector_registry": {
+                "path": foundation_path.relative_to(ROOT).as_posix(),
+                "sha256": hashlib.sha256(foundation_bytes).hexdigest(),
+                "pointer": (
+                    "selector_authority.aliases[candidate_id="
+                    "failure-diagnosis-analysis]"
+                ),
+            },
+        },
+    }
+
+
+def layer3_selector_normalized_control_projections(
+    authority: object,
+    *,
+    release_scenarios: object = None,
+) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
+    """Normalize selector views and owner-scoped Reference partitions."""
+
+    canonical = layer3_selector_control_projections(authority)
+    runtime_professionals = authority.get("runtime_professionals")
+    if not isinstance(runtime_professionals, dict):
+        raise ValidationProblem(
+            "normalized selector projections require Professional authority"
+        )
+    selectors: dict[str, dict[str, Any]] = {}
+    partitions: dict[str, dict[str, Any]] = {}
+    if release_scenarios is None:
+        release_scenarios = load_yaml_file(
+            ROOT / "src/registry/release-routing-scenarios.yaml"
+        )
+    diagnosis_decision = _engineering_change_diagnosis_decision_authority(
+        authority,
+        release_scenarios,
+    )
+    profile_fields = {
+        "profile",
+        "selection_basis",
+        "authorized_layer3",
+        "domain_authorization",
+        "selectors",
+    }
+    for filename, document in canonical.items():
+        professional_skill = document["professional_skill"]
+        professional = runtime_professionals.get(professional_skill)
+        if not isinstance(professional, dict):
+            raise ValidationProblem(
+                f"normalized selector lacks {professional_skill!r} authority"
+            )
+        raw_records = professional.get("reference_records")
+        if not isinstance(raw_records, list):
+            raise ValidationProblem(
+                f"normalized selector {professional_skill!r} lacks Reference records"
+            )
+        records_by_owner: dict[str, list[dict[str, Any]]] = {}
+        identities: dict[tuple[str, str], dict[str, Any]] = {}
+        for raw_record in raw_records:
+            if not isinstance(raw_record, dict):
+                raise ValidationProblem(
+                    f"normalized selector {professional_skill!r} has malformed Reference records"
+                )
+            record = copy.deepcopy(raw_record)
+            identity = (record.get("owner_skill"), record.get("path"))
+            if not all(isinstance(value, str) and value for value in identity):
+                raise ValidationProblem(
+                    f"normalized selector {professional_skill!r} has malformed Reference identity"
+                )
+            previous = identities.get(identity)
+            if previous is not None:
+                if previous != record:
+                    raise ValidationProblem(
+                        f"normalized selector {professional_skill!r} has conflicting duplicate Reference records"
+                    )
+                continue
+            identities[identity] = record
+            records_by_owner.setdefault(identity[0], []).append(record)
+        partition_owners = {
+            professional_skill,
+            *(
+                owner
+                for candidates in professional.get("candidates_by_role", {}).values()
+                for owner in candidates
+            ),
+        }
+        for owner_skill in sorted(partition_owners):
+            records = records_by_owner.get(owner_skill, [])
+            partitions[f"{professional_skill}/{owner_skill}.json"] = {
+                "contract": LAYER3_SELECTOR_REFERENCE_RECORDS_CONTRACT,
+                "authority_contract": authority["contract"],
+                "professional_skill": professional_skill,
+                "owner_skill": owner_skill,
+                "records_sha256": hashlib.sha256(
+                    _canonical_selector_document_bytes(records)
+                ).hexdigest(),
+                "reference_records": records,
+            }
+
+        profile_authority: list[dict[str, Any]] = []
+        profiles: dict[str, dict[str, Any]] = {}
+        owner_surfaces: list[dict[str, str]] = []
+        for surface in document["selection_surfaces"]:
+            profile = surface["profile"]
+            profile_row = {
+                field: copy.deepcopy(surface[field]) for field in profile_fields
+            }
+            previous = profiles.get(profile)
+            if previous is not None and previous != profile_row:
+                raise ValidationProblem(
+                    f"normalized selector {professional_skill!r} has owner-dependent Profile authority"
+                )
+            if previous is None:
+                profiles[profile] = profile_row
+                profile_authority.append(profile_row)
+            owner_surfaces.append(
+                {
+                    "profile": profile,
+                    "selection_owner": surface["selection_owner"],
+                }
+            )
+        base = {
+            "contract": LAYER3_SELECTOR_NORMALIZED_CONTROL_CONTRACT,
+            "authority_contract": authority["contract"],
+            "professional_skill": professional_skill,
+            "maximum_layer3": 3,
+            "exact_layer3_bypass": True,
+            "profile_authority": profile_authority,
+            "owner_surfaces": owner_surfaces,
+            "reference_records_partition": {
+                "contract": LAYER3_SELECTOR_REFERENCE_RECORDS_CONTRACT,
+                "path_template": (
+                    f"../reference-records/{professional_skill}/"
+                    "{owner_skill}.json"
+                ),
+            },
+        }
+        for surface in document["selection_surfaces"]:
+            selected_layer3: list[str] = []
+            selected_partitions = {
+                professional_skill: partitions[
+                    f"{professional_skill}/{professional_skill}.json"
+                ]
+            }
+            expanded = layer3_selector_expand_runtime_projection(
+                base,
+                selected_partitions,
+                profile=surface["profile"],
+                selection_owner=surface["selection_owner"],
+                exact_layer3=None,
+                selected_layer3=selected_layer3,
+                exact_references=None,
+            )
+            expected = copy.deepcopy(surface)
+            expected["reference_records"] = [
+                record
+                for record in expected["reference_records"]
+                if record["owner_skill"] == professional_skill
+            ]
+            if expanded != expected:
+                raise ValidationProblem(
+                    f"normalized selector {professional_skill!r} does not expand to canonical authority"
+                )
+        if professional_skill != "engineering-change-analysis":
+            selectors[filename] = base
+            continue
+
+        profile_rows = [
+            row
+            for row in base["profile_authority"]
+            if row["profile"] == diagnosis_decision["profile"]
+        ]
+        owner_rows = [
+            row
+            for row in base["owner_surfaces"]
+            if row
+            == {
+                "profile": diagnosis_decision["profile"],
+                "selection_owner": diagnosis_decision["selection_owner"],
+            }
+        ]
+        if len(profile_rows) != 1 or len(owner_rows) != 1:
+            raise ValidationProblem(
+                "diagnosis selector decision lacks one canonical owner/Profile surface"
+            )
+        shard_profile = copy.deepcopy(profile_rows[0])
+        shard_profile["selectors"] = [
+            row
+            for row in shard_profile["selectors"]
+            if row.get("selector_id") in diagnosis_decision["selector_ids"]
+        ]
+        if [row.get("selector_id") for row in shard_profile["selectors"]] != (
+            diagnosis_decision["selector_ids"]
+        ):
+            raise ValidationProblem(
+                "diagnosis selector decision does not resolve one canonical selector"
+            )
+        shard_projection = {
+            **copy.deepcopy(base),
+            "profile_authority": [shard_profile],
+            "owner_surfaces": owner_rows,
+        }
+        shard = {
+            "contract": LAYER3_SELECTOR_DECISION_PARTITION_CONTRACT,
+            "authority_contract": authority["contract"],
+            "professional_skill": professional_skill,
+            "decision_id": diagnosis_decision["decision_id"],
+            "profile": diagnosis_decision["profile"],
+            "selection_owner": diagnosis_decision["selection_owner"],
+            "review_skill": diagnosis_decision["review_skill"],
+            "selected_layer3": copy.deepcopy(
+                diagnosis_decision["selected_layer3"]
+            ),
+            "selector_ids": copy.deepcopy(diagnosis_decision["selector_ids"]),
+            "projection": shard_projection,
+        }
+        complete_path = f"{professional_skill}/complete.json"
+        decision_path = (
+            f"{professional_skill}/{diagnosis_decision['decision_id']}.json"
+        )
+        envelope_decision = {
+            "runtime_key": {
+                "route_source": copy.deepcopy(
+                    diagnosis_decision["source_authority"]["router"]
+                ),
+                "trigger": diagnosis_decision["route_trigger"],
+                "start_profile": diagnosis_decision["profile"],
+                "primary_professional_skill": diagnosis_decision[
+                    "professional_skill"
+                ],
+                "review_skill": diagnosis_decision["review_skill"],
+                "selection_owner": diagnosis_decision["selection_owner"],
+            },
+            "provenance": {
+                "decision_id": diagnosis_decision["decision_id"],
+                "scenario_id": diagnosis_decision["scenario_id"],
+                "light_case_id": diagnosis_decision["light_case_id"],
+                "release_scenario": copy.deepcopy(
+                    diagnosis_decision["source_authority"]["release_scenario"]
+                ),
+                "selector_registry": copy.deepcopy(
+                    diagnosis_decision["source_authority"]["selector_registry"]
+                ),
+            },
+        }
+        envelope_decision.update(
+            {
+                "path": decision_path,
+                "sha256": hashlib.sha256(
+                    _canonical_selector_document_bytes(shard)
+                ).hexdigest(),
+            }
+        )
+        envelope = {
+            "contract": LAYER3_SELECTOR_DECISION_ENVELOPE_CONTRACT,
+            "authority_contract": authority["contract"],
+            "professional_skill": professional_skill,
+            "maximum_layer3": 3,
+            "exact_layer3_bypass": True,
+            "decisions": [envelope_decision],
+            "complete": {
+                "path": complete_path,
+                "sha256": hashlib.sha256(
+                    _canonical_selector_document_bytes(base)
+                ).hexdigest(),
+            },
+        }
+        selectors[filename] = envelope
+        selectors[complete_path] = base
+        selectors[decision_path] = shard
+    return selectors, partitions
+
+
+def layer3_selector_resolve_control_projection(
+    envelope: object,
+    documents: object,
+    *,
+    runtime_key: object,
+) -> dict[str, Any]:
+    """Resolve one exact decision shard or the complete fail-closed fallback."""
+
+    envelope_fields = {
+        "contract",
+        "authority_contract",
+        "professional_skill",
+        "maximum_layer3",
+        "exact_layer3_bypass",
+        "decisions",
+        "complete",
+    }
+    if (
+        not isinstance(envelope, dict)
+        or set(envelope) != envelope_fields
+        or envelope.get("contract")
+        != LAYER3_SELECTOR_DECISION_ENVELOPE_CONTRACT
+        or envelope.get("authority_contract")
+        != LAYER3_SELECTOR_AUTHORITY_CONTRACT
+        or not isinstance(envelope.get("professional_skill"), str)
+        or not envelope["professional_skill"]
+        or envelope.get("maximum_layer3") != 3
+        or envelope.get("exact_layer3_bypass") is not True
+        or not isinstance(envelope.get("decisions"), list)
+        or not envelope["decisions"]
+        or not isinstance(documents, dict)
+    ):
+        raise ValidationProblem("selector decision envelope is malformed")
+    complete = envelope.get("complete")
+    if (
+        not isinstance(complete, dict)
+        or set(complete) != {"path", "sha256"}
+        or not all(isinstance(value, str) and value for value in complete.values())
+    ):
+        raise ValidationProblem("selector decision complete fallback is malformed")
+    runtime_key_fields = {
+        "route_source",
+        "trigger",
+        "start_profile",
+        "primary_professional_skill",
+        "review_skill",
+        "selection_owner",
+    }
+    route_source_fields = {"path", "sha256", "pointer"}
+    provenance_fields = {
+        "decision_id",
+        "scenario_id",
+        "light_case_id",
+        "release_scenario",
+        "selector_registry",
+    }
+    decision_fields = {"runtime_key", "provenance", "path", "sha256"}
+    decisions = envelope["decisions"]
+    if (
+        not isinstance(runtime_key, dict)
+        or set(runtime_key) != runtime_key_fields
+        or not isinstance(runtime_key.get("route_source"), dict)
+        or set(runtime_key["route_source"]) != route_source_fields
+        or not all(
+            isinstance(value, str) and value
+            for value in (
+                *runtime_key["route_source"].values(),
+                runtime_key["trigger"],
+                runtime_key["start_profile"],
+                runtime_key["primary_professional_skill"],
+                runtime_key["review_skill"],
+                runtime_key["selection_owner"],
+            )
+        )
+    ):
+        raise ValidationProblem("selector decision runtime tuple is malformed")
+    if any(
+        not isinstance(row, dict)
+        or set(row) != decision_fields
+        or not isinstance(row.get("runtime_key"), dict)
+        or set(row["runtime_key"]) != runtime_key_fields
+        or not isinstance(row["runtime_key"].get("route_source"), dict)
+        or set(row["runtime_key"]["route_source"]) != route_source_fields
+        or not isinstance(row.get("provenance"), dict)
+        or set(row["provenance"]) != provenance_fields
+        or not all(
+            isinstance(row["provenance"].get(field), str)
+            and row["provenance"][field]
+            for field in ("decision_id", "scenario_id", "light_case_id")
+        )
+        or not all(
+            isinstance(row["provenance"].get(field), dict)
+            for field in ("release_scenario", "selector_registry")
+        )
+        for row in decisions
+    ):
+        raise ValidationProblem("selector decision envelope contains a malformed decision")
+    decision_ids = [row["provenance"]["decision_id"] for row in decisions]
+    decision_paths = [row["path"] for row in decisions]
+    decision_keys = [
+        _canonical_selector_document_bytes(row["runtime_key"])
+        for row in decisions
+    ]
+    route_sources = [
+        _canonical_selector_document_bytes(row["runtime_key"]["route_source"])
+        for row in decisions
+    ]
+    if (
+        len(decision_ids) != len(set(decision_ids))
+        or len(decision_paths) != len(set(decision_paths))
+        or len(decision_keys) != len(set(decision_keys))
+        or len(route_sources) != len(set(route_sources))
+    ):
+        raise ValidationProblem("selector decision envelope is duplicate or ambiguous")
+    same_source = [
+        row
+        for row in decisions
+        if row["runtime_key"]["route_source"] == runtime_key["route_source"]
+    ]
+    exact = [
+        row
+        for row in same_source
+        if row["runtime_key"] == runtime_key
+    ]
+    if same_source and len(exact) != 1:
+        raise ValidationProblem("selector decision runtime tuple identity mismatch")
+    if exact:
+        decision = exact[0]
+        if set(documents) != {decision["path"]}:
+            raise ValidationProblem("selector decision document is missing or unexpected")
+        if hashlib.sha256(
+            _canonical_selector_document_bytes(documents[decision["path"]])
+        ).hexdigest() != decision["sha256"]:
+            raise ValidationProblem("selector decision document is stale")
+        shard = documents[decision["path"]]
+        shard_selected = shard.get("selected_layer3") if isinstance(shard, dict) else None
+        if (
+            not isinstance(shard, dict)
+            or shard.get("contract")
+            != LAYER3_SELECTOR_DECISION_PARTITION_CONTRACT
+            or shard.get("authority_contract") != envelope["authority_contract"]
+            or shard.get("professional_skill")
+            != runtime_key["primary_professional_skill"]
+            or shard.get("decision_id")
+            != decision["provenance"]["decision_id"]
+            or shard.get("profile") != runtime_key["start_profile"]
+            or shard.get("selection_owner") != runtime_key["selection_owner"]
+            or shard.get("review_skill") != runtime_key["review_skill"]
+            or not isinstance(shard_selected, list)
+            or not shard_selected
+            or len(shard_selected) > 3
+            or len(shard_selected) != len(set(shard_selected))
+            or any(not isinstance(item, str) or not item for item in shard_selected)
+            or not isinstance(shard.get("selector_ids"), list)
+            or not shard["selector_ids"]
+            or not isinstance(shard.get("projection"), dict)
+        ):
+            raise ValidationProblem("selector decision partition binding mismatch")
+        profile_rows = [
+            row
+            for row in shard["projection"].get("profile_authority", [])
+            if isinstance(row, dict)
+            and row.get("profile") == runtime_key["start_profile"]
+        ]
+        if (
+            len(profile_rows) != 1
+            or any(
+                item not in profile_rows[0].get("authorized_layer3", [])
+                for item in shard_selected
+            )
+        ):
+            raise ValidationProblem("selector decision partition Layer 3 is unauthorized")
+        return {
+            "contract": "changeforge.layer3-selector-resolution/v1",
+            "selection_kind": "exact",
+            "decision_id": decision["provenance"]["decision_id"],
+            "path": decision["path"],
+            "sha256": decision["sha256"],
+            "runtime_key": copy.deepcopy(runtime_key),
+            "provenance": copy.deepcopy(decision["provenance"]),
+            "selected_layer3": copy.deepcopy(shard_selected),
+            "projection": copy.deepcopy(shard["projection"]),
+        }
+
+    if set(documents) != {complete["path"]}:
+        raise ValidationProblem("selector decision complete fallback is missing or unexpected")
+    fallback = documents[complete["path"]]
+    if hashlib.sha256(_canonical_selector_document_bytes(fallback)).hexdigest() != (
+        complete["sha256"]
+    ):
+        raise ValidationProblem("selector decision document is stale")
+    if (
+        not isinstance(fallback, dict)
+        or fallback.get("contract") != LAYER3_SELECTOR_NORMALIZED_CONTROL_CONTRACT
+        or fallback.get("authority_contract") != envelope["authority_contract"]
+        or fallback.get("professional_skill")
+        != runtime_key["primary_professional_skill"]
+    ):
+        raise ValidationProblem("selector decision complete fallback is malformed")
+    return {
+        "contract": "changeforge.layer3-selector-resolution/v1",
+        "selection_kind": "complete",
+        "decision_id": None,
+        "path": complete["path"],
+        "sha256": complete["sha256"],
+        "runtime_key": copy.deepcopy(runtime_key),
+        "provenance": None,
+        "selected_layer3": None,
+        "projection": copy.deepcopy(fallback),
+    }
+
+
+def layer3_selector_expand_runtime_projection(
+    base: object,
+    partitions: object,
+    *,
+    profile: str,
+    selection_owner: str,
+    exact_layer3: object,
+    selected_layer3: object = None,
+    exact_references: object = None,
+    exact_reference_bindings: object = None,
+) -> dict[str, Any]:
+    """Expand one normalized selector assignment to the canonical runtime view."""
+
+    base_fields = {
+        "contract",
+        "authority_contract",
+        "professional_skill",
+        "maximum_layer3",
+        "exact_layer3_bypass",
+        "profile_authority",
+        "owner_surfaces",
+        "reference_records_partition",
+    }
+    if (
+        not isinstance(base, dict)
+        or set(base) != base_fields
+        or base.get("contract") != LAYER3_SELECTOR_NORMALIZED_CONTROL_CONTRACT
+        or base.get("authority_contract") != LAYER3_SELECTOR_AUTHORITY_CONTRACT
+        or not isinstance(base.get("professional_skill"), str)
+        or not base["professional_skill"]
+        or base.get("maximum_layer3") != 3
+        or base.get("exact_layer3_bypass") is not True
+    ):
+        raise ValidationProblem("normalized selector base is malformed")
+    owner_surfaces = base.get("owner_surfaces")
+    if (
+        not isinstance(owner_surfaces, list)
+        or not owner_surfaces
+        or any(
+            not isinstance(row, dict)
+            or set(row) != {"profile", "selection_owner"}
+            or not all(isinstance(value, str) and value for value in row.values())
+            for row in owner_surfaces
+        )
+        or len(
+            {(row["profile"], row["selection_owner"]) for row in owner_surfaces}
+        )
+        != len(owner_surfaces)
+    ):
+        raise ValidationProblem("normalized selector owner surfaces are malformed or duplicate")
+    if {"profile": profile, "selection_owner": selection_owner} not in owner_surfaces:
+        raise ValidationProblem("normalized selector assignment is unauthorized")
+    profile_authority = base.get("profile_authority")
+    profile_fields = {
+        "profile",
+        "selection_basis",
+        "authorized_layer3",
+        "domain_authorization",
+        "selectors",
+    }
+    matches = [
+        row
+        for row in profile_authority
+        if isinstance(row, dict) and row.get("profile") == profile
+    ] if isinstance(profile_authority, list) else []
+    if (
+        len(matches) != 1
+        or set(matches[0]) != profile_fields
+        or len(
+            {
+                row.get("profile")
+                for row in profile_authority
+                if isinstance(row, dict)
+            }
+        )
+        != len(profile_authority)
+    ):
+        raise ValidationProblem("normalized selector Profile authority is missing or duplicate")
+    profile_row = matches[0]
+    authorized_layer3 = profile_row.get("authorized_layer3")
+    domain_authorization = profile_row.get("domain_authorization")
+    selector_records = profile_row.get("selectors")
+    if (
+        not isinstance(authorized_layer3, list)
+        or len(authorized_layer3) != len(set(authorized_layer3))
+        or not all(isinstance(item, str) and item for item in authorized_layer3)
+        or not isinstance(domain_authorization, list)
+        or len(domain_authorization) != len(set(domain_authorization))
+        or not all(isinstance(item, str) and item for item in domain_authorization)
+        or not isinstance(selector_records, list)
+    ):
+        raise ValidationProblem("normalized selector Profile authority is malformed")
+    selector_ids: list[str] = []
+    for selector in selector_records:
+        selector_id = selector.get("selector_id") if isinstance(selector, dict) else None
+        if not isinstance(selector_id, str) or not selector_id:
+            raise ValidationProblem("normalized selector record is malformed")
+        selector_ids.append(selector_id)
+    if len(selector_ids) != len(set(selector_ids)):
+        raise ValidationProblem("normalized selector records contain a duplicate")
+
+    if exact_layer3 is not None:
+        if (
+            not isinstance(exact_layer3, list)
+            or len(exact_layer3) > base["maximum_layer3"]
+            or len(exact_layer3) != len(set(exact_layer3))
+            or not all(isinstance(item, str) and item for item in exact_layer3)
+        ):
+            raise ValidationProblem(
+                "exact Layer 3 must be an ordered unique 0..3 list; never truncate"
+            )
+        unauthorized = [
+            item for item in exact_layer3 if item not in authorized_layer3
+        ]
+        unauthorized_domains = [
+            item
+            for item in exact_layer3
+            if item in domain_authorization and item not in authorized_layer3
+        ]
+        if unauthorized or unauthorized_domains:
+            raise ValidationProblem(
+                "exact Layer 3 contains unauthorized Professional, profile, or Domain items"
+            )
+
+    if selected_layer3 is None:
+        selected_layer3 = list(exact_layer3) if exact_layer3 is not None else []
+    if (
+        not isinstance(selected_layer3, list)
+        or len(selected_layer3) > base["maximum_layer3"]
+        or len(selected_layer3) != len(set(selected_layer3))
+        or not all(isinstance(item, str) and item for item in selected_layer3)
+        or any(item not in authorized_layer3 for item in selected_layer3)
+    ):
+        raise ValidationProblem(
+            "selected Layer 3 must be an authorized ordered unique 0..3 list"
+        )
+    if exact_layer3 is not None and selected_layer3 != exact_layer3:
+        raise ValidationProblem("selected Layer 3 disagrees with exact Layer 3")
+
+    role_reference_records: list[dict[str, Any]] = []
+    if exact_references is None:
+        required_owners = [base["professional_skill"], *selected_layer3]
+        link = base.get("reference_records_partition")
+        if (
+            not isinstance(link, dict)
+            or set(link) != {"contract", "path_template"}
+            or link.get("contract") != LAYER3_SELECTOR_REFERENCE_RECORDS_CONTRACT
+            or link.get("path_template")
+            != (
+                f"../reference-records/{base['professional_skill']}/"
+                "{owner_skill}.json"
+            )
+        ):
+            raise ValidationProblem("normalized selector Reference partition template is malformed")
+        if (
+            not isinstance(partitions, dict)
+            or set(partitions) != set(required_owners)
+        ):
+            raise ValidationProblem(
+                "normalized selector requires exactly the Professional and selected Layer 3 partitions"
+            )
+        record_fields = {
+            "owner_skill",
+            "owner_layer",
+            "path",
+            "type",
+            "load_when",
+            "do_not_load_when",
+            "required_by",
+            "required_output",
+            "context_admissibility",
+            "residency",
+        }
+        identities: list[tuple[str, str]] = []
+        partition_fields = {
+            "contract",
+            "authority_contract",
+            "professional_skill",
+            "owner_skill",
+            "records_sha256",
+            "reference_records",
+        }
+        for owner_skill in required_owners:
+            partition = partitions[owner_skill]
+            if (
+                not isinstance(partition, dict)
+                or set(partition) != partition_fields
+                or partition.get("contract")
+                != LAYER3_SELECTOR_REFERENCE_RECORDS_CONTRACT
+                or partition.get("authority_contract") != base["authority_contract"]
+                or partition.get("professional_skill") != base["professional_skill"]
+                or partition.get("owner_skill") != owner_skill
+                or not isinstance(partition.get("reference_records"), list)
+                or partition.get("records_sha256")
+                != hashlib.sha256(
+                    _canonical_selector_document_bytes(
+                        partition.get("reference_records")
+                    )
+                ).hexdigest()
+            ):
+                raise ValidationProblem(
+                    "normalized selector Reference partition is missing, malformed, owner-mismatched, or stale"
+                )
+            for record in partition["reference_records"]:
+                if not isinstance(record, dict) or set(record) != record_fields:
+                    raise ValidationProblem("normalized selector Reference partition record is malformed")
+                identity = (record.get("owner_skill"), record.get("path"))
+                if not all(isinstance(value, str) and value for value in identity):
+                    raise ValidationProblem("normalized selector Reference partition identity is malformed")
+                identities.append(identity)
+                if record["owner_skill"] != owner_skill:
+                    raise ValidationProblem("normalized selector has owner-leaking Reference partition")
+                if (
+                    record.get("type") == "index"
+                    or record.get("owner_layer") not in {"professional", "foundation", "domain"}
+                    or not isinstance(record.get("required_by"), list)
+                    or not record["required_by"]
+                    or not set(record["required_by"])
+                    <= {"analysis-agent", "task-agent", "review-agent"}
+                    or not isinstance(record.get("required_output"), list)
+                    or not record["required_output"]
+                ):
+                    raise ValidationProblem("normalized selector Reference partition record is malformed")
+                if profile in record["required_by"]:
+                    role_reference_records.append(copy.deepcopy(record))
+        if len(identities) != len(set(identities)):
+            raise ValidationProblem("normalized selector Reference partitions have duplicate records")
+
+    if exact_references is not None:
+        if (
+            not isinstance(exact_references, list)
+            or len(exact_references) != len(set(exact_references))
+            or not all(isinstance(path, str) and path for path in exact_references)
+        ):
+            raise ValidationProblem(
+                "exact References must be an ordered unique path list"
+            )
+        if partitions not in (None, {}):
+            raise ValidationProblem("exact References must not load Reference partitions")
+        if exact_reference_bindings is None:
+            exact_reference_bindings = []
+        if (
+            not isinstance(exact_reference_bindings, list)
+            or len(exact_reference_bindings) != len(exact_references)
+        ):
+            raise ValidationProblem("exact References require one ordered native binding each")
+        allowed_exact_owners = {base["professional_skill"], *selected_layer3}
+        for exact_reference, binding in zip(
+            exact_references, exact_reference_bindings, strict=True
+        ):
+            if (
+                not isinstance(binding, dict)
+                or not isinstance(binding.get("owner_skill"), str)
+                or not isinstance(binding.get("path"), str)
+                or binding["owner_skill"] not in allowed_exact_owners
+                or exact_reference
+                not in {
+                    binding["path"],
+                    f"{binding['owner_skill']}:{binding['path']}",
+                    f"{binding['owner_skill']}/{binding['path']}",
+                }
+            ):
+                raise ValidationProblem(
+                    "exact References contain unauthorized or mismatched native bindings"
+                )
+        if len(
+            {(row["owner_skill"], row["path"]) for row in exact_reference_bindings}
+        ) != len(exact_reference_bindings):
+            raise ValidationProblem(
+                "exact References contain duplicate native bindings"
+            )
+
+    return {
+        "contract": LAYER3_SELECTOR_RUNTIME_CONTRACT,
+        "authority_contract": base["authority_contract"],
+        "professional_skill": base["professional_skill"],
+        "profile": profile,
+        "selection_owner": selection_owner,
+        "selection_basis": profile_row["selection_basis"],
+        "authorized_layer3": copy.deepcopy(authorized_layer3),
+        "domain_authorization": copy.deepcopy(domain_authorization),
+        "selector_loaded": exact_layer3 is None,
+        "exact_layer3": None if exact_layer3 is None else list(exact_layer3),
+        "selectors": copy.deepcopy(selector_records) if exact_layer3 is None else [],
+        "reference_selection_owner": selection_owner,
+        "reference_selector_loaded": exact_references is None,
+        "exact_references": (
+            None if exact_references is None else list(exact_references)
+        ),
+        "reference_records": (
+            role_reference_records if exact_references is None else []
+        ),
+    }
 
 
 def layer3_selector_runtime_selection_receipt(

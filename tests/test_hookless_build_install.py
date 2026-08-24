@@ -20,6 +20,7 @@ if str(SCRIPTS) not in sys.path:
 
 from validation_utils import (  # noqa: E402
     authoritative_build_input_snapshot_errors,
+    count_o200k_base_tokens,
 )
 
 
@@ -441,13 +442,25 @@ class HooklessBuildInstallTests(unittest.TestCase):
                 / "references/selectors/backend-change-builder.json"
             ).read_text(encoding="utf-8")
         )
+        partition = json.loads(
+            (
+                ROOT
+                / "dist/universal/skills/recommended/engineering-control-plane"
+                / "references/reference-records/backend-change-builder"
+                / "transaction-consistency.json"
+            ).read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            "changeforge.layer3-selector-normalized-control/v1",
+            selector["contract"],
+        )
+        self.assertNotIn("reference_records", selector)
         self.assertTrue(
             any(
                 record.get("owner_skill") == "transaction-consistency"
                 and record.get("path") == "references/evidence-patterns.md"
                 and record.get("required_output")
-                for surface in selector["selection_surfaces"]
-                for record in surface["reference_records"]
+                for record in partition["reference_records"]
             )
         )
 
@@ -647,27 +660,49 @@ class HooklessBuildInstallTests(unittest.TestCase):
                 self.assertNotIn(forbidden, profile["instructions"])
 
             role_capability = profile_contract["role_capabilities"][name]
-            for capability_id in role_capability["required_capability_ids"]:
-                for rule in capability_groups[capability_id]:
+            if name in {"task-agent", "review-agent"}:
+                role_terms = {
+                    "task-agent": (
+                        ("Task Capsule", "Professional Skill", "Layer 3 Delivery"),
+                        ("bound effective Level", "never calculate or recompute"),
+                        ("final edit", "fresh validation", "exact change capture"),
+                        ("latest changed paths", "exact change evidence", "fixed review scope"),
+                        ("daemon", "database", "runtime task state engine", "hidden protocol record"),
+                    ),
+                    "review-agent": (
+                        ("assigned Review Skill", "Layer 3 Delivery"),
+                        ("bound effective Level", "review depth", "never calculate or recompute"),
+                        ("delivered current", "every changed file", "missing evidence block"),
+                        ("fresh validation", "latest actual diff", "fresh re-review"),
+                        ("assigned Review Handoff", "reviewed/unreviewed scope", "residual risk"),
+                    ),
+                }[name]
+                for terms in role_terms:
+                    self.assertEqual(
+                        1,
+                        sum(all(term in rule for term in terms) for rule in rules),
+                        terms,
+                    )
+                limit = 440 if name == "task-agent" else 568
+                self.assertLessEqual(count_o200k_base_tokens(profile["instructions"]), limit)
+            else:
+                for capability_id in role_capability["required_capability_ids"]:
+                    for rule in capability_groups[capability_id]:
+                        matches = matching_rules(rules, rule)
+                        self.assertEqual(1, len(matches), rule["rule_id"])
+                        if "exact_rule" in rule:
+                            self.assertEqual(rule["exact_rule"], matches[0], rule["rule_id"])
+
+                handoff_id = role_capability["handoff_contract"]
+                for rule in profile_contract["handoff_contracts"][handoff_id]:
                     matches = matching_rules(rules, rule)
                     self.assertEqual(1, len(matches), rule["rule_id"])
                     if "exact_rule" in rule:
-                        self.assertEqual(
-                            rule["exact_rule"],
-                            matches[0],
-                            rule["rule_id"],
-                        )
+                        self.assertEqual(rule["exact_rule"], matches[0], rule["rule_id"])
 
-            handoff_id = role_capability["handoff_contract"]
-            for rule in profile_contract["handoff_contracts"][handoff_id]:
-                matches = matching_rules(rules, rule)
-                self.assertEqual(1, len(matches), rule["rule_id"])
-                if "exact_rule" in rule:
-                    self.assertEqual(rule["exact_rule"], matches[0], rule["rule_id"])
-
-            for rule_id in role_capability["forbidden_storage_projection_ids"]:
-                matches = matching_rules(rules, forbidden_storage[rule_id])
-                self.assertEqual(1, len(matches), rule_id)
+                for rule_id in role_capability["forbidden_storage_projection_ids"]:
+                    matches = matching_rules(rules, forbidden_storage[rule_id])
+                    self.assertEqual(1, len(matches), rule_id)
 
             for host, (root, suffix) in built_profile_roots.items():
                 built_lines = (

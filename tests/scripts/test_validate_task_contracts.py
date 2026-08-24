@@ -224,6 +224,168 @@ def _recompute_fixture_extension(extension: dict[str, object]) -> dict[str, obje
 
 
 class TaskContractTemplateTests(unittest.TestCase):
+    def test_execution_level_role_projections_are_minimal_and_source_bound(self) -> None:
+        fixture = json.loads(AGENT_LIGHT_CASES.read_text(encoding="utf-8"))
+        case = next(
+            item
+            for item in fixture["cases"]
+            if item["id"] == "single-file-bug-fix"
+        )
+        dispatches = {
+            step["profile"]: step
+            for step in case["steps"]
+            if step.get("action") == "dispatch"
+            and step.get("profile") in {"task-agent", "review-agent"}
+        }
+        task_extension = dispatches["task-agent"]["fixture_capsule"][
+            "execution_level_extension"
+        ]
+        review_extension = dispatches["review-agent"]["fixture_capsule"][
+            "execution_level_extension"
+        ]
+        task = VALIDATION_UTILS.execution_level_role_projection(
+            task_extension, role="task-agent"
+        )
+        review = VALIDATION_UTILS.execution_level_role_projection(
+            review_extension, role="review-agent"
+        )
+        self.assertEqual(
+            {
+                "version",
+                "effective_level",
+                "edit_status",
+                "current_obligations",
+                "source_sha256",
+            },
+            set(task),
+        )
+        self.assertEqual(
+            {
+                "version",
+                "effective_level",
+                "review_depth",
+                "assurance_obligations",
+                "source_sha256",
+            },
+            set(review),
+        )
+        self.assertEqual(task_extension["effective_level"], task["effective_level"])
+        self.assertEqual(
+            review_extension["effective_level"], review["effective_level"]
+        )
+        self.assertEqual(64, len(task["source_sha256"]))
+        self.assertEqual(64, len(review["source_sha256"]))
+        for forbidden in (
+            "trigger_evaluations",
+            "l1_eligibility",
+            "l2_eligibility",
+            "l5_assurance_eligibility",
+            "historical_max_level",
+            "material_risk_floor",
+        ):
+            self.assertNotIn(forbidden, task)
+            self.assertNotIn(forbidden, review)
+
+        with self.assertRaises(VALIDATION_UTILS.ExecutionLevelError):
+            VALIDATION_UTILS.execution_level_role_projection(
+                task_extension, role="main-control-agent"
+            )
+
+    def test_execution_level_role_projection_preserves_all_core_boundaries(self) -> None:
+        execution = CORE_CONTRACTS["execution_level_contract"]
+
+        def eligibility(rows: list[dict[str, object]]) -> dict[str, dict[str, object]]:
+            return {
+                str(row["id"]): {
+                    "status": "true",
+                    "evidence_kind": "analysis_handoff",
+                    "source_anchor": f"test:{row['id']}",
+                }
+                for row in rows
+            }
+
+        triggers, l2 = _execution_evidence()
+        inputs: list[dict[str, object]] = [
+            compute_execution_level(
+                requested="L1",
+                trigger_evaluations=triggers,
+                l1_evaluations=eligibility(execution["l1_eligibility"]),
+                l2_evaluations=l2,
+            ),
+            compute_execution_level(
+                requested="L2",
+                trigger_evaluations=triggers,
+                l2_evaluations=l2,
+            ),
+        ]
+        l3_triggers, l3_l2 = _execution_evidence()
+        l3_l2["local-scope-only"]["status"] = "false"
+        inputs.append(
+            compute_execution_level(
+                requested="unspecified",
+                trigger_evaluations=l3_triggers,
+                l2_evaluations=l3_l2,
+            )
+        )
+        l4_triggers, l4_l2 = _execution_evidence(
+            matched_trigger="formal-release-declared"
+        )
+        inputs.append(
+            compute_execution_level(
+                requested="unspecified",
+                trigger_evaluations=l4_triggers,
+                l2_evaluations=l4_l2,
+            )
+        )
+        inputs.append(
+            compute_execution_level(
+                requested="L5",
+                trigger_evaluations=triggers,
+                l2_evaluations=l2,
+                l5_confirmation="explicit",
+            )
+        )
+        inputs.append(
+            execution_level_integrity_fallback(
+                requested="unspecified",
+                prior_historical_max_floor="L4",
+                prior_historical_max_effective="L4",
+            )
+        )
+
+        for extension in inputs:
+            with self.subTest(level=extension["effective_level"]):
+                task = VALIDATION_UTILS.execution_level_role_projection(
+                    extension, role="task-agent"
+                )
+                review = VALIDATION_UTILS.execution_level_role_projection(
+                    extension, role="review-agent"
+                )
+                self.assertEqual(extension["effective_level"], task["effective_level"])
+                self.assertEqual(extension["effective_level"], review["effective_level"])
+                expected_rank = next(
+                    row["rank"]
+                    for row in execution["levels"]
+                    if row["id"] == extension["effective_level"]
+                )
+                self.assertEqual(expected_rank, review["review_depth"])
+                self.assertEqual(extension["edit_status"], task["edit_status"])
+                self.assertTrue(task["current_obligations"])
+                self.assertTrue(review["assurance_obligations"])
+
+        source = copy.deepcopy(inputs[2])
+        original = VALIDATION_UTILS.execution_level_role_projection(
+            source, role="task-agent"
+        )
+        source["scope_lineage"] = "changed/source/lineage"
+        changed = VALIDATION_UTILS.execution_level_role_projection(
+            source, role="task-agent"
+        )
+        self.assertNotEqual(original["source_sha256"], changed["source_sha256"])
+        with self.assertRaises(VALIDATION_UTILS.ExecutionLevelError):
+            VALIDATION_UTILS.execution_level_role_projection(
+                original, role="task-agent"
+            )
     def setUp(self) -> None:
         self.tempdir = tempfile.TemporaryDirectory()
         self.root = Path(self.tempdir.name) / "references"

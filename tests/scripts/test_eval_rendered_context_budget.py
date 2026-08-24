@@ -5,6 +5,7 @@ import copy
 import hashlib
 import json
 import re
+import shutil
 import sys
 import tempfile
 import unittest
@@ -34,6 +35,7 @@ def _load_module():
 EVAL = _load_module()
 
 import build as BUILD  # noqa: E402
+import validation_utils as VALIDATION  # noqa: E402
 
 from fixture_capsule_contract import (
     FixtureCapsuleError,
@@ -89,6 +91,1041 @@ AUTHORITATIVE_DAG_NODES = {
 
 
 class RenderedContextBudgetTests(unittest.TestCase):
+    @staticmethod
+    def _native_dispatch_probe() -> tuple[dict[str, object], dict[str, dict[str, object]]]:
+        document = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
+        case = copy.deepcopy(
+            next(item for item in document["cases"] if item["id"] == "single-module-feature")
+        )
+        manifests = {
+            profile: json.loads(
+                (
+                    ROOT
+                    / "dist/universal/skills"
+                    / profile
+                    / ".changeforge-build-manifest.json"
+                ).read_text(encoding="utf-8")
+            )
+            for profile in EVAL.BUILD_PROFILES
+        }
+        return case, manifests
+
+    @staticmethod
+    def _copy_native_dispatch_subject(
+        target: Path, primary: str, step: dict[str, object]
+    ) -> None:
+        for host, relative in {
+            "codex": "dist/codex/project/.codex/agents/main-control-agent.toml",
+            "claude": "dist/claude/project/.claude/agents/main-control-agent.md",
+            "copilot": "dist/copilot/project/.github/agents/main-control-agent.agent.md",
+        }.items():
+            del host
+            destination = target / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(ROOT / relative, destination)
+        common = (
+            "engineering-control-plane/SKILL.md",
+            "engineering-control-plane/references/professional-skill-router.md",
+        )
+        for relative in common:
+            destination = target / "dist/universal/skills/recommended" / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(
+                ROOT / "dist/universal/skills/recommended" / relative,
+                destination,
+            )
+        router_source = (
+            "src/control-skills/engineering-control-plane/references/"
+            "professional-skill-router.md"
+        )
+        router_destination = target / router_source
+        router_destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ROOT / router_source, router_destination)
+        BUILD._write_control_layer3_selector_projections(
+            target
+            / "dist/universal/skills/recommended/engineering-control-plane"
+        )
+        for profile in EVAL.BUILD_PROFILES:
+            relative = (
+                f"dist/universal/skills/{profile}/.changeforge-build-manifest.json"
+            )
+            destination = target / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(ROOT / relative, destination)
+        for name in (
+            "professional-skills.yaml",
+            "foundation-skills.yaml",
+            "domain-skills.yaml",
+            "release-routing-scenarios.yaml",
+        ):
+            relative = f"src/registry/{name}"
+            destination = target / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(ROOT / relative, destination)
+        fixture_relative = "evals/agent-light-trajectories/cases.yaml"
+        fixture_destination = target / fixture_relative
+        fixture_destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ROOT / fixture_relative, fixture_destination)
+        reference_pairs = [
+            (primary, str(path))
+            for path in step.get("professional_references", [])
+        ]
+        reference_pairs.extend(
+            tuple(str(logical_id).split("/", 1))
+            for logical_id in step.get("layer3_references", [])
+        )
+        for owner, relative_path in reference_pairs:
+            binding = EVAL._reference_native_binding(ROOT, owner, relative_path)
+            source = ROOT / binding["physical_path"]
+            destination = target / binding["physical_path"]
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, destination)
+
+    def test_native_dispatch_selection_assets_are_complete_and_host_ordered(self) -> None:
+        case, manifests = self._native_dispatch_probe()
+        step_index, step = next(
+            (index, item)
+            for index, item in enumerate(case["steps"])
+            if item.get("action") == "dispatch" and item.get("primary_skill")
+        )
+        with tempfile.TemporaryDirectory() as raw:
+            subject = Path(raw)
+            self._copy_native_dispatch_subject(
+                subject, str(step["primary_skill"]), step
+            )
+            measured = EVAL._native_dispatch_selection_assets(
+                str(case["id"]), step_index, step, subject, manifests
+            )
+        self.assertEqual(["codex", "claude", "copilot"], measured["host_order"])
+        self.assertEqual(
+            [
+                (host, kind)
+                for host in ("codex", "claude", "copilot")
+                for kind in (
+                    "main-profile",
+                    "control-owner",
+                    "global-professional-router",
+                    "professional-selector-envelope",
+                    "professional-selector-complete",
+                )
+            ],
+            [(row["host"], row["kind"]) for row in measured["components"]],
+        )
+
+    def test_native_dispatch_selection_assets_bind_all_manifests_and_input(self) -> None:
+        case, manifests = self._native_dispatch_probe()
+        step_index, step = next(
+            (index, item)
+            for index, item in enumerate(case["steps"])
+            if item.get("action") == "dispatch" and item.get("primary_skill")
+        )
+        measured = EVAL._native_dispatch_selection_assets(
+            str(case["id"]), step_index, step, ROOT, manifests
+        )
+        self.assertEqual(list(EVAL.BUILD_PROFILES), list(measured["manifest_bindings"]))
+        self.assertTrue(measured["authoritative_build_inputs"]["sha256"])
+        self.assertTrue(
+            all(
+                row["authoritative_build_inputs"]
+                == measured["authoritative_build_inputs"]
+                for row in measured["manifest_bindings"].values()
+            )
+        )
+
+    def test_native_dispatch_keeps_one_envelope_and_counts_asset_occurrences(self) -> None:
+        case, manifests = self._native_dispatch_probe()
+        lightweight = EVAL._load_current_lightweight_module(
+            ROOT / "scripts/eval-agent-lightweight.py"
+        )
+        measured = EVAL._native_trajectory_case_cost(
+            case,
+            ROOT,
+            manifests,
+            lightweight,
+            native_schema=EVAL._native_contract_identity(
+                json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
+            ),
+            host="codex",
+        )
+        kinds = [row["kind"] for row in measured["native_sources"]["components"]]
+        dispatch_count = sum(
+            step.get("action") == "dispatch" for step in case["steps"]
+        )
+        self.assertEqual(dispatch_count, kinds.count("native-selector-envelope"))
+        self.assertEqual(
+            3,
+            measured["structural"]["selector_load_count"],
+        )
+        self.assertEqual(
+            dispatch_count,
+            measured["structural"]["envelope_count"],
+        )
+
+    def test_s3c_native_trajectory_cost_is_complete_and_exclusive_per_host(self) -> None:
+        case, manifests = self._native_dispatch_probe()
+        lightweight = EVAL._load_current_lightweight_module(
+            ROOT / "scripts/eval-agent-lightweight.py"
+        )
+        native_schema = EVAL._native_contract_identity(
+            json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
+        )
+        measured_rows = []
+        for host in EVAL.FOCUS_PROFILE_HOSTS:
+            measured = EVAL._native_trajectory_case_cost(
+                case,
+                ROOT,
+                manifests,
+                lightweight,
+                native_schema=native_schema,
+                host=host,
+            )
+            measured_rows.append(measured)
+            sources = measured["native_sources"]["components"]
+            envelopes = [
+                row for row in sources if row["kind"] == "native-selector-envelope"
+            ]
+            selector_rows = [row for row in sources if row["bucket"] == "selector"]
+            worker = next(row for row in sources if row["kind"] == "worker-profile")
+            with self.subTest(host=host):
+                self.assertEqual(f"{case['id']}::{host}", measured["id"])
+                self.assertEqual(host, measured["host"])
+                self.assertTrue(all(row["host"] == host for row in sources))
+                self.assertIn(f"dist/{host}/", worker["physical_path"])
+                self.assertTrue(
+                    all(
+                        row["kind"]
+                        in {
+                            "global-professional-router",
+                            "professional-selector",
+                            "professional-selector-envelope",
+                            "professional-selector-decision",
+                            "professional-selector-complete",
+                        }
+                        for row in selector_rows
+                    )
+                )
+                self.assertTrue(
+                    all(row["bucket"] == "cross_agent_transfer" for row in envelopes)
+                )
+                self.assertEqual(
+                    sum(row["tokens"] for row in envelopes)
+                    + sum(
+                        row["tokens"]
+                        for row in measured["native_sources"]["handoffs"]
+                    ),
+                    measured["component_tokens"]["cross_agent_transfer"],
+                )
+                self.assertEqual(
+                    measured["total_task_tokens"],
+                    sum(measured["component_tokens"].values()),
+                )
+        errors = []
+        matrix = EVAL._host_complete_case_matrix(
+            "candidate",
+            measured_rows,
+            {
+                "logical_case_count": 1,
+                "host_pair_count": 3,
+                "host_order": list(EVAL.FOCUS_PROFILE_HOSTS),
+            },
+            errors,
+        )
+        self.assertEqual([], errors)
+        self.assertEqual(3, matrix["host_pair_count"])
+
+    def test_native_dispatch_assets_are_separate_complete_occurrence_rows(self) -> None:
+        case, manifests = self._native_dispatch_probe()
+        step_index, step = next(
+            (index, item)
+            for index, item in enumerate(case["steps"])
+            if item.get("action") == "dispatch" and item.get("primary_skill")
+        )
+        measured = EVAL._native_dispatch_selection_assets(
+            str(case["id"]), step_index, step, ROOT, manifests
+        )
+        self.assertEqual(15, len(measured["components"]))
+        self.assertTrue(
+            all(
+                row["load_count"] == 1
+                and row["content_scope"] == "complete-native-bytes"
+                and row["tokens"] > 0
+                for row in measured["components"]
+            )
+        )
+        self.assertEqual(9, measured["selector_load_count"])
+
+    def test_native_dispatch_selection_assets_fail_on_missing_authority(self) -> None:
+        case, manifests = self._native_dispatch_probe()
+        step_index, step = next(
+            (index, item)
+            for index, item in enumerate(case["steps"])
+            if item.get("action") == "dispatch" and item.get("primary_skill")
+        )
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._copy_native_dispatch_subject(root, str(step["primary_skill"]), step)
+            selector = root / (
+                "dist/universal/skills/recommended/engineering-control-plane/"
+                f"references/selectors/{step['primary_skill']}.json"
+            )
+            selector.unlink()
+            with self.assertRaisesRegex(ValueError, "professional-selector"):
+                EVAL._native_dispatch_selection_assets(
+                    str(case["id"]),
+                    step_index,
+                    step,
+                    root,
+                    manifests,
+                )
+
+    def test_native_dispatch_selection_assets_fail_on_host_profile_omission(self) -> None:
+        case, manifests = self._native_dispatch_probe()
+        step_index, step = next(
+            (index, item)
+            for index, item in enumerate(case["steps"])
+            if item.get("action") == "dispatch" and item.get("primary_skill")
+        )
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._copy_native_dispatch_subject(root, str(step["primary_skill"]), step)
+            (root / "dist/claude/project/.claude/agents/main-control-agent.md").unlink()
+            with self.assertRaisesRegex(ValueError, "claude.*main-profile"):
+                EVAL._native_dispatch_selection_assets(
+                    str(case["id"]),
+                    step_index,
+                    step,
+                    root,
+                    manifests,
+                )
+
+    def test_native_dispatch_selection_bundle_is_schema_aware(self) -> None:
+        case, manifests = self._native_dispatch_probe()
+        step_index, step = next(
+            (index, item)
+            for index, item in enumerate(case["steps"])
+            if item.get("action") == "dispatch" and item.get("primary_skill")
+        )
+        measured = EVAL._native_dispatch_selection_assets(
+            str(case["id"]), step_index, step, ROOT, manifests
+        )
+        self.assertEqual("split-professional-selector/v1", measured["schema"])
+        self.assertEqual(
+            [
+                "global-professional-router",
+                "professional-selector-complete",
+                "professional-selector-envelope",
+            ],
+            measured["physical_selector_kinds"],
+        )
+        self.assertEqual(9, measured["selector_load_count"])
+        self.assertEqual("complete", measured["selector_resolution"])
+        self.assertEqual(
+            "engineering-change-analysis/complete.json",
+            measured["professional_selector_decision_path"],
+        )
+        self.assertEqual(step["layer3_skills"], measured["effective_ordered_layer3"])
+        self.assertEqual([], measured["handoff_augmentation"]["layer3_skills"])
+
+    def test_s3d_diagnosis_loads_only_envelope_and_exact_decision_partition(self) -> None:
+        document = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
+        case = copy.deepcopy(
+            next(item for item in document["cases"] if item["id"] == "diagnosis-only")
+        )
+        manifests = {
+            profile: json.loads(
+                (
+                    ROOT
+                    / "dist/universal/skills"
+                    / profile
+                    / ".changeforge-build-manifest.json"
+                ).read_text(encoding="utf-8")
+            )
+            for profile in EVAL.BUILD_PROFILES
+        }
+        step_index, step = next(
+            (index, item)
+            for index, item in enumerate(case["steps"])
+            if item.get("action") == "dispatch" and item.get("primary_skill")
+        )
+        with tempfile.TemporaryDirectory() as raw:
+            subject = Path(raw)
+            self._copy_native_dispatch_subject(
+                subject, str(step["primary_skill"]), step
+            )
+            measured = EVAL._native_dispatch_selection_assets(
+                str(case["id"]), step_index, step, subject, manifests
+            )
+            for host in EVAL.FOCUS_PROFILE_HOSTS:
+                selector_rows = [
+                    row
+                    for row in measured["components"]
+                    if row["host"] == host
+                    and row["kind"]
+                    in {
+                        "professional-selector-envelope",
+                        "professional-selector-decision",
+                    }
+                ]
+                with self.subTest(host=host):
+                    self.assertEqual(
+                        [
+                            "professional-selector-envelope",
+                            "professional-selector-decision",
+                        ],
+                        [row["kind"] for row in selector_rows],
+                    )
+                    self.assertLessEqual(
+                        sum(row["tokens"] for row in selector_rows), 1_530
+                    )
+                    self.assertFalse(
+                        any(
+                            row["kind"] == "professional-selector-complete"
+                            for row in measured["components"]
+                            if row["host"] == host
+                        )
+                    )
+            self.assertEqual("exact", measured["selector_resolution"])
+            self.assertEqual(
+                "engineering-change-analysis/failure-diagnosis-analysis.json",
+                measured["professional_selector_decision_path"],
+            )
+            self.assertEqual(
+                ["failure-diagnosis"], measured["effective_ordered_layer3"]
+            )
+            resolution = measured["professional_selector_resolution"]
+            self.assertEqual(
+                {
+                    "route_source",
+                    "trigger",
+                    "start_profile",
+                    "primary_professional_skill",
+                    "review_skill",
+                    "selection_owner",
+                },
+                set(resolution["runtime_key"]),
+            )
+            self.assertNotIn("selected_layer3", resolution["runtime_key"])
+            self.assertNotIn("scenario_id", resolution["runtime_key"])
+            self.assertNotIn("light_case_id", resolution["runtime_key"])
+            self.assertEqual(
+                ["failure-diagnosis"], resolution["selected_layer3"]
+            )
+            receipt = measured["professional_selector_receipt"]
+            self.assertEqual([], receipt["evidence_signals"])
+            self.assertEqual(["exact-layer3-authority"], receipt["selector_ids"])
+            self.assertEqual(["failure-diagnosis"], receipt["selected_layer3"])
+
+        lightweight = EVAL._load_current_lightweight_module(
+            ROOT / "scripts/eval-agent-lightweight.py"
+        )
+        trajectory = EVAL._native_trajectory_case_cost(
+            case,
+            ROOT,
+            manifests,
+            lightweight,
+            native_schema=EVAL._native_contract_identity(document),
+            host="codex",
+        )
+        bundle = trajectory["native_sources"]["selection_authority_bundles"][0]
+        resolution = bundle["professional_selector_resolution"]
+        self.assertEqual("exact", resolution["selection_kind"])
+        self.assertEqual(
+            "failure-diagnosis-analysis", resolution["decision_id"]
+        )
+        self.assertEqual(
+            {
+                "route_source",
+                "trigger",
+                "start_profile",
+                "primary_professional_skill",
+                "review_skill",
+                "selection_owner",
+            },
+            set(resolution["runtime_key"]),
+        )
+        self.assertEqual(
+            {"router", "release_scenario", "selector_registry"},
+            set(resolution["source_authorities"]),
+        )
+        report_receipt = bundle["professional_selector_receipt"]
+        self.assertEqual([], report_receipt["evidence_signals"])
+        self.assertEqual(
+            ["exact-layer3-authority"], report_receipt["selector_ids"]
+        )
+        self.assertEqual(
+            ["failure-diagnosis"], report_receipt["selected_layer3"]
+        )
+        self.assertTrue(bundle["professional_selector_pointer"])
+        self.assertTrue(bundle["native_envelope"]["sha256"])
+        self.assertEqual(
+            set(EVAL.BUILD_PROFILES), set(bundle["manifest_bindings"])
+        )
+
+    def test_s3d_all_current_engineering_analysis_dispatches_resolve_once_per_host(self) -> None:
+        document = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
+        dispatches = [
+            (str(case["id"]), index, step)
+            for case in document["cases"]
+            for index, step in enumerate(case.get("steps", []))
+            if step.get("action") == "dispatch"
+            and step.get("primary_skill") == "engineering-change-analysis"
+        ]
+        self.assertEqual(8, len(dispatches))
+        manifests = {
+            profile: json.loads(
+                (
+                    ROOT
+                    / "dist/universal/skills"
+                    / profile
+                    / ".changeforge-build-manifest.json"
+                ).read_text(encoding="utf-8")
+            )
+            for profile in EVAL.BUILD_PROFILES
+        }
+        observed: list[tuple[str, str, str]] = []
+        with tempfile.TemporaryDirectory() as raw:
+            subject = Path(raw)
+            for case_id, step_index, step in dispatches:
+                self._copy_native_dispatch_subject(
+                    subject, str(step["primary_skill"]), step
+                )
+                measured = EVAL._native_dispatch_selection_assets(
+                    case_id, step_index, step, subject, manifests
+                )
+                expected_resolution = (
+                    "exact" if case_id == "diagnosis-only" else "complete"
+                )
+                self.assertEqual(expected_resolution, measured["selector_resolution"])
+                for host in EVAL.FOCUS_PROFILE_HOSTS:
+                    host_rows = [
+                        row
+                        for row in measured["components"]
+                        if row["host"] == host
+                        and row["kind"]
+                        in {
+                            "professional-selector-envelope",
+                            "professional-selector-decision",
+                            "professional-selector-complete",
+                        }
+                    ]
+                    self.assertEqual(2, len(host_rows))
+                    observed.append((case_id, host, expected_resolution))
+        self.assertEqual(24, len(observed))
+        self.assertEqual(
+            3,
+            sum(resolution == "exact" for _case, _host, resolution in observed),
+        )
+        self.assertEqual(
+            21,
+            sum(resolution == "complete" for _case, _host, resolution in observed),
+        )
+
+    def test_s3b_trajectory_reference_pair_binds_exact_or_fails_closed(self) -> None:
+        case, _manifests = self._native_dispatch_probe()
+        step = next(
+            item
+            for item in case["steps"]
+            if item.get("action") == "dispatch" and item.get("primary_skill")
+        )
+        exact, bindings = EVAL._trajectory_exact_reference_selection(step, ROOT)
+        self.assertEqual(step["professional_references"], exact)
+        self.assertEqual(
+            [(step["primary_skill"], path) for path in exact],
+            [(row["owner_skill"], row["path"]) for row in bindings],
+        )
+        for missing in ("professional_references", "layer3_references"):
+            unresolved = copy.deepcopy(step)
+            unresolved.pop(missing)
+            self.assertEqual(
+                (None, []),
+                EVAL._trajectory_exact_reference_selection(unresolved, ROOT),
+            )
+        invalid = copy.deepcopy(step)
+        invalid["professional_references"] = ["references/invented.md"]
+        with self.assertRaisesRegex(ValueError, "native registry binding"):
+            EVAL._trajectory_exact_reference_selection(invalid, ROOT)
+
+    def test_s3b_comparison_retains_physical_selection_rows_and_reconciles(self) -> None:
+        baseline = self._ab_subject(100)
+        candidate = self._ab_subject(100)
+        for subject in (baseline, candidate):
+            subject["cases"][0]["native_sources"]["components"] = [
+                {
+                    "host": "codex",
+                    "kind": "global-professional-router",
+                    "bucket": "selector",
+                    "physical_path": "router.md",
+                    "sha256": "a" * 64,
+                    "tokens": 5,
+                    "load_count": 1,
+                    "assignment_key": "case/main/router",
+                }
+            ]
+            subject["cases"][0]["native_sources"][
+                "selection_asset_component_tokens"
+            ] = {"always_loaded": 0, "selector": 5, "reference_partition": 0}
+        compared = EVAL._compare_end_to_end_subjects(baseline, candidate)
+        row = next(item for item in compared["cases"] if item["host"] == "codex")
+        self.assertEqual(
+            baseline["cases"][0]["native_sources"]["components"],
+            row["selection_asset_rows"]["baseline"],
+        )
+        self.assertEqual(0, row["selection_asset_reconciliation"]["baseline"])
+        broken = copy.deepcopy(candidate)
+        broken["cases"][0]["native_sources"]["components"][0]["tokens"] = 4
+        failed = EVAL._compare_end_to_end_subjects(baseline, broken)
+        self.assertEqual("fail", failed["status"])
+        self.assertTrue(
+            any("selection asset rows do not reconcile" in error for error in failed["errors"]),
+            failed["errors"],
+        )
+
+    def test_normalized_native_bundle_expands_authority_and_binds_partitions(self) -> None:
+        authority = VALIDATION.layer3_selector_authority(
+            VALIDATION.load_yaml_file(ROOT / "src/registry/foundation-skills.yaml"),
+            VALIDATION.load_yaml_file(ROOT / "src/registry/professional-skills.yaml"),
+            VALIDATION.load_yaml_file(ROOT / "src/registry/domain-skills.yaml"),
+            context="normalized evaluator bundle",
+        )
+        selectors, partitions = (
+            VALIDATION.layer3_selector_normalized_control_projections(authority)
+        )
+        filename = "backend-change-builder.json"
+        base = selectors[filename]
+        selected_layer3 = ["transaction-consistency"]
+        selected_partitions = {
+            owner: partitions[f"backend-change-builder/{owner}.json"]
+            for owner in ["backend-change-builder", *selected_layer3]
+        }
+        measured = EVAL._selection_authority_bundle(
+            schema="split-professional-selector/v1",
+            router_rows=[
+                {
+                    "pointer": "#L1",
+                    "profile": "task-agent",
+                    "professional_skill": "backend-change-builder",
+                    "layer3_skills": [],
+                    "review_skill": "ai-code-review-refactor",
+                }
+            ],
+            step={
+                "profile": "task-agent",
+                "primary_skill": "backend-change-builder",
+                "layer3_skills": ["transaction-consistency"],
+            },
+            selector=base,
+            reference_partitions=selected_partitions,
+            exact_references=None,
+            envelope_pointer="fixture:normalized:selector",
+            envelope_sha256="a" * 64,
+        )
+        self.assertEqual(
+            ["backend-change-builder", *selected_layer3],
+            measured["reference_partitions_loaded"],
+        )
+        self.assertEqual(
+            [
+                "../reference-records/backend-change-builder/"
+                "backend-change-builder.json",
+                "../reference-records/backend-change-builder/"
+                "transaction-consistency.json",
+            ],
+            measured["reference_partition_pointers"],
+        )
+        self.assertEqual(
+            ["transaction-consistency"], measured["effective_ordered_layer3"]
+        )
+
+    def test_native_partitions_are_loaded_once_per_host_only_when_unresolved(self) -> None:
+        case, manifests = self._native_dispatch_probe()
+        step_index, step = next(
+            (index, item)
+            for index, item in enumerate(case["steps"])
+            if item.get("action") == "dispatch" and item.get("primary_skill")
+        )
+        authority = VALIDATION.layer3_selector_authority(
+            VALIDATION.load_yaml_file(ROOT / "src/registry/foundation-skills.yaml"),
+            VALIDATION.load_yaml_file(ROOT / "src/registry/professional-skills.yaml"),
+            VALIDATION.load_yaml_file(ROOT / "src/registry/domain-skills.yaml"),
+            context="native partition cost",
+        )
+        selectors, partitions = (
+            VALIDATION.layer3_selector_normalized_control_projections(authority)
+        )
+        filename = f"{step['primary_skill']}.json"
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._copy_native_dispatch_subject(root, str(step["primary_skill"]), step)
+            control = root / (
+                "dist/universal/skills/recommended/engineering-control-plane/references"
+            )
+            selector_path = control / "selectors" / filename
+            selector_path.write_text(
+                json.dumps(selectors[filename], sort_keys=True, separators=(",", ":"))
+                + "\n",
+                encoding="utf-8",
+            )
+            owners = [str(step["primary_skill"]), *step["layer3_skills"]]
+            partition_paths = []
+            for owner in owners:
+                partition_path = (
+                    control / "reference-records" / str(step["primary_skill"])
+                    / f"{owner}.json"
+                )
+                partition_path.parent.mkdir(parents=True, exist_ok=True)
+                partition_path.write_text(
+                    json.dumps(
+                        partitions[f"{step['primary_skill']}/{owner}.json"],
+                        sort_keys=True,
+                        separators=(",", ":"),
+                    )
+                    + "\n",
+                    encoding="utf-8",
+                )
+                partition_paths.append(partition_path)
+            unresolved_step = copy.deepcopy(step)
+            unresolved_step.pop("professional_references")
+            unresolved_step.pop("layer3_references")
+            unresolved = EVAL._native_dispatch_selection_assets(
+                str(case["id"]), step_index, unresolved_step, root, manifests
+            )
+            self.assertEqual(3 * len(owners), unresolved["reference_partition_load_count"])
+            self.assertEqual(
+                3 * len(owners),
+                sum(
+                    row["load_count"]
+                    for row in unresolved["components"]
+                    if row["kind"] == "reference-records-partition"
+                ),
+            )
+            self.assertGreater(unresolved["component_tokens"]["reference_partition"], 0)
+
+            exact = copy.deepcopy(step)
+            exact["professional_references"] = []
+            exact["layer3_references"] = []
+            skipped = EVAL._native_dispatch_selection_assets(
+                str(case["id"]), step_index, exact, root, manifests
+            )
+            self.assertEqual(0, skipped["reference_partition_load_count"])
+            self.assertEqual([], skipped["reference_partitions_loaded"])
+            self.assertFalse(
+                any(
+                    row["kind"] == "reference-records-partition"
+                    for row in skipped["components"]
+                )
+            )
+
+            partition_paths[-1].unlink()
+            with self.assertRaisesRegex(ValueError, "Reference partition"):
+                EVAL._native_dispatch_selection_assets(
+                    str(case["id"]), step_index, unresolved_step, root, manifests
+                )
+
+    def test_native_combined_router_uses_declared_base_and_zero_token_handoff_augmentation(self) -> None:
+        case, manifests = self._native_dispatch_probe()
+        step_index, step = next(
+            (index, item)
+            for index, item in enumerate(case["steps"])
+            if item.get("action") == "dispatch" and item.get("profile") == "task-agent"
+        )
+        step = copy.deepcopy(step)
+        step["primary_skill"] = "data-api-contract-changer"
+        step["layer3_skills"] = [
+            "api-contract-design",
+            "dto-schema-design",
+            "version-compatibility",
+        ]
+        step["professional_references"] = []
+        step["layer3_references"] = []
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._copy_native_dispatch_subject(root, str(step["primary_skill"]), step)
+            router = root / (
+                "dist/universal/skills/recommended/engineering-control-plane/"
+                "references/professional-skill-router.md"
+            )
+            router.write_text(
+                "# Professional Skill Router\n\n"
+                "| Task signal | Start profile | Primary Professional Skill | Optional Layer 3 Skills | Review Skill |\n"
+                "| --- | --- | --- | --- | --- |\n"
+                "| analyzed public API or data-contract implementation (`implementation-preparation`) | analysis-agent | engineering-change-analysis | api-contract-design, version-compatibility | architecture-impact-reviewer |\n"
+                "| analyzed release scenario | analysis-agent | engineering-change-analysis | release-rollback, version-compatibility | delivery-release-gate |\n",
+                encoding="utf-8",
+            )
+            fixture_path = root / "evals/agent-light-trajectories/cases.yaml"
+            fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+            native_case = next(
+                item for item in fixture["cases"] if item["id"] == "api-contract-change"
+            )
+            native_case["steps"][step_index] = step
+            fixture_path.write_text(
+                json.dumps(fixture, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            (root / (
+                "dist/universal/skills/recommended/engineering-control-plane/"
+                "references/selectors/data-api-contract-changer.json"
+            )).unlink()
+            measured = EVAL._native_dispatch_selection_assets(
+                "api-contract-change", step_index, step, root, manifests
+            )
+        self.assertEqual("combined-router/v1", measured["schema"])
+        self.assertEqual(
+            ["api-contract-design", "version-compatibility"],
+            measured["router_declared_layer3"],
+        )
+        self.assertEqual(
+            ["dto-schema-design"],
+            measured["handoff_augmentation"]["layer3_skills"],
+        )
+        self.assertEqual(
+            "analyzed public API or data-contract implementation (`implementation-preparation`)",
+            measured["router_trigger"],
+        )
+        self.assertEqual("analysis-agent", measured["router_profile"])
+        self.assertEqual(
+            "engineering-change-analysis", measured["router_primary_skill"]
+        )
+        self.assertEqual(
+            "architecture-impact-reviewer", measured["router_review_skill"]
+        )
+        self.assertEqual(1, len(measured["router_pointers"]))
+        self.assertEqual(
+            "src/registry/release-routing-scenarios.yaml",
+            measured["handoff_augmentation"]["authority_path"],
+        )
+        self.assertEqual(
+            hashlib.sha256(
+                (ROOT / "src/registry/release-routing-scenarios.yaml").read_bytes()
+            ).hexdigest(),
+            measured["handoff_augmentation"]["sha256"],
+        )
+        self.assertEqual(0, measured["handoff_augmentation"]["tokens_added"])
+        self.assertEqual(3, measured["selector_load_count"])
+
+    def test_native_combined_router_rejects_ambiguous_release_scenario(self) -> None:
+        document = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
+        case = copy.deepcopy(
+            next(item for item in document["cases"] if item["id"] == "api-contract-change")
+        )
+        step_index, step = next(
+            (index, item)
+            for index, item in enumerate(case["steps"])
+            if item.get("action") == "dispatch" and item.get("profile") == "task-agent"
+        )
+        _probe, manifests = self._native_dispatch_probe()
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._copy_native_dispatch_subject(root, str(step["primary_skill"]), step)
+            scenario_path = root / "src/registry/release-routing-scenarios.yaml"
+            scenario_text = scenario_path.read_text(encoding="utf-8")
+            scenario_path.write_text(
+                scenario_text.replace(
+                    "light_case_id: single-module-feature",
+                    "light_case_id: api-contract-change",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "scenario authority is ambiguous"):
+                EVAL._native_combined_dispatch_binding(
+                    str(case["id"]),
+                    step_index,
+                    step,
+                    root,
+                    {"rows": []},
+                )
+
+    def test_native_selection_bundle_rejects_authority_disagreement_and_duplicate_occurrence(self) -> None:
+        with self.assertRaisesRegex(ValueError, "augmentation authority"):
+            EVAL._selection_authority_bundle(
+                schema="combined-router/v1",
+                router_rows=[{
+                    "pointer": "#L5",
+                    "signal": "accepted API task",
+                    "profile": "task-agent",
+                    "professional_skill": "data-api-contract-changer",
+                    "layer3_skills": [],
+                    "review_skill": "architecture-impact-reviewer",
+                }],
+                step={
+                    "profile": "task-agent",
+                    "primary_skill": "data-api-contract-changer",
+                    "layer3_skills": ["version-compatibility"],
+                    "router_trigger": "accepted API task",
+                    "review_skill": "architecture-impact-reviewer",
+                    "handoff_augmentation_authority": {
+                        "path": "src/registry/release-routing-scenarios.yaml",
+                        "sha256": "a" * 64,
+                        "pointer": "#/scenarios/0/tasks/0",
+                        "layer3_skills": [],
+                    },
+                },
+                selector=None,
+                envelope_pointer="fixture:case:step:1:selector",
+                envelope_sha256="a" * 64,
+            )
+        duplicate = {
+            "host": "codex",
+            "kind": "global-professional-router",
+            "physical_path": "same.md",
+            "sha256": "b" * 64,
+            "load_count": 1,
+        }
+        with self.assertRaisesRegex(ValueError, "duplicate selection asset"):
+            EVAL._validate_selection_asset_occurrences([duplicate, dict(duplicate)])
+
+    def test_combined_router_binding_rejects_nearby_but_unbound_authority(self) -> None:
+        correct = {
+            "pointer": "#/scenarios/0/router",
+            "signal": "accepted API task",
+            "profile": "task-agent",
+            "professional_skill": "data-api-contract-changer",
+            "layer3_skills": ["api-contract-design", "dto-schema-design"],
+            "review_skill": "architecture-impact-reviewer",
+        }
+        unrelated = {
+            "pointer": "#/scenarios/1/router",
+            "signal": "analyzed release scenario",
+            "profile": "analysis-agent",
+            "professional_skill": "engineering-change-analysis",
+            "layer3_skills": ["release-rollback", "version-compatibility"],
+            "review_skill": "delivery-release-gate",
+        }
+        step = {
+            "profile": "task-agent",
+            "primary_skill": "data-api-contract-changer",
+            "layer3_skills": [
+                "api-contract-design",
+                "dto-schema-design",
+                "version-compatibility",
+            ],
+            "router_trigger": "accepted API task",
+            "review_skill": "architecture-impact-reviewer",
+            "handoff_augmentation_authority": {
+                "path": "src/registry/release-routing-scenarios.yaml",
+                "sha256": "a" * 64,
+                "pointer": "#/scenarios/0/tasks/0",
+                "layer3_skills": ["version-compatibility"],
+            },
+        }
+        complete = {
+            **correct,
+            "layer3_skills": [
+                "api-contract-design",
+                "dto-schema-design",
+                "version-compatibility",
+            ],
+        }
+        mutations = {
+            "wrong trigger": [{**complete, "signal": "different trigger"}],
+            "wrong Professional": [
+                {**complete, "professional_skill": "backend-change-builder"}
+            ],
+            "wrong Profile": [{**complete, "profile": "analysis-agent"}],
+            "wrong Review": [
+                {**complete, "review_skill": "ai-code-review-refactor"}
+            ],
+            "ambiguous scenario": [complete, {**complete, "pointer": "#L99"}],
+        }
+        for label, router_rows in mutations.items():
+            with self.subTest(label=label), self.assertRaises(ValueError):
+                EVAL._selection_authority_bundle(
+                    schema="combined-router/v1",
+                    router_rows=router_rows,
+                    step=step,
+                    selector=None,
+                    envelope_pointer="fixture:api-contract-change:step:6:selector",
+                    envelope_sha256="b" * 64,
+                )
+
+        missing_augmentation = copy.deepcopy(step)
+        missing_augmentation.pop("handoff_augmentation_authority")
+        with self.assertRaisesRegex(ValueError, "augmentation authority"):
+            EVAL._selection_authority_bundle(
+                schema="combined-router/v1",
+                router_rows=[correct, unrelated],
+                step=missing_augmentation,
+                selector=None,
+                envelope_pointer="fixture:api-contract-change:step:6:selector",
+                envelope_sha256="b" * 64,
+            )
+
+    def test_release_projection_rejects_stale_json_or_markdown_binding(self) -> None:
+        comparison = {
+            "status": "pass",
+            "aggregate": {"baseline": 10, "candidate": 9, "delta": -1},
+            "cases": [
+                {
+                    "id": "case-a",
+                    "selection_authority_bundles": {
+                        "baseline": [{"schema": "combined-router/v1"}],
+                        "candidate": [
+                            {"schema": "changeforge.layer3-selector-normalized-control/v1"}
+                        ],
+                    },
+                    "structural": {
+                        "selector_load_count": {"baseline": 1, "candidate": 1},
+                        "reference_partition_load_count": {
+                            "baseline": 0,
+                            "candidate": 1,
+                        },
+                        "reference_load_count": {"baseline": 1, "candidate": 1},
+                    },
+                }
+            ],
+            "subjects": {"baseline": {}, "candidate": {}},
+            "host_matrix": {
+                "logical_case_count": 1,
+                "host_pair_count": 1,
+                "host_order": ["codex"],
+                "component_tokens": {},
+                "hosts": {},
+                "reconciliation": {
+                    "baseline": 0,
+                    "candidate": 0,
+                    "host_pair_count": 0,
+                },
+            },
+        }
+        binding = EVAL._end_to_end_projection_binding(comparison)
+        self.assertEqual(
+            {
+                "bundle_count": 1,
+                "bundle_digest": hashlib.sha256(
+                    EVAL._canonical_json_text(
+                        [{"schema": "combined-router/v1"}]
+                    ).encode("utf-8")
+                ).hexdigest(),
+                "schemas": {"combined-router/v1": 1},
+                "selector_load_count": 1,
+                "reference_partition_load_count": 0,
+                "reference_load_count": 1,
+            },
+            binding["selection_authority_summary"]["baseline"],
+        )
+        self.assertIn(
+            "Selection authority candidate: bundles **1**; schemas "
+            "**changeforge.layer3-selector-normalized-control/v1=1**; "
+            "selector/partition/reference loads **1 / 1 / 1**.",
+            EVAL._render_end_to_end_projection_markdown(comparison),
+        )
+        self.assertEqual(
+            [],
+            EVAL._end_to_end_projection_binding_errors(
+                comparison,
+                EVAL._render_end_to_end_projection_markdown(comparison),
+                binding,
+            ),
+        )
+        self.assertTrue(
+            EVAL._end_to_end_projection_binding_errors(
+                comparison,
+                "# stale\n",
+                binding,
+            )
+        )
+
     _admissible_report_cache: dict[str, object] | None = None
 
     @classmethod
@@ -109,8 +1146,8 @@ class RenderedContextBudgetTests(unittest.TestCase):
         source_targets = {
             "main-control-agent": 70,
             "analysis-agent": 230,
-            "task-agent": 650,
-            "review-agent": 510,
+            "task-agent": 440,
+            "review-agent": 336,
         }
         for role, target in source_targets.items():
             with self.subTest(role=role):
@@ -124,12 +1161,22 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 encoding="utf-8"
             )
         )
-        for projection in core["implementation_discipline_contract"][
-            "profile_projection"
-        ]:
+        discipline = core["implementation_discipline_contract"]
+        self.assertIn(
+            discipline["profile_capability_id"],
+            core["profile_contract"]["role_capabilities"]["task-agent"][
+                "required_capability_ids"
+            ],
+        )
+        resident_projection_ids = set()
+        for projection in discipline["profile_projection"]:
             rule = projection["exact_rule"]
+            occurrences = task_rules.count(rule)
+            if occurrences:
+                resident_projection_ids.add(projection["rule_id"])
             with self.subTest(task_rule=projection["rule_id"]):
-                self.assertEqual(1, task_rules.count(rule))
+                self.assertLessEqual(occurrences, 1)
+        self.assertEqual({"test-first-required"}, resident_projection_ids)
 
         analysis_root = (
             ROOT / "src/professional-skills/engineering-change-analysis/SKILL.md"
@@ -472,50 +1519,32 @@ class RenderedContextBudgetTests(unittest.TestCase):
             all(item["required_progress_for_multi_agent"] is True for item in rows)
         )
         self.assertEqual(
-            min(item["realized_reduction_ratio"] for item in rows),
-            report["transferred_context"]["conservative_long_task_ratio"],
+            "candidate-subject-only",
+            report["transferred_context"]["measurement_kind"],
+        )
+        self.assertTrue(
+            all("realized_reduction_ratio" not in item for item in rows)
         )
 
-    def test_compacted_transfer_meets_each_realized_reduction_boundary(self) -> None:
+    def test_candidate_transfer_is_measured_without_a_fabricated_baseline(self) -> None:
         transfer = EVAL.evaluate()["transferred_context"]
 
         contract = EVAL.TRANSFER_MEASUREMENT_CONTRACT
-        category_baselines = contract["category_baseline_gross_tokens"]
-        self.assertEqual(1_421, category_baselines["skill_reference"])
-        self.assertEqual(contract["baseline_gross_tokens"], transfer["before_gross_tokens"])
-        self.assertLessEqual(transfer["after_gross_tokens"], 14441)
-        self.assertGreaterEqual(transfer["realized_reduction_ratio"], 0.694706)
+        self.assertEqual(
+            {
+                "minimum_realized_reduction_ratio": 0.25,
+                "target_realized_reduction_ratio": 0.30,
+            },
+            contract,
+        )
+        self.assertEqual("candidate-subject-only", transfer["measurement_kind"])
+        self.assertGreater(transfer["gross_tokens"], 0)
         self.assertLessEqual(
             transfer["categories"]["repair_context"]["gross_tokens"],
             154,
         )
-        self.assertEqual(
-            transfer["before_gross_tokens"] - transfer["after_gross_tokens"],
-            transfer["realized_reduction_tokens"],
-        )
-        for category in ("authority", "skill_reference", "task_capsule"):
-            with self.subTest(protected_category=category):
-                self.assertEqual(
-                    category_baselines[category],
-                    transfer["categories"][category]["gross_tokens"],
-                )
-        self.assertLessEqual(
-            transfer["categories"]["duplicate_context"]["gross_tokens"],
-            int(category_baselines["duplicate_context"] * 0.75),
-        )
         self.assertEqual(0, transfer["categories"]["superseded_evidence"]["gross_tokens"])
         self.assertTrue(transfer["semantic_baseline"]["retained_semantic_equality"])
-        self.assertEqual(
-            "continue",
-            transfer["context_compaction_decision"]["classification"],
-        )
-        for row in transfer["long_task_rows"]:
-            with self.subTest(case=row["id"]):
-                self.assertEqual(
-                    contract["long_task_baseline_gross_tokens"][row["id"]],
-                    row["before_gross_tokens"],
-                )
-                self.assertGreaterEqual(row["realized_reduction_ratio"], 0.25)
 
         isolated = next(
             row
@@ -842,21 +1871,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     EVAL._current_blocking_review_window(case["steps"], 2)
                 )
 
-    def test_missing_long_task_baseline_fails_before_report_write(self) -> None:
-        baselines = EVAL.TRANSFER_MEASUREMENT_CONTRACT[
-            "long_task_baseline_gross_tokens"
-        ]
-        selected = next(iter(baselines))
-        with (
-            mock.patch.dict(
-                baselines,
-                {selected: baselines[selected]},
-                clear=True,
-            ),
-            mock.patch.object(EVAL, "_write_reports") as write_reports,
-        ):
-            self.assertEqual(1, EVAL.main([]))
-        write_reports.assert_not_called()
+    def test_evaluator_source_contains_no_registered_token_baseline(self) -> None:
+        source = SCRIPT.read_text(encoding="utf-8")
+        self.assertNotIn("long_task_baseline_gross_tokens", source)
+        self.assertNotIn("category_baseline_gross_tokens", source)
+        self.assertNotIn('"baseline_gross_tokens": 47_302', source)
 
     def test_context_compaction_threshold_classification_is_exact(self) -> None:
         self.assertEqual(
@@ -865,6 +1884,1122 @@ class RenderedContextBudgetTests(unittest.TestCase):
         self.assertEqual("marginal", EVAL._context_compaction_classification(0.25))
         self.assertEqual("marginal", EVAL._context_compaction_classification(0.299999))
         self.assertEqual("continue", EVAL._context_compaction_classification(0.30))
+
+    @staticmethod
+    def _ab_subject(total_tokens: int) -> dict[str, object]:
+        subject = {
+            "identity": {
+                "measurement_source": "isolated-built-subject",
+                "evaluator_sha256": "1" * 64,
+                "lightweight_evaluator_sha256": "8" * 64,
+                "native_fixture_sha256": "2" * 64,
+                "native_schema": {
+                    "fixture_schema_version": 2,
+                    "trajectory_case_count": 1,
+                    "task_focus_case_count": 1,
+                    "capsule_contracts": [],
+                },
+                "native_validator_sha256": "7" * 64,
+                "canonical_corpus_digest": "9" * 64,
+                "tokenizer": "o200k_base",
+                "source_commit": "3" * 40,
+                "authoritative_build_inputs": {"sha256": "4" * 64},
+                "manifests": {
+                    profile: {
+                        "sha256": str(index) * 64,
+                        "authoritative_build_inputs": {"sha256": "4" * 64},
+                    }
+                    for index, profile in enumerate(EVAL.BUILD_PROFILES, 5)
+                },
+            },
+            "cases": [
+                {
+                    "id": "measured-case",
+                    "route_obligations": {
+                        "professional": ["repository-tooling-change-builder"],
+                        "layer3": ["targeted-validation-selection"],
+                        "domain": [],
+                        "review": ["quality-test-gate"],
+                    },
+                    "component_tokens": {
+                        "always_loaded": 20,
+                        "dispatch_instructions": 10,
+                        "professional": 15,
+                        "layer3": 10,
+                        "selector": 5,
+                        "reference_partition": 0,
+                        "targeted_reference": 10,
+                        "cross_agent_transfer": total_tokens - 70,
+                    },
+                    "structural": {
+                        "selector_load_count": 1,
+                        "reference_partition_load_count": 0,
+                        "envelope_count": 1,
+                        "reference_load_count": 1,
+                        "reference_tokens": 10,
+                        "handoff_count": 1,
+                        "handoff_tokens": total_tokens - 70,
+                        "same_assignment_duplicate_read_count": 0,
+                        "end_to_end_context_occurrence_count": 4,
+                    },
+                    "total_task_tokens": total_tokens,
+                    "native_sources": {
+                        "selection_authority_bundles": [
+                            {
+                                "schema": "combined-router/v1",
+                                "effective_ordered_layer3": [
+                                    "targeted-validation-selection"
+                                ],
+                            }
+                        ]
+                    },
+                }
+            ],
+        }
+        logical = subject["cases"][0]
+        subject["cases"] = []
+        for host in EVAL.FOCUS_PROFILE_HOSTS:
+            row = copy.deepcopy(logical)
+            row["id"] = f"measured-case::{host}"
+            row["logical_case_id"] = "measured-case"
+            row["host"] = host
+            row["native_sources"]["selection_authority_bundles"][0]["host"] = host
+            row["native_sources"]["components"] = []
+            row["native_sources"]["selection_asset_component_tokens"] = {
+                "always_loaded": 0,
+                "selector": 0,
+                "reference_partition": 0,
+            }
+            subject["cases"].append(row)
+        subject["identity"].update(
+            {
+                "logical_case_count": 1,
+                "host_pair_count": len(EVAL.FOCUS_PROFILE_HOSTS),
+                "host_order": list(EVAL.FOCUS_PROFILE_HOSTS),
+            }
+        )
+        return subject
+
+    @staticmethod
+    def _focus_row(case: dict[str, object], subject: str = "candidate") -> dict[str, object]:
+        case_id = str(case["id"])
+        return {
+            "canonical_id": case_id,
+            f"{subject}_native_id": case_id,
+            f"{subject}_native_sha256": hashlib.sha256(
+                json.dumps(
+                    case,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode("utf-8")
+            ).hexdigest(),
+            "state": "raw-route-equal",
+            "semantic_obligation": EVAL._focus_semantic_obligation(case),
+            "route_obligations": {
+                "professional": [],
+                "layer3": [],
+                "domain": [],
+                "review": [],
+                "references": [],
+                "not_applicable_basis": "task-focus case contains no Task dispatch",
+            },
+        }
+
+    @staticmethod
+    def _focus_case(scenario: str) -> dict[str, object]:
+        document = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
+        return copy.deepcopy(
+            next(
+                case
+                for case in document["task_focus_cases"]
+                if case["scenario"] == scenario
+            )
+        )
+
+    @staticmethod
+    def _copy_focus_subject(target: Path) -> None:
+        copied = (
+            "src/control-model/core-contracts.json",
+            "src/agent-profiles/role-agents.json",
+            "src/control-skills/engineering-control-plane/references/implementation-handoff-template.md",
+        )
+        for relative in copied:
+            destination = target / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes((ROOT / relative).read_bytes())
+        host_templates = {
+            "codex": "dist/codex/project/.codex/agents/{role}.toml",
+            "claude": "dist/claude/project/.claude/agents/{role}.md",
+            "copilot": "dist/copilot/project/.github/agents/{role}.agent.md",
+        }
+        for role in (
+            "main-control-agent",
+            "analysis-agent",
+            "task-agent",
+            "review-agent",
+        ):
+            for host in EVAL.FOCUS_PROFILE_HOSTS:
+                relative = host_templates[host].format(role=role)
+                destination = target / relative
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.write_bytes((ROOT / relative).read_bytes())
+        for profile in EVAL.BUILD_PROFILES:
+            relative = (
+                f"dist/universal/skills/{profile}/.changeforge-build-manifest.json"
+            )
+            destination = target / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes((ROOT / relative).read_bytes())
+
+    def test_focus_cost_binds_only_the_core_derived_subject_actor_profile(self) -> None:
+        expected = {
+            "finding": "review-agent",
+            "same-pattern": "task-agent",
+            "repair": "task-agent",
+            "review-level": "review-agent",
+            "analysis-level": "main-control-agent",
+            "review-readiness": "main-control-agent",
+            "capability-equivalence": "main-control-agent",
+            "cost": "task-agent",
+        }
+        for scenario, role in expected.items():
+            case = self._focus_case(scenario)
+            measured = EVAL._focus_case_cost(
+                self._focus_row(case), case, ROOT, subject="candidate", host="codex"
+            )
+            profile_tokens = next(
+                item["tokens"]
+                for item in measured["actor_profile_binding"]["generated_profiles"]
+                if item["host"] == "codex"
+            )
+            with self.subTest(scenario=scenario):
+                self.assertEqual(role, measured["actor_profile_binding"]["actor"])
+                self.assertEqual(role, measured["actor_profile_binding"]["profile"])
+                self.assertEqual(
+                    profile_tokens, measured["component_tokens"]["always_loaded"]
+                )
+                self.assertEqual(
+                    0, measured["component_tokens"]["dispatch_instructions"]
+                )
+                self.assertEqual(
+                    profile_tokens, measured["total_task_tokens"]
+                )
+                self.assertEqual(
+                    list(EVAL.FOCUS_PROFILE_HOSTS),
+                    measured["actor_profile_binding"]["host_order"],
+                )
+                self.assertEqual(
+                    list(EVAL.FOCUS_PROFILE_HOSTS),
+                    [
+                        item["host"]
+                        for item in measured["actor_profile_binding"][
+                            "generated_profiles"
+                        ]
+                    ],
+                )
+                self.assertEqual(
+                    "oracle-only-not-loaded",
+                    measured["native_sources"]["fixture_case"]["content_scope"],
+                )
+                self.assertEqual(
+                    "authority-only-not-loaded",
+                    measured["native_sources"]["core"]["content_scope"],
+                )
+        capability = self._focus_case("capability-equivalence")
+        measured = EVAL._focus_case_cost(
+            self._focus_row(capability), capability, ROOT, subject="candidate", host="codex"
+        )
+        self.assertNotEqual("task-agent", measured["actor_profile_binding"]["profile"])
+
+    def test_focus_cost_core_growth_does_not_change_loaded_tokens(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._copy_focus_subject(root)
+            case = self._focus_case("finding")
+            before = EVAL._focus_case_cost(
+                self._focus_row(case), case, root, subject="candidate", host="codex"
+            )
+            core_path = root / "src/control-model/core-contracts.json"
+            core = json.loads(core_path.read_text(encoding="utf-8"))
+            core["s2d_unloaded_authority_probe"] = "full Core growth is not loaded"
+            core_path.write_text(
+                json.dumps(core, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            after = EVAL._focus_case_cost(
+                self._focus_row(case), case, root, subject="candidate", host="codex"
+            )
+        self.assertNotEqual(
+            before["native_sources"]["core"]["sha256"],
+            after["native_sources"]["core"]["sha256"],
+        )
+        self.assertEqual(before["component_tokens"], after["component_tokens"])
+        self.assertEqual(before["total_task_tokens"], after["total_task_tokens"])
+
+    def test_focus_cost_profile_mutation_is_scoped_to_its_bound_consumer(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._copy_focus_subject(root)
+            finding = self._focus_case("finding")
+            cost = self._focus_case("cost")
+            finding_before = EVAL._focus_case_cost(
+                self._focus_row(finding), finding, root, subject="candidate", host="codex"
+            )
+            cost_before = EVAL._focus_case_cost(
+                self._focus_row(cost), cost, root, subject="candidate", host="codex"
+            )
+            profile_path = root / "dist/codex/project/.codex/agents/task-agent.toml"
+            profile_path.write_text(
+                profile_path.read_text(encoding="utf-8")
+                + "\nS2D scoped profile token probe.\n",
+                encoding="utf-8",
+            )
+            profile_sha256 = hashlib.sha256(profile_path.read_bytes()).hexdigest()
+            for build_profile in EVAL.BUILD_PROFILES:
+                manifest_path = root / (
+                    "dist/universal/skills/"
+                    f"{build_profile}/.changeforge-build-manifest.json"
+                )
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                manifest["agent_profile_sha256"]["codex"]["task-agent"] = (
+                    profile_sha256
+                )
+                manifest_path.write_text(
+                    json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+                    encoding="utf-8",
+                )
+            finding_after = EVAL._focus_case_cost(
+                self._focus_row(finding), finding, root, subject="candidate", host="codex"
+            )
+            cost_after = EVAL._focus_case_cost(
+                self._focus_row(cost), cost, root, subject="candidate", host="codex"
+            )
+        self.assertEqual(
+            finding_before["total_task_tokens"], finding_after["total_task_tokens"]
+        )
+        self.assertGreater(
+            cost_after["total_task_tokens"], cost_before["total_task_tokens"]
+        )
+
+    def test_focus_cost_binding_fails_closed_on_unknown_disagreement_missing_and_stale(self) -> None:
+        mutations = (
+            "unknown",
+            "disagreement",
+            "missing-profile",
+            "symlink-profile",
+            "missing-manifest-host",
+            "stale-manifest",
+        )
+        for mutation in mutations:
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                self._copy_focus_subject(root)
+                case = self._focus_case("finding")
+                if mutation == "unknown":
+                    case["scenario"] = "unknown-focus-scenario"
+                elif mutation == "disagreement":
+                    core_path = root / "src/control-model/core-contracts.json"
+                    core = json.loads(core_path.read_text(encoding="utf-8"))
+                    core["review_discipline_contract"]["effective_level_policy"][
+                        "finding_merge_owner"
+                    ] = "task-agent"
+                    core_path.write_text(
+                        json.dumps(core, ensure_ascii=False, indent=2) + "\n",
+                        encoding="utf-8",
+                    )
+                elif mutation == "missing-profile":
+                    (
+                        root
+                        / "dist/codex/project/.codex/agents/review-agent.toml"
+                    ).unlink()
+                elif mutation == "symlink-profile":
+                    profile_path = (
+                        root
+                        / "dist/codex/project/.codex/agents/review-agent.toml"
+                    )
+                    profile_path.unlink()
+                    profile_path.symlink_to(
+                        ROOT
+                        / "dist/codex/project/.codex/agents/review-agent.toml"
+                    )
+                else:
+                    manifest_path = root / (
+                        "dist/universal/skills/recommended/"
+                        ".changeforge-build-manifest.json"
+                    )
+                    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                    if mutation == "missing-manifest-host":
+                        manifest["agent_profile_sha256"]["copilot"].pop(
+                            "review-agent"
+                        )
+                    else:
+                        manifest["agent_profile_sha256"]["codex"][
+                            "review-agent"
+                        ] = "0" * 64
+                    manifest_path.write_text(
+                        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+                        encoding="utf-8",
+                    )
+                with self.assertRaises(ValueError):
+                    EVAL._focus_case_cost(
+                        self._focus_row(case), case, root, subject="candidate", host="codex"
+                    )
+
+    def test_end_to_end_ab_gate_uses_aggregate_conservation_not_legacy_ratio(self) -> None:
+        equal = EVAL._compare_end_to_end_subjects(
+            self._ab_subject(100), self._ab_subject(100)
+        )
+        self.assertEqual("pass", equal["status"])
+        self.assertEqual(0, equal["aggregate"]["delta"])
+        below_legacy_ratio = EVAL._compare_end_to_end_subjects(
+            self._ab_subject(100), self._ab_subject(99)
+        )
+        self.assertEqual("pass", below_legacy_ratio["status"])
+        self.assertLess(
+            below_legacy_ratio["aggregate"]["reduction_ratio"],
+            EVAL.COST_GATE_MINIMUM_REDUCTION_RATIO,
+        )
+        one_over = EVAL._compare_end_to_end_subjects(
+            self._ab_subject(100), self._ab_subject(101)
+        )
+        self.assertEqual("fail", one_over["status"])
+        self.assertTrue(
+            any("exceeds baseline" in error for error in one_over["errors"]),
+            one_over["errors"],
+        )
+
+    @staticmethod
+    def _host_complete_ab_subject(total_tokens: int) -> dict[str, object]:
+        return RenderedContextBudgetTests._ab_subject(total_tokens)
+
+    def test_s3c_comparison_rejects_hybrid_or_incomplete_host_matrix(self) -> None:
+        baseline = self._host_complete_ab_subject(100)
+        candidate = self._host_complete_ab_subject(100)
+        self.assertEqual(
+            "pass", EVAL._compare_end_to_end_subjects(baseline, candidate)["status"]
+        )
+
+        for mutation in ("hybrid", "missing-host", "cross-host"):
+            before = copy.deepcopy(baseline)
+            broken = copy.deepcopy(candidate)
+            if mutation == "hybrid":
+                before["cases"] = before["cases"][:1]
+                broken["cases"] = broken["cases"][:1]
+            elif mutation == "missing-host":
+                before["cases"] = before["cases"][:-1]
+                broken["cases"] = broken["cases"][:-1]
+            else:
+                broken["cases"][0]["host"] = "claude"
+            with self.subTest(mutation=mutation):
+                report = EVAL._compare_end_to_end_subjects(before, broken)
+                self.assertEqual("fail", report["status"])
+                self.assertTrue(
+                    any("host" in error for error in report["errors"]),
+                    report["errors"],
+                )
+
+    def test_s3c_comparison_rejects_selector_envelope_component_overlap(self) -> None:
+        baseline = self._host_complete_ab_subject(100)
+        candidate = self._host_complete_ab_subject(100)
+        for subject in (baseline, candidate):
+            case = subject["cases"][0]
+            case["native_sources"]["components"].append(
+                {
+                    "host": "codex",
+                    "kind": "native-selector-envelope",
+                    "bucket": "selector",
+                    "physical_path": "fixture:measured-case:step:1:selector",
+                    "sha256": "a" * 64,
+                    "tokens": 5,
+                    "load_count": 1,
+                    "content_scope": "complete-native-dispatch-partition",
+                }
+            )
+        report = EVAL._compare_end_to_end_subjects(baseline, candidate)
+        self.assertEqual("fail", report["status"])
+        self.assertTrue(
+            any("overlap" in error for error in report["errors"]), report["errors"]
+        )
+
+    def test_s3c_comparison_requires_each_host_to_conserve_cost_and_authority(self) -> None:
+        baseline = self._host_complete_ab_subject(100)
+        candidate = self._host_complete_ab_subject(99)
+        candidate["cases"][0]["component_tokens"]["cross_agent_transfer"] += 2
+        candidate["cases"][0]["total_task_tokens"] += 2
+        report = EVAL._compare_end_to_end_subjects(baseline, candidate)
+        self.assertEqual("fail", report["status"])
+        self.assertLess(report["aggregate"]["candidate"], report["aggregate"]["baseline"])
+        self.assertTrue(
+            any("codex aggregate exceeds" in error for error in report["errors"]),
+            report["errors"],
+        )
+
+        crossed = self._host_complete_ab_subject(100)
+        crossed["cases"][0]["native_sources"]["selection_authority_bundles"][0][
+            "host"
+        ] = "copilot"
+        report = EVAL._compare_end_to_end_subjects(baseline, crossed)
+        self.assertEqual("fail", report["status"])
+        self.assertTrue(
+            any("cross-host" in error for error in report["errors"]), report["errors"]
+        )
+
+    def test_ordinary_raw_route_case_cannot_hide_one_token_regression_in_host_totals(self) -> None:
+        baseline = self._host_complete_ab_subject(100)
+        candidate = self._host_complete_ab_subject(100)
+        for subject in (baseline, candidate):
+            original = subject["cases"]
+            duplicate = []
+            for row in original:
+                row["mapping_state"] = "raw-route-equal"
+                row["raw_route_obligations"] = copy.deepcopy(
+                    row["route_obligations"]
+                )
+                second = copy.deepcopy(row)
+                second["id"] = f"second::{row['host']}"
+                second["logical_case_id"] = "second"
+                duplicate.append(second)
+            subject["cases"].extend(duplicate)
+            subject["identity"]["logical_case_count"] = 2
+            subject["identity"]["host_pair_count"] = 6
+
+        for row in candidate["cases"]:
+            delta = 1 if row["logical_case_id"] == "measured-case" else -2
+            row["component_tokens"]["cross_agent_transfer"] += delta
+            row["structural"]["handoff_tokens"] += delta
+            row["total_task_tokens"] += delta
+        report = EVAL._compare_end_to_end_subjects(baseline, candidate)
+        self.assertEqual("fail", report["status"])
+        self.assertLess(report["aggregate"]["candidate"], report["aggregate"]["baseline"])
+        self.assertTrue(
+            all(
+                host["total_task_tokens"]["candidate"]
+                < host["total_task_tokens"]["baseline"]
+                for host in report["host_matrix"]["hosts"].values()
+            )
+        )
+        self.assertEqual(3, len(report["ordinary_route_regressions"]))
+        self.assertTrue(
+            all(row["total_task_tokens"]["delta"] == 1 for row in report["ordinary_route_regressions"])
+        )
+        markdown = EVAL._render_end_to_end_projection_markdown(report)
+        self.assertIn("Ordinary raw-route-equal gate regressions/digest: **3**", markdown)
+        self.assertIn("**1 token(s)**", markdown)
+
+    def test_end_to_end_ab_gate_uses_measured_subjects_and_conservation(self) -> None:
+        conserved = EVAL._compare_end_to_end_subjects(
+            self._ab_subject(100), self._ab_subject(100)
+        )
+        self.assertEqual("pass", conserved["status"])
+        self.assertEqual(0.0, conserved["aggregate"]["reduction_ratio"])
+        row = conserved["cases"][0]
+        self.assertEqual(
+            {"baseline": 100, "candidate": 100, "delta": 0},
+            row["total_task_tokens"],
+        )
+        self.assertEqual(
+            {"baseline": 30, "candidate": 30, "delta": 0},
+            row["component_tokens"]["cross_agent_transfer"],
+        )
+        self.assertEqual(
+            "combined-router/v1",
+            row["selection_authority_bundles"]["baseline"][0]["schema"],
+        )
+
+        lost_bundle = self._ab_subject(100)
+        lost_bundle["cases"][0]["native_sources"].pop(
+            "selection_authority_bundles"
+        )
+        lost = EVAL._compare_end_to_end_subjects(
+            lost_bundle, self._ab_subject(100)
+        )
+        self.assertEqual("fail", lost["status"])
+        self.assertTrue(
+            any("loses measured selection authority bundles" in error for error in lost["errors"]),
+            lost["errors"],
+        )
+
+        one_over = EVAL._compare_end_to_end_subjects(
+            self._ab_subject(100), self._ab_subject(101)
+        )
+        self.assertEqual("fail", one_over["status"])
+        self.assertTrue(
+            any("exceeds baseline" in error for error in one_over["errors"]),
+            one_over["errors"],
+        )
+
+    def test_end_to_end_ab_actor_profiles_require_all_hosts_without_min_selection(self) -> None:
+        def add_binding(subject: dict[str, object]) -> None:
+            rows = [
+                {
+                    "host": host,
+                    "path": f"dist/{host}/profile",
+                    "sha256": str(index + 1) * 64,
+                    "tokens": tokens,
+                    "content_scope": "complete-subject-native-profile",
+                }
+                for index, (host, tokens) in enumerate(
+                    zip(EVAL.FOCUS_PROFILE_HOSTS, (5, 7, 8))
+                )
+            ]
+            for case in subject["cases"]:
+                host = case["host"]
+                selected = next(item for item in rows if item["host"] == host)
+                case["total_task_tokens"] += (
+                    selected["tokens"] - case["component_tokens"]["always_loaded"]
+                )
+                case["component_tokens"]["always_loaded"] = selected["tokens"]
+                case["actor_profile_binding"] = {
+                    "actor": "task-agent",
+                    "profile": "task-agent",
+                    "scenario": "cost",
+                    "core_authority": {"path": "core", "sha256": "a" * 64},
+                    "profile_authority": {"path": "profiles", "sha256": "b" * 64},
+                    "host_order": list(EVAL.FOCUS_PROFILE_HOSTS),
+                    "measured_host": host,
+                    "generated_profiles": rows,
+                    "manifest_bindings": {
+                        profile: {
+                            row_host: {
+                                "manifest_sha256": "c" * 64,
+                                "profile_sha256": rows[index]["sha256"],
+                            }
+                            for index, row_host in enumerate(EVAL.FOCUS_PROFILE_HOSTS)
+                        }
+                        for profile in EVAL.BUILD_PROFILES
+                    }
+                }
+
+        baseline = self._ab_subject(100)
+        candidate = self._ab_subject(100)
+        add_binding(baseline)
+        add_binding(candidate)
+        report = EVAL._compare_end_to_end_subjects(baseline, candidate)
+        self.assertEqual("pass", report["status"])
+        self.assertEqual(
+            ["claude"],
+            [row["host"] for row in report["cases"][0]["actor_profile_differences"]],
+        )
+
+        incomplete = copy.deepcopy(candidate)
+        incomplete["cases"][0]["actor_profile_binding"]["host_order"] = [
+            "codex"
+        ]
+        report = EVAL._compare_end_to_end_subjects(baseline, incomplete)
+        self.assertEqual("fail", report["status"])
+        self.assertTrue(any("host order" in error for error in report["errors"]))
+
+        selected_minimum = copy.deepcopy(candidate)
+        selected_minimum["cases"][0]["component_tokens"]["always_loaded"] = 1
+        selected_minimum["cases"][0]["total_task_tokens"] -= 4
+        report = EVAL._compare_end_to_end_subjects(baseline, selected_minimum)
+        self.assertEqual("fail", report["status"])
+        self.assertTrue(
+            any("not fully accounted" in error for error in report["errors"]),
+            report["errors"],
+        )
+
+    def test_end_to_end_ab_gate_accepts_only_combined_s1_s2_fixed_scope(self) -> None:
+        expected = frozenset(
+            {
+                "docs/BUILD_PROFILES.md",
+                "scripts/build.py",
+                "scripts/eval-agent-lightweight.py",
+                "scripts/eval-rendered-context-budget.py",
+                "scripts/validate-agent-profiles.py",
+                "scripts/validate-control-plane-prompt.py",
+                "scripts/validate-control-skills.py",
+                "scripts/validate-skill-routing.py",
+                "scripts/validation_utils.py",
+                "src/agent-profiles/role-agents.json",
+                "src/control-prompts/main-control-agent.md",
+                "src/control-skills/engineering-control-plane/references/implementation-handoff-template.md",
+                "src/control-skills/engineering-control-plane/references/professional-skill-router.md",
+                "src/control-skills/engineering-control-plane/references/review-handoff-template.md",
+                "evals/agent-light-trajectories/cases.yaml",
+                "reports/hookless-control-plane-eval.json",
+                "reports/rendered-context-budget.json",
+                "reports/rendered-context-budget.md",
+                "tests/scripts/test_authority_delivery_repair.py",
+                "tests/scripts/test_build_safety.py",
+                "tests/scripts/test_eval_agent_lightweight_layer3_references.py",
+                "tests/scripts/test_eval_agent_lightweight_utility.py",
+                "tests/scripts/test_eval_rendered_context_budget.py",
+                "tests/scripts/test_foundation_selector_authority.py",
+                "tests/scripts/test_rds_005_public_projection.py",
+                "tests/scripts/test_rds_006_agent_execution_discipline.py",
+                "tests/scripts/test_rds_006_task_handoff_context.py",
+                "tests/scripts/test_selector_jit_domain_parity.py",
+                "tests/scripts/test_skill_routing_roles.py",
+                "tests/scripts/test_validate_agent_profiles.py",
+                "tests/scripts/test_validate_control_plane_prompt.py",
+                "tests/scripts/test_validate_control_skills.py",
+                "tests/scripts/test_validate_docs_consistency.py",
+                "tests/scripts/test_validate_task_contracts.py",
+                "tests/test_hookless_build_install.py",
+                "scripts/validate-built-skill-reference-links.py",
+                "tests/scripts/test_built_professional_root_projection.py",
+                "tests/scripts/test_validate_built_skill_reference_links.py",
+                "tests/scripts/test_context_content_relocation.py",
+            }
+        )
+        self.assertNotIn(
+            "src/control-model/core-contracts.json", EVAL.AB_ALLOWED_WRITE_PATHS
+        )
+        self.assertNotIn(
+            "src/registry/professional-skills.yaml", EVAL.AB_ALLOWED_WRITE_PATHS
+        )
+        self.assertEqual(expected, EVAL.AB_ALLOWED_WRITE_PATHS)
+
+    def test_end_to_end_ab_gate_rejects_fabricated_or_reduced_coverage(self) -> None:
+        fabricated = self._ab_subject(100)
+        fabricated["identity"].pop("measurement_source")
+        report = EVAL._compare_end_to_end_subjects(
+            fabricated, self._ab_subject(75)
+        )
+        self.assertEqual("fail", report["status"])
+        self.assertTrue(any("measured subject" in error for error in report["errors"]))
+
+        for field in ("professional", "layer3", "domain", "review"):
+            with self.subTest(route_field=field):
+                baseline = self._ab_subject(100)
+                candidate = self._ab_subject(75)
+                baseline["cases"][0]["route_obligations"][field] = [field]
+                report = EVAL._compare_end_to_end_subjects(baseline, candidate)
+                self.assertEqual("fail", report["status"])
+                self.assertTrue(
+                    any("route obligations" in error for error in report["errors"])
+                )
+
+        reduced = self._ab_subject(75)
+        reduced["cases"][0]["structural"]["reference_load_count"] = 0
+        report = EVAL._compare_end_to_end_subjects(self._ab_subject(100), reduced)
+        self.assertEqual("fail", report["status"])
+        self.assertTrue(any("coverage" in error for error in report["errors"]))
+
+    def test_end_to_end_ab_gate_rejects_absent_components_and_fabricated_totals(self) -> None:
+        missing = self._ab_subject(100)
+        missing["cases"][0]["component_tokens"].pop("targeted_reference")
+        report = EVAL._compare_end_to_end_subjects(missing, self._ab_subject(75))
+        self.assertEqual("fail", report["status"])
+        self.assertTrue(any("complete component" in error for error in report["errors"]))
+
+        fabricated = self._ab_subject(100)
+        fabricated["cases"][0]["total_task_tokens"] += 1
+        report = EVAL._compare_end_to_end_subjects(fabricated, self._ab_subject(75))
+        self.assertEqual("fail", report["status"])
+        self.assertTrue(any("component sum" in error for error in report["errors"]))
+
+    def test_subject_case_cost_changes_when_measured_source_component_changes(self) -> None:
+        case = {
+            "id": "source-sensitive",
+            "measurements": [
+                {
+                    "host": "codex",
+                    "build_profile": "recommended",
+                    "total_tokens": 40,
+                    "components": [
+                        {"kind": "worker_profile", "tokens": 10},
+                        {"kind": "primary_skill", "tokens": 20},
+                        {"kind": "dispatch_capsule", "tokens": 10},
+                    ],
+                }
+            ],
+        }
+        transfer = {
+            "gross_tokens": 5,
+            "boundary_rows": [],
+            "categories": {
+                name: {"gross_tokens": 0, "occurrence_count": 0}
+                for name in EVAL.TRANSFER_CATEGORY_ORDER
+            },
+        }
+        metrics = {
+            "selector_load_count": 1,
+            "reference_load_count": 0,
+            "same_assignment_duplicate_read_count": 0,
+        }
+        measured = EVAL._subject_case_cost(case, transfer, metrics, {})
+        changed = copy.deepcopy(case)
+        changed["measurements"][0]["components"][1]["tokens"] += 7
+        changed["measurements"][0]["total_tokens"] += 7
+        remeasured = EVAL._subject_case_cost(changed, transfer, metrics, {})
+        self.assertEqual(7, remeasured["total_task_tokens"] - measured["total_task_tokens"])
+        self.assertEqual(
+            7,
+            remeasured["component_tokens"]["professional"]
+            - measured["component_tokens"]["professional"],
+        )
+
+    def test_manifest_input_mismatch_fails_before_subject_comparison(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            dist = Path(raw)
+            expected = {"sha256": "a" * 64, "file_count": 1}
+            for profile in EVAL.BUILD_PROFILES:
+                root = dist / profile
+                root.mkdir(parents=True)
+                (root / ".changeforge-build-manifest.json").write_text(
+                    json.dumps(
+                        {
+                            "profile": profile,
+                            "compiled_layer3_format": EVAL.COMPILED_LAYER3_FORMAT,
+                            "authoritative_build_inputs": {
+                                "sha256": "b" * 64,
+                                "file_count": 1,
+                            },
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+            identity, errors = EVAL._manifest_input_identity(dist, expected)
+        self.assertEqual({}, identity)
+        self.assertEqual(3, len(errors))
+        self.assertTrue(all("authoritative input mismatch" in error for error in errors))
+
+    def test_native_validator_binding_cannot_bypass_candidate_validity(self) -> None:
+        report = {
+            "status": "pass",
+            "fixture_schema_version": 2,
+            "evidence_scope": "deterministic-fixtures",
+            "errors": [],
+        }
+        EVAL._require_native_validator_report(
+            report, subject="baseline", expected_fixture_schema=2
+        )
+        EVAL._require_native_validator_report(
+            report, subject="candidate", expected_fixture_schema=2
+        )
+        for mutation in ("failed", "errors", "schema", "scope"):
+            with self.subTest(mutation=mutation):
+                changed = copy.deepcopy(report)
+                if mutation == "failed":
+                    changed["status"] = "fail"
+                elif mutation == "errors":
+                    changed["errors"] = ["invalid native trajectory"]
+                elif mutation == "schema":
+                    changed["fixture_schema_version"] = None
+                else:
+                    changed["evidence_scope"] = "candidate-substitution"
+                with self.assertRaises(ValueError):
+                    EVAL._require_native_validator_report(
+                        changed, subject="candidate", expected_fixture_schema=2
+                    )
+
+    def test_native_dispatch_partition_is_complete_and_unambiguous(self) -> None:
+        step = {
+            "actor": "main-control-agent",
+            "action": "dispatch",
+            "profile": "task-agent",
+            "mode": "normal",
+            "primary_skill": "repository-tooling-change-builder",
+            "layer3_skills": ["targeted-validation-selection"],
+            "professional_references": [],
+            "layer3_references": [],
+            "fixture_capsule": {"contract_version": "native-v1", "goal": "measure"},
+        }
+        selector, instructions = EVAL._native_dispatch_partition(step)
+        self.assertNotIn("fixture_capsule", selector)
+        self.assertEqual({"fixture_capsule": step["fixture_capsule"]}, instructions)
+        self.assertEqual(
+            set(step), set(selector) | {"fixture_capsule"}
+        )
+        combined = copy.deepcopy(step)
+        combined["utility_capsule"] = {"contract_version": "native-v1"}
+        selector, instructions = EVAL._native_dispatch_partition(combined)
+        self.assertEqual(
+            {"fixture_capsule", "utility_capsule"}, set(instructions)
+        )
+        self.assertEqual(
+            set(combined), set(selector) | {"fixture_capsule", "utility_capsule"}
+        )
+
+        for mutation in ("missing-profile", "missing-capsule", "malformed-capsule"):
+            with self.subTest(mutation=mutation):
+                changed = copy.deepcopy(step)
+                if mutation == "missing-profile":
+                    changed.pop("profile")
+                elif mutation == "missing-capsule":
+                    changed.pop("fixture_capsule")
+                else:
+                    changed["utility_capsule"] = "not-a-native-capsule"
+                with self.assertRaises(ValueError):
+                    EVAL._native_dispatch_partition(changed)
+
+    def test_native_contract_identity_records_unversioned_utility_capsule(self) -> None:
+        document = {
+            "schema_version": 2,
+            "cases": [],
+            "scheduling_cases": [],
+            "utility_cases": [
+                {
+                    "id": "native-utility",
+                    "steps": [
+                        {
+                            "action": "dispatch",
+                            "profile": "task-agent",
+                            "fixture_capsule": {
+                                "contract_version": "changeforge.fixture-capsule.v2",
+                                "contract_type": "utility",
+                            },
+                            "utility_capsule": {"mode": "validation-only/no-edit"},
+                        }
+                    ],
+                }
+            ],
+            "task_focus_cases": [],
+        }
+        identity = EVAL._native_contract_identity(document)
+        utility = next(
+            row
+            for row in identity["capsule_contracts"]
+            if row["capsule_field"] == "utility_capsule"
+        )
+        self.assertIsNone(utility["contract_version"])
+        self.assertEqual("unversioned-native-auxiliary", utility["version_state"])
+
+    def test_native_transfer_measurement_uses_complete_handoff_bytes(self) -> None:
+        document = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
+        source_case = next(
+            case for case in document["cases"] if case["id"] == "single-module-feature"
+        )
+        handoff = copy.deepcopy(
+            next(
+                step
+                for step in source_case["steps"]
+                if step.get("action") == "implementation-handoff"
+            )
+        )
+        case = {"id": "native-transfer", "steps": [handoff]}
+        lightweight_module = EVAL._load_current_lightweight_module(
+            ROOT / "scripts/eval-agent-lightweight.py"
+        )
+        measured = EVAL._native_transfer_measurement(case, lightweight_module)
+        expected = EVAL.count_o200k_base_tokens(EVAL._canonical_json_text(handoff))
+        self.assertEqual(expected, measured["gross_tokens"])
+        self.assertEqual(expected, measured["handoff_tokens"])
+        changed = copy.deepcopy(case)
+        changed["steps"][0]["exact_change_evidence"]["artifact"] = (
+            "diff --git a/module-a/service.py b/module-a/service.py\n"
+            "--- a/module-a/service.py\n"
+            "+++ b/module-a/service.py\n"
+            "@@ -1 +1 @@\n-old\n+changed\n"
+        )
+        changed_measurement = EVAL._native_transfer_measurement(
+            changed, lightweight_module
+        )
+        self.assertNotEqual(
+            measured["handoff_rows"][0]["sha256"],
+            changed_measurement["handoff_rows"][0]["sha256"],
+        )
+        with self.assertRaises(ValueError):
+            EVAL._native_transfer_measurement(
+                {"id": "native-transfer", "steps": [{"actor": "task-agent"}]},
+                lightweight_module,
+            )
+
+    def test_canonical_focus_mapping_closes_all_current_cases(self) -> None:
+        current = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
+        baseline = json.loads(
+            __import__("subprocess").run(
+                ["git", "show", "master:evals/agent-light-trajectories/cases.yaml"],
+                cwd=ROOT,
+                check=True,
+                stdout=__import__("subprocess").PIPE,
+            ).stdout
+        )
+        mapping = EVAL._canonical_focus_mapping(current, baseline)
+        self.assertEqual([], mapping["errors"])
+        self.assertEqual(46, len(mapping["rows"]))
+        self.assertEqual(
+            {"raw-route-equal", "source-derived-semantic-equivalent"},
+            {row["state"] for row in mapping["rows"]},
+        )
+        mapped = {
+            row["canonical_id"]: row["baseline_native_id"]
+            for row in mapping["rows"]
+            if row["canonical_id"] != row["baseline_native_id"]
+        }
+        self.assertEqual(EVAL.FOCUS_CURRENT_ONLY_MAP, mapped)
+
+    def test_canonical_focus_mapping_fails_closed_on_mapping_defects(self) -> None:
+        current = {
+            "task_focus_cases": [
+                {
+                    "id": "current",
+                    "scenario": "review-readiness",
+                    "decision": {"review_dispatches": 0},
+                    "expected_valid": True,
+                    "expected_error": None,
+                }
+            ]
+        }
+        baseline = {"task_focus_cases": []}
+        for overrides, expected in (
+            ({}, "unmapped"),
+            ({"current": ["one", "two"]}, "ambiguous"),
+            ({"current": "missing"}, "missing-native-binding"),
+        ):
+            with self.subTest(expected=expected):
+                report = EVAL._canonical_focus_mapping(
+                    current, baseline, overrides=overrides
+                )
+                self.assertTrue(any(expected in error for error in report["errors"]))
+                self.assertEqual("fail", report["status"])
+
+        baseline["task_focus_cases"] = [
+            {
+                "id": "native",
+                "scenario": "review-readiness",
+                "decision": {"review_dispatches": 1},
+                "expected_valid": True,
+                "expected_error": None,
+            }
+        ]
+        report = EVAL._canonical_focus_mapping(
+            current, baseline, overrides={"current": "native"}
+        )
+        self.assertTrue(any("semantic-mismatch" in error for error in report["errors"]))
+
+    def test_canonical_trajectory_mapping_preserves_routes_and_exposes_native_split(self) -> None:
+        baseline_case = {
+            "id": "payment-case",
+            "steps": [
+                {
+                    "action": "dispatch",
+                    "profile": "task-agent",
+                    "primary_skill": "repository-tooling-change-builder",
+                    "layer3_skills": ["payment-trading-extension"],
+                    "professional_references": [],
+                    "layer3_references": [
+                        "payment-trading-extension/references/checklist.md"
+                    ],
+                    "fixture_capsule": {"contract_version": "native-v1"},
+                }
+            ],
+        }
+        candidate_case = copy.deepcopy(baseline_case)
+        candidate_case["steps"][0]["layer3_references"] = [
+            "payment-trading-extension/references/duplicate-financial-effect-control.md"
+        ]
+        candidate_document = {
+            "cases": [candidate_case],
+            "scheduling_cases": [],
+            "utility_cases": [],
+        }
+        baseline_document = {
+            "cases": [baseline_case],
+            "scheduling_cases": [],
+            "utility_cases": [],
+        }
+        report = EVAL._canonical_trajectory_mapping(
+            candidate_document,
+            baseline_document,
+            candidate_root=ROOT,
+            baseline_root=ROOT,
+        )
+        self.assertEqual([], report["errors"])
+        self.assertEqual("source-derived-semantic-equivalent", report["rows"][0]["state"])
+        self.assertFalse(report["rows"][0]["raw_physical_route_equal"])
+
+        baseline_case["id"] = "api-contract-change"
+        candidate_case["id"] = "api-contract-change"
+        baseline_case["steps"][0]["primary_skill"] = "architecture-impact-reviewer"
+        candidate_case["steps"][0]["primary_skill"] = "architecture-impact-reviewer"
+        baseline_case["steps"][0]["layer3_references"] = []
+        candidate_case["steps"][0]["layer3_references"] = []
+        baseline_case["steps"][0]["professional_references"] = [
+            "references/architecture-output-and-gates.md"
+        ]
+        candidate_case["steps"][0]["professional_references"] = [
+            "references/consumer-and-data-impact.md"
+        ]
+        baseline_document["cases"] = [baseline_case]
+        candidate_document["cases"] = [candidate_case]
+        report = EVAL._canonical_trajectory_mapping(
+            candidate_document,
+            baseline_document,
+            candidate_root=ROOT,
+            baseline_root=ROOT,
+        )
+        self.assertEqual([], report["errors"])
+        self.assertEqual("source-derived-semantic-equivalent", report["rows"][0]["state"])
+
+        candidate_case["steps"][0]["primary_skill"] = "quality-test-gate"
+        report = EVAL._canonical_trajectory_mapping(
+            candidate_document,
+            baseline_document,
+            candidate_root=ROOT,
+            baseline_root=ROOT,
+        )
+        self.assertTrue(any("obligation-mismatch" in error for error in report["errors"]))
+
+    def test_subject_comparison_rejects_hidden_native_reference_differences(self) -> None:
+        baseline = self._ab_subject(100)
+        candidate = self._ab_subject(75)
+        binding = {
+            "semantic_obligation": "payment-duplicate-financial-effect-control",
+            "physical_path": "src/domain/references/checklist.md",
+            "reference_type": "decision-checklist",
+            "required_outputs": ["checklist-result", "residual-risk"],
+            "registry_sha256": "a" * 64,
+            "source_sha256": "b" * 64,
+            "tokens": 10,
+            "content_scope": "complete-native-bytes",
+        }
+        baseline["cases"][0]["native_reference_bindings"] = [binding]
+        candidate["cases"][0]["native_reference_bindings"] = [
+            {
+                **binding,
+                "physical_path": "src/domain/references/split.md",
+                "reference_type": "targeted",
+                "required_outputs": ["selected-approach", "residual-risk"],
+                "source_sha256": "c" * 64,
+                "tokens": 8,
+            }
+        ]
+        report = EVAL._compare_end_to_end_subjects(baseline, candidate)
+        self.assertEqual("pass", report["status"])
+        differences = next(
+            row["native_reference_differences"]
+            for row in report["cases"]
+            if row["host"] == "codex"
+        )
+        self.assertEqual(1, len(differences))
+        self.assertEqual("source-derived-semantic-equivalent", differences[0]["state"])
+
+        candidate["cases"][0]["native_reference_bindings"][0].pop("physical_path")
+        report = EVAL._compare_end_to_end_subjects(baseline, candidate)
+        self.assertEqual("fail", report["status"])
+        self.assertTrue(any("hidden physical" in error for error in report["errors"]))
+
+        repeated = {
+            **binding,
+            "physical_path": "src/domain/references/repeated.md",
+        }
+        baseline["cases"][0]["native_reference_bindings"] = [binding, repeated]
+        candidate = self._ab_subject(75)
+        candidate["cases"][0]["native_reference_bindings"] = [binding, repeated]
+        report = EVAL._compare_end_to_end_subjects(baseline, candidate)
+        self.assertEqual("pass", report["status"])
+        self.assertEqual(
+            [0, 1],
+            [
+                row["occurrence"]
+                for row in next(
+                    item["native_reference_differences"]
+                    for item in report["cases"]
+                    if item["host"] == "codex"
+                )
+            ],
+        )
+
+        candidate["cases"][0]["native_reference_bindings"] = [binding]
+        report = EVAL._compare_end_to_end_subjects(baseline, candidate)
+        self.assertEqual("fail", report["status"])
+        self.assertTrue(
+            any("occurrence cardinality" in error for error in report["errors"])
+        )
 
     def test_lightweight_join_requires_current_retained_semantic_equality(self) -> None:
         report = json.loads(EVAL.LIGHTWEIGHT_REPORT.read_text(encoding="utf-8"))
@@ -1801,11 +3936,6 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     {"retained_semantic_equality": True},
                 ),
             ),
-            mock.patch.object(
-                EVAL,
-                "_registered_long_task_baselines",
-                return_value={str(cases[0][1]["id"]): 100_000},
-            ),
         ):
             report = EVAL.evaluate()
 
@@ -1857,18 +3987,18 @@ class RenderedContextBudgetTests(unittest.TestCase):
             owner: str,
             decision_problem: str,
         ) -> str:
-            selector = json.loads(
+            partition = json.loads(
                 (
                     EVAL.DIST_SKILLS
                     / profile
-                    / "engineering-control-plane/references/selectors"
-                    / f"{primary}.json"
+                    / "engineering-control-plane/references/reference-records"
+                    / primary
+                    / f"{owner}.json"
                 ).read_text(encoding="utf-8")
             )
             records = {
                 json.dumps(record, sort_keys=True, separators=(",", ":"))
-                for surface in selector["selection_surfaces"]
-                for record in surface["reference_records"]
+                for record in partition["reference_records"]
                 if record.get("owner_skill") == owner
                 and (record.get("context_admissibility") or {}).get(
                     "decision_problem"
@@ -2381,7 +4511,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "task": {
                     "candidate_count": 19_281,
                     "exact_render_signature_count": 19_281,
-                    "over_target_candidate_count": 722,
+                    "over_target_candidate_count": 0,
                 },
                 "analyzed_task": {
                     "candidate_count": 66_150,
@@ -2408,47 +4538,46 @@ class RenderedContextBudgetTests(unittest.TestCase):
         )
         global_union = frontier["global_task_review_union"]
         self.assertEqual(
-            {"professional": 8, "layer3": 49, "active_reference": 30},
+            {"professional": 0, "layer3": 0, "active_reference": 0},
             global_union["frontier_counts"],
         )
         self.assertEqual(
-            {"professional": 9, "layer3": 19, "active_reference": 237},
+            {"professional": 17, "layer3": 68, "active_reference": 267},
             global_union["safe_complement_counts"],
         )
         self.assertEqual(
-            [
-                "change-documentation-gate",
-                "data-api-contract-changer",
-                "data-middleware-change-builder",
-                "installed-client-change-builder",
-                "integration-change-builder",
-                "platform-infrastructure-change-builder",
-                "repository-tooling-change-builder",
-                "security-privacy-gate",
-            ],
+            [],
             global_union["frontier"]["professional"],
         )
         self.assertEqual(
             [
                 "ai-code-review-refactor",
                 "architecture-impact-reviewer",
+                "change-documentation-gate",
+                "data-api-contract-changer",
+                "data-middleware-change-builder",
                 "delivery-release-gate",
                 "engineering-artifact-review",
                 "high-risk-design-review",
+                "installed-client-change-builder",
+                "integration-change-builder",
                 "logging-design-gate",
+                "platform-infrastructure-change-builder",
                 "quality-test-gate",
                 "reliability-observability-gate",
+                "repository-tooling-change-builder",
                 "routing-quality-review",
+                "security-privacy-gate",
             ],
             global_union["safe_complement"]["professional"],
         )
         expected_membership_sha256 = {
-            "frontier_professional": "96ce66a72080f6983fafaed55682fdce5f58d152bce2da14fdcda847d6fbd637",
-            "frontier_layer3": "d51517ecf92d47fcec3f31b3c05666a311e4673dda16675ca4dda2939c76ef9b",
-            "frontier_active_reference": "a793864c5bd30f8cd138da80fadeb1435dc152b8764b028e0a2b6446c39ed4fd",
-            "safe_complement_professional": "c07dffc19c8a53524dae5a6c15eea6aab655397dab57cf7d4881fb1e02cdb08e",
-            "safe_complement_layer3": "957107f6cebf787b5619cf1084b3d0db40709204e5ea6cdb229906cea12ff3b2",
-            "safe_complement_active_reference": "f8bc98538a777e3e69449f5eac324b6316150964feb6e335f12432e5af736d8a",
+            "frontier_professional": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "frontier_layer3": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "frontier_active_reference": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "safe_complement_professional": "16f31327f6a88946b2dbde611d07bd75d914701c641922abe819b58bfe1a1668",
+            "safe_complement_layer3": "7d3f8c6bd0f5f795ebacbe89ed8f22898a3f7a7752f557ae8fd2341f6c4d16e1",
+            "safe_complement_active_reference": "498ca595182a2d9e0305308c0cd7e36e3f1694d7363e530236cf18039f6420cb",
         }
         actual_membership_sha256 = {
             f"{placement}_{member_kind}": EVAL._sha256_text(
@@ -2463,20 +4592,20 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "build_manifests": {
                     "dev": {
                         "path": "dist/universal/skills/dev/.changeforge-build-manifest.json",
-                        "sha256": "bbdd2b5c67cddfd8b291d914121c83db3267101ec13bbbe51ec99119b1494afe",
+                        "sha256": "7ae84b65300fba7368bf57a823915de52935f7e15cef0b133c930fc98bf05bf4",
                     },
                     "full": {
                         "path": "dist/universal/skills/full/.changeforge-build-manifest.json",
-                        "sha256": "5e019808df71669a97ba2a113b01b54d2ae3e3785f8d69054463548f175d3b9e",
+                        "sha256": "e698396a4d49ee9d5c897a736503dcbf3e726055c6a78a503ce37ecb03e8896d",
                     },
                     "recommended": {
                         "path": "dist/universal/skills/recommended/.changeforge-build-manifest.json",
-                        "sha256": "0cfa21afa89853175a7506e864763aaeb726e335668ccbf7bfddd5aad0810e4e",
+                        "sha256": "8df357a87ba12b4f9ef1c0e60ed360ba9e6d755a7614026d17ab18d33a062959",
                     },
                 },
                 "capsule_source": {
                     "path": "evals/agent-light-trajectories/cases.yaml",
-                    "sha256": "25cc065fde1298111bbc5d3236976f3601b0db30453c805516689f2998c0191b",
+                    "sha256": "5102a1384d25228b68655fd9100db5fc3293bcf609d310c9564e9896c1a1dc22",
                 },
                 "control_projection_sha256": "234f88e0957c619c431d83fcf6232acc17500296a824b1584999ff3ad44573a1",
                 "registries": {
@@ -2486,7 +4615,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 },
                 "render_component_inventory": {
                     "count": 1_212,
-                    "mapping_sha256": "812fccf58b07b307b38a7da243e08572c55dfe8c433021d3586c8f539f2ed989",
+                    "mapping_sha256": "1eda6375327ce525027baf577dbd482a39bb991a7d421796b1a62ca8acbd41a5",
                 },
                 "selector_authority_sha256": "1b37e9e7b06ea375c418061ae89dd336ed1c703abf7b5c1d5c826fa93df63943",
             },
@@ -2494,7 +4623,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         )
         self.assertEqual(236_078, frontier["mapping_row_count"])
         self.assertEqual(
-            "92efce204a550daffc83b1ce0495c158da9b3088a6e1196cd0bcaca123acfc8d",
+            "bf359ae8515e1f118ae9a04aa6e1e484203eed0cbc9ea7c94a5fd818d71b4525",
             frontier["mapping_digest"],
         )
         self.assertEqual(
@@ -2513,17 +4642,17 @@ class RenderedContextBudgetTests(unittest.TestCase):
         self.assertEqual([], consumer_boundary["build_consumers"])
         self.assertEqual(
             {
-                "scripts/build.py": "2543ed2c2cb7498babeae20d1f7bd244f968522f116c90b8b08c4106a25efcf1",
-                "scripts/validation_utils.py": "a76092b2d24cdfaec66eb44e1f8d4e48a9f76d9dda8a875a3b5602771649f995",
-                "src/control-prompts/main-control-agent.md": "c0377059d4b8d010344fc6a7e5377cda22fd70c781478f38239fa841c2a4501b",
-                "src/control-skills/engineering-control-plane/references/professional-skill-router.md": "4b40d00ee6c58fed227c51f30e268183fe258ad858a6c95950ffb6b2d99963b3",
+                "scripts/build.py": "573d4d8e0ec0383d6a58e7c09d2aba237ed3b7b5e2283d4895174078754e1ade",
+                "scripts/validation_utils.py": "d1edf15f9aa69892aa5747bf9b5ce108b61bafaee2ae363b283b42c4f221b761",
+                "src/control-prompts/main-control-agent.md": "f03ff9e033ccadc539dcbf13068c471367b38c6142e658662c595ae02b97279b",
+                "src/control-skills/engineering-control-plane/references/professional-skill-router.md": "5a8fd594d763fde89b94087e08060b5d4dc19eab89bf6fb50849282e64bcf170",
             },
             consumer_boundary["checked_path_fingerprints"],
         )
         direct = frontier["budget_classes"]["task"]
         review = frontier["budget_classes"]["review"]
         self.assertEqual(
-            {"professional": 8, "layer3": 49, "active_reference": 30},
+            {"professional": 0, "layer3": 0, "active_reference": 0},
             direct["frontier_counts"],
         )
         self.assertEqual(
@@ -2531,11 +4660,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
             review["frontier_counts"],
         )
         self.assertEqual(
-            2_997,
+            3_000,
             max(item["maximum_tokens"] for item in direct["outside"]["active_reference"]),
         )
         self.assertEqual(
-            3_598,
+            3_431,
             max(item["maximum_tokens"] for item in review["outside"]["active_reference"]),
         )
         for row in frontier["budget_classes"].values():
@@ -2561,11 +4690,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
         }
         maxima = composition["max_by_budget_class"]
         self.assertEqual(
-            {"analysis": 3_513, "task": 3_202, "analyzed_task": 4_301, "review": 3_598},
+            {"analysis": 3_526, "task": 3_000, "analyzed_task": 4_099, "review": 3_431},
             {budget_class: maximum["tokens"] for budget_class, maximum in maxima.items()},
         )
         self.assertEqual(
-            ["admissible composition task maximum 3202 exceeds Phase 3 target 3000"],
+            [],
             composition["errors"],
         )
         self.assertEqual(0, composition["inventory"]["dropped_reference_obligation_count"])
@@ -2573,7 +4702,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         for budget_class, target in targets.items():
             with self.subTest(budget_class=budget_class):
                 maximum = maxima[budget_class]
-                expected_overflow = budget_class == "task"
+                expected_overflow = False
                 self.assertEqual(expected_overflow, maximum["tokens"] > target)
                 self.assertEqual(not expected_overflow, maximum["within_hard_evolution_target"])
                 self.assertTrue(maximum["route_obligations_preserved"])
@@ -2682,7 +4811,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         document = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
         capsule = EVAL._capsule_envelopes(EVAL._fixture_cases(document))["task"]
         self.assertEqual(
-            "fixture:repair-and-rereview:step:18:canonical-capsule",
+            "fixture:repair-and-rereview:step:20:canonical-capsule",
             capsule["path"],
         )
         components = [
@@ -2711,15 +4840,15 @@ class RenderedContextBudgetTests(unittest.TestCase):
             token_budget=EVAL.FROZEN_GATES["task"],
         )
         self.assertEqual(
-            [697, 269, 230, 229, 233, 346, 657],
+            [495, 269, 230, 229, 233, 346, 657],
             [item["tokens"] for item in components],
         )
         self.assertEqual(
-            2_661,
+            2_459,
             measurement["sum_component_tokens"],
         )
-        self.assertEqual(2_660, measurement["total_tokens"])
-        self.assertEqual(2_667, EVAL._component_upper_bound(components))
+        self.assertEqual(2_458, measurement["total_tokens"])
+        self.assertEqual(2_465, EVAL._component_upper_bound(components))
         self.assertTrue(measurement["within_token_budget"])
 
     def test_frontend_named_direct_evidence_stays_singleton_and_under_target(self) -> None:
@@ -2877,7 +5006,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             max(active_tokens, key=active_tokens.get),
         )
         self.assertLessEqual(max(active_tokens.values()), 807)
-        self.assertLessEqual(561 + 785 + 578 + 370 + 290 + 270 + 807, 3_700)
+        self.assertLessEqual(394 + 785 + 578 + 370 + 290 + 270 + 807, 3_700)
 
 
     def test_c1f_repository_tooling_named_direct_witness_is_bounded(self) -> None:
@@ -3034,7 +5163,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             capsule,
         ]
         self.assertEqual(
-            [697, 261, 222, 269, 223, 431, 657],
+            [495, 261, 222, 269, 223, 431, 657],
             [item["tokens"] for item in components],
         )
         measurement = EVAL._measure_context(
@@ -3042,11 +5171,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
             budget_class="task",
             token_budget=EVAL.FROZEN_GATES["task"],
         )
-        self.assertEqual(2_760, measurement["sum_component_tokens"])
-        self.assertEqual(2_759, measurement["total_tokens"])
-        self.assertEqual(2_766, EVAL._component_upper_bound(components))
+        self.assertEqual(2_558, measurement["sum_component_tokens"])
+        self.assertEqual(2_557, measurement["total_tokens"])
+        self.assertEqual(2_564, EVAL._component_upper_bound(components))
         self.assertTrue(measurement["within_token_budget"])
-        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 235)
+        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 437)
 
     def test_c1f_reliability_named_review_witness_is_bounded(self) -> None:
         authority = EVAL._selector_authority()
@@ -3206,7 +5335,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             capsule,
         ]
         self.assertEqual(
-            [561, 341, 209, 180, 224, 630, 785],
+            [394, 341, 209, 180, 224, 630, 785],
             [item["tokens"] for item in components],
         )
         measurement = EVAL._measure_context(
@@ -3214,11 +5343,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
             budget_class="review",
             token_budget=EVAL.FROZEN_GATES["review"],
         )
-        self.assertEqual(2_930, measurement["sum_component_tokens"])
-        self.assertEqual(2_929, measurement["total_tokens"])
-        self.assertEqual(2_936, EVAL._component_upper_bound(components))
+        self.assertEqual(2_763, measurement["sum_component_tokens"])
+        self.assertEqual(2_762, measurement["total_tokens"])
+        self.assertEqual(2_769, EVAL._component_upper_bound(components))
         self.assertTrue(measurement["within_token_budget"])
-        self.assertEqual(3_701, EVAL._component_upper_bound(components) + 765)
+        self.assertEqual(3_701, EVAL._component_upper_bound(components) + 932)
 
     def test_c1g_delivery_release_named_task_and_review_witnesses_are_bounded(self) -> None:
         authority = EVAL._selector_authority()
@@ -3287,9 +5416,9 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "profile_path": ROOT / "dist/copilot/project/.github/agents/task-agent.agent.md",
                 "profile_kind": "worker_profile",
                 "capsule": capsules["task"],
-                "component_tokens": [697, 310, 229, 250, 183, 474, 657],
+                "component_tokens": [495, 310, 229, 250, 183, 474, 657],
                 "component_shas": [
-                    "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
+                    "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
                     "58d88e71ba05ce0b36336ac8ef70f3f13ded845a842ac99fcdc01a5911ae7e5c",
                     "3e2150a21b3997726207b6ac9317c8077856708c87a481ac818898779c78229a",
                     "989a93e84c8ba897bdc8ba69113da520c11207996f1d64b7ad59b4810284ae91",
@@ -3297,10 +5426,10 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     "af7766cecc9f29fad1063a16234c6bf69cc7fb62148a6934c7b498de7d5eb893",
                     "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
                 ],
-                "sum_component_tokens": 2_800,
-                "total_tokens": 2_799,
-                "upper_bound": 2_806,
-                "negative_delta": 195,
+                "sum_component_tokens": 2_598,
+                "total_tokens": 2_597,
+                "upper_bound": 2_604,
+                "negative_delta": 397,
             },
             {
                 "budget_class": "review",
@@ -3312,9 +5441,9 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "profile_path": ROOT / "dist/copilot/project/.github/agents/review-agent.agent.md",
                 "profile_kind": "review_profile",
                 "capsule": capsules["review"],
-                "component_tokens": [561, 310, 229, 250, 183, 474, 785],
+                "component_tokens": [394, 310, 229, 250, 183, 474, 785],
                 "component_shas": [
-                    "fd175f897ff02b1a4b9d1acfb2eeec57f87a8a2e8de9a1716c45a710b141cfe9",
+                    "5a5b69f80b41996b108765c4f13d1f445e882087feee57c4d3bb4f4f4a2e33c7",
                     "58d88e71ba05ce0b36336ac8ef70f3f13ded845a842ac99fcdc01a5911ae7e5c",
                     "3e2150a21b3997726207b6ac9317c8077856708c87a481ac818898779c78229a",
                     "989a93e84c8ba897bdc8ba69113da520c11207996f1d64b7ad59b4810284ae91",
@@ -3322,10 +5451,10 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     "af7766cecc9f29fad1063a16234c6bf69cc7fb62148a6934c7b498de7d5eb893",
                     "3a1fe3cd1caea75f3aa1c7c9459d8a36de520f0e78a9ce9719b8f8ba13489e35",
                 ],
-                "sum_component_tokens": 2_792,
-                "total_tokens": 2_791,
-                "upper_bound": 2_798,
-                "negative_delta": 903,
+                "sum_component_tokens": 2_625,
+                "total_tokens": 2_624,
+                "upper_bound": 2_631,
+                "negative_delta": 1_070,
             },
         )
         for case in cases:
@@ -3534,9 +5663,9 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "profile_path": ROOT / "dist/copilot/project/.github/agents/task-agent.agent.md",
                 "profile_kind": "worker_profile",
                 "capsule": capsules["task"],
-                "component_tokens": [697, 293, 236, 202, 226, 468, 657],
+                "component_tokens": [495, 293, 236, 202, 226, 468, 657],
                 "component_shas": [
-                    "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
+                    "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
                     "e6313187ef53df0de6bb2de88839d3589bff2a6f3585d808e0b7df2d922d5067",
                     "e31d6327abc44b7be5ba6887f0ca587d9289e35459d82d09cc4389be01f4e8c0",
                     "c0bddf002b385fddd4834ad4670cdc91cb539b22bfc3b1ed2870dff423439d2b",
@@ -3544,10 +5673,10 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     "53aa82fd9b802487c4f5e92f999fa9ca96f4b8666f6054807cf106e07d5f6834",
                     "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
                 ],
-                "sum_component_tokens": 2_779,
-                "total_tokens": 2_778,
-                "upper_bound": 2_785,
-                "negative_delta": 216,
+                "sum_component_tokens": 2_577,
+                "total_tokens": 2_576,
+                "upper_bound": 2_583,
+                "negative_delta": 418,
             },
             {
                 "budget_class": "review",
@@ -3559,9 +5688,9 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "profile_path": ROOT / "dist/copilot/project/.github/agents/review-agent.agent.md",
                 "profile_kind": "review_profile",
                 "capsule": capsules["review"],
-                "component_tokens": [561, 293, 236, 202, 226, 468, 785],
+                "component_tokens": [394, 293, 236, 202, 226, 468, 785],
                 "component_shas": [
-                    "fd175f897ff02b1a4b9d1acfb2eeec57f87a8a2e8de9a1716c45a710b141cfe9",
+                    "5a5b69f80b41996b108765c4f13d1f445e882087feee57c4d3bb4f4f4a2e33c7",
                     "e6313187ef53df0de6bb2de88839d3589bff2a6f3585d808e0b7df2d922d5067",
                     "e31d6327abc44b7be5ba6887f0ca587d9289e35459d82d09cc4389be01f4e8c0",
                     "c0bddf002b385fddd4834ad4670cdc91cb539b22bfc3b1ed2870dff423439d2b",
@@ -3569,10 +5698,10 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     "53aa82fd9b802487c4f5e92f999fa9ca96f4b8666f6054807cf106e07d5f6834",
                     "3a1fe3cd1caea75f3aa1c7c9459d8a36de520f0e78a9ce9719b8f8ba13489e35",
                 ],
-                "sum_component_tokens": 2_771,
-                "total_tokens": 2_770,
-                "upper_bound": 2_777,
-                "negative_delta": 924,
+                "sum_component_tokens": 2_604,
+                "total_tokens": 2_603,
+                "upper_bound": 2_610,
+                "negative_delta": 1_091,
             },
         )
         for case in cases:
@@ -3953,12 +6082,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
             capsules["task"],
         ]
         self.assertEqual(
-            [697, 309, 257, 223, 232, 565, 657],
+            [495, 309, 257, 223, 232, 565, 657],
             [item["tokens"] for item in task_components],
         )
         self.assertEqual(
             [
-                "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
+                "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
                 "a1b284bddfd1cdf9fed94e175d603e2db962ab597ba443ab58d3e1a8c3d543b6",
                 "535ce74d430ee2cf20f237d416d8f0ec8b8f2c498cc7b262d2ab16624af16e65",
                 "33361cbcacb5926d779a486126acb5d4f5edb211655effedee3b6053aa763730",
@@ -3973,13 +6102,13 @@ class RenderedContextBudgetTests(unittest.TestCase):
             budget_class="task",
             token_budget=EVAL.FROZEN_GATES["task"],
         )
-        self.assertEqual(2_940, task_measurement["sum_component_tokens"])
-        self.assertEqual(2_939, task_measurement["total_tokens"])
-        self.assertEqual(2_946, EVAL._component_upper_bound(task_components))
+        self.assertEqual(2_738, task_measurement["sum_component_tokens"])
+        self.assertEqual(2_737, task_measurement["total_tokens"])
+        self.assertEqual(2_744, EVAL._component_upper_bound(task_components))
         self.assertTrue(task_measurement["within_token_budget"])
         self.assertEqual(
             EVAL.PHASE3_CONTEXT_TARGETS["task"] + 1,
-            EVAL._component_upper_bound(task_components) + 55,
+            EVAL._component_upper_bound(task_components) + 257,
         )
         review_layer3 = [
             "domain-object-identification",
@@ -4155,12 +6284,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
             capsules["review"],
         ]
         self.assertEqual(
-            [561, 298, 369, 302, 336, 948, 785],
+            [394, 298, 369, 302, 336, 948, 785],
             [item["tokens"] for item in review_components],
         )
         self.assertEqual(
             [
-                "fd175f897ff02b1a4b9d1acfb2eeec57f87a8a2e8de9a1716c45a710b141cfe9",
+                "5a5b69f80b41996b108765c4f13d1f445e882087feee57c4d3bb4f4f4a2e33c7",
                 "bc92739d0a17a4216e7710f19cb1e035fe59e48e2623c6441ccd9d82a43d997e",
                 "5d3f4ac9f0add16b6dd447315930d17f0f5afb4dea035d2a6f089a142c8a8767",
                 "c9981d67a0942008d538317d2fcec97cf41f3b3c6ad761d6efb48899df53f080",
@@ -4175,13 +6304,13 @@ class RenderedContextBudgetTests(unittest.TestCase):
             budget_class="review",
             token_budget=EVAL.FROZEN_GATES["review"],
         )
-        self.assertEqual(3_599, review_measurement["sum_component_tokens"])
-        self.assertEqual(3_598, review_measurement["total_tokens"])
-        self.assertEqual(3_605, EVAL._component_upper_bound(review_components))
+        self.assertEqual(3_432, review_measurement["sum_component_tokens"])
+        self.assertEqual(3_431, review_measurement["total_tokens"])
+        self.assertEqual(3_438, EVAL._component_upper_bound(review_components))
         self.assertTrue(review_measurement["within_token_budget"])
         self.assertEqual(
             EVAL.PHASE3_CONTEXT_TARGETS["review"] + 1,
-            EVAL._component_upper_bound(review_components) + 96,
+            EVAL._component_upper_bound(review_components) + 263,
         )
 
     def test_c1j_data_middleware_named_task_witness_is_bounded(self) -> None:
@@ -4393,12 +6522,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
             capsule,
         ]
         self.assertEqual(
-            [697, 246, 214, 283, 246, 608, 657],
+            [495, 246, 214, 283, 246, 608, 657],
             [item["tokens"] for item in components],
         )
         self.assertEqual(
             [
-                "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
+                "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
                 "2b71a32f0a209286a10ca1e770882e487479dcfdde5737587dee4954fe55bd94",
                 "3472b6ca5145616987527880780a6debd998414b3554cf85a6c43c1431ae3e5d",
                 "e8c916c5260c27787c8ac9da1ce9b0f4eebe2972360ea6779f050721a2bd5c75",
@@ -4413,13 +6542,13 @@ class RenderedContextBudgetTests(unittest.TestCase):
             budget_class="task",
             token_budget=EVAL.FROZEN_GATES["task"],
         )
-        self.assertEqual(2_951, measurement["sum_component_tokens"])
-        self.assertEqual(2_950, measurement["total_tokens"])
-        self.assertEqual(2_957, EVAL._component_upper_bound(components))
+        self.assertEqual(2_749, measurement["sum_component_tokens"])
+        self.assertEqual(2_748, measurement["total_tokens"])
+        self.assertEqual(2_755, EVAL._component_upper_bound(components))
         self.assertTrue(measurement["within_token_budget"])
         self.assertEqual(
             EVAL.PHASE3_CONTEXT_TARGETS["task"] + 1,
-            EVAL._component_upper_bound(components) + 44,
+            EVAL._component_upper_bound(components) + 246,
         )
 
     def test_c1l_data_api_named_task_witness_is_bounded(self) -> None:
@@ -4599,12 +6728,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
             capsule,
         ]
         self.assertEqual(
-            [697, 300, 209, 198, 209, 536, 657],
+            [495, 300, 209, 198, 209, 536, 657],
             [item["tokens"] for item in components],
         )
         self.assertEqual(
             [
-                "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
+                "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
                 "f0779c57fb4c72eb1294eb7a4119070a16cab83b008dc25fa89420e7565d4211",
                 "61061c8452d14599f435da37cf8c81d45a8d72ae437b30bc3a297f216f179263",
                 "1c4dfac80199dd1aa80147237375786cefa9886621c10a7607d60bd0cbdc9d2a",
@@ -4619,11 +6748,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
             budget_class="task",
             token_budget=EVAL.FROZEN_GATES["task"],
         )
-        self.assertEqual(2_806, measurement["sum_component_tokens"])
-        self.assertEqual(2_805, measurement["total_tokens"])
-        self.assertEqual(2_812, EVAL._component_upper_bound(components))
+        self.assertEqual(2_604, measurement["sum_component_tokens"])
+        self.assertEqual(2_603, measurement["total_tokens"])
+        self.assertEqual(2_610, EVAL._component_upper_bound(components))
         self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
-        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 189)
+        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 391)
         self.assertNotEqual(components, components[:-1])
 
 
@@ -4872,12 +7001,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
             capsule,
         ]
         self.assertEqual(
-            [697, 303, 250, 233, 217, 635, 657],
+            [495, 303, 250, 233, 217, 635, 657],
             [item["tokens"] for item in components],
         )
         self.assertEqual(
             [
-                "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
+                "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
                 "1f5f5d81f6dd59c74a1a43ed9e7710478b16a0657eaa5312fe623ee598fb300e",
                 "fcbe9dc653c2d7f98fe01738547701d6ba79fff570c24b176e130d3c17941ad2",
                 "b2e0f2942ce44f05e6e9df79b84ec2143d50cf2fdf774080a7426421dacbcd5d",
@@ -4892,11 +7021,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
             budget_class="task",
             token_budget=EVAL.FROZEN_GATES["task"],
         )
-        self.assertEqual(2_992, measurement["sum_component_tokens"])
-        self.assertEqual(2_991, measurement["total_tokens"])
-        self.assertEqual(2_998, EVAL._component_upper_bound(components))
+        self.assertEqual(2_790, measurement["sum_component_tokens"])
+        self.assertEqual(2_789, measurement["total_tokens"])
+        self.assertEqual(2_796, EVAL._component_upper_bound(components))
         self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
-        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 3)
+        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 205)
         self.assertNotEqual(components, components[:-1])
 
     def test_c1n_quality_client_named_task_witness_is_bounded(self) -> None:
@@ -5106,12 +7235,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
             capsule,
         ]
         self.assertEqual(
-            [697, 332, 257, 215, 232, 592, 657],
+            [495, 332, 257, 215, 232, 592, 657],
             [item["tokens"] for item in components],
         )
         self.assertEqual(
             [
-                "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
+                "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
                 "8bea21744146360fc9d8a946c724f174b71723a28ce5960c1ff872b0e621f6dd",
                 "535ce74d430ee2cf20f237d416d8f0ec8b8f2c498cc7b262d2ab16624af16e65",
                 "6a82967cb4e768321dca47421353b4a3ced565841444e760fe1c6078da9558ae",
@@ -5126,11 +7255,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
             budget_class="task",
             token_budget=EVAL.FROZEN_GATES["task"],
         )
-        self.assertEqual(2_982, measurement["sum_component_tokens"])
-        self.assertEqual(2_981, measurement["total_tokens"])
-        self.assertEqual(2_988, EVAL._component_upper_bound(components))
+        self.assertEqual(2_780, measurement["sum_component_tokens"])
+        self.assertEqual(2_779, measurement["total_tokens"])
+        self.assertEqual(2_786, EVAL._component_upper_bound(components))
         self.assertTrue(measurement["within_token_budget"])
-        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 13)
+        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 215)
         self.assertNotEqual(components, components[:-1])
 
 
@@ -5405,12 +7534,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
             capsule,
         ]
         self.assertEqual(
-            [697, 229, 250, 183, 197, 722, 657],
+            [495, 229, 250, 183, 197, 722, 657],
             [item["tokens"] for item in components],
         )
         self.assertEqual(
             [
-                "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
+                "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
                 "edf20265275b1afa37ecd528904f486436cfa88cd04b6ecacb773a0ed8105958",
                 "fcbe9dc653c2d7f98fe01738547701d6ba79fff570c24b176e130d3c17941ad2",
                 "f91cb26ad5c184d9505fec203a388ee461fda50f6a9c1684abc83bda5bfb8237",
@@ -5425,12 +7554,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
             budget_class="task",
             token_budget=EVAL.FROZEN_GATES["task"],
         )
-        self.assertEqual(2_935, measurement["sum_component_tokens"])
-        self.assertEqual(2_934, measurement["total_tokens"])
-        self.assertEqual(2_941, EVAL._component_upper_bound(components))
+        self.assertEqual(2_733, measurement["sum_component_tokens"])
+        self.assertEqual(2_732, measurement["total_tokens"])
+        self.assertEqual(2_739, EVAL._component_upper_bound(components))
         self.assertTrue(measurement["within_token_budget"])
         self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
-        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 60)
+        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 262)
         self.assertNotEqual(components, components[:-1])
 
     def test_fg_c1p_platform_iac_safety_named_task_witness_is_bounded(self) -> None:
@@ -5702,12 +7831,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
             capsule,
         ]
         self.assertEqual(
-            [697, 229, 250, 183, 165, 812, 657],
+            [495, 229, 250, 183, 165, 812, 657],
             [item["tokens"] for item in components],
         )
         self.assertEqual(
             [
-                "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
+                "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
                 "edf20265275b1afa37ecd528904f486436cfa88cd04b6ecacb773a0ed8105958",
                 "fcbe9dc653c2d7f98fe01738547701d6ba79fff570c24b176e130d3c17941ad2",
                 "f91cb26ad5c184d9505fec203a388ee461fda50f6a9c1684abc83bda5bfb8237",
@@ -5722,13 +7851,13 @@ class RenderedContextBudgetTests(unittest.TestCase):
             budget_class="task",
             token_budget=EVAL.FROZEN_GATES["task"],
         )
-        self.assertEqual(2_993, measurement["sum_component_tokens"])
-        self.assertEqual(2_992, measurement["total_tokens"])
-        self.assertEqual(2_999, EVAL._component_upper_bound(components))
+        self.assertEqual(2_791, measurement["sum_component_tokens"])
+        self.assertEqual(2_790, measurement["total_tokens"])
+        self.assertEqual(2_797, EVAL._component_upper_bound(components))
         self.assertTrue(measurement["within_token_budget"])
         self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
         negative = copy.deepcopy(components)
-        negative[5]["tokens"] = 814
+        negative[5]["tokens"] = 1_016
         self.assertEqual(3_001, EVAL._component_upper_bound(negative))
         self.assertNotEqual(components, components[:-1])
 
@@ -5900,10 +8029,10 @@ class RenderedContextBudgetTests(unittest.TestCase):
             EVAL._file_component("layer3_reference", ROOT / "src/foundation/capabilities/data-migration-design/references/evidence-patterns.md"),
             capsule,
         ]
-        self.assertEqual([697, 269, 230, 283, 246, 611, 657], [item["tokens"] for item in components])
+        self.assertEqual([495, 269, 230, 283, 246, 611, 657], [item["tokens"] for item in components])
         self.assertEqual(
             [
-                "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
+                "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
                 "22a41125147da43b01da304168205b8840d7ec6649a16c7727bd7719943696f3",
                 "f93f83da98b02b86460d186c6b3cb2187caa25234eaf64f2343799ee8bde7483",
                 "e8c916c5260c27787c8ac9da1ce9b0f4eebe2972360ea6779f050721a2bd5c75",
@@ -5914,13 +8043,13 @@ class RenderedContextBudgetTests(unittest.TestCase):
             [item["sha256"] for item in components],
         )
         measurement = EVAL._measure_context(components, budget_class="task", token_budget=EVAL.FROZEN_GATES["task"])
-        self.assertEqual(2_993, measurement["sum_component_tokens"])
-        self.assertEqual(2_992, measurement["total_tokens"])
-        self.assertEqual(2_999, EVAL._component_upper_bound(components))
+        self.assertEqual(2_791, measurement["sum_component_tokens"])
+        self.assertEqual(2_790, measurement["total_tokens"])
+        self.assertEqual(2_797, EVAL._component_upper_bound(components))
         self.assertTrue(measurement["within_token_budget"])
         self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
         negative = copy.deepcopy(components)
-        negative[5]["tokens"] = 613
+        negative[5]["tokens"] = 815
         self.assertEqual(3_001, EVAL._component_upper_bound(negative))
         self.assertNotEqual(components, components[:-1])
 
@@ -6198,12 +8327,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
             capsule,
         ]
         self.assertEqual(
-            [697, 333, 338, 229, 250, 482, 657],
+            [495, 333, 338, 229, 250, 482, 657],
             [item["tokens"] for item in components],
         )
         self.assertEqual(
             [
-                "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
+                "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
                 "cd91f6ea858e7b988fe1268c0e45d8f3cf38e501ff0a1cbb8d31a6ec0bcb4565",
                 "94a3e7d66eebc7a8c5c154df3405449473ea05b75b4d072f6828cbca8d197923",
                 "3e2150a21b3997726207b6ac9317c8077856708c87a481ac818898779c78229a",
@@ -6218,13 +8347,13 @@ class RenderedContextBudgetTests(unittest.TestCase):
             budget_class="task",
             token_budget=EVAL.FROZEN_GATES["task"],
         )
-        self.assertEqual(2_986, measurement["sum_component_tokens"])
-        self.assertEqual(2_985, measurement["total_tokens"])
-        self.assertEqual(2_992, EVAL._component_upper_bound(components))
+        self.assertEqual(2_784, measurement["sum_component_tokens"])
+        self.assertEqual(2_783, measurement["total_tokens"])
+        self.assertEqual(2_790, EVAL._component_upper_bound(components))
         self.assertTrue(measurement["within_token_budget"])
         self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
         negative = copy.deepcopy(components)
-        negative[5]["tokens"] = 491
+        negative[5]["tokens"] = 693
         self.assertEqual(3_001, EVAL._component_upper_bound(negative))
         self.assertNotEqual(components, components[:-1])
 
@@ -6497,12 +8626,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
             capsule,
         ]
         self.assertEqual(
-            [697, 303, 250, 311, 234, 532, 657],
+            [495, 303, 250, 311, 234, 532, 657],
             [item["tokens"] for item in components],
         )
         self.assertEqual(
             [
-                "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
+                "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
                 "1f5f5d81f6dd59c74a1a43ed9e7710478b16a0657eaa5312fe623ee598fb300e",
                 "fcbe9dc653c2d7f98fe01738547701d6ba79fff570c24b176e130d3c17941ad2",
                 "559d0467c675e0e77803979cb8f132d547567d236c0dad97efe2a030c6a8225a",
@@ -6517,13 +8646,13 @@ class RenderedContextBudgetTests(unittest.TestCase):
             budget_class="task",
             token_budget=EVAL.FROZEN_GATES["task"],
         )
-        self.assertEqual(2_984, measurement["sum_component_tokens"])
-        self.assertEqual(2_983, measurement["total_tokens"])
-        self.assertEqual(2_990, EVAL._component_upper_bound(components))
+        self.assertEqual(2_782, measurement["sum_component_tokens"])
+        self.assertEqual(2_781, measurement["total_tokens"])
+        self.assertEqual(2_788, EVAL._component_upper_bound(components))
         self.assertTrue(measurement["within_token_budget"])
         self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
         negative = copy.deepcopy(components)
-        negative[5]["tokens"] = 543
+        negative[5]["tokens"] = 745
         self.assertEqual(3_001, EVAL._component_upper_bound(negative))
         self.assertNotEqual(components, components[:-1])
 

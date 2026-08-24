@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import copy
 import hashlib
 import importlib.util
+import json
 import shutil
 import sys
 import tempfile
@@ -32,6 +34,8 @@ def load_build_module():
 
 BUILD = load_build_module()
 
+import validation_utils as VALIDATION  # noqa: E402
+
 from validation_utils import (  # noqa: E402
     AUTHORITATIVE_BUILD_INPUT_FILES,
     CONTEXT_BUDGET_MODEL,
@@ -42,6 +46,143 @@ from validation_utils import (  # noqa: E402
 
 
 class BuildSafetyTests(unittest.TestCase):
+    @staticmethod
+    def _current_handoff(kind: str) -> dict[str, object]:
+        capabilities = {
+            "native-change-read": "unsupported",
+            "change-evidence-export": "supported",
+            "supplied-change-delivery": "supported",
+            "reviewer-change-consume": "supported",
+            "non-mutating-validation": "supported",
+        }
+        artifact: object = (
+            "diff --git a/owner.py b/owner.py\n"
+            "--- a/owner.py\n"
+            "+++ b/owner.py\n"
+            "@@ -1 +1 @@\n-old\n+new\n"
+        )
+        if kind == "reviewer-accessible-native-reference":
+            capabilities.update(
+                {
+                    "native-change-read": "supported",
+                    "change-evidence-export": "unsupported",
+                    "supplied-change-delivery": "unsupported",
+                }
+            )
+            artifact = {
+                "reference": "native-change://codex/current-worktree",
+                "generation": 7,
+                "reviewer": "review-agent",
+                "changed_paths": ["owner.py"],
+                "readable": True,
+            }
+        return {
+            "latest_changed_paths": ["owner.py"],
+            "exact_change_evidence": {
+                "kind": kind,
+                "artifact": artifact,
+                "generation": 7,
+            },
+            "reviewer_capability_accessibility": capabilities,
+            "validation_after_latest_material_edit": {
+                "evidence_id": "focused-projection-test",
+                "result": "passed",
+                "generation": 7,
+            },
+            "fixed_review_scope": ["owner.py"],
+        }
+
+    def test_capability_projection_has_one_validation_utils_owner(self) -> None:
+        self.assertIs(
+            VALIDATION.normalized_decision_capabilities,
+            BUILD._normalized_decision_capabilities,
+        )
+        self.assertIs(
+            VALIDATION.main_capability_projection,
+            BUILD._main_capability_projection,
+        )
+        self.assertIs(
+            VALIDATION.render_decision_capability_facts,
+            BUILD._render_decision_capability_facts,
+        )
+
+    def test_not_required_requires_current_complete_native_handoff(self) -> None:
+        matrix = BUILD._load_host_enforcement()
+        handoff = self._current_handoff("reviewer-accessible-native-reference")
+        projection = BUILD._main_capability_projection(
+            matrix["hosts"]["codex"], handoff=handoff
+        )
+        self.assertEqual(
+            {
+                "exact-change-evidence-read": "supported",
+                "reviewer-accessible-change-reference": "supported",
+                "non-mutating-validation": "supported",
+                "not-required": "supported",
+            },
+            projection,
+        )
+
+    def test_not_required_requires_current_complete_supplied_handoff(self) -> None:
+        matrix = BUILD._load_host_enforcement()
+        handoff = self._current_handoff("exact-change-content")
+        projection = BUILD._main_capability_projection(
+            matrix["hosts"]["copilot"], handoff=handoff
+        )
+        self.assertEqual("supported", projection["not-required"])
+        self.assertEqual("supported", projection["exact-change-evidence-read"])
+        self.assertEqual(
+            "supported", projection["reviewer-accessible-change-reference"]
+        )
+
+    def test_not_required_fails_closed_for_incomplete_or_mismatched_handoff(self) -> None:
+        matrix = BUILD._load_host_enforcement()
+        valid = self._current_handoff("exact-before-after")
+        mutations = []
+        for field in (
+            "latest_changed_paths",
+            "exact_change_evidence",
+            "reviewer_capability_accessibility",
+            "validation_after_latest_material_edit",
+            "fixed_review_scope",
+        ):
+            changed = copy.deepcopy(valid)
+            changed.pop(field)
+            mutations.append(changed)
+        stale = copy.deepcopy(valid)
+        stale["validation_after_latest_material_edit"]["generation"] = 6
+        mutations.append(stale)
+        wrong_scope = copy.deepcopy(valid)
+        wrong_scope["fixed_review_scope"] = ["different.py"]
+        mutations.append(wrong_scope)
+        unsupported = copy.deepcopy(valid)
+        unsupported["reviewer_capability_accessibility"][
+            "reviewer-change-consume"
+        ] = "unsupported"
+        mutations.append(unsupported)
+        for index, handoff in enumerate(mutations):
+            with self.subTest(index=index):
+                projection = BUILD._main_capability_projection(
+                    matrix["hosts"]["copilot"], handoff=handoff
+                )
+                self.assertEqual("unsupported", projection["not-required"])
+                self.assertEqual(
+                    "unsupported",
+                    projection["reviewer-accessible-change-reference"],
+                )
+
+    def test_not_required_is_independent_of_l5_confirmation_states(self) -> None:
+        matrix = BUILD._load_host_enforcement()
+        core = copy.deepcopy(BUILD.CORE_CONTRACTS)
+        core["execution_level_contract"]["l5_confirmation"]["states"].remove(
+            "not-required"
+        )
+        projection = BUILD._main_capability_projection(
+            matrix["hosts"]["codex"],
+            handoff=self._current_handoff("reviewer-accessible-native-reference"),
+            core=core,
+        )
+        self.assertEqual("supported", projection["not-required"])
+
     @staticmethod
     def _windows_translating_write_text(
         path: Path,
@@ -799,7 +940,7 @@ Own one bounded decision.
         }
         for renderer, host in renderer_hosts.items():
             host_contract = matrix["hosts"][host]
-            capability_facts = BUILD._normalized_decision_capabilities(host_contract)
+            capability_facts = BUILD._main_capability_projection(host_contract)
             rendered = renderer(profiles["main-control-agent"], matrix)
             self.assertIn(
                 BUILD._render_decision_capability_facts(capability_facts),
@@ -814,6 +955,68 @@ Own one bounded decision.
         self.assertNotIn("Bash", claude.split("---", 2)[1])
         self.assertIn('tools: ["read","search"]', copilot)
         self.assertNotIn('"execute"', copilot.split("---", 2)[1])
+
+    def test_main_capability_projection_is_core_derived_and_role_minimal(self) -> None:
+        matrix = BUILD._load_host_enforcement()
+        expected_fields = {
+            "exact-change-evidence-read",
+            "reviewer-accessible-change-reference",
+            "non-mutating-validation",
+            "not-required",
+        }
+        for host in ("codex", "claude", "copilot"):
+            ceilings = BUILD._normalized_decision_capabilities(matrix["hosts"][host])
+            projection = BUILD._main_capability_projection(matrix["hosts"][host])
+            with self.subTest(host=host):
+                self.assertEqual(set(BUILD.DECISION_CAPABILITY_FIELDS), set(ceilings))
+                self.assertEqual(expected_fields, set(projection))
+                self.assertEqual("unsupported", projection["not-required"])
+                self.assertEqual("supported", projection["non-mutating-validation"])
+                self.assertEqual("unsupported", projection["exact-change-evidence-read"])
+                self.assertEqual(
+                    "unsupported",
+                    projection["reviewer-accessible-change-reference"],
+                )
+                self.assertEqual(
+                    BUILD._render_decision_capability_facts(projection),
+                    BUILD._render_decision_capability_facts(ceilings),
+                )
+
+        unknown = copy.deepcopy(matrix["hosts"]["codex"])
+        unknown.update(
+            profile_delivery="unknown",
+            diff_input_mode="unknown",
+            validation_mode="unknown",
+            utility_no_edit="unknown",
+        )
+        unknown_ceilings = BUILD._normalized_decision_capabilities(unknown)
+        unknown_projection = BUILD._main_capability_projection(unknown)
+        self.assertEqual(
+            {field: "unsupported" for field in BUILD.DECISION_CAPABILITY_FIELDS},
+            unknown_ceilings,
+        )
+        self.assertEqual(
+            {
+                "exact-change-evidence-read": "unsupported",
+                "reviewer-accessible-change-reference": "unsupported",
+                "non-mutating-validation": "unsupported",
+                "not-required": "unsupported",
+            },
+            unknown_projection,
+        )
+        self.assertEqual(
+            BUILD._render_decision_capability_facts(unknown_projection),
+            BUILD._render_decision_capability_facts(unknown_ceilings),
+        )
+
+        core = copy.deepcopy(BUILD.CORE_CONTRACTS)
+        core["execution_level_contract"]["l5_confirmation"]["states"].remove(
+            "not-required"
+        )
+        self.assertEqual(
+            projection,
+            BUILD._main_capability_projection(matrix["hosts"]["codex"], core=core),
+        )
 
     def test_copilot_analysis_projects_only_bounded_web_read_tools(self) -> None:
         matrix = BUILD._load_host_enforcement()
