@@ -11,6 +11,7 @@ Bounded subagents authorized; permission required: scope expansion/destructive/p
 Choose exactly Direct Task or Analyzed Work.
 Source-free user-fact questions -> no-repo direct-answer/no repository access; Main relays/closes. Source/professional evidence or control prompts -> source-backed analysis.
 Evidence Resolution reuses `change-intake-compiler`: source fact never asks; route-affecting fact/material unknown -> Analysis; user choice -> one Main question; otherwise bounded Direct discovery.
+Categories: repo-resolvable-fact; user-owned-choice; route-or-material-unknown; semantic-choice; execution-level-choice.
 Direct Task requires explicit owner/scope/placement/acceptance/validation/rollback and no unresolved material risk; category cannot force analysis.
 Unresolved behavior/rollback/material impact or an unknown owner/module/system/verification boundary routes to Analyzed Work. Inside an already-known stable owner/test/consumer boundary, bounded confirmation uses Direct checks and Inspection Boundary/stops.
 Direct bounded discovery outcomes: confirm+continue; invalidate -> Main/Analysis before edit; choice -> Main question. Worker never reroutes; simpler keeps Level, higher risk recomputes.
@@ -36,7 +37,7 @@ After 2 same-path failures require changed hypothesis/material/gap/transition or
 
 Answer/diagnosis: evidence/proof limits unless change requested. engineering-change-analysis -> current Engineering Brief and First Executable Slice; dispatch verbatim, never reinterpret.
 references/engineering-brief-template.md JIT-owns protected semantics, Specialist/DAG/handoff limits, and Delta rules. Main owns Path/Level projection/Review scheduling/user interaction; Task/Review never changes route authority.
-Invalidation: blocked -> main-control-agent -> analysis-agent -> updated Engineering Brief -> redispatch affected tasks. task_contract.analyzed_work_authority: analyze once; Delta/reroute only on its decision triggers.
+Invalidation: blocked -> main-control-agent -> analysis-agent -> updated Engineering Brief -> redispatch affected tasks. `task_contract.analyzed_work_authority`: analyze once; the first Analysis is initial and complete; desired behavior and observable Acceptance outrank observed failure evidence. Delta/reroute only on its decision triggers after an accepted Brief plus a named protected-decision invalidation.
 Synchronous/unknown capability: stop at Slice; multi-task -> DAG; else task-agent. Direct Task/non-implementation paths remain unchanged.
 
 ### Preparation Loop Breaker
@@ -53,7 +54,8 @@ task_contract.task_boundary; Task completion=progress; Related work uses combine
 ## Review and Repair
 
 <!-- review-evidence-contract:B -->
-Review Input Ready before review-agent dispatch needs latest changed paths, exact reviewable change evidence, reviewer capability accessibility, post-latest-edit validation, and fixed scope.
+Before review-agent dispatch, Review Input Ready needs latest changed paths, post-latest-edit validation, and fixed scope.
+It also needs the exact delivered unified diff or current reviewer-readable native reference plus instance consumption capability. Static host support alone is never readiness; forward evidence unchanged and never send Review to export it.
 Missing=>review dispatch=0. Legacy/incomplete permits one recovery. Review before Task before Review is forbidden.
 references/implementation-handoff-template.md JIT-owns Ledger State/currentness, freshness, capability branches, and review proof. Latest material edit invalidates validation evidence; Claims: latest-material-edit, validation-passed.
 Current review-agent evidence includes actual diff/every changed file/validation results and changed-scope-reviewed/blocking-findings-none|blocking-findings-resolved; Handoff-triggered high-risk-review-passed.

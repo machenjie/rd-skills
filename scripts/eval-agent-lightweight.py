@@ -8,6 +8,7 @@ import copy
 import hashlib
 import json
 import re
+import shlex
 import statistics
 import sys
 from pathlib import Path
@@ -116,6 +117,7 @@ PROFILE_ACTIONS = {
         "edit",
         "repair",
         "validate",
+        "capture-change-evidence",
         "export-diff",
         "implementation-discipline",
         IMPLEMENTATION_HANDOFF_ACTION,
@@ -544,8 +546,10 @@ IMPLEMENTATION_HANDOFF_FIELDS = (
 )
 EXACT_CHANGE_EVIDENCE_FIELDS = ("kind", "artifact", "generation")
 REVIEWER_CAPABILITY_ACCESSIBILITY_FIELDS = (
-    "exact-change-evidence-read",
-    "reviewer-accessible-change-reference",
+    "native-change-read",
+    "change-evidence-export",
+    "supplied-change-delivery",
+    "reviewer-change-consume",
     "non-mutating-validation",
 )
 VALIDATION_AFTER_LATEST_MATERIAL_EDIT_FIELDS = (
@@ -555,6 +559,13 @@ VALIDATION_AFTER_LATEST_MATERIAL_EDIT_FIELDS = (
 )
 REVIEW_INPUT_READY_FIELDS = ("actor", "action", "handoff_id", "ready")
 REVIEW_INPUT_BINDING_FIELDS = ("handoff_id", "artifact", "generation")
+NATIVE_CHANGE_REFERENCE_FIELDS = (
+    "reference",
+    "generation",
+    "reviewer",
+    "changed_paths",
+    "readable",
+)
 GENERIC_CAPABILITY_FIELDS = tuple(
     REVIEW_DISCIPLINE_MODEL["generic_capability_contract"]["injected_fields"]
 )
@@ -589,10 +600,602 @@ UTILITY_ASSIGNMENT_STATUSES = {"in_progress"}
 UTILITY_RETURN_STATUSES = {"blocked", "partial", "completed"}
 UTILITY_CAPABILITY_OPERATIONS = {
     "workspace-state-observation",
-    "exact-change-evidence-export",
+    "change-evidence-export",
     "non-mutating-validation",
 }
 WORKSPACE_CHECK_COMMANDS = ("workspace-state-observation",)
+
+
+def _git_diff_header_paths(header: str) -> tuple[str, str] | None:
+    try:
+        fields = shlex.split(header)
+    except ValueError:
+        return None
+    if (
+        len(fields) != 4
+        or fields[:2] != ["diff", "--git"]
+        or not fields[2].startswith("a/")
+        or not fields[3].startswith("b/")
+        or len(fields[2]) <= 2
+        or len(fields[3]) <= 2
+    ):
+        return None
+    return fields[2][2:], fields[3][2:]
+
+
+def _diff_metadata_values(lines: list[str]) -> dict[str, str] | None:
+    patterns = (
+        ("index", r"index [0-9a-f]+\.\.[0-9a-f]+(?: [0-7]{6})?"),
+        ("old-mode", r"old mode [0-7]{6}"),
+        ("new-mode", r"new mode [0-7]{6}"),
+        ("new-file", r"new file mode [0-7]{6}"),
+        ("deleted-file", r"deleted file mode [0-7]{6}"),
+        ("similarity", r"similarity index [0-9]+%"),
+        ("dissimilarity", r"dissimilarity index [0-9]+%"),
+        ("rename-from", r"rename from (.+)"),
+        ("rename-to", r"rename to (.+)"),
+        ("copy-from", r"copy from (.+)"),
+        ("copy-to", r"copy to (.+)"),
+    )
+    values: dict[str, str] = {}
+    for line in lines:
+        matched = False
+        for key, pattern in patterns:
+            match = re.fullmatch(pattern, line)
+            if match is None:
+                continue
+            if key in values:
+                return None
+            values[key] = match.group(1) if match.lastindex else line
+            matched = True
+            break
+        if not matched:
+            return None
+    return values
+
+
+def _diff_metadata_form(
+    lines: list[str],
+    before_path: str,
+    after_path: str,
+    content_kind: str,
+) -> str | None:
+    values = _diff_metadata_values(lines)
+    if values is None:
+        return None
+    keys = set(values)
+    rename_keys = {"rename-from", "rename-to"}
+    copy_keys = {"copy-from", "copy-to"}
+    similarity_keys = {"similarity", "dissimilarity"}
+    if len(keys & similarity_keys) > 1:
+        return None
+
+    if keys & (rename_keys | copy_keys):
+        if keys & rename_keys and keys & copy_keys:
+            return None
+        form = "rename" if keys & rename_keys else "copy"
+        pair = rename_keys if form == "rename" else copy_keys
+        if (
+            before_path == after_path
+            or not pair <= keys
+            or len(keys & similarity_keys) != 1
+            or not keys <= pair | similarity_keys | {"index"}
+            or values[f"{form}-from"] != before_path
+            or values[f"{form}-to"] != after_path
+            or (content_kind == "none" and "index" in keys)
+        ):
+            return None
+        return form
+
+    if before_path != after_path:
+        return None
+    if "new-file" in keys or "deleted-file" in keys:
+        if (
+            content_kind not in {"text", "binary"}
+            or {"new-file", "deleted-file"} <= keys
+        ):
+            return None
+        form = "new" if "new-file" in keys else "delete"
+        marker = "new-file" if form == "new" else "deleted-file"
+        return form if keys <= {marker, "index"} else None
+
+    mode_keys = {"old-mode", "new-mode"}
+    if keys & mode_keys and not mode_keys <= keys:
+        return None
+    if content_kind == "none":
+        return "mode" if keys == mode_keys else None
+    if content_kind not in {"text", "binary"}:
+        return None
+    return "normal" if keys <= {"index", *mode_keys} else None
+
+
+def _valid_unified_hunks(lines: list[str]) -> bool:
+    if not lines:
+        return False
+    header_pattern = re.compile(
+        r"@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(?: .*)?"
+    )
+    index = 0
+    while index < len(lines):
+        match = header_pattern.fullmatch(lines[index])
+        if match is None:
+            return False
+        expected_old = int(match.group(2) or 1)
+        expected_new = int(match.group(4) or 1)
+        old_count = 0
+        new_count = 0
+        content_count = 0
+        change_count = 0
+        index += 1
+        while index < len(lines) and not lines[index].startswith("@@ "):
+            line = lines[index]
+            if line == r"\ No newline at end of file":
+                if content_count == 0:
+                    return False
+            elif not line:
+                return False
+            elif line[0] == " ":
+                old_count += 1
+                new_count += 1
+                content_count += 1
+            elif line[0] == "-":
+                old_count += 1
+                content_count += 1
+                change_count += 1
+            elif line[0] == "+":
+                new_count += 1
+                content_count += 1
+                change_count += 1
+            else:
+                return False
+            index += 1
+        if (
+            content_count == 0
+            or change_count == 0
+            or old_count != expected_old
+            or new_count != expected_new
+        ):
+            return False
+    return True
+
+
+def _unified_diff_paths(payload: object) -> list[str] | None:
+    if not isinstance(payload, str) or not payload.strip():
+        return None
+    section_matches = list(re.finditer(r"^diff --git .+$", payload, flags=re.MULTILINE))
+    if not section_matches or payload[: section_matches[0].start()].strip():
+        return None
+    changed_paths: list[str] = []
+    for section_index, match in enumerate(section_matches):
+        end = (
+            section_matches[section_index + 1].start()
+            if section_index + 1 < len(section_matches)
+            else len(payload)
+        )
+        section_lines = payload[match.start() : end].splitlines()
+        header_paths = _git_diff_header_paths(section_lines[0])
+        if header_paths is None or len(section_lines) == 1:
+            return None
+        before_path, after_path = header_paths
+        body = section_lines[1:]
+        hunk_indexes = [index for index, line in enumerate(body) if line.startswith("@@")]
+        first_hunk = hunk_indexes[0] if hunk_indexes else len(body)
+        file_header_region = body[:first_hunk]
+        old_headers = [
+            index
+            for index, line in enumerate(file_header_region)
+            if line.startswith("--- ")
+        ]
+        new_headers = [
+            index
+            for index, line in enumerate(file_header_region)
+            if line.startswith("+++ ")
+        ]
+        binary_lines = [line for line in body if line.startswith("Binary files ")]
+        if old_headers or new_headers or hunk_indexes:
+            if (
+                len(old_headers) != 1
+                or len(new_headers) != 1
+                or new_headers[0] != old_headers[0] + 1
+                or not hunk_indexes
+                or hunk_indexes[0] != new_headers[0] + 1
+                or binary_lines
+            ):
+                return None
+            form = _diff_metadata_form(
+                body[: old_headers[0]], before_path, after_path, "text"
+            )
+            if form not in {"normal", "new", "delete", "rename", "copy"}:
+                return None
+            expected_old = "/dev/null" if form == "new" else f"a/{before_path}"
+            expected_new = "/dev/null" if form == "delete" else f"b/{after_path}"
+            if (
+                body[old_headers[0]] != f"--- {expected_old}"
+                or body[new_headers[0]] != f"+++ {expected_new}"
+                or not _valid_unified_hunks(body[hunk_indexes[0] :])
+            ):
+                return None
+        else:
+            if binary_lines:
+                if len(binary_lines) != 1:
+                    return None
+                marker_index = body.index(binary_lines[0])
+                form = _diff_metadata_form(
+                    body[:marker_index], before_path, after_path, "binary"
+                )
+                if form not in {"normal", "new", "delete", "rename", "copy"}:
+                    return None
+                expected_old = "/dev/null" if form == "new" else f"a/{before_path}"
+                expected_new = "/dev/null" if form == "delete" else f"b/{after_path}"
+                marker = f"Binary files {expected_old} and {expected_new} differ"
+                if (
+                    binary_lines[0] != marker
+                    or marker_index != len(body) - 1
+                ):
+                    return None
+            else:
+                form = _diff_metadata_form(
+                    body, before_path, after_path, "none"
+                )
+                if form not in {"rename", "copy", "mode"}:
+                    return None
+        changed_paths.append(before_path if form == "delete" else after_path)
+    return changed_paths
+
+
+def _native_change_reference_bound(
+    artifact: object,
+    changed_paths: object,
+    current_generation: object,
+    assigned_reviewer: str,
+) -> bool:
+    return (
+        isinstance(artifact, dict)
+        and tuple(artifact) == NATIVE_CHANGE_REFERENCE_FIELDS
+        and isinstance(artifact.get("reference"), str)
+        and re.fullmatch(
+            r"native-change://[a-z0-9][a-z0-9-]*/[A-Za-z0-9][A-Za-z0-9._-]*",
+            artifact["reference"],
+        )
+        is not None
+        and artifact.get("generation") == current_generation
+        and artifact.get("reviewer") == assigned_reviewer
+        and artifact.get("changed_paths") == changed_paths
+        and artifact.get("readable") is True
+    )
+
+
+def _exact_change_evidence_accessible(
+    kind: object,
+    artifact: object,
+    changed_paths: object,
+    capabilities: object,
+    *,
+    current_generation: object = None,
+    assigned_reviewer: str = "review-agent",
+) -> bool:
+    if not isinstance(capabilities, dict):
+        return False
+    if capabilities.get("reviewer-change-consume") != "supported":
+        return False
+    if kind == "reviewer-accessible-native-reference":
+        return (
+            capabilities.get("native-change-read") == "supported"
+            and _native_change_reference_bound(
+                artifact,
+                changed_paths,
+                current_generation,
+                assigned_reviewer,
+            )
+        )
+    return (
+        kind in REVIEW_INPUT_EXACT_EVIDENCE_KINDS
+        and capabilities.get("change-evidence-export") == "supported"
+        and capabilities.get("supplied-change-delivery") == "supported"
+        and _unified_diff_paths(artifact) == changed_paths
+    )
+
+
+ANALYZED_TRAJECTORY_INITIAL_FIELDS = (
+    "actor",
+    "action",
+    "analysis_kind",
+    "brief_id",
+    "brief_status",
+    "target_authority",
+    "acceptance",
+    "owner_placement_invariant",
+    "verification",
+    "downstream_task",
+    "review_projection",
+)
+ANALYZED_TRAJECTORY_DELTA_FIELDS = (
+    "actor",
+    "action",
+    "analysis_kind",
+    "accepted_brief_id",
+    "protected_decision_invalidated",
+    "invalidated_decisions",
+    "reroute_trigger",
+    "downstream_task",
+    "review_projection",
+)
+
+
+def _analyzed_trajectory_authority_errors(
+    case_id: str,
+    case_kind: object,
+    steps: list[dict[str, Any]],
+) -> list[str]:
+    if case_kind != "analyzed":
+        return []
+    errors: list[str] = []
+
+    def reject(code: str, message: str) -> None:
+        errors.append(f"{case_id}: [{code}] {message}")
+
+    analysis_dispatch_entries = [
+        (index, step)
+        for index, step in enumerate(steps)
+        if step.get("actor") == "main-control-agent"
+        and step.get("action") == "dispatch"
+        and step.get("profile") == "analysis-agent"
+    ]
+    task_dispatch_entries = [
+        (index, step)
+        for index, step in enumerate(steps)
+        if step.get("actor") == "main-control-agent"
+        and step.get("action") == "dispatch"
+        and step.get("profile") == "task-agent"
+        and step.get("mode") != "diff-export/no-edit"
+    ]
+    review_dispatch_entries = [
+        (index, step)
+        for index, step in enumerate(steps)
+        if step.get("actor") == "main-control-agent"
+        and step.get("action") == "dispatch"
+        and step.get("profile") == "review-agent"
+    ]
+    if len(analysis_dispatch_entries) != 1:
+        reject(
+            "analysis-mode",
+            "analyzed trajectory requires exactly one Analysis dispatch mode",
+        )
+        return errors
+    analysis_mode = analysis_dispatch_entries[0][1].get("mode")
+    read_only_modes = {"diagnosis-only", "source-backed-answer"}
+    if (
+        analysis_mode in read_only_modes
+        and not task_dispatch_entries
+        and not review_dispatch_entries
+    ):
+        # These two modes produce read-only Analysis output, not an
+        # implementation Brief, Task, or Review boundary.
+        return []
+    if analysis_mode != "implementation-preparation":
+        reject(
+            "analysis-mode",
+            "only implementation-preparation may create a downstream Task or Review boundary",
+        )
+        return errors
+
+    initial_entries = [
+        (index, step)
+        for index, step in enumerate(steps)
+        if step.get("actor") == "analysis-agent"
+        and step.get("action") == "first_executable_slice"
+    ]
+    if len(initial_entries) != 1:
+        reject(
+            "analysis-initial-kind",
+            "analyzed trajectory requires exactly one first initial Analysis event",
+        )
+        return errors
+    initial_index, initial = initial_entries[0]
+    if analysis_dispatch_entries[0][0] >= initial_index:
+        reject(
+            "analysis-initial-order",
+            "the unique implementation-preparation dispatch must precede its initial Analysis event",
+        )
+    if initial.get("analysis_kind") != "initial":
+        reject(
+            "analysis-initial-kind",
+            "the first Analysis event must declare analysis_kind initial",
+        )
+    if tuple(initial) != ANALYZED_TRAJECTORY_INITIAL_FIELDS:
+        reject(
+            "analysis-initial-shape",
+            "initial Analysis must carry the complete accepted Brief projection",
+        )
+
+    brief_id = initial.get("brief_id")
+    target = initial.get("target_authority")
+    acceptance = initial.get("acceptance")
+    owner = initial.get("owner_placement_invariant")
+    verification = initial.get("verification")
+    target_valid = (
+        isinstance(target, dict)
+        and tuple(target)
+        == (
+            "desired_behavior",
+            "observable_acceptance",
+            "observed_behavior",
+            "observed_behavior_role",
+        )
+        and isinstance(target.get("desired_behavior"), str)
+        and bool(target["desired_behavior"].strip())
+        and isinstance(target.get("observable_acceptance"), list)
+        and bool(target["observable_acceptance"])
+        and all(
+            isinstance(item, str) and bool(item.strip())
+            for item in target["observable_acceptance"]
+        )
+        and isinstance(target.get("observed_behavior"), str)
+        and bool(target["observed_behavior"].strip())
+        and target.get("observed_behavior_role") == "failure-evidence-only"
+        and target.get("desired_behavior") != target.get("observed_behavior")
+        and target.get("observed_behavior")
+        not in target.get("observable_acceptance", [])
+    )
+    if not target_valid:
+        reject(
+            "analysis-target-authority",
+            "desired behavior and observable Acceptance must outrank observed failure evidence",
+        )
+    if (
+        not isinstance(brief_id, str)
+        or not brief_id
+        or initial.get("brief_status") != "accepted"
+    ):
+        reject(
+            "analysis-brief-acceptance",
+            "initial Analysis must bind one accepted Engineering Brief",
+        )
+    if (
+        not isinstance(acceptance, list)
+        or not acceptance
+        or not all(isinstance(item, str) and item.strip() for item in acceptance)
+        or not isinstance(owner, dict)
+        or tuple(owner) != ("owner", "placement", "invariant")
+        or not all(isinstance(value, str) and value.strip() for value in owner.values())
+        or not isinstance(verification, list)
+        or not verification
+        or not all(isinstance(item, str) and item.strip() for item in verification)
+    ):
+        reject(
+            "analysis-initial-shape",
+            "initial Analysis must close Acceptance, Owner/Placement/Invariant, and verification",
+        )
+
+    projected_task = initial.get("downstream_task")
+    projected_review = initial.get("review_projection")
+
+    def projections_valid(task: object, review: object) -> bool:
+        return (
+            isinstance(task, dict)
+            and tuple(task) == ("task_id", "professional_skill", "layer3_skills")
+            and isinstance(task.get("task_id"), str)
+            and bool(task["task_id"].strip())
+            and isinstance(task.get("professional_skill"), str)
+            and bool(task["professional_skill"].strip())
+            and isinstance(task.get("layer3_skills"), list)
+            and all(isinstance(item, str) and item for item in task["layer3_skills"])
+            and len(task["layer3_skills"]) == len(set(task["layer3_skills"]))
+            and isinstance(review, dict)
+            and tuple(review) == ("profile", "professional_skill", "layer3_skills")
+            and review.get("profile") == "review-agent"
+            and isinstance(review.get("professional_skill"), str)
+            and bool(review["professional_skill"].strip())
+            and isinstance(review.get("layer3_skills"), list)
+            and all(isinstance(item, str) and item for item in review["layer3_skills"])
+            and len(review["layer3_skills"]) == len(set(review["layer3_skills"]))
+        )
+
+    if not projections_valid(projected_task, projected_review):
+        reject(
+            "analysis-task-projection",
+            "initial Analysis must freeze complete downstream Task and Review projections",
+        )
+    allowed_invalidations = set(
+        CORE_CONTRACTS["task_contract"]["analyzed_work_authority"][
+            "decision_invalidation_triggers"
+        ]
+    )
+    allowed_reroutes = {
+        "none",
+        *CORE_CONTRACTS["task_contract"]["analyzed_work_authority"][
+            "delta_analysis"
+        ]["skill_reroute_triggers"],
+    }
+    delta_entries = [
+        (index, step)
+        for index, step in enumerate(steps)
+        if step.get("actor") == "analysis-agent" and step.get("action") == "brief"
+    ]
+    for delta_index, delta in delta_entries:
+        if (
+            delta_index <= initial_index
+            or initial.get("brief_status") != "accepted"
+            or delta.get("accepted_brief_id") != brief_id
+        ):
+            reject(
+                "analysis-delta-acceptance",
+                "Delta requires the already accepted initial Brief binding",
+            )
+        if tuple(delta) != ANALYZED_TRAJECTORY_DELTA_FIELDS:
+            reject(
+                "analysis-delta-shape",
+                "Delta must use the complete protected-decision projection",
+            )
+        invalidated = delta.get("invalidated_decisions")
+        if (
+            delta.get("analysis_kind") != "delta"
+            or delta.get("protected_decision_invalidated") is not True
+            or not isinstance(invalidated, list)
+            or not invalidated
+            or not set(invalidated) <= allowed_invalidations
+            or delta.get("reroute_trigger") not in allowed_reroutes
+        ):
+            reject(
+                "analysis-delta-invalidation",
+                "Delta requires a named protected-decision invalidation",
+            )
+        if delta.get("reroute_trigger") == "none" and (
+            delta.get("downstream_task") != projected_task
+            or delta.get("review_projection") != projected_review
+        ):
+            reject(
+                "analysis-delta-routing",
+                "Delta cannot self-reroute Task or Review without a named reroute trigger",
+            )
+        projected_task = delta.get("downstream_task")
+        projected_review = delta.get("review_projection")
+        if not projections_valid(projected_task, projected_review):
+            reject(
+                "analysis-task-projection",
+                "Delta must preserve complete downstream Task and Review projections",
+            )
+
+    if not task_dispatch_entries and not review_dispatch_entries:
+        return errors
+    if (
+        len(task_dispatch_entries) != 1
+        or len(review_dispatch_entries) != 1
+        or task_dispatch_entries[0][0] <= initial_index
+        or review_dispatch_entries[0][0] <= initial_index
+    ):
+        reject(
+            "analysis-task-projection",
+            "downstream execution requires one Task and one Review dispatch after the accepted Brief",
+        )
+        return errors
+    task_dispatches = [step for _index, step in task_dispatch_entries]
+    review_dispatches = [step for _index, step in review_dispatch_entries]
+
+    task_dispatch = task_dispatches[0]
+    task_capsule = task_dispatch.get("fixture_capsule")
+    expected_task = {
+        "task_id": task_capsule.get("task_id") if isinstance(task_capsule, dict) else None,
+        "professional_skill": task_dispatch.get("primary_skill"),
+        "layer3_skills": task_dispatch.get("layer3_skills"),
+    }
+    if projected_task != expected_task:
+        reject(
+            "analysis-task-projection",
+            "Main must dispatch the accepted downstream Task projection verbatim",
+        )
+    review_dispatch = review_dispatches[0]
+    expected_review = {
+        "profile": "review-agent",
+        "professional_skill": review_dispatch.get("primary_skill"),
+        "layer3_skills": review_dispatch.get("layer3_skills"),
+    }
+    if projected_review != expected_review:
+        reject(
+            "analysis-review-projection",
+            "Main must preserve the accepted Review projection",
+        )
+    return errors
 
 
 def _canonical_ledger_shape_errors(ledger: object, *, context: str) -> list[str]:
@@ -3309,10 +3912,16 @@ def _review_discipline_errors(
                 )
                 handoff_ready = False
             evidence_artifact = exact_evidence.get("artifact")
-            if not isinstance(evidence_artifact, str) or not evidence_artifact.strip():
+            if not _exact_change_evidence_accessible(
+                evidence_kind,
+                evidence_artifact,
+                handoff_paths,
+                handoff.get("reviewer_capability_accessibility"),
+                current_generation=generation,
+            ):
                 reject(
-                    "review-input-evidence-artifact",
-                    "exact change evidence requires a non-empty artifact or reference",
+                    "review-input-evidence-payload",
+                    "supplied review evidence must be actual unified-diff content for the exact changed paths, or a current reviewer-readable native change reference",
                 )
                 handoff_ready = False
             if exact_evidence.get("generation") != generation:
@@ -3329,17 +3938,28 @@ def _review_discipline_errors(
             ):
                 reject(
                     "review-input-capability-shape",
-                    "reviewer capability accessibility must use the three canonical capability facts",
+                    "reviewer capability accessibility must use the five canonical capability facts",
                 )
                 capability_access = {}
                 handoff_ready = False
-            if any(
-                capability_access.get(field) != "supported"
-                for field in REVIEWER_CAPABILITY_ACCESSIBILITY_FIELDS
+            if (
+                capability_access.get("reviewer-change-consume") != "supported"
+                or capability_access.get("non-mutating-validation") != "supported"
+                or (
+                    evidence_kind == "reviewer-accessible-native-reference"
+                    and capability_access.get("native-change-read") != "supported"
+                )
+                or (
+                    evidence_kind != "reviewer-accessible-native-reference"
+                    and (
+                        capability_access.get("change-evidence-export") != "supported"
+                        or capability_access.get("supplied-change-delivery") != "supported"
+                    )
+                )
             ):
                 reject(
                     "review-input-capability",
-                    "review dispatch requires supported evidence read, accessible reference, and non-mutating validation capabilities",
+                    "review dispatch requires the evidence-path capabilities, reviewer consumption, and non-mutating validation",
                 )
                 handoff_ready = False
 
@@ -3363,6 +3983,13 @@ def _review_discipline_errors(
                 and step.get("actor") == "task-agent"
                 and step.get("action") == "validate"
             ]
+            round_captures = [
+                (index, step)
+                for index, step in enumerate(steps[:handoff_index])
+                if latest_material_index < index
+                and step.get("actor") == "task-agent"
+                and step.get("action") == "capture-change-evidence"
+            ]
             matching_validation = (
                 round_validations[0][1] if len(round_validations) == 1 else {}
             )
@@ -3381,6 +4008,29 @@ def _review_discipline_errors(
                 reject(
                     "review-input-validation",
                     "Handoff validation must bind the unique passing validation after the latest material edit",
+                )
+                handoff_ready = False
+            if (
+                len(round_captures) != 1
+                or len(round_validations) != 1
+                or tuple(round_captures[0][1])
+                != (
+                    "actor",
+                    "action",
+                    "task_id",
+                    "artifact",
+                    "generation",
+                    "changed_paths",
+                )
+                or round_captures[0][0] <= round_validations[0][0]
+                or round_captures[0][1].get("task_id") != task_id
+                or round_captures[0][1].get("artifact") != evidence_artifact
+                or round_captures[0][1].get("generation") != generation
+                or round_captures[0][1].get("changed_paths") != handoff_paths
+            ):
+                reject(
+                    "review-input-change-capture",
+                    "the same Task must capture exact current change evidence once after fresh validation and before its Handoff",
                 )
                 handoff_ready = False
 
@@ -3452,6 +4102,18 @@ def _review_discipline_errors(
                     "review-input-reviewer-binding",
                     "reviewer diff artifact, generation, and changed files must match the Handoff and dispatch",
                 )
+            supplied_reads = [
+                step
+                for step in steps[dispatch_index + 1 : event_index]
+                if step.get("actor") == "review-agent"
+                and step.get("action") == "read"
+                and step.get("artifact_ref") == evidence_artifact
+            ]
+            if evidence_kind != "reviewer-accessible-native-reference" and len(supplied_reads) != 1:
+                reject(
+                    "review-input-reviewer-read",
+                    "supplied review evidence must be read exactly once by the assigned reviewer before review",
+                )
         elif prior_review_index >= 0:
             reject(
                 "review-input-recovery",
@@ -3479,14 +4141,29 @@ def _review_discipline_errors(
                     "approval requires the actual latest diff; unavailable diff must block",
                 )
         elif diff_kind in {"actual-diff", "host-native-actual-diff"}:
-            if (
-                not isinstance(diff.get("artifact"), str)
-                or not diff["artifact"].strip()
-                or diff.get("generation") != generation
-            ):
+            if diff.get("generation") != generation:
                 reject(
                     "review-old-diff",
                     "review requires the actual latest diff generation after the latest modification",
+                )
+            elif diff_kind == "actual-diff" and (
+                _unified_diff_paths(diff.get("artifact")) != changed_files
+            ):
+                reject(
+                    "review-diff-payload",
+                    "review must consume delivered unified-diff content or a current native change reference",
+                )
+            elif diff_kind == "host-native-actual-diff" and not (
+                _native_change_reference_bound(
+                    diff.get("artifact"),
+                    changed_files,
+                    generation,
+                    "review-agent",
+                )
+            ):
+                reject(
+                    "review-diff-payload",
+                    "review must consume delivered unified-diff content or a current native change reference",
                 )
             if not changed_files:
                 reject("review-changed-files", "actual diff must declare changed files")
@@ -3673,7 +4350,7 @@ def _review_fixture_steps(case: dict[str, Any]) -> list[dict[str, Any]]:
         "review_kind": "implementation",
         "diff": {
             "kind": "actual-diff",
-            "artifact": "actual.diff",
+            "artifact": "diff --git a/owner.py b/owner.py\n--- a/owner.py\n+++ b/owner.py\n@@ -1 +1 @@\n-old\n+new\n",
             "generation": 1,
             "changed_files": ["owner.py"],
         },
@@ -3716,12 +4393,14 @@ def _review_fixture_steps(case: dict[str, Any]) -> list[dict[str, Any]]:
         "latest_changed_paths": ["owner.py"],
         "exact_change_evidence": {
             "kind": "exact-change-content",
-            "artifact": "actual.diff",
+            "artifact": "diff --git a/owner.py b/owner.py\n--- a/owner.py\n+++ b/owner.py\n@@ -1 +1 @@\n-old\n+new\n",
             "generation": 1,
         },
         "reviewer_capability_accessibility": {
-            "exact-change-evidence-read": "supported",
-            "reviewer-accessible-change-reference": "supported",
+            "native-change-read": "unsupported",
+            "change-evidence-export": "supported",
+            "supplied-change-delivery": "supported",
+            "reviewer-change-consume": "supported",
             "non-mutating-validation": "supported",
         },
         "validation_after_latest_material_edit": {
@@ -3744,11 +4423,24 @@ def _review_fixture_steps(case: dict[str, Any]) -> list[dict[str, Any]]:
         "primary_skill": "ai-code-review-refactor",
         "review_input_binding": {
             "handoff_id": handoff_id,
-            "artifact": "actual.diff",
+            "artifact": "diff --git a/owner.py b/owner.py\n--- a/owner.py\n+++ b/owner.py\n@@ -1 +1 @@\n-old\n+new\n",
             "generation": 1,
         },
     }
-    steps = [edit, validation, handoff, gate, dispatch, event, review]
+    capture = {
+        "actor": "task-agent",
+        "action": "capture-change-evidence",
+        "task_id": case_id,
+        "artifact": handoff["exact_change_evidence"]["artifact"],
+        "generation": 1,
+        "changed_paths": ["owner.py"],
+    }
+    artifact_read = {
+        "actor": "review-agent",
+        "action": "read",
+        "artifact_ref": handoff["exact_change_evidence"]["artifact"],
+    }
+    steps = [edit, validation, capture, handoff, gate, dispatch, artifact_read, event, review]
     mutation_kind = mutation.get("kind")
     if mutation_kind == "none":
         return steps
@@ -4035,15 +4727,17 @@ def _task_focus_case_errors(case: object) -> list[str]:
             "handoff_kind",
             "latest_changed_paths",
             "change_evidence_kind",
-            "exact-change-evidence-read",
-            "reviewer-accessible-change-reference",
+            "change_evidence_artifact",
+            "native-change-read",
+            "change-evidence-export",
+            "supplied-change-delivery",
+            "reviewer-change-consume",
             "non-mutating-validation",
             "validation_generation",
             "latest_material_edit_generation",
             "review_scope_fixed",
             "reviewer_mutation_capability",
             "reviewer_execute_capability",
-            "exact-change-evidence-export",
             "workspace-state-observation",
             "post_review_change_export",
         ) or tuple(decision) != (
@@ -4068,10 +4762,11 @@ def _task_focus_case_errors(case: object) -> list[str]:
             reject("review-readiness-shape", "review-readiness predicates must be booleans")
             return errors
         for field in (
-            "exact-change-evidence-read",
-            "reviewer-accessible-change-reference",
+            "native-change-read",
+            "change-evidence-export",
+            "supplied-change-delivery",
+            "reviewer-change-consume",
             "non-mutating-validation",
-            "exact-change-evidence-export",
             "workspace-state-observation",
         ):
             if inputs[field] not in GENERIC_CAPABILITY_STATES:
@@ -4082,17 +4777,15 @@ def _task_focus_case_errors(case: object) -> list[str]:
         ):
             reject("review-generation", "review generations must be non-negative integers")
             return errors
-        exact_kinds = {
-            "exact-change-content",
-            "exact-before-after",
-            "reviewer-accessible-native-reference",
-            "equivalent-exact-artifact",
-        }
         ready = (
             inputs["latest_changed_paths"]
-            and inputs["change_evidence_kind"] in exact_kinds
-            and inputs["exact-change-evidence-read"] == "supported"
-            and inputs["reviewer-accessible-change-reference"] == "supported"
+            and _exact_change_evidence_accessible(
+                inputs["change_evidence_kind"],
+                inputs["change_evidence_artifact"],
+                ["owner.py"],
+                inputs,
+                current_generation=inputs["latest_material_edit_generation"],
+            )
             and inputs["non-mutating-validation"] == "supported"
             and inputs["validation_generation"]
             == inputs["latest_material_edit_generation"]
@@ -4104,7 +4797,7 @@ def _task_focus_case_errors(case: object) -> list[str]:
         if (
             not ready
             and inputs["handoff_kind"] == "legacy-incomplete"
-            and inputs["exact-change-evidence-export"] == "supported"
+            and inputs["change-evidence-export"] == "supported"
             and inputs["workspace-state-observation"] == "supported"
         ):
             expected_recovery = 1
@@ -4906,6 +5599,66 @@ def _orchestration_case_result(
             "analysis-decision-invalidation",
             "Analyzed Work requires exactly one complete initial Analysis",
         )
+    if analysis_event_entries and analysis_event_entries[0][1].get("analysis_kind") != "initial":
+        reject(
+            "analysis-initial-order",
+            "the first Analysis event for analyzed work must be initial, never Delta",
+        )
+    if initial_events:
+        initial = initial_events[0]
+        target_authority = initial.get("target_authority")
+        target_valid = (
+            isinstance(target_authority, dict)
+            and tuple(target_authority) == (
+                "desired_behavior",
+                "observable_acceptance",
+                "observed_behavior",
+                "observed_behavior_role",
+            )
+            and isinstance(target_authority.get("desired_behavior"), str)
+            and bool(target_authority["desired_behavior"].strip())
+            and isinstance(target_authority.get("observable_acceptance"), list)
+            and bool(target_authority["observable_acceptance"])
+            and all(
+                isinstance(item, str) and bool(item.strip())
+                for item in target_authority["observable_acceptance"]
+            )
+            and isinstance(target_authority.get("observed_behavior"), str)
+            and target_authority.get("observed_behavior_role") == "failure-evidence-only"
+            and target_authority.get("desired_behavior")
+            != target_authority.get("observed_behavior")
+            and target_authority.get("observed_behavior")
+            not in target_authority.get("observable_acceptance", [])
+        )
+        if not target_valid:
+            reject(
+                "analysis-target-authority",
+                "desired behavior and observable Acceptance are target authority; observed behavior is failure evidence only",
+            )
+        closed_sections = initial.get("brief_closed_sections")
+        slice_projection = initial.get("first_executable_slice")
+        first_task = tasks[0] if tasks else {}
+        slice_valid = (
+            closed_sections == CORE_CONTRACTS["task_contract"]["analyzed_work_authority"]["authoritative_sections"]
+            and isinstance(slice_projection, dict)
+            and tuple(slice_projection) == (
+                "task_id",
+                "status",
+                "professional_skill",
+                "layer3_skills",
+                "all_required_fields_complete",
+            )
+            and slice_projection.get("task_id") == first_task.get("id")
+            and slice_projection.get("status") == "in_progress"
+            and slice_projection.get("professional_skill") == first_task.get("primary_skill")
+            and slice_projection.get("layer3_skills") == first_task.get("layer3_skills", [])
+            and slice_projection.get("all_required_fields_complete") is True
+        )
+        if not slice_valid:
+            reject(
+                "analysis-slice-closure",
+                "initial Analysis must close every authoritative Brief section and every non-blocked First Executable Slice field",
+            )
     initial_assignments = (
         initial_events[0].get("skill_assignments") if initial_events else None
     )
@@ -6430,11 +7183,11 @@ def _utility_capsule_errors(
             if _workspace_check_command(command):
                 continue
             operation_commands.append(command)
-            if mode == "diff-export/no-edit" and command != "exact-change-evidence-export":
+            if mode == "diff-export/no-edit" and command != "change-evidence-export":
                 errors.append(
                     f"{case_id}: diff-export utility at step {index} allows a non-export capability"
                 )
-            if mode == "validation-only/no-edit" and command == "exact-change-evidence-export":
+            if mode == "validation-only/no-edit" and command == "change-evidence-export":
                 errors.append(
                     f"{case_id}: validation utility at step {index} allows diff export"
                 )
@@ -6834,8 +7587,8 @@ def _utility_case_errors(case: dict[str, Any], steps: list[dict[str, Any]]) -> l
             "not continue to review or closure"
         )
     if mode == "diff-export/no-edit":
-        if capability_facts.get("exact-change-evidence-export") != "supported":
-            errors.append(f"{case_id}: diff-export requires exact-change-evidence-export")
+        if capability_facts.get("change-evidence-export") != "supported":
+            errors.append(f"{case_id}: diff-export requires change-evidence-export")
         if capability_facts.get("workspace-state-observation") != "supported":
             errors.append(f"{case_id}: diff-export requires workspace-state-observation")
         if case.get("actual_diff_supplied") is not False:
@@ -6843,9 +7596,18 @@ def _utility_case_errors(case: dict[str, Any], steps: list[dict[str, Any]]) -> l
         if result.get("action") != "export-diff":
             errors.append(f"{case_id}: diff-export utility must return export-diff evidence")
         artifact_ref = result.get("artifact_ref")
-        if not isinstance(artifact_ref, str) or not artifact_ref.startswith(
-            ("utility-return:", "host-native:")
-        ):
+        native_utility_reference = (
+            isinstance(artifact_ref, dict)
+            and capability_facts.get("native-change-read") == "supported"
+            and capability_facts.get("reviewer-change-consume") == "supported"
+            and _native_change_reference_bound(
+                artifact_ref,
+                artifact_ref.get("changed_paths"),
+                artifact_ref.get("generation"),
+                "review-agent",
+            )
+        )
+        if not (_unified_diff_paths(artifact_ref) or native_utility_reference):
             errors.append(
                 f"{case_id}: diff-export utility must return supplied content or "
                 "a host-native artifact reference"
@@ -7226,6 +7988,9 @@ def _metrics(
         **progress,
     }
     errors = _profile_errors(case_id, steps, professional, layer3_entries)
+    errors.extend(
+        _analyzed_trajectory_authority_errors(case_id, case.get("kind"), steps)
+    )
     errors.extend(_progress_errors(case_id, operational_steps))
     errors.extend(_review_discipline_errors(case_id, steps))
     if not utility_case:

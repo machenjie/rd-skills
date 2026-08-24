@@ -838,6 +838,8 @@ PROFILE_EXACT_RULE_BINDINGS = frozenset(
         ("task-normal-mode", "bounded-validation-retry"),
         ("task-normal-mode", "bounded-validation-stop"),
         ("review-target-modes", "implementation-review"),
+        ("review-target-modes", "no-summary-substitute"),
+        ("review-target-modes", "review-never-exports"),
     }
 )
 
@@ -1309,7 +1311,8 @@ def prompt_projection_block(
         ]
         lines = [
             begin,
-            "Review Input Ready before review-agent dispatch needs latest changed paths, exact reviewable change evidence, reviewer capability accessibility, post-latest-edit validation, and fixed scope.",
+            "Before review-agent dispatch, Review Input Ready needs latest changed paths, post-latest-edit validation, and fixed scope.",
+            "It also needs the exact delivered unified diff or current reviewer-readable native reference plus instance consumption capability. Static host support alone is never readiness; forward evidence unchanged and never send Review to export it.",
             "Missing=>review dispatch=0. Legacy/incomplete permits one recovery. Review before Task before Review is forbidden.",
             "references/implementation-handoff-template.md JIT-owns Ledger State/currentness, freshness, capability branches, and review proof. Latest material edit invalidates validation evidence; Claims: "
             + proof["latest_material_edit_claim"] + ", " + proof["validation_claim"] + ".",
@@ -4320,6 +4323,20 @@ def validate_core_contracts(
                 "review input readiness must fail before review dispatch when "
                 "any producer evidence is missing"
             )
+        elif readiness.get("native_evidence_fields") != [
+            "reference",
+            "generation",
+            "reviewer",
+            "changed_paths",
+            "readable",
+        ] or readiness.get("native_evidence_rule") != (
+            "structured-current-reference-binds-assigned-reviewer-generation-"
+            "changed-paths-and-readability"
+        ):
+            errors.append(
+                "native review evidence must bind the assigned reviewer, current "
+                "generation, exact changed paths, and readable instance"
+            )
         capability_contract = review_discipline["generic_capability_contract"]
         capability_contract_fields = {
             "fields",
@@ -4352,9 +4369,10 @@ def validate_core_contracts(
             "bounded-source-read",
             "workspace-mutation",
             "non-mutating-validation",
-            "exact-change-evidence-read",
-            "exact-change-evidence-export",
-            "reviewer-accessible-change-reference",
+            "native-change-read",
+            "change-evidence-export",
+            "supplied-change-delivery",
+            "reviewer-change-consume",
             "workspace-state-observation",
         ] or capability_contract.get("injected_fields") != capability_contract.get(
             "fields"
@@ -4364,8 +4382,10 @@ def validate_core_contracts(
             capability_fields = capability_contract["fields"]
             prompt_branches = capability_contract.get("prompt_branches")
             expected_prompt_fields = [
-                "exact-change-evidence-read",
-                "reviewer-accessible-change-reference",
+                "native-change-read",
+                "change-evidence-export",
+                "supplied-change-delivery",
+                "reviewer-change-consume",
                 "non-mutating-validation",
             ]
             if not isinstance(prompt_branches, list) or [
@@ -4373,7 +4393,7 @@ def validate_core_contracts(
                 for branch in prompt_branches
             ] != expected_prompt_fields:
                 errors.append(
-                    "generic capability prompt branches must use the three canonical "
+                    "generic capability prompt branches must use the five canonical "
                     "injected decision fields in order"
                 )
             else:
@@ -6777,6 +6797,12 @@ def validate_core_contracts(
                 "First Executable Slice",
             ],
             "initial_analysis": "one-complete-initial-analysis",
+            "first_analysis_kind": "initial",
+            "target_authority": {
+                "authority": ["desired_behavior", "observable_acceptance"],
+                "observed_behavior_role": "failure-evidence-only",
+                "observed_behavior_as_target": "forbidden",
+            },
             "initial_closure_obligations": [
                 "observable-acceptance",
                 "owner-placement-invariant",

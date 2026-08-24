@@ -262,8 +262,8 @@ class EvidenceDirectAuthorityTests(unittest.TestCase):
             row["name"]: row["instructions"]
             for row in json.loads(PROFILES.read_text(encoding="utf-8"))["profiles"]
         }
-        self.assertIn("Evidence Resolution", profiles["main-control-agent"])
-        self.assertIn("Brief decision authority", profiles["analysis-agent"])
+        self.assertIn("reviewer-accessible exact evidence", profiles["main-control-agent"])
+        self.assertIn("Desired behavior/Acceptance", profiles["analysis-agent"])
         self.assertIn("bounded discovery", profiles["task-agent"])
         self.assertIn("must not reroute", profiles["review-agent"])
         ownership = CORE_CONTRACTS["task_contract"]["analyzed_work_authority"][

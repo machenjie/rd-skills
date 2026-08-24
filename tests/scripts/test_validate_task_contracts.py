@@ -1258,8 +1258,10 @@ class CoreContractModelTests(unittest.TestCase):
         self.assertTrue(all("_" not in field for field in fields))
         self.assertEqual(
             [
-                "exact-change-evidence-read",
-                "reviewer-accessible-change-reference",
+                "native-change-read",
+                "change-evidence-export",
+                "supplied-change-delivery",
+                "reviewer-change-consume",
                 "non-mutating-validation",
             ],
             [branch["field"] for branch in capabilities["prompt_branches"]],

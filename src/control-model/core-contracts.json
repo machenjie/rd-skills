@@ -564,28 +564,41 @@
       "consumer": "main-control-agent-before-review-dispatch",
       "required_fields": ["latest_changed_paths", "exact_change_evidence", "reviewer_capability_accessibility", "validation_after_latest_material_edit", "fixed_review_scope"],
       "exact_change_evidence_kinds": ["exact-change-content", "exact-before-after", "reviewer-accessible-native-reference", "equivalent-exact-artifact"],
-      "forbidden_substitutes": ["changed-file-summary", "prose-description", "implementer-self-report"],
+      "forbidden_substitutes": ["changed-file-summary", "prose-description", "implementer-self-report", "digest", "command-output", "filename", "identifier", "opaque-reference"],
+      "supplied_evidence_rule": "actual-unified-diff-content-not-path-label-or-opaque-reference",
+      "native_evidence_rule": "structured-current-reference-binds-assigned-reviewer-generation-changed-paths-and-readability",
+      "native_evidence_fields": ["reference", "generation", "reviewer", "changed_paths", "readable"],
+      "delivery_rule": "main-forwards-exact-payload-or-reference-without-summary-or-regeneration",
+      "static_capability_rule": "capability-ceiling-does-not-prove-current-instance-readiness",
       "normal_flow": "same-implementation-handoff-before-review",
       "missing_field_outcome": "blocked-before-review-dispatch",
       "review_dispatch_count_when_missing": 0,
-      "legacy_recovery": {"eligibility": "legacy-or-incomplete-handoff-only", "maximum_attempts": 1, "timing": "before-review-dispatch", "required_capabilities": ["exact-change-evidence-export", "workspace-state-observation"], "normal_flow_eligible": false},
+      "legacy_recovery": {"eligibility": "legacy-or-incomplete-handoff-only", "maximum_attempts": 1, "timing": "before-review-dispatch", "required_capabilities": ["change-evidence-export", "workspace-state-observation"], "normal_flow_eligible": false},
       "reviewer_generation": false,
       "reviewer_mutation": false
     },
     "generic_capability_contract": {
-      "fields": ["bounded-source-read", "workspace-mutation", "non-mutating-validation", "exact-change-evidence-read", "exact-change-evidence-export", "reviewer-accessible-change-reference", "workspace-state-observation"],
-      "injected_fields": ["bounded-source-read", "workspace-mutation", "non-mutating-validation", "exact-change-evidence-read", "exact-change-evidence-export", "reviewer-accessible-change-reference", "workspace-state-observation"],
+      "fields": ["bounded-source-read", "workspace-mutation", "non-mutating-validation", "native-change-read", "change-evidence-export", "supplied-change-delivery", "reviewer-change-consume", "workspace-state-observation"],
+      "injected_fields": ["bounded-source-read", "workspace-mutation", "non-mutating-validation", "native-change-read", "change-evidence-export", "supplied-change-delivery", "reviewer-change-consume", "workspace-state-observation"],
       "states": ["supported", "unsupported"],
       "decision_inputs": "capability-state-only",
       "ignored_adapter_metadata": ["host-identity", "tool-identifier", "command-spelling"],
       "equivalence_rule": "equal-capability-state-produces-equal-routing-level-review-and-completion-decisions",
       "prompt_branches": [
-        {"field": "exact-change-evidence-read", "next_field": "reviewer-accessible-change-reference", "branches": [
-          {"value": "supported", "required_terms": ["exact change evidence read", "review-agent"]},
-          {"value": "unsupported", "required_terms": ["block review before dispatch", "diff scope", "unverified", "changed-file summary"]}
+        {"field": "native-change-read", "next_field": "change-evidence-export", "branches": [
+          {"value": "supported", "required_terms": ["native change reference", "review-agent"]},
+          {"value": "unsupported", "required_terms": ["native path unavailable", "supplied path"]}
         ]},
-        {"field": "reviewer-accessible-change-reference", "next_field": "non-mutating-validation", "branches": [
-          {"value": "supported", "required_terms": ["reviewer-accessible change reference", "review-agent"]},
+        {"field": "change-evidence-export", "next_field": "supplied-change-delivery", "branches": [
+          {"value": "supported", "required_terms": ["Task can capture exact change evidence", "current generation"]},
+          {"value": "unsupported", "required_terms": ["change evidence capture unavailable", "block before review"]}
+        ]},
+        {"field": "supplied-change-delivery", "next_field": "reviewer-change-consume", "branches": [
+          {"value": "supported", "required_terms": ["actual unified diff content", "exact delivery"]},
+          {"value": "unsupported", "required_terms": ["supplied path unavailable", "block before review"]}
+        ]},
+        {"field": "reviewer-change-consume", "next_field": "non-mutating-validation", "branches": [
+          {"value": "supported", "required_terms": ["delivered instance readable", "review-agent"]},
           {"value": "unsupported", "required_terms": ["block review before dispatch", "diff scope", "unverified"]}
         ]},
         {"field": "non-mutating-validation", "next_field": null, "branches": [
@@ -1204,6 +1217,8 @@
       "derived_artifacts": ["task-dag", "task-contract", "implementation-handoff", "review-handoff"],
       "protected_decisions": ["Acceptance", "Non-goals", "Owner", "Invariants", "Placement", "Contract semantics", "Rollback", "First Executable Slice"],
       "initial_analysis": "one-complete-initial-analysis",
+      "first_analysis_kind": "initial",
+      "target_authority": {"authority": ["desired_behavior", "observable_acceptance"], "observed_behavior_role": "failure-evidence-only", "observed_behavior_as_target": "forbidden"},
       "initial_closure_obligations": ["observable-acceptance", "owner-placement-invariant", "acceptance-proving-validation", "executable-task-dependencies", "professional-skill-boundaries", "minimum-sufficient-review-boundaries", "no-critical-gap-blocking-first-executable-slice"],
       "non_invalidation_events": ["task-completion", "task-switch", "ordinary-implementation-discovery", "review-boundary-not-reached"],
       "decision_invalidation_triggers": ["Acceptance-or-Non-goals", "Owner-or-Placement-or-Invariant", "contract-or-data-semantics", "dependency-or-rollback", "material-risk", "scope-blocker"],
@@ -1555,7 +1570,7 @@
   "prompt_contract": {
     "schema_version": 1,
     "path": "src/control-prompts/main-control-agent.md",
-    "document_sha256": "c0377059d4b8d010344fc6a7e5377cda22fd70c781478f38239fa841c2a4501b",
+    "document_sha256": "f03ff9e033ccadc539dcbf13068c471367b38c6142e658662c595ae02b97279b",
     "managed_projections": [
       {"id": "execution-level-contract", "section": "Execution Level and Validation", "required_contracts": ["execution_level_contract"]},
       {"id": "review-evidence-contract", "section": "Review and Repair", "required_contracts": ["visible_evidence_contract", "review_discipline_contract"]},
@@ -1582,7 +1597,7 @@
       {"id": "serial-shared-writes", "section": "Scheduling and Context", "required_terms": ["Related work uses combined final-diff review", "shared or unknown workspace", "parallel read-only tasks", "serial writes"]},
       {"id": "semantic-professional-task-boundary", "section": "Scheduling and Context", "required_terms": ["task_contract.task_boundary", "Task completion=progress"]},
       {"id": "diff-backed-review", "section": "Review and Repair", "required_terms": ["review-agent", "actual diff", "every changed file", "validation results", "fresh validation/re-review", "references/implementation-handoff-template.md", "JIT-owns Ledger State/currentness, freshness, capability branches, and review proof", "latest-material-edit", "validation-passed", "changed-scope-reviewed", "blocking-findings-none", "blocking-findings-resolved", "high-risk-review-passed", "not-required JIT-loads from the Handoff owner", "Missing/inconsistent authority/binding fails closed", "reissue"]},
-      {"id": "review-input-readiness", "section": "Review and Repair", "required_terms": ["Review Input Ready", "latest changed paths", "exact reviewable change evidence", "reviewer capability accessibility", "post-latest-edit validation", "fixed scope", "before review-agent dispatch", "missing=>review dispatch=0", "Legacy/incomplete permits one recovery", "Review before Task before Review is forbidden"]},
+      {"id": "review-input-readiness", "section": "Review and Repair", "required_terms": ["Review Input Ready", "latest changed paths", "exact delivered unified diff", "reviewer-readable native reference", "instance consumption capability", "post-latest-edit validation", "fixed scope", "before review-agent dispatch", "static host support alone is never readiness", "forward evidence unchanged", "never send Review to export it", "missing=>review dispatch=0", "Legacy/incomplete permits one recovery", "Review before Task before Review is forbidden"]},
       {"id": "evidence-template-authority", "section": "Review and Repair", "required_terms": ["references/implementation-handoff-template.md", "JIT-owns Ledger State/currentness"]},
       {"id": "minimum-sufficient-review-boundaries", "section": "Review and Repair", "required_terms": ["review_discipline_contract", "authoritative"]},
       {"id": "review-obligation-subsumption", "section": "Review and Repair", "required_terms": ["review_discipline_contract", "authoritative"]},
@@ -1653,7 +1668,7 @@
         {"rule_id": "normal-layer3", "required_terms": ["Load only capsule-named Layer 3 items", "normal implementation mode", "Layer 3 index or catalog"]},
         {"rule_id": "bounded-validation-retry", "required_terms": ["After 2 same-path failures", "retry only with changed hypothesis, material, gap, or transition"], "exact_rule": "- After 2 same-path failures, retry only with changed hypothesis, material, gap, or transition. Otherwise return Main or block; never reroute or run a third unchanged retry."},
         {"rule_id": "bounded-validation-stop", "required_terms": ["Otherwise return Main or block", "never reroute", "run a third unchanged retry"], "exact_rule": "- After 2 same-path failures, retry only with changed hypothesis, material, gap, or transition. Otherwise return Main or block; never reroute or run a third unchanged retry."},
-        {"rule_id": "implementation-handoff", "required_terms": ["final normal-mode validation", "assigned Implementation Handoff template", "Status", "visible task-local Evidence Ledger", "Review Input Ready", "same handoff", "exact change evidence"]}
+        {"rule_id": "implementation-handoff", "required_terms": ["Normal closure", "final edit", "fresh validation", "exact change capture", "same-task Implementation Handoff", "Main readiness gate", "no recovery Task"]}
       ],
       "task-utility-mode": [
         {"rule_id": "utility-skill-boundary", "required_terms": ["utility mode", "dedicated Utility Capsule", "no primary Professional Skill or Layer 3 guidance"]},
@@ -1671,9 +1686,10 @@
         {"rule_id": "task-action-authority", "required_terms": ["within current authority→execute", "bounded extra authority→request minimum exact authority", "user-owned decision→return Main", "unsafe/unsupported→block", "Permission leaves Task Level unchanged", "new material risk→Main/Delta Analysis/Level recomputation", "never self-authorize", "emulate the host sandbox"]}
       ],
       "review-target-modes": [
-        {"rule_id": "implementation-review", "required_terms": ["Implementation or repair review", "actual diff or an accessible host-native diff reference", "inspect it and every changed file", "latest repaired diff"], "exact_rule": "- Implementation or repair review requires the actual diff or an accessible host-native diff reference; inspect it and every changed file, including only the latest repaired diff."},
-        {"rule_id": "missing-diff", "required_terms": ["Missing evidence", "blocked verdict", "diff scope unverified"]},
-        {"rule_id": "no-summary-substitute", "required_terms": ["Never substitute a changed-file summary", "actual diff"]},
+        {"rule_id": "implementation-review", "required_terms": ["Implementation or repair review", "delivered current unified diff", "reviewer-readable native reference", "every changed file"], "exact_rule": "- Implementation or repair review inspects only the delivered current unified diff or reviewer-readable native reference and every changed file."},
+        {"rule_id": "missing-diff", "required_terms": ["Missing evidence", "blocks", "diff scope unverified"]},
+        {"rule_id": "no-summary-substitute", "required_terms": ["summaries", "digests", "paths", "command output", "opaque refs", "never substitute"], "exact_rule": "- Missing evidence blocks with diff scope unverified; summaries, digests, paths, command output, or opaque refs never substitute."},
+        {"rule_id": "review-never-exports", "required_terms": ["Review never generates or exports change evidence"], "exact_rule": "- Review never generates or exports change evidence."},
         {"rule_id": "artifact-review", "required_terms": ["Pre-implementation design or artifact review", "supporting source evidence", "no implementation diff is required"]}
       ],
       "review-scope-boundary": [
@@ -1692,7 +1708,7 @@
       "analysis-handoff": [{"rule_id": "analysis-visible-handoff", "required_terms": ["Professional/mode contract owns", "analysis output"]}],
       "implementation-handoff": [
         {"rule_id": "implementation-current-validation", "required_terms": ["current task-agent evidence", "latest material edit", "latest-material-edit", "validation-passed"]},
-        {"rule_id": "implementation-visible-handoff", "required_terms": ["assigned Implementation Handoff template", "visible task-local Evidence Ledger", "Review Input Ready", "same handoff"]}
+        {"rule_id": "implementation-visible-handoff", "required_terms": ["Normal closure", "same-task Implementation Handoff", "Main readiness gate"]}
       ],
       "review-handoff": [{"rule_id": "review-visible-handoff", "required_terms": ["assigned Review Handoff", "Status", "current Evidence Ledger", "reviewed/unreviewed scope"]}]
     }

@@ -1,6 +1,6 @@
 ---
 name: web-security
-description: "`analysis-agent`/`task-agent`/`review-agent`: use for render sinks, browser state, server fetch, upload, redirect, cross-origin, or embedding changes; skip without web exposure."
+description: "Use analysis, task, or review agents for reachable web-sink changes; skip without web exposure."
 ---
 
 # web-security
@@ -17,22 +17,23 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use for render sinks
 
 ## Skill Role
 
-Trace web-controlled sources to render, navigation, state-change, fetch, upload, cross-origin, cookie, and embedding sinks with control-placement and bypass evidence. Exclude general permission and credential policy.
+Trace web sources to render, navigation, state-change, fetch, upload, cross-origin, cookie, embedding, or protected-action sinks. Own control-placement and bypass proof, not permission or credential policy.
 
 ## High-Value Rules
 
-- Map the changed web-controlled source through transformations and trust transitions.
-- Classify its actual render, state-change, fetch, upload, navigation, cross-origin, embedding, or protected-action sink.
-- Select the named decision or evidence Reference for controls and bypass proof.
-- When the selected web-security decision remains active, load only its named Reference.
+- Map the changed web source through trust transitions.
+- Classify its effective web sink.
+- Select the owning control or evidence Reference.
+- While that decision is active, load only its named Reference.
 
 ## Anti-Patterns
 
-- Do not infer sink protection from a generic sanitizer, client/UI signal, hostname, extension, identity, framework default, or response header without final-context and deployment evidence.
+- Reject generic sanitizer, UI signal, hostname, extension, identity, framework-default, or header claims without final-context and deployed-behavior evidence.
 
 ## Stop Conditions
 
-Escalate when source-to-sink reachability is unknown, state change lacks request integrity or object authorization, or server fetch can reach untrusted destinations. Also escalate when active-content handling is ambiguous, cross-origin credentials broaden, or deployed control and bypass behavior cannot be verified.
+- Escalate unknown reachability, missing request integrity/object authorization, or unbounded server-fetch destinations.
+- Escalate ambiguous active content, broadened cross-origin credentials, or unverified deployed controls/bypasses.
 
 ## Output Contract
 

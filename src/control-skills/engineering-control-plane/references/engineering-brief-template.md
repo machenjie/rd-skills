@@ -41,6 +41,14 @@ Boundaries, and critical gaps blocking the First Executable Slice. Task
 completion or switch, ordinary implementation discovery, and an unreached
 Review Boundary do not re-trigger Analysis.
 
+The first Analysis event is always `initial`. Desired behavior and observable
+Acceptance are target authority; observed behavior is failure evidence only and
+cannot be copied into Acceptance. A Delta is legal only after this complete
+initial Brief is accepted and current evidence names the protected decision it
+invalidates. Before dispatch, close every authoritative Brief section and every
+non-blocked First Executable Slice field, then preserve the Slice's Professional
+Skill and Layer 3 selections verbatim.
+
 When this Brief must select Layer 3 for an analyzed downstream Task or Review,
 load exactly one current-Professional projection from
 `engineering-control-plane/references/selectors/<professional-skill>.json`.

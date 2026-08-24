@@ -108,7 +108,7 @@ class HooklessArchitectureTests(unittest.TestCase):
             "bounded confirmation",
             "engineering-change-analysis",
             "synchronous/unknown capability",
-            "actual diff, every changed file, validation results",
+            "actual diff/every changed file/validation results",
             "related work uses combined final-diff review",
             "preparation loop breaker",
             "bounded subagents authorized",

@@ -38,6 +38,12 @@ change sets differ or are unavailable.
 Task evidence is visible in scoped Markdown contracts and handoffs. Validation
 must follow the latest material edit, and implementation review uses the actual
 diff and every changed file. Older-scope evidence cannot authorize closure.
+For supplied-artifact hosts, actual evidence is delivered unified-diff content,
+not a digest, summary, filename, command output, or opaque identifier. For a
+native host, the assigned reviewer must be able to read the delivered current
+reference bound to the assigned reviewer, current generation, exact paths, and
+readable delivered instance. Host support is only a capability ceiling; Main proves accessibility
+for this handoff, and Review never exports its own evidence.
 rd-skills does not persist private runtime ledgers, prompt transcripts, or an
 internal task-state database. The exact artifact and completion flow is owned by
 the [Operating model](OPERATING_MODEL.md).

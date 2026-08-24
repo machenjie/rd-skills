@@ -89,6 +89,12 @@ dispatch when the producer has not supplied exact evidence; only a legacy or
 incomplete handoff may use one bounded pre-review recovery. The reviewer does
 not repair findings or generate change artifacts.
 
+Native change reads, evidence export, supplied delivery, and reviewer
+consumption are independent capability facts. Supplied review receives actual
+unified-diff content; native review receives a current reference readable by the
+assigned reviewer. Static support, a digest, a path, or a command-output label
+does not make Review Input Ready.
+
 ## What You Should See
 
 For implementation work, expect these observable stages:

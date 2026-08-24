@@ -220,7 +220,7 @@ UTILITY_ASSIGNMENT_REQUIRED_CLAIMS = ("workspace baseline captured",)
 UTILITY_RETURN_REQUIRED_CLAIMS = ("workspace unchanged", "utility result delivered")
 UTILITY_CAPABILITY_OPERATIONS = {
     "workspace-state-observation",
-    "exact-change-evidence-export",
+    "change-evidence-export",
     "non-mutating-validation",
 }
 COMPLETION_CLAIM_FIELDS = (

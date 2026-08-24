@@ -2,6 +2,9 @@
 
 Return this visible contract after the last material edit and its targeted
 validation. It records evidence, not implementer reasoning or self-review.
+The normal sequence is one Task's final edit, fresh validation, exact change
+capture, this same Implementation Handoff, and Main's readiness gate. Do not
+use a second Task or normal recovery/export Task to complete that sequence.
 
 For Analyzed Work, this handoff is a derived projection of the current
 Engineering Brief and its verbatim-dispatched First Executable Slice. Result
@@ -61,9 +64,10 @@ Authority reference only — project only consumer-required current Evidence bel
 
 ## Actual Diff or Host-native Diff Reference
 
-Provide the actual diff or an accessible host-native reference. A changed-file
-summary is not a diff. Write `not applicable — no material edits` only when no
-material edit occurred.
+Provide actual unified-diff content or a current host-native change reference
+that the assigned reviewer can read. A digest, summary, prose description,
+command output, filename, identifier, or opaque reference is not a diff. Write
+`not applicable — no material edits` only when no material edit occurred.
 
 ## Commands Run
 
@@ -89,8 +93,12 @@ Fixed Review Scope:
 Normal implementation and repair must provide all five values in the same Implementation Handoff
 before review dispatch. Exact evidence is change
 content, an exact before/after representation, a reviewer-accessible native
-change reference, or an equivalent exact artifact. A changed-file summary,
-prose description, or implementer self-report is not evidence. If any value is
+change reference, or an equivalent exact artifact whose actual bytes are
+delivered and readable by the assigned reviewer. A changed-file summary,
+digest, prose description, command output, filename, opaque reference, or
+implementer self-report is not evidence. Static host support is a capability
+ceiling, not current-instance readiness. Main forwards the exact payload or
+reference identity without summarizing or regenerating it. If any value is
 missing, remain blocked before review and let the current producer complete the
 handoff; do not send a reviewer first. Only a legacy/incomplete handoff may use
 one bounded recovery before review.
@@ -123,11 +131,20 @@ unavailable proof.
 
 Main JIT-loads this template for Core `generic_capability_contract` decisions:
 
-`exact-change-evidence-read`:
-- `supported`: exact change evidence read -> review-agent.
-- `unsupported`: block review before dispatch; diff scope unverified; a changed-file summary is not evidence.
-`reviewer-accessible-change-reference`:
-- `supported`: reviewer-accessible change reference -> review-agent.
+`native-change-read`:
+- `supported`: a current native change reference may be used only when it binds
+  the assigned `review-agent`, current generation, exact changed paths, and a
+  readable delivered instance.
+- `unsupported`: native path unavailable; use the supplied path or block before review.
+`change-evidence-export`:
+- `supported`: the current Task can capture exact change evidence for the
+  current generation.
+- `unsupported`: change evidence capture unavailable; block before review.
+`supplied-change-delivery`:
+- `supported`: deliver actual unified diff content unchanged for exact delivery.
+- `unsupported`: supplied path unavailable; block before review.
+`reviewer-change-consume`:
+- `supported`: prove the delivered instance readable by the assigned `review-agent`.
 - `unsupported`: block review before dispatch; diff scope unverified.
 `non-mutating-validation`:
 - `supported`: non-mutating validation -> current evidence.

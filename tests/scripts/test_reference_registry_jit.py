@@ -2350,9 +2350,9 @@ class ReferenceRegistryJitTest(unittest.TestCase):
 
         self.assertEqual(110, len(checked))
         self.assertEqual(len(checked), len(set(checked)))
-        self.assertEqual(3500, line_count)
-        self.assertEqual(724, list_sentence_count)
-        self.assertEqual(117, review_count)
+        self.assertEqual(3506, line_count)
+        self.assertEqual(730, list_sentence_count)
+        self.assertEqual(113, review_count)
         self.assertEqual([], violations)
 
     def test_foundation_benchmark_gate_has_negative_controls(self) -> None:

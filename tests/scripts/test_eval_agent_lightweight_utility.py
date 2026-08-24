@@ -110,6 +110,59 @@ class LightweightUtilityContractTests(unittest.TestCase):
             next(item for item in self.release_cases if item["id"] == case_id)
         )
 
+    @staticmethod
+    def _complete_initial_analysis_event() -> dict:
+        return {
+            "actor": "analysis-agent",
+            "action": "first_executable_slice",
+            "analysis_kind": "initial",
+            "brief_id": "brief-single-module-feature-1",
+            "brief_status": "accepted",
+            "target_authority": {
+                "desired_behavior": "Implement the accepted module-a service behavior.",
+                "observable_acceptance": [
+                    "The module-a service preserves its owner and existing consumers.",
+                    "The module-test command passes after the material edit.",
+                ],
+                "observed_behavior": "The requested module-a behavior is absent.",
+                "observed_behavior_role": "failure-evidence-only",
+            },
+            "acceptance": [
+                "Preserve existing consumers and satisfy the Engineering Brief."
+            ],
+            "owner_placement_invariant": {
+                "owner": "module-a/service.py",
+                "placement": "existing module-a service owner",
+                "invariant": "existing module-a consumers remain compatible",
+            },
+            "verification": ["module-test"],
+            "downstream_task": {
+                "task_id": "task-single-module-feature-1",
+                "professional_skill": "backend-change-builder",
+                "layer3_skills": [],
+            },
+            "review_projection": {
+                "profile": "review-agent",
+                "professional_skill": "architecture-impact-reviewer",
+                "layer3_skills": [],
+            },
+        }
+
+    @classmethod
+    def _post_acceptance_delta_event(cls) -> dict:
+        initial = cls._complete_initial_analysis_event()
+        return {
+            "actor": "analysis-agent",
+            "action": "brief",
+            "analysis_kind": "delta",
+            "accepted_brief_id": initial["brief_id"],
+            "protected_decision_invalidated": True,
+            "invalidated_decisions": ["Acceptance-or-Non-goals"],
+            "reroute_trigger": "none",
+            "downstream_task": copy.deepcopy(initial["downstream_task"]),
+            "review_projection": copy.deepcopy(initial["review_projection"]),
+        }
+
     def test_required_behavior_coverage_manifest_is_exact_and_machine_checked(
         self,
     ) -> None:
@@ -575,6 +628,72 @@ class LightweightUtilityContractTests(unittest.TestCase):
             errors,
         )
 
+    def test_normal_review_rejects_placeholder_exact_change_evidence(self) -> None:
+        case = self._release_case("single-file-bug-fix")
+        handoff = next(
+            step for step in case["steps"]
+            if step.get("action") == EVAL.IMPLEMENTATION_HANDOFF_ACTION
+        )
+        handoff["exact_change_evidence"]["artifact"] = "actual.diff"
+        dispatch = next(
+            step for step in case["steps"]
+            if step.get("action") == "dispatch"
+            and step.get("profile") == "review-agent"
+        )
+        dispatch["review_input_binding"]["artifact"] = "actual.diff"
+        event = next(
+            step for step in case["steps"]
+            if step.get("action") == EVAL.REVIEW_DISCIPLINE_ACTION
+        )
+        event["diff"]["artifact"] = "actual.diff"
+        errors = self._trajectory_errors(case)
+        self.assertTrue(
+            any("[review-input-evidence-payload]" in error for error in errors),
+            errors,
+        )
+
+    def test_analyzed_work_requires_initial_first_and_target_authority(self) -> None:
+        case = copy.deepcopy(next(
+            item for item in self.orchestration_cases
+            if item["id"] == "dedup-protected-delta-preserves-skill"
+        ))
+        initial_index = next(
+            index for index, event in enumerate(case["events"])
+            if event.get("analysis_kind") == "initial"
+        )
+        delta_index = next(
+            index for index, event in enumerate(case["events"])
+            if event.get("analysis_kind") == "delta"
+        )
+        case["events"][initial_index], case["events"][delta_index] = (
+            case["events"][delta_index],
+            case["events"][initial_index],
+        )
+        errors = EVAL._orchestration_case_errors(case)
+        self.assertTrue(
+            any("[analysis-initial-order]" in error for error in errors),
+            errors,
+        )
+
+        authority = copy.deepcopy(next(
+            item for item in self.orchestration_cases if item["expected_valid"]
+        ))
+        initial = next(
+            event for event in authority["events"]
+            if event.get("analysis_kind") == "initial"
+        )
+        initial["target_authority"] = {
+            "desired_behavior": "preserve the observed failure",
+            "observable_acceptance": ["preserve the observed failure"],
+            "observed_behavior": "preserve the observed failure",
+            "observed_behavior_role": "target-authority",
+        }
+        errors = EVAL._orchestration_case_errors(authority)
+        self.assertTrue(
+            any("[analysis-target-authority]" in error for error in errors),
+            errors,
+        )
+
     def test_normal_review_input_binding_mutations_fail_closed(self) -> None:
         def locate(case: dict) -> tuple[dict, dict, dict, dict]:
             handoff = next(
@@ -648,7 +767,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
                     handoff["exact_change_evidence"]["kind"] = "changed-file-summary"
                 elif mutation == "unsupported-capability":
                     handoff["reviewer_capability_accessibility"][
-                        "reviewer-accessible-change-reference"
+                        "reviewer-change-consume"
                     ] = "unsupported"
                 elif mutation == "stale-validation":
                     handoff["validation_after_latest_material_edit"]["generation"] = 0
@@ -814,7 +933,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
     def test_task_focus_relation_review_repair_and_cost_matrix_is_closed(self) -> None:
         results, errors = EVAL._task_focus_fixture_results(self.task_focus_cases)
         self.assertEqual([], errors)
-        self.assertEqual(42, len(results))
+        self.assertEqual(46, len(results))
         self.assertTrue(all(result["matches_expected"] for result in results))
         self.assertEqual(
             {
@@ -928,7 +1047,27 @@ class LightweightUtilityContractTests(unittest.TestCase):
                 },
             },
             "events": [
-                {"action": "analysis", "analysis_kind": "initial"},
+                {
+                    "action": "analysis",
+                    "analysis_kind": "initial",
+                    "target_authority": {
+                        "desired_behavior": "complete all three accepted tasks",
+                        "observable_acceptance": ["all three task validations pass"],
+                        "observed_behavior": "one or more task validations may fail",
+                        "observed_behavior_role": "failure-evidence-only",
+                    },
+                    "brief_closed_sections": list(
+                        EVAL.CORE_CONTRACTS["task_contract"]
+                        ["analyzed_work_authority"]["authoritative_sections"]
+                    ),
+                    "first_executable_slice": {
+                        "task_id": "A",
+                        "status": "in_progress",
+                        "professional_skill": "backend-change-builder",
+                        "layer3_skills": [],
+                        "all_required_fields_complete": True,
+                    },
+                },
                 {"action": "edit", "task_id": "A", "generation": 1},
                 {"action": "validate", "task_id": "A", "generation": 1, "evidence_id": "v-A"},
                 {"action": "edit", "task_id": "B", "generation": 1},
@@ -1535,6 +1674,96 @@ class LightweightUtilityContractTests(unittest.TestCase):
         self.assertTrue(required <= set(by_id), required - set(by_id))
         self.assertTrue(all(by_id[case_id]["matches_expected"] for case_id in required))
 
+    def test_vue_copilot_supplied_evidence_counts_and_negatives_are_exact(self) -> None:
+        case = self._release_case("single-module-feature")
+        self.assertEqual("copilot", case["host"])
+        self.assertEqual([], self._trajectory_errors(case))
+        steps = case["steps"]
+        first_review = next(
+            (index for index, step in enumerate(steps)
+             if step.get("actor") == "review-agent"
+             and step.get("action") in {"review", "review-discipline"}),
+            len(steps),
+        )
+        actual = {
+            "analysis_dispatches": sum(
+                step.get("action") == "dispatch"
+                and step.get("profile") == "analysis-agent" for step in steps
+            ),
+            "initial_analysis_events": sum(
+                step.get("actor") == "analysis-agent"
+                and step.get("analysis_kind") == "initial" for step in steps
+            ),
+            "task_dispatches": sum(
+                step.get("action") == "dispatch"
+                and step.get("profile") == "task-agent"
+                and step.get("mode") != "diff-export/no-edit" for step in steps
+            ),
+            "material_edits": sum(
+                step.get("actor") == "task-agent" and step.get("action") == "edit"
+                for step in steps
+            ),
+            "post_edit_validations": sum(
+                step.get("actor") == "task-agent" and step.get("action") == "validate"
+                for step in steps
+            ),
+            "exact_change_captures": sum(
+                step.get("action") == "capture-change-evidence" for step in steps
+            ),
+            "implementation_handoffs": sum(
+                step.get("action") == "implementation-handoff" for step in steps
+            ),
+            "main_readiness_gates": sum(
+                step.get("action") == "review-input-ready" and step.get("ready") is True
+                for step in steps
+            ),
+            "review_dispatches": sum(
+                step.get("action") == "dispatch"
+                and step.get("profile") == "review-agent" for step in steps
+            ),
+            "reviewer_artifact_reads": sum(
+                step.get("actor") == "review-agent" and step.get("action") == "read"
+                for step in steps
+            ),
+            "review_actions": sum(
+                step.get("actor") == "review-agent" and step.get("action") == "review"
+                for step in steps
+            ),
+            "recovery_task_dispatches": sum(
+                index > first_review and step.get("action") == "dispatch"
+                and step.get("profile") == "task-agent"
+                for index, step in enumerate(steps)
+            ),
+            "diff_export_utility_dispatches": sum(
+                step.get("action") == "dispatch"
+                and step.get("mode") == "diff-export/no-edit" for step in steps
+            ),
+            "reviewer_execute_actions": sum(
+                step.get("actor") == "review-agent" and step.get("action") == "execute"
+                for step in steps
+            ),
+        }
+        self.assertEqual(
+            case["review_evidence_contract"]["expected_counts"], actual
+        )
+
+        negative_ids = {
+            "focus-review-digest-placeholder-blocked",
+            "focus-review-command-output-placeholder-blocked",
+            "focus-review-opaque-reference-blocked",
+            "focus-review-path-only-blocked",
+        }
+        negatives = {
+            item["id"]: item for item in self.task_focus_cases
+            if item["id"] in negative_ids
+        }
+        self.assertEqual(negative_ids, set(negatives))
+        for case_id, negative in negatives.items():
+            with self.subTest(case=case_id):
+                self.assertEqual([], EVAL._task_focus_case_errors(negative))
+                self.assertEqual(0, negative["decision"]["review_dispatches"])
+                self.assertEqual(0, negative["decision"]["legacy_recovery_attempts"])
+
     def test_review_readiness_requires_read_reference_and_validation_capabilities(self) -> None:
         case = {
             "id": "review-reference-unsupported-boundary",
@@ -1543,15 +1772,17 @@ class LightweightUtilityContractTests(unittest.TestCase):
                 "handoff_kind": "normal",
                 "latest_changed_paths": True,
                 "change_evidence_kind": "exact-change-content",
-                "exact-change-evidence-read": "supported",
-                "reviewer-accessible-change-reference": "unsupported",
+                "change_evidence_artifact": "diff --git a/owner.py b/owner.py\n--- a/owner.py\n+++ b/owner.py\n@@ -1 +1 @@\n-old\n+new\n",
+                "native-change-read": "unsupported",
+                "change-evidence-export": "supported",
+                "supplied-change-delivery": "supported",
+                "reviewer-change-consume": "unsupported",
                 "non-mutating-validation": "supported",
                 "validation_generation": 9,
                 "latest_material_edit_generation": 9,
                 "review_scope_fixed": True,
                 "reviewer_mutation_capability": False,
                 "reviewer_execute_capability": False,
-                "exact-change-evidence-export": "supported",
                 "workspace-state-observation": "supported",
                 "post_review_change_export": False,
             },
@@ -1565,6 +1796,312 @@ class LightweightUtilityContractTests(unittest.TestCase):
             "expected_error": None,
         }
         self.assertEqual([], EVAL._task_focus_case_errors(case))
+
+    def test_native_change_reference_requires_current_assigned_reviewer_binding(self) -> None:
+        base = copy.deepcopy(
+            next(
+                item
+                for item in self.task_focus_cases
+                if item["id"] == "focus-review-native-reference-ready"
+            )
+        )
+        base["inputs"]["change_evidence_artifact"] = {
+            "reference": "native-change://codex/worktree-9",
+            "generation": 4,
+            "reviewer": "review-agent",
+            "changed_paths": ["owner.py"],
+            "readable": True,
+        }
+        self.assertEqual([], EVAL._task_focus_case_errors(base))
+
+        mutations = {
+            "opaque": "native-change:fixture-current",
+            "stale": {
+                **base["inputs"]["change_evidence_artifact"],
+                "generation": 3,
+            },
+            "wrong-reviewer": {
+                **base["inputs"]["change_evidence_artifact"],
+                "reviewer": "analysis-agent",
+            },
+            "unreadable": {
+                **base["inputs"]["change_evidence_artifact"],
+                "readable": False,
+            },
+        }
+        for name, artifact in mutations.items():
+            with self.subTest(mutation=name):
+                negative = copy.deepcopy(base)
+                negative["id"] = f"native-reference-{name}-blocked"
+                negative["inputs"]["change_evidence_artifact"] = artifact
+                negative["decision"] = {
+                    "review_input_ready": False,
+                    "review_dispatches": 0,
+                    "legacy_recovery_attempts": 0,
+                    "completion": "blocked-before-review",
+                }
+                self.assertEqual([], EVAL._task_focus_case_errors(negative))
+
+    def test_unified_diff_parser_rejects_pseudo_hunks_and_mismatched_paths(self) -> None:
+        malformed = {
+            "mismatched-path": (
+                "diff --git a/owner.py b/owner.py\n"
+                "--- a/other.py\n+++ b/owner.py\n"
+                "@@ -1 +1 @@\n-old\n+new\n"
+            ),
+            "garbage-hunk": (
+                "diff --git a/owner.py b/owner.py\n"
+                "--- a/owner.py\n+++ b/owner.py\n"
+                "@@ garbage\n-old\n+new\n"
+            ),
+            "wrong-hunk-count": (
+                "diff --git a/owner.py b/owner.py\n"
+                "--- a/owner.py\n+++ b/owner.py\n"
+                "@@ -1,2 +1 @@\n-old\n+new\n"
+            ),
+            "empty-first-section": (
+                "diff --git a/empty.py b/empty.py\nindex 1111111..2222222 100644\n"
+                "diff --git a/owner.py b/owner.py\n"
+                "--- a/owner.py\n+++ b/owner.py\n"
+                "@@ -1 +1 @@\n-old\n+new\n"
+            ),
+        }
+        for name, payload in malformed.items():
+            with self.subTest(case=name):
+                self.assertIsNone(EVAL._unified_diff_paths(payload))
+
+    def test_unified_diff_parser_accepts_git_non_text_and_boundary_forms(self) -> None:
+        valid = {
+            "new-file": (
+                "diff --git a/new.py b/new.py\nnew file mode 100644\n"
+                "--- /dev/null\n+++ b/new.py\n"
+                "@@ -0,0 +1 @@\n+new\n",
+                ["new.py"],
+            ),
+            "deleted-file": (
+                "diff --git a/old.py b/old.py\ndeleted file mode 100644\n"
+                "--- a/old.py\n+++ /dev/null\n"
+                "@@ -1 +0,0 @@\n-old\n",
+                ["old.py"],
+            ),
+            "rename": (
+                "diff --git a/old.py b/new.py\nsimilarity index 100%\n"
+                "rename from old.py\nrename to new.py\n",
+                ["new.py"],
+            ),
+            "copy": (
+                "diff --git a/source.py b/copy.py\nsimilarity index 100%\n"
+                "copy from source.py\ncopy to copy.py\n",
+                ["copy.py"],
+            ),
+            "mode-only": (
+                "diff --git a/tool.sh b/tool.sh\n"
+                "old mode 100644\nnew mode 100755\n",
+                ["tool.sh"],
+            ),
+            "binary": (
+                "diff --git a/image.png b/image.png\n"
+                "index 1111111..2222222 100644\n"
+                "Binary files a/image.png and b/image.png differ\n",
+                ["image.png"],
+            ),
+        }
+        for name, (payload, paths) in valid.items():
+            with self.subTest(case=name):
+                self.assertEqual(paths, EVAL._unified_diff_paths(payload))
+
+    def test_unified_diff_parser_rejects_mixed_duplicate_or_inconsistent_metadata(self) -> None:
+        invalid = {
+            "mixed-rename-copy": (
+                "diff --git a/old.py b/new.py\n"
+                "similarity index 100%\n"
+                "rename from old.py\nrename to new.py\n"
+                "copy from old.py\ncopy to new.py\n"
+            ),
+            "duplicate-index": (
+                "diff --git a/owner.py b/owner.py\n"
+                "index 1111111..2222222 100644\n"
+                "index 1111111..2222222 100644\n"
+                "--- a/owner.py\n+++ b/owner.py\n"
+                "@@ -1 +1 @@\n-old\n+new\n"
+            ),
+            "duplicate-similarity": (
+                "diff --git a/old.py b/new.py\n"
+                "similarity index 100%\nsimilarity index 100%\n"
+                "rename from old.py\nrename to new.py\n"
+            ),
+            "new-and-deleted": (
+                "diff --git a/item.py b/item.py\n"
+                "new file mode 100644\ndeleted file mode 100644\n"
+                "--- /dev/null\n+++ /dev/null\n"
+                "@@ -0,0 +0,0 @@\n+new\n"
+            ),
+            "rename-plus-new-file": (
+                "diff --git a/old.py b/new.py\nnew file mode 100644\n"
+                "similarity index 100%\n"
+                "rename from old.py\nrename to new.py\n"
+            ),
+            "mode-only-with-index": (
+                "diff --git a/tool.sh b/tool.sh\n"
+                "old mode 100644\nnew mode 100755\n"
+                "index 1111111..2222222 100644\n"
+            ),
+        }
+        for name, payload in invalid.items():
+            with self.subTest(case=name):
+                self.assertIsNone(EVAL._unified_diff_paths(payload))
+
+    def test_unified_diff_parser_distinguishes_file_headers_from_changed_hunk_lines(self) -> None:
+        changed_header_like_lines = (
+            "diff --git a/guide.md b/guide.md\n"
+            "index 1111111..2222222 100644\n"
+            "--- a/guide.md\n+++ b/guide.md\n"
+            "@@ -1 +1 @@\n--- heading\n+++ heading\n"
+        )
+        self.assertEqual(
+            ["guide.md"], EVAL._unified_diff_paths(changed_header_like_lines)
+        )
+
+        context_only = (
+            "diff --git a/guide.md b/guide.md\n"
+            "--- a/guide.md\n+++ b/guide.md\n"
+            "@@ -1 +1 @@\n unchanged\n"
+        )
+        self.assertIsNone(EVAL._unified_diff_paths(context_only))
+
+    def test_canonical_analyzed_trajectory_requires_complete_accepted_initial_brief(self) -> None:
+        case = self._release_case("single-module-feature")
+        initial_index = next(
+            index
+            for index, step in enumerate(case["steps"])
+            if step.get("actor") == "analysis-agent"
+            and step.get("action") == "first_executable_slice"
+        )
+        self.assertEqual(
+            self._complete_initial_analysis_event(),
+            case["steps"][initial_index],
+        )
+
+        mutations = {}
+        missing_kind = copy.deepcopy(case)
+        missing_kind["steps"][initial_index].pop("analysis_kind")
+        mutations["missing-kind"] = (missing_kind, "analysis-initial-kind")
+        missing_field = copy.deepcopy(case)
+        missing_field["steps"][initial_index].pop("owner_placement_invariant")
+        mutations["missing-field"] = (missing_field, "analysis-initial-shape")
+        altered_route = copy.deepcopy(case)
+        altered_route["steps"][initial_index]["downstream_task"][
+            "professional_skill"
+        ] = "repository-tooling-change-builder"
+        mutations["altered-route"] = (altered_route, "analysis-task-projection")
+        for name, (mutation, expected) in mutations.items():
+            with self.subTest(mutation=name):
+                errors = self._trajectory_errors(mutation)
+                self.assertTrue(any(expected in error for error in errors), errors)
+
+    def test_delta_requires_accepted_brief_binding_and_cannot_self_reroute(self) -> None:
+        base = self._release_case("single-module-feature")
+        initial_index = next(
+            index
+            for index, step in enumerate(base["steps"])
+            if step.get("actor") == "analysis-agent"
+            and step.get("action") == "first_executable_slice"
+        )
+        delta = self._post_acceptance_delta_event()
+
+        legitimate = copy.deepcopy(base)
+        legitimate["steps"].insert(initial_index + 1, copy.deepcopy(delta))
+        legitimate_errors = self._trajectory_errors(legitimate)
+        self.assertFalse(
+            any("analysis-" in error for error in legitimate_errors),
+            legitimate_errors,
+        )
+
+        pre_acceptance = copy.deepcopy(base)
+        pre_acceptance["steps"].insert(initial_index, copy.deepcopy(delta))
+        errors = self._trajectory_errors(pre_acceptance)
+        self.assertTrue(any("analysis-delta-acceptance" in error for error in errors), errors)
+
+        rerouted = copy.deepcopy(legitimate)
+        rerouted_delta = next(
+            step for step in rerouted["steps"] if step.get("analysis_kind") == "delta"
+        )
+        rerouted_delta["downstream_task"]["professional_skill"] = (
+            "repository-tooling-change-builder"
+        )
+        errors = self._trajectory_errors(rerouted)
+        self.assertTrue(any("analysis-delta-routing" in error for error in errors), errors)
+
+    def test_analysis_mode_owns_read_only_bypass_and_blocked_slice_authority(self) -> None:
+        def analysis_dispatch(mode: str) -> dict:
+            return {
+                "actor": "main-control-agent",
+                "action": "dispatch",
+                "profile": "analysis-agent",
+                "mode": mode,
+            }
+
+        for mode in ("diagnosis-only", "source-backed-answer"):
+            with self.subTest(read_only_mode=mode):
+                self.assertEqual(
+                    [],
+                    EVAL._analyzed_trajectory_authority_errors(
+                        f"read-only-{mode}",
+                        "analyzed",
+                        [analysis_dispatch(mode)],
+                    ),
+                )
+
+        implementation = [analysis_dispatch("implementation-preparation")]
+        errors = EVAL._analyzed_trajectory_authority_errors(
+            "implementation-missing-initial",
+            "analyzed",
+            implementation,
+        )
+        self.assertTrue(any("analysis-initial-kind" in error for error in errors), errors)
+
+        blocked_at_slice = [
+            analysis_dispatch("implementation-preparation"),
+            self._complete_initial_analysis_event(),
+        ]
+        self.assertEqual(
+            [],
+            EVAL._analyzed_trajectory_authority_errors(
+                "implementation-blocked-at-slice",
+                "analyzed",
+                blocked_at_slice,
+            ),
+        )
+
+        mutated = copy.deepcopy(blocked_at_slice)
+        mutated[0]["mode"] = "diagnosis-only"
+        mutated.pop()
+        self.assertEqual(
+            [],
+            EVAL._analyzed_trajectory_authority_errors(
+                "diagnosis-mode-positive", "analyzed", mutated
+            ),
+        )
+        mutated[0]["mode"] = "implementation-preparation"
+        errors = EVAL._analyzed_trajectory_authority_errors(
+            "implementation-mode-mutation", "analyzed", mutated
+        )
+        self.assertTrue(any("analysis-initial-kind" in error for error in errors), errors)
+
+    def test_initial_analysis_event_must_follow_its_unique_dispatch(self) -> None:
+        event_before_dispatch = [
+            self._complete_initial_analysis_event(),
+            {
+                "actor": "main-control-agent",
+                "action": "dispatch",
+                "profile": "analysis-agent",
+                "mode": "implementation-preparation",
+            },
+        ]
+        errors = EVAL._analyzed_trajectory_authority_errors(
+            "initial-before-dispatch", "analyzed", event_before_dispatch
+        )
+        self.assertTrue(any("analysis-initial-order" in error for error in errors), errors)
 
     def test_capability_equivalence_ignores_arbitrary_adapter_metadata(self) -> None:
         capabilities = {
@@ -3076,9 +3613,9 @@ class LightweightUtilityContractTests(unittest.TestCase):
             ("recommended", "engineering-change-analysis", "test-strategy", "references/checklist.md", "compiled"),
             ("full", "engineering-change-analysis", "test-strategy", "references/checklist.md", "compiled"),
             ("dev", "engineering-change-analysis", "test-strategy", "references/checklist.md", "top-level"),
-            ("recommended", "engineering-change-analysis", "payment-trading-extension", "references/checklist.md", "compiled"),
-            ("full", "engineering-change-analysis", "payment-trading-extension", "references/checklist.md", "top-level"),
-            ("dev", "engineering-change-analysis", "payment-trading-extension", "references/checklist.md", "top-level"),
+            ("recommended", "engineering-change-analysis", "payment-trading-extension", "references/provider-venue-event-authentication.md", "compiled"),
+            ("full", "engineering-change-analysis", "payment-trading-extension", "references/provider-venue-event-authentication.md", "top-level"),
+            ("dev", "engineering-change-analysis", "payment-trading-extension", "references/provider-venue-event-authentication.md", "top-level"),
             ("recommended", "high-risk-design-review", "module-boundary-design", "references/benchmarks-and-enforcement.md", "compiled"),
             ("full", "high-risk-design-review", "module-boundary-design", "references/benchmarks-and-enforcement.md", "compiled"),
             ("dev", "high-risk-design-review", "module-boundary-design", "references/benchmarks-and-enforcement.md", "top-level"),
@@ -3266,7 +3803,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
         identifiers = (
             "git --no-pager diff --no-ext-diff --no-textconv HEAD~1..HEAD",
             "native-diff-tool",
-            "exact-change-evidence-export; mutate",
+            "change-evidence-export; mutate",
         )
         for identifier in identifiers:
             with self.subTest(identifier=identifier):
@@ -3279,7 +3816,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
         self.assertEqual(
             {
                 "workspace-state-observation",
-                "exact-change-evidence-export",
+                "change-evidence-export",
                 "non-mutating-validation",
             },
             EVAL.UTILITY_CAPABILITY_OPERATIONS,
@@ -3319,24 +3856,24 @@ class LightweightUtilityContractTests(unittest.TestCase):
     def test_utility_requires_exact_pre_operation_post_observation_order(self) -> None:
         variants = {
             "operation-first": [
-                "exact-change-evidence-export",
+                "change-evidence-export",
                 "workspace-state-observation",
                 "workspace-state-observation",
             ],
             "operation-last": [
                 "workspace-state-observation",
                 "workspace-state-observation",
-                "exact-change-evidence-export",
+                "change-evidence-export",
             ],
             "interleaved": [
                 "workspace-state-observation",
-                "exact-change-evidence-export",
+                "change-evidence-export",
                 "non-mutating-validation",
                 "workspace-state-observation",
             ],
             "missing-post": [
                 "workspace-state-observation",
-                "exact-change-evidence-export",
+                "change-evidence-export",
             ],
         }
         for label, commands in variants.items():

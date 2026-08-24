@@ -2571,12 +2571,12 @@ NEW_ANCHOR_OVERRIDES = {
     "Select and place controls from the path. Compare candidate controls by protected outcome, intercepted edge, authority and owner, failure behavior, compatibility, and bypass surface. A mechanism remains undecided until the reachable path is known.": "| Control placement |",
     "Map the threat to fresh verification and detection. Connect the changed path and control to an abuse test, source/policy proof, monitoring, and final-edit freshness. The evidence limit remains explicit; scanner output alone cannot close business abuse.": "| Validation and detection cover the claim |",
     "Own residual risk and reopening. Record the unclosed path or consequence, compensating or containment evidence, accountable owner, release consequence, and the scope, incident, exposure, data, actor, or control change that requires review.": "| Residual risk is accountable |",
-    "Trace changed routes from source to sink. Identify attacker-controlled values, browser or server transformations, framework defaults, trust transitions, reachable sinks, and alternate encoded or nested paths before selecting a control.": "Select route-to-sink web-specific mechanisms from the actual browser or server path",
-    "Match rendering protection to context. Preserve contextual escaping, sanitization, trusted-template boundaries, URL and style handling, and script or markup policy for the actual sink; avoid decoding or concatenation after validation.": "| Rendering sink |",
-    "Protect state-changing requests at the authority boundary. Combine authenticated context with current request-integrity, origin, cookie, method, and object-authorization controls without treating browser UI or route guards as enforcement.": "| Browser state change |",
-    "Constrain server-side fetching and navigation. Validate destinations against owned policy, re-check redirects and resolved addresses, block credential forwarding and internal reachability, and preserve safe recovery for rejected targets.": "| Server-side connection |",
-    "Treat uploads and downloads as active content boundaries. Bound type, size, name, path, archive expansion, scanning, storage authority, rendering disposition, and retrieval authorization according to reachable abuse.": "| Upload storage and publication |",
-    "Define cross-origin and embedding behavior narrowly. Derive origin, credential, header, method, framing, opener, and message-channel policy from current consumers and reject ambient wildcard trust.": "| Navigation and browser policy |",
+    "Trace changed routes from source to sink. Identify attacker-controlled values, browser or server transformations, framework defaults, trust transitions, reachable sinks, and alternate encoded or nested paths before selecting a control.": "Select from the current browser/server path, boundary, authority, and failure contract.",
+    "Match rendering protection to context. Preserve contextual escaping, sanitization, trusted-template boundaries, URL and style handling, and script or markup policy for the actual sink; avoid decoding or concatenation after validation.": "| Render |",
+    "Protect state-changing requests at the authority boundary. Combine authenticated context with current request-integrity, origin, cookie, method, and object-authorization controls without treating browser UI or route guards as enforcement.": "| State change |",
+    "Constrain server-side fetching and navigation. Validate destinations against owned policy, re-check redirects and resolved addresses, block credential forwarding and internal reachability, and preserve safe recovery for rejected targets.": "| Server connection |",
+    "Treat uploads and downloads as active content boundaries. Bound type, size, name, path, archive expansion, scanning, storage authority, rendering disposition, and retrieval authorization according to reachable abuse.": "| Upload/publication |",
+    "Define cross-origin and embedding behavior narrowly. Derive origin, credential, header, method, framing, opener, and message-channel policy from current consumers and reject ambient wildcard trust.": "| Navigation/policy |",
     "Prove denial and bypass paths. Exercise alternate encodings, redirects, stale sessions, direct routes, nested payloads, mixed content, unauthorized objects, and deployment policy relevant to the changed sink.": "Re-run applicable hostile and denied cases",
     "Bind generated output to authoritative inputs, generator version, destination, drift check, sole editable source, and a non-circular clean-checkout bootstrap.": "Name schemas, templates, source, generator code, flags, versions, and the sole editable owner.",
     "Prove harness oracle and regression mechanism with positive and negative controls.": "Bind expected output or state to an independent oracle.",
@@ -6625,8 +6625,8 @@ class ContextContentRelocationTests(unittest.TestCase):
         for path, expected_sha256 in {
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
             "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
-            "tests/scripts/test_reference_registry_jit.py": "86d47acaa62ac11e505b7ab355d2e79a27b192402c7643c4cc21609ed678130b",
-            "tests/scripts/test_eval_rendered_context_budget.py": "8eaa8f7c4cf4d1dd74c238c065015da11c0307205f8b3e3dcf0719a1e92349a8",
+            "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
+            "tests/scripts/test_eval_rendered_context_budget.py": "9bc52e95f1ad5e6a3d5a8ad164eb789172c6b2b2b374749e42ddc12df9237a5a",
         }.items():
             with self.subTest(protected_hash=path):
                 self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -8069,7 +8069,7 @@ class ContextContentRelocationTests(unittest.TestCase):
             "scripts/build.py": "2543ed2c2cb7498babeae20d1f7bd244f968522f116c90b8b08c4106a25efcf1",
             "scripts/validation_utils.py": "a76092b2d24cdfaec66eb44e1f8d4e48a9f76d9dda8a875a3b5602771649f995",
             "evals/agent-light-trajectories/cases.yaml": "25cc065fde1298111bbc5d3236976f3601b0db30453c805516689f2998c0191b",
-            "tests/scripts/test_reference_registry_jit.py": "86d47acaa62ac11e505b7ab355d2e79a27b192402c7643c4cc21609ed678130b",
+            "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
         }.items():
             self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
 
@@ -8257,10 +8257,10 @@ class ContextContentRelocationTests(unittest.TestCase):
             "scripts/build.py": "2543ed2c2cb7498babeae20d1f7bd244f968522f116c90b8b08c4106a25efcf1",
             "scripts/validation_utils.py": "a76092b2d24cdfaec66eb44e1f8d4e48a9f76d9dda8a875a3b5602771649f995",
             "evals/agent-light-trajectories/cases.yaml": "25cc065fde1298111bbc5d3236976f3601b0db30453c805516689f2998c0191b",
-            "tests/scripts/test_reference_registry_jit.py": "86d47acaa62ac11e505b7ab355d2e79a27b192402c7643c4cc21609ed678130b",
-            "tests/scripts/test_eval_rendered_context_budget.py": "8eaa8f7c4cf4d1dd74c238c065015da11c0307205f8b3e3dcf0719a1e92349a8",
-            "scripts/audit-skill-content.py": "fa92d01937d8b53993158f2c018d381865c13e326bb18c32a4639e95e97427ca",
-            "tests/scripts/test_validate_root_content.py": "60930c84e33caa1814de6c7599afe3515fb0c51f9b4aed4de93fa350ef54d219",
+            "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
+            "tests/scripts/test_eval_rendered_context_budget.py": "9bc52e95f1ad5e6a3d5a8ad164eb789172c6b2b2b374749e42ddc12df9237a5a",
+            "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
+            "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
         }
         for path, expected_sha256 in protected.items():
             self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -8452,10 +8452,10 @@ class ContextContentRelocationTests(unittest.TestCase):
             "scripts/build.py": "2543ed2c2cb7498babeae20d1f7bd244f968522f116c90b8b08c4106a25efcf1",
             "scripts/validation_utils.py": "a76092b2d24cdfaec66eb44e1f8d4e48a9f76d9dda8a875a3b5602771649f995",
             "evals/agent-light-trajectories/cases.yaml": "25cc065fde1298111bbc5d3236976f3601b0db30453c805516689f2998c0191b",
-            "tests/scripts/test_reference_registry_jit.py": "86d47acaa62ac11e505b7ab355d2e79a27b192402c7643c4cc21609ed678130b",
-            "tests/scripts/test_eval_rendered_context_budget.py": "8eaa8f7c4cf4d1dd74c238c065015da11c0307205f8b3e3dcf0719a1e92349a8",
-            "scripts/audit-skill-content.py": "fa92d01937d8b53993158f2c018d381865c13e326bb18c32a4639e95e97427ca",
-            "tests/scripts/test_validate_root_content.py": "60930c84e33caa1814de6c7599afe3515fb0c51f9b4aed4de93fa350ef54d219",
+            "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
+            "tests/scripts/test_eval_rendered_context_budget.py": "9bc52e95f1ad5e6a3d5a8ad164eb789172c6b2b2b374749e42ddc12df9237a5a",
+            "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
+            "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
         }
         for path, expected_sha256 in protected.items():
             self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -8574,10 +8574,10 @@ class ContextContentRelocationTests(unittest.TestCase):
             "scripts/build.py": "2543ed2c2cb7498babeae20d1f7bd244f968522f116c90b8b08c4106a25efcf1",
             "scripts/validation_utils.py": "a76092b2d24cdfaec66eb44e1f8d4e48a9f76d9dda8a875a3b5602771649f995",
             "evals/agent-light-trajectories/cases.yaml": "25cc065fde1298111bbc5d3236976f3601b0db30453c805516689f2998c0191b",
-            "tests/scripts/test_reference_registry_jit.py": "86d47acaa62ac11e505b7ab355d2e79a27b192402c7643c4cc21609ed678130b",
-            "tests/scripts/test_eval_rendered_context_budget.py": "8eaa8f7c4cf4d1dd74c238c065015da11c0307205f8b3e3dcf0719a1e92349a8",
-            "scripts/audit-skill-content.py": "fa92d01937d8b53993158f2c018d381865c13e326bb18c32a4639e95e97427ca",
-            "tests/scripts/test_validate_root_content.py": "60930c84e33caa1814de6c7599afe3515fb0c51f9b4aed4de93fa350ef54d219",
+            "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
+            "tests/scripts/test_eval_rendered_context_budget.py": "9bc52e95f1ad5e6a3d5a8ad164eb789172c6b2b2b374749e42ddc12df9237a5a",
+            "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
+            "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
         }
         for path, expected_sha256 in protected.items():
             self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -9129,10 +9129,10 @@ class ContextContentRelocationTests(unittest.TestCase):
             "scripts/build.py": "2543ed2c2cb7498babeae20d1f7bd244f968522f116c90b8b08c4106a25efcf1",
             "scripts/validation_utils.py": "a76092b2d24cdfaec66eb44e1f8d4e48a9f76d9dda8a875a3b5602771649f995",
             "evals/agent-light-trajectories/cases.yaml": "25cc065fde1298111bbc5d3236976f3601b0db30453c805516689f2998c0191b",
-            "tests/scripts/test_reference_registry_jit.py": "86d47acaa62ac11e505b7ab355d2e79a27b192402c7643c4cc21609ed678130b",
-            "tests/scripts/test_eval_rendered_context_budget.py": "8eaa8f7c4cf4d1dd74c238c065015da11c0307205f8b3e3dcf0719a1e92349a8",
-            "scripts/audit-skill-content.py": "fa92d01937d8b53993158f2c018d381865c13e326bb18c32a4639e95e97427ca",
-            "tests/scripts/test_validate_root_content.py": "60930c84e33caa1814de6c7599afe3515fb0c51f9b4aed4de93fa350ef54d219",
+            "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
+            "tests/scripts/test_eval_rendered_context_budget.py": "9bc52e95f1ad5e6a3d5a8ad164eb789172c6b2b2b374749e42ddc12df9237a5a",
+            "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
+            "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
         }
         for path, expected_sha256 in protected.items():
             self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -9189,6 +9189,466 @@ class ContextContentRelocationTests(unittest.TestCase):
         negative = list(component_tokens)
         negative[5] = 491
         self.assertEqual(3_001, sum(negative) + 6)
+
+    def test_fg_c1s_security_web_frontier_is_lossless_and_bounded(self) -> None:
+        source_specs = {
+            "src/foundation/capabilities/web-security/SKILL.md": (
+                "4298354700632a0c131a219d518d6eafd622cf5423c107352264b8a63fb4c061",
+                "4d9a6d9e61de16b63b62b4c5e19ff8857cc96f5661b32f4540aaa7f07960a191",
+                521,
+                2_676,
+                48,
+                (
+                    "Trace web sources to render, navigation, state-change, fetch, upload, cross-origin, cookie, embedding, or protected-action sinks.",
+                    "Own control-placement and bypass proof, not permission or credential policy.",
+                    "Map the changed web source through trust transitions.",
+                    "Classify its effective web sink.",
+                    "Select the owning control or evidence Reference.",
+                    "While that decision is active, load only its named Reference.",
+                    "Reject generic sanitizer, UI signal, hostname, extension, identity, framework-default, or header claims without final-context and deployed-behavior evidence.",
+                    "Escalate unknown reachability, missing request integrity/object authorization, or unbounded server-fetch destinations.",
+                    "Escalate ambiguous active content, broadened cross-origin credentials, or unverified deployed controls/bypasses.",
+                    "web-security decision with reachable sources and sinks, contextual controls, state-change integrity, fetch and upload boundaries, cross-origin behavior, denial and bypass evidence, and proof limits",
+                ),
+            ),
+            "src/foundation/capabilities/web-security/references/benchmarks-and-patterns.md": (
+                "6e10eb10d7318a0b4a78ff8c5fc694dc4592829ca60fe70de4301e4a1391c68d",
+                "ba0d3b7172e4fce659dfce92653dfcbd628295d4714ab0b6b81a38e6bd2ab763",
+                532,
+                2_679,
+                31,
+                (
+                    "| Render | Safe construction, contextual encoding, inert/no interpretation. | Final context/helper, hostile/context-switch path, response transform. |",
+                    "| State change | Request authority, trusted origin/binding, owned step-up, no ambient authority. | Credentials/navigation/session/retry/enforcement; denied cross-site. |",
+                    "| Server connection | Network policy, intermediary fetch, bounded class, no caller influence. | Accepted/canonical input, bounds, resolution-to-connect, redirects, egress, failure, diagnostics owner. |",
+                    "| Upload/publication | Reject/transform/isolate/inspect/private/bounded publish. | Byte/parser bounds, storage/tenant identity, inspection, active content, permission, transition, serving. |",
+                    "| Navigation/policy | Same-site, bounded external, cross-origin, framed, no exposure. | Client/destination authority, credentials, effective policy/transform, bypass. |",
+                    "| Protected route | Authenticated subject plus permission-owned resource/action. | Trace/provenance, object/tenant scope, wrong subject, denial, audit owner. |",
+                    "| Closure | Repair, containment, deployment proof, non-applicability, residual handoff. | Final source, hostile/denied case, sibling scan, relevant artifact, limit, owner. |",
+                    "Select from the current browser/server path, boundary, authority, and failure contract.",
+                    "Apply framework-, client-, proxy-, and network-specific behavior behind shared labels.",
+                    "Route input source/representation/canonical form/constraints/response bounds to `input-validation`.",
+                    "Route subject authority/derivation/propagation/handoff to `authentication-authorization`.",
+                    "Route credential/session/token lifecycle/replay/recovery/assurance/compromise to `authentication-security`.",
+                    "Route subject-resource-action policy to `permission-boundary-modeling`.",
+                    "Route cross-graph outcomes/reachability/prioritization/control placement to `threat-modeling`.",
+                    "Prove route-to-sink correctness/bypass resistance in `web-security`.",
+                    "Re-evaluate framework, middleware, proxy, route, redirect, resolver, cache, storage, or serving changes affecting the sink/boundary.",
+                    "Named source, tests, browser artifacts, and deployment configuration prove only inspected routes, clients, intermediaries, environments, and time.",
+                    "They exclude undiscovered routes, production resolver/egress state, external consumers, proxy overrides, browser variants, live attackers, and downstream permission policy without independent evidence.",
+                ),
+            ),
+        }
+        pending = []
+        for path, (pre_sha256, post_sha256, tokens, size, line_feeds, anchors) in source_specs.items():
+            source_bytes = (ROOT / path).read_bytes()
+            actual_sha256 = hashlib.sha256(source_bytes).hexdigest()
+            if actual_sha256 not in {pre_sha256, post_sha256}:
+                self.fail(f"unexpected C1S source preimage for {path}: {actual_sha256}")
+            with self.subTest(source_hash=path):
+                self.assertEqual(post_sha256, actual_sha256)
+            if actual_sha256 != post_sha256:
+                pending.append(path)
+                continue
+            source = source_bytes.decode("utf-8")
+            self.assertEqual(tokens, VALIDATION.count_o200k_base_tokens(source))
+            self.assertEqual(size, len(source_bytes))
+            self.assertEqual(line_feeds, source_bytes.count(b"\n"))
+            self.assertTrue(source_bytes.endswith(b"\n"))
+            for anchor in anchors:
+                self.assertEqual(1, source.count(anchor))
+                self.assertEqual(0, source.replace(anchor, "", 1).count(anchor))
+        if pending:
+            return
+
+        web_root_path = ROOT / "src/foundation/capabilities/web-security/SKILL.md"
+        _metadata, raw_frontmatter, web_body = VALIDATION.parse_frontmatter(web_root_path)
+        h1_titles, web_sections = BUILD._markdown_heading_sections(web_body)
+        self.assertEqual(["web-security"], h1_titles)
+        self.assertEqual(
+            ["Registry Trigger", "Skill Role", "High-Value Rules", "Anti-Patterns", "Stop Conditions", "Output Contract", "Targeted References"],
+            re.findall(r"^## (.+)$", web_body, flags=re.MULTILINE),
+        )
+        self.assertEqual(4, len(re.findall(r"^- ", web_sections["High-Value Rules"][0], flags=re.MULTILINE)))
+        self.assertEqual(2, len(re.findall(r"^- ", web_sections["Stop Conditions"][0], flags=re.MULTILINE)))
+
+        def projection(path: str, headings: tuple[str, ...], selector: str | None, include_layer3_delivery: bool = False) -> str:
+            _metadata, raw, body = VALIDATION.parse_frontmatter(ROOT / path)
+            titles, sections = BUILD._markdown_heading_sections(body)
+            self.assertEqual(1, len(titles))
+            output = ["---", raw, "---", "", f"# {titles[0]}"]
+            for heading in headings:
+                values = sections.get(heading, [])
+                if not values and heading == "Inputs":
+                    continue
+                self.assertEqual(1, len(values))
+                self.assertTrue(values[0])
+                output.extend(["", f"## {heading}", "", values[0]])
+            output.extend(BUILD._compact_jit_reference_delivery_lines(selector))
+            if include_layer3_delivery:
+                output.extend(["", "## Layer 3 Delivery", "", "Foundation and Domain items are top-level Skills; no Layer 3 references are compiled."])
+            output.append("")
+            return "\n".join(output)
+
+        root_specs = {
+            "src/professional-skills/security-privacy-gate/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, "security-privacy-gate", True, 303, "1f5f5d81f6dd59c74a1a43ed9e7710478b16a0657eaa5312fe623ee598fb300e"),
+            "src/domain-extensions/cloud-platform-extension/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, None, False, 250, "fcbe9dc653c2d7f98fe01738547701d6ba79fff570c24b176e130d3c17941ad2"),
+            "src/foundation/capabilities/threat-modeling/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, False, 311, "559d0467c675e0e77803979cb8f132d547567d236c0dad97efe2a030c6a8225a"),
+            "src/foundation/capabilities/web-security/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, False, 234, "ae1207804645b3af4968e354358fcc27b10aa76f9f20fabe31388494d3bf17f1"),
+        }
+        for path, (headings, selector, layer3_delivery, tokens, sha256) in root_specs.items():
+            compact = projection(path, headings, selector, layer3_delivery)
+            with self.subTest(root_projection=path):
+                self.assertEqual(tokens, VALIDATION.count_o200k_base_tokens(compact))
+                self.assertEqual(sha256, hashlib.sha256(compact.encode("utf-8")).hexdigest())
+
+        reference_specs = {
+            ("cloud-platform-extension", "references/encryption-kms-and-cost-contracts.md"): (476, "7d5bfd16cca9c4b5a7911c58b14cf15e50e7f200ecedbb87f13a29c7079bfbc6", ("boundary-decision", "failure-decision", "residual-risk")),
+            ("cloud-platform-extension", "references/iam-workload-identity-and-network-contracts.md"): (440, "52661d530555b8c0ab6298f9d1288c3877beec6e3878a8a015e891ed76998dc1", ("boundary-decision", "failure-decision", "validation-plan")),
+            ("cloud-platform-extension", "references/provider-api-and-managed-service-authority.md"): (430, "4fc9962a94a2fcbdbf89128f7c26f8ea82b00e8532da9d604eccbcc0037381be", ("decision-record", "proof-limit", "validation-plan")),
+            ("cloud-platform-extension", "references/region-failure-domain-consistency-and-quota-contracts.md"): (485, "37d6621e04971dad77d5a5820022ace201388b0389bf690d2939356f0dd44eb4", ("decision-record", "proof-limit", "validation-plan")),
+            ("cloud-platform-extension", "references/resource-control-and-data-plane-boundaries.md"): (421, "eb9aa5a9b1f760b83825428562293f0afdfa9a4bcdb4af76c2d5081aef3e3fdc", ("boundary-decision", "decision-record", "proof-limit")),
+            ("security-privacy-gate", "references/checklist.md"): (136, "059a2463147824418c686f1cd1565ca3cfb85f3fb99eb2dd37f5ff2aa8144514", ("checklist-result", "residual-risk")),
+            ("security-privacy-gate", "references/evidence-patterns.md"): (427, "3e368eb8ddcef3e77a22de4d38ff0d2fac022702e9f9cca471811815b5a2fbc8", ("evidence-record", "proof-limit", "residual-risk")),
+            ("security-privacy-gate", "references/security-output-and-gates.md"): (625, "05129afaa245591be03b05cd5c2edc5dcfd5b494002d2dd70a9891b2d253f81e", ("gate-decision", "residual-risk")),
+            ("threat-modeling", "references/benchmarks-and-patterns.md"): (566, "f1e806daf9f9b3f44364be879504eb93ecb57219259c8fcc61d99d92c22b41e3", ("option-comparison", "selected-approach")),
+            ("threat-modeling", "references/checklist.md"): (254, "c6b1fc69a829f0e6c007302aca8af328417db024bd88fac8752a3a703960b077", ("checklist-result", "validation-plan")),
+            ("threat-modeling", "references/evidence-patterns.md"): (510, "cbf74fac36410acbeb1407437f48ee3f6464c91b91143fc9ee4c41eacb8e0247", ("evidence-record", "proof-limit", "residual-risk")),
+            ("web-security", "references/benchmarks-and-patterns.md"): (532, "ba0d3b7172e4fce659dfce92653dfcbd628295d4714ab0b6b81a38e6bd2ab763", ("option-comparison", "selected-approach")),
+            ("web-security", "references/checklist.md"): (391, "c7628358b5fb0826f91276a74eaa81612c99a994e4de46b142b7901b067c5177", ("checklist-result", "residual-risk")),
+            ("web-security", "references/evidence-patterns.md"): (564, "b11066a3a14729ed76883e082a7a1fa41252bdec5de244c7d22c2f69092c3fc3", ("evidence-record", "proof-limit", "residual-risk")),
+        }
+        selected_references = tuple(reference_specs)
+        for (owner, relative_path), (tokens, sha256, outputs) in reference_specs.items():
+            if owner == "security-privacy-gate":
+                source_root = ROOT / "src/professional-skills" / owner
+            elif owner == "cloud-platform-extension":
+                source_root = ROOT / "src/domain-extensions" / owner
+            else:
+                source_root = ROOT / "src/foundation/capabilities" / owner
+            path = source_root / relative_path
+            source = path.read_text(encoding="utf-8")
+            with self.subTest(reference=owner + "/" + relative_path):
+                self.assertEqual(sha256, hashlib.sha256(source.encode("utf-8")).hexdigest())
+                self.assertEqual(tokens, VALIDATION.count_o200k_base_tokens(source))
+                self.assertEqual((ALL_ROLES, outputs), _reference_binding(owner, str(path.relative_to(ROOT))))
+
+        professional = VALIDATION.load_yaml_file(ROOT / "src/registry/professional-skills.yaml")
+        foundation = VALIDATION.load_yaml_file(ROOT / "src/registry/foundation-skills.yaml")
+        domain = VALIDATION.load_yaml_file(ROOT / "src/registry/domain-skills.yaml")
+        selector_authority = VALIDATION.layer3_selector_authority(
+            foundation, professional, domain, context="C1S security web witness"
+        )
+        selector_projection = VALIDATION.layer3_selector_runtime_projection(
+            selector_authority,
+            professional_skill="security-privacy-gate",
+            profile="task-agent",
+            selection_owner="main-control-agent",
+            exact_layer3=None,
+        )
+        evidence_signals = ["cloud control plane", "account authority", "changed-surface", "ssrf"]
+        receipt = VALIDATION.layer3_selector_runtime_selection_receipt(
+            selector_projection, evidence_signals=evidence_signals
+        )
+        self.assertEqual(["cloud-platform-extension", "threat-modeling", "web-security"], receipt["selected_layer3"])
+        self.assertEqual("336dfef51f64a686fc616f4fc48cac5451ebd55fe61dee5e402d4e98ca5a90e4", receipt["receipt_sha256"])
+        self.assertEqual({"cloud-platform-extension"}, set(receipt["selected_layer3"]) & {row["name"] for row in domain["domain_skills"]})
+        for reduced_signals in (evidence_signals[:2], evidence_signals[2:]):
+            self.assertNotEqual(receipt["receipt_sha256"], VALIDATION.layer3_selector_runtime_selection_receipt(selector_projection, evidence_signals=reduced_signals)["receipt_sha256"])
+
+        authority = VALIDATION.reference_context_admissibility_authority(
+            professional, foundation, domain, context="C1S security web staged witness"
+        )
+        staged = VALIDATION.reference_context_staged_plan(
+            authority,
+            references=selected_references,
+            path="direct",
+            profile="task-agent",
+            selection_owner="main-control-agent",
+            available_carrier_fields=[],
+            receipt_replayed=True,
+            brief_current=False,
+            review_fresh=True,
+        )
+        expected = [list(reference) for reference in selected_references]
+        self.assertTrue(staged["reachable"])
+        self.assertEqual(expected, staged["selected_union"])
+        self.assertEqual(expected, staged["loaded_union"])
+        self.assertEqual(14, len(staged["stages"]))
+        self.assertEqual([[reference] for reference in expected], [stage["loaded_references"] for stage in staged["stages"]])
+        self.assertTrue(all(stage["carried_predecessors"] == [] for stage in staged["stages"]))
+        self.assertEqual([], staged["carried_predecessors"])
+        self.assertEqual(14, len(staged["required_output_receipts"]))
+        active_reference = ["web-security", "references/benchmarks-and-patterns.md"]
+        active_stage = next(stage for stage in staged["stages"] if stage["loaded_references"] == [active_reference])
+        self.assertEqual(11, active_stage["stage"])
+        self.assertEqual(
+            [{"reference": active_reference, "required_outputs": ["option-comparison", "selected-approach"]}],
+            active_stage["required_output_receipts"],
+        )
+
+        web_moves = [entry for entry in RELOCATION_LEDGER if entry["owner"] == "web-security"]
+        self.assertEqual(7, len(web_moves))
+        self.assertEqual(6, sum(entry["destination"] == "src/foundation/capabilities/web-security/references/benchmarks-and-patterns.md" for entry in web_moves))
+        self.assertTrue(all(entry["route_effect"] == "unchanged" and entry["co_trigger_effect"] == "unchanged" for entry in web_moves))
+        for entry in web_moves:
+            destination = (ROOT / entry["destination"]).read_text(encoding="utf-8")
+            self.assertEqual(0, destination.count(entry["old_anchor"]))
+            self.assertEqual(1, destination.count(entry["new_anchor"]))
+            self.assertEqual(0, destination.replace(entry["new_anchor"], "", 1).count(entry["new_anchor"]))
+
+        component_tokens = [697, 303, 250, 311, 234, 532, 657]
+        component_sha256 = [
+            "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
+            "1f5f5d81f6dd59c74a1a43ed9e7710478b16a0657eaa5312fe623ee598fb300e",
+            "fcbe9dc653c2d7f98fe01738547701d6ba79fff570c24b176e130d3c17941ad2",
+            "559d0467c675e0e77803979cb8f132d547567d236c0dad97efe2a030c6a8225a",
+            "ae1207804645b3af4968e354358fcc27b10aa76f9f20fabe31388494d3bf17f1",
+            "ba0d3b7172e4fce659dfce92653dfcbd628295d4714ab0b6b81a38e6bd2ab763",
+            "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
+        ]
+        self.assertEqual(7, len(component_sha256))
+        self.assertEqual(2_984, sum(component_tokens))
+        self.assertEqual(2_983, sum(component_tokens) - 1)
+        self.assertEqual(2_990, sum(component_tokens) + 6)
+        self.assertLessEqual(sum(component_tokens) + 6, 3_000)
+        negative = list(component_tokens)
+        negative[5] = 543
+        self.assertEqual(3_001, sum(negative) + 6)
+
+        protected = {
+            "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
+            "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
+            "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
+            "scripts/build.py": "2543ed2c2cb7498babeae20d1f7bd244f968522f116c90b8b08c4106a25efcf1",
+            "scripts/validation_utils.py": "a76092b2d24cdfaec66eb44e1f8d4e48a9f76d9dda8a875a3b5602771649f995",
+            "tests/scripts/test_eval_rendered_context_budget.py": "9bc52e95f1ad5e6a3d5a8ad164eb789172c6b2b2b374749e42ddc12df9237a5a",
+            "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
+            "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
+            "evals/agent-light-trajectories/cases.yaml": "25cc065fde1298111bbc5d3236976f3601b0db30453c805516689f2998c0191b",
+        }
+        for path, expected_sha256 in protected.items():
+            self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
+
+
+    def test_fg_c1t_installed_client_kotlin_type_frontier_is_lossless_and_bounded(self) -> None:
+        source_path = ROOT / "src/foundation/capabilities/kotlin-professional-usage/references/type-interop-and-dsl-contracts.md"
+        pre_sha256 = "a0b242ba4aee54d2ad92209496462f275bf339a75e82ed88a5dc1583ac3dea94"
+        post_sha256 = "9a78d5b2c4f4428a5583c50a721068cb5d7305d3b5d30ce80c023ba32d815446"
+        source_bytes = source_path.read_bytes()
+        actual_sha256 = hashlib.sha256(source_bytes).hexdigest()
+        self.assertIn(actual_sha256, {pre_sha256, post_sha256})
+        self.assertEqual(post_sha256, actual_sha256)
+        if actual_sha256 == pre_sha256:
+            return
+        source = source_bytes.decode("utf-8")
+        self.assertEqual(616, VALIDATION.count_o200k_base_tokens(source))
+        self.assertEqual(2_848, len(source_bytes))
+        self.assertEqual(40, source_bytes.count(b"\n"))
+        self.assertTrue(source_bytes.endswith(b"\n"))
+        anchors = (
+            "Use for these caller-visible decisions.",
+            "- **Nullability:** record platform types, flexible generic arguments, collection elements, reflection, serialization, persistence, generated surfaces, and the runtime validation or narrowing location.",
+            "- **Sealed hierarchy:** establish the module/package closure, external implementor contract, serialization tags, and how new variants reach compiled consumers.",
+            "- **Delegated property:** define the property/delegate owner, `getValue`/`setValue` state semantics, delegate lifecycle/threading, Java/reflection exposure, invalid read/write behavior, and verification output.",
+            "| Java | Signature/accessor, exception/default/wildcard/SAM, annotation, caller. |",
+            "| Data/value | Identity, equality, order, shallow copy, mutation, inheritance/persistence; boxing, mangling, Java representation, validation. |",
+            "| DSL | Receiver, `@DslMarker`, label/escape, mutation, validation, effect. |",
+            "- Probe runtime null and emitted ABI through the affected Java/reflection/generated/persisted caller.",
+            "- Add an allowed sealed subtype, box a value class through generic/interface/nullable use, and copy a data class with mutable nested state.",
+            "- Exercise delegate read/write/teardown/interop and nested same-name DSL receivers; reject partial construction.",
+            "Bind compiler, API, backend, Java, and plugin versions.",
+            "Documentation does not prove ABI, delegate lifetime, adapters, serializers, persistence, or generated callers.",
+            "Kotlin compilation and `val` do not prove Java compatibility or deep immutability.",
+            "Record boundary, owner/get-set output, caller/runtime evidence, representation, invalid behavior, compatibility limit, residual risk.",
+            "- `!!`, a platform type, or a generated annotation is treated as runtime null proof.",
+            "- Data-class `copy`, a value wrapper, sealed `when`, or `remember` is treated as deep immutability, stable ABI, future exhaustiveness, or durable state.",
+        )
+        for anchor in anchors:
+            self.assertEqual(1, source.count(anchor))
+            self.assertEqual(0, source.replace(anchor, "", 1).count(anchor))
+        source_urls = (
+            "https://kotlinlang.org/docs/java-interop.html",
+            "https://kotlinlang.org/docs/java-to-kotlin-interop.html",
+            "https://kotlinlang.org/docs/null-safety.html",
+            "https://kotlinlang.org/docs/sealed-classes.html",
+            "https://kotlinlang.org/docs/inline-functions.html",
+            "https://kotlinlang.org/docs/inline-classes.html",
+            "https://kotlinlang.org/docs/data-classes.html",
+            "https://kotlinlang.org/docs/delegated-properties.html",
+            "https://kotlinlang.org/docs/type-safe-builders.html",
+        )
+        for url in source_urls:
+            self.assertEqual(1, source.count(url))
+
+        def projection(path: str, headings: tuple[str, ...], selector: str | None, include_layer3_delivery: bool = False) -> str:
+            _metadata, raw, body = VALIDATION.parse_frontmatter(ROOT / path)
+            titles, sections = BUILD._markdown_heading_sections(body)
+            self.assertEqual(1, len(titles))
+            output = ["---", raw, "---", "", f"# {titles[0]}"]
+            for heading in headings:
+                values = sections.get(heading, [])
+                if not values and heading == "Inputs":
+                    continue
+                self.assertEqual(1, len(values))
+                self.assertTrue(values[0])
+                output.extend(["", f"## {heading}", "", values[0]])
+            output.extend(BUILD._compact_jit_reference_delivery_lines(selector))
+            if include_layer3_delivery:
+                output.extend(["", "## Layer 3 Delivery", "", "Foundation and Domain items are top-level Skills; no Layer 3 references are compiled."])
+            output.append("")
+            return "\n".join(output)
+
+        root_specs = {
+            "src/professional-skills/installed-client-change-builder/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, "installed-client-change-builder", True, 239, "41d925e4295ef95620024fae202294e72f77a322b16aaff351460602dd401565"),
+            "src/domain-extensions/cross-platform-client-extension/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, None, False, 265, "e7ae448387f1d7f79e38bdb876d09c80f1b798be00fd2fe4bb6f98c7e9f89b8f"),
+            "src/domain-extensions/ios-ipados-platform-extension/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, None, False, 261, "d165e8917475639800aa629514ff1843ab5e3cf7b58a0e7638c06671533b0031"),
+            "src/foundation/capabilities/kotlin-professional-usage/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, False, 256, "613a37d611c5d0375b2e8b279b12d181a6dcff09bee7ec1384335ff168a097b3"),
+        }
+        for path, (headings, selector, layer3_delivery, tokens, sha256) in root_specs.items():
+            compact = projection(path, headings, selector, layer3_delivery)
+            with self.subTest(root_projection=path):
+                self.assertEqual(tokens, VALIDATION.count_o200k_base_tokens(compact))
+                self.assertEqual(sha256, hashlib.sha256(compact.encode("utf-8")).hexdigest())
+
+        professional = VALIDATION.load_yaml_file(ROOT / "src/registry/professional-skills.yaml")
+        foundation = VALIDATION.load_yaml_file(ROOT / "src/registry/foundation-skills.yaml")
+        domain = VALIDATION.load_yaml_file(ROOT / "src/registry/domain-skills.yaml")
+        selector_authority = VALIDATION.layer3_selector_authority(
+            foundation, professional, domain, context="C1T installed client Kotlin witness"
+        )
+        selector_projection = VALIDATION.layer3_selector_runtime_projection(
+            selector_authority,
+            professional_skill="installed-client-change-builder",
+            profile="task-agent",
+            selection_owner="main-control-agent",
+            exact_layer3=None,
+        )
+        evidence_signals = [
+            "shared installed client",
+            "concrete platform targets",
+            "changed-surface",
+            "ios/ipados",
+            "application lifecycle",
+            "kotlin coroutine flow stateflow null java interop sealed reified value data delegated dsl or compose semantics",
+        ]
+        receipt = VALIDATION.layer3_selector_runtime_selection_receipt(
+            selector_projection, evidence_signals=evidence_signals
+        )
+        self.assertEqual(
+            ["cross-platform-client-extension", "ios-ipados-platform-extension", "kotlin-professional-usage"],
+            receipt["selected_layer3"],
+        )
+        self.assertEqual("83152d299a1aa000b4d2875a107a3b347a3b84e0aac1538eeec0f21301b6a182", receipt["receipt_sha256"])
+        self.assertEqual(
+            {"cross-platform-client-extension", "ios-ipados-platform-extension"},
+            set(receipt["selected_layer3"]) & {row["name"] for row in domain["domain_skills"]},
+        )
+        for reduced_signals in (evidence_signals[:3], evidence_signals[3:]):
+            self.assertNotEqual(
+                receipt["receipt_sha256"],
+                VALIDATION.layer3_selector_runtime_selection_receipt(
+                    selector_projection, evidence_signals=reduced_signals
+                )["receipt_sha256"],
+            )
+
+        selected_references = (
+            ("cross-platform-client-extension", "references/bridge-plugin-and-ffi-contracts.md"),
+            ("cross-platform-client-extension", "references/framework-target-evidence-contracts.md"),
+            ("cross-platform-client-extension", "references/parity-and-regression-contracts.md"),
+            ("cross-platform-client-extension", "references/shared-and-target-ownership-contracts.md"),
+            ("installed-client-change-builder", "references/dotnet-maui-framework-contracts.md"),
+            ("installed-client-change-builder", "references/electron-framework-contracts.md"),
+            ("installed-client-change-builder", "references/flutter-framework-contracts.md"),
+            ("installed-client-change-builder", "references/kotlin-multiplatform-framework-contracts.md"),
+            ("installed-client-change-builder", "references/native-platform-source-contracts.md"),
+            ("installed-client-change-builder", "references/qt-framework-contracts.md"),
+            ("installed-client-change-builder", "references/react-native-framework-contracts.md"),
+            ("installed-client-change-builder", "references/tauri-framework-contracts.md"),
+            ("ios-ipados-platform-extension", "references/compatibility-signing-and-distribution-contracts-implementation-and-review-evidence.md"),
+            ("ios-ipados-platform-extension", "references/data-keychain-and-extension-contracts-implementation-and-review-evidence.md"),
+            ("ios-ipados-platform-extension", "references/entry-capabilities-and-entitlements-contracts-implementation-and-review-evidence.md"),
+            ("ios-ipados-platform-extension", "references/lifecycle-scenes-and-background-contracts-implementation-and-review-evidence.md"),
+            ("ios-ipados-platform-extension", "references/special-platform-boundaries-implementation-and-review-evidence.md"),
+            ("ios-ipados-platform-extension", "references/ui-form-factor-and-accessibility-contracts-implementation-and-review-evidence.md"),
+            ("kotlin-professional-usage", "references/coroutine-flow-state-contracts.md"),
+            ("kotlin-professional-usage", "references/type-interop-and-dsl-contracts.md"),
+        )
+        authority = VALIDATION.reference_context_admissibility_authority(
+            professional, foundation, domain, context="C1T installed client Kotlin staged witness"
+        )
+        staged = VALIDATION.reference_context_staged_plan(
+            authority,
+            references=selected_references,
+            path="direct",
+            profile="task-agent",
+            selection_owner="main-control-agent",
+            available_carrier_fields=[],
+            receipt_replayed=True,
+            brief_current=False,
+            review_fresh=True,
+        )
+        expected = [list(reference) for reference in selected_references]
+        self.assertTrue(staged["reachable"])
+        self.assertEqual(expected, staged["selected_union"])
+        self.assertEqual(expected, staged["loaded_union"])
+        self.assertEqual(20, len(staged["stages"]))
+        self.assertEqual([[reference] for reference in expected], [stage["loaded_references"] for stage in staged["stages"]])
+        self.assertTrue(all(stage["carried_predecessors"] == [] for stage in staged["stages"]))
+        self.assertEqual([], staged["carried_predecessors"])
+        self.assertEqual(20, len(staged["required_output_receipts"]))
+        active_reference = ["kotlin-professional-usage", "references/type-interop-and-dsl-contracts.md"]
+        active_stage = next(stage for stage in staged["stages"] if stage["loaded_references"] == [active_reference])
+        self.assertEqual(19, active_stage["stage"])
+        self.assertEqual(
+            [{"reference": active_reference, "required_outputs": ["decision-record", "residual-risk"]}],
+            active_stage["required_output_receipts"],
+        )
+        self.assertEqual(
+            (TASK_FIRST_ROLES, ("decision-record", "residual-risk")),
+            _reference_binding(
+                "kotlin-professional-usage",
+                "src/foundation/capabilities/kotlin-professional-usage/references/type-interop-and-dsl-contracts.md",
+            ),
+        )
+
+        component_tokens = [697, 239, 265, 261, 256, 616, 657]
+        component_sha256 = [
+            "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
+            "41d925e4295ef95620024fae202294e72f77a322b16aaff351460602dd401565",
+            "e7ae448387f1d7f79e38bdb876d09c80f1b798be00fd2fe4bb6f98c7e9f89b8f",
+            "d165e8917475639800aa629514ff1843ab5e3cf7b58a0e7638c06671533b0031",
+            "613a37d611c5d0375b2e8b279b12d181a6dcff09bee7ec1384335ff168a097b3",
+            post_sha256,
+            "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
+        ]
+        self.assertEqual(7, len(component_sha256))
+        self.assertEqual(2_991, sum(component_tokens))
+        self.assertEqual(2_990, sum(component_tokens) - 1)
+        self.assertEqual(2_997, sum(component_tokens) + 6)
+        self.assertLessEqual(sum(component_tokens) + 6, 3_000)
+        negative = list(component_tokens)
+        negative[5] = 620
+        self.assertEqual(3_001, sum(negative) + 6)
+
+        protected = {
+            "src/professional-skills/installed-client-change-builder/SKILL.md": "40b877e360ef3e6dfb793d13a3a5def396b53c77b177366946a8c7391bf7659c",
+            "src/domain-extensions/cross-platform-client-extension/SKILL.md": "9a7c8b21bf06711c2b4a54a1e6b977ef31492cbd68ea709c24042077c4ebb449",
+            "src/domain-extensions/ios-ipados-platform-extension/SKILL.md": "7d252fa8cc54ff7aa79c03223019f6531df2946625ebca4814b7511a2eefb7c1",
+            "src/foundation/capabilities/kotlin-professional-usage/SKILL.md": "08ec8cf8083d2b0771712dc4b1496266756bde6b740a3565bbed1b9e2c26003f",
+            "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
+            "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
+            "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
+            "scripts/build.py": "2543ed2c2cb7498babeae20d1f7bd244f968522f116c90b8b08c4106a25efcf1",
+            "scripts/validation_utils.py": "a76092b2d24cdfaec66eb44e1f8d4e48a9f76d9dda8a875a3b5602771649f995",
+            "tests/scripts/test_eval_rendered_context_budget.py": "9bc52e95f1ad5e6a3d5a8ad164eb789172c6b2b2b374749e42ddc12df9237a5a",
+            "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
+            "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
+            "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
+            "evals/agent-light-trajectories/cases.yaml": "25cc065fde1298111bbc5d3236976f3601b0db30453c805516689f2998c0191b",
+        }
+        for path, expected_sha256 in protected.items():
+            self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
 
 
 if __name__ == "__main__":

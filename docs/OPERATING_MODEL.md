@@ -48,6 +48,11 @@ could block the First Executable Slice. Once the Brief and next executable Task
 are accepted, Task completion or switching, ordinary implementation discovery,
 and an unreached Review Boundary do not trigger another Analysis.
 
+The first Analysis is always `initial`. Desired behavior and observable
+Acceptance are target authority; observed failure behavior is evidence only.
+A Delta is legal only after the complete initial Brief is accepted and current
+evidence names the protected decision it invalidates.
+
 New evidence permits Delta Analysis only when it invalidates Acceptance or
 Non-goals, Owner/Placement/Invariant, contract or data semantics,
 dependency/rollback, material risk, or a scope blocker. The delta covers only the
@@ -129,6 +134,13 @@ security/privacy, transaction/concurrency/persistence invariants, material
 downstream rework, an independent integration boundary, or an L5 or explicit
 professional gate. Task completion alone is never such a boundary.
 Task, edit, and file counts do not otherwise determine Review frequency.
+
+Normal Task closure is one sequence: final edit, fresh validation, exact change
+capture, the same Task's Implementation Handoff, and Main's readiness gate.
+Supplied review evidence contains the unified diff itself; native review uses a
+current reference binding the assigned reviewer, current generation, exact
+changed paths, and a readable delivered instance. A static capability,
+digest, path, summary, or command-output label cannot establish readiness.
 
 A current Review Boundary carries one boundary and Review Round ID, strategy,
 Effective Level, required Review Skills, Specialist obligations, Covered Task

@@ -716,15 +716,9 @@ class HooklessBuildInstallTests(unittest.TestCase):
         for host, root in roots.items():
             suffix = expected_suffixes[host]
             main = (root / f"main-control-agent{suffix}").read_text()
-            capabilities = {
-                "bounded-source-read": "supported",
-                "workspace-mutation": "supported",
-                "non-mutating-validation": "supported",
-                "exact-change-evidence-read": "supported",
-                "exact-change-evidence-export": "supported",
-                "reviewer-accessible-change-reference": "supported",
-                "workspace-state-observation": "supported",
-            }
+            capabilities = BUILD._normalized_decision_capabilities(
+                BUILD._load_host_enforcement()["hosts"][host]
+            )
             self.assertIn(
                 BUILD._render_decision_capability_facts(capabilities),
                 main,

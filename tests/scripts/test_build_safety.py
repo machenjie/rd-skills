@@ -773,7 +773,10 @@ Own one bounded decision.
         for host in ("claude", "copilot", "cline", "openai-api"):
             self.assertEqual([], matrix["hosts"][host]["native_diff_safeguards"])
         self.assertEqual(
-            {capability: "supported" for capability in BUILD.DECISION_CAPABILITY_FIELDS},
+            {
+                **{capability: "supported" for capability in BUILD.DECISION_CAPABILITY_FIELDS},
+                "supplied-change-delivery": "unsupported",
+            },
             BUILD._normalized_decision_capabilities(matrix["hosts"]["codex"]),
         )
         unknown_adapter = dict(matrix["hosts"]["codex"])

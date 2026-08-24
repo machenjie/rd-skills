@@ -2381,7 +2381,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "task": {
                     "candidate_count": 19_281,
                     "exact_render_signature_count": 19_281,
-                    "over_target_candidate_count": 760,
+                    "over_target_candidate_count": 722,
                 },
                 "analyzed_task": {
                     "candidate_count": 66_150,
@@ -2408,11 +2408,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
         )
         global_union = frontier["global_task_review_union"]
         self.assertEqual(
-            {"professional": 9, "layer3": 50, "active_reference": 35},
+            {"professional": 8, "layer3": 49, "active_reference": 30},
             global_union["frontier_counts"],
         )
         self.assertEqual(
-            {"professional": 8, "layer3": 18, "active_reference": 232},
+            {"professional": 9, "layer3": 19, "active_reference": 237},
             global_union["safe_complement_counts"],
         )
         self.assertEqual(
@@ -2420,7 +2420,6 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "change-documentation-gate",
                 "data-api-contract-changer",
                 "data-middleware-change-builder",
-                "delivery-release-gate",
                 "installed-client-change-builder",
                 "integration-change-builder",
                 "platform-infrastructure-change-builder",
@@ -2433,6 +2432,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             [
                 "ai-code-review-refactor",
                 "architecture-impact-reviewer",
+                "delivery-release-gate",
                 "engineering-artifact-review",
                 "high-risk-design-review",
                 "logging-design-gate",
@@ -2443,12 +2443,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
             global_union["safe_complement"]["professional"],
         )
         expected_membership_sha256 = {
-            "frontier_professional": "4536bc44520548b3da04fb41d9be237464a11d9dc120ba3d9362d48eda8cb23a",
-            "frontier_layer3": "ea7398b7bf734e7ceda31393ae001b54d09f030aeb25416cf9bd3afcd2a44f71",
-            "frontier_active_reference": "8f659ed0653e5a01b9fdc37f7f5b8e94c8ceb911b1d28a3dd55de34437f96b9f",
-            "safe_complement_professional": "2876855b431c287c84cc21fac5e2e28631597942abefa8eab1ff339b5178543a",
-            "safe_complement_layer3": "74639662987bf177362348cd00994bd134f9ea96b6d227285549a689a11602c2",
-            "safe_complement_active_reference": "570375481b76c939e0670476f01879034cbc630896e33b98df7f5f873c1e3d68",
+            "frontier_professional": "96ce66a72080f6983fafaed55682fdce5f58d152bce2da14fdcda847d6fbd637",
+            "frontier_layer3": "d51517ecf92d47fcec3f31b3c05666a311e4673dda16675ca4dda2939c76ef9b",
+            "frontier_active_reference": "a793864c5bd30f8cd138da80fadeb1435dc152b8764b028e0a2b6446c39ed4fd",
+            "safe_complement_professional": "c07dffc19c8a53524dae5a6c15eea6aab655397dab57cf7d4881fb1e02cdb08e",
+            "safe_complement_layer3": "957107f6cebf787b5619cf1084b3d0db40709204e5ea6cdb229906cea12ff3b2",
+            "safe_complement_active_reference": "f8bc98538a777e3e69449f5eac324b6316150964feb6e335f12432e5af736d8a",
         }
         actual_membership_sha256 = {
             f"{placement}_{member_kind}": EVAL._sha256_text(
@@ -2463,15 +2463,15 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "build_manifests": {
                     "dev": {
                         "path": "dist/universal/skills/dev/.changeforge-build-manifest.json",
-                        "sha256": "ba1e483bd1eac1eaca90e1ce31c401775cc40dde4f5abac3f83e3f378e6d6e18",
+                        "sha256": "bbdd2b5c67cddfd8b291d914121c83db3267101ec13bbbe51ec99119b1494afe",
                     },
                     "full": {
                         "path": "dist/universal/skills/full/.changeforge-build-manifest.json",
-                        "sha256": "da43e75b6878a15d4710b4acfa9bbbf7778bd4c33fb1f226c3c7ab7ae686e85d",
+                        "sha256": "5e019808df71669a97ba2a113b01b54d2ae3e3785f8d69054463548f175d3b9e",
                     },
                     "recommended": {
                         "path": "dist/universal/skills/recommended/.changeforge-build-manifest.json",
-                        "sha256": "0f42792b182de89bca87f720d9cc947bf8f5cf92c9cb877ff6eeb52aa7f4f228",
+                        "sha256": "0cfa21afa89853175a7506e864763aaeb726e335668ccbf7bfddd5aad0810e4e",
                     },
                 },
                 "capsule_source": {
@@ -2485,8 +2485,8 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
                 },
                 "render_component_inventory": {
-                    "count": 1_208,
-                    "mapping_sha256": "c44bf5ee3e447e20b35294e40fb402d6748c056cd8142d63856afaa9552e74b1",
+                    "count": 1_212,
+                    "mapping_sha256": "812fccf58b07b307b38a7da243e08572c55dfe8c433021d3586c8f539f2ed989",
                 },
                 "selector_authority_sha256": "1b37e9e7b06ea375c418061ae89dd336ed1c703abf7b5c1d5c826fa93df63943",
             },
@@ -2494,7 +2494,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         )
         self.assertEqual(236_078, frontier["mapping_row_count"])
         self.assertEqual(
-            "10636c6ec0861c23d8425dfd775a79afe2198642840a8d7a1551a1f82bdcfbeb",
+            "92efce204a550daffc83b1ce0495c158da9b3088a6e1196cd0bcaca123acfc8d",
             frontier["mapping_digest"],
         )
         self.assertEqual(
@@ -2523,7 +2523,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         direct = frontier["budget_classes"]["task"]
         review = frontier["budget_classes"]["review"]
         self.assertEqual(
-            {"professional": 9, "layer3": 50, "active_reference": 35},
+            {"professional": 8, "layer3": 49, "active_reference": 30},
             direct["frontier_counts"],
         )
         self.assertEqual(
@@ -2531,7 +2531,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             review["frontier_counts"],
         )
         self.assertEqual(
-            2_999,
+            2_997,
             max(item["maximum_tokens"] for item in direct["outside"]["active_reference"]),
         )
         self.assertEqual(
@@ -2561,11 +2561,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
         }
         maxima = composition["max_by_budget_class"]
         self.assertEqual(
-            {"analysis": 3_513, "task": 3_215, "analyzed_task": 4_301, "review": 3_598},
+            {"analysis": 3_513, "task": 3_202, "analyzed_task": 4_301, "review": 3_598},
             {budget_class: maximum["tokens"] for budget_class, maximum in maxima.items()},
         )
         self.assertEqual(
-            ["admissible composition task maximum 3215 exceeds Phase 3 target 3000"],
+            ["admissible composition task maximum 3202 exceeds Phase 3 target 3000"],
             composition["errors"],
         )
         self.assertEqual(0, composition["inventory"]["dropped_reference_obligation_count"])
@@ -6225,6 +6225,305 @@ class RenderedContextBudgetTests(unittest.TestCase):
         self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
         negative = copy.deepcopy(components)
         negative[5]["tokens"] = 491
+        self.assertEqual(3_001, EVAL._component_upper_bound(negative))
+        self.assertNotEqual(components, components[:-1])
+
+    def test_fg_c1s_security_web_named_task_witness_is_bounded(self) -> None:
+        authority = EVAL._selector_authority()
+        projection = EVAL.layer3_selector_runtime_projection(
+            authority,
+            professional_skill="security-privacy-gate",
+            profile="task-agent",
+            selection_owner="main-control-agent",
+            exact_layer3=None,
+        )
+        classes, _inventory, errors = EVAL._admissible_selector_equivalence_classes(
+            authority, projection
+        )
+        self.assertEqual([], errors)
+        expected_layer3 = [
+            "cloud-platform-extension",
+            "threat-modeling",
+            "web-security",
+        ]
+        selected = next(
+            item for item in classes if item["selected_layer3"] == expected_layer3
+        )
+        expected_signals = [
+            "cloud control plane",
+            "account authority",
+            "changed-surface",
+            "ssrf",
+        ]
+        self.assertEqual(
+            (
+                "336dfef51f64a686fc616f4fc48cac5451ebd55fe61dee5e402d4e98ca5a90e4",
+                expected_signals,
+                "implementation-risk",
+                "professional-risk",
+            ),
+            (
+                selected["receipt"]["receipt_sha256"],
+                selected["receipt"]["evidence_signals"],
+                selected["receipt"]["selection_kind"],
+                selected["receipt"]["selection_basis"],
+            ),
+        )
+        domain_names = {
+            row["name"]
+            for row in EVAL.load_yaml_file(EVAL.DOMAIN_REGISTRY)["domain_skills"]
+        }
+        self.assertEqual(
+            ["cloud-platform-extension"],
+            [name for name in expected_layer3 if name in domain_names],
+        )
+        negative_receipt = EVAL.layer3_selector_runtime_selection_receipt(
+            projection, evidence_signals=expected_signals[:-1]
+        )
+        self.assertEqual(
+            ["cloud-platform-extension"], negative_receipt["selected_layer3"]
+        )
+        self.assertNotEqual(
+            selected["receipt"]["receipt_sha256"],
+            negative_receipt["receipt_sha256"],
+        )
+
+        protected = {
+            "src/professional-skills/security-privacy-gate/SKILL.md": "f11d7bdde385a27584a4b22e07cd389adc4c59d8933597433238c4ecc5ba7ae5",
+            "src/domain-extensions/cloud-platform-extension/SKILL.md": "6c300ff1c468f83c7b75c54997c67539710e6f8e236fc655d4ecda5e806a4224",
+            "src/foundation/capabilities/threat-modeling/SKILL.md": "90d1b45cc6cab690eb2861c3ec896cc742466223468a41aafd8b84674db7271d",
+            "src/foundation/capabilities/web-security/SKILL.md": "4d9a6d9e61de16b63b62b4c5e19ff8857cc96f5661b32f4540aaa7f07960a191",
+            "src/foundation/capabilities/web-security/references/benchmarks-and-patterns.md": "ba0d3b7172e4fce659dfce92653dfcbd628295d4714ab0b6b81a38e6bd2ab763",
+        }
+        for path, expected_sha256 in protected.items():
+            self.assertEqual(
+                expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
+            )
+
+        expected_selected = [
+            ["security-privacy-gate", "references/checklist.md"],
+            ["security-privacy-gate", "references/evidence-patterns.md"],
+            ["security-privacy-gate", "references/security-output-and-gates.md"],
+            ["threat-modeling", "references/benchmarks-and-patterns.md"],
+            ["threat-modeling", "references/checklist.md"],
+            ["threat-modeling", "references/evidence-patterns.md"],
+            ["web-security", "references/benchmarks-and-patterns.md"],
+            ["web-security", "references/checklist.md"],
+            ["web-security", "references/evidence-patterns.md"],
+            ["cloud-platform-extension", "references/resource-control-and-data-plane-boundaries.md"],
+            ["cloud-platform-extension", "references/iam-workload-identity-and-network-contracts.md"],
+            ["cloud-platform-extension", "references/region-failure-domain-consistency-and-quota-contracts.md"],
+            ["cloud-platform-extension", "references/encryption-kms-and-cost-contracts.md"],
+            ["cloud-platform-extension", "references/provider-api-and-managed-service-authority.md"],
+        ]
+        selected_references = [
+            [record["owner_skill"], record["path"]]
+            for record in projection["reference_records"]
+            if record["owner_skill"]
+            in {"security-privacy-gate", *expected_layer3}
+        ]
+        self.assertEqual(expected_selected, selected_references)
+        context_authority = EVAL.reference_context_admissibility_authority(
+            EVAL.load_yaml_file(EVAL.PROFESSIONAL_REGISTRY),
+            EVAL.load_yaml_file(EVAL.FOUNDATION_REGISTRY),
+            EVAL.load_yaml_file(EVAL.DOMAIN_REGISTRY),
+            context="C1S security web named Task witness",
+        )
+        staged = EVAL.reference_context_staged_plan(
+            context_authority,
+            references=[tuple(reference) for reference in selected_references],
+            path="direct",
+            profile="task-agent",
+            selection_owner="main-control-agent",
+            available_carrier_fields=[],
+            receipt_replayed=True,
+            brief_current=False,
+            review_fresh=True,
+        )
+        expected_loaded = [
+            ["cloud-platform-extension", "references/encryption-kms-and-cost-contracts.md"],
+            ["cloud-platform-extension", "references/iam-workload-identity-and-network-contracts.md"],
+            ["cloud-platform-extension", "references/provider-api-and-managed-service-authority.md"],
+            ["cloud-platform-extension", "references/region-failure-domain-consistency-and-quota-contracts.md"],
+            ["cloud-platform-extension", "references/resource-control-and-data-plane-boundaries.md"],
+            ["security-privacy-gate", "references/checklist.md"],
+            ["security-privacy-gate", "references/evidence-patterns.md"],
+            ["security-privacy-gate", "references/security-output-and-gates.md"],
+            ["threat-modeling", "references/benchmarks-and-patterns.md"],
+            ["threat-modeling", "references/checklist.md"],
+            ["threat-modeling", "references/evidence-patterns.md"],
+            ["web-security", "references/benchmarks-and-patterns.md"],
+            ["web-security", "references/checklist.md"],
+            ["web-security", "references/evidence-patterns.md"],
+        ]
+        self.assertTrue(staged["reachable"])
+        self.assertEqual(expected_selected, staged["selected_union"])
+        self.assertEqual(expected_loaded, staged["loaded_union"])
+        self.assertEqual(
+            {tuple(item) for item in expected_selected},
+            {tuple(item) for item in expected_loaded},
+        )
+        self.assertEqual(
+            [14, 14, 14, 14],
+            [
+                len(staged["selected_union"]),
+                len(staged["loaded_union"]),
+                len(staged["stages"]),
+                len(staged["required_output_receipts"]),
+            ],
+        )
+        self.assertEqual(
+            expected_loaded,
+            [stage["loaded_references"][0] for stage in staged["stages"]],
+        )
+        self.assertTrue(
+            all(
+                len(stage["loaded_references"]) == 1
+                and stage["carried_predecessors"] == []
+                for stage in staged["stages"]
+            )
+        )
+        self.assertEqual([], staged["carried_predecessors"])
+        outputs = {
+            ("cloud-platform-extension", "references/encryption-kms-and-cost-contracts.md"): ["boundary-decision", "failure-decision", "residual-risk"],
+            ("cloud-platform-extension", "references/iam-workload-identity-and-network-contracts.md"): ["boundary-decision", "failure-decision", "validation-plan"],
+            ("cloud-platform-extension", "references/provider-api-and-managed-service-authority.md"): ["decision-record", "proof-limit", "validation-plan"],
+            ("cloud-platform-extension", "references/region-failure-domain-consistency-and-quota-contracts.md"): ["decision-record", "proof-limit", "validation-plan"],
+            ("cloud-platform-extension", "references/resource-control-and-data-plane-boundaries.md"): ["boundary-decision", "decision-record", "proof-limit"],
+            ("security-privacy-gate", "references/checklist.md"): ["checklist-result", "residual-risk"],
+            ("security-privacy-gate", "references/evidence-patterns.md"): ["evidence-record", "proof-limit", "residual-risk"],
+            ("security-privacy-gate", "references/security-output-and-gates.md"): ["gate-decision", "residual-risk"],
+            ("threat-modeling", "references/benchmarks-and-patterns.md"): ["option-comparison", "selected-approach"],
+            ("threat-modeling", "references/checklist.md"): ["checklist-result", "validation-plan"],
+            ("threat-modeling", "references/evidence-patterns.md"): ["evidence-record", "proof-limit", "residual-risk"],
+            ("web-security", "references/benchmarks-and-patterns.md"): ["option-comparison", "selected-approach"],
+            ("web-security", "references/checklist.md"): ["checklist-result", "residual-risk"],
+            ("web-security", "references/evidence-patterns.md"): ["evidence-record", "proof-limit", "residual-risk"],
+        }
+        receipts = [
+            {"reference": reference, "required_outputs": outputs[tuple(reference)]}
+            for reference in expected_loaded
+        ]
+        self.assertEqual(receipts, staged["required_output_receipts"])
+        self.assertEqual(
+            receipts,
+            [stage["required_output_receipts"][0] for stage in staged["stages"]],
+        )
+        active = ["web-security", "references/benchmarks-and-patterns.md"]
+        self.assertEqual(
+            (
+                [active],
+                [],
+                [{
+                    "reference": active,
+                    "required_outputs": ["option-comparison", "selected-approach"],
+                }],
+            ),
+            (
+                staged["stages"][11]["loaded_references"],
+                staged["stages"][11]["carried_predecessors"],
+                staged["stages"][11]["required_output_receipts"],
+            ),
+        )
+        self.assertNotEqual(expected_selected, expected_selected[:-1])
+        self.assertNotEqual(expected_loaded, expected_loaded[:-1])
+
+        def source_component(
+            kind: str,
+            path: Path,
+            headings: tuple[str, ...],
+            selector: str | None,
+            *,
+            layer3_delivery: bool = False,
+        ) -> dict[str, object]:
+            _metadata, raw_frontmatter, body = EVAL.parse_frontmatter(path)
+            h1_titles, sections = BUILD._markdown_heading_sections(body)
+            output = ["---", raw_frontmatter, "---", "", f"# {h1_titles[0]}"]
+            for heading in headings:
+                values = sections.get(heading, [])
+                if not values and heading == "Inputs":
+                    continue
+                self.assertEqual(1, len(values))
+                output.extend(["", f"## {heading}", "", values[0]])
+            output.extend(BUILD._compact_jit_reference_delivery_lines(selector))
+            if layer3_delivery:
+                output.extend([
+                    "",
+                    "## Layer 3 Delivery",
+                    "",
+                    "Foundation and Domain items are top-level Skills; no Layer 3 references are compiled.",
+                ])
+            output.append("")
+            return EVAL._component(
+                kind, path.relative_to(ROOT).as_posix(), "\n".join(output)
+            )
+
+        document = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
+        capsule = EVAL._capsule_envelopes(EVAL._fixture_cases(document))["task"]
+        components = [
+            EVAL._file_component(
+                "worker_profile",
+                ROOT / "dist/copilot/project/.github/agents/task-agent.agent.md",
+            ),
+            source_component(
+                "primary_skill",
+                ROOT / "src/professional-skills/security-privacy-gate/SKILL.md",
+                BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS,
+                "security-privacy-gate",
+                layer3_delivery=True,
+            ),
+            source_component(
+                "layer3",
+                ROOT / "src/domain-extensions/cloud-platform-extension/SKILL.md",
+                BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS,
+                None,
+            ),
+            source_component(
+                "layer3",
+                ROOT / "src/foundation/capabilities/threat-modeling/SKILL.md",
+                BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS,
+                None,
+            ),
+            source_component(
+                "layer3",
+                ROOT / "src/foundation/capabilities/web-security/SKILL.md",
+                BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS,
+                None,
+            ),
+            EVAL._file_component(
+                "layer3_reference",
+                ROOT / "src/foundation/capabilities/web-security/references/benchmarks-and-patterns.md",
+            ),
+            capsule,
+        ]
+        self.assertEqual(
+            [697, 303, 250, 311, 234, 532, 657],
+            [item["tokens"] for item in components],
+        )
+        self.assertEqual(
+            [
+                "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
+                "1f5f5d81f6dd59c74a1a43ed9e7710478b16a0657eaa5312fe623ee598fb300e",
+                "fcbe9dc653c2d7f98fe01738547701d6ba79fff570c24b176e130d3c17941ad2",
+                "559d0467c675e0e77803979cb8f132d547567d236c0dad97efe2a030c6a8225a",
+                "ae1207804645b3af4968e354358fcc27b10aa76f9f20fabe31388494d3bf17f1",
+                "ba0d3b7172e4fce659dfce92653dfcbd628295d4714ab0b6b81a38e6bd2ab763",
+                "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
+            ],
+            [item["sha256"] for item in components],
+        )
+        measurement = EVAL._measure_context(
+            components,
+            budget_class="task",
+            token_budget=EVAL.FROZEN_GATES["task"],
+        )
+        self.assertEqual(2_984, measurement["sum_component_tokens"])
+        self.assertEqual(2_983, measurement["total_tokens"])
+        self.assertEqual(2_990, EVAL._component_upper_bound(components))
+        self.assertTrue(measurement["within_token_budget"])
+        self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
+        negative = copy.deepcopy(components)
+        negative[5]["tokens"] = 543
         self.assertEqual(3_001, EVAL._component_upper_bound(negative))
         self.assertNotEqual(components, components[:-1])
 

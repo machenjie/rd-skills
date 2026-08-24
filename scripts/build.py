@@ -1354,7 +1354,26 @@ def _normalized_decision_capabilities(entry: dict[str, Any]) -> dict[str, str]:
     """Project adapter metadata to generic capability facts."""
 
     profile_supported = entry.get("profile_delivery") in ENFORCEMENT_STATUSES[:-1]
-    diff_supported = entry.get("diff_input_mode") in {"native", "supplied-artifact"}
+    roles = entry.get("roles")
+    roles = roles if isinstance(roles, dict) else {}
+
+    def rendered_tools(role: str) -> set[str]:
+        facts = roles.get(role)
+        tools = facts.get("rendered_tools") if isinstance(facts, dict) else None
+        return set(tools) if isinstance(tools, list) else set()
+
+    diff_input_mode = entry.get("diff_input_mode")
+    native_change_read = profile_supported and diff_input_mode == "native"
+    change_evidence_export = profile_supported and bool(
+        rendered_tools("task-agent") & {"execute", "Bash"}
+    )
+    supplied_change_delivery = (
+        profile_supported and diff_input_mode == "supplied-artifact"
+    )
+    reviewer_change_consume = profile_supported and bool(
+        rendered_tools("review-agent")
+        & {"read", "Read", "search", "Grep", "Glob", "execute-read-only"}
+    )
     validation_supported = entry.get("validation_mode") in {
         "native-read-only",
         "task-no-edit",
@@ -1366,9 +1385,10 @@ def _normalized_decision_capabilities(entry: dict[str, Any]) -> dict[str, str]:
         "bounded-source-read": supported if profile_supported else unsupported,
         "workspace-mutation": supported if profile_supported else unsupported,
         "non-mutating-validation": supported if validation_supported else unsupported,
-        "exact-change-evidence-read": supported if diff_supported else unsupported,
-        "exact-change-evidence-export": supported if diff_supported else unsupported,
-        "reviewer-accessible-change-reference": supported if diff_supported else unsupported,
+        "native-change-read": supported if native_change_read else unsupported,
+        "change-evidence-export": supported if change_evidence_export else unsupported,
+        "supplied-change-delivery": supported if supplied_change_delivery else unsupported,
+        "reviewer-change-consume": supported if reviewer_change_consume else unsupported,
         "workspace-state-observation": supported if observation_supported else unsupported,
     }
 

@@ -6,7 +6,10 @@ changed-path set, current validation results, and the Evidence Requirements.
 Main dispatches this assignment only after the producer's Review Input Ready
 gate proves exact change evidence is accessible to the reviewer, validation is
 later than the latest material edit, and Review scope is fixed. The reviewer
-never generates change evidence, repairs the handoff, or mutates the workspace.
+never generates or exports change evidence, repairs the handoff, or mutates the
+workspace. Supplied evidence is actual unified-diff content, not a digest,
+summary, command output, filename, identifier, or opaque reference. Native
+review uses only the delivered current reference that this reviewer can read.
 
 For Analyzed Work, this handoff is a derived projection of the current
 Engineering Brief. Protected Brief decisions stay resolvable at their Authority
