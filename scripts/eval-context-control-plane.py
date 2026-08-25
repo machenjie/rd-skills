@@ -29,17 +29,22 @@ EXPECTED_FIXTURE_SCHEMA_VERSION = 2
 EXPECTED_DEPENDENCIES = ["eval-agent-lightweight", "eval-rendered-context"]
 TRANSFER_SUMMARY_FIELDS = (
     "semantic_baseline",
+    "measurement_kind",
     "gross_tokens",
     "non_compressible_tokens",
     "compressible_tokens",
     "compressible_ratio",
+    "measured_case_count",
     "long_task_selector_join_count",
-    "conservative_long_task_ratio",
+    "proof_limits",
+)
+FORBIDDEN_REALIZED_REDUCTION_FIELDS = (
     "before_gross_tokens",
     "after_gross_tokens",
     "realized_reduction_tokens",
     "realized_reduction_ratio",
-    "proof_limits",
+    "conservative_long_task_ratio",
+    "context_compaction_decision",
 )
 
 
@@ -148,7 +153,7 @@ def _load_rendered_context_report(
     expected_long_case_ids: set[str],
     expected_fixture_schema_version: int,
     path: Path | None = None,
-) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+) -> tuple[dict[str, Any], dict[str, Any]]:
     report_path = RENDERED_CONTEXT_REPORT if path is None else path
     report = _read_json(
         report_path,
@@ -215,19 +220,29 @@ def _load_rendered_context_report(
             "rendered-context transferred_context summary is missing: "
             + ", ".join(missing_summary)
         )
+    if transfer["measurement_kind"] != "candidate-subject-only":
+        raise ValueError(
+            "rendered-context transfer measurement must be candidate-subject-only"
+        )
+    measured_case_count = sum(
+        isinstance(item, dict) and item.get("fixture_group") != "utility"
+        for item in cases
+    )
+    if transfer["measured_case_count"] != measured_case_count:
+        raise ValueError("rendered-context measured case count is inconsistent")
+    fabricated_fields = [
+        field for field in FORBIDDEN_REALIZED_REDUCTION_FIELDS if field in transfer
+    ]
+    if fabricated_fields:
+        raise ValueError(
+            "candidate-subject-only transfer must not claim a realized reduction: "
+            + ", ".join(fabricated_fields)
+        )
     semantic = transfer["semantic_baseline"]
     if not isinstance(semantic, dict) or semantic.get("retained_semantic_equality") is not True:
         raise ValueError("rendered-context semantic equality evidence is missing")
-    decision = transfer.get("context_compaction_decision")
-    if not isinstance(decision, dict) or not {
-        "classification",
-        "observed_conservative_ratio",
-        "minimum_realized_reduction_ratio",
-        "target_realized_reduction_ratio",
-    }.issubset(decision):
-        raise ValueError("rendered-context context compaction decision is missing")
     summary = {field: transfer[field] for field in TRANSFER_SUMMARY_FIELDS}
-    return report, summary, decision
+    return report, summary
 
 
 def _args(argv: list[str] | None) -> argparse.Namespace:
@@ -254,7 +269,7 @@ def main(argv: list[str] | None = None) -> int:
             for item in cases
             if item["metrics"].get("required_progress_for_multi_agent")
         }
-        rendered, transfer_summary, compaction_decision = _load_rendered_context_report(
+        rendered, transfer_summary = _load_rendered_context_report(
             {str(item["id"]) for item in cases},
             expected_long_case_ids,
             int(source["fixture_schema_version"]),
@@ -337,13 +352,10 @@ def main(argv: list[str] | None = None) -> int:
         },
         "rendered_context_summary": rendered["aggregate"],
         "transferred_context_summary": transfer_summary,
-        "context_compaction_decision": compaction_decision,
         "errors": errors,
     }
     args.reports_dir.mkdir(parents=True, exist_ok=True)
     report_json.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    classification = compaction_decision["classification"]
-    observed_ratio = compaction_decision["observed_conservative_ratio"]
     lines = [
         "# Context Control Plane Evaluation",
         "",
@@ -355,11 +367,11 @@ def main(argv: list[str] | None = None) -> int:
         "",
         "This evaluation consumes the current rendered context measurement and verifies the remaining deterministic control-plane boundaries.",
         "",
-        "## Context Compaction Continuation Decision",
+        "## Transferred Context Measurement",
         "",
-        f"Producer-observed conservative ratio: **{observed_ratio}**; classification: **{classification}**.",
+        "Measurement kind: **candidate-subject-only**.",
         "",
-        "The producer classification is measurement-only and does not add a Gate.",
+        "No realized-reduction ratio or continuation decision is claimed without a measured baseline.",
         "",
         "## Limitations",
         "",

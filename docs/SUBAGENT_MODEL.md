@@ -171,15 +171,28 @@ obligations only when all eight dimensions are the same or stronger.
 
 Only material current-task findings affecting Acceptance, correctness or
 invariants, regression, security or reliability, or material code health create
-a Repair obligation. Adjacent issues, optional cleanup, style preferences,
+a Repair obligation. An ordinary finding does not stop review or expand its
+fixed boundary: the Review Agent finishes required changed scope, base
+dimensions, and professional-risk dimensions and returns all evidence-backed
+findings from the round. Adjacent issues, optional cleanup, style preferences,
 speculative abstraction, unrelated debt, and future work do not. A fundamental
 architecture error, invalid public contract, major security defect, or
 fundamentally unmet Acceptance may return `blocked` with Reviewed and Unreviewed
-Scope before full review; only `pass` requires all required changed scope to be
-reviewed.
+Scope before full review. Every non-fundamental Review outcome, including
+`findings`, requires all required changed scope, base dimensions, and
+professional-risk dimensions to be reviewed; `pass` additionally requires no
+blocking findings.
+
+Main emits exactly one Repair Task Contract for all material `current-task`
+findings that share the Review Round and Task ID, without changing the Task ID.
+Every finding keeps its relation, affected scope, Acceptance or risk impact,
+required validation, and covering re-review obligation. Repairs never merge
+Task IDs; a `scope-blocker` returns through Main to Analysis and an `adjacent`
+finding is record-only.
 
 After Repair, the Task Agent supplies fresh targeted validation and the Review
-Agent performs fresh independent re-review of the original finding, Repair diff,
+Agent performs fresh independent re-review of every repaired finding, the
+latest Repair diff,
 and affected dependents. Only intersecting, behavior-dependent, and transitively
 affected Evidence is invalidated; unaffected fresh Evidence remains current.
 Public/shared contracts, schemas, common abstractions, ownership/dependency,

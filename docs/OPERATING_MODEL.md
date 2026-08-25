@@ -122,6 +122,21 @@ Repair loop. All current-task same-pattern occurrences inside authorized scope
 remain mandatory; adjacent matches are recorded with rationale and residual
 risk.
 
+An ordinary material finding does not end the current review or expand its
+fixed boundary. The reviewer continues through all required changed scope,
+base dimensions, and professional-risk dimensions and returns every
+evidence-backed finding from that round together. Early `blocked` review is
+limited to a fundamental architecture error, invalid public contract, major
+security defect, or fundamentally unmet Acceptance and names both Reviewed and
+Unreviewed Scope.
+
+Main batches all material `current-task` findings that share one Review Round
+and Task ID into exactly one canonical Repair Task Contract, retaining the
+original Task ID. The assignment preserves each finding's relation, affected
+scope, Acceptance or risk impact, required validation, and required covering
+re-review. It never merges Task IDs: `scope-blocker` returns through Main to
+Analysis, while `adjacent` remains recorded and deferred outside Repair.
+
 Effective Level determines review depth; the minimum sufficient Review or Risk
 Boundary determines frequency. L1-L3 related changed scope defaults to one
 combined independent final review of the latest actual diff and all required
@@ -161,8 +176,10 @@ obligations only when these dimensions are the same or stronger.
 Any scoped material edit invalidates current validation and review evidence
 only for intersecting scope and downstream transitive Task dependencies;
 unaffected current evidence remains reusable. After Repair, fresh targeted
-validation and fresh independent re-review remain mandatory for that affected
-scope. Re-review focuses on the original finding, the
+validation over required changed scope and fresh independent re-review of the
+latest post-repair diff and evidence remain mandatory for that affected scope;
+pre-repair validation and review cannot satisfy readiness. Re-review focuses on
+the original finding, the
 Repair diff, and affected dependents; it expands for a public/shared contract,
 schema, common abstraction, ownership or dependency graph, security boundary,
 transaction/concurrency semantics, or integration behavior. A scoped re-review

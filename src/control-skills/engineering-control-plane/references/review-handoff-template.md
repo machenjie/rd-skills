@@ -34,11 +34,22 @@ before severity or blocker. Use only `current-task`, `scope-blocker`, or
 Pre-implementation artifact review is exempt from this implementation-finding
 format.
 
-Main projects to Repair the material `current-task` findings, affected scope,
-Acceptance impact, latest diff, invalidated/reusable Evidence, required
-validation, and required re-review. Each item preserves its Finding Relation
-and omits `outcome=blocking`, which the projection premise already proves. Main
-copies the structured Finding Relation without prose inference. A
+An ordinary finding does not end the Review. The reviewer completes the fixed
+Review Boundary's required changed scope, every base dimension, and every
+required professional-risk dimension, then returns one Review Handoff with all
+evidence-backed findings from that round. A finding never expands the Review
+Boundary. Only fundamental architecture, invalid public contract, major
+security, or fundamentally unmet Acceptance may return `blocked` early, with
+explicit Reviewed and Unreviewed Scope.
+
+Main groups the material `current-task` findings by the existing Review Round
+ID and Task ID and emits exactly one canonical Task Contract v2 Repair
+assignment per non-empty group. The Task ID stays unchanged. Each finding
+separately preserves its Finding Relation, affected scope, Acceptance or risk
+impact, required validation, and required covering re-review; the batch also
+carries the latest diff and invalidated/reusable Evidence. Main copies the
+structured fields without prose inference. Findings from different Task IDs
+never share one Repair assignment. A
 `scope-blocker` returns blocked through Main to Analysis; `adjacent` is recorded,
 does not block, and is ineligible for Repair. Do not re-inject task history. Invalidate
 only affected or transitively dependent Evidence; preserve unrelated current
@@ -131,14 +142,19 @@ an implementation diff review.
 For each implementation or repair finding, state fields in this order:
 
 Finding Relation: current-task / scope-blocker / adjacent
+Review Round ID:
+Task ID:
 Severity:
 Blocker:
 Description:
-Affected path:
+Affected scope:
 Acceptance or risk impact:
+Required validation:
+Required covering re-review:
 
 Finding Relation appears before severity or blocker. Do not invent private
-identifiers. Pre-implementation artifact review may use its artifact-specific
+identifiers; use only the handoff-visible Finding, Review Round, and Task
+identities. Pre-implementation artifact review may use its artifact-specific
 finding shape without implementation Finding Relation.
 
 ## Core Review Discipline
@@ -207,9 +223,23 @@ Only material current-task findings affecting Acceptance, correctness or an
 invariant, regression, security/reliability, or material code health require
 Repair. Adjacent issues, optional cleanup, style preference, speculative
 abstraction, unrelated debt, and future improvement do not enter the mandatory
-Repair loop. Fundamental architecture, contract, security, or Acceptance
-failure may return `blocked` after naming Reviewed and Unreviewed Scope. Only
-`pass` requires complete required changed-scope review.
+Repair loop. Ordinary findings remain accumulated while the reviewer finishes
+the fixed Review Boundary's required changed scope, base dimensions, and
+professional-risk dimensions; the closing handoff reports all evidence-backed
+findings from the round. Findings do not expand that boundary. Only fundamental
+architecture, invalid public contract, major security, or fundamentally unmet
+Acceptance may return `blocked` early after naming Reviewed and Unreviewed
+Scope. Every non-fundamental Review outcome, including `findings`, requires the
+complete fixed changed scope, base dimensions, and professional-risk dimensions.
+`pass` additionally requires no blocking findings.
+
+Main batches material `current-task` findings only when Review Round ID and
+Task ID both match. One batch becomes one canonical Task Contract v2 Repair
+assignment with the same Task ID and per-finding Finding Relation, affected
+scope, Acceptance or risk impact, required validation, and required covering
+re-review. Cross-Task batching is forbidden. A `scope-blocker` returns through
+Main to Analysis, while an `adjacent` finding is record-only and never enters
+Repair.
 
 ## Evidence Ledger
 

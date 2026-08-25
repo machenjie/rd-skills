@@ -778,6 +778,16 @@
       "reproduction_triggers": ["stale-evidence", "coverage-gap", "suspicious-oracle-or-test", "flaky-or-retry", "environment-sensitive-result", "concrete-reviewer-doubt", "effective-level-or-professional-risk-independent-reproduction"],
       "reviewer_independence_requires_duplicate_execution": false
     },
+    "complete_review_pass": {
+      "ordinary_material_finding_action": "record-and-continue-fixed-review-boundary",
+      "completion_requirements": ["required-changed-scope", "base-review-dimensions", "required-professional-risk-dimensions"],
+      "handoff_contents": "all-evidence-backed-findings-from-current-review-round-and-fixed-boundary",
+      "finding_expands_review_boundary": false,
+      "early_block_triggers": ["fundamental-architecture-error", "invalid-public-contract", "major-security-defect", "acceptance-fundamentally-unmet"],
+      "early_block_scope_report": ["Reviewed Scope", "Unreviewed Scope"],
+      "ordinary_outcomes_require_complete_boundary": true,
+      "pass_requires_no_blocking_findings": true
+    },
     "review_boundary_contract": {
       "schema_version": 1,
       "boundary_fields": ["Review Boundary ID", "Review Strategy", "Review Round ID", "Effective Level", "Required Review Skills", "Specialist Obligations", "Covered Task IDs", "Required Changed Scope", "Professional Risk Dimensions", "Required Validation / Evidence Binding", "Review Assignments", "Primary Close Ordering"],
@@ -889,13 +899,18 @@
       },
       {
         "rule_id": "material-findings-and-fail-fast",
-        "required_terms": ["Only material current-task findings", "acceptance/correctness/invariant/regression/security/reliability/material code health", "adjacent/optional/style/speculative/unrelated/future", "fail-fast blocked", "Reviewed/Unreviewed Scope", "PASS needs full changed-scope review"],
-        "exact_rule": "- Only material current-task findings affecting acceptance/correctness/invariant/regression/security/reliability/material code health require repair; adjacent/optional/style/speculative/unrelated/future work does not. Fundamental failure may fail-fast blocked with Reviewed/Unreviewed Scope; PASS needs full changed-scope review."
+        "required_terms": ["Only material current-task findings", "acceptance/correctness/invariant/regression/security/reliability/material code health", "adjacent/optional/style/speculative/unrelated/future", "fail-fast blocked", "Reviewed/Unreviewed Scope", "Every non-fundamental Review outcome", "PASS additionally requires no blocking findings"],
+        "exact_rule": "- Only material current-task findings affecting acceptance/correctness/invariant/regression/security/reliability/material code health require repair; adjacent/optional/style/speculative/unrelated/future work does not. Fundamental failure may fail-fast blocked with Reviewed/Unreviewed Scope. Every non-fundamental Review outcome, including findings, requires the complete fixed Review Boundary; PASS additionally requires no blocking findings."
+      },
+      {
+        "rule_id": "complete-review-pass",
+        "required_terms": ["Ordinary findings do not end Review", "fixed Review Boundary", "required changed scope", "base dimensions", "professional-risk dimensions", "all evidence-backed findings"],
+        "exact_rule": "- Ordinary findings do not end Review: complete the fixed Review Boundary's required changed scope, base dimensions, and professional-risk dimensions, then return all evidence-backed findings."
       }
     ],
     "handoff_projection": {
       "target": "review-handoff-template.md",
-      "required_terms": ["Core Review Discipline", "L1-L5", "actual latest diff", "every changed file", "observable acceptance", "validation freshness", "regression mechanism", "negative and boundary behavior", "ownership and placement", "unnecessary scope", "unverified scope", "residual risk", "Professional Risk Matrix", "correctness-invariants", "authority-security-privacy", "failure-recovery-concurrency", "performance-resources", "contracts-data-consumers", "tests-evidence", "maintainability-structure", "operations-documentation-release", "source-backed reason and evidence", "named registered Review Skill, scope, and reason", "fresh validation", "latest actual diff", "fresh re-review", "older review", "Effective Level determines review depth", "Review/Risk Boundary determines frequency", "same or stronger", "Covered Task IDs", "Review Skills", "Specialist obligations", "scope-correct", "trustworthy-oracle validation evidence", "Only material current-task findings", "Reviewed and Unreviewed Scope", "invalidate only Evidence whose Scope intersects the repair", "A covering scoped re-review satisfies Final Review"]
+      "required_terms": ["Core Review Discipline", "L1-L5", "actual latest diff", "every changed file", "observable acceptance", "validation freshness", "regression mechanism", "negative and boundary behavior", "ownership and placement", "unnecessary scope", "unverified scope", "residual risk", "Professional Risk Matrix", "correctness-invariants", "authority-security-privacy", "failure-recovery-concurrency", "performance-resources", "contracts-data-consumers", "tests-evidence", "maintainability-structure", "operations-documentation-release", "source-backed reason and evidence", "named registered Review Skill, scope, and reason", "fresh validation", "latest actual diff", "fresh re-review", "older review", "Effective Level determines review depth", "Review/Risk Boundary determines frequency", "same or stronger", "Covered Task IDs", "Review Skills", "Specialist obligations", "scope-correct", "trustworthy-oracle validation evidence", "Only material current-task findings", "ordinary finding does not end Review", "Every non-fundamental Review outcome", "PASS additionally requires no blocking findings", "all evidence-backed findings", "same Review Round and Task ID", "Finding Relation", "affected scope", "Acceptance or risk impact", "required validation", "required covering re-review", "cross-Task batching is forbidden", "Reviewed and Unreviewed Scope", "invalidate only Evidence whose Scope intersects the repair", "A covering scoped re-review satisfies Final Review"]
     }
   },
   "context_budget_contract": {
@@ -1426,11 +1441,20 @@
         "required_scope_report": ["Reviewed Scope", "Unreviewed Scope"],
         "pass_requires_complete_changed_scope": true
       },
+      "ordinary_finding_action": "continue-and-complete-fixed-review-boundary",
+      "review_handoff_finding_set": "all-evidence-backed-findings-from-current-review-round-and-fixed-boundary",
       "review_finding_scope_authority": false,
       "repair_input_relations": ["current-task"]
     },
     "repair_routing": {
       "scope_authority": ["original-task-boundary", "accepted-current-task-finding"],
+      "batch_key": ["Review Round ID", "Task ID"],
+      "batch_cardinality": "exactly-one-repair-assignment-per-review-round-and-task-id",
+      "assignment_contract": "Task Contract v2",
+      "task_id_rule": "unchanged-from-finding-task-id",
+      "batch_contents": "all-material-current-task-findings-for-the-same-review-round-and-task-id",
+      "per_finding_preserves": ["Finding Relation", "affected scope", "Acceptance or risk impact", "required validation", "required covering re-review"],
+      "cross_task_batching": "forbidden",
       "current_task_blocking": "task-agent-repair",
       "scope_blocker": "return-main-analysis",
       "adjacent": "report-defer-continue-primary-task",
@@ -1684,7 +1708,7 @@
   "prompt_contract": {
     "schema_version": 1,
     "path": "src/control-prompts/main-control-agent.md",
-    "document_sha256": "f03ff9e033ccadc539dcbf13068c471367b38c6142e658662c595ae02b97279b",
+    "document_sha256": "7ef6e17e0da1d5cd8eaa883b0b5a8948f6e79f718c2546faaf1fae83dc46f66e",
     "managed_projections": [
       {"id": "execution-level-contract", "section": "Execution Level and Validation", "required_contracts": ["execution_level_contract"]},
       {"id": "review-evidence-contract", "section": "Review and Repair", "required_contracts": ["visible_evidence_contract", "review_discipline_contract"]},

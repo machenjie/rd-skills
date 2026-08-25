@@ -94,7 +94,7 @@ def _rendered_report(*, status: str = "pass") -> dict:
         "cases": [
             {"id": "isolated-write-parallel-contract"},
             {"id": "shared-workspace-serial-write"},
-            {"id": "validation-task-no-edit"},
+            {"id": "validation-task-no-edit", "fixture_group": "utility"},
         ],
         "aggregate": {"max_main": {"tokens": 1000}},
         "transferred_context": {
@@ -109,14 +109,12 @@ def _rendered_report(*, status: str = "pass") -> dict:
                 "source": "reports/hookless-control-plane-eval.json#/orchestration_fixtures",
                 "retained_semantic_equality": True,
             },
+            "measurement_kind": "candidate-subject-only",
             "gross_tokens": 10,
             "non_compressible_tokens": 10,
             "compressible_tokens": 0,
             "compressible_ratio": 0.0,
-            "before_gross_tokens": 47302,
-            "after_gross_tokens": 10,
-            "realized_reduction_tokens": 47292,
-            "realized_reduction_ratio": round(47292 / 47302, 6),
+            "measured_case_count": 2,
             "long_task_selector_join_count": 2,
             "long_task_rows": [
                 {
@@ -126,10 +124,6 @@ def _rendered_report(*, status: str = "pass") -> dict:
                     "non_compressible_tokens": 10,
                     "compressible_tokens": 0,
                     "compressible_ratio": 0.0,
-                    "before_gross_tokens": 20,
-                    "after_gross_tokens": 10,
-                    "realized_reduction_tokens": 10,
-                    "realized_reduction_ratio": 0.5,
                 },
                 {
                     "id": "shared-workspace-serial-write",
@@ -138,19 +132,8 @@ def _rendered_report(*, status: str = "pass") -> dict:
                     "non_compressible_tokens": 10,
                     "compressible_tokens": 0,
                     "compressible_ratio": 0.0,
-                    "before_gross_tokens": 20,
-                    "after_gross_tokens": 10,
-                    "realized_reduction_tokens": 10,
-                    "realized_reduction_ratio": 0.5,
                 },
             ],
-            "conservative_long_task_ratio": 0.5,
-            "context_compaction_decision": {
-                "classification": "continue",
-                "observed_conservative_ratio": 0.5,
-                "minimum_realized_reduction_ratio": 0.25,
-                "target_realized_reduction_ratio": 0.30,
-            },
             "proof_limits": ["Deterministic transfer projection only."],
         },
         "errors": [],
@@ -225,20 +208,21 @@ class ContextControlPlaneEvaluationTests(unittest.TestCase):
         self.assertEqual("pass", report["status"])
         self.assertEqual("deterministic-fixtures", report["evidence_scope"])
         self.assertEqual(
-            "continue",
-            report["context_compaction_decision"]["classification"],
+            "candidate-subject-only",
+            report["transferred_context_summary"]["measurement_kind"],
         )
+        self.assertNotIn("context_compaction_decision", report)
         self.assertEqual("pass", report["status"])
         self.assertFalse(markdown_exists)
 
-    def test_copies_producer_summary_and_decision_without_recomputing(self) -> None:
+    def test_copies_candidate_producer_summary_without_recomputing(self) -> None:
         rendered = _rendered_report()
         transfer = rendered["transferred_context"]
-        producer_decision = {
-            **transfer["context_compaction_decision"],
+        producer_semantic = {
+            **transfer["semantic_baseline"],
             "producer_owned_marker": "copied-not-recomputed",
         }
-        transfer["context_compaction_decision"] = producer_decision
+        transfer["semantic_baseline"] = producer_semantic
 
         result, stderr, report, markdown_exists = self._invoke(
             json.dumps(_source_report()),
@@ -246,11 +230,11 @@ class ContextControlPlaneEvaluationTests(unittest.TestCase):
         )
 
         self.assertEqual(0, result, stderr)
-        self.assertEqual(producer_decision, report["context_compaction_decision"])
         self.assertEqual(
-            transfer["semantic_baseline"],
+            producer_semantic,
             report["transferred_context_summary"]["semantic_baseline"],
         )
+        self.assertNotIn("realized_reduction_ratio", report["transferred_context_summary"])
         self.assertFalse(markdown_exists)
 
     def test_rendered_context_rejects_unproven_long_task_join(self) -> None:
@@ -338,9 +322,9 @@ class ContextControlPlaneEvaluationTests(unittest.TestCase):
         self.assertIsNone(report)
         self.assertFalse(markdown_exists)
 
-    def test_missing_producer_decision_is_rejected(self) -> None:
+    def test_fabricated_realized_reduction_is_rejected(self) -> None:
         rendered = _rendered_report()
-        rendered["transferred_context"].pop("context_compaction_decision")
+        rendered["transferred_context"]["realized_reduction_ratio"] = 0.5
 
         result, stderr, report, markdown_exists = self._invoke(
             json.dumps(_source_report()),
@@ -348,7 +332,7 @@ class ContextControlPlaneEvaluationTests(unittest.TestCase):
         )
 
         self.assertEqual(1, result)
-        self.assertIn("context compaction decision is missing", stderr)
+        self.assertIn("must not claim a realized reduction", stderr)
         self.assertIsNone(report)
         self.assertFalse(markdown_exists)
 

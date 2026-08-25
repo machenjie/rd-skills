@@ -80,15 +80,30 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         self.assertLessEqual(
             count_o200k_base_tokens(task), 635 - required_task_reduction
         )
-        self.assertLessEqual(count_o200k_base_tokens(review), 568)
+        self.assertLessEqual(count_o200k_base_tokens(review), 336)
         self.assertIn("Consume Main's bound effective Level", task)
-        self.assertIn("Consume Main's bound effective Level", review)
+        self.assertIn("Main-bound Level/depth/assurance", review)
         self.assertIn("never calculate or recompute", task)
-        self.assertIn("never calculate or recompute", review)
+        self.assertIn("never recalculate route/authority", review)
         self.assertIn("final edit", task)
         self.assertIn("exact change capture", task)
-        self.assertIn("delivered current", review)
+        self.assertIn("Actual diff authoritative", review)
         self.assertIn("fresh re-review", review)
+        self.assertIn(
+            "Non-fundamental outcomes incl. findings require complete fixed Review Boundary",
+            review,
+        )
+        self.assertIn("PASS requires no blockers", review)
+        for obligation in (
+            "Depth only Level-added, never removed.",
+            "In current source, independently direct-read exact anchors; unknown location→search→minimum complete proof",
+            "Search/Top-K/summaries/digests/paths/command output/opaque refs select evidence, not completeness",
+            "Actual diff authoritative; every changed file required; missing evidence blocks.",
+            "older review cannot cover later edits.",
+            "Never edit, repair, dispatch or inherit implementer reasoning.",
+        ):
+            self.assertIn(obligation, review)
+        self.assertNotIn("PASS requires the full changed scope", review)
     def _mutated_source_result(
         self,
         role: str,
@@ -398,18 +413,22 @@ class AgentProfileReadabilityTests(unittest.TestCase):
                     self.assertEqual(1, result)
                     self.assertIn("role-minimal projection terms", output)
 
-            first_terms = VALIDATOR.ROLE_MINIMAL_REQUIRED_GROUPS[role][0]
-            exact_rule = next(
-                rule for rule in rules if all(term in rule for term in first_terms)
-            )
-            mutation = exact_rule.replace(first_terms[0], "REMOVED_ROLE_BOUND_TERM", 1)
-            for platform in ("codex", "claude", "copilot"):
-                with self.subTest(surface=platform, role=role):
-                    result, output = self._mutated_built_result(
-                        platform, role, exact_rule, mutation
-                    )
-                    self.assertEqual(1, result)
-                    self.assertIn("role-minimal projection terms", output)
+            for terms in VALIDATOR.ROLE_MINIMAL_REQUIRED_GROUPS[role]:
+                exact_rule = next(
+                    rule for rule in rules if all(term in rule for term in terms)
+                )
+                mutation = exact_rule.replace(
+                    terms[0], "REMOVED_ROLE_BOUND_TERM", 1
+                )
+                for platform in ("codex", "claude", "copilot"):
+                    with self.subTest(
+                        surface=platform, role=role, term=terms[0]
+                    ):
+                        result, output = self._mutated_built_result(
+                            platform, role, exact_rule, mutation
+                        )
+                        self.assertEqual(1, result)
+                        self.assertIn("role-minimal projection terms", output)
 
     def test_decoded_built_instructions_accept_current_profiles(self) -> None:
         source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))

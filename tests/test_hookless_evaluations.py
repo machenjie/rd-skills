@@ -363,9 +363,9 @@ class HooklessEvaluationTests(unittest.TestCase):
             transferred["non_compressible_tokens"]
             + transferred["compressible_tokens"],
         )
-        self.assertGreaterEqual(
-            transferred["conservative_long_task_ratio"],
-            0.30,
+        self.assertEqual(
+            "candidate-subject-only",
+            transferred["measurement_kind"],
         )
         self.assertTrue(
             transferred["semantic_baseline"]["retained_semantic_equality"]
@@ -374,16 +374,32 @@ class HooklessEvaluationTests(unittest.TestCase):
             report["orchestration_fixture_count"],
             transferred["semantic_baseline"]["orchestration_fixture_count"],
         )
-        self.assertEqual(
-            "continue",
-            transferred["context_compaction_decision"]["classification"],
-        )
-        self.assertEqual(
-            transferred["conservative_long_task_ratio"],
-            transferred["context_compaction_decision"][
-                "observed_conservative_ratio"
-            ],
-        )
+        self.assertNotIn("realized_reduction_ratio", transferred)
+        self.assertNotIn("context_compaction_decision", transferred)
+        repair_rows = [
+            row["projection"]
+            for task in transferred["long_task_rows"]
+            for row in task["boundary_rows"]
+            if row["boundary"] == "review_to_repair"
+        ]
+        self.assertTrue(repair_rows)
+        for repair in repair_rows:
+            self.assertEqual(2, len(repair["repair_batch_key"]))
+            self.assertTrue(
+                all(
+                    isinstance(item, str) and item
+                    for item in repair["repair_batch_key"]
+                )
+            )
+            self.assertTrue(
+                all(
+                    obligation["required_covering_rereview"][
+                        "covered_task_ids"
+                    ]
+                    == [repair["repair_batch_key"][1]]
+                    for obligation in repair["finding_obligations"]
+                )
+            )
 
         context = load_owned_eval_report(
             self,
@@ -395,6 +411,11 @@ class HooklessEvaluationTests(unittest.TestCase):
         self.assertEqual("deterministic-fixtures", context["evidence_scope"])
         self.assertTrue(set(report["limitations"]).issubset(context["limitations"]))
         self.assertEqual(rendered["aggregate"], context["rendered_context_summary"])
+        self.assertEqual(
+            "candidate-subject-only",
+            context["transferred_context_summary"]["measurement_kind"],
+        )
+        self.assertNotIn("context_compaction_decision", context)
         self.assertNotIn("safe_parallel_writes", context["checks"])
         self.assertTrue(context["checks"]["current_write_parallelism_unsupported"])
         self.assertTrue(context["checks"]["shared_workspace_serial_write"])

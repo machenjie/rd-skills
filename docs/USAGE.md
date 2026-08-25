@@ -32,8 +32,10 @@ Stop if the owner, public contract, or verification command differs from this re
 Replace the paths and test command with repository facts. Expected interaction:
 `main-control-agent` assigns one bounded task to `task-agent`; after the final
 edit, targeted validation runs and `review-agent` reviews the actual diff and
-every changed file. Blocking findings return for repair, fresh validation, and
-re-review.
+every changed file. Ordinary findings accumulate until the fixed review scope
+and required risk dimensions are complete. Material current-task findings from
+the same Review Round and Task ID return as one Repair assignment, followed by
+fresh validation and one covering re-review.
 
 ## Copyable Analyzed Work Request
 
@@ -107,7 +109,10 @@ For implementation work, expect these observable stages:
    including changed paths, exact change evidence, reviewer accessibility,
    fresh targeted validation, and fixed review scope.
 4. Independent review of the actual latest diff and all changed files.
-5. Repair plus fresh validation/re-review when a blocking finding exists.
+5. One same-Round, same-Task Repair batch for material current-task findings,
+   preserving each finding's scope and proof obligations, followed by fresh
+   validation and covering re-review. Scope blockers return to Analysis and
+   adjacent findings remain record-only.
 6. A visible closure handoff whose status is supported by current evidence.
 
 No-edit validation or diff export uses before/after workspace change-set checks.

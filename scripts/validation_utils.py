@@ -1325,7 +1325,7 @@ def prompt_projection_block(
             + "; Handoff-triggered "
             + required_review_claims[1]
             + ".",
-            "not-required JIT-loads from the Handoff owner. Missing/inconsistent authority/binding fails closed; reissue. Repair requires fresh validation/re-review.",
+            "not-required JIT-loads from the Handoff owner. Missing/inconsistent authority/binding fails closed; reissue. Finish fixed scope/risks; return all findings. One round/task current-task Repair keeps obligations; no cross-task/adjacent; scope blocker Main→Analysis. Repair requires fresh validation/re-review.",
             "No " + "/".join(forbidden) + ". review_discipline_contract and task_contract.finding_relations remain authoritative.",
             end,
         ]
@@ -4441,6 +4441,7 @@ def validate_core_contracts(
         "level_extension_rule",
         "review_frequency_policy",
         "validation_evidence_reuse",
+        "complete_review_pass",
         "review_boundary_contract",
         "obligation_subsumption",
         "material_edit_invalidation_policy",
@@ -4855,6 +4856,34 @@ def validate_core_contracts(
                 "review_discipline_contract.validation_evidence_reuse must reuse "
                 "fresh scoped trustworthy evidence unless a closed trigger applies"
             )
+        expected_complete_review_pass = {
+            "ordinary_material_finding_action": (
+                "record-and-continue-fixed-review-boundary"
+            ),
+            "completion_requirements": [
+                "required-changed-scope",
+                "base-review-dimensions",
+                "required-professional-risk-dimensions",
+            ],
+            "handoff_contents": (
+                "all-evidence-backed-findings-from-current-review-round-and-fixed-boundary"
+            ),
+            "finding_expands_review_boundary": False,
+            "early_block_triggers": [
+                "fundamental-architecture-error",
+                "invalid-public-contract",
+                "major-security-defect",
+                "acceptance-fundamentally-unmet",
+            ],
+            "early_block_scope_report": ["Reviewed Scope", "Unreviewed Scope"],
+            "ordinary_outcomes_require_complete_boundary": True,
+            "pass_requires_no_blocking_findings": True,
+        }
+        if review_discipline["complete_review_pass"] != expected_complete_review_pass:
+            errors.append(
+                "review_discipline_contract.complete_review_pass must accumulate "
+                "ordinary findings through the complete fixed Review Boundary"
+            )
         expected_review_boundary_contract = {
             "schema_version": 1,
             "boundary_fields": [
@@ -5180,10 +5209,12 @@ def validate_core_contracts(
             "review-frequency-and-subsumption",
             "validation-evidence-reuse",
             "material-findings-and-fail-fast",
+            "complete-review-pass",
         ]:
             errors.append(
                 "review_discipline_contract.profile_projection must define the "
-                "uniform dimensions, risk matrix, repair, frequency, reuse, and finding rules"
+                "uniform dimensions, risk matrix, repair, frequency, reuse, finding, "
+                "and complete-pass rules"
             )
         handoff_projection = review_discipline["handoff_projection"]
         if exact_keys(
@@ -7202,6 +7233,12 @@ def validate_core_contracts(
                 "required_scope_report": ["Reviewed Scope", "Unreviewed Scope"],
                 "pass_requires_complete_changed_scope": True,
             },
+            "ordinary_finding_action": (
+                "continue-and-complete-fixed-review-boundary"
+            ),
+            "review_handoff_finding_set": (
+                "all-evidence-backed-findings-from-current-review-round-and-fixed-boundary"
+            ),
             "review_finding_scope_authority": False,
             "repair_input_relations": ["current-task"],
         }
@@ -7216,6 +7253,23 @@ def validate_core_contracts(
                 "original-task-boundary",
                 "accepted-current-task-finding",
             ],
+            "batch_key": ["Review Round ID", "Task ID"],
+            "batch_cardinality": (
+                "exactly-one-repair-assignment-per-review-round-and-task-id"
+            ),
+            "assignment_contract": "Task Contract v2",
+            "task_id_rule": "unchanged-from-finding-task-id",
+            "batch_contents": (
+                "all-material-current-task-findings-for-the-same-review-round-and-task-id"
+            ),
+            "per_finding_preserves": [
+                "Finding Relation",
+                "affected scope",
+                "Acceptance or risk impact",
+                "required validation",
+                "required covering re-review",
+            ],
+            "cross_task_batching": "forbidden",
             "current_task_blocking": "task-agent-repair",
             "scope_blocker": "return-main-analysis",
             "adjacent": "report-defer-continue-primary-task",

@@ -306,7 +306,9 @@ TRANSFER_PROJECTION_FIELDS = {
         "unverified_scope",
     ),
     "review_to_repair": (
+        "repair_batch_key",
         "blocking_findings",
+        "finding_obligations",
         "affected_scope",
         "acceptance_impact",
         "latest_diff",
@@ -4333,6 +4335,59 @@ def _current_blocking_review_window(
     review = steps[review_index]
     if review.get("verdict") != "findings":
         return None
+    dispatch = steps[index] if isinstance(steps[index], dict) else {}
+    capsule = dispatch.get("fixture_capsule")
+    repair_task_id = capsule.get("task_id") if isinstance(capsule, dict) else None
+    closing_review = next(
+        (
+            step
+            for step in reversed(steps[review_index + 1 : index])
+            if isinstance(step, dict)
+            and step.get("actor") == "review-agent"
+            and step.get("action") == "review"
+        ),
+        None,
+    )
+    review_round_id = (
+        closing_review.get("review_round_id")
+        if isinstance(closing_review, dict)
+        else None
+    )
+    round_aware_findings = [
+        step
+        for step in steps[review_index + 1 : index]
+        if isinstance(step, dict)
+        and step.get("action") == "finding"
+        and step.get("review_round_id") is not None
+    ]
+    covered_task_ids = (
+        closing_review.get("covered_task_ids", [])
+        if isinstance(closing_review, dict)
+        else []
+    )
+    closes_repair_task = (
+        isinstance(closing_review, dict)
+        and closing_review.get("task_id") == repair_task_id
+    ) or (
+        isinstance(covered_task_ids, list)
+        and repair_task_id in covered_task_ids
+    )
+    if (
+        not round_aware_findings
+        or not isinstance(closing_review, dict)
+        or not isinstance(review_round_id, str)
+        or not review_round_id
+        or not closes_repair_task
+        or any(
+            closing_review.get(field) is not True
+            for field in (
+                "required_changed_scope_complete",
+                "base_dimensions_complete",
+                "professional_risk_dimensions_complete",
+            )
+        )
+    ):
+        return None
     blockers = [
         step
         for step in steps[review_index + 1 : index]
@@ -4340,7 +4395,17 @@ def _current_blocking_review_window(
         and step.get("action") == "finding"
         and step.get("relation") == "current-task"
         and step.get("material") is True
+        and (
+            step.get("task_id") == repair_task_id
+            and step.get("review_round_id") == review_round_id
+        )
     ]
+    if closing_review.get("finding_ids") != [
+        step.get("evidence_id")
+        for step in round_aware_findings
+        if step.get("review_round_id") == review_round_id
+    ]:
+        return None
     return (review, blockers) if blockers else None
 
 
@@ -4369,6 +4434,15 @@ def _current_evidence_errors(value: Any, *, context: str) -> list[str]:
         elif not item.get("claim"):
             errors.append(f"{context}: current_evidence[{index}] needs a claim")
     return errors
+
+
+def _nonempty_string_list(value: object) -> bool:
+    return (
+        isinstance(value, list)
+        and bool(value)
+        and all(isinstance(item, str) and item.strip() for item in value)
+        and len(value) == len(set(value))
+    )
 
 
 def _transfer_projection_errors(boundary: str, projection: Any) -> list[str]:
@@ -4417,6 +4491,21 @@ def _transfer_projection_errors(boundary: str, projection: Any) -> list[str]:
             )
         )
     else:
+        batch_key = projection.get("repair_batch_key")
+        if (
+            not isinstance(batch_key, list)
+            or len(batch_key) != 2
+            or any(
+                not isinstance(item, str) or not item.strip()
+                for item in batch_key
+            )
+        ):
+            errors.append(
+                f"{boundary}: repair_batch_key must bind one Review Round and Task ID"
+            )
+            repair_task_id = None
+        else:
+            repair_task_id = batch_key[1]
         findings = projection.get("blocking_findings")
         if (
             not isinstance(findings, list)
@@ -4430,6 +4519,52 @@ def _transfer_projection_errors(boundary: str, projection: Any) -> list[str]:
         ):
             errors.append(
                 f"{boundary}: only material current-task findings may enter Repair with Finding Relation preserved"
+            )
+        obligations = projection.get("finding_obligations")
+        obligation_fields = (
+            "finding_id",
+            "relation",
+            "affected_scope",
+            "acceptance_or_risk_impact",
+            "required_validation",
+            "required_covering_rereview",
+        )
+        if (
+            not isinstance(obligations, list)
+            or not obligations
+            or any(
+                not isinstance(item, dict)
+                or tuple(item) != obligation_fields
+                or item.get("relation") != "current-task"
+                or not _nonempty_string_list(item.get("affected_scope"))
+                or not isinstance(item.get("acceptance_or_risk_impact"), str)
+                or not item["acceptance_or_risk_impact"].strip()
+                or not _nonempty_string_list(item.get("required_validation"))
+                or not isinstance(item.get("required_covering_rereview"), dict)
+                or tuple(item["required_covering_rereview"])
+                != ("covered_task_ids", "same_or_stronger")
+                or item["required_covering_rereview"].get("covered_task_ids")
+                != [repair_task_id]
+                or item["required_covering_rereview"].get("same_or_stronger") is not True
+                for item in obligations
+            )
+        ):
+            errors.append(
+                f"{boundary}: each Finding must preserve scope, impact, validation, and covering re-review obligations"
+            )
+        finding_claims = [
+            item.get("claim") for item in findings or [] if isinstance(item, dict)
+        ]
+        obligation_ids = [
+            item.get("finding_id")
+            for item in obligations or []
+            if isinstance(item, dict)
+        ]
+        if finding_claims != obligation_ids or len(obligation_ids) != len(
+            set(obligation_ids)
+        ):
+            errors.append(
+                f"{boundary}: one Repair must retain every same-task Finding exactly once"
             )
         diff = projection.get("latest_diff")
         if not isinstance(diff, dict) or diff.get("kind") not in {
@@ -4642,7 +4777,7 @@ def _case_transfer_projection_rows(case: dict[str, Any]) -> list[tuple[str, dict
                 (
                     "task_to_implementation",
                     execution,
-                    f"{_relative(IMPLEMENTATION_HANDOFF_TEMPLATE)}; {_relative(FIXTURES)}#/{case_id}/tasks/{task_id}",
+                    f"{_relative(IMPLEMENTATION_HANDOFF_TEMPLATE)}; {_relative(FIXTURES)}#/{case_id}/steps/{index}/tasks/{task_id}",
                 )
             )
             repair_window = _current_blocking_review_window(steps, index)
@@ -4672,11 +4807,69 @@ def _case_transfer_projection_rows(case: dict[str, Any]) -> list[tuple[str, dict
                         ]
                     }
                 )
+                repair_task_id = payload.get("task_id")
+                if not isinstance(repair_task_id, str) or not repair_task_id:
+                    raise ValueError(
+                        f"{case_id}: Repair projection requires one Task ID"
+                    )
+                for item in findings:
+                    required_covering_rereview = item.get(
+                        "required_covering_rereview"
+                    )
+                    if (
+                        not isinstance(item.get("path"), str)
+                        or not item["path"].strip()
+                        or not _nonempty_string_list(
+                            [item["path"], *item.get("dependent_scope", [])]
+                        )
+                        or not isinstance(item.get("acceptance_impact"), str)
+                        or not item["acceptance_impact"].strip()
+                        or not _nonempty_string_list(
+                            item.get("required_validation")
+                        )
+                        or not isinstance(required_covering_rereview, dict)
+                        or tuple(required_covering_rereview)
+                        != ("covered_task_ids", "same_or_stronger")
+                        or required_covering_rereview.get("covered_task_ids")
+                        != [repair_task_id]
+                        or required_covering_rereview.get("same_or_stronger")
+                        is not True
+                    ):
+                        raise ValueError(
+                            f"{case_id}: Repair projection per-finding obligations "
+                            "must be explicit, non-empty, and bound to the Repair Task ID"
+                        )
+                review_round_ids = {
+                    item.get("review_round_id") for item in findings
+                }
+                if len(review_round_ids) != 1 or not next(iter(review_round_ids)):
+                    raise ValueError(
+                        f"{case_id}: Repair projection requires one explicit Review Round ID"
+                    )
+                review_round_id = next(iter(review_round_ids))
                 repair = {
+                    "repair_batch_key": [review_round_id, repair_task_id],
                     "blocking_findings": [
                         {
                             "claim": item.get("evidence_id"),
                             "relation": item.get("relation"),
+                        }
+                        for item in findings
+                    ],
+                    "finding_obligations": [
+                        {
+                            "finding_id": item.get("evidence_id"),
+                            "relation": item.get("relation"),
+                            "affected_scope": [
+                                item["path"], *item.get("dependent_scope", [])
+                            ],
+                            "acceptance_or_risk_impact": item.get(
+                                "acceptance_impact"
+                            ),
+                            "required_validation": item["required_validation"],
+                            "required_covering_rereview": item[
+                                "required_covering_rereview"
+                            ],
                         }
                         for item in findings
                     ],
@@ -4695,6 +4888,11 @@ def _case_transfer_projection_rows(case: dict[str, Any]) -> list[tuple[str, dict
                     "required_validation": payload.get("verification", []),
                     "required_rereview": {"required": True, "owner": payload.get("review_owner")},
                 }
+                repair_errors = _transfer_projection_errors(
+                    "review_to_repair", repair
+                )
+                if repair_errors:
+                    raise ValueError("; ".join(repair_errors))
                 rows.append(
                     (
                         "review_to_repair",

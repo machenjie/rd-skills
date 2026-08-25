@@ -1769,8 +1769,31 @@ class CoreContractModelTests(unittest.TestCase):
         )
         self.assertEqual("orthogonal", relations["severity_relation"])
         self.assertEqual(["current-task"], relations["repair_input_relations"])
+        self.assertEqual(
+            "continue-and-complete-fixed-review-boundary",
+            relations["ordinary_finding_action"],
+        )
+        self.assertFalse(relations["review_finding_scope_authority"])
         self.assertFalse(
             relations["rules"]["adjacent"]["high_or_critical_scope_authority"]
+        )
+        repair = task["repair_routing"]
+        self.assertEqual(["Review Round ID", "Task ID"], repair["batch_key"])
+        self.assertEqual(
+            "all-material-current-task-findings-for-the-same-review-round-and-task-id",
+            repair["batch_contents"],
+        )
+        self.assertEqual("unchanged-from-finding-task-id", repair["task_id_rule"])
+        self.assertEqual("forbidden", repair["cross_task_batching"])
+        self.assertEqual(
+            [
+                "Finding Relation",
+                "affected scope",
+                "Acceptance or risk impact",
+                "required validation",
+                "required covering re-review",
+            ],
+            repair["per_finding_preserves"],
         )
 
         scan = task["same_pattern_scan"]
@@ -2625,6 +2648,28 @@ class CoreContractModelTests(unittest.TestCase):
             contract["profile_capability_id"],
             CORE_CONTRACTS["profile_contract"]["role_capabilities"]["review-agent"]
             ["required_capability_ids"],
+        )
+        self.assertEqual(
+            {
+                "ordinary_material_finding_action": "record-and-continue-fixed-review-boundary",
+                "completion_requirements": [
+                    "required-changed-scope",
+                    "base-review-dimensions",
+                    "required-professional-risk-dimensions",
+                ],
+                "handoff_contents": "all-evidence-backed-findings-from-current-review-round-and-fixed-boundary",
+                "finding_expands_review_boundary": False,
+                "early_block_triggers": [
+                    "fundamental-architecture-error",
+                    "invalid-public-contract",
+                    "major-security-defect",
+                    "acceptance-fundamentally-unmet",
+                ],
+                "early_block_scope_report": ["Reviewed Scope", "Unreviewed Scope"],
+                "ordinary_outcomes_require_complete_boundary": True,
+                "pass_requires_no_blocking_findings": True,
+            },
+            contract["complete_review_pass"],
         )
 
     def test_adaptive_testing_contract_is_closed(self) -> None:

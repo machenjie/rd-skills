@@ -1194,6 +1194,40 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 self.assertNotIn(mode_only_term, analysis_root)
                 self.assertIn(mode_only_term, implementation)
 
+    def test_review_profile_keeps_evidence_localization_and_depth_on_all_hosts(
+        self,
+    ) -> None:
+        profiles = json.loads(
+            (ROOT / "src/agent-profiles/role-agents.json").read_text(
+                encoding="utf-8"
+            )
+        )["profiles"]
+        review = next(
+            item["instructions"]
+            for item in profiles
+            if item["name"] == "review-agent"
+        )
+        obligations = (
+            "Depth only Level-added, never removed.",
+            "In current source, independently direct-read exact anchors; unknown location→search→minimum complete proof",
+            "Search/Top-K/summaries/digests/paths/command output/opaque refs select evidence, not completeness",
+            "Actual diff authoritative; every changed file required; missing evidence blocks.",
+            "older review cannot cover later edits.",
+            "Never edit, repair, dispatch or inherit implementer reasoning.",
+        )
+        self.assertLessEqual(EVAL.count_o200k_base_tokens(review), 336)
+        for obligation in obligations:
+            self.assertEqual(1, review.count(obligation))
+        for path in (
+            ROOT / "dist/codex/project/.codex/agents/review-agent.toml",
+            ROOT / "dist/claude/project/.claude/agents/review-agent.md",
+            ROOT / "dist/copilot/project/.github/agents/review-agent.agent.md",
+        ):
+            with self.subTest(path=path):
+                rendered = path.read_text(encoding="utf-8")
+                for obligation in obligations:
+                    self.assertEqual(1, rendered.count(obligation))
+
     def test_transfer_compaction_round_trips_every_valid_boundary(self) -> None:
         document = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
         for _group, case in EVAL._fixture_cases(document):
@@ -1578,11 +1612,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
             if item["boundary"] == "review_to_repair"
         )
         self.assertEqual(
-            ["initial-service-review"],
+            ["initial-service-review-A", "initial-service-review-B"],
             [item["claim"] for item in repair["blocking_findings"]],
         )
         self.assertEqual(
-            ["current-task"],
+            ["current-task", "current-task"],
             [item["relation"] for item in repair["blocking_findings"]],
         )
         self.assertTrue(
@@ -1594,7 +1628,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         self.assertTrue(
             all("outcome" not in item for item in repair["blocking_findings"])
         )
-        self.assertEqual(["service.py"], repair["affected_scope"])
+        self.assertEqual(["service.py", "tests/test_service.py"], repair["affected_scope"])
         self.assertEqual(
             {"initial-targeted-test", "previous-diff-review"},
             {item["claim"] for item in repair["invalidated_evidence"]},
@@ -1751,18 +1785,34 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 },
                 {
                     "action": "finding",
+                    "task_id": "original-task",
+                    "review_round_id": "R-original-1",
                     "path": "a.py",
                     "dependent_scope": ["a_test.py"],
                     "evidence_id": "blocker-A",
                     "relation": "current-task",
                     "material": True,
+                    "acceptance_impact": "acceptance",
+                    "required_validation": ["repair-check"],
+                    "required_covering_rereview": {
+                        "covered_task_ids": ["original-task"],
+                        "same_or_stronger": True,
+                    },
                 },
                 {
                     "action": "finding",
+                    "task_id": "original-task",
+                    "review_round_id": "R-original-1",
                     "path": "b.py",
                     "evidence_id": "blocker-B",
                     "relation": "current-task",
                     "material": True,
+                    "acceptance_impact": "correctness",
+                    "required_validation": ["repair-check"],
+                    "required_covering_rereview": {
+                        "covered_task_ids": ["original-task"],
+                        "same_or_stronger": True,
+                    },
                 },
                 {
                     "action": "finding",
@@ -1770,6 +1820,8 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     "evidence_id": "non-material",
                     "relation": "current-task",
                     "material": False,
+                    "task_id": "original-task",
+                    "review_round_id": "R-original-1",
                 },
                 {
                     "action": "finding",
@@ -1777,23 +1829,40 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     "evidence_id": "resolved",
                     "relation": "adjacent",
                     "material": False,
+                    "task_id": "original-task",
+                    "review_round_id": "R-original-1",
+                },
+                {
+                    "actor": "review-agent",
+                    "action": "review",
+                    "task_id": "original-task",
+                    "review_round_id": "R-original-1",
+                    "required_changed_scope_complete": True,
+                    "base_dimensions_complete": True,
+                    "professional_risk_dimensions_complete": True,
+                    "finding_ids": [
+                        "blocker-A",
+                        "blocker-B",
+                        "non-material",
+                        "resolved",
+                    ],
                 },
                 {
                     "action": "dispatch",
                     "profile": "task-agent",
                     "fixture_capsule": {
                         "contract_type": "task",
-                        "task_id": "repair-task",
+                        "task_id": "original-task",
                         "status": "in_progress",
                         "acceptance": ["resolve current blockers"],
                         "verification": ["repair-check"],
                         "review_owner": "review-agent",
                     },
                 },
-                {"action": "repair", "task_id": "repair-task", "path": "a.py"},
+                {"action": "repair", "task_id": "original-task", "path": "a.py"},
                 {
                     "action": "validate",
-                    "task_id": "repair-task",
+                    "task_id": "original-task",
                     "command": "repair-check",
                     "outcome": "passed",
                     "evidence_id": "repair-validation",
@@ -1836,6 +1905,266 @@ class RenderedContextBudgetTests(unittest.TestCase):
             ["owner-placement-inspection"],
             [item["claim"] for item in repair["reusable_evidence"]],
         )
+
+    def test_review_convergence_projection_preserves_per_finding_obligations(self) -> None:
+        obligations = {
+            "blocker-A": {
+                "finding_id": "blocker-A",
+                "relation": "current-task",
+                "affected_scope": ["a.py", "a_test.py"],
+                "acceptance_or_risk_impact": "acceptance",
+                "required_validation": ["targeted-A"],
+                "required_covering_rereview": {
+                    "covered_task_ids": ["task-A"],
+                    "same_or_stronger": True,
+                },
+            },
+            "blocker-B": {
+                "finding_id": "blocker-B",
+                "relation": "current-task",
+                "affected_scope": ["b.py"],
+                "acceptance_or_risk_impact": "correctness",
+                "required_validation": ["targeted-B"],
+                "required_covering_rereview": {
+                    "covered_task_ids": ["task-A"],
+                    "same_or_stronger": True,
+                },
+            },
+        }
+        case = {
+            "id": "review-convergence-transfer",
+            "steps": [
+                {
+                    "action": "review-discipline",
+                    "task_id": "task-A",
+                    "verdict": "findings",
+                    "diff": {"kind": "actual-diff", "artifact": "a.diff"},
+                    "validation": {"evidence_id": "validation-A"},
+                },
+                *[
+                    {
+                        "action": "finding",
+                        "task_id": "task-A",
+                        "review_round_id": "R-A-1",
+                        "path": obligation["affected_scope"][0],
+                        "dependent_scope": obligation["affected_scope"][1:],
+                        "evidence_id": finding_id,
+                        "relation": "current-task",
+                        "material": True,
+                        "acceptance_impact": obligation[
+                            "acceptance_or_risk_impact"
+                        ],
+                        "required_validation": obligation["required_validation"],
+                        "required_covering_rereview": obligation[
+                            "required_covering_rereview"
+                        ],
+                    }
+                    for finding_id, obligation in obligations.items()
+                ],
+                {
+                    "actor": "review-agent",
+                    "action": "review",
+                    "task_id": "task-A",
+                    "review_round_id": "R-A-1",
+                    "required_changed_scope_complete": True,
+                    "base_dimensions_complete": True,
+                    "professional_risk_dimensions_complete": True,
+                    "finding_ids": ["blocker-A", "blocker-B"],
+                },
+                {
+                    "action": "dispatch",
+                    "profile": "task-agent",
+                    "fixture_capsule": {
+                        "contract_type": "task",
+                        "task_id": "task-A",
+                        "status": "in_progress",
+                        "acceptance": ["resolve A and B"],
+                        "verification": ["targeted-A", "targeted-B"],
+                        "review_owner": "review-agent",
+                    },
+                },
+            ],
+        }
+
+        repair = next(
+            projection
+            for boundary, projection, _source in EVAL._case_transfer_projection_rows(case)
+            if boundary == "review_to_repair"
+        )
+
+        self.assertEqual(
+            list(obligations.values()), repair["finding_obligations"]
+        )
+        self.assertEqual(["R-A-1", "task-A"], repair["repair_batch_key"])
+
+        for mutation, batch_key in (
+            ("empty-round", ["", "task-A"]),
+            ("empty-task", ["R-A-1", ""]),
+        ):
+            with self.subTest(malformed_batch_key=mutation):
+                probe = copy.deepcopy(repair)
+                probe["repair_batch_key"] = batch_key
+                self.assertTrue(
+                    any(
+                        "repair_batch_key must bind" in error
+                        for error in EVAL._transfer_projection_errors(
+                            "review_to_repair", probe
+                        )
+                    )
+                )
+
+        delimiter_case = copy.deepcopy(case)
+        for step in delimiter_case["steps"]:
+            if step.get("task_id") == "task-A":
+                step["task_id"] = "task:A"
+            if step.get("review_round_id") == "R-A-1":
+                step["review_round_id"] = "R:A:1"
+            covering = step.get("required_covering_rereview")
+            if isinstance(covering, dict):
+                covering["covered_task_ids"] = ["task:A"]
+        delimiter_case["steps"][-1]["fixture_capsule"]["task_id"] = "task:A"
+        delimiter_repair = next(
+            projection
+            for boundary, projection, _source in EVAL._case_transfer_projection_rows(
+                delimiter_case
+            )
+            if boundary == "review_to_repair"
+        )
+        self.assertEqual(
+            ["R:A:1", "task:A"], delimiter_repair["repair_batch_key"]
+        )
+        self.assertTrue(
+            all(
+                item["required_covering_rereview"]["covered_task_ids"]
+                == ["task:A"]
+                for item in delimiter_repair["finding_obligations"]
+            )
+        )
+
+        malformed_findings = {
+            "missing-impact": lambda finding: finding.pop("acceptance_impact"),
+            "empty-impact": lambda finding: finding.update(acceptance_impact=""),
+            "empty-path": lambda finding: finding.update(path=""),
+            "non-string-dependent-scope": lambda finding: finding.update(
+                dependent_scope=[7]
+            ),
+            "scalar-dependent-scope": lambda finding: finding.update(
+                dependent_scope="scope"
+            ),
+            "missing-validation": lambda finding: finding.pop("required_validation"),
+            "empty-validation": lambda finding: finding.update(required_validation=[]),
+            "invalid-validation-member": lambda finding: finding.update(
+                required_validation=[7]
+            ),
+            "missing-covering-rereview": lambda finding: finding.pop(
+                "required_covering_rereview"
+            ),
+            "malformed-covering-rereview": lambda finding: finding.update(
+                required_covering_rereview=[]
+            ),
+            "missing-covering-task": lambda finding: finding.update(
+                required_covering_rereview={"same_or_stronger": True}
+            ),
+            "wrong-covering-task": lambda finding: finding.update(
+                required_covering_rereview={
+                    "covered_task_ids": ["task-B"],
+                    "same_or_stronger": True,
+                }
+            ),
+            "non-covering-rereview": lambda finding: finding.update(
+                required_covering_rereview={
+                    "covered_task_ids": ["task-A"],
+                    "same_or_stronger": False,
+                }
+            ),
+        }
+        for mutation, mutate in malformed_findings.items():
+            with self.subTest(malformed_finding=mutation):
+                probe = copy.deepcopy(case)
+                finding = next(
+                    step
+                    for step in probe["steps"]
+                    if step.get("evidence_id") == "blocker-A"
+                )
+                mutate(finding)
+                with self.assertRaisesRegex(
+                    ValueError, "per-finding obligations|dependent_scope"
+                ):
+                    list(EVAL._case_transfer_projection_rows(probe))
+
+        malformed_obligations = {
+            "empty-impact": lambda item: item.update(
+                acceptance_or_risk_impact=""
+            ),
+            "empty-scope-member": lambda item: item.update(
+                affected_scope=[""]
+            ),
+            "non-string-scope-member": lambda item: item.update(
+                affected_scope=[7]
+            ),
+            "empty-validation-member": lambda item: item.update(
+                required_validation=[""]
+            ),
+            "non-string-validation-member": lambda item: item.update(
+                required_validation=[7]
+            ),
+            "missing-covering-task": lambda item: item.update(
+                required_covering_rereview={"same_or_stronger": True}
+            ),
+            "wrong-covering-task": lambda item: item.update(
+                required_covering_rereview={
+                    "covered_task_ids": ["task-B"],
+                    "same_or_stronger": True,
+                }
+            ),
+        }
+        for mutation, mutate in malformed_obligations.items():
+            with self.subTest(malformed_projection=mutation):
+                probe = copy.deepcopy(repair)
+                mutate(probe["finding_obligations"][0])
+                self.assertTrue(
+                    any(
+                        "each Finding must preserve" in error
+                        for error in EVAL._transfer_projection_errors(
+                            "review_to_repair", probe
+                        )
+                    )
+                )
+
+        for mutation, expected in (
+            ("unclosed-boundary", None),
+            ("missing-review-round", None),
+            ("changed-task-id", None),
+            ("cross-task-finding", ["blocker-A"]),
+        ):
+            with self.subTest(mutation=mutation):
+                probe = copy.deepcopy(case)
+                if mutation == "unclosed-boundary":
+                    probe["steps"] = [
+                        step for step in probe["steps"]
+                        if step.get("action") != "review"
+                    ]
+                elif mutation == "missing-review-round":
+                    for step in probe["steps"]:
+                        if step.get("action") in {"finding", "review"}:
+                            step.pop("review_round_id", None)
+                elif mutation == "changed-task-id":
+                    probe["steps"][-1]["fixture_capsule"]["task_id"] = "task-B"
+                else:
+                    probe["steps"][2]["task_id"] = "task-B"
+                    probe["steps"][2]["required_covering_rereview"][
+                        "covered_task_ids"
+                    ] = ["task-B"]
+                window = EVAL._current_blocking_review_window(
+                    probe["steps"], len(probe["steps"]) - 1
+                )
+                if expected is None:
+                    self.assertIsNone(window)
+                else:
+                    self.assertEqual(
+                        expected,
+                        [item["evidence_id"] for item in window[1]],
+                    )
 
     def test_adjacent_and_scope_blocker_findings_never_create_repair_projection(
         self,
@@ -4592,20 +4921,20 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "build_manifests": {
                     "dev": {
                         "path": "dist/universal/skills/dev/.changeforge-build-manifest.json",
-                        "sha256": "7ae84b65300fba7368bf57a823915de52935f7e15cef0b133c930fc98bf05bf4",
+                        "sha256": "3d2366faada5d630ccb2a5a1422c8ffc48e5cea953e4374e8294cd34c2a34bdb",
                     },
                     "full": {
                         "path": "dist/universal/skills/full/.changeforge-build-manifest.json",
-                        "sha256": "e698396a4d49ee9d5c897a736503dcbf3e726055c6a78a503ce37ecb03e8896d",
+                        "sha256": "09ffd11ed498b01d8206816a18cc1cb5d5a25c156700388e71d4f714868ce625",
                     },
                     "recommended": {
                         "path": "dist/universal/skills/recommended/.changeforge-build-manifest.json",
-                        "sha256": "8df357a87ba12b4f9ef1c0e60ed360ba9e6d755a7614026d17ab18d33a062959",
+                        "sha256": "5e237e687d76cca4eca834d822cd11a19375f6bdf3a016887dbe192be6121701",
                     },
                 },
                 "capsule_source": {
                     "path": "evals/agent-light-trajectories/cases.yaml",
-                    "sha256": "5102a1384d25228b68655fd9100db5fc3293bcf609d310c9564e9896c1a1dc22",
+                    "sha256": "4aef1df4b08b6f86399bf0c8223997038f8c69ea42edcb13d3112f62079869c4",
                 },
                 "control_projection_sha256": "234f88e0957c619c431d83fcf6232acc17500296a824b1584999ff3ad44573a1",
                 "registries": {
@@ -4615,7 +4944,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 },
                 "render_component_inventory": {
                     "count": 1_212,
-                    "mapping_sha256": "1eda6375327ce525027baf577dbd482a39bb991a7d421796b1a62ca8acbd41a5",
+                    "mapping_sha256": "2414469d6aeec832b3e9b89711ddbda54883a3f256f40260b2764476d008a496",
                 },
                 "selector_authority_sha256": "1b37e9e7b06ea375c418061ae89dd336ed1c703abf7b5c1d5c826fa93df63943",
             },
@@ -4623,7 +4952,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         )
         self.assertEqual(236_078, frontier["mapping_row_count"])
         self.assertEqual(
-            "bf359ae8515e1f118ae9a04aa6e1e484203eed0cbc9ea7c94a5fd818d71b4525",
+            "38b5d56d6092d4671448ed7b633ccf7388900590de7f32ab7811159c8f98d672",
             frontier["mapping_digest"],
         )
         self.assertEqual(
@@ -4643,8 +4972,8 @@ class RenderedContextBudgetTests(unittest.TestCase):
         self.assertEqual(
             {
                 "scripts/build.py": "573d4d8e0ec0383d6a58e7c09d2aba237ed3b7b5e2283d4895174078754e1ade",
-                "scripts/validation_utils.py": "d1edf15f9aa69892aa5747bf9b5ce108b61bafaee2ae363b283b42c4f221b761",
-                "src/control-prompts/main-control-agent.md": "f03ff9e033ccadc539dcbf13068c471367b38c6142e658662c595ae02b97279b",
+                "scripts/validation_utils.py": "b7d3f973e6d1dfa52429560195f1c8da1f611d0d98fa32e0fc5c82c35bb34a17",
+                "src/control-prompts/main-control-agent.md": "7ef6e17e0da1d5cd8eaa883b0b5a8948f6e79f718c2546faaf1fae83dc46f66e",
                 "src/control-skills/engineering-control-plane/references/professional-skill-router.md": "5a8fd594d763fde89b94087e08060b5d4dc19eab89bf6fb50849282e64bcf170",
             },
             consumer_boundary["checked_path_fingerprints"],
@@ -4660,7 +4989,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             review["frontier_counts"],
         )
         self.assertEqual(
-            3_000,
+            2_999,
             max(item["maximum_tokens"] for item in direct["outside"]["active_reference"]),
         )
         self.assertEqual(
@@ -4690,7 +5019,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         }
         maxima = composition["max_by_budget_class"]
         self.assertEqual(
-            {"analysis": 3_526, "task": 3_000, "analyzed_task": 4_099, "review": 3_431},
+            {"analysis": 3_583, "task": 2_999, "analyzed_task": 4_098, "review": 3_431},
             {budget_class: maximum["tokens"] for budget_class, maximum in maxima.items()},
         )
         self.assertEqual(
@@ -4811,7 +5140,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         document = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
         capsule = EVAL._capsule_envelopes(EVAL._fixture_cases(document))["task"]
         self.assertEqual(
-            "fixture:repair-and-rereview:step:20:canonical-capsule",
+            "fixture:repair-and-rereview:step:22:canonical-capsule",
             capsule["path"],
         )
         components = [
@@ -4840,15 +5169,15 @@ class RenderedContextBudgetTests(unittest.TestCase):
             token_budget=EVAL.FROZEN_GATES["task"],
         )
         self.assertEqual(
-            [495, 269, 230, 229, 233, 346, 657],
+            [494, 269, 230, 229, 233, 346, 657],
             [item["tokens"] for item in components],
         )
         self.assertEqual(
-            2_459,
+            2_458,
             measurement["sum_component_tokens"],
         )
-        self.assertEqual(2_458, measurement["total_tokens"])
-        self.assertEqual(2_465, EVAL._component_upper_bound(components))
+        self.assertEqual(2_457, measurement["total_tokens"])
+        self.assertEqual(2_464, EVAL._component_upper_bound(components))
         self.assertTrue(measurement["within_token_budget"])
 
     def test_frontend_named_direct_evidence_stays_singleton_and_under_target(self) -> None:
@@ -5163,7 +5492,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             capsule,
         ]
         self.assertEqual(
-            [495, 261, 222, 269, 223, 431, 657],
+            [494, 261, 222, 269, 223, 431, 657],
             [item["tokens"] for item in components],
         )
         measurement = EVAL._measure_context(
@@ -5171,11 +5500,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
             budget_class="task",
             token_budget=EVAL.FROZEN_GATES["task"],
         )
-        self.assertEqual(2_558, measurement["sum_component_tokens"])
-        self.assertEqual(2_557, measurement["total_tokens"])
-        self.assertEqual(2_564, EVAL._component_upper_bound(components))
+        self.assertEqual(2_557, measurement["sum_component_tokens"])
+        self.assertEqual(2_556, measurement["total_tokens"])
+        self.assertEqual(2_563, EVAL._component_upper_bound(components))
         self.assertTrue(measurement["within_token_budget"])
-        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 437)
+        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 438)
 
     def test_c1f_reliability_named_review_witness_is_bounded(self) -> None:
         authority = EVAL._selector_authority()
@@ -5416,20 +5745,20 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "profile_path": ROOT / "dist/copilot/project/.github/agents/task-agent.agent.md",
                 "profile_kind": "worker_profile",
                 "capsule": capsules["task"],
-                "component_tokens": [495, 310, 229, 250, 183, 474, 657],
+                "component_tokens": [494, 310, 229, 250, 183, 474, 657],
                 "component_shas": [
-                    "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
+                    "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
                     "58d88e71ba05ce0b36336ac8ef70f3f13ded845a842ac99fcdc01a5911ae7e5c",
                     "3e2150a21b3997726207b6ac9317c8077856708c87a481ac818898779c78229a",
                     "989a93e84c8ba897bdc8ba69113da520c11207996f1d64b7ad59b4810284ae91",
                     "f91cb26ad5c184d9505fec203a388ee461fda50f6a9c1684abc83bda5bfb8237",
                     "af7766cecc9f29fad1063a16234c6bf69cc7fb62148a6934c7b498de7d5eb893",
-                    "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
+                    "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
                 ],
-                "sum_component_tokens": 2_598,
-                "total_tokens": 2_597,
-                "upper_bound": 2_604,
-                "negative_delta": 397,
+                "sum_component_tokens": 2_597,
+                "total_tokens": 2_596,
+                "upper_bound": 2_603,
+                "negative_delta": 398,
             },
             {
                 "budget_class": "review",
@@ -5443,7 +5772,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "capsule": capsules["review"],
                 "component_tokens": [394, 310, 229, 250, 183, 474, 785],
                 "component_shas": [
-                    "5a5b69f80b41996b108765c4f13d1f445e882087feee57c4d3bb4f4f4a2e33c7",
+                    "6701f276ea5d897830c0fad9f45c086d3c9133f4fc6ab0502089392858e7cda0",
                     "58d88e71ba05ce0b36336ac8ef70f3f13ded845a842ac99fcdc01a5911ae7e5c",
                     "3e2150a21b3997726207b6ac9317c8077856708c87a481ac818898779c78229a",
                     "989a93e84c8ba897bdc8ba69113da520c11207996f1d64b7ad59b4810284ae91",
@@ -5663,20 +5992,20 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "profile_path": ROOT / "dist/copilot/project/.github/agents/task-agent.agent.md",
                 "profile_kind": "worker_profile",
                 "capsule": capsules["task"],
-                "component_tokens": [495, 293, 236, 202, 226, 468, 657],
+                "component_tokens": [494, 293, 236, 202, 226, 468, 657],
                 "component_shas": [
-                    "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
+                    "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
                     "e6313187ef53df0de6bb2de88839d3589bff2a6f3585d808e0b7df2d922d5067",
                     "e31d6327abc44b7be5ba6887f0ca587d9289e35459d82d09cc4389be01f4e8c0",
                     "c0bddf002b385fddd4834ad4670cdc91cb539b22bfc3b1ed2870dff423439d2b",
                     "156956a35e90e36dff8c9fe49b8ac006c97ca16d3b78b775da3a5f618927d6b3",
                     "53aa82fd9b802487c4f5e92f999fa9ca96f4b8666f6054807cf106e07d5f6834",
-                    "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
+                    "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
                 ],
-                "sum_component_tokens": 2_577,
-                "total_tokens": 2_576,
-                "upper_bound": 2_583,
-                "negative_delta": 418,
+                "sum_component_tokens": 2_576,
+                "total_tokens": 2_575,
+                "upper_bound": 2_582,
+                "negative_delta": 419,
             },
             {
                 "budget_class": "review",
@@ -5690,7 +6019,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "capsule": capsules["review"],
                 "component_tokens": [394, 293, 236, 202, 226, 468, 785],
                 "component_shas": [
-                    "5a5b69f80b41996b108765c4f13d1f445e882087feee57c4d3bb4f4f4a2e33c7",
+                    "6701f276ea5d897830c0fad9f45c086d3c9133f4fc6ab0502089392858e7cda0",
                     "e6313187ef53df0de6bb2de88839d3589bff2a6f3585d808e0b7df2d922d5067",
                     "e31d6327abc44b7be5ba6887f0ca587d9289e35459d82d09cc4389be01f4e8c0",
                     "c0bddf002b385fddd4834ad4670cdc91cb539b22bfc3b1ed2870dff423439d2b",
@@ -6082,18 +6411,18 @@ class RenderedContextBudgetTests(unittest.TestCase):
             capsules["task"],
         ]
         self.assertEqual(
-            [495, 309, 257, 223, 232, 565, 657],
+            [494, 309, 257, 223, 232, 565, 657],
             [item["tokens"] for item in task_components],
         )
         self.assertEqual(
             [
-                "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
+                "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
                 "a1b284bddfd1cdf9fed94e175d603e2db962ab597ba443ab58d3e1a8c3d543b6",
                 "535ce74d430ee2cf20f237d416d8f0ec8b8f2c498cc7b262d2ab16624af16e65",
                 "33361cbcacb5926d779a486126acb5d4f5edb211655effedee3b6053aa763730",
                 "eb3ff8d61501d0a450aa9f72d60f5f96248791b06fb3b0cae7a57792d6780750",
                 "c1bf533e04443976a6bbe8ee77121a9117e88ffb868c39402311e9aa016c3409",
-                "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
+                "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
             ],
             [item["sha256"] for item in task_components],
         )
@@ -6102,13 +6431,13 @@ class RenderedContextBudgetTests(unittest.TestCase):
             budget_class="task",
             token_budget=EVAL.FROZEN_GATES["task"],
         )
-        self.assertEqual(2_738, task_measurement["sum_component_tokens"])
-        self.assertEqual(2_737, task_measurement["total_tokens"])
-        self.assertEqual(2_744, EVAL._component_upper_bound(task_components))
+        self.assertEqual(2_737, task_measurement["sum_component_tokens"])
+        self.assertEqual(2_736, task_measurement["total_tokens"])
+        self.assertEqual(2_743, EVAL._component_upper_bound(task_components))
         self.assertTrue(task_measurement["within_token_budget"])
         self.assertEqual(
             EVAL.PHASE3_CONTEXT_TARGETS["task"] + 1,
-            EVAL._component_upper_bound(task_components) + 257,
+            EVAL._component_upper_bound(task_components) + 258,
         )
         review_layer3 = [
             "domain-object-identification",
@@ -6289,7 +6618,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         )
         self.assertEqual(
             [
-                "5a5b69f80b41996b108765c4f13d1f445e882087feee57c4d3bb4f4f4a2e33c7",
+                "6701f276ea5d897830c0fad9f45c086d3c9133f4fc6ab0502089392858e7cda0",
                 "bc92739d0a17a4216e7710f19cb1e035fe59e48e2623c6441ccd9d82a43d997e",
                 "5d3f4ac9f0add16b6dd447315930d17f0f5afb4dea035d2a6f089a142c8a8767",
                 "c9981d67a0942008d538317d2fcec97cf41f3b3c6ad761d6efb48899df53f080",
@@ -6522,18 +6851,18 @@ class RenderedContextBudgetTests(unittest.TestCase):
             capsule,
         ]
         self.assertEqual(
-            [495, 246, 214, 283, 246, 608, 657],
+            [494, 246, 214, 283, 246, 608, 657],
             [item["tokens"] for item in components],
         )
         self.assertEqual(
             [
-                "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
+                "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
                 "2b71a32f0a209286a10ca1e770882e487479dcfdde5737587dee4954fe55bd94",
                 "3472b6ca5145616987527880780a6debd998414b3554cf85a6c43c1431ae3e5d",
                 "e8c916c5260c27787c8ac9da1ce9b0f4eebe2972360ea6779f050721a2bd5c75",
                 "c8d8f21a9a60dfe588db5a8157791781715b8293758a6d730ee38ad1dc3f65c6",
                 "99a9f2e244e3083030ebd9b64a89be758208f1380787c0824236c4a83244518a",
-                "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
+                "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
             ],
             [item["sha256"] for item in components],
         )
@@ -6542,13 +6871,13 @@ class RenderedContextBudgetTests(unittest.TestCase):
             budget_class="task",
             token_budget=EVAL.FROZEN_GATES["task"],
         )
-        self.assertEqual(2_749, measurement["sum_component_tokens"])
-        self.assertEqual(2_748, measurement["total_tokens"])
-        self.assertEqual(2_755, EVAL._component_upper_bound(components))
+        self.assertEqual(2_748, measurement["sum_component_tokens"])
+        self.assertEqual(2_747, measurement["total_tokens"])
+        self.assertEqual(2_754, EVAL._component_upper_bound(components))
         self.assertTrue(measurement["within_token_budget"])
         self.assertEqual(
             EVAL.PHASE3_CONTEXT_TARGETS["task"] + 1,
-            EVAL._component_upper_bound(components) + 246,
+            EVAL._component_upper_bound(components) + 247,
         )
 
     def test_c1l_data_api_named_task_witness_is_bounded(self) -> None:
@@ -6728,18 +7057,18 @@ class RenderedContextBudgetTests(unittest.TestCase):
             capsule,
         ]
         self.assertEqual(
-            [495, 300, 209, 198, 209, 536, 657],
+            [494, 300, 209, 198, 209, 536, 657],
             [item["tokens"] for item in components],
         )
         self.assertEqual(
             [
-                "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
+                "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
                 "f0779c57fb4c72eb1294eb7a4119070a16cab83b008dc25fa89420e7565d4211",
                 "61061c8452d14599f435da37cf8c81d45a8d72ae437b30bc3a297f216f179263",
                 "1c4dfac80199dd1aa80147237375786cefa9886621c10a7607d60bd0cbdc9d2a",
                 "4bf5229519d767637f267538dad8e89249aa3620473267d7da1b2fcee143dcbb",
                 "70e2a6d903a1d125c5f893206b670fb1578ba43031b11a7f67e84f9683f259a2",
-                "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
+                "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
             ],
             [item["sha256"] for item in components],
         )
@@ -6748,11 +7077,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
             budget_class="task",
             token_budget=EVAL.FROZEN_GATES["task"],
         )
-        self.assertEqual(2_604, measurement["sum_component_tokens"])
-        self.assertEqual(2_603, measurement["total_tokens"])
-        self.assertEqual(2_610, EVAL._component_upper_bound(components))
+        self.assertEqual(2_603, measurement["sum_component_tokens"])
+        self.assertEqual(2_602, measurement["total_tokens"])
+        self.assertEqual(2_609, EVAL._component_upper_bound(components))
         self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
-        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 391)
+        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 392)
         self.assertNotEqual(components, components[:-1])
 
 
@@ -7001,18 +7330,18 @@ class RenderedContextBudgetTests(unittest.TestCase):
             capsule,
         ]
         self.assertEqual(
-            [495, 303, 250, 233, 217, 635, 657],
+            [494, 303, 250, 233, 217, 635, 657],
             [item["tokens"] for item in components],
         )
         self.assertEqual(
             [
-                "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
+                "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
                 "1f5f5d81f6dd59c74a1a43ed9e7710478b16a0657eaa5312fe623ee598fb300e",
                 "fcbe9dc653c2d7f98fe01738547701d6ba79fff570c24b176e130d3c17941ad2",
                 "b2e0f2942ce44f05e6e9df79b84ec2143d50cf2fdf774080a7426421dacbcd5d",
                 "8ca8f4143c96cda353931bdead1f2fbdaaa3837b27497e9111bc2caf669bee81",
                 "f876b57f88901fa11afcbbf60a549a0af4ca884a4b05df338534b85b49346d38",
-                "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
+                "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
             ],
             [item["sha256"] for item in components],
         )
@@ -7021,11 +7350,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
             budget_class="task",
             token_budget=EVAL.FROZEN_GATES["task"],
         )
-        self.assertEqual(2_790, measurement["sum_component_tokens"])
-        self.assertEqual(2_789, measurement["total_tokens"])
-        self.assertEqual(2_796, EVAL._component_upper_bound(components))
+        self.assertEqual(2_789, measurement["sum_component_tokens"])
+        self.assertEqual(2_788, measurement["total_tokens"])
+        self.assertEqual(2_795, EVAL._component_upper_bound(components))
         self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
-        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 205)
+        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 206)
         self.assertNotEqual(components, components[:-1])
 
     def test_c1n_quality_client_named_task_witness_is_bounded(self) -> None:
@@ -7235,18 +7564,18 @@ class RenderedContextBudgetTests(unittest.TestCase):
             capsule,
         ]
         self.assertEqual(
-            [495, 332, 257, 215, 232, 592, 657],
+            [494, 332, 257, 215, 232, 592, 657],
             [item["tokens"] for item in components],
         )
         self.assertEqual(
             [
-                "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
+                "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
                 "8bea21744146360fc9d8a946c724f174b71723a28ce5960c1ff872b0e621f6dd",
                 "535ce74d430ee2cf20f237d416d8f0ec8b8f2c498cc7b262d2ab16624af16e65",
                 "6a82967cb4e768321dca47421353b4a3ced565841444e760fe1c6078da9558ae",
                 "eb3ff8d61501d0a450aa9f72d60f5f96248791b06fb3b0cae7a57792d6780750",
                 "02edd179aae452bb8d1c4663bc73fa8f7bff2b980def64c4c51ad086c18a7777",
-                "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
+                "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
             ],
             [item["sha256"] for item in components],
         )
@@ -7255,11 +7584,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
             budget_class="task",
             token_budget=EVAL.FROZEN_GATES["task"],
         )
-        self.assertEqual(2_780, measurement["sum_component_tokens"])
-        self.assertEqual(2_779, measurement["total_tokens"])
-        self.assertEqual(2_786, EVAL._component_upper_bound(components))
+        self.assertEqual(2_779, measurement["sum_component_tokens"])
+        self.assertEqual(2_778, measurement["total_tokens"])
+        self.assertEqual(2_785, EVAL._component_upper_bound(components))
         self.assertTrue(measurement["within_token_budget"])
-        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 215)
+        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 216)
         self.assertNotEqual(components, components[:-1])
 
 
@@ -7534,18 +7863,18 @@ class RenderedContextBudgetTests(unittest.TestCase):
             capsule,
         ]
         self.assertEqual(
-            [495, 229, 250, 183, 197, 722, 657],
+            [494, 229, 250, 183, 197, 722, 657],
             [item["tokens"] for item in components],
         )
         self.assertEqual(
             [
-                "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
+                "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
                 "edf20265275b1afa37ecd528904f486436cfa88cd04b6ecacb773a0ed8105958",
                 "fcbe9dc653c2d7f98fe01738547701d6ba79fff570c24b176e130d3c17941ad2",
                 "f91cb26ad5c184d9505fec203a388ee461fda50f6a9c1684abc83bda5bfb8237",
                 "8f5d6f6f82a18be75f0eca521865139c604e2e41cc73858b535285f026b5f094",
                 "97ce7438c774d56a64d46fd241c3d6876b97929b8294f43897818185ba812cd4",
-                "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
+                "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
             ],
             [item["sha256"] for item in components],
         )
@@ -7554,12 +7883,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
             budget_class="task",
             token_budget=EVAL.FROZEN_GATES["task"],
         )
-        self.assertEqual(2_733, measurement["sum_component_tokens"])
-        self.assertEqual(2_732, measurement["total_tokens"])
-        self.assertEqual(2_739, EVAL._component_upper_bound(components))
+        self.assertEqual(2_732, measurement["sum_component_tokens"])
+        self.assertEqual(2_731, measurement["total_tokens"])
+        self.assertEqual(2_738, EVAL._component_upper_bound(components))
         self.assertTrue(measurement["within_token_budget"])
         self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
-        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 262)
+        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 263)
         self.assertNotEqual(components, components[:-1])
 
     def test_fg_c1p_platform_iac_safety_named_task_witness_is_bounded(self) -> None:
@@ -7831,18 +8160,18 @@ class RenderedContextBudgetTests(unittest.TestCase):
             capsule,
         ]
         self.assertEqual(
-            [495, 229, 250, 183, 165, 812, 657],
+            [494, 229, 250, 183, 165, 812, 657],
             [item["tokens"] for item in components],
         )
         self.assertEqual(
             [
-                "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
+                "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
                 "edf20265275b1afa37ecd528904f486436cfa88cd04b6ecacb773a0ed8105958",
                 "fcbe9dc653c2d7f98fe01738547701d6ba79fff570c24b176e130d3c17941ad2",
                 "f91cb26ad5c184d9505fec203a388ee461fda50f6a9c1684abc83bda5bfb8237",
                 "a0a06ad825967e548dc5eb817ce003a24519aa99a4c2262cc0bcbc0830a97b76",
                 "8cf0a2d5b85a83cd517a937059b28b243c2718e7da90dad405fd33a474e44b1f",
-                "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
+                "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
             ],
             [item["sha256"] for item in components],
         )
@@ -7851,13 +8180,13 @@ class RenderedContextBudgetTests(unittest.TestCase):
             budget_class="task",
             token_budget=EVAL.FROZEN_GATES["task"],
         )
-        self.assertEqual(2_791, measurement["sum_component_tokens"])
-        self.assertEqual(2_790, measurement["total_tokens"])
-        self.assertEqual(2_797, EVAL._component_upper_bound(components))
+        self.assertEqual(2_790, measurement["sum_component_tokens"])
+        self.assertEqual(2_789, measurement["total_tokens"])
+        self.assertEqual(2_796, EVAL._component_upper_bound(components))
         self.assertTrue(measurement["within_token_budget"])
         self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
         negative = copy.deepcopy(components)
-        negative[5]["tokens"] = 1_016
+        negative[5]["tokens"] = 1_017
         self.assertEqual(3_001, EVAL._component_upper_bound(negative))
         self.assertNotEqual(components, components[:-1])
 
@@ -8029,27 +8358,27 @@ class RenderedContextBudgetTests(unittest.TestCase):
             EVAL._file_component("layer3_reference", ROOT / "src/foundation/capabilities/data-migration-design/references/evidence-patterns.md"),
             capsule,
         ]
-        self.assertEqual([495, 269, 230, 283, 246, 611, 657], [item["tokens"] for item in components])
+        self.assertEqual([494, 269, 230, 283, 246, 611, 657], [item["tokens"] for item in components])
         self.assertEqual(
             [
-                "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
+                "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
                 "22a41125147da43b01da304168205b8840d7ec6649a16c7727bd7719943696f3",
                 "f93f83da98b02b86460d186c6b3cb2187caa25234eaf64f2343799ee8bde7483",
                 "e8c916c5260c27787c8ac9da1ce9b0f4eebe2972360ea6779f050721a2bd5c75",
                 "c8d8f21a9a60dfe588db5a8157791781715b8293758a6d730ee38ad1dc3f65c6",
                 "b868feeb34a6b3e3399403c1b96608a6baa46f8768945768c02ff1a517f3ea65",
-                "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
+                "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
             ],
             [item["sha256"] for item in components],
         )
         measurement = EVAL._measure_context(components, budget_class="task", token_budget=EVAL.FROZEN_GATES["task"])
-        self.assertEqual(2_791, measurement["sum_component_tokens"])
-        self.assertEqual(2_790, measurement["total_tokens"])
-        self.assertEqual(2_797, EVAL._component_upper_bound(components))
+        self.assertEqual(2_790, measurement["sum_component_tokens"])
+        self.assertEqual(2_789, measurement["total_tokens"])
+        self.assertEqual(2_796, EVAL._component_upper_bound(components))
         self.assertTrue(measurement["within_token_budget"])
         self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
         negative = copy.deepcopy(components)
-        negative[5]["tokens"] = 815
+        negative[5]["tokens"] = 816
         self.assertEqual(3_001, EVAL._component_upper_bound(negative))
         self.assertNotEqual(components, components[:-1])
 
@@ -8327,18 +8656,18 @@ class RenderedContextBudgetTests(unittest.TestCase):
             capsule,
         ]
         self.assertEqual(
-            [495, 333, 338, 229, 250, 482, 657],
+            [494, 333, 338, 229, 250, 482, 657],
             [item["tokens"] for item in components],
         )
         self.assertEqual(
             [
-                "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
+                "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
                 "cd91f6ea858e7b988fe1268c0e45d8f3cf38e501ff0a1cbb8d31a6ec0bcb4565",
                 "94a3e7d66eebc7a8c5c154df3405449473ea05b75b4d072f6828cbca8d197923",
                 "3e2150a21b3997726207b6ac9317c8077856708c87a481ac818898779c78229a",
                 "989a93e84c8ba897bdc8ba69113da520c11207996f1d64b7ad59b4810284ae91",
                 "771c35d891ee7662d60144c0bab45f6e6956007060d3ab6a97e69aef6051552e",
-                "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
+                "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
             ],
             [item["sha256"] for item in components],
         )
@@ -8347,13 +8676,13 @@ class RenderedContextBudgetTests(unittest.TestCase):
             budget_class="task",
             token_budget=EVAL.FROZEN_GATES["task"],
         )
-        self.assertEqual(2_784, measurement["sum_component_tokens"])
-        self.assertEqual(2_783, measurement["total_tokens"])
-        self.assertEqual(2_790, EVAL._component_upper_bound(components))
+        self.assertEqual(2_783, measurement["sum_component_tokens"])
+        self.assertEqual(2_782, measurement["total_tokens"])
+        self.assertEqual(2_789, EVAL._component_upper_bound(components))
         self.assertTrue(measurement["within_token_budget"])
         self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
         negative = copy.deepcopy(components)
-        negative[5]["tokens"] = 693
+        negative[5]["tokens"] = 694
         self.assertEqual(3_001, EVAL._component_upper_bound(negative))
         self.assertNotEqual(components, components[:-1])
 
@@ -8626,18 +8955,18 @@ class RenderedContextBudgetTests(unittest.TestCase):
             capsule,
         ]
         self.assertEqual(
-            [495, 303, 250, 311, 234, 532, 657],
+            [494, 303, 250, 311, 234, 532, 657],
             [item["tokens"] for item in components],
         )
         self.assertEqual(
             [
-                "9c52b3dfcbf455974f28a19b6a13776240bfce977ebefe3cf97bbebf89a4e494",
+                "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
                 "1f5f5d81f6dd59c74a1a43ed9e7710478b16a0657eaa5312fe623ee598fb300e",
                 "fcbe9dc653c2d7f98fe01738547701d6ba79fff570c24b176e130d3c17941ad2",
                 "559d0467c675e0e77803979cb8f132d547567d236c0dad97efe2a030c6a8225a",
                 "ae1207804645b3af4968e354358fcc27b10aa76f9f20fabe31388494d3bf17f1",
                 "ba0d3b7172e4fce659dfce92653dfcbd628295d4714ab0b6b81a38e6bd2ab763",
-                "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
+                "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
             ],
             [item["sha256"] for item in components],
         )
@@ -8646,13 +8975,13 @@ class RenderedContextBudgetTests(unittest.TestCase):
             budget_class="task",
             token_budget=EVAL.FROZEN_GATES["task"],
         )
-        self.assertEqual(2_782, measurement["sum_component_tokens"])
-        self.assertEqual(2_781, measurement["total_tokens"])
-        self.assertEqual(2_788, EVAL._component_upper_bound(components))
+        self.assertEqual(2_781, measurement["sum_component_tokens"])
+        self.assertEqual(2_780, measurement["total_tokens"])
+        self.assertEqual(2_787, EVAL._component_upper_bound(components))
         self.assertTrue(measurement["within_token_budget"])
         self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
         negative = copy.deepcopy(components)
-        negative[5]["tokens"] = 745
+        negative[5]["tokens"] = 746
         self.assertEqual(3_001, EVAL._component_upper_bound(negative))
         self.assertNotEqual(components, components[:-1])
 

@@ -1167,12 +1167,18 @@ def _analyzed_trajectory_authority_errors(
                 "Delta must use the complete protected-decision projection",
             )
         invalidated = delta.get("invalidated_decisions")
+        invalidated_valid = (
+            isinstance(invalidated, list)
+            and bool(invalidated)
+            and all(isinstance(item, str) and item for item in invalidated)
+            and len(invalidated) == len(set(invalidated))
+        )
         if (
             delta.get("analysis_kind") != "delta"
             or delta.get("protected_decision_invalidated") is not True
-            or not isinstance(invalidated, list)
-            or not invalidated
-            or not set(invalidated) <= allowed_invalidations
+            or not invalidated_valid
+            or not set(invalidated if invalidated_valid else [])
+            <= allowed_invalidations
             or delta.get("reroute_trigger") not in allowed_reroutes
         ):
             reject(
@@ -2093,6 +2099,7 @@ def _adaptive_test_guard_errors(
     task_id: object,
     derived_risk_triggers: set[str],
     oracle_authority: dict[str, Any] | None = None,
+    assignment_end_index: int | None = None,
 ) -> list[str]:
     code = IMPLEMENTATION_GUARD_CODES["G"]
     errors: list[str] = []
@@ -2130,6 +2137,8 @@ def _adaptive_test_guard_errors(
         if step.get("actor") == "task-agent"
         and step.get("action") == ADAPTIVE_TEST_EVIDENCE_ACTION
         and step.get("task_id") == task_id
+        and (dispatch_index is None or dispatch_index < index)
+        and (assignment_end_index is None or index < assignment_end_index)
     ]
     for index, record in typed_records:
         expected_fields = (
@@ -2303,6 +2312,7 @@ def _implementation_guard_errors(
     steps: list[dict[str, Any]],
     derived_risk_triggers: set[str],
     oracle_authority: dict[str, Any] | None = None,
+    assignment_end_index: int | None = None,
 ) -> list[str]:
     errors: list[str] = []
     evidence = event.get("evidence")
@@ -2403,6 +2413,8 @@ def _implementation_guard_errors(
         and step.get("action") == "read"
         and step.get("task_id") == task_id
         and step.get("read_kind") in IMPLEMENTATION_SOURCE_READ_KINDS
+        and (dispatch_index is None or dispatch_index < index)
+        and (assignment_end_index is None or index < assignment_end_index)
     ]
     source_reads_by_id = {
         step.get("evidence_id"): (index, step)
@@ -2654,6 +2666,8 @@ def _implementation_guard_errors(
                 if step.get("actor") == "task-agent"
                 and step.get("action") == "validate"
                 and task_id in _validation_bound_task_ids(step)[0]
+                and (dispatch_index is None or dispatch_index < index)
+                and (assignment_end_index is None or index < assignment_end_index)
                 and (
                     step.get("evidence_id") == signal
                     or step.get("command") == signal
@@ -2939,6 +2953,7 @@ def _implementation_guard_errors(
                 event.get("task_id"),
                 derived_risk_triggers,
                 oracle_authority,
+                assignment_end_index,
             )
         )
     return errors
@@ -3054,81 +3069,88 @@ def _implementation_discipline_errors(
             continue
         edits.setdefault(task_id, []).append(index)
 
-    for task_id, edit_indexes in edits.items():
-        first_edit_index = min(edit_indexes)
-        final_edit_index = max(edit_indexes)
-        task_dispatches = dispatches.get(task_id, [])
-        if len(task_dispatches) != 1:
-            errors.append(
-                _implementation_discipline_error(
-                    case_id,
-                    "implementation-discipline-dispatch-binding",
-                    f"task {task_id!r} must bind exactly one normal task dispatch",
-                )
-            )
+    for task_id, task_dispatches in dispatches.items():
         task_events = events.get(task_id, [])
-        if len(task_events) != 1:
-            code = (
-                "implementation-discipline-missing-event"
-                if not task_events
-                else "implementation-discipline-duplicate-event"
-            )
-            errors.append(
-                _implementation_discipline_error(
-                    case_id,
-                    code,
-                    "task-agent must complete implementation discipline before first edit",
-                )
-            )
-            continue
-        event_index, event = task_events[0]
-        dispatch_index = task_dispatches[0] if len(task_dispatches) == 1 else None
-        dispatch_step = steps[dispatch_index] if dispatch_index is not None else None
-        if (
-            dispatch_index is None
-            or not dispatch_index < event_index < first_edit_index
+        task_edits = edits.get(task_id, [])
+        if any(index < task_dispatches[0] for index, _event in task_events) or any(
+            index < task_dispatches[0] for index in task_edits
         ):
             errors.append(
                 _implementation_discipline_error(
                     case_id,
                     IMPLEMENTATION_GUARD_CODES["order"],
-                    "task-agent must complete implementation discipline before first edit",
+                    "task-agent discipline and edits must follow their normal task dispatch",
                 )
             )
-        errors.extend(
-            _implementation_guard_errors(
-                case_id,
-                event,
-                event_index,
-                dispatch_index,
-                first_edit_index,
-                final_edit_index,
-                steps,
-                _derived_adaptive_risk_triggers(event, dispatch_step),
-                (
-                    validated_authority
-                    if validated_authority is not None
-                    and validated_authority["task_id"] == task_id
-                    else None
-                ),
+        for dispatch_offset, dispatch_index in enumerate(task_dispatches):
+            assignment_end_index = (
+                task_dispatches[dispatch_offset + 1]
+                if dispatch_offset + 1 < len(task_dispatches)
+                else len(steps)
             )
-        )
-
-    for task_id, task_events in events.items():
-        if task_id not in edits:
-            errors.append(
-                _implementation_discipline_error(
-                    case_id,
-                    "implementation-discipline-without-edit",
-                    f"task {task_id!r} has discipline evidence but no task-agent edit",
+            assignment_events = [
+                item
+                for item in task_events
+                if dispatch_index < item[0] < assignment_end_index
+            ]
+            assignment_edits = [
+                index
+                for index in task_edits
+                if dispatch_index < index < assignment_end_index
+            ]
+            if not assignment_edits:
+                for _event_index, _event in assignment_events:
+                    errors.append(
+                        _implementation_discipline_error(
+                            case_id,
+                            "implementation-discipline-without-edit",
+                            f"task {task_id!r} has discipline evidence but no task-agent edit in its assignment",
+                        )
+                    )
+                continue
+            if len(assignment_events) != 1:
+                code = (
+                    "implementation-discipline-missing-event"
+                    if not assignment_events
+                    else "implementation-discipline-duplicate-event"
                 )
-            )
-        elif len(task_events) > 1:
-            errors.append(
-                _implementation_discipline_error(
+                errors.append(
+                    _implementation_discipline_error(
+                        case_id,
+                        code,
+                        "task-agent must complete one implementation discipline event before the assignment's first edit",
+                    )
+                )
+                continue
+            first_edit_index = min(assignment_edits)
+            final_edit_index = max(assignment_edits)
+            event_index, event = assignment_events[0]
+            dispatch_step = steps[dispatch_index]
+            if not dispatch_index < event_index < first_edit_index:
+                errors.append(
+                    _implementation_discipline_error(
+                        case_id,
+                        IMPLEMENTATION_GUARD_CODES["order"],
+                        "task-agent must complete implementation discipline before first edit",
+                    )
+                )
+            errors.extend(
+                _implementation_guard_errors(
                     case_id,
-                    "implementation-discipline-duplicate-event",
-                    f"task {task_id!r} has duplicate discipline events",
+                    event,
+                    event_index,
+                    dispatch_index,
+                    first_edit_index,
+                    final_edit_index,
+                    steps,
+                    _derived_adaptive_risk_triggers(event, dispatch_step),
+                    (
+                        validated_authority
+                        if validated_authority is not None
+                        and validated_authority["task_id"] == task_id
+                        else None
+                    ),
+                    assignment_end_index,
                 )
             )
     return list(dict.fromkeys(errors))
@@ -3848,7 +3870,7 @@ def _review_discipline_errors(
         (index, step)
         for index, step in enumerate(steps)
         if step.get("actor") == "review-agent"
-        and step.get("action") in REVIEW_ACTIONS | {"finding"}
+        and step.get("action") in REVIEW_ACTIONS
     ]
     if not events and not review_actions:
         return list(dict.fromkeys(errors))
@@ -3922,7 +3944,7 @@ def _review_discipline_errors(
         expected_actions = (
             {"re-review"}
             if required_review_kind == "repair"
-            else {"review", "finding"}
+            else {"review"}
         )
         if review_action.get("action") not in expected_actions:
             reject(
@@ -3930,7 +3952,66 @@ def _review_discipline_errors(
                 f"derived {required_review_kind!r} review kind requires one of "
                 f"{sorted(expected_actions)}",
             )
-
+        round_findings = [
+            step
+            for step in steps[event_index + 1 : review_index]
+            if step.get("actor") == "review-agent"
+            and step.get("action") == "finding"
+        ]
+        review_round_id = review_action.get("review_round_id")
+        if event.get("verdict") in {"pass", "findings"}:
+            if (
+                not isinstance(review_round_id, str)
+                or not review_round_id
+                or review_action.get("task_id") != task_id
+                or any(
+                    review_action.get(field) is not True
+                    for field in (
+                        "required_changed_scope_complete",
+                        "base_dimensions_complete",
+                        "professional_risk_dimensions_complete",
+                    )
+                )
+            ):
+                reject(
+                    "review-complete-pass",
+                    "every non-fundamental Review outcome requires a Review Round ID and complete fixed scope and review dimensions",
+                )
+            finding_ids = [finding.get("evidence_id") for finding in round_findings]
+            reported_finding_ids = review_action.get("finding_ids")
+            if (
+                not isinstance(reported_finding_ids, list)
+                or any(
+                    not isinstance(finding_id, str) or not finding_id
+                    for finding_id in reported_finding_ids
+                )
+                or len(reported_finding_ids) != len(set(reported_finding_ids))
+                or reported_finding_ids != finding_ids
+                or any(
+                    finding.get("task_id") != task_id
+                    or finding.get("review_round_id") != review_round_id
+                    for finding in round_findings
+                )
+            ):
+                reject(
+                    "review-complete-pass",
+                    "one closing Review Handoff must report every Finding from its fixed Review Round and Task ID",
+                )
+            blocking_finding_ids = [
+                finding.get("evidence_id")
+                for finding in round_findings
+                if finding.get("relation") in {"current-task", "scope-blocker"}
+            ]
+            if event.get("verdict") == "pass" and blocking_finding_ids:
+                reject(
+                    "review-verdict",
+                    "PASS additionally requires no blocking Findings",
+                )
+        if event.get("verdict") == "findings" and not round_findings:
+            reject(
+                "review-complete-pass",
+                "a findings verdict requires evidence-backed Findings before the closing Review Handoff",
+            )
         dispatch_pair = next(
             (
                 (index, step)
@@ -4060,6 +4141,7 @@ def _review_discipline_errors(
                 "review must cover every file changed since the previous review",
             )
 
+        review_input_ready = False
         if material_since_review:
             round_dispatches = [
                 (index, step)
@@ -4376,6 +4458,11 @@ def _review_discipline_errors(
                     "review-input-reviewer-read",
                     "supplied review evidence must be read exactly once by the assigned reviewer before review",
                 )
+            review_input_ready = (
+                handoff_ready
+                and gate.get("ready") is True
+                and isinstance(dispatch, dict)
+            )
         elif prior_review_index >= 0:
             reject(
                 "review-input-recovery",
@@ -4385,6 +4472,21 @@ def _review_discipline_errors(
         verdict = event.get("verdict")
         if verdict not in REVIEW_VERDICTS:
             reject("review-verdict", "review verdict is not canonical")
+        if verdict == "blocked" and review_input_ready:
+            if review_action.get("reason") not in FINDING_RELATION_MODEL[
+                "fail_fast"
+            ]["triggers"]:
+                reject(
+                    "review-fail-fast",
+                    "ready blocked Review requires exactly one fundamental Core reason",
+                )
+            if not _nonempty_string_list(
+                review_action.get("reviewed_scope")
+            ) or not _nonempty_string_list(review_action.get("unreviewed_scope")):
+                reject(
+                    "review-fail-fast",
+                    "ready blocked Review requires explicit Reviewed and Unreviewed Scope",
+                )
         if diff_kind == "unavailable":
             if any(
                 (
@@ -4644,6 +4746,12 @@ def _review_fixture_steps(case: dict[str, Any]) -> list[dict[str, Any]]:
     review: dict[str, Any] = {
         "actor": "review-agent",
         "action": "review",
+        "task_id": case_id,
+        "review_round_id": f"{case_id}:review-round:1",
+        "required_changed_scope_complete": True,
+        "base_dimensions_complete": True,
+        "professional_risk_dimensions_complete": True,
+        "finding_ids": [],
         "changed_paths": ["owner.py"],
     }
     handoff_id = f"{case_id}:implementation-handoff:1"
@@ -5949,11 +6057,17 @@ def _orchestration_case_result(
             continue
         invalidated = event.get("invalidated_decisions")
         updates = event.get("transitive_updates")
+        invalidated_valid = (
+            isinstance(invalidated, list)
+            and bool(invalidated)
+            and all(isinstance(item, str) and item for item in invalidated)
+            and len(invalidated) == len(set(invalidated))
+        )
+        invalidated_items = invalidated if invalidated_valid else []
         if (
             event.get("protected_decision_invalidated") is not True
-            or not isinstance(invalidated, list)
-            or not invalidated
-            or not set(invalidated) <= protected_decisions
+            or not invalidated_valid
+            or not set(invalidated_items) <= protected_decisions
         ):
             reject(
                 "analysis-decision-invalidation",
@@ -6037,7 +6151,7 @@ def _orchestration_case_result(
         ]
         invalidated_sections = {
             section
-            for decision in invalidated or []
+            for decision in invalidated_items
             for section in DELTA_BRIEF_SECTIONS_BY_INVALIDATION.get(decision, set())
         }
         mandatory_updates = {
@@ -6121,9 +6235,18 @@ def _orchestration_case_result(
     covering_review_seen = False
     covering_rereview_seen = False
     repair_seen = False
-    pending_repair_findings: dict[str, tuple[str, set[str], set[str]]] = {}
+    pending_repair_findings: dict[str, dict[str, Any]] = {}
     finding_relations_by_id: dict[str, str] = {}
     seen_finding_ids: set[str] = set()
+    findings_by_round_task: dict[tuple[str, str], list[str]] = {}
+    completed_review_batches: set[tuple[str, str]] = set()
+    repair_batch_keys: list[tuple[str, str]] = []
+    resolved_batch_finding_ids: list[str] = []
+    repair_source_rounds: dict[str, str] = {}
+    finding_routes: dict[str, list[str]] = {
+        "scope_blocker": [],
+        "adjacent": [],
+    }
     repair_review_requirements: dict[str, tuple[set[str], set[str]]] = {}
     repaired_task_ids: set[str] = set()
     repair_invalidated_claims: set[str] = set()
@@ -6221,6 +6344,91 @@ def _orchestration_case_result(
                         "repair must name unique unresolved material Finding identities",
                     )
                     resolved_finding_ids = []
+                review_round_id = event.get("review_round_id")
+                if not isinstance(review_round_id, str) or not review_round_id:
+                    reject(
+                        "repair-batch-key",
+                        "Repair batch requires a non-empty Review Round ID and Task ID",
+                    )
+                else:
+                    batch_key = (str(review_round_id), str(task_id))
+                    if event.get("repair_batch_count", 1) != 1:
+                        reject(
+                            "repair-batch-cardinality",
+                            "one Review Round and Task ID produces exactly one Repair assignment",
+                        )
+                    expected_batch_ids = [
+                        finding_id
+                        for finding_id, finding in pending_repair_findings.items()
+                        if finding.get("review_round_id") == review_round_id
+                        and finding.get("task_id") == task_id
+                    ]
+                    if resolved_finding_ids != expected_batch_ids:
+                        reject(
+                            "repair-batch-completeness",
+                            "Repair must batch every unresolved material current-task Finding from the same Review Round and Task ID",
+                        )
+                    resolved_records = [
+                        pending_repair_findings[finding_id]
+                        for finding_id in resolved_finding_ids
+                        if finding_id in pending_repair_findings
+                    ]
+                    if any(
+                        finding.get("task_id") != task_id
+                        or finding.get("review_round_id") != review_round_id
+                        for finding in resolved_records
+                    ):
+                        reject(
+                            "repair-cross-task-batch",
+                            "findings from different Task IDs or Review Rounds cannot share one Repair assignment",
+                        )
+                    if resolved_records and any(
+                        finding.get("task_id") != task_id
+                        for finding in resolved_records
+                    ):
+                        reject(
+                            "repair-task-id-continuity",
+                            "Repair Task ID must stay unchanged from every batched Finding",
+                        )
+                    if batch_key not in completed_review_batches:
+                        reject(
+                            "repair-before-review-complete",
+                            "Repair is forbidden until the fixed Review Boundary pass is complete",
+                        )
+                    expected_obligations = [
+                        {
+                            "finding_id": finding_id,
+                            "relation": finding_relations_by_id.get(finding_id),
+                            "affected_scope": pending_repair_findings[finding_id].get(
+                                "affected_scope"
+                            ),
+                            "acceptance_or_risk_impact": pending_repair_findings[
+                                finding_id
+                            ].get("acceptance_or_risk_impact"),
+                            "required_validation": pending_repair_findings[
+                                finding_id
+                            ].get("required_validation"),
+                            "required_covering_rereview": pending_repair_findings[
+                                finding_id
+                            ].get("required_covering_rereview"),
+                        }
+                        for finding_id in resolved_finding_ids
+                        if finding_id in pending_repair_findings
+                    ]
+                    if event.get("finding_obligations") != expected_obligations:
+                        reject(
+                            "repair-finding-obligation",
+                            "Repair must preserve each Finding Relation, affected scope, impact, validation, and covering re-review obligation",
+                        )
+                    if batch_key in repair_batch_keys:
+                        reject(
+                            "repair-batch-cardinality",
+                            "a Review Round and Task ID cannot produce a split second Repair assignment",
+                        )
+                    else:
+                        repair_batch_keys.append(batch_key)
+                        resolved_batch_finding_ids.extend(resolved_finding_ids)
+                        repair_source_rounds[str(task_id)] = review_round_id
                 projected_relations = event.get("finding_relations")
                 expected_relations = {
                     finding_id: finding_relations_by_id.get(finding_id)
@@ -6241,9 +6449,10 @@ def _orchestration_case_result(
                 derived_specialists: set[str] = set()
                 derived_risks: set[str] = set()
                 for finding_id in resolved_finding_ids:
-                    finding_task, finding_specialists, finding_risks = (
-                        pending_repair_findings[finding_id]
-                    )
+                    finding = pending_repair_findings[finding_id]
+                    finding_task = finding["task_id"]
+                    finding_specialists = finding["specialists"]
+                    finding_risks = finding["risks"]
                     if finding_task not in affected:
                         reject(
                             "repair-finding-identity",
@@ -6346,6 +6555,15 @@ def _orchestration_case_result(
                     reject("repair-rereview", "re-review requires a preceding repair")
                 covering_rereview_seen = current_review | event_task_set == set(task_ids)
                 rereviewed_task_ids.update(event_task_set & repaired_task_ids)
+                rereview_round = event.get("review_round_id")
+                if rereview_round is not None and any(
+                    repair_source_rounds.get(task) == rereview_round
+                    for task in event_task_set
+                ):
+                    reject(
+                        "repair-rereview-freshness",
+                        "post-repair re-review requires a fresh Review Round bound to the latest generation",
+                    )
             elif covering_rereview_seen:
                 reject(
                     "obligation-subsumption",
@@ -6519,6 +6737,13 @@ def _orchestration_case_result(
                     "PASS requires complete required changed-scope review",
                 )
             if verdict == "blocked":
+                if event.get("reason") not in FINDING_RELATION_MODEL["fail_fast"][
+                    "triggers"
+                ]:
+                    reject(
+                        "review-fail-fast",
+                        "ready blocked Review requires exactly one fundamental Core reason",
+                    )
                 if not valid_scope_list(event.get("reviewed_scope")) or not valid_scope_list(
                     event.get("unreviewed_scope")
                 ):
@@ -6529,6 +6754,63 @@ def _orchestration_case_result(
                 terminal_seen = True
                 terminal_state = "blocked"
             elif verdict in {"pass", "findings"}:
+                review_round_id = event.get("review_round_id")
+                if not isinstance(review_round_id, str) or not review_round_id:
+                    reject(
+                        "review-complete-pass",
+                        "every non-fundamental Review outcome requires a Review Round ID",
+                    )
+                if any(
+                    event.get(field) is not True
+                    for field in (
+                        "required_changed_scope_complete",
+                        "base_dimensions_complete",
+                        "professional_risk_dimensions_complete",
+                    )
+                ):
+                    reject(
+                        "review-complete-pass",
+                        "every non-fundamental Review outcome requires complete fixed scope, base dimensions, and professional-risk dimensions",
+                    )
+                expected_finding_ids = [
+                    finding_id
+                    for task in event_tasks
+                    for finding_id in findings_by_round_task.get(
+                        (review_round_id, task), []
+                    )
+                ]
+                reported_finding_ids = event.get("finding_ids")
+                finding_membership_valid = (
+                    isinstance(reported_finding_ids, list)
+                    and all(
+                        isinstance(finding_id, str) and finding_id
+                        for finding_id in reported_finding_ids
+                    )
+                    and len(reported_finding_ids)
+                    == len(set(reported_finding_ids))
+                )
+                if (
+                    not finding_membership_valid
+                    or reported_finding_ids != expected_finding_ids
+                ):
+                    reject(
+                        "review-complete-pass",
+                        "the closing Review Handoff must contain every evidence-backed Finding from the fixed round and boundary",
+                    )
+                blocking_finding_ids = [
+                    finding_id
+                    for finding_id in expected_finding_ids
+                    if finding_relations_by_id.get(finding_id)
+                    in {"current-task", "scope-blocker"}
+                ]
+                if verdict == "pass" and blocking_finding_ids:
+                    reject(
+                        "review-verdict",
+                        "PASS additionally requires no blocking Findings",
+                    )
+                if action == "review" and isinstance(review_round_id, str):
+                    for task in event_tasks:
+                        completed_review_batches.add((review_round_id, task))
                 current_review.update(event_task_set)
                 for task_id in event_task_set:
                     invalidated_claims.discard(f"review:{task_id}")
@@ -6558,6 +6840,26 @@ def _orchestration_case_result(
                 seen_finding_ids.add(finding_id)
                 if relation in finding_relations:
                     finding_relations_by_id[finding_id] = relation
+                review_round_id = event.get("review_round_id")
+                if (
+                    not isinstance(review_round_id, str)
+                    or not review_round_id
+                    or task_id not in task_ids
+                ):
+                    reject(
+                        "review-complete-pass",
+                        "every Finding must name a current Review Round and Task ID",
+                    )
+                else:
+                    round_key = (review_round_id, task_id)
+                    if round_key in completed_review_batches:
+                        reject(
+                            "review-complete-pass",
+                            "ordinary Finding cannot be emitted after its Review Handoff closes",
+                        )
+                    findings_by_round_task.setdefault(round_key, []).append(
+                        finding_id
+                    )
             material = category in material_categories
             if category in non_repair_categories:
                 material = False
@@ -6607,11 +6909,97 @@ def _orchestration_case_result(
                             for impact in impact_dimensions
                         )
                     }
-                    pending_repair_findings[finding_id] = (
-                        task_id,
-                        derived_specialists,
-                        derived_risks,
+                    review_round_id = event.get("review_round_id")
+                    affected_scope = event.get("affected_scope")
+                    acceptance_or_risk_impact = event.get(
+                        "acceptance_or_risk_impact"
                     )
+                    required_validation = event.get("required_validation")
+                    required_covering_rereview = event.get(
+                        "required_covering_rereview"
+                    )
+                    if (
+                        not isinstance(review_round_id, str)
+                        or not review_round_id
+                        or not valid_scope_list(affected_scope)
+                        or not isinstance(acceptance_or_risk_impact, str)
+                        or not acceptance_or_risk_impact
+                        or not valid_scope_list(required_validation)
+                        or not isinstance(required_covering_rereview, dict)
+                        or tuple(required_covering_rereview)
+                        != ("covered_task_ids", "same_or_stronger")
+                        or required_covering_rereview.get("covered_task_ids")
+                        != [task_id]
+                        or required_covering_rereview.get("same_or_stronger") is not True
+                    ):
+                        reject(
+                            "finding-obligation",
+                            "round-bound material Finding must declare affected scope, impact, validation, and covering re-review",
+                        )
+                    pending_repair_findings[finding_id] = {
+                        "task_id": task_id,
+                        "review_round_id": review_round_id,
+                        "specialists": derived_specialists,
+                        "risks": derived_risks,
+                        "affected_scope": affected_scope,
+                        "acceptance_or_risk_impact": acceptance_or_risk_impact,
+                        "required_validation": required_validation,
+                        "required_covering_rereview": required_covering_rereview,
+                    }
+            if relation == "scope-blocker" and finding_identity_valid:
+                finding_routes["scope_blocker"].append(finding_id)
+                closing_review_index = next(
+                    (
+                        candidate_index
+                        for candidate_index, candidate in enumerate(
+                            events[index + 1 :], index + 1
+                        )
+                        if isinstance(candidate, dict)
+                        and candidate.get("action") == "review"
+                        and candidate.get("review_round_id") == review_round_id
+                        and isinstance(candidate.get("finding_ids"), list)
+                        and all(
+                            isinstance(item, str) and item
+                            for item in candidate["finding_ids"]
+                        )
+                        and finding_id in candidate["finding_ids"]
+                        and candidate.get("required_changed_scope_complete") is True
+                        and candidate.get("base_dimensions_complete") is True
+                        and candidate.get("professional_risk_dimensions_complete") is True
+                    ),
+                    None,
+                )
+                analysis_index = next(
+                    (
+                        candidate_index
+                        for candidate_index, candidate in enumerate(
+                            events[index + 1 :], index + 1
+                        )
+                        if isinstance(candidate, dict)
+                        and candidate.get("action") == "analysis"
+                        and candidate.get("analysis_kind") == "delta"
+                        and isinstance(
+                            candidate.get("invalidated_decisions"), list
+                        )
+                        and all(
+                            isinstance(item, str) and item
+                            for item in candidate["invalidated_decisions"]
+                        )
+                        and "scope-blocker" in candidate["invalidated_decisions"]
+                    ),
+                    None,
+                )
+                if (
+                    closing_review_index is None
+                    or analysis_index is None
+                    or analysis_index <= closing_review_index
+                ):
+                    reject(
+                        "scope-blocker-route",
+                        "scope-blocker must return through Main to Delta Analysis only after the complete closing Review Handoff",
+                    )
+            elif relation == "adjacent" and finding_identity_valid:
+                finding_routes["adjacent"].append(finding_id)
         elif action == "blocked":
             if event.get("reason") not in FINDING_RELATION_MODEL["fail_fast"]["triggers"]:
                 reject("review-fail-fast", "blocked fail-fast reason is not fundamental")
@@ -6660,6 +7048,20 @@ def _orchestration_case_result(
         and not invalidated_claims
         and not pending_repair_findings
     )
+    repair_flow = {
+        "repair_count": repair_count,
+        "affected_task_ids": sorted(repaired_task_ids),
+        "invalidated_claims": sorted(repair_invalidated_claims),
+        "fresh_validation_task_ids": sorted(repair_validated_task_ids),
+        "rereviewed_task_ids": sorted(rereviewed_task_ids),
+    }
+    if repair_batch_keys or resolved_batch_finding_ids:
+        repair_flow.update(
+            {
+                "resolved_finding_ids": resolved_batch_finding_ids,
+                "batch_keys": [list(batch_key) for batch_key in repair_batch_keys],
+            }
+        )
     semantic_trace = {
         "id": case_id,
         "work_kind": "analyzed" if analysis_events else "direct",
@@ -6692,13 +7094,7 @@ def _orchestration_case_result(
             "count": len(review_actions),
             "actions": review_actions,
         },
-        "repair_flow": {
-            "repair_count": repair_count,
-            "affected_task_ids": sorted(repaired_task_ids),
-            "invalidated_claims": sorted(repair_invalidated_claims),
-            "fresh_validation_task_ids": sorted(repair_validated_task_ids),
-            "rereviewed_task_ids": sorted(rereviewed_task_ids),
-        },
+        "repair_flow": repair_flow,
         "parallel_isolation": parallel_isolation,
         "completion": {
             "state": terminal_state,
@@ -6724,6 +7120,8 @@ def _orchestration_case_result(
         },
         "proof_limit": "deterministic-structural-fixture-only",
     }
+    if finding_routes["scope_blocker"] or finding_routes["adjacent"]:
+        semantic_trace["finding_routes"] = finding_routes
     return list(dict.fromkeys(errors)), semantic_trace
 
 
@@ -6985,13 +7383,27 @@ def _implementation_internal_evidence_indexes(
 ) -> set[int]:
     """Identify closed task-local discipline evidence without changing the raw trace."""
 
-    first_edit_by_task: dict[str, int] = {}
+    dispatches: dict[str, list[int]] = {}
+    for index, step in enumerate(steps):
+        task_id = _normal_task_dispatch_id(step)
+        if task_id is not None:
+            dispatches.setdefault(task_id, []).append(index)
+
+    first_edit_by_assignment: dict[tuple[str, int], int] = {}
     for index, step in enumerate(steps):
         if step.get("actor") != "task-agent" or step.get("action") not in EDIT_ACTIONS:
             continue
         task_id = step.get("task_id")
         if isinstance(task_id, str) and task_id.strip():
-            first_edit_by_task.setdefault(task_id, index)
+            prior_dispatches = [
+                dispatch_index
+                for dispatch_index in dispatches.get(task_id, [])
+                if dispatch_index < index
+            ]
+            if prior_dispatches:
+                first_edit_by_assignment.setdefault(
+                    (task_id, prior_dispatches[-1]), index
+                )
 
     internal: set[int] = set()
     for index, step in enumerate(steps):
@@ -7011,7 +7423,19 @@ def _implementation_internal_evidence_indexes(
             internal.add(index)
             continue
         task_id = step.get("task_id")
-        first_edit = first_edit_by_task.get(task_id) if isinstance(task_id, str) else None
+        prior_dispatches = (
+            [
+                dispatch_index
+                for dispatch_index in dispatches.get(task_id, [])
+                if dispatch_index < index
+            ]
+            if isinstance(task_id, str)
+            else []
+        )
+        assignment = (task_id, prior_dispatches[-1]) if prior_dispatches else None
+        first_edit = (
+            first_edit_by_assignment.get(assignment) if assignment is not None else None
+        )
         if first_edit is None:
             continue
         if (
@@ -7569,6 +7993,86 @@ def _utility_evidence_errors(
     return errors
 
 
+def _valid_same_task_repair_redispatch(
+    steps: list[dict[str, Any]], index: int, task_id: str
+) -> bool:
+    dispatch = steps[index]
+    if (
+        dispatch.get("mode") != "repair"
+        or not isinstance(dispatch.get("batch_id"), str)
+        or not dispatch["batch_id"].strip()
+        or not isinstance(dispatch.get("review_round_id"), str)
+        or not dispatch["review_round_id"].strip()
+    ):
+        return False
+    prior = steps[:index]
+    completed_reviews = [
+        step
+        for step in prior
+        if step.get("actor") == "review-agent"
+        and step.get("action") == "review"
+        and step.get("task_id") == task_id
+        and step.get("review_round_id") == dispatch["review_round_id"]
+        and step.get("required_changed_scope_complete") is True
+        and step.get("base_dimensions_complete") is True
+        and step.get("professional_risk_dimensions_complete") is True
+        and isinstance(step.get("finding_ids"), list)
+    ]
+    if len(completed_reviews) != 1:
+        return False
+    review = completed_reviews[0]
+    round_findings = [
+        step
+        for step in prior
+        if step.get("actor") == "review-agent"
+        and step.get("action") == "finding"
+        and step.get("task_id") == task_id
+        and step.get("review_round_id") == dispatch["review_round_id"]
+    ]
+    all_finding_ids = [step.get("evidence_id") for step in round_findings]
+    current_findings = [
+        step
+        for step in round_findings
+        if step.get("material") is True and step.get("relation") == "current-task"
+    ]
+    current_finding_ids = [step.get("evidence_id") for step in current_findings]
+    if (
+        not current_finding_ids
+        or review.get("finding_ids") != all_finding_ids
+        or dispatch.get("finding_ids") != current_finding_ids
+    ):
+        return False
+    expected_obligations = [
+        {
+            "finding_id": finding.get("evidence_id"),
+            "relation": finding.get("relation"),
+            "affected_scope": list(
+                dict.fromkeys(
+                    [
+                        *(
+                            [finding.get("path")]
+                            if isinstance(finding.get("path"), str)
+                            else []
+                        ),
+                        *(
+                            finding.get("dependent_scope")
+                            if isinstance(finding.get("dependent_scope"), list)
+                            else []
+                        ),
+                    ]
+                )
+            ),
+            "acceptance_or_risk_impact": finding.get("acceptance_impact"),
+            "required_validation": finding.get("required_validation"),
+            "required_covering_rereview": finding.get(
+                "required_covering_rereview"
+            ),
+        }
+        for finding in current_findings
+    ]
+    return dispatch.get("finding_obligations") == expected_obligations
+
+
 def _profile_errors(
     case_id: str,
     steps: list[dict[str, Any]],
@@ -7576,7 +8080,8 @@ def _profile_errors(
     layer3_entries: dict[str, dict[str, Any]],
 ) -> list[str]:
     errors: list[str] = []
-    task_ids: set[str] = set()
+    task_dispatches: dict[str, list[int]] = {}
+    consumed_repair_batches: set[tuple[str, str]] = set()
     for index, step in enumerate(steps):
         actor = str(step.get("actor") or "")
         action = str(step.get("action") or "")
@@ -7605,12 +8110,26 @@ def _profile_errors(
                 and fixture_capsule.get("contract_type") == "task"
             ):
                 task_id = fixture_capsule.get("task_id")
-                if isinstance(task_id, str) and task_id in task_ids:
-                    errors.append(
-                        f"{case_id}: task fixture repeats Task ID {task_id!r}"
-                    )
-                elif isinstance(task_id, str):
-                    task_ids.add(task_id)
+                if isinstance(task_id, str):
+                    prior_dispatches = task_dispatches.setdefault(task_id, [])
+                    if prior_dispatches:
+                        review_round_id = step.get("review_round_id")
+                        batch_key = (str(review_round_id), task_id)
+                        if batch_key in consumed_repair_batches:
+                            errors.append(
+                                f"{case_id}: duplicate Repair batch dispatch for "
+                                f"Review Round {review_round_id!r} and Task ID {task_id!r}"
+                            )
+                        elif not _valid_same_task_repair_redispatch(
+                            steps, index, task_id
+                        ):
+                            errors.append(
+                                f"{case_id}: task fixture repeats Task ID {task_id!r} "
+                                "without one complete same-round current-task Repair batch"
+                            )
+                        else:
+                            consumed_repair_batches.add(batch_key)
+                    prior_dispatches.append(index)
             if not isinstance(mode, str) or not mode.strip():
                 errors.append(
                     f"{case_id}: dispatch at step {index} needs a non-empty mode"

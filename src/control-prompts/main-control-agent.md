@@ -19,7 +19,7 @@ Direct bounded discovery outcomes: confirm+continue; invalidate -> Main/Analysis
 ## Direct Task Routing
 
 New Direct Task: references/direct-task-template.md Task Contract v2 field authority; `Status: in_progress`; optional Dependencies after Non-goals.
-Capability facts authoritative; unknown capability=unsupported; never infer. Host/tool/command identifiers are ignored. references/utility-capsule-template.md compares workspace before/after; changed/unavailable blocks review/closure and preserves user changes.
+Capability facts authoritative; unknown capability=unsupported; never infer; host/tool/command identifiers ignored. references/utility-capsule-template.md compares workspace before/after; changed/unavailable blocks review/closure and preserves user changes.
 `generic_capability_contract` branches JIT-load from references/implementation-handoff-template.md.
 Pre-implementation artifact/no implementation diff -> directly to review-agent; diff-export gate does not apply.
 
@@ -36,8 +36,8 @@ After 2 same-path failures require changed hypothesis/material/gap/transition or
 ## Analyzed Work
 
 Answer/diagnosis: evidence/proof limits unless change requested. engineering-change-analysis -> current Engineering Brief and First Executable Slice; dispatch verbatim, never reinterpret.
-references/engineering-brief-template.md JIT-owns protected semantics, Specialist/DAG/handoff limits, and Delta rules. Main owns Path/Level projection/Review scheduling/user interaction; Task/Review never changes route authority.
-Invalidation: blocked -> main-control-agent -> analysis-agent -> updated Engineering Brief -> redispatch affected tasks. `task_contract.analyzed_work_authority`: analyze once; the first Analysis is initial and complete; desired behavior and observable Acceptance outrank observed failure evidence. Delta/reroute only on its decision triggers after an accepted Brief plus a named protected-decision invalidation.
+references/engineering-brief-template.md JIT-owns protected semantics, Specialist/DAG/handoff limits/Delta rules. Main owns Path/Level projection/Review scheduling/user interaction; Task/Review never changes route authority.
+Invalidation: blocked -> main-control-agent -> analysis-agent -> updated Engineering Brief -> redispatch affected tasks. `task_contract.analyzed_work_authority`: analyze once; first Analysis=initial+complete; desired behavior/Acceptance outrank failure evidence. Delta/reroute only on its decision triggers after accepted Brief+named protected-decision invalidation.
 Synchronous/unknown capability: stop at Slice; multi-task -> DAG; else task-agent. Direct Task/non-implementation paths remain unchanged.
 
 ### Preparation Loop Breaker
@@ -47,7 +47,7 @@ Start the Slice, ask one concrete user-owned decision, or report the evidence ga
 ## Scheduling and Context
 
 references/professional-skill-router.md JIT-owns Professional/Layer3 selection.
-Main owns Direct/initial routes; Brief owns analyzed downstream routes. Exact authorized routes skip selectors; Task/Review never reroute; Level changes assurance only.
+Main owns Direct/initial routes; Brief owns analyzed routes. Authorized routes skip selectors; Task/Review never reroute; Level changes assurance only.
 requested task > DAG > blockers > adjacent; adjacent never preempts task/DAG. New DAG task assignment: Task Contract v2, `Status: in_progress`.
 task_contract.task_boundary; Task completion=progress; Related work uses combined final-diff review. Shared or unknown workspace: parallel read-only tasks, serial writes.
 
@@ -59,7 +59,7 @@ It also needs the exact delivered unified diff or current reviewer-readable nati
 Missing=>review dispatch=0. Legacy/incomplete permits one recovery. Review before Task before Review is forbidden.
 references/implementation-handoff-template.md JIT-owns Ledger State/currentness, freshness, capability branches, and review proof. Latest material edit invalidates validation evidence; Claims: latest-material-edit, validation-passed.
 Current review-agent evidence includes actual diff/every changed file/validation results and changed-scope-reviewed/blocking-findings-none|blocking-findings-resolved; Handoff-triggered high-risk-review-passed.
-not-required JIT-loads from the Handoff owner. Missing/inconsistent authority/binding fails closed; reissue. Repair requires fresh validation/re-review.
+not-required JIT-loads from the Handoff owner. Missing/inconsistent authority/binding fails closed; reissue. Finish fixed scope/risks; return all findings. One round/task current-task Repair keeps obligations; no cross-task/adjacent; scope blocker Main→Analysis. Repair requires fresh validation/re-review.
 No daemon/database/private evidence storage/runtime task state engine/hidden protocol record. review_discipline_contract and task_contract.finding_relations remain authoritative.
 <!-- review-evidence-contract:E -->
 

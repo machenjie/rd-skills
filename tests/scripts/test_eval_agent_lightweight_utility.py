@@ -111,6 +111,18 @@ class LightweightUtilityContractTests(unittest.TestCase):
             next(item for item in self.release_cases if item["id"] == case_id)
         )
 
+    def _review_convergence_case(self) -> dict:
+        case = copy.deepcopy(
+            next(
+                item
+                for item in self.orchestration_cases
+                if item["id"] == "dedup-scoped-repair-subsumes-final"
+            )
+        )
+        case["id"] = "review-convergence-complete-pass"
+        case.pop("retained_semantics", None)
+        return case
+
     @staticmethod
     def _complete_initial_analysis_event() -> dict:
         return {
@@ -1071,6 +1083,26 @@ class LightweightUtilityContractTests(unittest.TestCase):
             ],
         )
         self.assertEqual(2, len({handoff["handoff_id"] for handoff in repair_handoffs}))
+        task_dispatches = [
+            step
+            for step in repair["steps"]
+            if step.get("action") == "dispatch" and step.get("profile") == "task-agent"
+        ]
+        self.assertEqual(
+            ["task-repair-and-rereview-1", "task-repair-and-rereview-1"],
+            [step["fixture_capsule"]["task_id"] for step in task_dispatches],
+        )
+        self.assertEqual(
+            ["initial-service-review-A", "initial-service-review-B"],
+            task_dispatches[-1]["finding_ids"],
+        )
+        self.assertEqual(
+            task_dispatches[-1]["finding_ids"],
+            [
+                obligation["finding_id"]
+                for obligation in task_dispatches[-1]["finding_obligations"]
+            ],
+        )
 
     def test_normal_review_rejects_every_unconsumed_late_handoff_gate_pair(
         self,
@@ -1296,6 +1328,11 @@ class LightweightUtilityContractTests(unittest.TestCase):
                     "validation_evidence_ids": ["v-A", "v-B", "v-C"],
                     "independent": True,
                     "verdict": "pass",
+                    "review_round_id": "R-ABC-TEST-1",
+                    "required_changed_scope_complete": True,
+                    "base_dimensions_complete": True,
+                    "professional_risk_dimensions_complete": True,
+                    "finding_ids": [],
                 },
                 {"action": "complete"},
             ],
@@ -1341,16 +1378,20 @@ class LightweightUtilityContractTests(unittest.TestCase):
             case for case in self.orchestration_cases
             if case["id"] == "dedup-scoped-repair-subsumes-final"
         ))
-        finding_event = next(
+        finding_events = [
             event for event in scoped_repair["events"]
             if event["action"] == "finding"
-        )
+        ]
+        finding_event = finding_events[0]
         repair_event = next(
             event for event in scoped_repair["events"]
             if event["action"] == "repair"
         )
         self.assertEqual(
-            {finding_event["finding_id"]: finding_event["relation"]},
+            {
+                event["finding_id"]: event["relation"]
+                for event in finding_events
+            },
             repair_event["finding_relations"],
         )
         for relation, category in (
@@ -1624,6 +1665,586 @@ class LightweightUtilityContractTests(unittest.TestCase):
             )
         )
 
+    def test_review_convergence_complete_pass_batches_all_same_task_findings(self) -> None:
+        case = self._review_convergence_case()
+
+        errors, trace = EVAL._orchestration_case_result(case)
+
+        self.assertEqual([], errors)
+        self.assertEqual(1, trace["repair_flow"]["repair_count"])
+        self.assertEqual(
+            ["F-C-A", "F-C-B"],
+            trace["repair_flow"]["resolved_finding_ids"],
+        )
+        self.assertEqual([["R-C-1", "C"]], trace["repair_flow"]["batch_keys"])
+        self.assertEqual(["C"], trace["repair_flow"]["fresh_validation_task_ids"])
+        self.assertEqual(["C"], trace["repair_flow"]["rereviewed_task_ids"])
+        self.assertTrue(trace["completion"]["current_evidence"])
+
+    def test_repair_batch_identity_is_structural_for_delimiter_bearing_ids(
+        self,
+    ) -> None:
+        case = copy.deepcopy(
+            next(
+                item
+                for item in self.orchestration_cases
+                if item["id"] == "review-repair-structural-batch-key-collision"
+            )
+        )
+
+        errors, trace = EVAL._orchestration_case_result(case)
+
+        self.assertEqual([], errors)
+        self.assertEqual(
+            [["R", "A:B"], ["R:A", "B"]],
+            trace["repair_flow"]["batch_keys"],
+        )
+
+        duplicate = copy.deepcopy(self._review_convergence_case())
+        duplicate.pop("retained_semantics", None)
+        repair_index = next(
+            index
+            for index, event in enumerate(duplicate["events"])
+            if event["action"] == "repair"
+        )
+        repeated = copy.deepcopy(duplicate["events"][repair_index])
+        repeated["generation"] = 3
+        duplicate["events"].insert(repair_index + 1, repeated)
+        duplicate_errors = EVAL._orchestration_case_errors(duplicate)
+        self.assertTrue(
+            any("[repair-batch-cardinality]" in error for error in duplicate_errors),
+            duplicate_errors,
+        )
+
+    def test_review_convergence_negative_controls_reject_batch_drift(self) -> None:
+        def merge_cross_task(case: dict) -> None:
+            review = next(
+                event for event in case["events"] if event["action"] == "review"
+            )
+            finding = copy.deepcopy(
+                next(
+                    event
+                    for event in case["events"]
+                    if event.get("finding_id") == "F-C-A"
+                )
+            )
+            finding.update(
+                {
+                    "finding_id": "F-B-X",
+                    "task_id": "B",
+                    "affected_scope": ["B"],
+                    "required_covering_rereview": {
+                        "covered_task_ids": ["B"],
+                        "same_or_stronger": True,
+                    },
+                }
+            )
+            case["events"].insert(case["events"].index(review), finding)
+            review["finding_ids"].insert(0, "F-B-X")
+            repair = next(
+                event for event in case["events"] if event["action"] == "repair"
+            )
+            repair["resolved_finding_ids"].insert(0, "F-B-X")
+            repair["finding_relations"] = {
+                "F-B-X": "current-task",
+                **repair["finding_relations"],
+            }
+            repair["finding_obligations"].insert(
+                0,
+                {
+                    "finding_id": finding["finding_id"],
+                    "relation": finding["relation"],
+                    "affected_scope": finding["affected_scope"],
+                    "acceptance_or_risk_impact": finding[
+                        "acceptance_or_risk_impact"
+                    ],
+                    "required_validation": finding["required_validation"],
+                    "required_covering_rereview": finding[
+                        "required_covering_rereview"
+                    ],
+                },
+            )
+
+        def remove_review_field(case: dict, field: str) -> None:
+            next(
+                event for event in case["events"] if event["action"] == "review"
+            ).pop(field)
+
+        def remove_finding_obligation_field(case: dict, field: str) -> None:
+            repair = next(
+                event for event in case["events"] if event["action"] == "repair"
+            )
+            repair["finding_obligations"][0].pop(field)
+
+        mutations: dict[str, tuple[str, object]] = {
+            "missing-review-round": (
+                "review-complete-pass",
+                lambda case: remove_review_field(case, "review_round_id"),
+            ),
+            "missing-required-scope-complete": (
+                "review-complete-pass",
+                lambda case: remove_review_field(
+                    case, "required_changed_scope_complete"
+                ),
+            ),
+            "missing-base-dimensions-complete": (
+                "review-complete-pass",
+                lambda case: remove_review_field(case, "base_dimensions_complete"),
+            ),
+            "missing-risk-dimensions-complete": (
+                "review-complete-pass",
+                lambda case: remove_review_field(
+                    case, "professional_risk_dimensions_complete"
+                ),
+            ),
+            "missing-review-finding-membership": (
+                "review-complete-pass",
+                lambda case: remove_review_field(case, "finding_ids"),
+            ),
+            "dropped-finding": (
+                "repair-batch-completeness",
+                lambda case: next(
+                    event for event in case["events"] if event["action"] == "repair"
+                )["resolved_finding_ids"].remove("F-C-B"),
+            ),
+            "split-repair": (
+                "repair-batch-cardinality",
+                lambda case: next(
+                    event for event in case["events"] if event["action"] == "repair"
+                ).update(repair_batch_count=2),
+            ),
+            "changed-task-id": (
+                "repair-task-id-continuity",
+                lambda case: next(
+                    event for event in case["events"] if event["action"] == "repair"
+                ).update(task_id="B"),
+            ),
+            "cross-task-merge": (
+                "repair-cross-task-batch",
+                merge_cross_task,
+            ),
+            "lost-finding-obligation": (
+                "repair-finding-obligation",
+                lambda case: next(
+                    event for event in case["events"] if event["action"] == "repair"
+                )["finding_obligations"].pop(),
+            ),
+            **{
+                f"lost-finding-{field}": (
+                    "repair-finding-obligation",
+                    lambda case, field=field: remove_finding_obligation_field(
+                        case, field
+                    ),
+                )
+                for field in (
+                    "relation",
+                    "affected_scope",
+                    "acceptance_or_risk_impact",
+                    "required_validation",
+                    "required_covering_rereview",
+                )
+            },
+            "stale-validation": (
+                "review-validation-binding",
+                lambda case: next(
+                    event
+                    for event in case["events"]
+                    if event["action"] == "re-review"
+                ).update(validation_evidence_ids=["v-C1"]),
+            ),
+            "stale-rereview": (
+                "repair-rereview-freshness",
+                lambda case: next(
+                    event
+                    for event in case["events"]
+                    if event["action"] == "re-review"
+                ).update(review_round_id="R-C-1"),
+            ),
+        }
+        for name, (code, mutate) in mutations.items():
+            with self.subTest(mutation=name):
+                case = self._review_convergence_case()
+                mutate(case)
+                errors = EVAL._orchestration_case_errors(case)
+                self.assertTrue(any(f"[{code}]" in error for error in errors), errors)
+
+    def test_review_convergence_rejects_pass_without_complete_boundary(self) -> None:
+        case = copy.deepcopy(
+            next(
+                item
+                for item in self.orchestration_cases
+                if item["id"] == "dedup-direct-work-zero-analysis"
+            )
+        )
+        case.pop("retained_semantics", None)
+        next(
+            event for event in case["events"] if event["action"] == "review"
+        ).pop("required_changed_scope_complete")
+
+        errors = EVAL._orchestration_case_errors(case)
+
+        self.assertTrue(
+            any("[review-complete-pass]" in error for error in errors), errors
+        )
+
+    def test_review_convergence_rejects_duplicate_canonical_repair_dispatch(self) -> None:
+        case = self._release_case("repair-and-rereview")
+        repair_index = next(
+            index
+            for index, step in enumerate(case["steps"])
+            if step.get("action") == "dispatch"
+            and step.get("mode") == "repair"
+            and step.get("finding_ids")
+        )
+        case["steps"].insert(repair_index + 1, copy.deepcopy(case["steps"][repair_index]))
+
+        errors = EVAL._profile_errors(
+            case["id"], case["steps"], self.professional, self.layer3
+        )
+
+        self.assertTrue(
+            any("duplicate Repair batch" in error for error in errors), errors
+        )
+
+    def test_review_convergence_mixed_relations_keep_routes_separate(self) -> None:
+        case = self._review_convergence_case()
+        case["id"] = "review-convergence-mixed-relations"
+        review = next(event for event in case["events"] if event["action"] == "review")
+        first = next(event for event in case["events"] if event["action"] == "finding")
+        second = next(
+            event
+            for event in case["events"]
+            if event.get("finding_id") == "F-C-B"
+        )
+        second.update(
+            {
+                "finding_id": "F-C-SCOPE",
+                "relation": "scope-blocker",
+                "repair_required": False,
+            }
+        )
+        for field in (
+            "affected_scope",
+            "acceptance_or_risk_impact",
+            "required_validation",
+            "required_covering_rereview",
+        ):
+            second.pop(field, None)
+        adjacent = copy.deepcopy(second)
+        adjacent.update(
+            {
+                "finding_id": "F-C-ADJ",
+                "relation": "adjacent",
+                "category": "adjacent-issue",
+            }
+        )
+        case["events"].insert(case["events"].index(review), adjacent)
+        review["finding_ids"] = ["F-C-A", "F-C-SCOPE", "F-C-ADJ"]
+        repair = next(event for event in case["events"] if event["action"] == "repair")
+        repair["resolved_finding_ids"] = ["F-C-A"]
+        repair["finding_relations"] = {"F-C-A": "current-task"}
+        repair["finding_obligations"] = repair["finding_obligations"][:1]
+        repair["affected_risk_dimensions"] = ["security"]
+
+        analysis = {
+            "action": "analysis",
+            "analysis_kind": "delta",
+            "protected_decision_invalidated": True,
+            "invalidated_decisions": ["scope-blocker"],
+            "transitive_updates": [
+                "affected-brief-sections",
+                "affected-tasks",
+                "affected-review-boundaries",
+            ],
+            "analysis_scope": "delta",
+            "professional_domain_changed": False,
+            "work_type_changed": False,
+            "material_risk_trigger_changed": False,
+            "skill_assignments": {
+                task["id"]: task["primary_skill"] for task in case["tasks"]
+            },
+            "delta_impact": {
+                "invalidated": ["scope-blocker"],
+                "affected": {
+                    "brief": [
+                        "Acceptance and Non-goals",
+                        "Ownership and Invariants",
+                        "Placement and Reuse",
+                        "Contract / Data / Failure Impact",
+                    ],
+                    "tasks": ["A", "B", "C"],
+                    "dependencies": [],
+                    "skills": [],
+                    "reviews": [
+                        "ai-code-review-refactor",
+                        "quality-test-gate",
+                        "security-privacy-gate",
+                    ],
+                },
+                "unlisted": "preserved",
+            },
+        }
+        case["events"].insert(case["events"].index(repair), analysis)
+
+        errors, trace = EVAL._orchestration_case_result(case)
+
+        self.assertEqual([], errors)
+        self.assertEqual(["F-C-A"], trace["repair_flow"]["resolved_finding_ids"])
+        self.assertEqual(["F-C-SCOPE"], trace["finding_routes"]["scope_blocker"])
+        self.assertEqual(["F-C-ADJ"], trace["finding_routes"]["adjacent"])
+
+    def test_review_convergence_rejects_scope_blocker_analysis_before_close(self) -> None:
+        case = copy.deepcopy(
+            next(
+                item
+                for item in self.orchestration_cases
+                if item["id"] == "review-convergence-mixed-relations"
+            )
+        )
+        case.pop("retained_semantics", None)
+        review_index = next(
+            index
+            for index, event in enumerate(case["events"])
+            if event["action"] == "review"
+        )
+        analysis_index = next(
+            index
+            for index, event in enumerate(case["events"])
+            if event.get("analysis_kind") == "delta"
+        )
+        analysis = case["events"].pop(analysis_index)
+        case["events"].insert(review_index, analysis)
+
+        errors = EVAL._orchestration_case_errors(case)
+
+        self.assertTrue(
+            any("[scope-blocker-route]" in error for error in errors), errors
+        )
+
+    def test_review_convergence_adjacent_only_can_pass_both_review_paths(self) -> None:
+        release = self._release_case("single-file-bug-fix")
+        review_index = next(
+            index
+            for index, step in enumerate(release["steps"])
+            if step.get("actor") == "review-agent" and step.get("action") == "review"
+        )
+        closing = release["steps"][review_index]
+        adjacent = {
+            "actor": "review-agent",
+            "action": "finding",
+            "task_id": closing["task_id"],
+            "review_round_id": closing["review_round_id"],
+            "evidence_id": "adjacent-release-only",
+            "relation": "adjacent",
+            "material": False,
+        }
+        release["steps"].insert(review_index, adjacent)
+        closing["finding_ids"] = [adjacent["evidence_id"]]
+        self.assertEqual([], EVAL._review_discipline_errors(release["id"], release["steps"]))
+
+        orchestration = copy.deepcopy(
+            next(
+                item
+                for item in self.orchestration_cases
+                if item["id"] == "dedup-direct-work-zero-analysis"
+            )
+        )
+        orchestration["id"] = "review-convergence-adjacent-only-pass"
+        orchestration.pop("retained_semantics", None)
+        closing = next(
+            event for event in orchestration["events"] if event["action"] == "review"
+        )
+        adjacent_event = {
+            "action": "finding",
+            "finding_id": "F-A-ADJACENT",
+            "task_id": "A",
+            "review_round_id": closing["review_round_id"],
+            "relation": "adjacent",
+            "category": "adjacent-issue",
+            "repair_required": False,
+        }
+        orchestration["events"].insert(
+            orchestration["events"].index(closing), adjacent_event
+        )
+        closing["finding_ids"] = [adjacent_event["finding_id"]]
+
+        errors, trace = EVAL._orchestration_case_result(orchestration)
+
+        self.assertEqual([], errors)
+        self.assertEqual(["F-A-ADJACENT"], trace["finding_routes"]["adjacent"])
+        self.assertEqual(0, trace["repair_flow"]["repair_count"])
+        self.assertTrue(trace["completion"]["current_evidence"])
+
+    def test_review_convergence_current_task_finding_still_rejects_pass(self) -> None:
+        case = copy.deepcopy(
+            next(
+                item
+                for item in self.orchestration_cases
+                if item["id"] == "review-convergence-adjacent-only-pass"
+            )
+        )
+        case.pop("retained_semantics", None)
+        finding = next(event for event in case["events"] if event["action"] == "finding")
+        finding.update(
+            relation="current-task",
+            category="correctness-or-invariant",
+            impact_dimensions=["correctness"],
+            repair_required=True,
+            affected_scope=["A"],
+            acceptance_or_risk_impact="correctness",
+            required_validation=["current-generation-scoped-validation"],
+            required_covering_rereview={
+                "covered_task_ids": ["A"],
+                "same_or_stronger": True,
+            },
+        )
+
+        errors = EVAL._orchestration_case_errors(case)
+
+        self.assertTrue(any("[review-verdict]" in error for error in errors), errors)
+
+    def test_review_convergence_malformed_membership_fields_fail_without_exceptions(self) -> None:
+        finding_id_values = (None, 7, "F-C-SCOPE", ["F-C-CURRENT", []])
+        for value in finding_id_values:
+            with self.subTest(field="finding_ids", value=value):
+                case = copy.deepcopy(
+                    next(
+                        item
+                        for item in self.orchestration_cases
+                        if item["id"] == "review-convergence-mixed-relations"
+                    )
+                )
+                case.pop("retained_semantics", None)
+                next(
+                    event for event in case["events"] if event["action"] == "review"
+                )["finding_ids"] = value
+                errors = EVAL._orchestration_case_errors(case)
+                self.assertTrue(
+                    any("[review-complete-pass]" in error for error in errors), errors
+                )
+
+        invalidated_values = (None, 7, "scope-blocker", [["scope-blocker"]], [7])
+        for value in invalidated_values:
+            with self.subTest(field="invalidated_decisions", value=value):
+                case = copy.deepcopy(
+                    next(
+                        item
+                        for item in self.orchestration_cases
+                        if item["id"] == "review-convergence-mixed-relations"
+                    )
+                )
+                case.pop("retained_semantics", None)
+                next(
+                    event
+                    for event in case["events"]
+                    if event.get("analysis_kind") == "delta"
+                )["invalidated_decisions"] = value
+                errors = EVAL._orchestration_case_errors(case)
+                self.assertTrue(
+                    any(
+                        "[analysis-decision-invalidation]" in error
+                        for error in errors
+                    ),
+                    errors,
+                )
+
+    def test_ready_blocked_review_requires_exact_core_reason(self) -> None:
+        triggers = {
+            "fundamental-architecture-error",
+            "invalid-public-contract",
+            "major-security-defect",
+            "acceptance-fundamentally-unmet",
+        }
+        base = copy.deepcopy(
+            next(
+                item
+                for item in self.orchestration_cases
+                if item["id"] == "dedup-terminal-blocked-review"
+            )
+        )
+        base.pop("retained_semantics", None)
+        review = next(event for event in base["events"] if event["action"] == "review")
+        for reason in sorted(triggers):
+            with self.subTest(path="orchestration", reason=reason):
+                probe = copy.deepcopy(base)
+                next(
+                    event for event in probe["events"] if event["action"] == "review"
+                )["reason"] = reason
+                self.assertEqual([], EVAL._orchestration_case_errors(probe))
+        for reason in (None, "unknown", "ordinary-material-finding"):
+            with self.subTest(path="orchestration-invalid", reason=reason):
+                probe = copy.deepcopy(base)
+                blocked = next(
+                    event for event in probe["events"] if event["action"] == "review"
+                )
+                if reason is None:
+                    blocked.pop("reason", None)
+                else:
+                    blocked["reason"] = reason
+                errors = EVAL._orchestration_case_errors(probe)
+                self.assertTrue(
+                    any("[review-fail-fast]" in error for error in errors), errors
+                )
+
+        release = self._release_case("single-file-bug-fix")
+        discipline = next(
+            step for step in release["steps"] if step.get("action") == "review-discipline"
+        )
+        closing = next(
+            step
+            for step in release["steps"]
+            if step.get("actor") == "review-agent" and step.get("action") == "review"
+        )
+        discipline["dimensions"]["observable-acceptance"] = "blocked"
+        discipline["verdict"] = "blocked"
+        closing.update(
+            reason="fundamental-architecture-error",
+            reviewed_scope=["owner.py"],
+            unreviewed_scope=["dependent consumer"],
+        )
+        for reason in sorted(triggers):
+            with self.subTest(path="ready-review", reason=reason):
+                probe = copy.deepcopy(release)
+                next(
+                    step
+                    for step in probe["steps"]
+                    if step.get("actor") == "review-agent"
+                    and step.get("action") == "review"
+                )["reason"] = reason
+                self.assertEqual(
+                    [], EVAL._review_discipline_errors(probe["id"], probe["steps"])
+                )
+        for reason in (None, "unknown", "ordinary-material-finding"):
+            with self.subTest(path="ready-review-invalid", reason=reason):
+                probe = copy.deepcopy(release)
+                blocked = next(
+                    step
+                    for step in probe["steps"]
+                    if step.get("actor") == "review-agent"
+                    and step.get("action") == "review"
+                )
+                if reason is None:
+                    blocked.pop("reason", None)
+                else:
+                    blocked["reason"] = reason
+                errors = EVAL._review_discipline_errors(probe["id"], probe["steps"])
+                self.assertTrue(
+                    any("[review-fail-fast]" in error for error in errors), errors
+                )
+        for field in ("reviewed_scope", "unreviewed_scope"):
+            with self.subTest(path="ready-review-scope", field=field):
+                probe = copy.deepcopy(release)
+                next(
+                    step
+                    for step in probe["steps"]
+                    if step.get("actor") == "review-agent"
+                    and step.get("action") == "review"
+                )[field] = []
+                errors = EVAL._review_discipline_errors(probe["id"], probe["steps"])
+                self.assertTrue(
+                    any("[review-fail-fast]" in error for error in errors), errors
+                )
+
     def test_orchestration_semantic_trace_is_bounded_reducer_state(self) -> None:
         results, errors = EVAL._orchestration_fixture_results(
             self.orchestration_cases
@@ -1697,6 +2318,8 @@ class LightweightUtilityContractTests(unittest.TestCase):
                 "invalidated_claims": ["review:C", "validation:C"],
                 "fresh_validation_task_ids": ["C"],
                 "rereviewed_task_ids": ["C"],
+                "resolved_finding_ids": ["F-C-A", "F-C-B"],
+                "batch_keys": [["R-C-1", "C"]],
             },
             repair["repair_flow"],
         )
@@ -1728,6 +2351,13 @@ class LightweightUtilityContractTests(unittest.TestCase):
             event for event in justified_rerun["events"] if event["action"] == "review"
         )
         review["reproduction_triggers"] = ["concrete-reviewer-doubt"]
+        review.update(
+            review_round_id="R-A-JUSTIFIED-RERUN-1",
+            required_changed_scope_complete=True,
+            base_dimensions_complete=True,
+            professional_risk_dimensions_complete=True,
+            finding_ids=[],
+        )
         reducer_errors, justified_trace = EVAL._orchestration_case_result(
             justified_rerun
         )
@@ -2358,7 +2988,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
         for case in [*self.release_cases, *self.scheduling_cases, *self.utility_cases]:
             review_count = sum(
                 step.get("actor") == "review-agent"
-                and step.get("action") in EVAL.REVIEW_ACTIONS | {"finding"}
+                and step.get("action") in EVAL.REVIEW_ACTIONS
                 for step in case["steps"]
             )
             guard_count = sum(

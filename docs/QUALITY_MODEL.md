@@ -50,9 +50,19 @@ rd-skills quality is the combination of control correctness, professional judgme
   Specialists do not close Tasks or add rounds. The primary consumes their
   current results and emits one artifact referenced exactly by every covered
   Task projection.
-- Only material current-task findings require bounded Repair. Fundamental
-  failure may stop `blocked` with Reviewed and Unreviewed Scope; `pass` still
-  requires the complete required changed-scope review.
+- An ordinary material finding does not end its fixed Review Boundary or add
+  scope. The reviewer completes required changed scope, base dimensions, and
+  professional-risk dimensions, then returns every evidence-backed finding in
+  one Review Handoff. Only a fundamental architecture error, invalid public
+  contract, major security defect, or fundamentally unmet Acceptance may stop
+  early as `blocked`, with Reviewed and Unreviewed Scope; `pass` still requires
+  the complete required changed-scope review.
+- Material `current-task` findings from one Review Round and one Task ID form
+  exactly one bounded Repair assignment with that Task ID unchanged. Each
+  finding retains its relation, affected scope, Acceptance or risk impact,
+  required validation, and covering re-review obligation. A `scope-blocker`
+  returns through Main to Analysis, `adjacent` remains record-only, and Repair
+  never batches findings across Task IDs.
 - Any scoped material edit invalidates validation and review evidence for
   intersecting scope and transitive Task dependencies only, retaining
   unaffected current evidence. Repair receives fresh targeted validation and

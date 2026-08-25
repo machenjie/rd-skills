@@ -33,116 +33,116 @@
   },
   "rendered_context_summary": {
     "max_main": {
-      "tokens": 1900,
+      "tokens": 1898,
       "capacity_ceiling": 2200,
       "minimum_headroom_ratio": 0.1,
       "required_reserve_tokens": 220,
       "release_target": 1980,
       "minimum_release_margin_tokens": 80,
       "evolution_target": 1900,
-      "release_margin_tokens": 80,
-      "evolution_margin_tokens": 0,
-      "capacity_headroom_tokens": 300,
-      "capacity_headroom_ratio": 0.136364,
+      "release_margin_tokens": 82,
+      "evolution_margin_tokens": 2,
+      "capacity_headroom_tokens": 302,
+      "capacity_headroom_ratio": 0.137273,
       "host": "copilot",
       "build_profile": "recommended"
     },
     "max_by_budget_class": {
       "analysis": {
-        "tokens": 5000,
+        "tokens": 2538,
         "capacity_ceiling": 5000,
         "minimum_headroom_ratio": 0.0,
         "required_reserve_tokens": 0,
         "release_target": 5000,
         "minimum_release_margin_tokens": 0,
         "evolution_target": 5000,
-        "release_margin_tokens": 0,
-        "evolution_margin_tokens": 0,
-        "capacity_headroom_tokens": 0,
-        "capacity_headroom_ratio": 0.0,
+        "release_margin_tokens": 2462,
+        "evolution_margin_tokens": 2462,
+        "capacity_headroom_tokens": 2462,
+        "capacity_headroom_ratio": 0.4924,
         "host": "claude",
         "build_profile": "dev",
-        "step": 1,
+        "step": 2,
         "primary_skill": "engineering-change-analysis"
       },
       "task": {
-        "tokens": 3141,
+        "tokens": 2023,
         "capacity_ceiling": 3200,
         "minimum_headroom_ratio": 0.0,
         "required_reserve_tokens": 0,
         "release_target": 3200,
         "minimum_release_margin_tokens": 0,
         "evolution_target": 3200,
-        "release_margin_tokens": 59,
-        "evolution_margin_tokens": 59,
-        "capacity_headroom_tokens": 59,
-        "capacity_headroom_ratio": 0.018437,
+        "release_margin_tokens": 1177,
+        "evolution_margin_tokens": 1177,
+        "capacity_headroom_tokens": 1177,
+        "capacity_headroom_ratio": 0.367812,
         "host": "copilot",
         "build_profile": "full",
-        "step": 18,
+        "step": 22,
         "primary_skill": "backend-change-builder"
       },
       "analyzed_task": {
-        "tokens": 6399,
+        "tokens": 3829,
         "capacity_ceiling": 6500,
         "minimum_headroom_ratio": 0.0,
         "required_reserve_tokens": 0,
         "release_target": 6500,
         "minimum_release_margin_tokens": 0,
         "evolution_target": 6500,
-        "release_margin_tokens": 101,
-        "evolution_margin_tokens": 101,
-        "capacity_headroom_tokens": 101,
-        "capacity_headroom_ratio": 0.015538,
+        "release_margin_tokens": 2671,
+        "evolution_margin_tokens": 2671,
+        "capacity_headroom_tokens": 2671,
+        "capacity_headroom_ratio": 0.410923,
         "host": "copilot",
         "build_profile": "dev",
         "step": 6,
         "primary_skill": "delivery-release-gate"
       },
       "review": {
-        "tokens": 3672,
+        "tokens": 2230,
         "capacity_ceiling": 4000,
         "minimum_headroom_ratio": 0.0,
         "required_reserve_tokens": 0,
         "release_target": 4000,
         "minimum_release_margin_tokens": 0,
         "evolution_target": 4000,
-        "release_margin_tokens": 328,
-        "evolution_margin_tokens": 328,
-        "capacity_headroom_tokens": 328,
-        "capacity_headroom_ratio": 0.082,
+        "release_margin_tokens": 1770,
+        "evolution_margin_tokens": 1770,
+        "capacity_headroom_tokens": 1770,
+        "capacity_headroom_ratio": 0.4425,
         "host": "codex",
         "build_profile": "dev",
         "step": 1,
         "primary_skill": "architecture-impact-reviewer"
       },
       "utility": {
-        "tokens": 1242,
+        "tokens": 826,
         "capacity_ceiling": 2500,
         "minimum_headroom_ratio": 0.0,
         "required_reserve_tokens": 0,
         "release_target": 2500,
         "minimum_release_margin_tokens": 0,
         "evolution_target": 2500,
-        "release_margin_tokens": 1258,
-        "evolution_margin_tokens": 1258,
-        "capacity_headroom_tokens": 1258,
-        "capacity_headroom_ratio": 0.5032,
+        "release_margin_tokens": 1674,
+        "evolution_margin_tokens": 1674,
+        "capacity_headroom_tokens": 1674,
+        "capacity_headroom_ratio": 0.6696,
         "host": "copilot",
         "build_profile": "recommended",
         "step": 1,
         "primary_skill": null
       }
     },
-    "max_duplicate_rule_token_ratio": 0.009991,
-    "duplicate_rule_token_ratio_margin": 0.020009,
-    "max_discovery_metadata_tokens": 8747,
+    "max_duplicate_rule_token_ratio": 0.021695,
+    "duplicate_rule_token_ratio_margin": 0.008305,
+    "max_discovery_metadata_tokens": 8514,
     "loaded_layer3_reference_count": 8,
     "measured_layer3_reference_component_count": 72,
     "loaded_layer3_reference_logical_ids": [
       "ai-product-extension/references/checklist.md",
       "module-boundary-design/references/benchmarks-and-enforcement.md",
-      "payment-trading-extension/references/checklist.md",
+      "payment-trading-extension/references/duplicate-financial-effect-control.md",
       "release-rollback/references/benchmarks-and-patterns.md",
       "release-rollback/references/evidence-patterns.md",
       "test-strategy/references/checklist.md",
@@ -151,30 +151,52 @@
     ],
     "duplicate_block_examples_from_max_ratio_context": [
       {
-        "sha256": "d9675a3f8a7b187e8e6529cc8388121803517cea0f0974f552d9f7dc41d7b70c",
-        "tokens_per_extra_copy": 17,
+        "sha256": "6f7e72f4da4f146e4344b482b01e9d7b7ff20879839ca957f01fcc4eebe30d45",
+        "tokens_per_extra_copy": 19,
         "occurrence_count": 3,
         "extra_copy_count": 2,
-        "duplicate_tokens": 34,
+        "duplicate_tokens": 38,
         "sources": [
           {
-            "component": "primary_skill:dist/universal/skills/recommended/integration-change-builder/SKILL.md",
-            "occurrences": 2
+            "component": "layer3:dist/universal/skills/recommended/engineering-change-analysis/references/layer3/data-migration-design.md",
+            "occurrences": 1
           },
           {
-            "component": "targeted_reference:dist/universal/skills/recommended/integration-change-builder/references/checklist.md",
+            "component": "layer3:dist/universal/skills/recommended/engineering-change-analysis/references/layer3/release-rollback.md",
+            "occurrences": 1
+          },
+          {
+            "component": "layer3:dist/universal/skills/recommended/engineering-change-analysis/references/layer3/transaction-consistency.md",
             "occurrences": 1
           }
         ],
-        "preview": "derive the exact signed representation and permitted transformation or canonicalization from the current provider contract."
+        "preview": "current-professional jit. exact skips it; never select/reroute/preload index/catalog."
+      },
+      {
+        "sha256": "6e145383ce3dc0a06733f721a7883a3d3b680fe15c2893dbe4ce6d3665472611",
+        "tokens_per_extra_copy": 16,
+        "occurrence_count": 2,
+        "extra_copy_count": 1,
+        "duplicate_tokens": 16,
+        "sources": [
+          {
+            "component": "layer3:dist/universal/skills/recommended/engineering-change-analysis/references/layer3/data-migration-design.md",
+            "occurrences": 1
+          },
+          {
+            "component": "layer3:dist/universal/skills/recommended/engineering-change-analysis/references/layer3/release-rollback.md",
+            "occurrences": 1
+          }
+        ],
+        "preview": "load the named benchmark, checklist, or evidence reference according to the open output."
       }
     ]
   },
   "transferred_context_summary": {
     "semantic_baseline": {
       "source": "reports/hookless-control-plane-eval.json#/orchestration_fixtures",
-      "orchestration_fixture_count": 23,
-      "positive_fixture_count": 7,
+      "orchestration_fixture_count": 26,
+      "positive_fixture_count": 10,
       "positive_fixture_ids": [
         "dedup-combined-multi-task",
         "dedup-direct-work-zero-analysis",
@@ -182,21 +204,21 @@
         "dedup-protected-delta-preserves-skill",
         "dedup-reuse-fresh-validation",
         "dedup-scoped-repair-subsumes-final",
-        "dedup-terminal-blocked-review"
+        "dedup-terminal-blocked-review",
+        "review-convergence-adjacent-only-pass",
+        "review-convergence-mixed-relations",
+        "review-repair-structural-batch-key-collision"
       ],
       "retained_semantic_equality": true,
       "derivation": "consumed lightweight reducer result; no second semantic reducer"
     },
-    "gross_tokens": 14437,
-    "non_compressible_tokens": 14437,
+    "measurement_kind": "candidate-subject-only",
+    "gross_tokens": 14410,
+    "non_compressible_tokens": 14410,
     "compressible_tokens": 0,
     "compressible_ratio": 0.0,
+    "measured_case_count": 14,
     "long_task_selector_join_count": 9,
-    "conservative_long_task_ratio": 0.602026,
-    "before_gross_tokens": 47302,
-    "after_gross_tokens": 14437,
-    "realized_reduction_tokens": 32865,
-    "realized_reduction_ratio": 0.694791,
     "proof_limits": [
       "Transferred-context counts are deterministic projections from checked-in trace fields, canonical Capsules, and current handoff contracts; they are not host-observed requests or model responses.",
       "Skill / Reference counts cover only selectors crossing the dispatch boundary; full loaded Skill content remains measured by the existing rendered instruction contexts.",
@@ -205,12 +227,6 @@
       "Duplicate context detects exact normalized blocks in the projected transfers, not semantic paraphrases.",
       "Current-evidence selection uses explicit fixture ordering and freshness; it does not infer unstated runtime evidence."
     ]
-  },
-  "context_compaction_decision": {
-    "classification": "continue",
-    "observed_conservative_ratio": 0.602026,
-    "minimum_realized_reduction_ratio": 0.25,
-    "target_realized_reduction_ratio": 0.3
   },
   "errors": []
 }
