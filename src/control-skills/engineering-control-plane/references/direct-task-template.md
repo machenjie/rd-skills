@@ -52,7 +52,14 @@ L5 Evidence: when=effective L5 only; requires=independent pre-implementation rev
 Name the already known owner, test, and consumer boundaries. Direct bounded
 discovery requires a stable Primary Professional, Domain / Layer3 route,
 semantic scope, no unresolved user choice or material risk, and a bounded read
-boundary. Within the already-known owner boundary, inspection may confirm only:
+boundary. Known exact file, symbol, or section locations use direct reads with
+no repeated discovery. Otherwise search candidate locations, then read the
+minimum complete evidence needed for the decision; widen only when current
+source remains insufficient. Search, Top-K, ranked results, repository maps,
+truncated results, prior summaries, and nearby files are selectors, not proof.
+Top-K is not a complete corpus. Completeness claims require declared coverage
+or a Proof Limit. Within the already-known owner boundary, inspection may
+confirm only:
 
 - exact owning symbol/file;
 - relevant existing test;
@@ -85,6 +92,9 @@ requires Main to recompute it. Task and Review workers never reroute.
 
 Name the claims, commands, artifacts, freshness requirement, scope, and proof
 limits that must appear in the task-local Evidence Ledger.
+Analysis anchors may supply path, symbol/range, claim, scope, freshness, and
+Proof Limit selectors. Task still proves material claims from current source;
+Review confirms them independently and never inherits correctness or coverage.
 Record one `test-approach-selected` Claim for each normal behavior batch with its
 Guard G approach, reason, oracle, evidence, and proof boundary. Record current
 `red-proof` and `green-proof` only when applicable, with current proof after the

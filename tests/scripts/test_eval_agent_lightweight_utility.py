@@ -206,6 +206,212 @@ class LightweightUtilityContractTests(unittest.TestCase):
             },
         )
 
+    def test_evidence_localization_quality_gate_and_cost_observation_are_separate(
+        self,
+    ) -> None:
+        results, errors = EVAL._evidence_localization_fixture_results(
+            copy.deepcopy(self.document["evidence_localization_cases"])
+        )
+        self.assertEqual([], errors)
+        self.assertGreaterEqual(len(results), 15)
+        required_cost_fields = {
+            "search_count",
+            "exact_read_count",
+            "broad_or_full_file_read_count",
+            "repeated_read_count",
+            "search_result_volume",
+            "truncated_search_count",
+            "evidence_byte_proxy",
+            "time_to_owner_proof_step",
+            "time_to_first_edit_step",
+        }
+        for result in results:
+            with self.subTest(case=result["id"]):
+                self.assertEqual(
+                    required_cost_fields, set(result["cost_observation"])
+                )
+                self.assertIn("passed", result["quality_gate"])
+                self.assertIn("errors", result["quality_gate"])
+                self.assertEqual(
+                    result["expected_valid"], result["quality_gate"]["passed"]
+                )
+                self.assertTrue(result["matches_expected"])
+
+        cheap_invalid = next(
+            item for item in results if item["id"] == "localization-cost-cannot-hide-quality"
+        )
+        self.assertEqual(0, cheap_invalid["cost_observation"]["search_count"])
+        self.assertFalse(cheap_invalid["quality_gate"]["passed"])
+        self.assertTrue(cheap_invalid["matches_expected"])
+
+    def test_known_exact_and_stable_direct_localization_costs(self) -> None:
+        results, errors = EVAL._evidence_localization_fixture_results(
+            copy.deepcopy(self.document["evidence_localization_cases"])
+        )
+        self.assertEqual([], errors)
+        by_id = {item["id"]: item for item in results}
+        known = by_id["localization-known-exact-zero-search"]
+        self.assertEqual(0, known["cost_observation"]["search_count"])
+        self.assertGreater(known["cost_observation"]["exact_read_count"], 0)
+        self.assertEqual(0, known["cost_observation"]["repeated_read_count"])
+        stable = by_id["localization-stable-owner-direct"]
+        self.assertTrue(stable["quality_gate"]["passed"])
+        self.assertEqual("continue", stable["worker_action"])
+        self.assertTrue(stable["authority_preserved"])
+        escalated = by_id["localization-material-risk-return"]
+        self.assertEqual("return-main-analysis", escalated["worker_action"])
+        self.assertEqual(0, escalated["cost_observation"]["time_to_first_edit_step"])
+
+    def test_unknown_location_requires_candidate_search(self) -> None:
+        case = copy.deepcopy(
+            next(
+                item
+                for item in self.document["evidence_localization_cases"]
+                if item["id"] == "localization-read-search-fallback"
+            )
+        )
+        case["operations"] = [
+            operation
+            for operation in case["operations"]
+            if operation["action"] != "search"
+        ]
+        results, _errors = EVAL._evidence_localization_fixture_results([case])
+        self.assertFalse(results[0]["quality_gate"]["passed"])
+        self.assertIn(
+            "unknown-location-search",
+            results[0]["quality_gate"]["error_codes"],
+        )
+
+    def test_unknown_location_search_must_precede_current_source_reads(self) -> None:
+        case = copy.deepcopy(
+            next(
+                item
+                for item in self.document["evidence_localization_cases"]
+                if item["id"] == "localization-stable-owner-direct"
+            )
+        )
+        search = next(
+            operation for operation in case["operations"] if operation["action"] == "search"
+        )
+        operations_without_search = [
+            operation for operation in case["operations"] if operation is not search
+        ]
+        first_claim_index = next(
+            index
+            for index, operation in enumerate(operations_without_search)
+            if operation["action"] == "claim"
+        )
+        operations_without_search.insert(first_claim_index, search)
+        case["operations"] = operations_without_search
+
+        results, _errors = EVAL._evidence_localization_fixture_results([case])
+
+        self.assertFalse(results[0]["quality_gate"]["passed"])
+        self.assertIn(
+            "unknown-location-order",
+            results[0]["quality_gate"]["error_codes"],
+        )
+
+    def test_known_exact_review_anchor_uses_independent_exact_read_without_search(
+        self,
+    ) -> None:
+        case = copy.deepcopy(
+            next(
+                item
+                for item in self.document["evidence_localization_cases"]
+                if item["id"] == "localization-known-exact-review-anchor"
+            )
+        )
+        results, errors = EVAL._evidence_localization_fixture_results([case])
+        self.assertEqual([], errors)
+        self.assertTrue(results[0]["quality_gate"]["passed"])
+        self.assertEqual(0, results[0]["cost_observation"]["search_count"])
+        self.assertGreater(results[0]["cost_observation"]["exact_read_count"], 0)
+
+    def test_exact_search_and_one_consumer_read_cannot_prove_absence(self) -> None:
+        case = copy.deepcopy(
+            next(
+                item
+                for item in self.document["evidence_localization_cases"]
+                if item["id"] == "localization-top-k-cannot-prove-absence"
+            )
+        )
+        search = next(
+            operation for operation in case["operations"] if operation["action"] == "search"
+        )
+        search["mode"] = "exact"
+        search["result_volume"] = 1
+        results, _errors = EVAL._evidence_localization_fixture_results([case])
+        self.assertFalse(results[0]["quality_gate"]["passed"])
+        self.assertIn(
+            "completeness-coverage",
+            results[0]["quality_gate"]["error_codes"],
+        )
+
+    def test_indirect_consumer_gap_requires_visible_proof_limit(self) -> None:
+        case = copy.deepcopy(
+            next(
+                item
+                for item in self.document["evidence_localization_cases"]
+                if item["id"] == "localization-indirect-consumer-proof-limit"
+            )
+        )
+        results, errors = EVAL._evidence_localization_fixture_results([case])
+        self.assertEqual([], errors)
+        self.assertTrue(results[0]["quality_gate"]["passed"])
+        self.assertTrue(results[0]["proof_limit_recorded"])
+
+    def test_localization_negative_controls_reject_selector_and_inherited_proof(
+        self,
+    ) -> None:
+        results, errors = EVAL._evidence_localization_fixture_results(
+            copy.deepcopy(self.document["evidence_localization_cases"])
+        )
+        self.assertEqual([], errors)
+        by_id = {item["id"]: item for item in results}
+        for case_id, code in (
+            ("localization-nearby-is-not-owner", "owner-current-source-proof"),
+            ("localization-same-pattern-exact-misses-variant", "completeness-coverage"),
+            ("localization-top-k-cannot-prove-absence", "selector-as-proof"),
+            ("localization-truncation-cannot-prove-complete", "selector-as-proof"),
+            ("localization-indirect-consumer-not-closed", "completeness-coverage"),
+            ("localization-task-cannot-inherit-correctness", "inherited-proof"),
+            ("localization-review-independent-required", "review-independent-localization"),
+            ("localization-cost-cannot-hide-quality", "selector-as-proof"),
+        ):
+            with self.subTest(case=case_id):
+                item = by_id[case_id]
+                self.assertFalse(item["quality_gate"]["passed"])
+                self.assertIn(code, item["quality_gate"]["error_codes"])
+                self.assertTrue(item["matches_expected"])
+
+    def test_structural_fallback_minimum_complete_evidence_and_authority_invariance(
+        self,
+    ) -> None:
+        results, errors = EVAL._evidence_localization_fixture_results(
+            copy.deepcopy(self.document["evidence_localization_cases"])
+        )
+        self.assertEqual([], errors)
+        by_id = {item["id"]: item for item in results}
+        fallback = by_id["localization-read-search-fallback"]
+        self.assertTrue(fallback["quality_gate"]["passed"])
+        self.assertTrue(fallback["fallback_used"])
+        complete = by_id["localization-minimum-complete-evidence"]
+        self.assertTrue(complete["quality_gate"]["passed"])
+        self.assertEqual(
+            {
+                "owner",
+                "consumer",
+                "invariant",
+                "test",
+                "contract",
+                "validation-boundary",
+            },
+            set(complete["covered_evidence"]),
+        )
+        for item in results:
+            self.assertTrue(item["authority_preserved"], item)
+
     def test_remaining_twelve_behaviors_use_full_path_machine_mutations(self) -> None:
         results, errors = EVAL._required_behavior_coverage_results(
             copy.deepcopy(self.document),

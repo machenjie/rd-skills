@@ -988,6 +988,403 @@
       "expected_error": null
     }
   ],
+  "evidence_localization_cases": [
+    {
+      "id": "localization-known-exact-zero-search",
+      "actor": "task-agent",
+      "discovery_state": "known-exact",
+      "host_capabilities": ["read", "search"],
+      "inherited_anchor": "none",
+      "boundary": "not-applicable",
+      "authority_before": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "authority_after": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "required_evidence": ["owner"],
+      "not_applicable": ["consumer", "invariant", "test", "contract", "validation-boundary"],
+      "operations": [
+        {"id":"read-owner","action":"read","target":"owner.py#Owner.run","read_scope":"exact","source_kind":"current-source","coverage":"owner","bytes":320},
+        {"id":"claim-owner","action":"claim","kind":"owner","status":"proved","basis":["read-owner"],"scope":"owner.py#Owner.run","bytes":48},
+        {"id":"edit-owner","action":"edit","target":"owner.py#Owner.run","bytes":0}
+      ],
+      "worker_action": "not-applicable",
+      "expected_valid": true,
+      "expected_error": null
+    },
+    {
+      "id": "localization-stable-owner-direct",
+      "actor": "task-agent",
+      "discovery_state": "unknown",
+      "host_capabilities": ["read", "search", "structural-search"],
+      "inherited_anchor": "none",
+      "boundary": "stable-owner",
+      "authority_before": ["direct", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "authority_after": ["direct", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "required_evidence": ["owner", "consumer", "test", "validation-boundary"],
+      "not_applicable": ["invariant", "contract"],
+      "operations": [
+        {"id":"search-owner","action":"search","mode":"structural","target":"Owner.run","result_volume":3,"truncated":false,"bytes":180},
+        {"id":"read-owner","action":"read","target":"owner.py#Owner.run","read_scope":"exact","source_kind":"current-source","coverage":"owner","bytes":420},
+        {"id":"read-consumer","action":"read","target":"consumer.py#call_owner","read_scope":"exact","source_kind":"current-source","coverage":"consumer","bytes":240},
+        {"id":"read-test","action":"read","target":"test_owner.py#test_run","read_scope":"exact","source_kind":"current-source","coverage":"test","bytes":260},
+        {"id":"read-validation","action":"read","target":"pyproject.toml#test-command","read_scope":"exact","source_kind":"current-source","coverage":"validation-boundary","bytes":120},
+        {"id":"claim-owner","action":"claim","kind":"owner","status":"proved","basis":["read-owner"],"scope":"owner.py#Owner.run","bytes":48},
+        {"id":"edit-owner","action":"edit","target":"owner.py#Owner.run","bytes":0}
+      ],
+      "worker_action": "continue",
+      "expected_valid": true,
+      "expected_error": null
+    },
+    {
+      "id": "localization-material-risk-return",
+      "actor": "task-agent",
+      "discovery_state": "unknown",
+      "host_capabilities": ["read", "search"],
+      "inherited_anchor": "none",
+      "boundary": "cross-module-or-public-contract",
+      "authority_before": ["direct", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "authority_after": ["direct", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "required_evidence": [],
+      "not_applicable": ["owner", "consumer", "invariant", "test", "contract", "validation-boundary"],
+      "operations": [
+        {"id":"search-contract","action":"search","mode":"exact","target":"public contract","result_volume":2,"truncated":false,"bytes":160},
+        {"id":"limit-contract","action":"claim","kind":"proof-limit","status":"proof-limit","basis":["search-contract"],"scope":"public consumer graph unresolved","bytes":64}
+      ],
+      "worker_action": "return-main-analysis",
+      "expected_valid": true,
+      "expected_error": null
+    },
+    {
+      "id": "localization-nearby-is-not-owner",
+      "actor": "analysis-agent",
+      "discovery_state": "unknown",
+      "host_capabilities": ["read", "search", "structural-search"],
+      "inherited_anchor": "none",
+      "boundary": "not-applicable",
+      "authority_before": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "authority_after": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "required_evidence": ["owner"],
+      "not_applicable": ["consumer", "invariant", "test", "contract", "validation-boundary"],
+      "operations": [
+        {"id":"search-nearby","action":"search","mode":"structural","target":"Owner.run","result_volume":2,"truncated":false,"bytes":140},
+        {"id":"read-nearby","action":"read","target":"nearby.py#OwnerView","read_scope":"exact","source_kind":"selector","coverage":"candidate","bytes":220},
+        {"id":"claim-owner","action":"claim","kind":"owner","status":"proved","basis":["read-nearby"],"scope":"nearby.py","bytes":40}
+      ],
+      "worker_action": "not-applicable",
+      "expected_valid": false,
+      "expected_error": "owner-current-source-proof"
+    },
+    {
+      "id": "localization-same-pattern-expanded-coverage",
+      "actor": "analysis-agent",
+      "discovery_state": "unknown",
+      "host_capabilities": ["read", "search", "structural-search"],
+      "inherited_anchor": "none",
+      "boundary": "not-applicable",
+      "authority_before": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "authority_after": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "required_evidence": [],
+      "not_applicable": ["owner", "consumer", "invariant", "test", "contract", "validation-boundary"],
+      "operations": [
+        {"id":"search-exact","action":"search","mode":"exact","target":"authorize_user","result_volume":1,"truncated":false,"bytes":100},
+        {"id":"search-expanded","action":"search","mode":"expanded","target":"authorize variants","result_volume":2,"truncated":false,"bytes":180},
+        {"id":"read-pattern-a","action":"read","target":"a.py#authorize_user","read_scope":"exact","source_kind":"current-source","coverage":"same-pattern","bytes":220},
+        {"id":"read-pattern-b","action":"read","target":"b.py#user_is_authorized","read_scope":"exact","source_kind":"current-source","coverage":"same-pattern","bytes":240},
+        {"id":"coverage-patterns","action":"coverage","scope":"declared authorization syntax and naming variants","search_ids":["search-exact","search-expanded"],"corpus_complete":true,"indirect_consumers_closed":false,"bytes":80},
+        {"id":"claim-complete","action":"claim","kind":"completeness","status":"proved","basis":["coverage-patterns","read-pattern-a","read-pattern-b"],"scope":"declared authorization variants","bytes":64}
+      ],
+      "worker_action": "not-applicable",
+      "expected_valid": true,
+      "expected_error": null
+    },
+    {
+      "id": "localization-same-pattern-exact-misses-variant",
+      "actor": "analysis-agent",
+      "discovery_state": "unknown",
+      "host_capabilities": ["read", "search", "structural-search"],
+      "inherited_anchor": "none",
+      "boundary": "not-applicable",
+      "authority_before": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "authority_after": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "required_evidence": [],
+      "not_applicable": ["owner", "consumer", "invariant", "test", "contract", "validation-boundary"],
+      "operations": [
+        {"id":"search-exact","action":"search","mode":"exact","target":"authorize_user","result_volume":1,"truncated":false,"bytes":100},
+        {"id":"read-pattern-a","action":"read","target":"a.py#authorize_user","read_scope":"exact","source_kind":"current-source","coverage":"same-pattern","bytes":220},
+        {"id":"claim-complete","action":"claim","kind":"completeness","status":"proved","basis":["search-exact","read-pattern-a"],"scope":"all authorization patterns","bytes":64}
+      ],
+      "worker_action": "not-applicable",
+      "expected_valid": false,
+      "expected_error": "completeness-coverage"
+    },
+    {
+      "id": "localization-indirect-consumer-proof-limit",
+      "actor": "analysis-agent",
+      "discovery_state": "unknown",
+      "host_capabilities": ["read", "search", "structural-search"],
+      "inherited_anchor": "none",
+      "boundary": "not-applicable",
+      "authority_before": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "authority_after": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "required_evidence": ["owner", "consumer"],
+      "not_applicable": ["invariant", "test", "contract", "validation-boundary"],
+      "operations": [
+        {"id":"search-consumers","action":"search","mode":"structural","target":"Owner.run callers","result_volume":1,"truncated":false,"bytes":160},
+        {"id":"read-owner","action":"read","target":"owner.py#Owner.run","read_scope":"exact","source_kind":"current-source","coverage":"owner","bytes":260},
+        {"id":"read-direct","action":"read","target":"direct.py#call","read_scope":"exact","source_kind":"current-source","coverage":"consumer","bytes":220},
+        {"id":"limit-impact","action":"claim","kind":"proof-limit","status":"proof-limit","basis":["search-consumers","read-owner","read-direct"],"scope":"indirect consumers are not closed; impact scope remains open","bytes":88}
+      ],
+      "worker_action": "not-applicable",
+      "expected_valid": true,
+      "expected_error": null
+    },
+    {
+      "id": "localization-top-k-proof-limit",
+      "actor": "analysis-agent",
+      "discovery_state": "unknown",
+      "host_capabilities": ["read", "search", "structural-search"],
+      "inherited_anchor": "none",
+      "boundary": "not-applicable",
+      "authority_before": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "authority_after": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "required_evidence": [],
+      "not_applicable": ["owner", "consumer", "invariant", "test", "contract", "validation-boundary"],
+      "operations": [
+        {"id":"search-top-k","action":"search","mode":"top-k","target":"consumers","result_volume":5,"truncated":false,"bytes":300},
+        {"id":"limit-consumers","action":"claim","kind":"proof-limit","status":"proof-limit","basis":["search-top-k"],"scope":"Top-K does not close consumer corpus","bytes":64}
+      ],
+      "worker_action": "not-applicable",
+      "expected_valid": true,
+      "expected_error": null
+    },
+    {
+      "id": "localization-known-exact-review-anchor",
+      "actor": "review-agent",
+      "discovery_state": "known-exact",
+      "host_capabilities": ["read", "search"],
+      "inherited_anchor": "task-agent",
+      "boundary": "not-applicable",
+      "authority_before": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "authority_after": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "required_evidence": ["owner"],
+      "not_applicable": ["consumer", "invariant", "test", "contract", "validation-boundary"],
+      "operations": [
+        {"id":"anchor-task","action":"anchor","source":"task-agent","target":"owner.py#Owner.run@fresh-2","bytes":64},
+        {"id":"read-owner","action":"read","target":"owner.py#Owner.run","read_scope":"exact","source_kind":"current-source","coverage":"owner","bytes":320},
+        {"id":"claim-correct","action":"claim","kind":"correctness","status":"proved","basis":["read-owner"],"scope":"changed owner correctness","bytes":48}
+      ],
+      "worker_action": "not-applicable",
+      "expected_valid": true,
+      "expected_error": null
+    },
+    {
+      "id": "localization-top-k-cannot-prove-absence",
+      "actor": "analysis-agent",
+      "discovery_state": "unknown",
+      "host_capabilities": ["read", "search", "structural-search"],
+      "inherited_anchor": "none",
+      "boundary": "not-applicable",
+      "authority_before": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "authority_after": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "required_evidence": [],
+      "not_applicable": ["owner", "consumer", "invariant", "test", "contract", "validation-boundary"],
+      "operations": [
+        {"id":"search-top-k","action":"search","mode":"top-k","target":"consumers","result_volume":5,"truncated":false,"bytes":300},
+        {"id":"read-result","action":"read","target":"consumer_a.py#call","read_scope":"exact","source_kind":"current-source","coverage":"consumer","bytes":200},
+        {"id":"claim-absence","action":"claim","kind":"absence","status":"proved","basis":["search-top-k","read-result"],"scope":"no other consumers","bytes":64}
+      ],
+      "worker_action": "not-applicable",
+      "expected_valid": false,
+      "expected_error": "selector-as-proof"
+    },
+    {
+      "id": "localization-truncation-cannot-prove-complete",
+      "actor": "analysis-agent",
+      "discovery_state": "unknown",
+      "host_capabilities": ["read", "search", "structural-search"],
+      "inherited_anchor": "none",
+      "boundary": "not-applicable",
+      "authority_before": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "authority_after": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "required_evidence": [],
+      "not_applicable": ["owner", "consumer", "invariant", "test", "contract", "validation-boundary"],
+      "operations": [
+        {"id":"search-truncated","action":"search","mode":"expanded","target":"same pattern","result_volume":20,"truncated":true,"bytes":800},
+        {"id":"read-pattern-a","action":"read","target":"a.py#pattern","read_scope":"exact","source_kind":"current-source","coverage":"same-pattern","bytes":220},
+        {"id":"read-pattern-b","action":"read","target":"b.py#pattern","read_scope":"exact","source_kind":"current-source","coverage":"same-pattern","bytes":220},
+        {"id":"claim-complete","action":"claim","kind":"completeness","status":"proved","basis":["search-truncated","read-pattern-a","read-pattern-b"],"scope":"all pattern occurrences","bytes":64}
+      ],
+      "worker_action": "not-applicable",
+      "expected_valid": false,
+      "expected_error": "selector-as-proof"
+    },
+    {
+      "id": "localization-indirect-consumer-not-closed",
+      "actor": "analysis-agent",
+      "discovery_state": "unknown",
+      "host_capabilities": ["read", "search", "structural-search"],
+      "inherited_anchor": "none",
+      "boundary": "not-applicable",
+      "authority_before": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "authority_after": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "required_evidence": ["owner", "consumer"],
+      "not_applicable": ["invariant", "test", "contract", "validation-boundary"],
+      "operations": [
+        {"id":"search-consumers","action":"search","mode":"structural","target":"Owner.run callers","result_volume":1,"truncated":false,"bytes":160},
+        {"id":"read-owner","action":"read","target":"owner.py#Owner.run","read_scope":"exact","source_kind":"current-source","coverage":"owner","bytes":260},
+        {"id":"read-direct","action":"read","target":"direct.py#call","read_scope":"exact","source_kind":"current-source","coverage":"consumer","bytes":220},
+        {"id":"claim-impact","action":"claim","kind":"impact-scope","status":"proved","basis":["read-owner","read-direct"],"scope":"impact scope closed","bytes":64}
+      ],
+      "worker_action": "not-applicable",
+      "expected_valid": false,
+      "expected_error": "completeness-coverage"
+    },
+    {
+      "id": "localization-analysis-anchor-task-current-proof",
+      "actor": "task-agent",
+      "discovery_state": "known-exact",
+      "host_capabilities": ["read", "search"],
+      "inherited_anchor": "analysis-agent",
+      "boundary": "not-applicable",
+      "authority_before": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "authority_after": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "required_evidence": ["owner"],
+      "not_applicable": ["consumer", "invariant", "test", "contract", "validation-boundary"],
+      "operations": [
+        {"id":"anchor-analysis","action":"anchor","source":"analysis-agent","target":"owner.py#Owner.run@fresh-1","bytes":64},
+        {"id":"read-owner","action":"read","target":"owner.py#Owner.run","read_scope":"exact","source_kind":"current-source","coverage":"owner","bytes":320},
+        {"id":"claim-owner","action":"claim","kind":"owner","status":"proved","basis":["read-owner"],"scope":"owner.py#Owner.run","bytes":48},
+        {"id":"edit-owner","action":"edit","target":"owner.py#Owner.run","bytes":0}
+      ],
+      "worker_action": "not-applicable",
+      "expected_valid": true,
+      "expected_error": null
+    },
+    {
+      "id": "localization-task-cannot-inherit-correctness",
+      "actor": "task-agent",
+      "discovery_state": "known-exact",
+      "host_capabilities": ["read", "search"],
+      "inherited_anchor": "analysis-agent",
+      "boundary": "not-applicable",
+      "authority_before": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "authority_after": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "required_evidence": [],
+      "not_applicable": ["owner", "consumer", "invariant", "test", "contract", "validation-boundary"],
+      "operations": [
+        {"id":"anchor-analysis","action":"anchor","source":"analysis-agent","target":"owner.py#Owner.run correctness conclusion","bytes":96},
+        {"id":"read-selector","action":"read","target":"owner.py#Owner.run","read_scope":"exact","source_kind":"selector","coverage":"candidate","bytes":120},
+        {"id":"claim-correct","action":"claim","kind":"correctness","status":"proved","basis":["anchor-analysis"],"scope":"owner correctness","bytes":48}
+      ],
+      "worker_action": "not-applicable",
+      "expected_valid": false,
+      "expected_error": "inherited-proof"
+    },
+    {
+      "id": "localization-review-independent-current-proof",
+      "actor": "review-agent",
+      "discovery_state": "unknown",
+      "host_capabilities": ["read", "search"],
+      "inherited_anchor": "task-agent",
+      "boundary": "not-applicable",
+      "authority_before": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "authority_after": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "required_evidence": ["owner"],
+      "not_applicable": ["consumer", "invariant", "test", "contract", "validation-boundary"],
+      "operations": [
+        {"id":"anchor-task","action":"anchor","source":"task-agent","target":"owner.py#Owner.run","bytes":64},
+        {"id":"search-review","action":"search","mode":"fallback","target":"Owner.run","result_volume":2,"truncated":false,"bytes":140},
+        {"id":"read-owner","action":"read","target":"owner.py#Owner.run","read_scope":"exact","source_kind":"current-source","coverage":"owner","bytes":320},
+        {"id":"claim-correct","action":"claim","kind":"correctness","status":"proved","basis":["read-owner"],"scope":"changed owner correctness","bytes":48}
+      ],
+      "worker_action": "not-applicable",
+      "expected_valid": true,
+      "expected_error": null
+    },
+    {
+      "id": "localization-review-independent-required",
+      "actor": "review-agent",
+      "discovery_state": "unknown",
+      "host_capabilities": ["read", "search"],
+      "inherited_anchor": "task-agent",
+      "boundary": "not-applicable",
+      "authority_before": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "authority_after": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "required_evidence": ["owner"],
+      "not_applicable": ["consumer", "invariant", "test", "contract", "validation-boundary"],
+      "operations": [
+        {"id":"anchor-task","action":"anchor","source":"task-agent","target":"owner.py#Owner.run correctness conclusion","bytes":96},
+        {"id":"search-review","action":"search","mode":"fallback","target":"Owner.run","result_volume":2,"truncated":false,"bytes":140},
+        {"id":"read-owner","action":"read","target":"owner.py#Owner.run","read_scope":"exact","source_kind":"current-source","coverage":"owner","bytes":320},
+        {"id":"claim-correct","action":"claim","kind":"correctness","status":"proved","basis":["anchor-task"],"scope":"changed owner correctness","bytes":48}
+      ],
+      "worker_action": "not-applicable",
+      "expected_valid": false,
+      "expected_error": "review-independent-localization"
+    },
+    {
+      "id": "localization-read-search-fallback",
+      "actor": "analysis-agent",
+      "discovery_state": "unknown",
+      "host_capabilities": ["read", "search"],
+      "inherited_anchor": "none",
+      "boundary": "not-applicable",
+      "authority_before": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "authority_after": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "required_evidence": ["owner"],
+      "not_applicable": ["consumer", "invariant", "test", "contract", "validation-boundary"],
+      "operations": [
+        {"id":"search-fallback","action":"search","mode":"fallback","target":"Owner.run text variants","result_volume":2,"truncated":false,"bytes":160},
+        {"id":"read-owner","action":"read","target":"owner.py#Owner.run","read_scope":"exact","source_kind":"current-source","coverage":"owner","bytes":320},
+        {"id":"claim-owner","action":"claim","kind":"owner","status":"proved","basis":["read-owner"],"scope":"owner.py#Owner.run","bytes":48}
+      ],
+      "worker_action": "not-applicable",
+      "expected_valid": true,
+      "expected_error": null
+    },
+    {
+      "id": "localization-minimum-complete-evidence",
+      "actor": "analysis-agent",
+      "discovery_state": "unknown",
+      "host_capabilities": ["read", "search", "structural-search"],
+      "inherited_anchor": "none",
+      "boundary": "not-applicable",
+      "authority_before": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "authority_after": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "required_evidence": ["owner", "consumer", "invariant", "test", "contract", "validation-boundary"],
+      "not_applicable": [],
+      "operations": [
+        {"id":"search-owner","action":"search","mode":"structural","target":"Owner.run","result_volume":4,"truncated":false,"bytes":180},
+        {"id":"read-owner","action":"read","target":"owner.py#Owner.run","read_scope":"exact","source_kind":"current-source","coverage":"owner","bytes":320},
+        {"id":"read-consumer","action":"read","target":"consumer.py#call","read_scope":"exact","source_kind":"current-source","coverage":"consumer","bytes":220},
+        {"id":"read-invariant","action":"read","target":"owner.py#invariant","read_scope":"exact","source_kind":"current-source","coverage":"invariant","bytes":180},
+        {"id":"read-test","action":"read","target":"test_owner.py#test_run","read_scope":"exact","source_kind":"current-source","coverage":"test","bytes":240},
+        {"id":"read-contract","action":"read","target":"contract.py#OwnerProtocol","read_scope":"exact","source_kind":"current-source","coverage":"contract","bytes":180},
+        {"id":"read-validation","action":"read","target":"pyproject.toml#test-command","read_scope":"exact","source_kind":"current-source","coverage":"validation-boundary","bytes":120},
+        {"id":"claim-correct","action":"claim","kind":"correctness","status":"proved","basis":["read-owner","read-consumer","read-invariant","read-test","read-contract","read-validation"],"scope":"accepted owner behavior","bytes":64}
+      ],
+      "worker_action": "not-applicable",
+      "expected_valid": true,
+      "expected_error": null
+    },
+    {
+      "id": "localization-cost-cannot-hide-quality",
+      "actor": "analysis-agent",
+      "discovery_state": "unknown",
+      "host_capabilities": ["read", "search", "structural-search"],
+      "inherited_anchor": "none",
+      "boundary": "not-applicable",
+      "authority_before": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "authority_after": ["analyzed", "repository-tooling-change-builder", [], "L3", "owner-module"],
+      "required_evidence": [],
+      "not_applicable": ["owner", "consumer", "invariant", "test", "contract", "validation-boundary"],
+      "operations": [
+        {"id":"anchor-summary","action":"anchor","source":"analysis-agent","target":"prior summary says behavior correct","bytes":24},
+        {"id":"claim-correct","action":"claim","kind":"correctness","status":"proved","basis":["anchor-summary"],"scope":"owner correctness","bytes":24}
+      ],
+      "worker_action": "not-applicable",
+      "expected_valid": false,
+      "expected_error": "selector-as-proof"
+    }
+  ],
   "completion_state_cases": [
     {
       "id": "implementation-completed-with-current-evidence",

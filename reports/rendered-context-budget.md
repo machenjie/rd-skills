@@ -23,11 +23,11 @@ Capacity ceilings, minimum headroom ratios, and minimum release margins come fro
 | Context | Capacity ceiling | Required reserve | Release target | Minimum release margin | Evolution target | Observed maximum | Release margin | Evolution margin | Capacity headroom ratio |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Main always-loaded | 2200 | 220 | 1980 | 80 | 1900 | 1874 | 106 | 26 | 0.148182 |
-| Direct Task dispatch | 3200 | 0 | 3200 | 0 | 3200 | 2024 | 1176 | 1176 | 0.3675 |
-| Analyzed Task dispatch | 6500 | 0 | 6500 | 0 | 6500 | 3830 | 2670 | 2670 | 0.410769 |
-| Analysis dispatch | 5000 | 0 | 5000 | 0 | 5000 | 2481 | 2519 | 2519 | 0.5038 |
-| Review dispatch | 4000 | 0 | 4000 | 0 | 4000 | 2230 | 1770 | 1770 | 0.4425 |
-| Utility dispatch | 2500 | 0 | 2500 | 0 | 2500 | 827 | 1673 | 1673 | 0.6692 |
+| Direct Task dispatch | 3200 | 0 | 3200 | 0 | 3200 | 2023 | 1177 | 1177 | 0.367812 |
+| Analyzed Task dispatch | 6500 | 0 | 6500 | 0 | 6500 | 3829 | 2671 | 2671 | 0.410923 |
+| Analysis dispatch | 5000 | 0 | 5000 | 0 | 5000 | 2538 | 2462 | 2462 | 0.4924 |
+| Review dispatch | 4000 | 0 | 4000 | 0 | 4000 | 2273 | 1727 | 1727 | 0.43175 |
+| Utility dispatch | 2500 | 0 | 2500 | 0 | 2500 | 826 | 1674 | 1674 | 0.6696 |
 
 ## Admissible Context Composition Gate
 
@@ -35,23 +35,10 @@ Contract: **changeforge.admissible-context-composition-eval/v1**; selector owner
 
 | Context | Phase 3 target | Reachable maximum | Professional | Layer 3 | Owner | Build | Host |
 | --- | ---: | ---: | --- | --- | --- | --- | --- |
-## End-to-End Cost Gate
-
-Contract: **changeforge.end-to-end-cost-projection/v1**.
-Comparison SHA-256: `3743f533ba98ddd2d6ccc075e4de1263799c482e566cc1139ce0def48a008f59`.
-Subject identity SHA-256: `43b2a9eb6373c9ac1469d12f8c57160650160d3b73bcb1c5f80860f8196ad656`.
-Comparable cases: **186**; status: **pass**.
-Host matrix logical/physical rows: **62 / 186**; digest `ec3416d569bf87686d63c2b18cac9e7a9faf1f32969e2fa86e1cff5cc95b5554`.
-Host matrix reconciliation baseline/candidate/rows: **0 / 0 / 0**.
-Selection authority bundle digests: baseline `083344588e220b0777aa7b5abf723ec55db3bc24115b9a273afc5cba3aaf00bd`; candidate `8ce2742641c0073620ab7d5eeb4457472592e73783045d445d09e22da0ac3d64`.
-Selection authority baseline: bundles **108**; schemas **combined-router/v1=108**; selector/partition/reference loads **45 / 0 / 129**.
-Selection authority candidate: bundles **108**; schemas **split-professional-selector/v1=108**; selector/partition/reference loads **141 / 0 / 129**.
-Ordinary raw-route-equal gate regressions/digest: **0** / `4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945`.
-Aggregate baseline/candidate/delta: **802232 / 717053 / -85179**.
-| task | 3000 | 3000 | installed-client-change-builder | cross-platform-client-extension, ios-ipados-platform-extension, kotlin-professional-usage | main-control-agent | dev | copilot |
-| analyzed_task | 6000 | 4099 | backend-change-builder | failure-diagnosis, filesystem-process-safety, nodejs-runtime-professional-usage | engineering-brief | dev | copilot |
-| analysis | 4500 | 3526 | engineering-change-analysis | iot-embedded-extension, failure-diagnosis, package-dependency-management | main-control-agent | dev | claude |
-| review | 3700 | 3431 | ai-code-review-refactor | domain-object-identification, implementation-structure-design, refactoring | engineering-brief | dev | codex |
+| task | 3000 | 2999 | installed-client-change-builder | cross-platform-client-extension, ios-ipados-platform-extension, kotlin-professional-usage | main-control-agent | dev | copilot |
+| analyzed_task | 6000 | 4098 | backend-change-builder | failure-diagnosis, filesystem-process-safety, nodejs-runtime-professional-usage | engineering-brief | dev | copilot |
+| analysis | 4500 | 3583 | engineering-change-analysis | iot-embedded-extension, failure-diagnosis, package-dependency-management | main-control-agent | dev | claude |
+| review | 3700 | 3474 | ai-code-review-refactor | domain-object-identification, implementation-structure-design, refactoring | engineering-brief | dev | codex |
 
 ### Dominance Frontier Projection
 
@@ -64,7 +51,7 @@ Aggregate baseline/candidate/delta: **802232 / 717053 / -85179**.
 
 Global Task/Review frontier counts: professional=0, layer3=0, active_reference=0; safe complement: professional=17, layer3=68, active_reference=267.
 
-Mapping digest: `bf359ae8515e1f118ae9a04aa6e1e484203eed0cbc9ea7c94a5fd818d71b4525`; runtime consumers: **0**; build consumers: **0**.
+Mapping digest: `f64a2ad8b872bb8828521a0f75ef95170bad26df63f909644028a866cd373642`; runtime consumers: **0**; build consumers: **0**.
 
 Coverage: analysis_foundation_domain=yes, analyzed_task_three_layer3=yes, review_domain_foundation=yes, nested_targeted_references=yes, direct_main_owner=yes, initial_analysis_main_owner=yes, analyzed_brief_owner=yes, direct_false_worst_excluded=yes.
 
@@ -79,7 +66,7 @@ Forbidden-combination evidence: >3 rejected=47; unauthorized exact rejected=65; 
 - Sequenced Reference stages are source-owned; only canonically replayed engineering-brief Task/Review carriers may replace a predecessor body, while other owner surfaces conservatively co-load.
 - Reported maxima are exact for the deterministic canonical representatives; the full inventory count and dominance mapping remain available separately.
 
-Maximum exact normalized duplicate-rule ratio: **0.022204** (gate: **0.03**; margin: **0.007796**).
+Maximum exact normalized duplicate-rule ratio: **0.021695** (gate: **0.03**; margin: **0.008305**).
 
 Discovery metadata is reported separately because actual host discovery injection is not observed.
 

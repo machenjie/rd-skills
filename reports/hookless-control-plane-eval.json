@@ -3916,6 +3916,590 @@
       "errors": []
     }
   ],
+  "evidence_localization_fixture_count": 19,
+  "evidence_localization_fixtures": [
+    {
+      "id": "localization-known-exact-zero-search",
+      "actor": "task-agent",
+      "worker_action": "not-applicable",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [
+        "owner"
+      ],
+      "proof_limit_recorded": false,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 0,
+        "exact_read_count": 1,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 0,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 368,
+        "time_to_owner_proof_step": 2,
+        "time_to_first_edit_step": 3
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "localization-stable-owner-direct",
+      "actor": "task-agent",
+      "worker_action": "continue",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [
+        "consumer",
+        "owner",
+        "test",
+        "validation-boundary"
+      ],
+      "proof_limit_recorded": false,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 1,
+        "exact_read_count": 4,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 3,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 1268,
+        "time_to_owner_proof_step": 6,
+        "time_to_first_edit_step": 7
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "localization-material-risk-return",
+      "actor": "task-agent",
+      "worker_action": "return-main-analysis",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [],
+      "proof_limit_recorded": true,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 1,
+        "exact_read_count": 0,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 2,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 224,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "localization-nearby-is-not-owner",
+      "actor": "analysis-agent",
+      "worker_action": "not-applicable",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [],
+      "proof_limit_recorded": false,
+      "expected_valid": false,
+      "quality_gate": {
+        "passed": false,
+        "error_codes": [
+          "minimum-complete-evidence",
+          "owner-current-source-proof"
+        ],
+        "errors": [
+          "localization-nearby-is-not-owner: [owner-current-source-proof] owner is not proved by current owning source",
+          "localization-nearby-is-not-owner: [minimum-complete-evidence] required current evidence is missing: ['owner']"
+        ]
+      },
+      "cost_observation": {
+        "search_count": 1,
+        "exact_read_count": 1,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 2,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 400,
+        "time_to_owner_proof_step": 3,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "localization-same-pattern-expanded-coverage",
+      "actor": "analysis-agent",
+      "worker_action": "not-applicable",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [],
+      "proof_limit_recorded": false,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 2,
+        "exact_read_count": 2,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 3,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 884,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "localization-same-pattern-exact-misses-variant",
+      "actor": "analysis-agent",
+      "worker_action": "not-applicable",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [],
+      "proof_limit_recorded": false,
+      "expected_valid": false,
+      "quality_gate": {
+        "passed": false,
+        "error_codes": [
+          "completeness-coverage"
+        ],
+        "errors": [
+          "localization-same-pattern-exact-misses-variant: [completeness-coverage] absence, completeness, and impact closure require declared corpus coverage"
+        ]
+      },
+      "cost_observation": {
+        "search_count": 1,
+        "exact_read_count": 1,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 1,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 384,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "localization-indirect-consumer-proof-limit",
+      "actor": "analysis-agent",
+      "worker_action": "not-applicable",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [
+        "consumer",
+        "owner"
+      ],
+      "proof_limit_recorded": true,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 1,
+        "exact_read_count": 2,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 1,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 728,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "localization-top-k-proof-limit",
+      "actor": "analysis-agent",
+      "worker_action": "not-applicable",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [],
+      "proof_limit_recorded": true,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 1,
+        "exact_read_count": 0,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 5,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 364,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "localization-known-exact-review-anchor",
+      "actor": "review-agent",
+      "worker_action": "not-applicable",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [
+        "owner"
+      ],
+      "proof_limit_recorded": false,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 0,
+        "exact_read_count": 1,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 0,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 432,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "localization-top-k-cannot-prove-absence",
+      "actor": "analysis-agent",
+      "worker_action": "not-applicable",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [
+        "consumer"
+      ],
+      "proof_limit_recorded": false,
+      "expected_valid": false,
+      "quality_gate": {
+        "passed": false,
+        "error_codes": [
+          "selector-as-proof"
+        ],
+        "errors": [
+          "localization-top-k-cannot-prove-absence: [selector-as-proof] limited or truncated search cannot prove completeness"
+        ]
+      },
+      "cost_observation": {
+        "search_count": 1,
+        "exact_read_count": 1,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 5,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 564,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "localization-truncation-cannot-prove-complete",
+      "actor": "analysis-agent",
+      "worker_action": "not-applicable",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [],
+      "proof_limit_recorded": false,
+      "expected_valid": false,
+      "quality_gate": {
+        "passed": false,
+        "error_codes": [
+          "selector-as-proof"
+        ],
+        "errors": [
+          "localization-truncation-cannot-prove-complete: [selector-as-proof] limited or truncated search cannot prove completeness"
+        ]
+      },
+      "cost_observation": {
+        "search_count": 1,
+        "exact_read_count": 2,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 20,
+        "truncated_search_count": 1,
+        "evidence_byte_proxy": 1304,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "localization-indirect-consumer-not-closed",
+      "actor": "analysis-agent",
+      "worker_action": "not-applicable",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [
+        "consumer",
+        "owner"
+      ],
+      "proof_limit_recorded": false,
+      "expected_valid": false,
+      "quality_gate": {
+        "passed": false,
+        "error_codes": [
+          "completeness-coverage"
+        ],
+        "errors": [
+          "localization-indirect-consumer-not-closed: [completeness-coverage] absence, completeness, and impact closure require declared corpus coverage"
+        ]
+      },
+      "cost_observation": {
+        "search_count": 1,
+        "exact_read_count": 2,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 1,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 704,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "localization-analysis-anchor-task-current-proof",
+      "actor": "task-agent",
+      "worker_action": "not-applicable",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [
+        "owner"
+      ],
+      "proof_limit_recorded": false,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 0,
+        "exact_read_count": 1,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 0,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 432,
+        "time_to_owner_proof_step": 3,
+        "time_to_first_edit_step": 4
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "localization-task-cannot-inherit-correctness",
+      "actor": "task-agent",
+      "worker_action": "not-applicable",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [],
+      "proof_limit_recorded": false,
+      "expected_valid": false,
+      "quality_gate": {
+        "passed": false,
+        "error_codes": [
+          "inherited-proof"
+        ],
+        "errors": [
+          "localization-task-cannot-inherit-correctness: [inherited-proof] Task cannot inherit correctness or coverage"
+        ]
+      },
+      "cost_observation": {
+        "search_count": 0,
+        "exact_read_count": 1,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 0,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 264,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "localization-review-independent-current-proof",
+      "actor": "review-agent",
+      "worker_action": "not-applicable",
+      "authority_preserved": true,
+      "fallback_used": true,
+      "covered_evidence": [
+        "owner"
+      ],
+      "proof_limit_recorded": false,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 1,
+        "exact_read_count": 1,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 2,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 572,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "localization-review-independent-required",
+      "actor": "review-agent",
+      "worker_action": "not-applicable",
+      "authority_preserved": true,
+      "fallback_used": true,
+      "covered_evidence": [
+        "owner"
+      ],
+      "proof_limit_recorded": false,
+      "expected_valid": false,
+      "quality_gate": {
+        "passed": false,
+        "error_codes": [
+          "review-independent-localization"
+        ],
+        "errors": [
+          "localization-review-independent-required: [review-independent-localization] Review cannot inherit correctness or coverage"
+        ]
+      },
+      "cost_observation": {
+        "search_count": 1,
+        "exact_read_count": 1,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 2,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 604,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "localization-read-search-fallback",
+      "actor": "analysis-agent",
+      "worker_action": "not-applicable",
+      "authority_preserved": true,
+      "fallback_used": true,
+      "covered_evidence": [
+        "owner"
+      ],
+      "proof_limit_recorded": false,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 1,
+        "exact_read_count": 1,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 2,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 528,
+        "time_to_owner_proof_step": 3,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "localization-minimum-complete-evidence",
+      "actor": "analysis-agent",
+      "worker_action": "not-applicable",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [
+        "consumer",
+        "contract",
+        "invariant",
+        "owner",
+        "test",
+        "validation-boundary"
+      ],
+      "proof_limit_recorded": false,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 1,
+        "exact_read_count": 6,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 4,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 1504,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "localization-cost-cannot-hide-quality",
+      "actor": "analysis-agent",
+      "worker_action": "not-applicable",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [],
+      "proof_limit_recorded": false,
+      "expected_valid": false,
+      "quality_gate": {
+        "passed": false,
+        "error_codes": [
+          "selector-as-proof",
+          "unknown-location-search"
+        ],
+        "errors": [
+          "localization-cost-cannot-hide-quality: [unknown-location-search] unknown source location requires candidate search before proof",
+          "localization-cost-cannot-hide-quality: [selector-as-proof] selector or inherited evidence cannot prove a material claim"
+        ]
+      },
+      "cost_observation": {
+        "search_count": 0,
+        "exact_read_count": 0,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 0,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 48,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    }
+  ],
   "risk_calibration_fixture_count": 13,
   "risk_calibration_fixtures": [
     {

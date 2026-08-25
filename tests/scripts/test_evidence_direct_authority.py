@@ -41,6 +41,9 @@ EVAL_PRESSURE = _load_script(
 AUDIT_SKILL_CONTENT = _load_script(
     "evidence_direct_audit_skill_content", "audit-skill-content.py"
 )
+VALIDATE_AGENT_PROFILES = _load_script(
+    "evidence_direct_validate_agent_profiles", "validate-agent-profiles.py"
+)
 PROMPT = ROOT / "src" / "control-prompts" / "main-control-agent.md"
 DIRECT_TEMPLATE = (
     ROOT
@@ -63,6 +66,126 @@ INTAKE_SKILL = (
 
 
 class EvidenceDirectAuthorityTests(unittest.TestCase):
+    def test_profile_validator_covers_every_build_owned_profile_root(self) -> None:
+        actual = [
+            (platform, root.relative_to(ROOT).as_posix(), extension)
+            for platform, root, extension in VALIDATE_AGENT_PROFILES.OUTPUTS
+        ]
+        self.assertEqual(
+            [
+                ("codex", "dist/codex/project/.codex/agents", ".toml"),
+                ("codex", "dist/codex/user/.codex/agents", ".toml"),
+                ("codex", "dist/codex/admin/agents", ".toml"),
+                ("claude", "dist/claude/project/.claude/agents", ".md"),
+                ("claude", "dist/claude/user/.claude/agents", ".md"),
+                ("copilot", "dist/copilot/project/.github/agents", ".agent.md"),
+                ("copilot", "dist/copilot/user/.copilot/agents", ".agent.md"),
+            ],
+            actual,
+        )
+
+    def test_core_owns_localization_without_routing_or_authority_ownership(self) -> None:
+        localization = CORE_CONTRACTS["evidence_localization_contract"]
+        self.assertEqual(
+            ["analysis-agent", "task-agent", "review-agent"],
+            localization["applies_to"],
+        )
+        self.assertEqual("locate-current-source-evidence", localization["purpose"])
+        self.assertEqual(
+            ["read", "search"], localization["host_capabilities"]["required"]
+        )
+        self.assertEqual(
+            "read-search",
+            localization["host_capabilities"]["structural_fallback"],
+        )
+        for excluded in (
+            "route-selection",
+            "professional-skill-selection",
+            "layer3-selection",
+            "execution-level",
+            "task-scope-or-write-authority",
+            "finding-classification",
+            "review-or-repair-authority",
+        ):
+            self.assertIn(excluded, localization["authority_exclusions"])
+
+        expected_cost_fields = [
+            "search_count",
+            "exact_read_count",
+            "broad_or_full_file_read_count",
+            "repeated_read_count",
+            "search_result_volume",
+            "truncated_search_count",
+            "evidence_byte_proxy",
+            "time_to_owner_proof_step",
+            "time_to_first_edit_step",
+        ]
+        self.assertEqual(expected_cost_fields, localization["cost_observation_fields"])
+
+        for invariant in (
+            "route_decision_contract",
+            "layer3_selector_contract",
+            "execution_level_contract",
+            "task-contract-v2-fields-and-order",
+            "engineering-brief-authority",
+            "review-and-finding-authority",
+            "four-profile-architecture",
+        ):
+            self.assertIn(invariant, localization["unchanged_authorities"])
+
+    def test_localization_contract_rejects_selector_as_proof_and_authority_drift(
+        self,
+    ) -> None:
+        selector_drift = json.loads(json.dumps(CORE_CONTRACTS))
+        selector_drift["evidence_localization_contract"]["selector_only"].remove(
+            "top-k"
+        )
+        self.assertTrue(
+            any(
+                "Evidence Localization" in error
+                for error in validate_core_contracts(selector_drift)
+            )
+        )
+
+        authority_drift = json.loads(json.dumps(CORE_CONTRACTS))
+        authority_drift["evidence_localization_contract"][
+            "authority_exclusions"
+        ].remove("execution-level")
+        self.assertTrue(
+            any(
+                "Evidence Localization" in error
+                for error in validate_core_contracts(authority_drift)
+            )
+        )
+
+    def test_worker_profiles_project_localization_with_review_independence(self) -> None:
+        profiles = {
+            row["name"]: row["instructions"]
+            for row in json.loads(PROFILES.read_text(encoding="utf-8"))["profiles"]
+        }
+        self.assertNotIn("target source", profiles["main-control-agent"].casefold())
+        for role in ("analysis-agent", "task-agent", "review-agent"):
+            with self.subTest(role=role):
+                text = profiles[role]
+                self.assertIn("minimum complete", text)
+                self.assertIn("selector", text)
+                self.assertIn("Proof Limit", text)
+        self.assertIn("independently", profiles["review-agent"])
+        self.assertIn("current source", profiles["review-agent"])
+
+    def test_direct_template_separates_locate_from_current_source_proof(self) -> None:
+        text = " ".join(DIRECT_TEMPLATE.read_text(encoding="utf-8").split())
+        for term in (
+            "Known exact file, symbol, or section",
+            "search candidate locations",
+            "minimum complete evidence",
+            "selectors, not proof",
+            "Top-K is not a complete corpus",
+            "Proof Limit",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term, text)
+
     def test_intake_semantics_project_to_exact_gap_classes_without_second_owner(
         self,
     ) -> None:

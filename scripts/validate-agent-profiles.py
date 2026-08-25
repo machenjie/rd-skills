@@ -14,6 +14,7 @@ from validation_utils import (
     COMPLETION_STATE_MODEL,
     CORE_CONTRACTS,
     EVIDENCE_LEDGER_MODEL,
+    EVIDENCE_LOCALIZATION_MODEL,
     IMPLEMENTATION_DISCIPLINE_MODEL,
     REVIEW_DISCIPLINE_MODEL,
     PROFILE_CONTRACT_MODEL,
@@ -109,7 +110,7 @@ ROLE_MINIMAL_REQUIRED_GROUPS = {
         ("material current-task findings", "PASS requires the full changed scope"),
         ("After repair", "fresh validation", "latest actual diff", "fresh re-review"),
         ("selection stays independent",),
-        ("Never reroute", "copy/union"),
+        ("must not reroute", "copy/union"),
         ("Never edit", "repair", "dispatch agents"),
         ("Leave external-source-read to analysis-agent",),
         ("assigned Review Handoff", "reviewed/unreviewed scope", "residual risk"),
@@ -198,8 +199,12 @@ def _validate_minimal_role_projection(
 
 OUTPUTS = (
     ("codex", ROOT / "dist" / "codex" / "project" / ".codex" / "agents", ".toml"),
+    ("codex", ROOT / "dist" / "codex" / "user" / ".codex" / "agents", ".toml"),
+    ("codex", ROOT / "dist" / "codex" / "admin" / "agents", ".toml"),
     ("claude", ROOT / "dist" / "claude" / "project" / ".claude" / "agents", ".md"),
+    ("claude", ROOT / "dist" / "claude" / "user" / ".claude" / "agents", ".md"),
     ("copilot", ROOT / "dist" / "copilot" / "project" / ".github" / "agents", ".agent.md"),
+    ("copilot", ROOT / "dist" / "copilot" / "user" / ".copilot" / "agents", ".agent.md"),
 )
 BUILT_MANIFESTS = (
     ROOT / "dist/codex/project/.agents/skills/recommended/.changeforge-build-manifest.json",
@@ -321,6 +326,18 @@ def _validate_profile_instruction_contract(
             errors.append(
                 f"{error_label}: instructions contain forbidden term {obsolete!r}"
             )
+
+    localization_groups = EVIDENCE_LOCALIZATION_MODEL["profile_projection"].get(
+        role_name
+    )
+    if localization_groups:
+        _validate_instruction_rule_groups(
+            role_name=error_label,
+            contract_label="evidence localization",
+            groups=localization_groups,
+            rules=rules,
+            errors=errors,
+        )
 
     if role_name in ROLE_MINIMAL_REQUIRED_GROUPS:
         _validate_minimal_role_projection(role_name, rules, errors)

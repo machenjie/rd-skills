@@ -18,6 +18,7 @@ from typing import Any, NamedTuple
 from validation_utils import (
     COMPILED_LAYER3_FORMAT,
     CORE_CONTRACTS,
+    EVIDENCE_LOCALIZATION_MODEL,
     EVIDENCE_LEDGER_MODEL,
     IMPLEMENTATION_DISCIPLINE_MODEL,
     REVIEW_DISCIPLINE_MODEL,
@@ -8641,6 +8642,531 @@ def _external_read_fixture_results(
     return results, errors
 
 
+def _evidence_localization_fixture_results(
+    raw_cases: object,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Evaluate current-source proof quality separately from localization cost."""
+
+    if not isinstance(raw_cases, list):
+        return [], ["evidence localization fixtures must be a list"]
+
+    case_fields = (
+        "id",
+        "actor",
+        "discovery_state",
+        "host_capabilities",
+        "inherited_anchor",
+        "boundary",
+        "authority_before",
+        "authority_after",
+        "required_evidence",
+        "not_applicable",
+        "operations",
+        "worker_action",
+        "expected_valid",
+        "expected_error",
+    )
+    operation_fields = {
+        "anchor": ("id", "action", "source", "target", "bytes"),
+        "search": (
+            "id",
+            "action",
+            "mode",
+            "target",
+            "result_volume",
+            "truncated",
+            "bytes",
+        ),
+        "read": (
+            "id",
+            "action",
+            "target",
+            "read_scope",
+            "source_kind",
+            "coverage",
+            "bytes",
+        ),
+        "coverage": (
+            "id",
+            "action",
+            "scope",
+            "search_ids",
+            "corpus_complete",
+            "indirect_consumers_closed",
+            "bytes",
+        ),
+        "claim": (
+            "id",
+            "action",
+            "kind",
+            "status",
+            "basis",
+            "scope",
+            "bytes",
+        ),
+        "edit": ("id", "action", "target", "bytes"),
+    }
+    valid_actors = set(EVIDENCE_LOCALIZATION_MODEL["applies_to"])
+    valid_capabilities = {
+        *EVIDENCE_LOCALIZATION_MODEL["host_capabilities"]["required"],
+        *EVIDENCE_LOCALIZATION_MODEL["host_capabilities"]["optional"],
+    }
+    valid_required_evidence = set(
+        EVIDENCE_LOCALIZATION_MODEL["minimum_complete_evidence"]
+    )
+    selector_modes = {
+        "top-k",
+        "ranked",
+        "semantic",
+        "repo-map",
+        "repo-graph",
+    }
+    material_claims = {"owner", "correctness", "absence", "completeness", "impact-scope"}
+    results: list[dict[str, Any]] = []
+    errors: list[str] = []
+    seen_case_ids: set[str] = set()
+
+    for raw_case in raw_cases:
+        case_errors: list[str] = []
+        if not isinstance(raw_case, dict):
+            errors.append("evidence localization fixture must be a mapping")
+            continue
+        case_id = str(raw_case.get("id") or "")
+
+        def reject(code: str, message: str) -> None:
+            case_errors.append(f"{case_id or '<missing>'}: [{code}] {message}")
+
+        if not case_id or case_id in seen_case_ids:
+            reject("localization-schema", "fixture id must be non-empty and unique")
+        seen_case_ids.add(case_id)
+        if tuple(raw_case) != case_fields:
+            reject("localization-schema", "fixture fields or order are not canonical")
+
+        actor = raw_case.get("actor")
+        if actor not in valid_actors:
+            reject("localization-schema", "actor is not a localization worker")
+        discovery_state = raw_case.get("discovery_state")
+        if discovery_state not in {"known-exact", "unknown"}:
+            reject("localization-schema", "discovery_state is invalid")
+        capabilities = raw_case.get("host_capabilities")
+        if (
+            not isinstance(capabilities, list)
+            or len(capabilities) != len(set(capabilities))
+            or not set(capabilities) <= valid_capabilities
+            or not {"read", "search"} <= set(capabilities)
+        ):
+            reject("localization-schema", "host capabilities must include read/search")
+            capabilities = []
+        inherited_anchor = raw_case.get("inherited_anchor")
+        if inherited_anchor not in {"none", "analysis-agent", "task-agent"}:
+            reject("localization-schema", "inherited anchor is invalid")
+        boundary = raw_case.get("boundary")
+        if boundary not in {
+            "not-applicable",
+            "stable-owner",
+            *EVIDENCE_LOCALIZATION_MODEL["direct_boundary"]["material_boundaries"],
+        }:
+            reject("localization-schema", "boundary is invalid")
+
+        authority_before = raw_case.get("authority_before")
+        authority_after = raw_case.get("authority_after")
+        authority_shape = (
+            isinstance(authority_before, list)
+            and len(authority_before) == 5
+            and isinstance(authority_before[2], list)
+            and isinstance(authority_after, list)
+            and len(authority_after) == 5
+            and isinstance(authority_after[2], list)
+        )
+        if not authority_shape:
+            reject("authority-invariance", "authority snapshots are malformed")
+        authority_preserved = authority_shape and authority_before == authority_after
+        if not authority_preserved:
+            reject("authority-invariance", "localization changed route/Skill/Layer3/Level/scope")
+
+        required_evidence = raw_case.get("required_evidence")
+        not_applicable = raw_case.get("not_applicable")
+        for label, values in (
+            ("required_evidence", required_evidence),
+            ("not_applicable", not_applicable),
+        ):
+            if (
+                not isinstance(values, list)
+                or len(values) != len(set(values))
+                or not set(values) <= valid_required_evidence
+            ):
+                reject("localization-schema", f"{label} is invalid")
+        if isinstance(required_evidence, list) and isinstance(not_applicable, list):
+            if set(required_evidence) & set(not_applicable):
+                reject("localization-schema", "evidence cannot be required and not applicable")
+            if set(required_evidence) | set(not_applicable) != valid_required_evidence:
+                reject(
+                    "minimum-complete-evidence",
+                    "each evidence class must be required or explicitly not applicable",
+                )
+
+        operations = raw_case.get("operations")
+        if not isinstance(operations, list) or not operations:
+            reject("localization-schema", "operations must be non-empty")
+            operations = []
+        operation_by_id: dict[str, dict[str, Any]] = {}
+        for index, operation in enumerate(operations):
+            if not isinstance(operation, dict):
+                reject("localization-schema", f"operation {index} must be a mapping")
+                continue
+            action = operation.get("action")
+            expected_fields = operation_fields.get(action)
+            if expected_fields is None or tuple(operation) != expected_fields:
+                reject("localization-schema", f"operation {index} fields are invalid")
+                continue
+            operation_id = operation.get("id")
+            if (
+                not isinstance(operation_id, str)
+                or not operation_id
+                or operation_id in operation_by_id
+            ):
+                reject("localization-schema", f"operation {index} id is invalid")
+                continue
+            operation_by_id[operation_id] = operation
+            if type(operation.get("bytes")) is not int or operation["bytes"] < 0:
+                reject("localization-schema", f"operation {operation_id} bytes are invalid")
+            if action == "search" and (
+                type(operation.get("result_volume")) is not int
+                or operation["result_volume"] < 0
+                or type(operation.get("truncated")) is not bool
+                or operation.get("mode")
+                not in {"exact", "expanded", "structural", "fallback", *selector_modes}
+            ):
+                reject("localization-schema", f"search {operation_id} is invalid")
+            if action == "read" and (
+                operation.get("read_scope") not in {"exact", "broad-or-full-file"}
+                or operation.get("source_kind") not in {"current-source", "selector"}
+                or operation.get("coverage")
+                not in {
+                    *valid_required_evidence,
+                    "candidate",
+                    "same-pattern",
+                    "direct-consumer",
+                    "indirect-consumer",
+                }
+            ):
+                reject("localization-schema", f"read {operation_id} is invalid")
+            if action == "coverage":
+                search_ids = operation.get("search_ids")
+                referenced_searches = [
+                    operation_by_id.get(search_id, {})
+                    for search_id in search_ids
+                ] if isinstance(search_ids, list) else []
+                if (
+                    not isinstance(operation.get("scope"), str)
+                    or not operation["scope"]
+                    or not isinstance(search_ids, list)
+                    or not search_ids
+                    or len(search_ids) != len(set(search_ids))
+                    or any(
+                        item.get("action") != "search"
+                        or item.get("mode") in selector_modes
+                        or item.get("truncated") is not False
+                        for item in referenced_searches
+                    )
+                    or type(operation.get("corpus_complete")) is not bool
+                    or type(operation.get("indirect_consumers_closed")) is not bool
+                ):
+                    reject(
+                        "completeness-coverage",
+                        f"coverage {operation_id} is not backed by complete admissible searches",
+                    )
+            if action == "claim" and (
+                operation.get("kind") not in {*material_claims, "proof-limit"}
+                or operation.get("status") not in {"proved", "proof-limit"}
+                or not isinstance(operation.get("basis"), list)
+                or any(item not in operation_by_id for item in operation.get("basis", []))
+            ):
+                reject("localization-schema", f"claim {operation_id} is invalid")
+
+        searches = [item for item in operations if item.get("action") == "search"]
+        reads = [item for item in operations if item.get("action") == "read"]
+        claims = [item for item in operations if item.get("action") == "claim"]
+        coverage_proofs = [
+            item for item in operations if item.get("action") == "coverage"
+        ]
+        edits = [item for item in operations if item.get("action") == "edit"]
+        anchors = [item for item in operations if item.get("action") == "anchor"]
+        read_targets = [str(item.get("target")) for item in reads]
+        covered_evidence = sorted(
+            {
+                str(item["coverage"])
+                for item in reads
+                if item.get("source_kind") == "current-source"
+                and item.get("coverage") in valid_required_evidence
+            }
+        )
+
+        if discovery_state == "known-exact" and searches:
+            reject("known-exact-discovery", "known exact source must not search")
+        if discovery_state == "known-exact" and not any(
+            item.get("read_scope") == "exact" for item in reads
+        ):
+            reject("known-exact-discovery", "known exact source needs an exact read")
+        if discovery_state == "unknown" and not searches:
+            reject(
+                "unknown-location-search",
+                "unknown source location requires candidate search before proof",
+            )
+        if discovery_state == "unknown" and searches:
+            first_search_step = next(
+                index
+                for index, item in enumerate(operations)
+                if item.get("action") == "search"
+            )
+            first_current_read_step = next(
+                (
+                    index
+                    for index, item in enumerate(operations)
+                    if item.get("action") == "read"
+                    and item.get("source_kind") == "current-source"
+                ),
+                None,
+            )
+            if (
+                first_current_read_step is not None
+                and first_search_step >= first_current_read_step
+            ):
+                reject(
+                    "unknown-location-order",
+                    "unknown source location requires candidate search before current-source reads",
+                )
+
+        material_boundaries = set(
+            EVIDENCE_LOCALIZATION_MODEL["direct_boundary"]["material_boundaries"]
+        )
+        worker_action = raw_case.get("worker_action")
+        if worker_action not in {"continue", "return-main-analysis", "not-applicable"}:
+            reject("localization-schema", "worker_action is invalid")
+        if boundary in material_boundaries:
+            if edits or worker_action != "return-main-analysis":
+                reject("material-before-edit", "material discovery must return Main before edit")
+        elif boundary == "stable-owner" and worker_action != "continue":
+            reject("stable-owner-direct", "stable Direct discovery must continue")
+
+        if inherited_anchor != "none" and not anchors:
+            reject("localization-schema", "declared inherited anchor is missing")
+        if actor == "review-agent" and inherited_anchor != "none":
+            independent_current_read = any(
+                item.get("source_kind") == "current-source" for item in reads
+            )
+            independently_localized = (
+                discovery_state == "known-exact"
+                and independent_current_read
+                and any(item.get("read_scope") == "exact" for item in reads)
+            ) or (
+                discovery_state == "unknown"
+                and bool(searches)
+                and independent_current_read
+            )
+            if not independently_localized:
+                reject(
+                    "review-independent-localization",
+                    "Review must independently locate and read current source",
+                )
+
+        for claim in claims:
+            if claim.get("status") != "proved" or claim.get("kind") not in material_claims:
+                continue
+            basis = [operation_by_id.get(item, {}) for item in claim.get("basis", [])]
+            basis_actions = {item.get("action") for item in basis}
+            current_reads = [
+                item
+                for item in basis
+                if item.get("action") == "read"
+                and item.get("source_kind") == "current-source"
+            ]
+            if actor == "review-agent" and any(
+                item.get("action") == "anchor" for item in basis
+            ):
+                reject(
+                    "review-independent-localization",
+                    "Review cannot inherit correctness or coverage",
+                )
+                continue
+            if actor == "task-agent" and any(
+                item.get("action") == "anchor" for item in basis
+            ):
+                reject("inherited-proof", "Task cannot inherit correctness or coverage")
+                continue
+            if claim.get("kind") == "owner" and not any(
+                item.get("coverage") == "owner" for item in current_reads
+            ):
+                reject("owner-current-source-proof", "owner is not proved by current owning source")
+                continue
+            selector_search = any(
+                item.get("action") == "search"
+                and (item.get("mode") in selector_modes or item.get("truncated") is True)
+                for item in basis
+            )
+            selector_basis = selector_search or any(
+                item.get("action") == "anchor"
+                or (
+                    item.get("action") == "read"
+                    and item.get("source_kind") == "selector"
+                )
+                for item in basis
+            )
+            if not current_reads or (selector_basis and basis_actions <= {"search", "anchor", "read"} and not current_reads):
+                reject("selector-as-proof", "selector or inherited evidence cannot prove a material claim")
+                continue
+            if claim.get("kind") in {"absence", "completeness", "impact-scope"} and (
+                selector_search or any(item.get("truncated") is True for item in searches)
+            ):
+                reject("selector-as-proof", "limited or truncated search cannot prove completeness")
+                continue
+            closure_coverage = [
+                item
+                for item in basis
+                if item.get("action") == "coverage"
+                and item in coverage_proofs
+            ]
+            if claim.get("kind") in {"absence", "completeness", "impact-scope"} and not any(
+                item.get("corpus_complete") is True for item in closure_coverage
+            ):
+                reject(
+                    "completeness-coverage",
+                    "absence, completeness, and impact closure require declared corpus coverage",
+                )
+                continue
+            if claim.get("kind") == "completeness":
+                pattern_targets = {
+                    str(item.get("target"))
+                    for item in current_reads
+                    if item.get("coverage") == "same-pattern"
+                }
+                if len(pattern_targets) < 2:
+                    reject("completeness-coverage", "same-pattern completeness lacks variant coverage")
+            if claim.get("kind") == "impact-scope" and (
+                not any(
+                    item.get("indirect_consumers_closed") is True
+                    for item in closure_coverage
+                )
+                or not any(
+                    item.get("coverage") == "indirect-consumer"
+                    for item in current_reads
+                )
+            ):
+                reject(
+                    "completeness-coverage",
+                    "impact scope lacks declared indirect consumer coverage",
+                )
+
+        if isinstance(required_evidence, list):
+            missing_evidence = sorted(set(required_evidence) - set(covered_evidence))
+            if missing_evidence:
+                reject(
+                    "minimum-complete-evidence",
+                    f"required current evidence is missing: {missing_evidence}",
+                )
+
+        if (
+            discovery_state == "unknown"
+            and not ({"symbol-search", "structural-search"} & set(capabilities))
+            and not any(item.get("mode") == "fallback" for item in searches)
+            and boundary not in material_boundaries
+        ):
+            reject("structural-fallback", "read/search-only host must use fallback localization")
+
+        search_count = len(searches)
+        exact_read_count = sum(item.get("read_scope") == "exact" for item in reads)
+        broad_read_count = sum(
+            item.get("read_scope") == "broad-or-full-file" for item in reads
+        )
+        repeated_read_count = len(read_targets) - len(set(read_targets))
+        owner_proof_step = next(
+            (
+                index
+                for index, item in enumerate(operations, 1)
+                if item.get("action") == "claim"
+                and item.get("kind") == "owner"
+                and item.get("status") == "proved"
+            ),
+            0,
+        )
+        first_edit_step = next(
+            (
+                index
+                for index, item in enumerate(operations, 1)
+                if item.get("action") == "edit"
+            ),
+            0,
+        )
+        cost_observation = {
+            "search_count": search_count,
+            "exact_read_count": exact_read_count,
+            "broad_or_full_file_read_count": broad_read_count,
+            "repeated_read_count": repeated_read_count,
+            "search_result_volume": sum(
+                int(item.get("result_volume", 0)) for item in searches
+            ),
+            "truncated_search_count": sum(
+                item.get("truncated") is True for item in searches
+            ),
+            "evidence_byte_proxy": sum(
+                int(item.get("bytes", 0)) for item in operations
+            ),
+            "time_to_owner_proof_step": owner_proof_step,
+            "time_to_first_edit_step": first_edit_step,
+        }
+        if repeated_read_count and discovery_state == "known-exact":
+            reject("known-exact-discovery", "known exact source must not repeat reads")
+
+        expected_valid = raw_case.get("expected_valid")
+        expected_error = raw_case.get("expected_error")
+        if type(expected_valid) is not bool or (
+            expected_error is not None
+            and (not isinstance(expected_error, str) or not expected_error)
+        ):
+            reject("localization-schema", "expected result contract is invalid")
+        actual_valid = not case_errors
+        error_codes = sorted(
+            {
+                match.group(1)
+                for error in case_errors
+                if (match := re.search(r"\[([^]]+)\]", error))
+            }
+        )
+        matches_expected = actual_valid == expected_valid and (
+            expected_error is None or expected_error in error_codes
+        )
+        if not matches_expected:
+            errors.extend(
+                case_errors
+                or [f"{case_id}: expected invalid evidence localization fixture"]
+            )
+        results.append(
+            {
+                "id": case_id,
+                "actor": actor,
+                "worker_action": worker_action,
+                "authority_preserved": authority_preserved,
+                "fallback_used": any(
+                    item.get("mode") == "fallback" for item in searches
+                ),
+                "covered_evidence": covered_evidence,
+                "proof_limit_recorded": any(
+                    item.get("status") == "proof-limit" for item in claims
+                ),
+                "expected_valid": expected_valid,
+                "quality_gate": {
+                    "passed": actual_valid,
+                    "error_codes": error_codes,
+                    "errors": case_errors,
+                },
+                "cost_observation": cost_observation,
+                "matches_expected": matches_expected,
+            }
+        )
+
+    return results, errors
+
+
 def _risk_calibration_fixture_results(
     raw_cases: object,
 ) -> tuple[list[dict[str, Any]], list[str]]:
@@ -9015,6 +9541,7 @@ def _write_reports(
         f"Release fixtures: **{report['release_fixture_count']}**; "
         f"scheduling fixtures: **{report['scheduling_fixture_count']}**; "
         f"utility fixtures: **{report['utility_fixture_count']}**; "
+        f"evidence-localization controls: **{report['evidence_localization_fixture_count']}**; "
         f"completion-state controls: **{report['completion_state_fixture_count']}**.",
         "",
         "Deterministic step counts are structural proxies.",
@@ -9091,6 +9618,11 @@ def main(argv: list[str] | None = None) -> int:
         external_read_results, external_read_errors = _external_read_fixture_results(
             document.get("external_read_cases")
         )
+        evidence_localization_results, evidence_localization_errors = (
+            _evidence_localization_fixture_results(
+                document.get("evidence_localization_cases")
+            )
+        )
         risk_calibration_results, risk_calibration_errors = (
             _risk_calibration_fixture_results(document.get("risk_calibration_cases"))
         )
@@ -9110,6 +9642,7 @@ def main(argv: list[str] | None = None) -> int:
             *orchestration_errors,
             *combined_review_errors,
             *external_read_errors,
+            *evidence_localization_errors,
             *risk_calibration_errors,
             *completion_errors,
         ]
@@ -9145,6 +9678,11 @@ def main(argv: list[str] | None = None) -> int:
             errors.append(
                 "external-read fixture count must remain exactly 14, found "
                 f"{len(external_read_results)}"
+            )
+        if len(evidence_localization_results) != 19:
+            errors.append(
+                "evidence localization fixture count must remain exactly 19, found "
+                f"{len(evidence_localization_results)}"
             )
         if len(risk_calibration_results) != 13:
             errors.append(
@@ -9232,6 +9770,8 @@ def main(argv: list[str] | None = None) -> int:
         "combined_review_fixtures": combined_review_results,
         "external_read_fixture_count": len(external_read_results),
         "external_read_fixtures": external_read_results,
+        "evidence_localization_fixture_count": len(evidence_localization_results),
+        "evidence_localization_fixtures": evidence_localization_results,
         "risk_calibration_fixture_count": len(risk_calibration_results),
         "risk_calibration_fixtures": risk_calibration_results,
         "cases": results,
@@ -9270,6 +9810,7 @@ def main(argv: list[str] | None = None) -> int:
         f"{report['orchestration_fixture_count']} orchestration controls and "
         f"{report['combined_review_fixture_count']} combined-review controls and "
         f"{report['external_read_fixture_count']} external-read controls and "
+        f"{report['evidence_localization_fixture_count']} evidence-localization controls and "
         f"{report['risk_calibration_fixture_count']} risk-calibration controls and "
         f"{report['completion_state_fixture_count']} completion-state controls."
     )

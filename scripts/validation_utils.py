@@ -3776,6 +3776,7 @@ def validate_core_contracts(
         "impact_graph_contract",
         "roles",
         "external_read_contract",
+        "evidence_localization_contract",
         "implementation_discipline_contract",
         "review_discipline_contract",
         "context_budget_contract",
@@ -3960,6 +3961,170 @@ def validate_core_contracts(
         errors.append(
             "external_read_contract must equal the closed analysis-only JIT "
             "read and evidence policy"
+        )
+
+    evidence_localization = data["evidence_localization_contract"]
+    expected_evidence_localization = {
+        "schema_version": 1,
+        "applies_to": ["analysis-agent", "task-agent", "review-agent"],
+        "purpose": "locate-current-source-evidence",
+        "host_capabilities": {
+            "required": ["read", "search"],
+            "optional": ["symbol-search", "structural-search"],
+            "structural_fallback": "read-search",
+        },
+        "location_sequence": {
+            "known_exact": "direct-exact-read-no-search-or-duplicate-discovery",
+            "unknown": "search-candidates-then-read",
+            "widen": "only-when-current-evidence-is-insufficient",
+            "proof": "minimum-complete-current-source-evidence",
+        },
+        "selector_only": [
+            "top-k",
+            "ranked-search",
+            "semantic-search",
+            "repo-map",
+            "repo-graph",
+            "truncated-search-result",
+            "prior-summary",
+            "nearby-file",
+        ],
+        "material_claim_source": "current-source-only",
+        "completeness_claims": [
+            "no-other-consumer",
+            "no-other-same-pattern-occurrence",
+            "no-other-affected-path",
+            "unique-owner",
+            "impact-scope-closed",
+        ],
+        "incomplete_coverage": "record-proof-limit",
+        "minimum_complete_evidence": [
+            "owner",
+            "consumer",
+            "invariant",
+            "test",
+            "contract",
+            "validation-boundary",
+        ],
+        "evidence_reuse": {
+            "allowed_anchors": [
+                "path",
+                "symbol-or-range",
+                "claim",
+                "scope",
+                "freshness",
+                "proof-limit",
+            ],
+            "forbidden_inheritance": [
+                "coverage-conclusion",
+                "correctness-conclusion",
+            ],
+            "review_independent_confirmation": True,
+        },
+        "direct_boundary": {
+            "stable_owner": (
+                "continue-direct-with-current-route-skill-level-and-scope"
+            ),
+            "material_boundaries": [
+                "unknown-owner",
+                "cross-module-or-public-contract",
+                "security",
+                "money",
+                "migration",
+                "other-material-boundary",
+            ],
+            "material_outcome": "stop-before-edit-return-main-for-analysis",
+            "worker_route_or_skill_selection": False,
+        },
+        "authority_exclusions": [
+            "route-selection",
+            "professional-skill-selection",
+            "layer3-selection",
+            "execution-level",
+            "task-scope-or-write-authority",
+            "current-task-scope-blocker-adjacent-classification",
+            "finding-classification",
+            "review-or-repair-authority",
+        ],
+        "infrastructure_exclusions": [
+            "locator-agent",
+            "daemon",
+            "index",
+            "vector-database",
+            "persistent-retrieval-state",
+        ],
+        "unchanged_authorities": [
+            "route_decision_contract",
+            "layer3_selector_contract",
+            "execution_level_contract",
+            "task-contract-v2-fields-and-order",
+            "engineering-brief-authority",
+            "review-and-finding-authority",
+            "four-profile-architecture",
+        ],
+        "profile_projection": {
+            "analysis-agent": [
+                {
+                    "rule_id": "analysis-localization",
+                    "required_terms": [
+                        "current source",
+                        "direct read",
+                        "search candidates",
+                        "minimum complete",
+                        "selectors only",
+                        "Proof Limit",
+                        "never correctness/coverage conclusions",
+                    ],
+                }
+            ],
+            "task-agent": [
+                {
+                    "rule_id": "task-localization",
+                    "required_terms": [
+                        "Current source",
+                        "direct read",
+                        "minimum complete",
+                        "selectors only",
+                        "Proof Limit",
+                        "anchors",
+                        "never inherit correctness/coverage",
+                    ],
+                }
+            ],
+            "review-agent": [
+                {
+                    "rule_id": "review-localization",
+                    "required_terms": [
+                        "independently",
+                        "current source",
+                        "anchors are selectors",
+                        "never inherit correctness/coverage",
+                        "Proof Limit",
+                    ],
+                }
+            ],
+        },
+        "cost_observation_fields": [
+            "search_count",
+            "exact_read_count",
+            "broad_or_full_file_read_count",
+            "repeated_read_count",
+            "search_result_volume",
+            "truncated_search_count",
+            "evidence_byte_proxy",
+            "time_to_owner_proof_step",
+            "time_to_first_edit_step",
+        ],
+        "quality_cost_separation": {
+            "quality_gate": "authoritative",
+            "cost_observation": "secondary-after-quality",
+            "cost_cannot_override_quality_failure": True,
+        },
+    }
+    if evidence_localization != expected_evidence_localization:
+        errors.append(
+            "Evidence Localization must equal the closed current-source, "
+            "quality-first localization-only contract"
         )
 
     implementation_discipline = data["implementation_discipline_contract"]
@@ -8527,6 +8692,7 @@ IMPLEMENTATION_DISCIPLINE_MODEL = CORE_CONTRACTS[
     "implementation_discipline_contract"
 ]
 REVIEW_DISCIPLINE_MODEL = CORE_CONTRACTS["review_discipline_contract"]
+EVIDENCE_LOCALIZATION_MODEL = CORE_CONTRACTS["evidence_localization_contract"]
 
 
 def normalized_decision_capabilities(entry: dict[str, Any]) -> dict[str, str]:
