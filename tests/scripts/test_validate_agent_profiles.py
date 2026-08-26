@@ -90,9 +90,11 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         self.assertIn("Actual diff authoritative", review)
         self.assertIn("fresh re-review", review)
         self.assertIn(
-            "Non-fundamental outcomes incl. findings require complete fixed Review Boundary",
+            "Non-fundamental outcomes require complete fixed Review Boundary",
             review,
         )
+        self.assertIn("after ready dispatch block only", review)
+        self.assertIn("Reviewed/Unreviewed Scope+Proof Limit", review)
         self.assertIn("PASS requires no blockers", review)
         for obligation in (
             "Depth only Level-added, never removed.",

@@ -719,7 +719,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
             self.review_discipline_cases
         )
         self.assertEqual([], errors)
-        self.assertEqual(30, len(results))
+        self.assertEqual(35, len(results))
         self.assertTrue(all(result["matches_expected"] for result in results))
 
         level_results = {
@@ -1060,7 +1060,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
                 for step in case["steps"]
                 if step.get("action") == EVAL.IMPLEMENTATION_HANDOFF_ACTION
             )
-        self.assertEqual(11, len(handoffs))
+        self.assertEqual(13, len(handoffs))
         self.assertTrue(
             all(tuple(handoff) == EVAL.IMPLEMENTATION_HANDOFF_FIELDS for handoff in handoffs)
         )
@@ -1076,24 +1076,29 @@ class LightweightUtilityContractTests(unittest.TestCase):
             if step.get("action") == EVAL.IMPLEMENTATION_HANDOFF_ACTION
         ]
         self.assertEqual(
-            [1, 2],
+            [1, 2, 3, 4],
             [
                 handoff["exact_change_evidence"]["generation"]
                 for handoff in repair_handoffs
             ],
         )
-        self.assertEqual(2, len({handoff["handoff_id"] for handoff in repair_handoffs}))
+        self.assertEqual(4, len({handoff["handoff_id"] for handoff in repair_handoffs}))
         task_dispatches = [
             step
             for step in repair["steps"]
             if step.get("action") == "dispatch" and step.get("profile") == "task-agent"
         ]
         self.assertEqual(
-            ["task-repair-and-rereview-1", "task-repair-and-rereview-1"],
+            [
+                "task-repair-and-rereview-1",
+                "task-repair-and-rereview-1",
+                "task-repair-and-rereview-1",
+                "task-repair-and-rereview-1",
+            ],
             [step["fixture_capsule"]["task_id"] for step in task_dispatches],
         )
         self.assertEqual(
-            ["initial-service-review-A", "initial-service-review-B"],
+            ["third-followup-service-review-D"],
             task_dispatches[-1]["finding_ids"],
         )
         self.assertEqual(
@@ -1101,6 +1106,29 @@ class LightweightUtilityContractTests(unittest.TestCase):
             [
                 obligation["finding_id"]
                 for obligation in task_dispatches[-1]["finding_obligations"]
+            ],
+        )
+        repair_dispatches = [
+            step
+            for step in task_dispatches
+            if step.get("mode") == "repair" and step.get("finding_ids")
+        ]
+        self.assertEqual(3, len(repair_dispatches))
+        self.assertEqual(
+            [
+                "review-repair-and-rereview-1",
+                "review-repair-and-rereview-2",
+                "review-repair-and-rereview-3",
+            ],
+            [step["review_round_id"] for step in repair_dispatches],
+        )
+        self.assertEqual(
+            ["review-repair-and-rereview-4"],
+            [
+                step["review_round_id"]
+                for step in repair["steps"]
+                if step.get("action") == "re-review"
+                and step.get("outcome") == "pass"
             ],
         )
 
@@ -1680,6 +1708,491 @@ class LightweightUtilityContractTests(unittest.TestCase):
         self.assertEqual(["C"], trace["repair_flow"]["fresh_validation_task_ids"])
         self.assertEqual(["C"], trace["repair_flow"]["rereviewed_task_ids"])
         self.assertTrue(trace["completion"]["current_evidence"])
+
+    def test_rereview_finding_creates_a_second_same_task_repair_round(self) -> None:
+        case = self._review_convergence_case()
+        case["id"] = "review-convergence-second-repair"
+        events = case["events"]
+        second_review_index = next(
+            index
+            for index, event in enumerate(events)
+            if event["action"] == "re-review"
+        )
+        second_review = events[second_review_index]
+        finding = {
+            "action": "finding",
+            "finding_id": "F-C-C",
+            "task_id": "C",
+            "review_round_id": "R-C-2",
+            "relation": "current-task",
+            "category": "correctness-or-invariant",
+            "impact_dimensions": ["correctness"],
+            "repair_required": True,
+            "affected_scope": ["C"],
+            "acceptance_or_risk_impact": "correctness",
+            "required_validation": ["current-generation-scoped-validation"],
+            "required_covering_rereview": {
+                "covered_task_ids": ["C"],
+                "same_or_stronger": True,
+            },
+        }
+        events.insert(second_review_index, finding)
+        second_review.update(verdict="findings", finding_ids=["F-C-C"])
+        events[-1:-1] = [
+            {
+                "action": "repair",
+                "task_id": "C",
+                "generation": 3,
+                "affected_task_ids": ["C"],
+                "resolved_finding_ids": ["F-C-C"],
+                "finding_relations": {"F-C-C": "current-task"},
+                "impact_boundaries": [],
+                "affected_specialist_obligations": [],
+                "affected_risk_dimensions": ["correctness"],
+                "invalidated_claims": ["validation:C", "review:C"],
+                "review_round_id": "R-C-2",
+                "finding_obligations": [
+                    {
+                        "finding_id": "F-C-C",
+                        "relation": "current-task",
+                        "affected_scope": ["C"],
+                        "acceptance_or_risk_impact": "correctness",
+                        "required_validation": [
+                            "current-generation-scoped-validation"
+                        ],
+                        "required_covering_rereview": {
+                            "covered_task_ids": ["C"],
+                            "same_or_stronger": True,
+                        },
+                    }
+                ],
+            },
+            {
+                "action": "validate",
+                "task_id": "C",
+                "generation": 3,
+                "evidence_id": "v-C3",
+            },
+            {
+                **copy.deepcopy(second_review),
+                "evidence_id": "r-C3",
+                "verdict": "pass",
+                "review_round_id": "R-C-3",
+                "validation_evidence_ids": ["v-C3"],
+                "finding_ids": [],
+            },
+        ]
+
+        errors, trace = EVAL._orchestration_case_result(case)
+
+        self.assertEqual([], errors)
+        self.assertEqual(2, trace["repair_flow"]["repair_count"])
+        self.assertEqual(
+            [["R-C-1", "C"], ["R-C-2", "C"]],
+            trace["repair_flow"]["batch_keys"],
+        )
+        self.assertEqual(
+            ["review", "re-review", "re-review"], trace["review"]["actions"]
+        )
+        self.assertTrue(trace["completion"]["current_evidence"])
+
+    def test_rereview_scope_blocker_closes_round_then_routes_delta_without_repair(
+        self,
+    ) -> None:
+        case = self._review_convergence_case()
+        case["id"] = "review-convergence-rereview-scope-blocker"
+        events = case["events"]
+        second_review_index = next(
+            index
+            for index, event in enumerate(events)
+            if event["action"] == "re-review"
+        )
+        scope_finding = {
+            "action": "finding",
+            "finding_id": "F-C-SCOPE-R2",
+            "task_id": "C",
+            "review_round_id": "R-C-2",
+            "relation": "scope-blocker",
+            "category": "acceptance",
+            "repair_required": False,
+        }
+        events.insert(second_review_index, scope_finding)
+        events[second_review_index + 1].update(
+            verdict="findings", finding_ids=["F-C-SCOPE-R2"]
+        )
+        events[-1:-1] = [
+            {
+                "action": "analysis",
+                "analysis_kind": "delta",
+                "protected_decision_invalidated": True,
+                "invalidated_decisions": ["scope-blocker"],
+                "transitive_updates": [
+                    "affected-brief-sections",
+                    "affected-tasks",
+                    "affected-review-boundaries",
+                ],
+                "analysis_scope": "delta",
+                "professional_domain_changed": False,
+                "work_type_changed": False,
+                "material_risk_trigger_changed": False,
+                "skill_assignments": {
+                    task["id"]: task["primary_skill"] for task in case["tasks"]
+                },
+                "delta_impact": {
+                    "invalidated": ["scope-blocker"],
+                    "affected": {
+                        "brief": [
+                            "Acceptance and Non-goals",
+                            "Ownership and Invariants",
+                            "Placement and Reuse",
+                            "Contract / Data / Failure Impact",
+                        ],
+                        "tasks": ["A", "B", "C"],
+                        "dependencies": [],
+                        "skills": [],
+                        "reviews": [
+                            "ai-code-review-refactor",
+                            "quality-test-gate",
+                            "security-privacy-gate",
+                        ],
+                    },
+                    "unlisted": "preserved",
+                },
+            }
+        ]
+
+        errors, trace = EVAL._orchestration_case_result(case)
+
+        self.assertEqual([], errors)
+        self.assertEqual(["F-C-SCOPE-R2"], trace["finding_routes"]["scope_blocker"])
+        self.assertEqual(1, trace["repair_flow"]["repair_count"])
+        self.assertEqual(["initial", "delta"], trace["analysis"]["kinds"])
+
+    def test_post_dispatch_blocked_review_requires_narrow_reason_and_proof(self) -> None:
+        fixture = {
+            "id": "post-dispatch-blocked-review",
+            "expected_valid": True,
+            "expected_error": None,
+            "level": "L3",
+            "mutation": {"kind": "none"},
+        }
+        for reason in (
+            "required-review-evidence-or-surface-unavailable",
+            "required-current-evidence-stale",
+            "protected-authority-or-engineering-brief-invalidated",
+        ):
+            with self.subTest(reason=reason):
+                steps = EVAL._review_fixture_steps(fixture)
+                discipline = next(
+                    step
+                    for step in steps
+                    if step.get("action") == EVAL.REVIEW_DISCIPLINE_ACTION
+                )
+                closing = next(
+                    step
+                    for step in steps
+                    if step.get("actor") == "review-agent"
+                    and step.get("action") == "review"
+                )
+                discipline["verdict"] = "blocked"
+                discipline["dimensions"]["unverified-scope"] = "blocked"
+                closing.update(
+                    reason=reason,
+                    reviewed_scope=["owner.py"],
+                    unreviewed_scope=["required current review evidence"],
+                    proof_limit="review cannot prove the unreviewed required surface",
+                )
+                if reason == "required-review-evidence-or-surface-unavailable":
+                    discipline["diff"] = {
+                        "kind": "unavailable",
+                        "artifact": None,
+                        "generation": None,
+                        "changed_files": [],
+                    }
+                    discipline["evidence_source"] = "unavailable"
+                    closing["changed_paths"] = []
+                elif reason == "required-current-evidence-stale":
+                    discipline["validation"]["generation"] = 0
+                else:
+                    closing["invalidated_decisions"] = [
+                        "Engineering Brief: Acceptance and Non-goals"
+                    ]
+
+                self.assertEqual(
+                    [], EVAL._review_discipline_errors(fixture["id"], steps)
+                )
+
+                missing_proof = copy.deepcopy(steps)
+                next(
+                    step
+                    for step in missing_proof
+                    if step.get("actor") == "review-agent"
+                    and step.get("action") == "review"
+                )["proof_limit"] = ""
+                self.assertTrue(
+                    any(
+                        "review-post-dispatch-block" in error
+                        for error in EVAL._review_discipline_errors(
+                            fixture["id"], missing_proof
+                        )
+                    )
+                )
+
+    def test_post_dispatch_unavailable_uses_proven_readiness_snapshot(self) -> None:
+        fixture = {
+            "id": "post-dispatch-unavailable-snapshot",
+            "expected_valid": True,
+            "expected_error": None,
+            "level": "L3",
+            "mutation": {"kind": "none"},
+        }
+
+        artifact_unavailable = EVAL._review_fixture_steps(fixture)
+        discipline = next(
+            step
+            for step in artifact_unavailable
+            if step.get("action") == EVAL.REVIEW_DISCIPLINE_ACTION
+        )
+        closing = next(
+            step
+            for step in artifact_unavailable
+            if step.get("actor") == "review-agent"
+            and step.get("action") == "review"
+        )
+        dispatch_index = next(
+            index
+            for index, step in enumerate(artifact_unavailable)
+            if step.get("action") == "dispatch"
+            and step.get("profile") == "review-agent"
+        )
+        artifact_unavailable[:] = [
+            step
+            for index, step in enumerate(artifact_unavailable)
+            if not (
+                index > dispatch_index
+                and step.get("actor") == "review-agent"
+                and step.get("action") == "read"
+            )
+        ]
+        discipline["verdict"] = "blocked"
+        discipline["dimensions"]["unverified-scope"] = "blocked"
+        discipline["diff"] = {
+            "kind": "unavailable",
+            "artifact": None,
+            "generation": None,
+            "changed_files": [],
+        }
+        discipline["evidence_source"] = "unavailable"
+        closing.update(
+            reason="required-review-evidence-or-surface-unavailable",
+            reviewed_scope=["owner.py"],
+            unreviewed_scope=["dispatched exact change artifact"],
+            proof_limit="artifact became unavailable after dispatch before first read",
+            changed_paths=[],
+        )
+        self.assertEqual(
+            [], EVAL._review_discipline_errors(fixture["id"], artifact_unavailable)
+        )
+
+        validation_unavailable = EVAL._review_fixture_steps(fixture)
+        discipline = next(
+            step
+            for step in validation_unavailable
+            if step.get("action") == EVAL.REVIEW_DISCIPLINE_ACTION
+        )
+        closing = next(
+            step
+            for step in validation_unavailable
+            if step.get("actor") == "review-agent"
+            and step.get("action") == "review"
+        )
+        discipline["verdict"] = "blocked"
+        discipline["dimensions"]["unverified-scope"] = "blocked"
+        discipline["validation"].update(
+            source="unavailable",
+            evidence_id=None,
+            result="unavailable",
+            generation=None,
+        )
+        closing.update(
+            reason="required-review-evidence-or-surface-unavailable",
+            reviewed_scope=["owner.py"],
+            unreviewed_scope=["required current validation"],
+            proof_limit="current validation became unavailable after readiness",
+        )
+        self.assertEqual(
+            [], EVAL._review_discipline_errors(fixture["id"], validation_unavailable)
+        )
+
+        pre_dispatch_unavailable = EVAL._review_fixture_steps(fixture)
+        handoff = next(
+            step
+            for step in pre_dispatch_unavailable
+            if step.get("action") == EVAL.IMPLEMENTATION_HANDOFF_ACTION
+        )
+        handoff["exact_change_evidence"]["artifact"] = None
+        errors = EVAL._review_discipline_errors(
+            fixture["id"], pre_dispatch_unavailable
+        )
+        self.assertTrue(
+            any(
+                code in error
+                for error in errors
+                for code in (
+                    "review-input-evidence-payload",
+                    "review-input-dispatch-before-ready",
+                )
+            ),
+            errors,
+        )
+
+        false_unavailable = EVAL._review_fixture_steps(fixture)
+        discipline = next(
+            step
+            for step in false_unavailable
+            if step.get("action") == EVAL.REVIEW_DISCIPLINE_ACTION
+        )
+        closing = next(
+            step
+            for step in false_unavailable
+            if step.get("actor") == "review-agent"
+            and step.get("action") == "review"
+        )
+        discipline["verdict"] = "blocked"
+        discipline["dimensions"]["unverified-scope"] = "blocked"
+        closing.update(
+            reason="required-review-evidence-or-surface-unavailable",
+            reviewed_scope=["owner.py"],
+            unreviewed_scope=["claimed unavailable evidence"],
+            proof_limit="the claimed unavailable evidence would bound proof",
+        )
+        errors = EVAL._review_discipline_errors(fixture["id"], false_unavailable)
+        self.assertTrue(
+            any("review-post-dispatch-block" in error for error in errors), errors
+        )
+
+    def test_progress_policy_has_no_fixed_repair_round_ceiling(self) -> None:
+        for cycle_count in (3, 6, 9):
+            with self.subTest(cycle_count=cycle_count):
+                case_id = f"unbounded-repair-progress-{cycle_count}"
+                steps = [
+                    {
+                        "actor": "main-control-agent",
+                        "action": "progress",
+                        "checkpoint_type": "start/path",
+                        "evidence": "accepted repair path selected",
+                        "evidence_anchor": f"fixture:{case_id}:path",
+                    },
+                    {
+                        "actor": "main-control-agent",
+                        "action": "dispatch",
+                        "task_id": "repair-task",
+                        "batch_id": "repair-task",
+                    },
+                    {
+                        "actor": "main-control-agent",
+                        "action": "progress",
+                        "checkpoint_type": "dispatch/batch",
+                        "evidence": "repair batch dispatched",
+                        "evidence_anchor": "batch:repair-task",
+                    },
+                ]
+                for cycle in range(1, cycle_count + 1):
+                    evidence_id = f"repair-validation-{cycle}"
+                    steps.extend(
+                        [
+                            {"actor": "task-agent", "action": "repair"},
+                            {
+                                "actor": "task-agent",
+                                "action": "validate",
+                                "evidence_id": evidence_id,
+                                "outcome": "passed",
+                            },
+                            {
+                                "actor": "main-control-agent",
+                                "action": "progress",
+                                "checkpoint_type": "validation",
+                                "evidence": f"repair cycle {cycle} validation passed",
+                                "evidence_anchor": f"validation:{evidence_id}:passed",
+                            },
+                            {
+                                "actor": "review-agent",
+                                "action": "re-review",
+                                "evidence_id": f"repair-review-{cycle}",
+                                "outcome": "findings",
+                            },
+                        ]
+                    )
+                steps.append({"actor": "main-control-agent", "action": "close"})
+
+                self.assertEqual([], EVAL._progress_errors(case_id, steps))
+                metrics = EVAL._progress_metrics(
+                    {"id": case_id, "risk": "high"}, steps
+                )
+                self.assertTrue(
+                    metrics["required_multi_agent_progress_satisfied"], metrics
+                )
+
+    def test_post_dispatch_authority_invalidation_routes_main_delta_analysis(
+        self,
+    ) -> None:
+        case = copy.deepcopy(
+            next(
+                item
+                for item in self.orchestration_cases
+                if item["id"] == "dedup-terminal-blocked-review"
+            )
+        )
+        case["id"] = "review-post-dispatch-authority-delta"
+        case.pop("retained_semantics", None)
+        blocked = next(
+            event for event in case["events"] if event["action"] == "review"
+        )
+        blocked.update(
+            reason="protected-authority-or-engineering-brief-invalidated",
+            proof_limit="current evidence invalidates protected Acceptance",
+            invalidated_decisions=["Acceptance-or-Non-goals"],
+        )
+        case["events"].append(
+            {
+                "action": "analysis",
+                "analysis_kind": "delta",
+                "protected_decision_invalidated": True,
+                "invalidated_decisions": ["Acceptance-or-Non-goals"],
+                "transitive_updates": [
+                    "affected-brief-sections",
+                    "affected-tasks",
+                    "affected-review-boundaries",
+                ],
+                "analysis_scope": "delta",
+                "professional_domain_changed": False,
+                "work_type_changed": False,
+                "material_risk_trigger_changed": False,
+                "skill_assignments": {"A": "backend-change-builder"},
+                "delta_impact": {
+                    "invalidated": ["Acceptance-or-Non-goals"],
+                    "affected": {
+                        "brief": ["Acceptance and Non-goals"],
+                        "tasks": ["A"],
+                        "dependencies": [],
+                        "skills": [],
+                        "reviews": ["ai-code-review-refactor"],
+                    },
+                    "unlisted": "preserved",
+                },
+            }
+        )
+
+        self.assertEqual([], EVAL._orchestration_case_errors(case))
+
+        missing_route = copy.deepcopy(case)
+        missing_route["events"].pop()
+        self.assertTrue(
+            any(
+                "[review-authority-route]" in error
+                for error in EVAL._orchestration_case_errors(missing_route)
+            )
+        )
 
     def test_repair_batch_identity_is_structural_for_delimiter_bearing_ids(
         self,

@@ -54,13 +54,14 @@ task_contract.task_boundary; Task completion=progress; Related work uses combine
 ## Review and Repair
 
 <!-- review-evidence-contract:B -->
-Before review-agent dispatch, Review Input Ready needs latest changed paths, post-latest-edit validation, and fixed scope.
-It also needs the exact delivered unified diff or current reviewer-readable native reference plus instance consumption capability. Static host support alone is never readiness; forward evidence unchanged and never send Review to export it.
-Missing=>review dispatch=0. Legacy/incomplete permits one recovery. Review before Task before Review is forbidden.
-references/implementation-handoff-template.md JIT-owns Ledger State/currentness, freshness, capability branches, and review proof. Latest material edit invalidates validation evidence; Claims: latest-material-edit, validation-passed.
-Current review-agent evidence includes actual diff/every changed file/validation results and changed-scope-reviewed/blocking-findings-none|blocking-findings-resolved; Handoff-triggered high-risk-review-passed.
-not-required JIT-loads from the Handoff owner. Missing/inconsistent authority/binding fails closed; reissue. Finish fixed scope/risks; return all findings. One round/task current-task Repair keeps obligations; no cross-task/adjacent; scope blocker Main→Analysis. Repair requires fresh validation/re-review.
-No daemon/database/private evidence storage/runtime task state engine/hidden protocol record. review_discipline_contract and task_contract.finding_relations remain authoritative.
+Before review-agent dispatch, Review Input Ready=latest changed paths+post-latest-edit validation+fixed scope.
+exact delivered unified diff or current reviewer-readable native reference+instance consumption capability also required. Static host support alone is never readiness; forward evidence unchanged; never send Review to export it.
+Missing=>review dispatch=0; Legacy/incomplete permits one recovery; Review before Task before Review is forbidden.
+references/implementation-handoff-template.md JIT-owns Ledger State/currentness, freshness, capability branches, and review proof. Latest material edit invalidates validation/evidence; Claims: latest-material-edit, validation-passed.
+Current review-agent evidence: actual diff/every changed file/validation results/changed-scope-reviewed/high-risk-review-passed/blocking-findings-none|blocking-findings-resolved.
+not-required JIT-loads from the Handoff owner; Missing/inconsistent authority/binding fails closed→reissue.
+Core repair_routing owns exact groups/batches/obligations/exclusions; scope-blocker→Main→Analysis. Core post_dispatch_block owns reasons/proof; protected invalidation→Main→Analysis; repair requires fresh validation/re-review.
+No daemon/database/private evidence storage/runtime task state engine/hidden protocol record. review_discipline_contract and task_contract.finding_relations authoritative.
 <!-- review-evidence-contract:E -->
 
 ## Progress

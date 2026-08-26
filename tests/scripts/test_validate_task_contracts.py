@@ -1595,11 +1595,15 @@ class CoreContractModelTests(unittest.TestCase):
         finding_shape = "\n".join(
             (
                 "Finding Relation: current-task / scope-blocker / adjacent",
+                "Review Round ID:",
+                "Task ID:",
                 "Severity:",
                 "Blocker:",
                 "Description:",
-                "Affected path:",
+                "Affected scope:",
                 "Acceptance or risk impact:",
+                "Required validation:",
+                "Required covering re-review:",
             )
         )
         self.assertIn(finding_shape, review)
@@ -1607,8 +1611,8 @@ class CoreContractModelTests(unittest.TestCase):
             "before severity or blocker",
             "Pre-implementation artifact review",
             "material `current-task` findings",
-            "copies the structured Finding Relation without prose inference",
-            "omits `outcome=blocking`",
+            "structured fields without prose inference",
+            "exactly one canonical Task Contract v2 Repair",
         ):
             with self.subTest(term=term):
                 self.assertIn(term, review)
@@ -2666,6 +2670,31 @@ class CoreContractModelTests(unittest.TestCase):
                     "acceptance-fundamentally-unmet",
                 ],
                 "early_block_scope_report": ["Reviewed Scope", "Unreviewed Scope"],
+                "post_dispatch_block": {
+                    "timing": "after-review-input-ready-and-dispatch",
+                    "reasons": [
+                        "required-review-evidence-or-surface-unavailable",
+                        "required-current-evidence-stale",
+                        "protected-authority-or-engineering-brief-invalidated",
+                    ],
+                    "required_scope_report": [
+                        "Reviewed Scope",
+                        "Unreviewed Scope",
+                        "Proof Limit",
+                    ],
+                    "authority_invalidation_route": [
+                        "blocked",
+                        "main-control-agent",
+                        "analysis-agent",
+                    ],
+                    "forbidden_reasons": [
+                        "ordinary-uncertainty",
+                        "ordinary-difficulty",
+                        "ordinary-finding",
+                        "continuable-evidence-gap",
+                    ],
+                },
+                "round_completion_actions": ["review", "re-review"],
                 "ordinary_outcomes_require_complete_boundary": True,
                 "pass_requires_no_blocking_findings": True,
             },
@@ -3850,7 +3879,7 @@ class CoreContractModelTests(unittest.TestCase):
                     ]["capacity_ceiling"],
                     (case["id"], count_o200k_base_tokens(encoded)),
                 )
-        self.assertEqual(28, encoded_count)
+        self.assertEqual(32, encoded_count)
 
     def test_explicit_l1_is_a_base_not_an_automatic_or_historical_override(self) -> None:
         document = json.loads(AGENT_LIGHT_CASES.read_text(encoding="utf-8"))
@@ -4301,10 +4330,10 @@ class CoreContractModelTests(unittest.TestCase):
                         row["source_anchor"].startswith(f"fixture:{case['id']}:")
                     )
         self.assertEqual(
-            {"task": 14, "review": 14, "analysis": 8, "utility": 2},
+            {"task": 16, "review": 16, "analysis": 8, "utility": 2},
             counts,
         )
-        self.assertEqual({"L2": 10, "L3": 7, "L4": 11}, levels)
+        self.assertEqual({"L2": 14, "L3": 7, "L4": 11}, levels)
 
     def test_analysis_capsule_forbids_execution_level_extension(self) -> None:
         analysis = _first_fixture_step("analysis")

@@ -15,7 +15,8 @@ For Analyzed Work, this handoff is a derived projection of the current
 Engineering Brief. Protected Brief decisions stay resolvable at their Authority
 source; review evidence and findings cannot redefine them. If the handoff
 conflicts with the current Brief or a protected decision must change, mark it
-blocked and return to analysis through Main.
+blocked, report Reviewed Scope, Unreviewed Scope, and the current Proof Limit,
+and return to analysis through Main.
 
 The `Inbound Review Projection` section contains only Acceptance; Review Boundary;
 Effective Level; required Review Skills; required changed scope; the latest
@@ -34,13 +35,19 @@ before severity or blocker. Use only `current-task`, `scope-blocker`, or
 Pre-implementation artifact review is exempt from this implementation-finding
 format.
 
-An ordinary finding does not end the Review. The reviewer completes the fixed
-Review Boundary's required changed scope, every base dimension, and every
-required professional-risk dimension, then returns one Review Handoff with all
-evidence-backed findings from that round. A finding never expands the Review
-Boundary. Only fundamental architecture, invalid public contract, major
-security, or fundamentally unmet Acceptance may return `blocked` early, with
-explicit Reviewed and Unreviewed Scope.
+An ordinary finding does not end the Review. For review and re-review, the
+reviewer completes the fixed Review Boundary's required changed scope, every
+base dimension, and every required professional-risk dimension, then returns
+one Review Handoff with all evidence-backed findings from that round. A finding
+never expands the Review Boundary. Only fundamental architecture, invalid
+public contract, major security, or fundamentally unmet Acceptance may return
+`blocked` early, with explicit Reviewed and Unreviewed Scope. After Review
+Input Ready dispatch, `blocked` is also allowed only when required review
+evidence or surface becomes unavailable, required current evidence becomes
+stale, or current evidence invalidates protected Authority or the Engineering
+Brief. Report non-empty Reviewed Scope, Unreviewed Scope, and Proof Limit.
+Ordinary uncertainty, difficulty, findings, and continuable gaps do not qualify;
+protected invalidation returns through Main to Analysis.
 
 Main groups the material `current-task` findings by the existing Review Round
 ID and Task ID and emits exactly one canonical Task Contract v2 Repair
@@ -50,8 +57,9 @@ impact, required validation, and required covering re-review; the batch also
 carries the latest diff and invalidated/reusable Evidence. Main copies the
 structured fields without prose inference. Findings from different Task IDs
 never share one Repair assignment. A
-`scope-blocker` returns blocked through Main to Analysis; `adjacent` is recorded,
-does not block, and is ineligible for Repair. Do not re-inject task history. Invalidate
+`scope-blocker` from review or re-review returns blocked through Main to
+Analysis; `adjacent` is recorded, does not block, and is ineligible for Repair.
+Do not re-inject task history. Invalidate
 only affected or transitively dependent Evidence; preserve unrelated current
 Evidence.
 
@@ -196,6 +204,9 @@ ownership/dependency graph, security boundary, transaction/concurrency
 semantics, or integration behavior. Focus re-review on the original finding,
 repair diff, and affected dependents; an older review cannot cover the new
 modification.
+A re-review completes a Review Round. Any new material `current-task` findings
+form the next same-Task Repair group under the same rules; convergence repeats
+without a fixed Repair or Review round limit.
 
 Effective Level determines review depth; the Review/Risk Boundary determines
 frequency. Task completion is not a Review Boundary. L1-L3 related work uses one
@@ -223,23 +234,31 @@ Only material current-task findings affecting Acceptance, correctness or an
 invariant, regression, security/reliability, or material code health require
 Repair. Adjacent issues, optional cleanup, style preference, speculative
 abstraction, unrelated debt, and future improvement do not enter the mandatory
-Repair loop. Ordinary findings remain accumulated while the reviewer finishes
-the fixed Review Boundary's required changed scope, base dimensions, and
-professional-risk dimensions; the closing handoff reports all evidence-backed
-findings from the round. Findings do not expand that boundary. Only fundamental
-architecture, invalid public contract, major security, or fundamentally unmet
-Acceptance may return `blocked` early after naming Reviewed and Unreviewed
-Scope. Every non-fundamental Review outcome, including `findings`, requires the
-complete fixed changed scope, base dimensions, and professional-risk dimensions.
-`pass` additionally requires no blocking findings.
+Repair loop. Ordinary findings remain accumulated during review and re-review
+while the reviewer finishes the fixed Review Boundary's required changed scope,
+base dimensions, and professional-risk dimensions; the closing handoff reports
+all evidence-backed findings from the round. Findings do not expand that
+boundary. Only fundamental architecture, invalid public contract, major
+security, or fundamentally unmet Acceptance may return `blocked` early after
+naming Reviewed and Unreviewed Scope. After ready dispatch, only unavailable
+required review surface, stale required current evidence, or protected
+Authority/Engineering Brief invalidation may also block; record Reviewed Scope,
+Unreviewed Scope, and Proof Limit, and route protected invalidation through Main
+to Analysis. Ordinary uncertainty, difficulty, findings, and continuable gaps
+never early-block. Every other Review outcome, including `findings`, requires
+the complete fixed changed scope, base dimensions, and professional-risk
+dimensions. `pass` additionally requires no blocking findings.
 
 Main batches material `current-task` findings only when Review Round ID and
 Task ID both match. One batch becomes one canonical Task Contract v2 Repair
 assignment with the same Task ID and per-finding Finding Relation, affected
 scope, Acceptance or risk impact, required validation, and required covering
-re-review. Cross-Task batching is forbidden. A `scope-blocker` returns through
-Main to Analysis, while an `adjacent` finding is record-only and never enters
-Repair.
+re-review. Cross-Task batching is forbidden. A `scope-blocker` closing review or
+re-review returns through Main to Analysis, while an `adjacent` finding is
+record-only and never enters Repair. A re-review completes its Review Round;
+any new material `current-task` findings form the next same-Task Repair batch,
+followed by fresh validation and another fresh re-review, without a fixed round
+limit.
 
 ## Evidence Ledger
 

@@ -1375,7 +1375,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             if step.get("action") == "dispatch"
         ]
         self.assertEqual(16, len(cases))
-        self.assertEqual(38, len(dispatches))
+        self.assertEqual(42, len(dispatches))
         for case_id, index, step in dispatches:
             with self.subTest(case=case_id, step=index):
                 self.assertNotIn("dispatch_capsule", step)
@@ -2165,6 +2165,178 @@ class RenderedContextBudgetTests(unittest.TestCase):
                         expected,
                         [item["evidence_id"] for item in window[1]],
                     )
+
+    def test_rereview_findings_create_a_second_repair_transfer_occurrence(self) -> None:
+        def finding(finding_id: str, round_id: str) -> dict[str, object]:
+            return {
+                "action": "finding",
+                "task_id": "task-A",
+                "review_round_id": round_id,
+                "path": "a.py",
+                "dependent_scope": [],
+                "evidence_id": finding_id,
+                "relation": "current-task",
+                "material": True,
+                "acceptance_impact": "correctness",
+                "required_validation": ["targeted-A"],
+                "required_covering_rereview": {
+                    "covered_task_ids": ["task-A"],
+                    "same_or_stronger": True,
+                },
+            }
+
+        def closing(action: str, finding_id: str, round_id: str) -> dict[str, object]:
+            return {
+                "actor": "review-agent",
+                "action": action,
+                "task_id": "task-A",
+                "review_round_id": round_id,
+                "required_changed_scope_complete": True,
+                "base_dimensions_complete": True,
+                "professional_risk_dimensions_complete": True,
+                "finding_ids": [finding_id],
+            }
+
+        def repair_dispatch() -> dict[str, object]:
+            return {
+                "action": "dispatch",
+                "profile": "task-agent",
+                "fixture_capsule": {
+                    "contract_type": "task",
+                    "task_id": "task-A",
+                    "status": "in_progress",
+                    "acceptance": ["resolve current finding"],
+                    "verification": ["targeted-A"],
+                    "review_owner": "review-agent",
+                },
+            }
+
+        case = {
+            "id": "rereview-second-repair-transfer",
+            "steps": [
+                {
+                    "action": "review-discipline",
+                    "task_id": "task-A",
+                    "verdict": "findings",
+                    "diff": {"kind": "actual-diff", "artifact": "r1.diff"},
+                    "validation": {"evidence_id": "validation-r1"},
+                },
+                finding("finding-r1", "R-A-1"),
+                closing("review", "finding-r1", "R-A-1"),
+                repair_dispatch(),
+                {"action": "repair", "task_id": "task-A", "path": "a.py"},
+                {
+                    "action": "validate",
+                    "task_id": "task-A",
+                    "command": "targeted-A",
+                    "outcome": "passed",
+                    "evidence_id": "validation-r2",
+                },
+                {
+                    "action": "review-discipline",
+                    "task_id": "task-A",
+                    "verdict": "findings",
+                    "diff": {"kind": "actual-diff", "artifact": "r2.diff"},
+                    "validation": {"evidence_id": "validation-r2"},
+                },
+                finding("finding-r2", "R-A-2"),
+                closing("re-review", "finding-r2", "R-A-2"),
+                repair_dispatch(),
+            ],
+        }
+
+        rows = [
+            projection
+            for boundary, projection, _source in EVAL._case_transfer_projection_rows(
+                case
+            )
+            if boundary == "review_to_repair"
+        ]
+
+        self.assertEqual(2, len(rows))
+        self.assertEqual(
+            [["R-A-1", "task-A"], ["R-A-2", "task-A"]],
+            [row["repair_batch_key"] for row in rows],
+        )
+        self.assertEqual(
+            [["finding-r1"], ["finding-r2"]],
+            [
+                [item["finding_id"] for item in row["finding_obligations"]]
+                for row in rows
+            ],
+        )
+
+    def test_repair_task_projections_are_bound_to_their_own_generation(self) -> None:
+        document = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
+        case = next(
+            item for item in document["cases"] if item["id"] == "repair-and-rereview"
+        )
+
+        projection_rows = EVAL._case_transfer_projection_rows(case)
+        rows = [
+            projection
+            for boundary, projection, _source in projection_rows
+            if boundary == "task_to_implementation"
+        ]
+        repair_rows = [
+            projection
+            for boundary, projection, _source in projection_rows
+            if boundary == "review_to_repair"
+        ]
+
+        self.assertEqual([1, 2, 3, 4], [row["freshness"] for row in rows])
+        self.assertEqual(
+            [
+                "initial-targeted-test",
+                "repair-targeted-test",
+                "second-repair-targeted-test",
+                "third-repair-targeted-test",
+            ],
+            [row["validation_result"]["evidence_id"] for row in rows],
+        )
+        self.assertEqual(
+            [
+                ["targeted-test"],
+                ["targeted-test"],
+                ["targeted-test"],
+                ["targeted-test"],
+            ],
+            [row["commands"] for row in rows],
+        )
+        self.assertEqual(
+            [
+                {
+                    "task-repair-and-rereview-1-green",
+                    "initial-targeted-test",
+                },
+                {
+                    "task-repair-and-rereview-1-repair-green",
+                    "repair-targeted-test",
+                },
+                {
+                    "task-repair-and-rereview-1-second-repair-red",
+                    "task-repair-and-rereview-1-second-repair-green",
+                    "second-repair-targeted-test",
+                },
+                {
+                    "task-repair-and-rereview-1-third-repair-red",
+                    "task-repair-and-rereview-1-third-repair-green",
+                    "third-repair-targeted-test",
+                },
+            ],
+            [
+                {item["claim"] for item in row["current_evidence"]}
+                for row in rows
+            ],
+        )
+        self.assertEqual(
+            [
+                ["review-repair-and-rereview-1", "task-repair-and-rereview-1"],
+                ["review-repair-and-rereview-2", "task-repair-and-rereview-1"],
+                ["review-repair-and-rereview-3", "task-repair-and-rereview-1"],
+            ],
+            [row["repair_batch_key"] for row in repair_rows],
+        )
 
     def test_adjacent_and_scope_blocker_findings_never_create_repair_projection(
         self,
@@ -4921,20 +5093,20 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "build_manifests": {
                     "dev": {
                         "path": "dist/universal/skills/dev/.changeforge-build-manifest.json",
-                        "sha256": "3d2366faada5d630ccb2a5a1422c8ffc48e5cea953e4374e8294cd34c2a34bdb",
+                        "sha256": "99a214293c5db239b68eaf4571a1c0ede81acf99ef4846755ad7847f03b81303",
                     },
                     "full": {
                         "path": "dist/universal/skills/full/.changeforge-build-manifest.json",
-                        "sha256": "09ffd11ed498b01d8206816a18cc1cb5d5a25c156700388e71d4f714868ce625",
+                        "sha256": "a318b2f53141bd388a78f99e70cd76e9d62f91079ba920033f277f004afa7d6a",
                     },
                     "recommended": {
                         "path": "dist/universal/skills/recommended/.changeforge-build-manifest.json",
-                        "sha256": "5e237e687d76cca4eca834d822cd11a19375f6bdf3a016887dbe192be6121701",
+                        "sha256": "8e1009957874291d61f21e7e0c004f3b36ff45287d105cca7fd9e0f3153012f6",
                     },
                 },
                 "capsule_source": {
                     "path": "evals/agent-light-trajectories/cases.yaml",
-                    "sha256": "4aef1df4b08b6f86399bf0c8223997038f8c69ea42edcb13d3112f62079869c4",
+                    "sha256": "8c96c5d86368af97a71d1cc42b4f8bd6192b989042c0348646b5f4556f556e81",
                 },
                 "control_projection_sha256": "234f88e0957c619c431d83fcf6232acc17500296a824b1584999ff3ad44573a1",
                 "registries": {
@@ -4944,7 +5116,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 },
                 "render_component_inventory": {
                     "count": 1_212,
-                    "mapping_sha256": "2414469d6aeec832b3e9b89711ddbda54883a3f256f40260b2764476d008a496",
+                    "mapping_sha256": "99e6faaf590bc763fbd556ab141350aa3ca595106b3bb73565f239776fd6bdee",
                 },
                 "selector_authority_sha256": "1b37e9e7b06ea375c418061ae89dd336ed1c703abf7b5c1d5c826fa93df63943",
             },
@@ -4952,7 +5124,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         )
         self.assertEqual(236_078, frontier["mapping_row_count"])
         self.assertEqual(
-            "38b5d56d6092d4671448ed7b633ccf7388900590de7f32ab7811159c8f98d672",
+            "296bd1f9623e08b078835d8970b814c48fe08588cd539d3b3370fabf62d221aa",
             frontier["mapping_digest"],
         )
         self.assertEqual(
@@ -4972,8 +5144,8 @@ class RenderedContextBudgetTests(unittest.TestCase):
         self.assertEqual(
             {
                 "scripts/build.py": "573d4d8e0ec0383d6a58e7c09d2aba237ed3b7b5e2283d4895174078754e1ade",
-                "scripts/validation_utils.py": "b7d3f973e6d1dfa52429560195f1c8da1f611d0d98fa32e0fc5c82c35bb34a17",
-                "src/control-prompts/main-control-agent.md": "7ef6e17e0da1d5cd8eaa883b0b5a8948f6e79f718c2546faaf1fae83dc46f66e",
+                "scripts/validation_utils.py": "83a748b0ec0464d7f7da6ef3fc7bf1a61ab83188ef2dcf0ba51f2076af13f09e",
+                "src/control-prompts/main-control-agent.md": "fe4137506224b71eb456f5923b66b5b4976546492b36a66c6eab12525f81eb86",
                 "src/control-skills/engineering-control-plane/references/professional-skill-router.md": "5a8fd594d763fde89b94087e08060b5d4dc19eab89bf6fb50849282e64bcf170",
             },
             consumer_boundary["checked_path_fingerprints"],
@@ -5772,7 +5944,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "capsule": capsules["review"],
                 "component_tokens": [394, 310, 229, 250, 183, 474, 785],
                 "component_shas": [
-                    "6701f276ea5d897830c0fad9f45c086d3c9133f4fc6ab0502089392858e7cda0",
+                    "4a9eeb28e114de6e1df13070a845528ef0d8d721f938e2e66a4ff87abaed79a2",
                     "58d88e71ba05ce0b36336ac8ef70f3f13ded845a842ac99fcdc01a5911ae7e5c",
                     "3e2150a21b3997726207b6ac9317c8077856708c87a481ac818898779c78229a",
                     "989a93e84c8ba897bdc8ba69113da520c11207996f1d64b7ad59b4810284ae91",
@@ -6019,7 +6191,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "capsule": capsules["review"],
                 "component_tokens": [394, 293, 236, 202, 226, 468, 785],
                 "component_shas": [
-                    "6701f276ea5d897830c0fad9f45c086d3c9133f4fc6ab0502089392858e7cda0",
+                    "4a9eeb28e114de6e1df13070a845528ef0d8d721f938e2e66a4ff87abaed79a2",
                     "e6313187ef53df0de6bb2de88839d3589bff2a6f3585d808e0b7df2d922d5067",
                     "e31d6327abc44b7be5ba6887f0ca587d9289e35459d82d09cc4389be01f4e8c0",
                     "c0bddf002b385fddd4834ad4670cdc91cb539b22bfc3b1ed2870dff423439d2b",
@@ -6618,7 +6790,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         )
         self.assertEqual(
             [
-                "6701f276ea5d897830c0fad9f45c086d3c9133f4fc6ab0502089392858e7cda0",
+                "4a9eeb28e114de6e1df13070a845528ef0d8d721f938e2e66a4ff87abaed79a2",
                 "bc92739d0a17a4216e7710f19cb1e035fe59e48e2623c6441ccd9d82a43d997e",
                 "5d3f4ac9f0add16b6dd447315930d17f0f5afb4dea035d2a6f089a142c8a8767",
                 "c9981d67a0942008d538317d2fcec97cf41f3b3c6ad761d6efb48899df53f080",

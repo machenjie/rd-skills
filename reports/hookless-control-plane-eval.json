@@ -734,7 +734,7 @@
       ]
     }
   ],
-  "review_discipline_fixture_count": 30,
+  "review_discipline_fixture_count": 35,
   "review_discipline_fixtures": [
     {
       "id": "review-level-L1",
@@ -1012,7 +1012,7 @@
         "review-rejects-repair-order: [review-input-dispatch-binding] review dispatch must bind handoff_id, artifact, and generation in canonical order",
         "review-rejects-repair-order: [review-input-dispatch-binding] review dispatch must bind the current Handoff artifact and generation",
         "review-rejects-repair-order: [review-input-reviewer-binding] reviewer diff artifact, generation, and changed files must match the Handoff and dispatch",
-        "review-rejects-repair-order: [review-input-reviewer-read] supplied review evidence must be read exactly once by the assigned reviewer before review",
+        "review-rejects-repair-order: [review-input-reviewer-read] supplied review evidence must be read exactly once by the assigned reviewer before review, unless it became unavailable after dispatch before first read",
         "review-rejects-repair-order: [review-stale-validation] review requires fresh passing validation after the latest material edit",
         "review-rejects-repair-order: [review-repair-order] repair requires fresh validation, latest actual diff, then fresh re-review"
       ]
@@ -1024,6 +1024,50 @@
       "actual_valid": true,
       "matches_expected": true,
       "errors": []
+    },
+    {
+      "id": "review-post-dispatch-surface-unavailable-blocked",
+      "level": "L3",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "review-post-dispatch-current-evidence-stale-blocked",
+      "level": "L3",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "review-post-dispatch-authority-invalidated-blocked",
+      "level": "L4",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "review-rejects-post-dispatch-ordinary-finding-block",
+      "level": "L3",
+      "expected_valid": false,
+      "actual_valid": false,
+      "matches_expected": true,
+      "errors": [
+        "review-rejects-post-dispatch-ordinary-finding-block: [review-fail-fast] ready blocked Review requires an existing fundamental reason or a narrow post-dispatch evidence/Authority reason"
+      ]
+    },
+    {
+      "id": "review-rejects-post-dispatch-block-without-proof-limit",
+      "level": "L3",
+      "expected_valid": false,
+      "actual_valid": false,
+      "matches_expected": true,
+      "errors": [
+        "review-rejects-post-dispatch-block-without-proof-limit: [review-post-dispatch-block] post-dispatch blocked Review requires the narrow reason evidence plus Reviewed Scope, Unreviewed Scope, and Proof Limit"
+      ]
     },
     {
       "id": "review-rejects-missing-professional-risk",
@@ -1465,7 +1509,7 @@
       "errors": []
     }
   ],
-  "orchestration_fixture_count": 26,
+  "orchestration_fixture_count": 29,
   "orchestration_fixtures": [
     {
       "id": "dedup-combined-multi-task",
@@ -1774,6 +1818,30 @@
         "repair-without-rereview: [completion-current-evidence] completion cannot rely on invalidated repair evidence"
       ],
       "retained_semantic_equality": null
+    },
+    {
+      "id": "review-convergence-second-repair",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": [],
+      "retained_semantic_equality": true
+    },
+    {
+      "id": "review-convergence-rereview-scope-blocker",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": [],
+      "retained_semantic_equality": true
+    },
+    {
+      "id": "review-post-dispatch-authority-delta",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": [],
+      "retained_semantic_equality": true
     }
   ],
   "semantic_traces": [
@@ -4050,6 +4118,382 @@
         ]
       },
       "proof_limit": "deterministic-structural-fixture-only"
+    },
+    {
+      "id": "review-convergence-second-repair",
+      "work_kind": "analyzed",
+      "analysis": {
+        "count": 1,
+        "kinds": [
+          "initial"
+        ]
+      },
+      "task_dispatch": [
+        {
+          "task_id": "A",
+          "primary_skill": "backend-change-builder",
+          "layer3_skills": []
+        },
+        {
+          "task_id": "B",
+          "primary_skill": "data-middleware-change-builder",
+          "layer3_skills": []
+        },
+        {
+          "task_id": "C",
+          "primary_skill": "security-privacy-gate",
+          "layer3_skills": []
+        }
+      ],
+      "validation": {
+        "fresh_count": 5,
+        "fresh_evidence_ids": [
+          "v-A1",
+          "v-B1",
+          "v-C1",
+          "v-C2",
+          "v-C3"
+        ],
+        "reuse_count": 5,
+        "reused_evidence_ids": [
+          "v-A1",
+          "v-B1",
+          "v-C1",
+          "v-C2",
+          "v-C3"
+        ],
+        "rerun_count": 0
+      },
+      "review_boundary": {
+        "covered_task_ids": [
+          "A",
+          "B",
+          "C"
+        ],
+        "effective_level": "L3",
+        "required_review_skills": [
+          "ai-code-review-refactor",
+          "quality-test-gate",
+          "security-privacy-gate"
+        ],
+        "required_changed_scope": [
+          "A",
+          "B",
+          "C"
+        ]
+      },
+      "review": {
+        "count": 3,
+        "actions": [
+          "review",
+          "re-review",
+          "re-review"
+        ]
+      },
+      "repair_flow": {
+        "repair_count": 2,
+        "affected_task_ids": [
+          "C"
+        ],
+        "invalidated_claims": [
+          "review:C",
+          "validation:C"
+        ],
+        "fresh_validation_task_ids": [
+          "C"
+        ],
+        "rereviewed_task_ids": [
+          "C"
+        ],
+        "resolved_finding_ids": [
+          "F-C-A",
+          "F-C-B",
+          "F-C-C"
+        ],
+        "batch_keys": [
+          [
+            "R-C-1",
+            "C"
+          ],
+          [
+            "R-C-2",
+            "C"
+          ]
+        ]
+      },
+      "parallel_isolation": "serialized-events",
+      "completion": {
+        "state": "complete",
+        "current_evidence": true,
+        "current_validation_task_ids": [
+          "A",
+          "B",
+          "C"
+        ],
+        "current_review_task_ids": [
+          "A",
+          "B",
+          "C"
+        ],
+        "current_validation_evidence": [
+          {
+            "task_id": "A",
+            "generation": 1,
+            "evidence_id": "v-A1"
+          },
+          {
+            "task_id": "B",
+            "generation": 1,
+            "evidence_id": "v-B1"
+          },
+          {
+            "task_id": "C",
+            "generation": 3,
+            "evidence_id": "v-C3"
+          }
+        ],
+        "current_review_evidence": [
+          {
+            "task_id": "A",
+            "evidence_id": "r-ABC1"
+          },
+          {
+            "task_id": "B",
+            "evidence_id": "r-ABC1"
+          },
+          {
+            "task_id": "C",
+            "evidence_id": "r-C3"
+          }
+        ],
+        "invalidated_claims": []
+      },
+      "proof_limit": "deterministic-structural-fixture-only"
+    },
+    {
+      "id": "review-convergence-rereview-scope-blocker",
+      "work_kind": "analyzed",
+      "analysis": {
+        "count": 2,
+        "kinds": [
+          "initial",
+          "delta"
+        ]
+      },
+      "task_dispatch": [
+        {
+          "task_id": "A",
+          "primary_skill": "backend-change-builder",
+          "layer3_skills": []
+        },
+        {
+          "task_id": "B",
+          "primary_skill": "data-middleware-change-builder",
+          "layer3_skills": []
+        },
+        {
+          "task_id": "C",
+          "primary_skill": "security-privacy-gate",
+          "layer3_skills": []
+        }
+      ],
+      "validation": {
+        "fresh_count": 4,
+        "fresh_evidence_ids": [
+          "v-A1",
+          "v-B1",
+          "v-C1",
+          "v-C2"
+        ],
+        "reuse_count": 4,
+        "reused_evidence_ids": [
+          "v-A1",
+          "v-B1",
+          "v-C1",
+          "v-C2"
+        ],
+        "rerun_count": 0
+      },
+      "review_boundary": {
+        "covered_task_ids": [
+          "A",
+          "B",
+          "C"
+        ],
+        "effective_level": "L3",
+        "required_review_skills": [
+          "ai-code-review-refactor",
+          "quality-test-gate",
+          "security-privacy-gate"
+        ],
+        "required_changed_scope": [
+          "A",
+          "B",
+          "C"
+        ]
+      },
+      "review": {
+        "count": 2,
+        "actions": [
+          "review",
+          "re-review"
+        ]
+      },
+      "repair_flow": {
+        "repair_count": 1,
+        "affected_task_ids": [
+          "C"
+        ],
+        "invalidated_claims": [
+          "review:C",
+          "validation:C"
+        ],
+        "fresh_validation_task_ids": [
+          "C"
+        ],
+        "rereviewed_task_ids": [
+          "C"
+        ],
+        "resolved_finding_ids": [
+          "F-C-A",
+          "F-C-B"
+        ],
+        "batch_keys": [
+          [
+            "R-C-1",
+            "C"
+          ]
+        ]
+      },
+      "parallel_isolation": "serialized-events",
+      "completion": {
+        "state": "complete",
+        "current_evidence": true,
+        "current_validation_task_ids": [
+          "A",
+          "B",
+          "C"
+        ],
+        "current_review_task_ids": [
+          "A",
+          "B",
+          "C"
+        ],
+        "current_validation_evidence": [
+          {
+            "task_id": "A",
+            "generation": 1,
+            "evidence_id": "v-A1"
+          },
+          {
+            "task_id": "B",
+            "generation": 1,
+            "evidence_id": "v-B1"
+          },
+          {
+            "task_id": "C",
+            "generation": 2,
+            "evidence_id": "v-C2"
+          }
+        ],
+        "current_review_evidence": [
+          {
+            "task_id": "A",
+            "evidence_id": "r-ABC1"
+          },
+          {
+            "task_id": "B",
+            "evidence_id": "r-ABC1"
+          },
+          {
+            "task_id": "C",
+            "evidence_id": "r-C2"
+          }
+        ],
+        "invalidated_claims": []
+      },
+      "proof_limit": "deterministic-structural-fixture-only",
+      "finding_routes": {
+        "scope_blocker": [
+          "F-C-SCOPE-R2"
+        ],
+        "adjacent": []
+      }
+    },
+    {
+      "id": "review-post-dispatch-authority-delta",
+      "work_kind": "analyzed",
+      "analysis": {
+        "count": 2,
+        "kinds": [
+          "initial",
+          "delta"
+        ]
+      },
+      "task_dispatch": [
+        {
+          "task_id": "A",
+          "primary_skill": "backend-change-builder",
+          "layer3_skills": []
+        }
+      ],
+      "validation": {
+        "fresh_count": 1,
+        "fresh_evidence_ids": [
+          "v-A"
+        ],
+        "reuse_count": 1,
+        "reused_evidence_ids": [
+          "v-A"
+        ],
+        "rerun_count": 0
+      },
+      "review_boundary": {
+        "covered_task_ids": [
+          "A"
+        ],
+        "effective_level": "L3",
+        "required_review_skills": [
+          "ai-code-review-refactor"
+        ],
+        "required_changed_scope": [
+          "A"
+        ]
+      },
+      "review": {
+        "count": 1,
+        "actions": [
+          "review"
+        ]
+      },
+      "repair_flow": {
+        "repair_count": 0,
+        "affected_task_ids": [],
+        "invalidated_claims": [],
+        "fresh_validation_task_ids": [],
+        "rereviewed_task_ids": []
+      },
+      "parallel_isolation": "serialized-events",
+      "completion": {
+        "state": "blocked",
+        "current_evidence": false,
+        "current_validation_task_ids": [
+          "A"
+        ],
+        "current_review_task_ids": [],
+        "current_validation_evidence": [
+          {
+            "task_id": "A",
+            "generation": 1,
+            "evidence_id": "v-A"
+          }
+        ],
+        "current_review_evidence": [],
+        "invalidated_claims": [
+          "review:A"
+        ]
+      },
+      "proof_limit": "deterministic-structural-fixture-only"
     }
   ],
   "combined_review_fixture_count": 15,
@@ -5537,17 +5981,17 @@
       "metrics": {
         "time_to_first_productive_action_step": 3,
         "time_to_first_edit_step": 3,
-        "total_completion_steps": 22,
-        "control_turn_count": 10,
-        "subagent_count": 4,
+        "total_completion_steps": 43,
+        "control_turn_count": 19,
+        "subagent_count": 8,
         "duplicate_read_count": 0,
         "same_assignment_duplicate_read_count": 0,
         "selector_load_count": 2,
-        "reference_load_count": 4,
-        "handoff_count": 4,
-        "end_to_end_context_occurrence_count": 10,
-        "verification_action_count": 4,
-        "loaded_skill_count": 4,
+        "reference_load_count": 8,
+        "handoff_count": 8,
+        "end_to_end_context_occurrence_count": 18,
+        "verification_action_count": 8,
+        "loaded_skill_count": 8,
         "loaded_layer3_reference_count": 0,
         "analysis_used": false,
         "preparation_loop_detected": false,
@@ -5558,13 +6002,13 @@
         "utility_workspace_diff_unchanged": false,
         "review_after_final_edit": true,
         "repair_has_rereview": true,
-        "implementation_discipline_event_count": 2,
-        "implementation_internal_evidence_event_count": 14,
-        "review_discipline_event_count": 2,
-        "progress_count": 4,
-        "productive_action_count": 10,
+        "implementation_discipline_event_count": 4,
+        "implementation_internal_evidence_event_count": 28,
+        "review_discipline_event_count": 4,
+        "progress_count": 9,
+        "productive_action_count": 20,
         "max_silent_steps": 5,
-        "progress_to_productive_action_ratio": 0.4,
+        "progress_to_productive_action_ratio": 0.45,
         "required_progress_for_multi_agent": true,
         "explicit_complex_or_high_risk": false,
         "required_multi_agent_progress_satisfied": true
@@ -5926,15 +6370,15 @@
     },
     "total_completion_steps": {
       "median": 15.0,
-      "max": 22
+      "max": 43
     },
     "control_turn_count": {
       "median": 8.0,
-      "max": 10
+      "max": 19
     },
     "subagent_count": {
       "median": 3.0,
-      "max": 4
+      "max": 8
     },
     "duplicate_read_count": {
       "median": 0.0,
@@ -5950,22 +6394,22 @@
     },
     "reference_load_count": {
       "median": 3.0,
-      "max": 5
+      "max": 8
     },
     "handoff_count": {
       "median": 3.0,
-      "max": 4
+      "max": 8
     },
     "end_to_end_context_occurrence_count": {
       "median": 9.0,
-      "max": 12
+      "max": 18
     },
     "verification_action_count": {
       "median": 2.0,
-      "max": 4
+      "max": 8
     },
     "loaded_skill_count": {
-      "median": 4.5,
+      "median": 5.5,
       "max": 9
     },
     "loaded_layer3_reference_count": {
@@ -5978,18 +6422,18 @@
     },
     "progress_count": {
       "median": 3.0,
-      "max": 4
+      "max": 9
     },
     "productive_action_count": {
       "median": 6.0,
-      "max": 10
+      "max": 20
     },
     "max_silent_steps": {
       "median": 4.5,
       "max": 9
     },
     "progress_to_productive_action_ratio": {
-      "median": 0.4142855,
+      "median": 0.428571,
       "max": 0.5
     }
   },

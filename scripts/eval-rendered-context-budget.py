@@ -74,6 +74,7 @@ FOUNDATION_REGISTRY = ROOT / "src" / "registry" / "foundation-skills.yaml"
 DOMAIN_REGISTRY = ROOT / "src" / "registry" / "domain-skills.yaml"
 
 BUILD_PROFILES = ("recommended", "full", "dev")
+REVIEW_ROUND_COMPLETION_ACTIONS = {"review", "re-review"}
 HOST_PROFILE_ROOTS = {
     "codex": ROOT / "dist" / "codex" / "project" / ".codex" / "agents",
     "claude": ROOT / "dist" / "claude" / "project" / ".claude" / "agents",
@@ -4344,7 +4345,7 @@ def _current_blocking_review_window(
             for step in reversed(steps[review_index + 1 : index])
             if isinstance(step, dict)
             and step.get("actor") == "review-agent"
-            and step.get("action") == "review"
+            and step.get("action") in REVIEW_ROUND_COMPLETION_ACTIONS
         ),
         None,
     )
@@ -4667,9 +4668,20 @@ def _step_task_ids(step: dict[str, Any]) -> set[str]:
 def _task_bound_steps(
     steps: list[Any], start: int, task_id: str
 ) -> list[tuple[int, dict[str, Any]]]:
+    end = next(
+        (
+            index
+            for index, step in enumerate(steps[start + 1 :], start + 1)
+            if isinstance(step, dict)
+            and step.get("actor") == "task-agent"
+            and step.get("action") == "implementation-handoff"
+            and step.get("task_id") == task_id
+        ),
+        len(steps) - 1,
+    )
     return [
         (index, step)
-        for index, step in enumerate(steps[start + 1 :], start + 1)
+        for index, step in enumerate(steps[start + 1 : end + 1], start + 1)
         if isinstance(step, dict) and task_id in _step_task_ids(step)
     ]
 

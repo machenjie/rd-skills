@@ -32,10 +32,12 @@ Stop if the owner, public contract, or verification command differs from this re
 Replace the paths and test command with repository facts. Expected interaction:
 `main-control-agent` assigns one bounded task to `task-agent`; after the final
 edit, targeted validation runs and `review-agent` reviews the actual diff and
-every changed file. Ordinary findings accumulate until the fixed review scope
-and required risk dimensions are complete. Material current-task findings from
-the same Review Round and Task ID return as one Repair assignment, followed by
-fresh validation and one covering re-review.
+every changed file. Ordinary findings accumulate during review and re-review
+until the fixed scope and required risk dimensions are complete. Material
+current-task findings from the same Review Round and Task ID return as exactly
+one same-Task Repair assignment, followed by fresh validation and a covering
+re-review. New material findings in that re-review use the same rule for the
+next round.
 
 ## Copyable Analyzed Work Request
 
@@ -111,9 +113,16 @@ For implementation work, expect these observable stages:
 4. Independent review of the actual latest diff and all changed files.
 5. One same-Round, same-Task Repair batch for material current-task findings,
    preserving each finding's scope and proof obligations, followed by fresh
-   validation and covering re-review. Scope blockers return to Analysis and
-   adjacent findings remain record-only.
+   validation and covering re-review. A later re-review finding may create the
+   next same-Task batch. Scope blockers from review or re-review return to
+   Analysis and adjacent findings remain record-only.
 6. A visible closure handoff whose status is supported by current evidence.
+
+After Review Input Ready dispatch, a blocked Review is valid only when required
+review surface becomes unavailable, required current Evidence becomes stale,
+or current Evidence invalidates protected Authority or the Engineering Brief.
+It reports Reviewed Scope, Unreviewed Scope, and Proof Limit; protected
+invalidation returns through Main to Delta Analysis.
 
 No-edit validation or diff export uses before/after workspace change-set checks.
 A changed or unavailable no-edit check invalidates that utility result.

@@ -195,8 +195,8 @@
   "transferred_context_summary": {
     "semantic_baseline": {
       "source": "reports/hookless-control-plane-eval.json#/orchestration_fixtures",
-      "orchestration_fixture_count": 26,
-      "positive_fixture_count": 10,
+      "orchestration_fixture_count": 29,
+      "positive_fixture_count": 13,
       "positive_fixture_ids": [
         "dedup-combined-multi-task",
         "dedup-direct-work-zero-analysis",
@@ -207,14 +207,17 @@
         "dedup-terminal-blocked-review",
         "review-convergence-adjacent-only-pass",
         "review-convergence-mixed-relations",
+        "review-convergence-rereview-scope-blocker",
+        "review-convergence-second-repair",
+        "review-post-dispatch-authority-delta",
         "review-repair-structural-batch-key-collision"
       ],
       "retained_semantic_equality": true,
       "derivation": "consumed lightweight reducer result; no second semantic reducer"
     },
     "measurement_kind": "candidate-subject-only",
-    "gross_tokens": 14410,
-    "non_compressible_tokens": 14410,
+    "gross_tokens": 14864,
+    "non_compressible_tokens": 14864,
     "compressible_tokens": 0,
     "compressible_ratio": 0.0,
     "measured_case_count": 14,

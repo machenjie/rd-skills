@@ -1297,13 +1297,6 @@ def prompt_projection_block(
         return "\n".join(lines)
 
     if identifier == "review-evidence-contract":
-        review_claims = proof["required_review_claims"]
-        required_review_claims = [
-            review_claims["changed_scope_reviewed"]["true"],
-            review_claims["high_risk_review"]["passed"],
-            review_claims["blocking_findings"]["none"],
-            review_claims["blocking_findings"]["resolved"],
-        ]
         forbidden = [
             rule["projection_terms"][0]
             for rule in evidence["forbidden_storage"]
@@ -1311,22 +1304,18 @@ def prompt_projection_block(
         ]
         lines = [
             begin,
-            "Before review-agent dispatch, Review Input Ready needs latest changed paths, post-latest-edit validation, and fixed scope.",
-            "It also needs the exact delivered unified diff or current reviewer-readable native reference plus instance consumption capability. Static host support alone is never readiness; forward evidence unchanged and never send Review to export it.",
-            "Missing=>review dispatch=0. Legacy/incomplete permits one recovery. Review before Task before Review is forbidden.",
-            "references/implementation-handoff-template.md JIT-owns Ledger State/currentness, freshness, capability branches, and review proof. Latest material edit invalidates validation evidence; Claims: "
-            + proof["latest_material_edit_claim"] + ", " + proof["validation_claim"] + ".",
-            "Current review-agent evidence includes actual diff/every changed file/validation results and "
-            + required_review_claims[0]
-            + "/"
-            + required_review_claims[2]
-            + "|"
-            + required_review_claims[3]
-            + "; Handoff-triggered "
-            + required_review_claims[1]
+            "Before review-agent dispatch, Review Input Ready=latest changed paths+post-latest-edit validation+fixed scope.",
+            "exact delivered unified diff or current reviewer-readable native reference+instance consumption capability also required. Static host support alone is never readiness; forward evidence unchanged; never send Review to export it.",
+            "Missing=>review dispatch=0; Legacy/incomplete permits one recovery; Review before Task before Review is forbidden.",
+            "references/implementation-handoff-template.md JIT-owns Ledger State/currentness, freshness, capability branches, and review proof. Latest material edit invalidates validation/evidence; Claims: "
+            + proof["latest_material_edit_claim"]
+            + ", "
+            + proof["validation_claim"]
             + ".",
-            "not-required JIT-loads from the Handoff owner. Missing/inconsistent authority/binding fails closed; reissue. Finish fixed scope/risks; return all findings. One round/task current-task Repair keeps obligations; no cross-task/adjacent; scope blocker Main→Analysis. Repair requires fresh validation/re-review.",
-            "No " + "/".join(forbidden) + ". review_discipline_contract and task_contract.finding_relations remain authoritative.",
+            "Current review-agent evidence: actual diff/every changed file/validation results/changed-scope-reviewed/high-risk-review-passed/blocking-findings-none|blocking-findings-resolved.",
+            "not-required JIT-loads from the Handoff owner; Missing/inconsistent authority/binding fails closed→reissue.",
+            "Core repair_routing owns exact groups/batches/obligations/exclusions; scope-blocker→Main→Analysis. Core post_dispatch_block owns reasons/proof; protected invalidation→Main→Analysis; repair requires fresh validation/re-review.",
+            "No " + "/".join(forbidden) + ". review_discipline_contract and task_contract.finding_relations authoritative.",
             end,
         ]
         return "\n".join(lines)
@@ -4876,6 +4865,31 @@ def validate_core_contracts(
                 "acceptance-fundamentally-unmet",
             ],
             "early_block_scope_report": ["Reviewed Scope", "Unreviewed Scope"],
+            "post_dispatch_block": {
+                "timing": "after-review-input-ready-and-dispatch",
+                "reasons": [
+                    "required-review-evidence-or-surface-unavailable",
+                    "required-current-evidence-stale",
+                    "protected-authority-or-engineering-brief-invalidated",
+                ],
+                "required_scope_report": [
+                    "Reviewed Scope",
+                    "Unreviewed Scope",
+                    "Proof Limit",
+                ],
+                "authority_invalidation_route": [
+                    "blocked",
+                    "main-control-agent",
+                    "analysis-agent",
+                ],
+                "forbidden_reasons": [
+                    "ordinary-uncertainty",
+                    "ordinary-difficulty",
+                    "ordinary-finding",
+                    "continuable-evidence-gap",
+                ],
+            },
+            "round_completion_actions": ["review", "re-review"],
             "ordinary_outcomes_require_complete_boundary": True,
             "pass_requires_no_blocking_findings": True,
         }
@@ -7262,6 +7276,7 @@ def validate_core_contracts(
             "batch_contents": (
                 "all-material-current-task-findings-for-the-same-review-round-and-task-id"
             ),
+            "eligible_round_completions": ["review", "re-review"],
             "per_finding_preserves": [
                 "Finding Relation",
                 "affected scope",

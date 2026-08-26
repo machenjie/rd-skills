@@ -785,6 +785,14 @@
       "finding_expands_review_boundary": false,
       "early_block_triggers": ["fundamental-architecture-error", "invalid-public-contract", "major-security-defect", "acceptance-fundamentally-unmet"],
       "early_block_scope_report": ["Reviewed Scope", "Unreviewed Scope"],
+      "post_dispatch_block": {
+        "timing": "after-review-input-ready-and-dispatch",
+        "reasons": ["required-review-evidence-or-surface-unavailable", "required-current-evidence-stale", "protected-authority-or-engineering-brief-invalidated"],
+        "required_scope_report": ["Reviewed Scope", "Unreviewed Scope", "Proof Limit"],
+        "authority_invalidation_route": ["blocked", "main-control-agent", "analysis-agent"],
+        "forbidden_reasons": ["ordinary-uncertainty", "ordinary-difficulty", "ordinary-finding", "continuable-evidence-gap"]
+      },
+      "round_completion_actions": ["review", "re-review"],
       "ordinary_outcomes_require_complete_boundary": true,
       "pass_requires_no_blocking_findings": true
     },
@@ -899,8 +907,8 @@
       },
       {
         "rule_id": "material-findings-and-fail-fast",
-        "required_terms": ["Only material current-task findings", "acceptance/correctness/invariant/regression/security/reliability/material code health", "adjacent/optional/style/speculative/unrelated/future", "fail-fast blocked", "Reviewed/Unreviewed Scope", "Every non-fundamental Review outcome", "PASS additionally requires no blocking findings"],
-        "exact_rule": "- Only material current-task findings affecting acceptance/correctness/invariant/regression/security/reliability/material code health require repair; adjacent/optional/style/speculative/unrelated/future work does not. Fundamental failure may fail-fast blocked with Reviewed/Unreviewed Scope. Every non-fundamental Review outcome, including findings, requires the complete fixed Review Boundary; PASS additionally requires no blocking findings."
+        "required_terms": ["Only material current-task findings", "acceptance/correctness/invariant/regression/security/reliability/material code health", "adjacent/optional/style/speculative/unrelated/future", "fail-fast blocked", "Reviewed/Unreviewed Scope", "post-dispatch required surface unavailable/current evidence stale/protected Authority or Brief invalidated", "Reviewed/Unreviewed Scope+Proof Limit", "protected invalidation Main→Analysis", "Every non-fundamental Review outcome", "PASS additionally requires no blocking findings"],
+        "exact_rule": "- Only material current-task findings affecting acceptance/correctness/invariant/regression/security/reliability/material code health require repair; adjacent/optional/style/speculative/unrelated/future work does not. Fundamental failure may fail-fast blocked with Reviewed/Unreviewed Scope. Post-dispatch required surface unavailable/current evidence stale/protected Authority or Brief invalidated may block with Reviewed/Unreviewed Scope+Proof Limit; protected invalidation Main→Analysis. Every non-fundamental Review outcome, including findings, requires the complete fixed Review Boundary; PASS additionally requires no blocking findings."
       },
       {
         "rule_id": "complete-review-pass",
@@ -910,7 +918,7 @@
     ],
     "handoff_projection": {
       "target": "review-handoff-template.md",
-      "required_terms": ["Core Review Discipline", "L1-L5", "actual latest diff", "every changed file", "observable acceptance", "validation freshness", "regression mechanism", "negative and boundary behavior", "ownership and placement", "unnecessary scope", "unverified scope", "residual risk", "Professional Risk Matrix", "correctness-invariants", "authority-security-privacy", "failure-recovery-concurrency", "performance-resources", "contracts-data-consumers", "tests-evidence", "maintainability-structure", "operations-documentation-release", "source-backed reason and evidence", "named registered Review Skill, scope, and reason", "fresh validation", "latest actual diff", "fresh re-review", "older review", "Effective Level determines review depth", "Review/Risk Boundary determines frequency", "same or stronger", "Covered Task IDs", "Review Skills", "Specialist obligations", "scope-correct", "trustworthy-oracle validation evidence", "Only material current-task findings", "ordinary finding does not end Review", "Every non-fundamental Review outcome", "PASS additionally requires no blocking findings", "all evidence-backed findings", "same Review Round and Task ID", "Finding Relation", "affected scope", "Acceptance or risk impact", "required validation", "required covering re-review", "cross-Task batching is forbidden", "Reviewed and Unreviewed Scope", "invalidate only Evidence whose Scope intersects the repair", "A covering scoped re-review satisfies Final Review"]
+      "required_terms": ["Core Review Discipline", "L1-L5", "actual latest diff", "every changed file", "observable acceptance", "validation freshness", "regression mechanism", "negative and boundary behavior", "ownership and placement", "unnecessary scope", "unverified scope", "residual risk", "Professional Risk Matrix", "correctness-invariants", "authority-security-privacy", "failure-recovery-concurrency", "performance-resources", "contracts-data-consumers", "tests-evidence", "maintainability-structure", "operations-documentation-release", "source-backed reason and evidence", "named registered Review Skill, scope, and reason", "fresh validation", "latest actual diff", "fresh re-review", "older review", "Effective Level determines review depth", "Review/Risk Boundary determines frequency", "same or stronger", "Covered Task IDs", "Review Skills", "Specialist obligations", "scope-correct", "trustworthy-oracle validation evidence", "Only material current-task findings", "ordinary finding does not end Review", "review and re-review", "required review evidence or surface becomes unavailable", "required current evidence becomes stale", "protected Authority or Engineering Brief is invalidated", "Proof Limit", "Every non-fundamental Review outcome", "PASS additionally requires no blocking findings", "all evidence-backed findings", "same Review Round and Task ID", "Finding Relation", "affected scope", "Acceptance or risk impact", "required validation", "required covering re-review", "cross-Task batching is forbidden", "Reviewed and Unreviewed Scope", "invalidate only Evidence whose Scope intersects the repair", "A covering scoped re-review satisfies Final Review"]
     }
   },
   "context_budget_contract": {
@@ -1453,6 +1461,7 @@
       "assignment_contract": "Task Contract v2",
       "task_id_rule": "unchanged-from-finding-task-id",
       "batch_contents": "all-material-current-task-findings-for-the-same-review-round-and-task-id",
+      "eligible_round_completions": ["review", "re-review"],
       "per_finding_preserves": ["Finding Relation", "affected scope", "Acceptance or risk impact", "required validation", "required covering re-review"],
       "cross_task_batching": "forbidden",
       "current_task_blocking": "task-agent-repair",
@@ -1708,7 +1717,7 @@
   "prompt_contract": {
     "schema_version": 1,
     "path": "src/control-prompts/main-control-agent.md",
-    "document_sha256": "7ef6e17e0da1d5cd8eaa883b0b5a8948f6e79f718c2546faaf1fae83dc46f66e",
+    "document_sha256": "fe4137506224b71eb456f5923b66b5b4976546492b36a66c6eab12525f81eb86",
     "managed_projections": [
       {"id": "execution-level-contract", "section": "Execution Level and Validation", "required_contracts": ["execution_level_contract"]},
       {"id": "review-evidence-contract", "section": "Review and Repair", "required_contracts": ["visible_evidence_contract", "review_discipline_contract"]},

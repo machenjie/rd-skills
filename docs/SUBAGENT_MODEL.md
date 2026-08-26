@@ -171,10 +171,10 @@ obligations only when all eight dimensions are the same or stronger.
 
 Only material current-task findings affecting Acceptance, correctness or
 invariants, regression, security or reliability, or material code health create
-a Repair obligation. An ordinary finding does not stop review or expand its
-fixed boundary: the Review Agent finishes required changed scope, base
-dimensions, and professional-risk dimensions and returns all evidence-backed
-findings from the round. Adjacent issues, optional cleanup, style preferences,
+a Repair obligation. An ordinary finding does not stop review or re-review or
+expand its fixed boundary: the Review Agent finishes required changed scope,
+base dimensions, and professional-risk dimensions and returns all
+evidence-backed findings from the round. Adjacent issues, optional cleanup, style preferences,
 speculative abstraction, unrelated debt, and future work do not. A fundamental
 architecture error, invalid public contract, major security defect, or
 fundamentally unmet Acceptance may return `blocked` with Reviewed and Unreviewed
@@ -182,6 +182,13 @@ Scope before full review. Every non-fundamental Review outcome, including
 `findings`, requires all required changed scope, base dimensions, and
 professional-risk dimensions to be reviewed; `pass` additionally requires no
 blocking findings.
+
+After Review Input Ready dispatch, Review may also return `blocked` only if a
+required review surface becomes unavailable, required current Evidence becomes
+stale, or current Evidence invalidates protected Authority or the Engineering
+Brief. It reports non-empty Reviewed Scope, Unreviewed Scope, and Proof Limit.
+Ordinary uncertainty, difficulty, findings, and continuable gaps do not qualify;
+protected invalidation returns through Main to Delta Analysis.
 
 Main emits exactly one Repair Task Contract for all material `current-task`
 findings that share the Review Round and Task ID, without changing the Task ID.
@@ -199,3 +206,7 @@ Public/shared contracts, schemas, common abstractions, ownership/dependency,
 security, transaction/concurrency, or integration impact expands that scope. A
 re-review that covers the final current obligation satisfies Final Review
 without a duplicate round.
+A re-review completes its Review Round. New material `current-task` findings
+form exactly one next same-Task Repair batch for that round, followed by fresh
+validation and another fresh re-review. A `scope-blocker` closing review or
+re-review returns through Main to Delta Analysis and never enters Repair.

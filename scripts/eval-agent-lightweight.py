@@ -104,6 +104,13 @@ INTERNAL_EVIDENCE_ACTIONS = {
 WORKER_EVIDENCE_ACTIONS = PRODUCTIVE_ACTIONS | {"brief", "task_plan", "finding"}
 EDIT_ACTIONS = {"edit", "repair"}
 REVIEW_ACTIONS = {"review", "re-review"}
+REVIEW_ROUND_COMPLETION_ACTIONS = set(
+    REVIEW_DISCIPLINE_MODEL["complete_review_pass"]["round_completion_actions"]
+)
+POST_DISPATCH_BLOCK_MODEL = REVIEW_DISCIPLINE_MODEL["complete_review_pass"][
+    "post_dispatch_block"
+]
+POST_DISPATCH_BLOCK_REASONS = set(POST_DISPATCH_BLOCK_MODEL["reasons"])
 MAIN_ACTIONS = {
     "classify",
     "dispatch",
@@ -1319,7 +1326,6 @@ def completion_claim_errors(
     return list(dict.fromkeys(errors))
 PROGRESS_TO_PRODUCTIVE_RATIO_MAX = 0.75
 MULTI_AGENT_PROGRESS_MIN = 3
-MULTI_AGENT_PROGRESS_MAX = 5
 MAX_SILENT_STRUCTURAL_STEPS = 5
 GENERIC_PROGRESS_EVIDENCE = {
     "a",
@@ -3959,6 +3965,16 @@ def _review_discipline_errors(
             and step.get("action") == "finding"
         ]
         review_round_id = review_action.get("review_round_id")
+        post_dispatch_reason = review_action.get("reason")
+        post_dispatch_block = (
+            event.get("verdict") == "blocked"
+            and post_dispatch_reason in POST_DISPATCH_BLOCK_REASONS
+        )
+        post_dispatch_unavailable = (
+            post_dispatch_block
+            and post_dispatch_reason
+            == "required-review-evidence-or-surface-unavailable"
+        )
         if event.get("verdict") in {"pass", "findings"}:
             if (
                 not isinstance(review_round_id, str)
@@ -4135,7 +4151,12 @@ def _review_discipline_errors(
                 if isinstance(step.get("path"), str) and step.get("path")
             )
         )
-        if expected_changed_files and changed_files != expected_changed_files:
+        if (
+            expected_changed_files
+            and changed_files != expected_changed_files
+            and post_dispatch_reason
+            != "required-review-evidence-or-surface-unavailable"
+        ):
             reject(
                 "review-changed-files",
                 "review must cover every file changed since the previous review",
@@ -4337,6 +4358,12 @@ def _review_discipline_errors(
             matching_validation = (
                 round_validations[0][1] if len(round_validations) == 1 else {}
             )
+            event_validation_matches_handoff = (
+                handoff_evidence_id == validation.get("evidence_id")
+                and handoff_validation.get("result") == validation.get("result")
+                and handoff_validation.get("generation")
+                == validation.get("generation")
+            )
             if (
                 not isinstance(handoff_evidence_id, str)
                 or not handoff_evidence_id.strip()
@@ -4345,9 +4372,11 @@ def _review_discipline_errors(
                 or len(round_validations) != 1
                 or matching_validation.get("evidence_id") != handoff_evidence_id
                 or matching_validation.get("outcome") != "passed"
-                or handoff_evidence_id != validation.get("evidence_id")
-                or handoff_validation.get("result") != validation.get("result")
-                or handoff_validation.get("generation") != validation.get("generation")
+                or (
+                    not event_validation_matches_handoff
+                    and post_dispatch_reason != "required-current-evidence-stale"
+                    and not post_dispatch_unavailable
+                )
             ):
                 reject(
                     "review-input-validation",
@@ -4441,6 +4470,8 @@ def _review_discipline_errors(
                 diff.get("artifact") != evidence_artifact
                 or diff.get("generation") != exact_evidence.get("generation")
                 or changed_files != handoff_paths
+            ) and post_dispatch_reason != (
+                "required-review-evidence-or-surface-unavailable"
             ):
                 reject(
                     "review-input-reviewer-binding",
@@ -4454,10 +4485,11 @@ def _review_discipline_errors(
                 and step.get("artifact_ref") == evidence_artifact
             ]
             if evidence_kind != "reviewer-accessible-native-reference" and len(supplied_reads) != 1:
-                reject(
-                    "review-input-reviewer-read",
-                    "supplied review evidence must be read exactly once by the assigned reviewer before review",
-                )
+                if not (post_dispatch_unavailable and not supplied_reads):
+                    reject(
+                        "review-input-reviewer-read",
+                        "supplied review evidence must be read exactly once by the assigned reviewer before review, unless it became unavailable after dispatch before first read",
+                    )
             review_input_ready = (
                 handoff_ready
                 and gate.get("ready") is True
@@ -4473,20 +4505,47 @@ def _review_discipline_errors(
         if verdict not in REVIEW_VERDICTS:
             reject("review-verdict", "review verdict is not canonical")
         if verdict == "blocked" and review_input_ready:
-            if review_action.get("reason") not in FINDING_RELATION_MODEL[
+            fundamental_reason = review_action.get("reason") in FINDING_RELATION_MODEL[
                 "fail_fast"
-            ]["triggers"]:
+            ]["triggers"]
+            if not fundamental_reason and not post_dispatch_block:
                 reject(
                     "review-fail-fast",
-                    "ready blocked Review requires exactly one fundamental Core reason",
+                    "ready blocked Review requires an existing fundamental reason or a narrow post-dispatch evidence/Authority reason",
                 )
-            if not _nonempty_string_list(
-                review_action.get("reviewed_scope")
-            ) or not _nonempty_string_list(review_action.get("unreviewed_scope")):
+            if not _nonempty_string_list(review_action.get("reviewed_scope")) or not (
+                _nonempty_string_list(review_action.get("unreviewed_scope"))
+            ):
                 reject(
                     "review-fail-fast",
                     "ready blocked Review requires explicit Reviewed and Unreviewed Scope",
                 )
+            if post_dispatch_block:
+                proof_limit = review_action.get("proof_limit")
+                reason_evidenced = {
+                    "required-review-evidence-or-surface-unavailable": (
+                        diff_kind == "unavailable"
+                        or validation_source == "unavailable"
+                        or evidence_source == "unavailable"
+                    ),
+                    "required-current-evidence-stale": (
+                        validation.get("generation") != generation
+                    ),
+                    "protected-authority-or-engineering-brief-invalidated": (
+                        _nonempty_string_list(
+                            review_action.get("invalidated_decisions")
+                        )
+                    ),
+                }.get(str(post_dispatch_reason), False)
+                if (
+                    not isinstance(proof_limit, str)
+                    or not proof_limit.strip()
+                    or not reason_evidenced
+                ):
+                    reject(
+                        "review-post-dispatch-block",
+                        "post-dispatch blocked Review requires the narrow reason evidence plus Reviewed Scope, Unreviewed Scope, and Proof Limit",
+                    )
         if diff_kind == "unavailable":
             if any(
                 (
@@ -4548,7 +4607,7 @@ def _review_discipline_errors(
                 or validation_steps[0][1].get("outcome") != "passed"
                 or validation_result != "passed"
                 or validation.get("generation") != generation
-            ):
+            ) and post_dispatch_reason != "required-current-evidence-stale":
                 reject(
                     "review-stale-validation",
                     "review requires fresh passing validation after the latest material edit",
@@ -4583,7 +4642,10 @@ def _review_discipline_errors(
                     "review-repair-order",
                     "repair review requires repair, fresh validation, latest actual diff, then fresh re-review",
                 )
-            if diff_kind not in {"actual-diff", "host-native-actual-diff"}:
+            if (
+                not post_dispatch_block
+                and diff_kind not in {"actual-diff", "host-native-actual-diff"}
+            ):
                 reject(
                     "review-repair-order",
                     "repair review requires the latest actual diff before fresh re-review",
@@ -4598,7 +4660,7 @@ def _review_discipline_errors(
                 and step.get("evidence_id") == validation.get("evidence_id")
                 and step.get("outcome") == "passed"
             ]
-            if len(repair_validation) != 1:
+            if not post_dispatch_block and len(repair_validation) != 1:
                 reject(
                     "review-repair-order",
                     "repair requires fresh validation, latest actual diff, then fresh re-review",
@@ -4862,6 +4924,49 @@ def _review_fixture_steps(case: dict[str, Any]) -> list[dict[str, Any]]:
             for decision in professional_risks:
                 decision["status"] = "blocked"
             event["verdict"] = "blocked"
+    elif mutation_kind in {
+        "post-dispatch-surface-unavailable",
+        "post-dispatch-current-evidence-stale",
+        "post-dispatch-authority-invalidated",
+        "post-dispatch-ordinary-finding-blocked",
+        "post-dispatch-block-missing-proof-limit",
+    }:
+        event["verdict"] = "blocked"
+        event["dimensions"]["unverified-scope"] = "blocked"
+        review.update(
+            reviewed_scope=["owner.py"],
+            unreviewed_scope=["required current review evidence"],
+            proof_limit="review cannot prove the unreviewed required surface",
+        )
+        if mutation_kind in {
+            "post-dispatch-surface-unavailable",
+            "post-dispatch-block-missing-proof-limit",
+        }:
+            review["reason"] = (
+                "required-review-evidence-or-surface-unavailable"
+            )
+            event["diff"] = {
+                "kind": "unavailable",
+                "artifact": None,
+                "generation": None,
+                "changed_files": [],
+            }
+            event["evidence_source"] = "unavailable"
+            review["changed_paths"] = []
+            if mutation_kind == "post-dispatch-block-missing-proof-limit":
+                review["proof_limit"] = ""
+        elif mutation_kind == "post-dispatch-current-evidence-stale":
+            review["reason"] = "required-current-evidence-stale"
+            event["validation"]["generation"] = 0
+        elif mutation_kind == "post-dispatch-authority-invalidated":
+            review["reason"] = (
+                "protected-authority-or-engineering-brief-invalidated"
+            )
+            review["invalidated_decisions"] = [
+                "Engineering Brief: Acceptance and Non-goals"
+            ]
+        else:
+            review["reason"] = "ordinary-finding"
     elif mutation_kind in {"reviewer-edit", "reviewer-repair"}:
         steps.insert(
             2,
@@ -6254,6 +6359,7 @@ def _orchestration_case_result(
     rereviewed_task_ids: set[str] = set()
     repair_count = 0
     terminal_seen = False
+    blocked_authority_route_pending = False
     terminal_state = "in-progress"
     allowed_reproduction = set(
         REVIEW_DISCIPLINE_MODEL["validation_evidence_reuse"]["reproduction_triggers"]
@@ -6281,6 +6387,13 @@ def _orchestration_case_result(
             continue
         action = event.get("action")
         if terminal_seen:
+            if (
+                blocked_authority_route_pending
+                and action == "analysis"
+                and event.get("analysis_kind") == "delta"
+            ):
+                blocked_authority_route_pending = False
+                continue
             reject("orchestration-terminal", "no orchestration event may follow completion or blocked")
             continue
         if action in {"edit", "repair"}:
@@ -6737,12 +6850,15 @@ def _orchestration_case_result(
                     "PASS requires complete required changed-scope review",
                 )
             if verdict == "blocked":
-                if event.get("reason") not in FINDING_RELATION_MODEL["fail_fast"][
+                reason = event.get("reason")
+                fundamental_reason = reason in FINDING_RELATION_MODEL["fail_fast"][
                     "triggers"
-                ]:
+                ]
+                post_dispatch_reason = reason in POST_DISPATCH_BLOCK_REASONS
+                if not fundamental_reason and not post_dispatch_reason:
                     reject(
                         "review-fail-fast",
-                        "ready blocked Review requires exactly one fundamental Core reason",
+                        "ready blocked Review requires an existing fundamental reason or a narrow post-dispatch evidence/Authority reason",
                     )
                 if not valid_scope_list(event.get("reviewed_scope")) or not valid_scope_list(
                     event.get("unreviewed_scope")
@@ -6751,6 +6867,47 @@ def _orchestration_case_result(
                         "review-blocked-scope",
                         "blocked Review must report non-empty text Reviewed and Unreviewed Scope",
                     )
+                if post_dispatch_reason:
+                    proof_limit = event.get("proof_limit")
+                    reason_evidenced = {
+                        "required-review-evidence-or-surface-unavailable": (
+                            event.get("required_review_surface") == "unavailable"
+                        ),
+                        "required-current-evidence-stale": (
+                            event.get("required_current_evidence") == "stale"
+                        ),
+                        "protected-authority-or-engineering-brief-invalidated": (
+                            valid_scope_list(event.get("invalidated_decisions"))
+                        ),
+                    }.get(str(reason), False)
+                    if (
+                        not isinstance(proof_limit, str)
+                        or not proof_limit.strip()
+                        or not reason_evidenced
+                    ):
+                        reject(
+                            "review-post-dispatch-block",
+                            "post-dispatch blocked Review requires the narrow reason evidence plus Reviewed Scope, Unreviewed Scope, and Proof Limit",
+                        )
+                    if reason == (
+                        "protected-authority-or-engineering-brief-invalidated"
+                    ):
+                        invalidated = event.get("invalidated_decisions", [])
+                        routed = any(
+                            isinstance(candidate, dict)
+                            and candidate.get("action") == "analysis"
+                            and candidate.get("analysis_kind") == "delta"
+                            and candidate.get("protected_decision_invalidated") is True
+                            and candidate.get("invalidated_decisions") == invalidated
+                            for candidate in events[index + 1 :]
+                        )
+                        if not routed:
+                            reject(
+                                "review-authority-route",
+                                "protected Authority or Engineering Brief invalidation must return through Main to Delta Analysis",
+                            )
+                        else:
+                            blocked_authority_route_pending = True
                 terminal_seen = True
                 terminal_state = "blocked"
             elif verdict in {"pass", "findings"}:
@@ -6808,7 +6965,9 @@ def _orchestration_case_result(
                         "review-verdict",
                         "PASS additionally requires no blocking Findings",
                     )
-                if action == "review" and isinstance(review_round_id, str):
+                if action in REVIEW_ROUND_COMPLETION_ACTIONS and isinstance(
+                    review_round_id, str
+                ):
                     for task in event_tasks:
                         completed_review_batches.add((review_round_id, task))
                 current_review.update(event_task_set)
@@ -6955,7 +7114,7 @@ def _orchestration_case_result(
                             events[index + 1 :], index + 1
                         )
                         if isinstance(candidate, dict)
-                        and candidate.get("action") == "review"
+                        and candidate.get("action") in REVIEW_ROUND_COMPLETION_ACTIONS
                         and candidate.get("review_round_id") == review_round_id
                         and isinstance(candidate.get("finding_ids"), list)
                         and all(
@@ -8010,7 +8169,7 @@ def _valid_same_task_repair_redispatch(
         step
         for step in prior
         if step.get("actor") == "review-agent"
-        and step.get("action") == "review"
+        and step.get("action") in REVIEW_ROUND_COMPLETION_ACTIONS
         and step.get("task_id") == task_id
         and step.get("review_round_id") == dispatch["review_round_id"]
         and step.get("required_changed_scope_complete") is True
@@ -8655,9 +8814,7 @@ def _progress_metrics(case: dict[str, Any], steps: list[dict[str, Any]]) -> dict
         "required_multi_agent_progress_satisfied": (
             not required
             or (
-                MULTI_AGENT_PROGRESS_MIN
-                <= len(progress_indexes)
-                <= MULTI_AGENT_PROGRESS_MAX
+                MULTI_AGENT_PROGRESS_MIN <= len(progress_indexes)
                 and required_types
                 and max_silent_steps <= MAX_SILENT_STRUCTURAL_STEPS
                 and ratio <= PROGRESS_TO_PRODUCTIVE_RATIO_MAX
@@ -8803,7 +8960,7 @@ def _metrics(
     ]:
         errors.append(
             f"{case_id}: complex, high-risk, long, or three-dispatch work requires "
-            "3-5 anchored progress updates, required checkpoint types, max five "
+            "at least three anchored progress updates, required checkpoint types, max five "
             "silent structural steps, and progress/productive ratio at most 0.75"
         )
     repair_flow = any(
@@ -8811,8 +8968,10 @@ def _metrics(
         or step.get("mode") in {"repair", "re-review"}
         for step in operational_steps
     )
-    if repair_flow and not 3 <= progress["progress_count"] <= 4:
-        errors.append(f"{case_id}: repair/re-review work requires 3-4 progress updates")
+    if repair_flow and progress["progress_count"] < MULTI_AGENT_PROGRESS_MIN:
+        errors.append(
+            f"{case_id}: repair/re-review work requires at least three progress updates"
+        )
     if (
         case.get("kind") == "direct"
         and metrics["subagent_count"] <= 2
@@ -10178,9 +10337,9 @@ def main(argv: list[str] | None = None) -> int:
                 "adaptive testing fixture count must remain exactly 15, found "
                 f"{len(adaptive_results)}"
             )
-        if len(review_discipline_results) != 30:
+        if len(review_discipline_results) != 35:
             errors.append(
-                "review discipline fixture count must remain exactly 30, found "
+                "review discipline fixture count must remain exactly 35, found "
                 f"{len(review_discipline_results)}"
             )
         if len(task_focus_results) != 46:
