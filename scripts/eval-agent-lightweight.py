@@ -5121,6 +5121,7 @@ def _task_focus_case_errors(case: object) -> list[str]:
         "analysis-level",
         "review-readiness",
         "capability-equivalence",
+        "engineering-choice",
     }:
         reject("focus-scenario", "task-focus scenario is not in the closed set")
         return errors
@@ -5646,6 +5647,82 @@ def _task_focus_case_errors(case: object) -> list[str]:
                 "ordinary-cost",
                 "ordinary L1-L3 agent and review rounds, adjacent repair loops, untriggered external reads, and always-loaded prompt growth must not increase",
             )
+    elif scenario == "engineering-choice":
+        if tuple(inputs) != (
+            "decision_domain",
+            "acceptance_equivalent",
+            "business_semantics_change",
+            "scope_expansion",
+            "production_or_destructive",
+            "irreversible_material_data_change",
+            "product_tradeoff",
+            "normalized_options",
+        ) or tuple(decision) != (
+            "owner",
+            "action",
+            "ask_user",
+            "selected",
+        ):
+            reject("engineering-choice-shape", "engineering-choice fields are not canonical")
+            return errors
+        if inputs["decision_domain"] != "concurrency-retry-hardware-lifecycle":
+            reject(
+                "engineering-choice-domain",
+                "fixture must use the normalized concurrency/retry/hardware-lifecycle domain",
+            )
+        bool_fields = (
+            "acceptance_equivalent",
+            "business_semantics_change",
+            "scope_expansion",
+            "production_or_destructive",
+            "irreversible_material_data_change",
+            "product_tradeoff",
+        )
+        if any(type(inputs[field]) is not bool for field in bool_fields):
+            reject("engineering-choice-shape", "choice ownership predicates must be booleans")
+            return errors
+        options = inputs["normalized_options"]
+        if options != [
+            "bounded-concurrency",
+            "retry-policy",
+            "hardware-lifecycle-adapter",
+        ]:
+            reject(
+                "engineering-choice-options",
+                "fixture options must be deterministic normalized engineering choices",
+            )
+        user_owned = any(
+            inputs[field]
+            for field in (
+                "business_semantics_change",
+                "scope_expansion",
+                "production_or_destructive",
+                "irreversible_material_data_change",
+                "product_tradeoff",
+            )
+        )
+        expected = (
+            ("main", "ask-one-minimum-concrete", True)
+            if user_owned
+            else ("agent", "select-evidence-backed", False)
+        )
+        if (
+            decision["owner"],
+            decision["action"],
+            decision["ask_user"],
+        ) != expected:
+            reject(
+                "engineering-choice-ownership",
+                "acceptance-equivalent technical choices are Agent-owned; only declared user-owned tradeoffs ask",
+            )
+        if not user_owned and (
+            inputs["acceptance_equivalent"] is not True
+            or decision["selected"] not in options
+        ):
+            reject(
+                "engineering-choice-selection",
+                "Agent-owned choice must select one evidence-backed acceptance-equivalent option",
+            )
     return list(dict.fromkeys(errors))
 
 
@@ -6153,6 +6230,14 @@ def _orchestration_case_result(
     authoritative_brief_sections = CORE_CONTRACTS["task_contract"][
         "analyzed_work_authority"
     ]["authoritative_sections"]
+    finding_events_by_id = {
+        event.get("finding_id"): event
+        for event in events
+        if isinstance(event, dict)
+        and event.get("action") == "finding"
+        and isinstance(event.get("finding_id"), str)
+        and event.get("finding_id")
+    }
     for event_index, event in analysis_event_entries:
         if event.get("analysis_kind") == "initial":
             previous_analysis_index = event_index
@@ -6177,6 +6262,62 @@ def _orchestration_case_result(
             reject(
                 "analysis-decision-invalidation",
                 "Delta Analysis requires a protected decision invalidation",
+            )
+        source = events[event_index - 1] if event_index > 0 else {}
+        source_action = source.get("action") if isinstance(source, dict) else None
+        source_invalidated = source.get("invalidated_decisions", []) if isinstance(
+            source, dict
+        ) else []
+        source_finding_ids = source.get("finding_ids", []) if isinstance(
+            source, dict
+        ) else []
+        source_finding_membership_valid = (
+            isinstance(source_finding_ids, list)
+            and all(
+                isinstance(finding_id, str) and finding_id
+                for finding_id in source_finding_ids
+            )
+            and len(source_finding_ids) == len(set(source_finding_ids))
+        )
+        source_findings = [
+            finding_events_by_id.get(finding_id, {})
+            for finding_id in source_finding_ids
+            if isinstance(finding_id, str)
+        ] if source_finding_membership_valid else []
+        scope_blocker_source = bool(source_findings) and any(
+            finding.get("relation") == "scope-blocker"
+            for finding in source_findings
+        )
+        protected_review_source = (
+            source_action in REVIEW_ACTIONS
+            and source.get("verdict") == "blocked"
+            and source.get("reason")
+            == "protected-authority-or-engineering-brief-invalidated"
+            and source_invalidated == invalidated_items
+        )
+        completed_scope_blocker_source = (
+            source_action in {*REVIEW_ACTIONS, "pre-review"}
+            and source_finding_membership_valid
+            and scope_blocker_source
+            and (
+                "scope-blocker" in invalidated_items
+                or source_invalidated == invalidated_items
+            )
+        )
+        evidence_invalidation_source = (
+            source_action == "evidence-invalidation"
+            and source.get("source") == "current-evidence"
+            and source.get("material") is True
+            and source_invalidated == invalidated_items
+        )
+        if not (
+            protected_review_source
+            or completed_scope_blocker_source
+            or evidence_invalidation_source
+        ):
+            reject(
+                "delta-invalidation-source",
+                "Delta requires the immediately preceding evidence or completed Review event to establish the same protected/material invalidation",
             )
         if (
             not isinstance(updates, list)
@@ -6324,6 +6465,172 @@ def _orchestration_case_result(
                 "delta-impact-exact",
                 "Delta Impact must exactly project proven invalidated decisions and transitive affected sets; unlisted remains preserved",
             )
+
+    non_invalidation_events = set(
+        CORE_CONTRACTS["task_contract"]["analyzed_work_authority"][
+            "non_invalidation_events"
+        ]
+    )
+    intermediate_triggers = set(
+        REVIEW_DISCIPLINE_MODEL["review_frequency_policy"][
+            "intermediate_review_triggers"
+        ]
+    )
+    initial_event_index = next(
+        (
+            index
+            for index, event in analysis_event_entries
+            if event.get("analysis_kind") == "initial"
+        ),
+        -1,
+    )
+    first_task_action_index = next(
+        (
+            index
+            for index, event in enumerate(events)
+            if event.get("action") in {*EDIT_ACTIONS, "validate"}
+        ),
+        len(events),
+    )
+    declared_material_triggers = (
+        initial_events[0].get("material_intermediate_review_triggers", [])
+        if initial_events
+        else []
+    )
+    if (
+        not isinstance(declared_material_triggers, list)
+        or len(declared_material_triggers) != len(set(declared_material_triggers))
+        or not set(declared_material_triggers) <= intermediate_triggers
+    ):
+        reject(
+            "pre-review-trigger",
+            "initial Analysis material intermediate Review triggers must be a unique closed-set list",
+        )
+        declared_material_triggers = []
+    broad_pre_review_count = 0
+    pre_review_count = 0
+    last_delta_index = -1
+    for event_index, event in enumerate(events):
+        action = event.get("action")
+        if action == "analysis" and event.get("analysis_kind") == "delta":
+            last_delta_index = event_index
+        elif action == "non-invalidation":
+            reasons = event.get("reasons")
+            if (
+                not isinstance(reasons, list)
+                or not reasons
+                or len(reasons) != len(set(reasons))
+                or not set(reasons) <= non_invalidation_events
+                or event.get("protected_decision_invalidated") is not False
+            ):
+                reject(
+                    "analysis-non-invalidation",
+                    "Task transitions, ordinary discovery, and claim-local reproof must remain non-invalidation events",
+                )
+        elif action == "pre-review":
+            pre_review_count += 1
+            level = event.get("effective_level")
+            trigger = event.get("trigger")
+            if not (
+                initial_event_index >= 0
+                and initial_event_index < event_index < first_task_action_index
+            ):
+                reject(
+                    "pre-review-order",
+                    "pre-review must follow initial Analysis and precede the first edit or Task validation action",
+                )
+            if level in {"L1", "L2", "L3"}:
+                reject("pre-review-frequency", "L1-L3 must not run pre-review")
+            if level == "L4" and (
+                trigger not in intermediate_triggers
+                or trigger not in set(declared_material_triggers)
+            ):
+                reject(
+                    "pre-review-trigger",
+                    "L4 pre-review requires an existing material intermediate trigger proved in initial Analysis",
+                )
+            if level not in {"L4", "L5"}:
+                reject("pre-review-level", "pre-review level must be L4 or L5")
+            if level != effective_level:
+                reject(
+                    "pre-review-level",
+                    "pre-review level must equal the accepted Review Boundary Effective Level",
+                )
+            review_round_id = event.get("review_round_id")
+            pre_review_tasks = event.get("covered_task_ids")
+            reported_finding_ids = event.get("finding_ids")
+            actual_finding_entries = [
+                (candidate_index, candidate)
+                for candidate_index, candidate in enumerate(events)
+                if isinstance(candidate, dict)
+                and candidate.get("action") == "finding"
+                and candidate.get("review_round_id") == review_round_id
+                and candidate.get("task_id") in set(pre_review_tasks or [])
+            ]
+            actual_finding_ids = [
+                str(candidate.get("finding_id"))
+                for _candidate_index, candidate in actual_finding_entries
+            ]
+            if (
+                event.get("independent") is not True
+                or not isinstance(review_round_id, str)
+                or not review_round_id
+                or pre_review_tasks != covered_task_ids
+                or event.get("required_changed_scope_complete") is not True
+                or event.get("base_dimensions_complete") is not True
+                or event.get("professional_risk_dimensions_complete") is not True
+                or not isinstance(reported_finding_ids, list)
+                or len(reported_finding_ids) != len(set(reported_finding_ids))
+                or reported_finding_ids != actual_finding_ids
+                or any(
+                    candidate_index >= event_index
+                    for candidate_index, _candidate in actual_finding_entries
+                )
+                or event.get("finding_expands_boundary") is not False
+            ):
+                reject(
+                    "pre-review-finding-frontier",
+                    "pre-review closing Handoff must independently cover the fixed boundary and contain every preceding finding in the round",
+                )
+            if event.get("broad") is True:
+                broad_pre_review_count += 1
+                if broad_pre_review_count > 1 and event.get("material_boundary_expanded") is not True:
+                    reject(
+                        "preparation-review-loop",
+                        "broad pre-review cannot repeat without protected or material boundary expansion",
+                    )
+        elif action == "scoped-verification":
+            if (
+                last_delta_index < 0
+                or event_index <= last_delta_index
+                or event.get("broad_review") is not False
+                or not isinstance(event.get("invalidated_decisions"), list)
+                or not event["invalidated_decisions"]
+            ):
+                reject(
+                    "pre-review-scoped-verification",
+                    "Delta must receive bounded scoped verification, not a repeated broad review",
+                )
+
+    if effective_level in {"L1", "L2", "L3"} and pre_review_count:
+        reject("pre-review-frequency", "L1-L3 require zero pre-review rounds")
+    if effective_level == "L4":
+        required_l4_pre_reviews = 1 if declared_material_triggers else 0
+        if pre_review_count != required_l4_pre_reviews:
+            reject(
+                "pre-review-mandatory",
+                "L4 requires exactly one pre-review when initial Analysis proves a material intermediate trigger, otherwise zero",
+            )
+        if pre_review_count > 1:
+            reject(
+                "preparation-review-loop",
+                "L4 permits at most one trigger-backed independent pre-review",
+            )
+    if effective_level == "L5" and pre_review_count != 1:
+        reject(
+            "pre-review-mandatory",
+            "L5 requires exactly one independent pre-review before Task action",
+        )
 
     latest_generation: dict[str, int] = {}
     current_validation: set[str] = set()
@@ -7114,7 +7421,11 @@ def _orchestration_case_result(
                             events[index + 1 :], index + 1
                         )
                         if isinstance(candidate, dict)
-                        and candidate.get("action") in REVIEW_ROUND_COMPLETION_ACTIONS
+                        and (
+                            candidate.get("action")
+                            in REVIEW_ROUND_COMPLETION_ACTIONS
+                            or candidate.get("action") == "pre-review"
+                        )
                         and candidate.get("review_round_id") == review_round_id
                         and isinstance(candidate.get("finding_ids"), list)
                         and all(
@@ -7127,6 +7438,11 @@ def _orchestration_case_result(
                         and candidate.get("professional_risk_dimensions_complete") is True
                     ),
                     None,
+                )
+                closing_invalidated = (
+                    events[closing_review_index].get("invalidated_decisions", [])
+                    if closing_review_index is not None
+                    else []
                 )
                 analysis_index = next(
                     (
@@ -7144,7 +7460,15 @@ def _orchestration_case_result(
                             isinstance(item, str) and item
                             for item in candidate["invalidated_decisions"]
                         )
-                        and "scope-blocker" in candidate["invalidated_decisions"]
+                        and (
+                            "scope-blocker" in candidate["invalidated_decisions"]
+                            or (
+                                isinstance(closing_invalidated, list)
+                                and bool(closing_invalidated)
+                                and candidate["invalidated_decisions"]
+                                == closing_invalidated
+                            )
+                        )
                     ),
                     None,
                 )
@@ -7194,7 +7518,13 @@ def _orchestration_case_result(
                 )
             terminal_seen = True
             terminal_state = "complete"
-        elif action != "analysis":
+        elif action not in {
+            "analysis",
+            "non-invalidation",
+            "pre-review",
+            "scoped-verification",
+            "evidence-invalidation",
+        }:
             reject("orchestration-event", f"unsupported orchestration action {action!r}")
 
     if not terminal_seen:
@@ -9015,6 +9345,7 @@ def _expectation_errors(case: dict[str, Any], actual: dict[str, Any]) -> list[st
         "control_turns_max": "control_turn_count",
         "loaded_skills_max": "loaded_skill_count",
         "duplicate_reads_max": "duplicate_read_count",
+        "verification_actions_max": "verification_action_count",
         "progress_max": "progress_count",
         "max_silent_steps_max": "max_silent_steps",
         "progress_to_productive_action_ratio_max": "progress_to_productive_action_ratio",
@@ -9382,6 +9713,21 @@ def _evidence_localization_fixture_results(
             "scope",
             "bytes",
         ),
+        "close": (
+            "id",
+            "action",
+            "requirement_statuses",
+            "unresolved_material_risk",
+            "bytes",
+        ),
+        "reopen": (
+            "id",
+            "action",
+            "reason",
+            "requirement",
+            "invalidation",
+            "bytes",
+        ),
         "edit": ("id", "action", "target", "bytes"),
     }
     valid_actors = set(EVIDENCE_LOCALIZATION_MODEL["applies_to"])
@@ -9561,6 +9907,35 @@ def _evidence_localization_fixture_results(
                 or any(item not in operation_by_id for item in operation.get("basis", []))
             ):
                 reject("localization-schema", f"claim {operation_id} is invalid")
+            if action == "close":
+                statuses = operation.get("requirement_statuses")
+                if (
+                    not isinstance(statuses, dict)
+                    or set(statuses) != valid_required_evidence
+                    or any(
+                        status
+                        not in {"proved", "not-applicable", "legitimate-proof-limit"}
+                        for status in statuses.values()
+                    )
+                    or type(operation.get("unresolved_material_risk")) is not bool
+                ):
+                    reject(
+                        "evidence-closure",
+                        f"closure {operation_id} must resolve every current requirement",
+                    )
+            if action == "reopen" and (
+                operation.get("reason")
+                not in {"contradictory-evidence", "new-evidence-requirement"}
+                or operation.get("requirement") not in valid_required_evidence
+                or operation.get("invalidation")
+                not in {
+                    "claim-local",
+                    *CORE_CONTRACTS["task_contract"]["analyzed_work_authority"][
+                        "decision_invalidation_triggers"
+                    ],
+                }
+            ):
+                reject("evidence-reopening", f"reopen {operation_id} is invalid")
 
         searches = [item for item in operations if item.get("action") == "search"]
         reads = [item for item in operations if item.get("action") == "read"]
@@ -9579,6 +9954,114 @@ def _evidence_localization_fixture_results(
                 and item.get("coverage") in valid_required_evidence
             }
         )
+
+        evidence_closed = False
+        closed_legitimate_proof_limits: set[str] = set()
+        reopened_requirement: str | None = None
+        reopened_at = -1
+        material_invalidation = False
+        for index, operation in enumerate(operations):
+            action = operation.get("action")
+            if action == "reopen":
+                if not evidence_closed or reopened_requirement is not None:
+                    reject(
+                        "evidence-reopening",
+                        "Evidence can reopen only one bounded requirement after closure",
+                    )
+                    continue
+                reopened_requirement = str(operation.get("requirement"))
+                reopened_at = index
+                evidence_closed = False
+                closed_legitimate_proof_limits.discard(reopened_requirement)
+                material_invalidation = operation.get("invalidation") != "claim-local"
+                continue
+            if action in {"search", "read"} and evidence_closed:
+                reject(
+                    "discovery-after-evidence-closure",
+                    "search/read after closure requires a new or invalidated Evidence Requirement",
+                )
+            if action != "close":
+                continue
+            statuses = operation.get("requirement_statuses")
+            if not isinstance(statuses, dict):
+                continue
+            if operation.get("unresolved_material_risk") is True:
+                reject(
+                    "evidence-closure-material-risk",
+                    "Evidence cannot close with reachable unresolved material risk",
+                )
+            preceding = operations[:index]
+            for requirement, status in statuses.items():
+                expected_status = (
+                    "not-applicable"
+                    if requirement in set(not_applicable or [])
+                    else status
+                )
+                if requirement in set(not_applicable or []) and status != expected_status:
+                    reject(
+                        "evidence-closure",
+                        f"not-applicable requirement {requirement} has inconsistent closure",
+                    )
+                if requirement in set(required_evidence or []) and status == "not-applicable":
+                    reject(
+                        "evidence-closure",
+                        f"current requirement {requirement} cannot close as not-applicable",
+                    )
+                if status == "proved" and not any(
+                    item.get("action") == "read"
+                    and item.get("source_kind") == "current-source"
+                    and item.get("coverage") == requirement
+                    for item in preceding
+                ):
+                    reject(
+                        "evidence-closure",
+                        f"proved requirement {requirement} lacks current-source proof",
+                    )
+                if status == "legitimate-proof-limit" and not any(
+                    item.get("action") == "claim"
+                    and item.get("kind") == "proof-limit"
+                    and item.get("status") == "proof-limit"
+                    and item.get("scope") == requirement
+                    for item in preceding
+                ):
+                    reject(
+                        "evidence-closure",
+                        f"Proof Limit for {requirement} lacks an explicit bounded claim",
+                    )
+            if reopened_requirement is not None:
+                if material_invalidation:
+                    reject(
+                        "evidence-reopening",
+                        "protected/material invalidation cannot be locally reclosed",
+                    )
+                elif not any(
+                    item.get("action") == "read"
+                    and item.get("source_kind") == "current-source"
+                    and item.get("coverage") == reopened_requirement
+                    for item in operations[reopened_at + 1 : index]
+                ):
+                    reject(
+                        "evidence-reopening",
+                        "claim-local reopening needs current-source reproof of its bounded requirement",
+                    )
+                reopened_requirement = None
+                reopened_at = -1
+            evidence_closed = operation.get("unresolved_material_risk") is False
+            closed_legitimate_proof_limits = (
+                {
+                    requirement
+                    for requirement, status in statuses.items()
+                    if status == "legitimate-proof-limit"
+                }
+                if evidence_closed
+                else set()
+            )
+
+        if reopened_requirement is not None and not material_invalidation:
+            reject(
+                "evidence-reopening",
+                "claim-local Evidence Requirement remains open",
+            )
 
         if discovery_state == "known-exact" and searches:
             reject("known-exact-discovery", "known exact source must not search")
@@ -9621,11 +10104,42 @@ def _evidence_localization_fixture_results(
         worker_action = raw_case.get("worker_action")
         if worker_action not in {"continue", "return-main-analysis", "not-applicable"}:
             reject("localization-schema", "worker_action is invalid")
+        if (edits or worker_action == "continue") and not evidence_closed:
+            reject(
+                "evidence-closure-before-action",
+                "edit or worker continuation requires complete current Evidence Closure",
+            )
+        proof_limit_claims = [
+            claim
+            for claim in claims
+            if claim.get("kind") == "proof-limit"
+            and claim.get("status") == "proof-limit"
+        ]
+        material_proof_limit = bool(proof_limit_claims) and (
+            boundary in material_boundaries
+            or not evidence_closed
+            or any(
+                claim.get("scope") not in closed_legitimate_proof_limits
+                for claim in proof_limit_claims
+            )
+        )
+        if material_proof_limit and (
+            edits or worker_action != "return-main-analysis"
+        ):
+            reject(
+                "material-proof-limit-return-main",
+                "a material Proof Limit must stop edit and return Main",
+            )
         if boundary in material_boundaries:
             if edits or worker_action != "return-main-analysis":
                 reject("material-before-edit", "material discovery must return Main before edit")
         elif boundary == "stable-owner" and worker_action != "continue":
             reject("stable-owner-direct", "stable Direct discovery must continue")
+        if material_invalidation and (edits or worker_action != "return-main-analysis"):
+            reject(
+                "material-before-edit",
+                "protected/material invalidation must stop edit and return Main for bounded Delta",
+            )
 
         if inherited_anchor != "none" and not anchors:
             reject("localization-schema", "declared inherited anchor is missing")
@@ -9736,7 +10250,16 @@ def _evidence_localization_fixture_results(
                 )
 
         if isinstance(required_evidence, list):
-            missing_evidence = sorted(set(required_evidence) - set(covered_evidence))
+            nonmaterial_proof_limit_closure = (
+                closed_legitimate_proof_limits
+                if evidence_closed and boundary not in material_boundaries
+                else set()
+            )
+            missing_evidence = sorted(
+                set(required_evidence)
+                - set(covered_evidence)
+                - nonmaterial_proof_limit_closure
+            )
             if missing_evidence:
                 reject(
                     "minimum-complete-evidence",
@@ -9830,6 +10353,10 @@ def _evidence_localization_fixture_results(
                 "covered_evidence": covered_evidence,
                 "proof_limit_recorded": any(
                     item.get("status") == "proof-limit" for item in claims
+                ),
+                "evidence_closed": evidence_closed,
+                "reopening_count": sum(
+                    item.get("action") == "reopen" for item in operations
                 ),
                 "expected_valid": expected_valid,
                 "quality_gate": {
@@ -10160,8 +10687,24 @@ def _completion_fixture_errors(
     return results, errors
 
 
-def _aggregate(results: list[dict[str, Any]]) -> dict[str, Any]:
-    metrics = [item["metrics"] for item in results]
+def _aggregate(
+    results: list[dict[str, Any]],
+    expectations_by_id: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    expectations_by_id = expectations_by_id or {}
+    metrics_by_id = {
+        str(result.get("id") or ""): result.get("metrics", {})
+        for result in results
+    }
+    global_structural_ceilings = CORE_CONTRACTS["final_goal_contract"][
+        "maximum_structural_proxies"
+    ]
+    per_case_expectation_fields = {
+        "control_turn_count": "control_turns_max",
+        "subagent_count": "subagents",
+        "duplicate_read_count": "duplicate_reads_max",
+        "verification_action_count": "verification_actions_max",
+    }
     numeric_names = (
         "time_to_first_productive_action_step",
         "time_to_first_edit_step",
@@ -10185,16 +10728,54 @@ def _aggregate(results: list[dict[str, Any]]) -> dict[str, Any]:
     )
     summary: dict[str, Any] = {}
     for name in numeric_names:
-        values = [
-            value[name]
-            for value in metrics
-            if isinstance(value.get(name), (int, float))
-            and not isinstance(value.get(name), bool)
+        entries = [
+            (str(result.get("id") or ""), result["metrics"][name])
+            for result in results
+            if isinstance(result["metrics"].get(name), (int, float))
+            and not isinstance(result["metrics"].get(name), bool)
         ]
-        summary[name] = {
+        values = [value for _case_id, value in entries]
+        exception_ids: list[str] = []
+        bounded_values = list(values)
+        expectation_field = per_case_expectation_fields.get(name)
+        global_ceiling = global_structural_ceilings.get(name)
+        if expectation_field is not None and isinstance(global_ceiling, int):
+            bounded_values = []
+            for case_id, value in entries:
+                case_limit = expectations_by_id.get(case_id, {}).get(
+                    expectation_field
+                )
+                authorized_repair_exception = (
+                    case_id == "repair-and-rereview"
+                    and expectations_by_id.get(case_id, {}).get(
+                        "repair_requires_rereview"
+                    )
+                    is True
+                    and metrics_by_id.get(case_id, {}).get("repair_has_rereview")
+                    is True
+                )
+                if (
+                    value > global_ceiling
+                    and authorized_repair_exception
+                    and isinstance(case_limit, (int, float))
+                    and not isinstance(case_limit, bool)
+                    and value <= case_limit
+                ):
+                    exception_ids.append(case_id)
+                else:
+                    bounded_values.append(value)
+        metric_summary = {
             "median": statistics.median(values) if values else None,
-            "max": max(values) if values else None,
+            "max": max(bounded_values) if bounded_values else None,
         }
+        if expectation_field is not None:
+            metric_summary.update(
+                {
+                    "observed_max": max(values) if values else None,
+                    "per_case_exception_ids": exception_ids,
+                }
+            )
+        summary[name] = metric_summary
     return summary
 
 
@@ -10342,9 +10923,9 @@ def main(argv: list[str] | None = None) -> int:
                 "review discipline fixture count must remain exactly 35, found "
                 f"{len(review_discipline_results)}"
             )
-        if len(task_focus_results) != 46:
+        if len(task_focus_results) != 48:
             errors.append(
-                "task-focus fixture count must remain exactly 46, found "
+                "task-focus fixture count must remain exactly 48, found "
                 f"{len(task_focus_results)}"
             )
         if len(combined_review_results) != 15:
@@ -10357,9 +10938,9 @@ def main(argv: list[str] | None = None) -> int:
                 "external-read fixture count must remain exactly 14, found "
                 f"{len(external_read_results)}"
             )
-        if len(evidence_localization_results) != 19:
+        if len(evidence_localization_results) != 27:
             errors.append(
-                "evidence localization fixture count must remain exactly 19, found "
+                "evidence localization fixture count must remain exactly 27, found "
                 f"{len(evidence_localization_results)}"
             )
         if len(risk_calibration_results) != 13:
@@ -10463,7 +11044,15 @@ def main(argv: list[str] | None = None) -> int:
             ),
             "isolated_write_parallelism": "conditional-contract-only",
         },
-        "aggregate_structural_proxies": _aggregate(results),
+        "aggregate_structural_proxies": _aggregate(
+            results,
+            {
+                str(case.get("id") or ""): case.get("expected", {})
+                for group in (raw_cases, raw_scheduling_cases, raw_utility_cases)
+                for case in group
+                if isinstance(case, dict)
+            },
+        ),
         "errors": errors,
     }
     if not args.no_write_report:

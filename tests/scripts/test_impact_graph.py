@@ -140,6 +140,8 @@ IMPACT_004_SCRIPT_CASES = {
         "direct_producer_ids": ["eval-routing"],
         "test_modules": [
             "tests/scripts/test_capability_coverage_red.py",
+            "tests/scripts/test_decision_eval.py",
+            "tests/scripts/test_evidence_direct_authority.py",
             REPORT_DIRECTORY_REGRESSION_TEST,
             "tests/scripts/test_route_implementation_owner_candidates.py",
             "tests/scripts/test_route_oracle_instrumentation.py",
@@ -790,6 +792,9 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                 "build-full",
                 "build-dev",
                 "eval-skill-professionalism",
+                "eval-agent-lightweight",
+                "eval-rendered-context",
+                "eval-context-control",
             ],
             result["selected_producer_ids"],
         )
@@ -1114,8 +1119,17 @@ class ImpactGraphResolutionTests(unittest.TestCase):
             ),
             "scripts/validation_utils.py": (
                 "core-schema-and-validation",
-                ["validate-task-contracts"],
                 [
+                    "eval-agent-lightweight",
+                    "eval-context-control",
+                    "eval-pressure-behavior",
+                    "eval-rendered-context",
+                    "eval-routing",
+                    "validate-task-contracts",
+                ],
+                [
+                    "tests/scripts/test_decision_eval.py",
+                    "tests/scripts/test_evidence_direct_authority.py",
                     "tests/scripts/test_impact_graph.py",
                     REPORT_DIRECTORY_REGRESSION_TEST,
                     "tests/scripts/test_validate_task_contracts.py",
@@ -1124,8 +1138,17 @@ class ImpactGraphResolutionTests(unittest.TestCase):
             ),
             "src/control-model/core-contracts.json": (
                 "core-schema-and-validation",
-                ["validate-task-contracts"],
                 [
+                    "eval-agent-lightweight",
+                    "eval-context-control",
+                    "eval-pressure-behavior",
+                    "eval-rendered-context",
+                    "eval-routing",
+                    "validate-task-contracts",
+                ],
+                [
+                    "tests/scripts/test_decision_eval.py",
+                    "tests/scripts/test_evidence_direct_authority.py",
                     "tests/scripts/test_impact_graph.py",
                     REPORT_DIRECTORY_REGRESSION_TEST,
                     "tests/scripts/test_validate_task_contracts.py",
@@ -1166,6 +1189,8 @@ class ImpactGraphResolutionTests(unittest.TestCase):
             "scripts/validation_utils.py": (
                 "core-schema-and-validation",
                 [
+                    "tests/scripts/test_decision_eval.py",
+                    "tests/scripts/test_evidence_direct_authority.py",
                     "tests/scripts/test_impact_graph.py",
                     REPORT_DIRECTORY_REGRESSION_TEST,
                     "tests/scripts/test_validate_task_contracts.py",
@@ -1176,6 +1201,7 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                 "skill-content-collector",
                 [
                     "tests/scripts/test_audit_skill_content.py",
+                    "tests/scripts/test_evidence_direct_authority.py",
                     "tests/scripts/test_expert_panel_actionability.py",
                     "tests/scripts/test_expert_panel_attestation.py",
                     REPORT_DIRECTORY_REGRESSION_TEST,
@@ -1194,6 +1220,8 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                 "routing-evaluator",
                 [
                     "tests/scripts/test_capability_coverage_red.py",
+                    "tests/scripts/test_decision_eval.py",
+                    "tests/scripts/test_evidence_direct_authority.py",
                     REPORT_DIRECTORY_REGRESSION_TEST,
                     "tests/scripts/test_route_implementation_owner_candidates.py",
                     "tests/scripts/test_route_oracle_instrumentation.py",
@@ -1355,6 +1383,9 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                 "build-full",
                 "build-dev",
                 "validate-agent-profiles",
+                "eval-agent-lightweight",
+                "eval-context-control",
+                "eval-rendered-context",
             },
             "scripts/build.py": set(),
             "scripts/quickstart.py": set(),
@@ -1467,6 +1498,95 @@ class ImpactGraphResolutionTests(unittest.TestCase):
             explained_paths,
         )
         json.loads(json.dumps(result, sort_keys=True))
+
+    def test_behavior_control_sources_select_existing_regression_evaluators(self) -> None:
+        behavior_producers = {
+            "eval-routing",
+            "eval-agent-lightweight",
+            "eval-context-control",
+            "eval-rendered-context",
+            "eval-pressure-behavior",
+        }
+        expected = {
+            "src/control-model/core-contracts.json": {
+                "eval-routing",
+                "eval-agent-lightweight",
+                "eval-context-control",
+                "eval-rendered-context",
+                "eval-pressure-behavior",
+            },
+            "src/control-prompts/main-control-agent.md": {
+                "eval-agent-lightweight",
+                "eval-context-control",
+                "eval-rendered-context",
+            },
+            "src/agent-profiles/role-agents.json": {
+                "eval-agent-lightweight",
+                "eval-context-control",
+                "eval-rendered-context",
+            },
+            "src/control-skills/engineering-control-plane/references/engineering-brief-template.md": {
+                "eval-agent-lightweight",
+                "eval-context-control",
+                "eval-rendered-context",
+            },
+            "src/professional-skills/backend-change-builder/SKILL.md": {
+                "eval-agent-lightweight",
+                "eval-context-control",
+                "eval-rendered-context",
+            },
+            "src/registry/professional-skills.yaml": {
+                "eval-routing",
+                "eval-agent-lightweight",
+                "eval-context-control",
+                "eval-rendered-context",
+                "eval-pressure-behavior",
+            },
+            "src/registry/foundation-skills.yaml": {
+                "eval-routing",
+                "eval-agent-lightweight",
+                "eval-context-control",
+                "eval-rendered-context",
+                "eval-pressure-behavior",
+            },
+            "src/registry/domain-skills.yaml": {
+                "eval-routing",
+                "eval-agent-lightweight",
+                "eval-context-control",
+                "eval-rendered-context",
+                "eval-pressure-behavior",
+            },
+        }
+        for path, required in expected.items():
+            with self.subTest(path=path):
+                result = self._resolve([("M", path)])
+                self.assertEqual(
+                    required,
+                    behavior_producers & set(result["selected_producer_ids"]),
+                )
+                self.assertNotIn(
+                    "validate-professionalism-regression",
+                    result["selected_producer_ids"],
+                )
+
+        for path in (
+            "src/registry/control-skills.yaml",
+            "src/registry/release-routing-scenarios.yaml",
+        ):
+            with self.subTest(path=path):
+                result = self._resolve([("M", path)])
+                self.assertNotIn(
+                    "eval-pressure-behavior", result["selected_producer_ids"]
+                )
+
+    def test_known_no_impact_change_selects_no_behavior_or_full_regression(self) -> None:
+        result = self._resolve([("M", "LICENSE")])
+        self.assertEqual([], result["selected_producer_ids"])
+        self.assertEqual([], result["selected_test_modules"])
+        self.assertEqual("known-no-impact", result["reason"])
+        self.assertEqual(
+            "known-no-impact", result["changed_paths"][0]["classification"]
+        )
 
     def test_ambiguous_and_unmatched_paths_fail_closed(self) -> None:
         ambiguous = copy.deepcopy(CORE_CONTRACTS)

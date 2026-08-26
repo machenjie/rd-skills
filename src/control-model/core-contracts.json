@@ -290,7 +290,7 @@
       {"id": "impact-graph-resolver", "path_patterns": ["scripts/impact_graph.py"], "producer_ids": [], "test_modules": ["tests/scripts/test_impact_graph.py", "tests/scripts/test_impact_graph_git.py"]},
       {"id": "affected-test-runner", "path_patterns": ["scripts/run-ci-tests.py"], "producer_ids": [], "test_modules": ["tests/scripts/test_run_ci_tests.py"]},
       {"id": "core-evaluator", "path_patterns": ["scripts/eval-core-principles.py"], "producer_ids": [], "test_modules": ["tests/scripts/test_affected_professionalism.py", "tests/scripts/test_eval_core_affected.py", "tests/scripts/test_eval_core_principles.py"]},
-      {"id": "core-schema-and-validation", "path_patterns": ["scripts/validation_utils.py", "src/control-model/core-contracts.json"], "producer_ids": ["validate-task-contracts"], "test_modules": ["tests/scripts/test_decision_eval.py", "tests/scripts/test_evidence_direct_authority.py", "tests/scripts/test_impact_graph.py", "tests/scripts/test_report_directory_cli.py", "tests/scripts/test_validate_task_contracts.py", "tests/scripts/test_validation_utils.py"]},
+      {"id": "core-schema-and-validation", "path_patterns": ["scripts/validation_utils.py", "src/control-model/core-contracts.json"], "producer_ids": ["validate-task-contracts", "eval-routing", "eval-agent-lightweight", "eval-context-control", "eval-rendered-context", "eval-pressure-behavior"], "test_modules": ["tests/scripts/test_decision_eval.py", "tests/scripts/test_evidence_direct_authority.py", "tests/scripts/test_impact_graph.py", "tests/scripts/test_report_directory_cli.py", "tests/scripts/test_validate_task_contracts.py", "tests/scripts/test_validation_utils.py"]},
       {"id": "retired-workflow-guard", "path_patterns": [".github/workflows/ci.yml", ".github/workflows/formal-release.yml"], "producer_ids": ["validate-docs-consistency"], "test_modules": ["tests/scripts/test_validate_docs_consistency.py"]},
       {"id": "affected-test-support", "path_patterns": ["tests/scripts/affected_test_support.py"], "producer_ids": [], "test_modules": ["tests/scripts/test_affected_professionalism.py", "tests/scripts/test_eval_core_affected.py", "tests/scripts/test_impact_graph_git.py"]},
       {"id": "expert-panel-source-test-support", "path_patterns": ["tests/scripts/expert_panel_source_test_support.py"], "producer_ids": [], "test_modules": ["tests/scripts/test_expert_panel_actionability.py", "tests/scripts/test_expert_panel_attestation.py", "tests/scripts/test_expert_panel_manifest.py", "tests/scripts/test_expert_panel_review.py", "tests/scripts/test_professional_completeness_carry_forward.py", "tests/scripts/test_professional_completeness_schema3.py", "tests/scripts/test_professional_review_cost_fixture.py", "tests/scripts/test_professionalism_expert_panel.py"]},
@@ -336,14 +336,15 @@
       {"id": "skill-content-collector", "path_patterns": ["scripts/audit-skill-content.py"], "producer_ids": ["audit-skill-content"], "test_modules": ["tests/scripts/test_audit_skill_content.py", "tests/scripts/test_evidence_direct_authority.py", "tests/scripts/test_expert_panel_actionability.py", "tests/scripts/test_expert_panel_attestation.py", "tests/scripts/test_report_directory_cli.py", "tests/scripts/test_validate_root_content.py"]},
       {"id": "build-profiles", "path_patterns": ["scripts/build.py"], "producer_ids": [], "test_modules": ["tests/scripts/test_build_safety.py"]},
       {"id": "quickstart", "path_patterns": ["scripts/quickstart.py"], "producer_ids": [], "test_modules": ["tests/scripts/test_quickstart.py"]},
-      {"id": "agent-profiles", "path_patterns": ["scripts/validate-agent-profiles.py", "src/agent-profiles/**"], "producer_ids": ["validate-agent-profiles"], "test_modules": ["tests/scripts/test_evidence_direct_authority.py", "tests/scripts/test_validate_agent_profiles.py"]},
-      {"id": "control-prompt", "path_patterns": ["scripts/validate-control-plane-prompt.py", "src/control-prompts/**"], "producer_ids": ["validate-control-plane-prompt", "validate-hookless-residue"], "test_modules": ["tests/scripts/test_evidence_direct_authority.py", "tests/scripts/test_validate_control_plane_prompt.py", "tests/test_hookless_architecture.py"]},
+      {"id": "agent-profiles", "path_patterns": ["scripts/validate-agent-profiles.py", "src/agent-profiles/**"], "producer_ids": ["validate-agent-profiles", "eval-agent-lightweight", "eval-context-control", "eval-rendered-context"], "test_modules": ["tests/scripts/test_evidence_direct_authority.py", "tests/scripts/test_validate_agent_profiles.py"]},
+      {"id": "control-prompt", "path_patterns": ["scripts/validate-control-plane-prompt.py", "src/control-prompts/**"], "producer_ids": ["validate-control-plane-prompt", "validate-hookless-residue", "eval-agent-lightweight", "eval-context-control", "eval-rendered-context"], "test_modules": ["tests/scripts/test_evidence_direct_authority.py", "tests/scripts/test_validate_control_plane_prompt.py", "tests/test_hookless_architecture.py"]},
       {"id": "task-contract-producer", "path_patterns": ["scripts/validate-task-contracts.py"], "producer_ids": ["validate-task-contracts"], "test_modules": ["tests/scripts/test_validate_task_contracts.py"]},
-      {"id": "control-skills", "path_patterns": ["src/control-skills/**"], "producer_ids": ["validate-control-skills", "validate-hookless-residue", "validate-task-contracts"], "test_modules": ["tests/scripts/test_evidence_direct_authority.py", "tests/scripts/test_rds_006_task_dag_decomposition.py", "tests/scripts/test_validate_control_skills.py", "tests/scripts/test_validate_task_contracts.py", "tests/test_hookless_architecture.py"]},
+      {"id": "control-skills", "path_patterns": ["src/control-skills/**"], "producer_ids": ["validate-control-skills", "validate-hookless-residue", "validate-task-contracts", "eval-agent-lightweight", "eval-context-control", "eval-rendered-context"], "test_modules": ["tests/scripts/test_evidence_direct_authority.py", "tests/scripts/test_rds_006_task_dag_decomposition.py", "tests/scripts/test_validate_control_skills.py", "tests/scripts/test_validate_task_contracts.py", "tests/test_hookless_architecture.py"]},
       {"id": "foundation-skills", "path_patterns": ["src/foundation/**"], "producer_ids": ["validate-capabilities", "validate-registry", "validate-skill-routing", "validate-skill-body-links", "validate-skill-content-size", "audit-skill-content", "validate-reference-content", "validate-root-content"], "test_modules": ["tests/scripts/test_audit_skill_content.py", "tests/scripts/test_validate_capabilities.py", "tests/scripts/test_validate_reference_content.py", "tests/scripts/test_validate_registry.py", "tests/scripts/test_validate_root_content.py", "tests/scripts/test_validate_task_contracts.py"]},
-      {"id": "professional-skills", "path_patterns": ["src/professional-skills/**"], "producer_ids": ["validate-skills", "validate-registry", "validate-skill-routing", "validate-skill-body-links", "validate-skill-content-size", "audit-skill-content", "validate-reference-content", "validate-root-content", "eval-skill-professionalism"], "test_modules": ["tests/scripts/test_audit_skill_content.py", "tests/scripts/test_evidence_direct_authority.py", "tests/scripts/test_rds_006_task_dag_decomposition.py", "tests/scripts/test_validate_reference_content.py", "tests/scripts/test_validate_registry.py", "tests/scripts/test_validate_root_content.py", "tests/scripts/test_validate_skills.py", "tests/scripts/test_validate_task_contracts.py"]},
+      {"id": "professional-skills", "path_patterns": ["src/professional-skills/**"], "producer_ids": ["validate-skills", "validate-registry", "validate-skill-routing", "validate-skill-body-links", "validate-skill-content-size", "audit-skill-content", "validate-reference-content", "validate-root-content", "eval-skill-professionalism", "eval-agent-lightweight", "eval-context-control", "eval-rendered-context"], "test_modules": ["tests/scripts/test_audit_skill_content.py", "tests/scripts/test_evidence_direct_authority.py", "tests/scripts/test_rds_006_task_dag_decomposition.py", "tests/scripts/test_validate_reference_content.py", "tests/scripts/test_validate_registry.py", "tests/scripts/test_validate_root_content.py", "tests/scripts/test_validate_skills.py", "tests/scripts/test_validate_task_contracts.py"]},
       {"id": "domain-skills", "path_patterns": ["src/domain-extensions/**"], "producer_ids": ["validate-domain-extensions", "validate-registry", "validate-skill-routing", "validate-skill-body-links", "validate-skill-content-size", "audit-skill-content", "validate-reference-content", "validate-root-content"], "test_modules": ["tests/scripts/test_audit_skill_content.py", "tests/scripts/test_validate_reference_content.py", "tests/scripts/test_validate_registry.py", "tests/scripts/test_validate_root_content.py", "tests/scripts/test_validate_task_contracts.py"]},
-      {"id": "skill-registries", "path_patterns": ["src/registry/**"], "producer_ids": ["validate-skills", "validate-capabilities", "validate-domain-extensions", "validate-registry", "validate-skill-routing", "validate-src-invariants", "audit-skill-content", "validate-reference-content", "validate-root-content", "build-recommended", "build-full", "build-dev"], "test_modules": ["tests/scripts/test_audit_skill_content.py", "tests/scripts/test_validate_capabilities.py", "tests/scripts/test_validate_reference_content.py", "tests/scripts/test_validate_registry.py", "tests/scripts/test_validate_root_content.py", "tests/scripts/test_validate_skills.py"]}
+      {"id": "skill-registries", "path_patterns": ["src/registry/professional-skills.yaml", "src/registry/foundation-skills.yaml", "src/registry/domain-skills.yaml"], "producer_ids": ["validate-skills", "validate-capabilities", "validate-domain-extensions", "validate-registry", "validate-skill-routing", "validate-src-invariants", "audit-skill-content", "validate-reference-content", "validate-root-content", "build-recommended", "build-full", "build-dev", "eval-routing", "eval-agent-lightweight", "eval-context-control", "eval-rendered-context", "eval-pressure-behavior"], "test_modules": ["tests/scripts/test_audit_skill_content.py", "tests/scripts/test_validate_capabilities.py", "tests/scripts/test_validate_reference_content.py", "tests/scripts/test_validate_registry.py", "tests/scripts/test_validate_root_content.py", "tests/scripts/test_validate_skills.py"]},
+      {"id": "control-and-release-registries", "path_patterns": ["src/registry/control-skills.yaml", "src/registry/release-routing-scenarios.yaml"], "producer_ids": ["validate-skills", "validate-capabilities", "validate-domain-extensions", "validate-registry", "validate-skill-routing", "validate-src-invariants", "audit-skill-content", "validate-reference-content", "validate-root-content", "build-recommended", "build-full", "build-dev", "eval-routing", "eval-agent-lightweight", "eval-context-control", "eval-rendered-context"], "test_modules": ["tests/scripts/test_audit_skill_content.py", "tests/scripts/test_validate_capabilities.py", "tests/scripts/test_validate_reference_content.py", "tests/scripts/test_validate_registry.py", "tests/scripts/test_validate_root_content.py", "tests/scripts/test_validate_skills.py"]}
     ]
   },
   "roles": {
@@ -527,6 +528,19 @@
       "quality_gate": "authoritative",
       "cost_observation": "secondary-after-quality",
       "cost_cannot_override_quality_failure": true
+    },
+    "evidence_closure": {
+      "requirement_outcomes": ["proved", "not-applicable", "legitimate-proof-limit"],
+      "closed_when": "all-current-requirements-resolved-and-no-unresolved-material-risk",
+      "post_closure_search_or_read": "forbidden-without-new-or-invalidated-evidence-requirement",
+      "stop_basis": "claim-completeness-not-search-top-k-or-file-count",
+      "reopening": {
+        "claim-local": "claim-local-bounded-reproof-no-analysis",
+        "new-requirement": "bounded-discovery-for-new-evidence-requirement",
+        "protected-or-material": "stop-edit-return-main-bounded-delta"
+      },
+      "contradiction_scope": "reopen-intersecting-claim-only",
+      "material_proof_limit": "stop-before-edit-return-main"
     }
   },
   "implementation_discipline_contract": {
@@ -771,6 +785,18 @@
       "minimum_sufficient_review_boundaries": true,
       "defaults": {"L1-L3": "one-combined-independent-final-review", "L4": "same-frequency-plus-triggered-professional-depth", "L5": "required-independent-preimplementation-and-final-review"},
       "intermediate_review_triggers": ["delayed-review-materially-increases-downstream-risk", "downstream-consumer-would-commit-to-a-materially-risky-contract", "materially-irreversible-or-wide-blast-radius-before-final-review", "L5-or-explicit-professional-gate"]
+    },
+    "preimplementation_convergence": {
+      "L1-L3": "forbidden",
+      "L4": "existing-material-intermediate-trigger-only-once",
+      "L5": "mandatory-independent",
+      "keyword_only_trigger": "forbidden",
+      "review_boundary": "fixed-and-complete-finding-frontier",
+      "ordinary_finding": "record-and-continue-boundary",
+      "finding_boundary_expansion": "forbidden",
+      "post_delta_or_repair": "scoped-verification-or-scoped-rereview",
+      "repeat_broad_review": "forbidden-without-protected-decision-or-material-boundary-expansion",
+      "preparation_loop": "forbidden-without-new-material-evidence"
     },
     "validation_evidence_reuse": {
       "default": "reuse-unless-a-declared-reproduction-trigger-applies",
@@ -1356,15 +1382,16 @@
       "initial_analysis": "one-complete-initial-analysis",
       "first_analysis_kind": "initial",
       "target_authority": {"authority": ["desired_behavior", "observable_acceptance"], "observed_behavior_role": "failure-evidence-only", "observed_behavior_as_target": "forbidden"},
-      "initial_closure_obligations": ["observable-acceptance", "owner-placement-invariant", "acceptance-proving-validation", "executable-task-dependencies", "professional-skill-boundaries", "minimum-sufficient-review-boundaries", "no-critical-gap-blocking-first-executable-slice"],
-      "non_invalidation_events": ["task-completion", "task-switch", "ordinary-implementation-discovery", "review-boundary-not-reached"],
+      "initial_closure_obligations": ["acceptance-and-non-goals", "owner-placement-invariant", "contract-data-failure-impact", "acceptance-proving-validation", "rollback", "executable-task-dependencies", "professional-and-layer3-boundaries", "minimum-sufficient-review-boundaries", "critical-evidence-gaps", "minimum-safe-first-executable-slice"],
+      "non_invalidation_events": ["task-completion", "task-switch", "ordinary-implementation-discovery", "review-boundary-not-reached", "claim-local-evidence-reproof"],
       "decision_invalidation_triggers": ["Acceptance-or-Non-goals", "Owner-or-Placement-or-Invariant", "contract-or-data-semantics", "dependency-or-rollback", "material-risk", "scope-blocker"],
       "delta_analysis": {
         "scope": "invalidated-decisions-and-transitive-impact-only",
         "updates": ["affected-brief-sections", "affected-tasks", "affected-dependencies", "affected-skill-assignments", "affected-review-boundaries"],
         "full_reanalysis_condition": "foundational-goal-or-system-assumptions-invalidated",
         "skill_assignment_default": "preserve",
-        "skill_reroute_triggers": ["professional-domain", "work-type", "material-risk-trigger"]
+        "skill_reroute_triggers": ["professional-domain", "work-type", "material-risk-trigger"],
+        "forbidden_triggers": ["better-design-preference", "speculative-abstraction", "future-extensibility", "optional-robustness", "non-material-gap", "style-or-documentation-polish", "task-switch-or-completion", "claim-local-evidence-reproof"]
       },
       "first_executable_slice": {
         "defined_by": "engineering-brief",
@@ -1717,7 +1744,7 @@
   "prompt_contract": {
     "schema_version": 1,
     "path": "src/control-prompts/main-control-agent.md",
-    "document_sha256": "fe4137506224b71eb456f5923b66b5b4976546492b36a66c6eab12525f81eb86",
+    "document_sha256": "a08e0f293c87a70ce247cec5262744f2482f94063fb65c5d838beef421ba3bd9",
     "managed_projections": [
       {"id": "execution-level-contract", "section": "Execution Level and Validation", "required_contracts": ["execution_level_contract"]},
       {"id": "review-evidence-contract", "section": "Review and Repair", "required_contracts": ["visible_evidence_contract", "review_discipline_contract"]},

@@ -11,7 +11,8 @@ Bounded subagents authorized; permission required: scope expansion/destructive/p
 Choose exactly Direct Task or Analyzed Work.
 Source-free user-fact questions -> no-repo direct-answer/no repository access; Main relays/closes. Source/professional evidence or control prompts -> source-backed analysis.
 Evidence Resolution reuses `change-intake-compiler`: source fact never asks; route-affecting fact/material unknown -> Analysis; user choice -> one Main question; otherwise bounded Direct discovery.
-Categories: repo-resolvable-fact; user-owned-choice; route-or-material-unknown; semantic-choice; execution-level-choice.
+Business semantics/scope expansion/production-destructive action/irreversible material data change/product tradeoff=user-owned; implementation/placement/storage-lock strategy/ordinary engineering tradeoff=Agent-owned.
+repo-resolvable-fact user-owned-choice route-or-material-unknown semantic-choice execution-level-choice.
 Direct Task requires explicit owner/scope/placement/acceptance/validation/rollback and no unresolved material risk; category cannot force analysis.
 Unresolved behavior/rollback/material impact or an unknown owner/module/system/verification boundary routes to Analyzed Work. Inside an already-known stable owner/test/consumer boundary, bounded confirmation uses Direct checks and Inspection Boundary/stops.
 Direct bounded discovery outcomes: confirm+continue; invalidate -> Main/Analysis before edit; choice -> Main question. Worker never reroutes; simpler keeps Level, higher risk recomputes.
@@ -37,7 +38,7 @@ After 2 same-path failures require changed hypothesis/material/gap/transition or
 
 Answer/diagnosis: evidence/proof limits unless change requested. engineering-change-analysis -> current Engineering Brief and First Executable Slice; dispatch verbatim, never reinterpret.
 references/engineering-brief-template.md JIT-owns protected semantics, Specialist/DAG/handoff limits/Delta rules. Main owns Path/Level projection/Review scheduling/user interaction; Task/Review never changes route authority.
-Invalidation: blocked -> main-control-agent -> analysis-agent -> updated Engineering Brief -> redispatch affected tasks. `task_contract.analyzed_work_authority`: analyze once; first Analysis=initial+complete; desired behavior/Acceptance outrank failure evidence. Delta/reroute only on its decision triggers after accepted Brief+named protected-decision invalidation.
+blocked -> main-control-agent -> analysis-agent -> updated Engineering Brief -> redispatch affected tasks. `task_contract.analyzed_work_authority`: analyze once; Delta/reroute only on its decision triggers.
 Synchronous/unknown capability: stop at Slice; multi-task -> DAG; else task-agent. Direct Task/non-implementation paths remain unchanged.
 
 ### Preparation Loop Breaker

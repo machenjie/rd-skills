@@ -4109,6 +4109,31 @@ def validate_core_contracts(
             "cost_observation": "secondary-after-quality",
             "cost_cannot_override_quality_failure": True,
         },
+        "evidence_closure": {
+            "requirement_outcomes": [
+                "proved",
+                "not-applicable",
+                "legitimate-proof-limit",
+            ],
+            "closed_when": (
+                "all-current-requirements-resolved-and-no-unresolved-material-risk"
+            ),
+            "post_closure_search_or_read": (
+                "forbidden-without-new-or-invalidated-evidence-requirement"
+            ),
+            "stop_basis": "claim-completeness-not-search-top-k-or-file-count",
+            "reopening": {
+                "claim-local": "claim-local-bounded-reproof-no-analysis",
+                "new-requirement": (
+                    "bounded-discovery-for-new-evidence-requirement"
+                ),
+                "protected-or-material": (
+                    "stop-edit-return-main-bounded-delta"
+                ),
+            },
+            "contradiction_scope": "reopen-intersecting-claim-only",
+            "material_proof_limit": "stop-before-edit-return-main",
+        },
     }
     if evidence_localization != expected_evidence_localization:
         errors.append(
@@ -4429,6 +4454,7 @@ def validate_core_contracts(
         "repair_order",
         "level_extension_rule",
         "review_frequency_policy",
+        "preimplementation_convergence",
         "validation_evidence_reuse",
         "complete_review_pass",
         "review_boundary_contract",
@@ -4825,6 +4851,28 @@ def validate_core_contracts(
             errors.append(
                 "review_discipline_contract.review_frequency_policy must separate "
                 "Effective Level depth from minimum-sufficient Review Boundary frequency"
+            )
+        expected_preimplementation_convergence = {
+            "L1-L3": "forbidden",
+            "L4": "existing-material-intermediate-trigger-only-once",
+            "L5": "mandatory-independent",
+            "keyword_only_trigger": "forbidden",
+            "review_boundary": "fixed-and-complete-finding-frontier",
+            "ordinary_finding": "record-and-continue-boundary",
+            "finding_boundary_expansion": "forbidden",
+            "post_delta_or_repair": "scoped-verification-or-scoped-rereview",
+            "repeat_broad_review": (
+                "forbidden-without-protected-decision-or-material-boundary-expansion"
+            ),
+            "preparation_loop": "forbidden-without-new-material-evidence",
+        }
+        if (
+            review_discipline["preimplementation_convergence"]
+            != expected_preimplementation_convergence
+        ):
+            errors.append(
+                "review_discipline_contract.preimplementation_convergence must "
+                "close risk-triggered pre-review without repeated broad review"
             )
         expected_validation_reuse = {
             "default": "reuse-unless-a-declared-reproduction-trigger-applies",
@@ -7014,19 +7062,23 @@ def validate_core_contracts(
                 "observed_behavior_as_target": "forbidden",
             },
             "initial_closure_obligations": [
-                "observable-acceptance",
+                "acceptance-and-non-goals",
                 "owner-placement-invariant",
+                "contract-data-failure-impact",
                 "acceptance-proving-validation",
+                "rollback",
                 "executable-task-dependencies",
-                "professional-skill-boundaries",
+                "professional-and-layer3-boundaries",
                 "minimum-sufficient-review-boundaries",
-                "no-critical-gap-blocking-first-executable-slice",
+                "critical-evidence-gaps",
+                "minimum-safe-first-executable-slice",
             ],
             "non_invalidation_events": [
                 "task-completion",
                 "task-switch",
                 "ordinary-implementation-discovery",
                 "review-boundary-not-reached",
+                "claim-local-evidence-reproof",
             ],
             "decision_invalidation_triggers": [
                 "Acceptance-or-Non-goals",
@@ -7053,6 +7105,16 @@ def validate_core_contracts(
                     "professional-domain",
                     "work-type",
                     "material-risk-trigger",
+                ],
+                "forbidden_triggers": [
+                    "better-design-preference",
+                    "speculative-abstraction",
+                    "future-extensibility",
+                    "optional-robustness",
+                    "non-material-gap",
+                    "style-or-documentation-polish",
+                    "task-switch-or-completion",
+                    "claim-local-evidence-reproof",
                 ],
             },
             "first_executable_slice": {

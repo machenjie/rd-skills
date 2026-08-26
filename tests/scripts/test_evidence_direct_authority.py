@@ -158,6 +158,37 @@ class EvidenceDirectAuthorityTests(unittest.TestCase):
             )
         )
 
+    def test_evidence_closure_is_claim_complete_and_reopens_only_bounded_requirements(
+        self,
+    ) -> None:
+        closure = CORE_CONTRACTS["evidence_localization_contract"][
+            "evidence_closure"
+        ]
+        self.assertEqual(
+            ["proved", "not-applicable", "legitimate-proof-limit"],
+            closure["requirement_outcomes"],
+        )
+        self.assertEqual(
+            "all-current-requirements-resolved-and-no-unresolved-material-risk",
+            closure["closed_when"],
+        )
+        self.assertEqual(
+            "forbidden-without-new-or-invalidated-evidence-requirement",
+            closure["post_closure_search_or_read"],
+        )
+        self.assertEqual(
+            "claim-local-bounded-reproof-no-analysis",
+            closure["reopening"]["claim-local"],
+        )
+        self.assertEqual(
+            "stop-edit-return-main-bounded-delta",
+            closure["reopening"]["protected-or-material"],
+        )
+        self.assertEqual(
+            "claim-completeness-not-search-top-k-or-file-count",
+            closure["stop_basis"],
+        )
+
     def test_worker_profiles_project_localization_with_review_independence(self) -> None:
         profiles = {
             row["name"]: row["instructions"]
@@ -388,12 +419,62 @@ class EvidenceDirectAuthorityTests(unittest.TestCase):
         self.assertIn("reviewer-accessible exact evidence", profiles["main-control-agent"])
         self.assertIn("Desired behavior/Acceptance", profiles["analysis-agent"])
         self.assertIn("bounded discovery", profiles["task-agent"])
-        self.assertIn("must not reroute", profiles["review-agent"])
+        self.assertIn("never reroute", profiles["review-agent"])
         ownership = CORE_CONTRACTS["task_contract"]["analyzed_work_authority"][
             "decision_ownership"
         ]
         self.assertEqual("forbidden", ownership["main_reinterpretation"])
         self.assertEqual("forbidden", ownership["worker_route_change"])
+
+    def test_analysis_delta_and_pre_review_convergence_are_closed(self) -> None:
+        analyzed = CORE_CONTRACTS["task_contract"]["analyzed_work_authority"]
+        self.assertIn(
+            "claim-local-evidence-reproof",
+            analyzed["non_invalidation_events"],
+        )
+        self.assertIn(
+            "minimum-safe-first-executable-slice",
+            analyzed["initial_closure_obligations"],
+        )
+        for trigger in (
+            "better-design-preference",
+            "speculative-abstraction",
+            "future-extensibility",
+            "optional-robustness",
+            "non-material-gap",
+            "style-or-documentation-polish",
+            "task-switch-or-completion",
+            "claim-local-evidence-reproof",
+        ):
+            self.assertIn(trigger, analyzed["delta_analysis"]["forbidden_triggers"])
+
+        pre_review = CORE_CONTRACTS["review_discipline_contract"][
+            "preimplementation_convergence"
+        ]
+        self.assertEqual("forbidden", pre_review["L1-L3"])
+        self.assertEqual(
+            "existing-material-intermediate-trigger-only-once",
+            pre_review["L4"],
+        )
+        self.assertEqual("mandatory-independent", pre_review["L5"])
+        self.assertEqual(
+            "forbidden-without-protected-decision-or-material-boundary-expansion",
+            pre_review["repeat_broad_review"],
+        )
+
+    def test_user_owned_choice_excludes_engineering_implementation_choices(self) -> None:
+        prompt = PROMPT.read_text(encoding="utf-8").casefold()
+        for term in (
+            "business semantics",
+            "scope expansion",
+            "production-destructive action",
+            "irreversible material data change",
+            "product tradeoff",
+            "implementation/placement/storage-lock strategy",
+            "ordinary engineering tradeoff",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term.casefold(), prompt)
 
     def test_core_rejects_source_binding_drift_and_repo_wide_discovery(self) -> None:
         for field, mutation in (

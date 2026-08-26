@@ -65,6 +65,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
         cls.orchestration_cases = document["orchestration_cases"]
         cls.completion_state_cases = document["completion_state_cases"]
         cls.external_read_cases = document["external_read_cases"]
+        cls.evidence_localization_cases = document["evidence_localization_cases"]
         cls.professional, cls.layer3 = EVAL._skill_registries()
 
     def _errors(self, case: dict) -> list[str]:
@@ -255,6 +256,350 @@ class LightweightUtilityContractTests(unittest.TestCase):
         self.assertEqual(0, cheap_invalid["cost_observation"]["search_count"])
         self.assertFalse(cheap_invalid["quality_gate"]["passed"])
         self.assertTrue(cheap_invalid["matches_expected"])
+
+    def test_evidence_closure_positive_and_negative_controls_match_oracles(self) -> None:
+        results, errors = EVAL._evidence_localization_fixture_results(
+            copy.deepcopy(self.evidence_localization_cases)
+        )
+        self.assertEqual([], errors)
+        by_id = {item["id"]: item for item in results}
+        expected = {
+            "localization-missing-close-before-edit": (
+                False,
+                "evidence-closure-before-action",
+            ),
+            "closure-known-exact-extra-discovery": (
+                False,
+                "discovery-after-evidence-closure",
+            ),
+            "closure-unrelated-nearby-search": (
+                False,
+                "discovery-after-evidence-closure",
+            ),
+            "closure-unclosed-contract-bounded-discovery": (True, None),
+            "closure-top-k-only-completeness": (False, "selector-as-proof"),
+            "closure-claim-local-reopening": (True, None),
+            "closure-material-invalidation-continued-edit": (
+                False,
+                "material-before-edit",
+            ),
+            "closure-material-invalidation-main-delta": (True, None),
+        }
+        for case_id, (valid, error_code) in expected.items():
+            with self.subTest(case=case_id):
+                result = by_id[case_id]
+                self.assertEqual(valid, result["quality_gate"]["passed"])
+                self.assertTrue(result["matches_expected"])
+                if error_code is not None:
+                    self.assertIn(error_code, result["quality_gate"]["error_codes"])
+        for case_id in (
+            "localization-known-exact-zero-search",
+            "localization-stable-owner-direct",
+            "localization-minimum-complete-evidence",
+        ):
+            self.assertTrue(by_id[case_id]["evidence_closed"], case_id)
+        for case_id in (
+            "localization-indirect-consumer-proof-limit",
+            "localization-top-k-proof-limit",
+        ):
+            self.assertEqual("return-main-analysis", by_id[case_id]["worker_action"])
+
+    def test_edit_continue_and_material_proof_limit_require_closed_routing(self) -> None:
+        missing_close = copy.deepcopy(next(
+            item for item in self.evidence_localization_cases
+            if item["id"] == "localization-known-exact-zero-search"
+        ))
+        missing_close["id"] = "localization-missing-close-before-edit"
+        missing_close["expected_valid"] = False
+        missing_close["expected_error"] = "evidence-closure-before-action"
+        missing_close["operations"] = [
+            operation for operation in missing_close["operations"]
+            if operation["action"] != "close"
+        ]
+
+        material_limit = copy.deepcopy(next(
+            item for item in self.evidence_localization_cases
+            if item["id"] == "localization-indirect-consumer-proof-limit"
+        ))
+        material_limit["id"] = "localization-material-proof-limit-continued"
+        material_limit["worker_action"] = "continue"
+        material_limit["expected_valid"] = False
+        material_limit["expected_error"] = "material-proof-limit-return-main"
+
+        results, errors = EVAL._evidence_localization_fixture_results(
+            [missing_close, material_limit]
+        )
+        self.assertEqual([], errors)
+        by_id = {item["id"]: item for item in results}
+        self.assertIn(
+            "evidence-closure-before-action",
+            by_id[missing_close["id"]]["quality_gate"]["error_codes"],
+        )
+        self.assertIn(
+            "material-proof-limit-return-main",
+            by_id[material_limit["id"]]["quality_gate"]["error_codes"],
+        )
+
+    def test_nonmaterial_legitimate_proof_limit_closes_and_continues(self) -> None:
+        case = copy.deepcopy(next(
+            item for item in self.evidence_localization_cases
+            if item["id"] == "localization-stable-owner-direct"
+        ))
+        case["id"] = "localization-stable-nonmaterial-contract-proof-limit"
+        case["required_evidence"].append("contract")
+        case["not_applicable"].remove("contract")
+        close_index = next(
+            index for index, operation in enumerate(case["operations"])
+            if operation["action"] == "close"
+        )
+        case["operations"].insert(
+            close_index,
+            {
+                "id": "limit-contract",
+                "action": "claim",
+                "kind": "proof-limit",
+                "status": "proof-limit",
+                "basis": ["read-owner"],
+                "scope": "contract",
+                "bytes": 24,
+            },
+        )
+        next(
+            operation for operation in case["operations"]
+            if operation["action"] == "close"
+        )["requirement_statuses"]["contract"] = "legitimate-proof-limit"
+
+        results, errors = EVAL._evidence_localization_fixture_results([case])
+        self.assertEqual([], errors)
+        self.assertTrue(results[0]["quality_gate"]["passed"])
+        self.assertTrue(results[0]["evidence_closed"])
+        self.assertEqual("continue", results[0]["worker_action"])
+
+    def test_analysis_review_convergence_and_engineering_choice_controls(self) -> None:
+        orchestration_results, orchestration_errors = EVAL._orchestration_fixture_results(
+            copy.deepcopy(self.orchestration_cases)
+        )
+        self.assertEqual([], orchestration_errors)
+        orchestration = {item["id"]: item for item in orchestration_results}
+        for case_id in (
+            "accepted-brief-noninvalidation-events-no-analysis",
+            "review-convergence-second-repair",
+            "adjacent-finding-no-analysis",
+            "preparation-review-loop-forbidden",
+            "pre-review-complete-finding-frontier",
+            "pre-review-delta-scoped-verification",
+        ):
+            with self.subTest(case=case_id):
+                self.assertTrue(orchestration[case_id]["matches_expected"])
+
+        focus_results, focus_errors = EVAL._task_focus_fixture_results(
+            copy.deepcopy(self.task_focus_cases)
+        )
+        self.assertEqual([], focus_errors)
+        focus = {item["id"]: item for item in focus_results}
+        for case_id in (
+            "l4-risk-depth-not-frequency",
+            "engineering-choice-not-user-choice",
+        ):
+            with self.subTest(case=case_id):
+                self.assertTrue(focus[case_id]["matches_expected"])
+
+    def test_delta_requires_a_legitimate_preceding_invalidation_source(self) -> None:
+        review_delta = copy.deepcopy(next(
+            event
+            for case in self.orchestration_cases
+            if case["id"] == "review-post-dispatch-authority-delta"
+            for event in case["events"]
+            if event.get("analysis_kind") == "delta"
+        ))
+        evidence_delta = copy.deepcopy(next(
+            event
+            for case in self.orchestration_cases
+            if case["id"] == "pre-review-delta-scoped-verification"
+            for event in case["events"]
+            if event.get("analysis_kind") == "delta"
+        ))
+        adjacent = copy.deepcopy(next(
+            item for item in self.orchestration_cases
+            if item["id"] == "adjacent-finding-no-analysis"
+        ))
+        current_task = copy.deepcopy(adjacent)
+        current_task["id"] = "current-task-finding-delta-forbidden"
+        next(
+            event for event in current_task["events"]
+            if event.get("action") == "finding"
+        )["relation"] = "current-task"
+        non_invalidation = copy.deepcopy(next(
+            item for item in self.orchestration_cases
+            if item["id"] == "accepted-brief-noninvalidation-events-no-analysis"
+        ))
+        cases = (
+            (adjacent, review_delta, "complete"),
+            (current_task, review_delta, "complete"),
+            (non_invalidation, evidence_delta, "non-invalidation"),
+        )
+        for case, delta, source_action in cases:
+            case_id = case["id"]
+            with self.subTest(case=case_id):
+                source_index = next(
+                    index for index, event in enumerate(case["events"])
+                    if event.get("action") == source_action
+                )
+                insertion = source_index if source_action == "complete" else source_index + 1
+                case["events"].insert(insertion, copy.deepcopy(delta))
+                errors = EVAL._orchestration_case_errors(case)
+                self.assertTrue(
+                    any("delta-invalidation-source" in error for error in errors),
+                    errors,
+                )
+
+    def test_pre_review_order_level_and_finding_frontier_are_structural(self) -> None:
+        base = copy.deepcopy(next(
+            item for item in self.orchestration_cases
+            if item["id"] == "pre-review-complete-finding-frontier"
+        ))
+        pre_index = next(
+            index for index, event in enumerate(base["events"])
+            if event.get("action") == "pre-review"
+        )
+        edit_index = next(
+            index for index, event in enumerate(base["events"])
+            if event.get("action") == "edit"
+        )
+
+        post_edit = copy.deepcopy(base)
+        pre_review = post_edit["events"].pop(pre_index)
+        post_edit["events"].insert(edit_index + 1, pre_review)
+        self.assertTrue(any(
+            "pre-review-order" in error
+            for error in EVAL._orchestration_case_errors(post_edit)
+        ))
+
+        incomplete_frontier = copy.deepcopy(base)
+        next(
+            event for event in incomplete_frontier["events"]
+            if event.get("action") == "pre-review"
+        )["finding_ids"] = []
+        self.assertTrue(any(
+            "pre-review-finding-frontier" in error
+            for error in EVAL._orchestration_case_errors(incomplete_frontier)
+        ))
+
+        keyword_only = copy.deepcopy(base)
+        next(
+            event for event in keyword_only["events"]
+            if event.get("analysis_kind") == "initial"
+        ).pop("material_intermediate_review_triggers")
+        self.assertTrue(any(
+            "pre-review-trigger" in error
+            for error in EVAL._orchestration_case_errors(keyword_only)
+        ))
+
+        l3 = copy.deepcopy(base)
+        l3["review_boundary"]["effective_level"] = "L3"
+        next(
+            event for event in l3["events"]
+            if event.get("action") == "pre-review"
+        )["effective_level"] = "L3"
+        self.assertTrue(any(
+            "pre-review-frequency" in error
+            for error in EVAL._orchestration_case_errors(l3)
+        ))
+
+        l5_missing = copy.deepcopy(base)
+        l5_missing["review_boundary"]["effective_level"] = "L5"
+        l5_missing["events"] = [
+            event for event in l5_missing["events"]
+            if event.get("action") not in {"pre-review", "finding"}
+        ]
+        self.assertTrue(any(
+            "pre-review-mandatory" in error
+            for error in EVAL._orchestration_case_errors(l5_missing)
+        ))
+
+        triggered_l4_missing = copy.deepcopy(base)
+        triggered_l4_missing["events"] = [
+            event for event in triggered_l4_missing["events"]
+            if event.get("action") not in {"pre-review", "finding"}
+        ]
+        self.assertTrue(any(
+            "pre-review-mandatory" in error
+            for error in EVAL._orchestration_case_errors(triggered_l4_missing)
+        ))
+
+    def test_global_structural_ceilings_exclude_only_explicit_per_case_bounds(self) -> None:
+        self.assertEqual(
+            {
+                "control_turn_count": 11,
+                "subagent_count": 5,
+                "duplicate_read_count": 0,
+                "verification_action_count": 4,
+            },
+            EVAL.CORE_CONTRACTS["final_goal_contract"][
+                "maximum_structural_proxies"
+            ],
+        )
+        results = [
+            {
+                "id": "ordinary",
+                "metrics": {
+                    "control_turn_count": 9,
+                    "subagent_count": 4,
+                    "duplicate_read_count": 0,
+                    "verification_action_count": 4,
+                },
+            },
+            {
+                "id": "repair-and-rereview",
+                "metrics": {
+                    "control_turn_count": 19,
+                    "subagent_count": 8,
+                    "duplicate_read_count": 0,
+                    "verification_action_count": 8,
+                    "repair_has_rereview": True,
+                },
+            },
+        ]
+        expectations = {
+            "ordinary": {
+                "control_turns_max": 11,
+                "subagents": 4,
+                "duplicate_reads_max": 0,
+                "verification_actions_max": 4,
+            },
+            "repair-and-rereview": {
+                "control_turns_max": 20,
+                "subagents": 8,
+                "duplicate_reads_max": 0,
+                "verification_actions_max": 8,
+                "repair_requires_rereview": True,
+            },
+        }
+        aggregate = EVAL._aggregate(results, expectations)
+        for metric, expected_max in {
+            "control_turn_count": 9,
+            "subagent_count": 4,
+            "verification_action_count": 4,
+        }.items():
+            with self.subTest(metric=metric):
+                self.assertEqual(expected_max, aggregate[metric]["max"])
+                self.assertEqual(
+                    ["repair-and-rereview"],
+                    aggregate[metric]["per_case_exception_ids"],
+                )
+        self.assertEqual(19, aggregate["control_turn_count"]["observed_max"])
+        self.assertEqual(8, aggregate["subagent_count"]["observed_max"])
+        self.assertEqual(8, aggregate["verification_action_count"]["observed_max"])
+
+        ordinary_over_cap = copy.deepcopy(results)
+        ordinary_over_cap[0]["metrics"]["control_turn_count"] = 19
+        over_cap_expectations = copy.deepcopy(expectations)
+        over_cap_expectations["ordinary"]["control_turns_max"] = 20
+        over_cap = EVAL._aggregate(ordinary_over_cap, over_cap_expectations)
+        self.assertEqual(19, over_cap["control_turn_count"]["max"])
+        self.assertNotIn(
+            "ordinary", over_cap["control_turn_count"]["per_case_exception_ids"]
+        )
 
     def test_known_exact_and_stable_direct_localization_costs(self) -> None:
         results, errors = EVAL._evidence_localization_fixture_results(
@@ -1200,7 +1545,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
     def test_task_focus_relation_review_repair_and_cost_matrix_is_closed(self) -> None:
         results, errors = EVAL._task_focus_fixture_results(self.task_focus_cases)
         self.assertEqual([], errors)
-        self.assertEqual(46, len(results))
+        self.assertEqual(48, len(results))
         self.assertTrue(all(result["matches_expected"] for result in results))
         self.assertEqual(
             {
@@ -1212,6 +1557,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
                 "analysis-level",
                 "review-readiness",
                 "capability-equivalence",
+                "engineering-choice",
             },
             {result["scenario"] for result in results},
         )
