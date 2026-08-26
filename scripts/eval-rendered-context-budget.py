@@ -23,6 +23,7 @@ from typing import Any
 from validation_utils import (
     COMPILED_LAYER3_FORMAT,
     CONTEXT_BUDGET_MODEL,
+    REVIEW_DISCIPLINE_MODEL,
     ValidationProblem,
     authoritative_build_input_snapshot,
     count_o200k_base_tokens,
@@ -241,6 +242,31 @@ FOCUS_CURRENT_ONLY_MAP = {
     "focus-review-command-output-placeholder-blocked": "focus-review-summary-is-not-evidence",
     "focus-review-opaque-reference-blocked": "focus-review-summary-is-not-evidence",
     "focus-review-path-only-blocked": "focus-review-summary-is-not-evidence",
+    "focus-review-missing-latest-changed-paths-blocked": "focus-review-missing-change-evidence-blocked",
+    "focus-review-missing-fixed-scope-blocked": "focus-review-missing-change-evidence-blocked",
+    "focus-review-missing-reviewer-consumption-blocked": "focus-review-unsupported-capability-blocked",
+    "l4-risk-depth-not-frequency": "focus-review-l4-actual-gates-only",
+    "engineering-choice-not-user-choice": "focus-direct-task-level-unchanged",
+}
+FOCUS_PROTECTED_SEMANTIC_EXTENSIONS = {
+    "l4-risk-depth-not-frequency": {
+        "baseline_id": "focus-review-l4-actual-gates-only",
+        "candidate_native_sha256": "2be6b6da02472e37028db4cbf6e73b25b93dac3a895a7ea5bf43cda76ae19d90",
+        "baseline_native_sha256": "b70da853565a78b65e0864469d8127ea002ff8baa28188f8066827d7e3fb6eb4",
+        "candidate_semantic_sha256": "b66435d6fe768fe2a9aae9a2bafe10bf9594e2ffd709d854be0adc2de44a6f87",
+        "baseline_semantic_sha256": "4ba1d82057ea5aa29d690672171d48d607cf5a5dc39716af86e624a9bf551376",
+        "candidate_actor": "review-agent",
+        "baseline_actor": "review-agent",
+    },
+    "engineering-choice-not-user-choice": {
+        "baseline_id": "focus-direct-task-level-unchanged",
+        "candidate_native_sha256": "dab625f164c8aabf0f3fd2b72b88ec428bde187858a2237b11677442dc7c17cf",
+        "baseline_native_sha256": "0ec86a72e58ff4ee5f1db945710db1536ee7e28a7aca51524d90e19644b9f567",
+        "candidate_semantic_sha256": "7f19132183309dab8971127796678ae5f3376ac2768f2aa446598ec6f3c3abdf",
+        "baseline_semantic_sha256": "a624167a69447dcff8cc5e0a9226f86a7876af5f50fbd38eb67174e36d5da4f3",
+        "candidate_actor": "main-control-agent",
+        "baseline_actor": "main-control-agent",
+    },
 }
 FOCUS_SCENARIO_ACTORS = {
     "finding": "review-agent",
@@ -251,6 +277,7 @@ FOCUS_SCENARIO_ACTORS = {
     "review-readiness": "main-control-agent",
     "capability-equivalence": "main-control-agent",
     "cost": "task-agent",
+    "engineering-choice": "main-control-agent",
 }
 FOCUS_PROFILE_HOSTS = ("codex", "claude", "copilot")
 REFERENCE_SEMANTIC_EQUIVALENCE = {
@@ -801,6 +828,7 @@ def _canonical_focus_mapping(
     baseline_document: dict[str, Any],
     *,
     overrides: dict[str, str | list[str]] | None = None,
+    protected_extensions: dict[str, dict[str, str]] | None = None,
 ) -> dict[str, Any]:
     candidate_cases = {
         str(item.get("id")): item
@@ -813,8 +841,19 @@ def _canonical_focus_mapping(
         if isinstance(item, dict) and item.get("id")
     }
     mapping = FOCUS_CURRENT_ONLY_MAP if overrides is None else overrides
+    protections = (
+        FOCUS_PROTECTED_SEMANTIC_EXTENSIONS
+        if protected_extensions is None
+        else protected_extensions
+    )
     rows: list[dict[str, Any]] = []
     errors: list[str] = []
+    protected_ids = set(FOCUS_PROTECTED_SEMANTIC_EXTENSIONS)
+    if set(protections) != protected_ids:
+        errors.append(
+            "protected focus projection must exactly cover "
+            + ", ".join(sorted(protected_ids))
+        )
     for canonical_id, candidate in candidate_cases.items():
         native: str | list[str] | None = (
             canonical_id if canonical_id in baseline_cases else mapping.get(canonical_id)
@@ -831,40 +870,131 @@ def _canonical_focus_mapping(
             continue
         candidate_obligation = _focus_semantic_obligation(candidate)
         baseline_obligation = _focus_semantic_obligation(baseline)
-        if candidate_obligation != baseline_obligation:
-            errors.append(f"{canonical_id}: semantic-mismatch")
-            continue
         candidate_text = json.dumps(
             candidate, ensure_ascii=False, sort_keys=True, separators=(",", ":")
         )
         baseline_text = json.dumps(
             baseline, ensure_ascii=False, sort_keys=True, separators=(",", ":")
         )
-        state = (
-            "raw-route-equal"
-            if canonical_id == native and candidate_text == baseline_text
-            else "source-derived-semantic-equivalent"
+        candidate_native_sha256 = _sha256_text(candidate_text)
+        baseline_native_sha256 = _sha256_text(baseline_text)
+        candidate_semantic_sha256 = _sha256_text(
+            json.dumps(
+                candidate_obligation,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            )
         )
-        rows.append(
-            {
-                "canonical_id": canonical_id,
-                "candidate_native_id": canonical_id,
-                "baseline_native_id": native,
-                "state": state,
-                "semantic_obligation": candidate_obligation,
-                "route_obligations": {
-                    "professional": [],
-                    "layer3": [],
-                    "domain": [],
-                    "review": [],
-                    "references": [],
-                    "not_applicable_basis": "task-focus case contains no Task dispatch",
-                },
-                "candidate_native_sha256": _sha256_text(candidate_text),
-                "baseline_native_sha256": _sha256_text(baseline_text),
-                "raw_physical_route_equal": state == "raw-route-equal",
+        baseline_semantic_sha256 = _sha256_text(
+            json.dumps(
+                baseline_obligation,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+        )
+        protected_projection: dict[str, str] | None = None
+        if candidate_obligation != baseline_obligation:
+            if canonical_id not in protected_ids:
+                errors.append(f"{canonical_id}: semantic-mismatch")
+                continue
+            protected_projection = protections.get(canonical_id)
+            if protected_projection is None:
+                errors.append(f"{canonical_id}: protected-projection-missing")
+                continue
+            required_protection_fields = {
+                "baseline_id",
+                "candidate_native_sha256",
+                "baseline_native_sha256",
+                "candidate_semantic_sha256",
+                "baseline_semantic_sha256",
+                "candidate_actor",
+                "baseline_actor",
             }
-        )
+            if set(protected_projection) != required_protection_fields:
+                errors.append(f"{canonical_id}: protected-projection-schema")
+                continue
+            protection_checks = (
+                (
+                    "protected-baseline-binding",
+                    protected_projection["baseline_id"] == native,
+                ),
+                (
+                    "stale-candidate-native-hash",
+                    protected_projection["candidate_native_sha256"]
+                    == candidate_native_sha256,
+                ),
+                (
+                    "stale-baseline-native-hash",
+                    protected_projection["baseline_native_sha256"]
+                    == baseline_native_sha256,
+                ),
+                (
+                    "stale-candidate-semantic-hash",
+                    protected_projection["candidate_semantic_sha256"]
+                    == candidate_semantic_sha256,
+                ),
+                (
+                    "stale-baseline-semantic-hash",
+                    protected_projection["baseline_semantic_sha256"]
+                    == baseline_semantic_sha256,
+                ),
+            )
+            failed_checks = [
+                code for code, passed in protection_checks if not passed
+            ]
+            if failed_checks:
+                errors.extend(
+                    f"{canonical_id}: {code}" for code in failed_checks
+                )
+                continue
+            try:
+                core = json.loads(
+                    (ROOT / "src/control-model/core-contracts.json").read_text(
+                        encoding="utf-8"
+                    )
+                )
+                candidate_actor = _focus_case_actor_authority(candidate, core)[0]
+                baseline_actor = _focus_case_actor_authority(baseline, core)[0]
+            except (OSError, json.JSONDecodeError, ValueError) as exc:
+                errors.append(f"{canonical_id}: protected-actor-authority: {exc}")
+                continue
+            if (
+                candidate_actor != baseline_actor
+                or protected_projection["candidate_actor"] != candidate_actor
+                or protected_projection["baseline_actor"] != baseline_actor
+            ):
+                errors.append(f"{canonical_id}: protected-actor-mismatch")
+                continue
+            state = "protected-semantic-extension"
+        else:
+            state = (
+                "raw-route-equal"
+                if canonical_id == native and candidate_text == baseline_text
+                else "source-derived-semantic-equivalent"
+            )
+        row = {
+            "canonical_id": canonical_id,
+            "candidate_native_id": canonical_id,
+            "baseline_native_id": native,
+            "state": state,
+            "semantic_obligation": candidate_obligation,
+            "route_obligations": {
+                "professional": [],
+                "layer3": [],
+                "domain": [],
+                "review": [],
+                "references": [],
+                "not_applicable_basis": "task-focus case contains no Task dispatch",
+            },
+            "candidate_native_sha256": candidate_native_sha256,
+            "baseline_native_sha256": baseline_native_sha256,
+            "raw_physical_route_equal": state == "raw-route-equal",
+        }
+        if protected_projection is not None:
+            row["protected_projection"] = dict(protected_projection)
+        rows.append(row)
     if len(rows) != len(candidate_cases):
         errors.append(
             f"canonical focus coverage is incomplete: {len(rows)}/{len(candidate_cases)}"
@@ -1046,6 +1176,35 @@ def _focus_case_actor_authority(
             raise ValueError(
                 "analysis-level route path disagrees with Core computation point"
             )
+    elif scenario == "engineering-choice":
+        concepts = core.get("prompt_contract", {}).get("concepts", [])
+        matches = [
+            concept
+            for concept in concepts
+            if isinstance(concept, dict)
+            and concept.get("id") == "evidence-resolution-authority"
+        ] if isinstance(concepts, list) else []
+        if len(matches) != 1:
+            raise ValueError(
+                "engineering-choice lacks unique Core evidence-resolution authority"
+            )
+        authority_pointer = (
+            "/prompt_contract/concepts/evidence-resolution-authority"
+        )
+        authority_value = matches[0]
+        required_terms = authority_value.get("required_terms")
+        if (
+            authority_value.get("section") != "Choose Exactly One Path"
+            or not isinstance(required_terms, list)
+            or not {
+                "user choice -> one Main question",
+                "otherwise bounded Direct discovery",
+            } <= set(required_terms)
+        ):
+            raise ValueError(
+                "engineering-choice Core evidence-resolution authority is incomplete"
+            )
+        actor = _role_for_core_capability(core, "main-prompt-single-load")
     else:
         authority_pointer = (
             "/implementation_discipline_contract/profile_capability_id"
@@ -4373,20 +4532,36 @@ def _current_blocking_review_window(
         isinstance(covered_task_ids, list)
         and repair_task_id in covered_task_ids
     )
-    if (
-        not round_aware_findings
-        or not isinstance(closing_review, dict)
-        or not isinstance(review_round_id, str)
-        or not review_round_id
-        or not closes_repair_task
-        or any(
-            closing_review.get(field) is not True
+    initial_completion_is_complete = (
+        isinstance(closing_review, dict)
+        and closing_review.get("action") == "review"
+        and all(
+            closing_review.get(field) is True
             for field in (
                 "required_changed_scope_complete",
                 "base_dimensions_complete",
                 "professional_risk_dimensions_complete",
             )
         )
+    )
+    focused_rereview_is_complete = (
+        isinstance(closing_review, dict)
+        and closing_review.get("action") == "re-review"
+        and closing_review.get("rereview_checks")
+        == REVIEW_DISCIPLINE_MODEL["repair_invalidation_policy"]["rereview_focus"]
+        and closing_review.get("rereview_scope_expanded") is False
+        and closing_review.get("frozen_boundary_status")
+        in {"preserved", "violation", "invalidated"}
+        and closing_review.get("frozen_professional_risk_boundary_status")
+        == "preserved"
+    )
+    if (
+        not round_aware_findings
+        or not isinstance(closing_review, dict)
+        or not isinstance(review_round_id, str)
+        or not review_round_id
+        or not closes_repair_task
+        or not (initial_completion_is_complete or focused_rereview_is_complete)
     ):
         return None
     blockers = [

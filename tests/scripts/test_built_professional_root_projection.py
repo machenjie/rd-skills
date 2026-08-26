@@ -647,10 +647,15 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
                         BUILD._append_layer3_entrypoint(root, profile)
                         rendered = (root / "SKILL.md").read_text(encoding="utf-8")
                         self.assertNotIn("## Targeted References", rendered)
-                        self.assertIn("## JIT Reference Delivery", rendered)
-                        self.assertIn(
-                            f"references/selectors/{item.name}.json",
-                            rendered,
+                        self.assertEqual(
+                            1, rendered.count("## JIT Reference Delivery")
+                        )
+                        self.assertEqual(
+                            1,
+                            rendered.count(
+                                "engineering-control-plane/references/selectors/"
+                                f"{item.name}.json"
+                            ),
                         )
                         for heading in BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS:
                             self.assertIn(f"## {heading}", rendered)
@@ -693,11 +698,17 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
                         BUILD._write_compact_layer3_root_projection(root, item)
                         rendered = (root / "SKILL.md").read_text(encoding="utf-8")
                         self.assertNotIn("## Targeted References", rendered)
-                        self.assertIn("## JIT Reference Delivery", rendered)
-                        self.assertIn("Current-Professional JIT", rendered)
+                        for forbidden in (
+                            "## JIT Reference Delivery",
+                            "Current-Professional JIT",
+                            "engineering-control-plane/references/selectors/",
+                            "never select/reroute/preload",
+                            "index/catalog",
+                        ):
+                            self.assertNotIn(forbidden, rendered)
                 self.assertEqual(source_root, source_path.read_text(encoding="utf-8"))
 
-    def test_compiled_layer3_projection_uses_same_jit_reference_delivery(self) -> None:
+    def test_compiled_layer3_projection_has_no_jit_control_and_keeps_references(self) -> None:
         registries = BUILD._load_registries()
         items = [
             *[
@@ -713,8 +724,14 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
             with self.subTest(skill=item.name):
                 rendered = BUILD._render_layer3_reference(item)
                 self.assertNotIn("## Targeted References", rendered)
-                self.assertIn("## JIT Reference Delivery", rendered)
-                self.assertIn("Current-Professional JIT", rendered)
+                for forbidden in (
+                    "## JIT Reference Delivery",
+                    "Current-Professional JIT",
+                    "engineering-control-plane/references/selectors/",
+                    "never select/reroute/preload",
+                    "index/catalog",
+                ):
+                    self.assertNotIn(forbidden, rendered)
                 for contract in VALIDATION.reference_contracts(
                     item.registry["reference_index"],
                     f"{item.name}.reference_index",

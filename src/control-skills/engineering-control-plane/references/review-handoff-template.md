@@ -35,11 +35,14 @@ before severity or blocker. Use only `current-task`, `scope-blocker`, or
 Pre-implementation artifact review is exempt from this implementation-finding
 format.
 
-An ordinary finding does not end the Review. For review and re-review, the
-reviewer completes the fixed Review Boundary's required changed scope, every
-base dimension, and every required professional-risk dimension, then returns
-one Review Handoff with all evidence-backed findings from that round. A finding
-never expands the Review Boundary. Only fundamental architecture, invalid
+An ordinary finding does not end the Review. Initial Review completes the fixed
+Review Boundary's required changed scope, every base dimension, and every
+required professional-risk dimension, then returns one Review Handoff with all
+evidence-backed findings from that round. Re-review is focused only on inherited
+finding resolution, repair-diff correctness, repair regressions, repair-affected
+scope and transitive dependents, and whether the frozen Acceptance, Invariant,
+Contract, and professional-risk boundary still holds. A finding never expands
+the Review Boundary. Only fundamental architecture, invalid
 public contract, major security, or fundamentally unmet Acceptance may return
 `blocked` early, with explicit Reviewed and Unreviewed Scope. After Review
 Input Ready dispatch, `blocked` is also allowed only when required review
@@ -48,6 +51,19 @@ stale, or current evidence invalidates protected Authority or the Engineering
 Brief. Report non-empty Reviewed Scope, Unreviewed Scope, and Proof Limit.
 Ordinary uncertainty, difficulty, findings, and continuable gaps do not qualify;
 protected invalidation returns through Main to Analysis.
+Delta Analysis invalidates validation and review evidence for every affected
+Task and transitive dependent. Completion then requires an affected Task edit,
+fresh post-edit validation, and a fresh focused PASS re-review; pre-decision
+evidence cannot close the changed protected decision.
+
+Classify every Re-review finding as `inherited`, `repair-regression`,
+`frozen-boundary-violation`, `protected-invalidation`, or `adjacent`, and project
+that classification to the existing Finding Relation. `inherited`,
+`repair-regression`, and an evidence-backed `frozen-boundary-violation` may be
+material `current-task` blockers. `protected-invalidation` is a `scope-blocker`
+and returns through Main to Delta Analysis. `adjacent` is residual/follow-up
+only, cannot block, and never enters Repair. A Re-review discovery is not
+mandatory current-task work without this classification and evidence.
 
 Main groups the material `current-task` findings by the existing Review Round
 ID and Task ID and emits exactly one canonical Task Contract v2 Repair
@@ -62,6 +78,15 @@ Analysis; `adjacent` is recorded, does not block, and is ineligible for Repair.
 Do not re-inject task history. Invalidate
 only affected or transitively dependent Evidence; preserve unrelated current
 Evidence.
+
+Main permits at most two automatic Repair rounds for each Task ID. Review
+Boundary ID, Review Round ID, and Delta Analysis do not reset that budget. At
+the cap, an unresolved blocker returns `BLOCKED / non-converged`; protected
+invalidation returns through Main to Delta Analysis; adjacent or hardening-only
+work may be recorded while the current completion contract closes. The cap
+never implies `pass`. Repeated review-driven Delta Analysis must change
+hypothesis, material, gap, or transition after two same-path failures; a third
+unchanged replan is forbidden and returns Main or blocks.
 
 The public Execution Level lines use Core public `execution-level/v2`. The integrity
 fallback for missing, malformed, or duplicate public execution-level data is
@@ -201,12 +226,13 @@ re-review. Invalidate only Evidence whose Scope intersects the repair, Claims
 that depend on modified behavior, and transitive impact. Retain unaffected fresh
 Evidence. Expand for a public/shared contract, schema, common abstraction,
 ownership/dependency graph, security boundary, transaction/concurrency
-semantics, or integration behavior. Focus re-review on the original finding,
-repair diff, and affected dependents; an older review cannot cover the new
-modification.
-A re-review completes a Review Round. Any new material `current-task` findings
-form the next same-Task Repair group under the same rules; convergence repeats
-without a fixed Repair or Review round limit.
+semantics, or integration behavior. Focus re-review on inherited finding
+resolution, repair-diff correctness, repair regressions, affected transitive
+dependents, and the frozen Acceptance, Invariant, Contract, and professional-risk
+boundary; an older review cannot cover the new modification. A re-review
+completes a Review Round. Classify each new finding as `inherited`,
+`repair-regression`, `frozen-boundary-violation`, `protected-invalidation`, or
+`adjacent` before applying the existing Finding Relation.
 
 Effective Level determines review depth; the Review/Risk Boundary determines
 frequency. Task completion is not a Review Boundary. L1-L3 related work uses one
@@ -234,20 +260,24 @@ Only material current-task findings affecting Acceptance, correctness or an
 invariant, regression, security/reliability, or material code health require
 Repair. Adjacent issues, optional cleanup, style preference, speculative
 abstraction, unrelated debt, and future improvement do not enter the mandatory
-Repair loop. Ordinary findings remain accumulated during review and re-review
-while the reviewer finishes the fixed Review Boundary's required changed scope,
-base dimensions, and professional-risk dimensions; the closing handoff reports
-all evidence-backed findings from the round. Findings do not expand that
-boundary. Only fundamental architecture, invalid public contract, major
+Repair loop. Ordinary findings remain accumulated during Initial Review while
+the reviewer finishes the fixed Review Boundary's required changed scope, base
+dimensions, and professional-risk dimensions. Focused Re-review completes only
+its frozen five-part scope and explicitly records that the frozen
+professional-risk boundary remains valid; it does not reopen Initial Review
+scope or require Initial completeness fields. The closing handoff reports all evidence-backed
+findings from the round. Findings do not expand that boundary. Only fundamental architecture, invalid public contract, major
 security, or fundamentally unmet Acceptance may return `blocked` early after
 naming Reviewed and Unreviewed Scope. After ready dispatch, only unavailable
 required review surface, stale required current evidence, or protected
 Authority/Engineering Brief invalidation may also block; record Reviewed Scope,
 Unreviewed Scope, and Proof Limit, and route protected invalidation through Main
 to Analysis. Ordinary uncertainty, difficulty, findings, and continuable gaps
-never early-block. Every other Review outcome, including `findings`, requires
-the complete fixed changed scope, base dimensions, and professional-risk
-dimensions. `pass` additionally requires no blocking findings.
+never early-block. Every other Initial Review outcome, including `findings`,
+requires the complete fixed changed scope, base dimensions, and
+professional-risk dimensions. A focused Re-review outcome instead requires its
+five frozen checks and explicit frozen professional-risk validity. `pass`
+additionally requires no blocking findings.
 
 Main batches material `current-task` findings only when Review Round ID and
 Task ID both match. One batch becomes one canonical Task Contract v2 Repair
@@ -256,9 +286,12 @@ scope, Acceptance or risk impact, required validation, and required covering
 re-review. Cross-Task batching is forbidden. A `scope-blocker` closing review or
 re-review returns through Main to Analysis, while an `adjacent` finding is
 record-only and never enters Repair. A re-review completes its Review Round;
-any new material `current-task` findings form the next same-Task Repair batch,
-followed by fresh validation and another fresh re-review, without a fixed round
-limit.
+any inherited, repair-regression, or evidence-backed frozen-boundary violation
+mapped to a material `current-task` finding forms the next same-Task Repair
+batch, followed by fresh validation and another fresh re-review, while the
+per-Task maximum remains two automatic Repair rounds. Delta Analysis does not
+reset the budget. At cap, blockers fail closed as non-converged; protected
+invalidation routes to Main/Delta Analysis; adjacent/hardening stays residual.
 
 ## Evidence Ledger
 

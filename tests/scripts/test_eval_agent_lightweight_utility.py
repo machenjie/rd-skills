@@ -404,6 +404,27 @@ class LightweightUtilityContractTests(unittest.TestCase):
             with self.subTest(case=case_id):
                 self.assertTrue(focus[case_id]["matches_expected"])
 
+    def test_l4_boundary_expansion_prereview_fixtures_are_exact(self) -> None:
+        results, errors = EVAL._orchestration_fixture_results(
+            copy.deepcopy(self.orchestration_cases)
+        )
+        self.assertEqual([], errors)
+        by_id = {item["id"]: item for item in results}
+        self.assertTrue(
+            by_id["l4-expanded-material-boundary-second-prereview"][
+                "matches_expected"
+            ]
+        )
+        unchanged = by_id["l4-unchanged-boundary-second-prereview"]
+        self.assertTrue(unchanged["matches_expected"])
+        self.assertTrue(
+            any(
+                "[preparation-review-loop]" in error
+                for error in unchanged["errors"]
+            ),
+            unchanged["errors"],
+        )
+
     def test_delta_requires_a_legitimate_preceding_invalidation_source(self) -> None:
         review_delta = copy.deepcopy(next(
             event
@@ -1147,7 +1168,13 @@ class LightweightUtilityContractTests(unittest.TestCase):
             if step.get("action") == EVAL.REVIEW_DISCIPLINE_ACTION
         )
         event["review_kind"] = "repair"
-        valid_repair_steps[-1]["action"] = "re-review"
+        valid_repair_steps[-1].update(
+            action="re-review",
+            rereview_checks=list(EVAL.REREVIEW_CHECKS),
+            rereview_scope_expanded=False,
+            frozen_boundary_status="preserved",
+            frozen_professional_risk_boundary_status="preserved",
+        )
         self.assertEqual(
             [],
             EVAL._review_discipline_errors(
@@ -1405,7 +1432,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
                 for step in case["steps"]
                 if step.get("action") == EVAL.IMPLEMENTATION_HANDOFF_ACTION
             )
-        self.assertEqual(13, len(handoffs))
+        self.assertEqual(12, len(handoffs))
         self.assertTrue(
             all(tuple(handoff) == EVAL.IMPLEMENTATION_HANDOFF_FIELDS for handoff in handoffs)
         )
@@ -1421,13 +1448,13 @@ class LightweightUtilityContractTests(unittest.TestCase):
             if step.get("action") == EVAL.IMPLEMENTATION_HANDOFF_ACTION
         ]
         self.assertEqual(
-            [1, 2, 3, 4],
+            [1, 2, 3],
             [
                 handoff["exact_change_evidence"]["generation"]
                 for handoff in repair_handoffs
             ],
         )
-        self.assertEqual(4, len({handoff["handoff_id"] for handoff in repair_handoffs}))
+        self.assertEqual(3, len({handoff["handoff_id"] for handoff in repair_handoffs}))
         task_dispatches = [
             step
             for step in repair["steps"]
@@ -1438,13 +1465,8 @@ class LightweightUtilityContractTests(unittest.TestCase):
                 "task-repair-and-rereview-1",
                 "task-repair-and-rereview-1",
                 "task-repair-and-rereview-1",
-                "task-repair-and-rereview-1",
             ],
             [step["fixture_capsule"]["task_id"] for step in task_dispatches],
-        )
-        self.assertEqual(
-            ["third-followup-service-review-D"],
-            task_dispatches[-1]["finding_ids"],
         )
         self.assertEqual(
             task_dispatches[-1]["finding_ids"],
@@ -1458,17 +1480,16 @@ class LightweightUtilityContractTests(unittest.TestCase):
             for step in task_dispatches
             if step.get("mode") == "repair" and step.get("finding_ids")
         ]
-        self.assertEqual(3, len(repair_dispatches))
+        self.assertEqual(2, len(repair_dispatches))
         self.assertEqual(
             [
                 "review-repair-and-rereview-1",
                 "review-repair-and-rereview-2",
-                "review-repair-and-rereview-3",
             ],
             [step["review_round_id"] for step in repair_dispatches],
         )
         self.assertEqual(
-            ["review-repair-and-rereview-4"],
+            ["review-repair-and-rereview-3"],
             [
                 step["review_round_id"]
                 for step in repair["steps"]
@@ -1545,7 +1566,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
     def test_task_focus_relation_review_repair_and_cost_matrix_is_closed(self) -> None:
         results, errors = EVAL._task_focus_fixture_results(self.task_focus_cases)
         self.assertEqual([], errors)
-        self.assertEqual(48, len(results))
+        self.assertEqual(51, len(results))
         self.assertTrue(all(result["matches_expected"] for result in results))
         self.assertEqual(
             {
@@ -1992,11 +2013,53 @@ class LightweightUtilityContractTests(unittest.TestCase):
             for error in EVAL._orchestration_case_errors(too_many_layer3)
         ))
 
-        missing_layer3 = copy.deepcopy(valid)
-        missing_layer3["tasks"][0]["layer3_skills"] = ["minimal-correct-implementation"]
+        independent_review_layer3 = copy.deepcopy(valid)
+        independent_review_layer3["tasks"][0]["layer3_skills"] = [
+            "concurrency-control",
+            "idempotency-retry-design",
+        ]
+        independent_review_layer3["events"][0]["first_executable_slice"][
+            "layer3_skills"
+        ] = [
+            "concurrency-control",
+            "idempotency-retry-design",
+        ]
+        independent_review_layer3["tasks"][0]["review_skills"] = [
+            "reliability-observability-gate"
+        ]
+        independent_review_layer3["review_boundary"][
+            "primary_review_skill"
+        ] = "reliability-observability-gate"
+        independent_review_layer3["review_boundary"][
+            "required_review_skills"
+        ] = [
+            "reliability-observability-gate",
+            "quality-test-gate",
+            "security-privacy-gate",
+        ]
+        review_event = independent_review_layer3["events"][7]
+        review_event["review_skills"] = [
+            "reliability-observability-gate",
+            "quality-test-gate",
+            "security-privacy-gate",
+        ]
+        review_event["layer3_skills"] = ["concurrency-control"]
+        self.assertEqual(
+            [],
+            EVAL._orchestration_case_errors(independent_review_layer3),
+            "Review Layer3 must be selected independently from review risk, "
+            "not copied or unioned from Task implementation Layer3",
+        )
+
+        unauthorized_review_layer3 = copy.deepcopy(independent_review_layer3)
+        unauthorized_review_layer3["events"][7]["layer3_skills"] = [
+            "repository-context-map"
+        ]
         self.assertTrue(any(
-            "review-layer3-preservation" in error
-            for error in EVAL._orchestration_case_errors(missing_layer3)
+            "review-layer3-routing" in error
+            for error in EVAL._orchestration_case_errors(
+                unauthorized_review_layer3
+            )
         ))
 
         altered_layer3 = copy.deepcopy(self.layer3)
@@ -2053,6 +2116,17 @@ class LightweightUtilityContractTests(unittest.TestCase):
         self.assertEqual([["R-C-1", "C"]], trace["repair_flow"]["batch_keys"])
         self.assertEqual(["C"], trace["repair_flow"]["fresh_validation_task_ids"])
         self.assertEqual(["C"], trace["repair_flow"]["rereviewed_task_ids"])
+        initial_review = next(
+            event for event in case["events"] if event["action"] == "review"
+        )
+        self.assertTrue(initial_review["required_changed_scope_complete"])
+        self.assertTrue(initial_review["base_dimensions_complete"])
+        self.assertTrue(initial_review["professional_risk_dimensions_complete"])
+        rereview = next(
+            event for event in case["events"] if event["action"] == "re-review"
+        )
+        self.assertEqual(list(EVAL.REREVIEW_CHECKS), rereview["rereview_checks"])
+        self.assertFalse(rereview["rereview_scope_expanded"])
         self.assertTrue(trace["completion"]["current_evidence"])
 
     def test_rereview_finding_creates_a_second_same_task_repair_round(self) -> None:
@@ -2071,6 +2145,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
             "task_id": "C",
             "review_round_id": "R-C-2",
             "relation": "current-task",
+            "rereview_classification": "repair-regression",
             "category": "correctness-or-invariant",
             "impact_dimensions": ["correctness"],
             "repair_required": True,
@@ -2133,6 +2208,8 @@ class LightweightUtilityContractTests(unittest.TestCase):
 
         self.assertEqual([], errors)
         self.assertEqual(2, trace["repair_flow"]["repair_count"])
+        self.assertEqual({"C": 2}, trace["repair_flow"]["repair_counts_by_task"])
+        self.assertEqual({"C": "within-budget"}, trace["repair_flow"]["cap_dispositions"])
         self.assertEqual(
             [["R-C-1", "C"], ["R-C-2", "C"]],
             trace["repair_flow"]["batch_keys"],
@@ -2141,6 +2218,132 @@ class LightweightUtilityContractTests(unittest.TestCase):
             ["review", "re-review", "re-review"], trace["review"]["actions"]
         )
         self.assertTrue(trace["completion"]["current_evidence"])
+
+        third = copy.deepcopy(case)
+        third["id"] = "review-convergence-third-repair-rejected"
+        final_review_index = max(
+            index
+            for index, event in enumerate(third["events"])
+            if event.get("action") == "re-review"
+        )
+        final_review = third["events"][final_review_index]
+        third_finding = {
+            "action": "finding",
+            "finding_id": "F-C-D",
+            "task_id": "C",
+            "review_round_id": final_review["review_round_id"],
+            "relation": "current-task",
+            "rereview_classification": "repair-regression",
+            "category": "security-or-reliability",
+            "impact_dimensions": ["security"],
+            "repair_required": True,
+            "affected_scope": ["C"],
+            "acceptance_or_risk_impact": "security",
+            "required_validation": ["current-generation-scoped-validation"],
+            "required_covering_rereview": {
+                "covered_task_ids": ["C"],
+                "same_or_stronger": True,
+            },
+        }
+        third["events"].insert(final_review_index, third_finding)
+        final_review = third["events"][final_review_index + 1]
+        final_review.update(verdict="findings", finding_ids=["F-C-D"])
+        capped = copy.deepcopy(third)
+        capped["id"] = "review-convergence-cap-blocks-security-defect"
+        capped["events"][-1] = {
+            "action": "blocked",
+            "task_id": "C",
+            "reason": "repair-round-limit-non-converged",
+            "reviewed_scope": ["C repair diff and affected dependents"],
+            "unreviewed_scope": ["unresolved security blocker F-C-D"],
+        }
+        capped_errors, capped_trace = EVAL._orchestration_case_result(capped)
+        self.assertEqual([], capped_errors)
+        self.assertEqual("blocked", capped_trace["completion"]["state"])
+        self.assertEqual(
+            "blocked-non-converged",
+            capped_trace["repair_flow"]["cap_dispositions"]["C"],
+        )
+
+        third["events"].insert(
+            final_review_index + 2,
+            {
+                "action": "repair",
+                "task_id": "C",
+                "generation": 4,
+                "affected_task_ids": ["C"],
+                "resolved_finding_ids": ["F-C-D"],
+                "finding_relations": {"F-C-D": "current-task"},
+                "impact_boundaries": [],
+                "affected_specialist_obligations": ["security"],
+                "affected_risk_dimensions": ["security"],
+                "invalidated_claims": ["validation:C", "review:C"],
+                "review_round_id": final_review["review_round_id"],
+                "finding_obligations": [
+                    {
+                        "finding_id": "F-C-D",
+                        "relation": "current-task",
+                        "affected_scope": ["C"],
+                        "acceptance_or_risk_impact": "security",
+                        "required_validation": [
+                            "current-generation-scoped-validation"
+                        ],
+                        "required_covering_rereview": {
+                            "covered_task_ids": ["C"],
+                            "same_or_stronger": True,
+                        },
+                    }
+                ],
+            },
+        )
+        third_errors = EVAL._orchestration_case_errors(third)
+        self.assertTrue(
+            any("repair-round-cap" in error for error in third_errors),
+            third_errors,
+        )
+
+    def test_rereview_requires_focused_frozen_boundary_checks(self) -> None:
+        case = self._review_convergence_case()
+        rereview = next(
+            event for event in case["events"] if event["action"] == "re-review"
+        )
+        rereview.pop("rereview_checks")
+        errors = EVAL._orchestration_case_errors(case)
+        self.assertTrue(any("rereview-focus" in error for error in errors), errors)
+
+    def test_rereview_uses_focused_completion_without_reopening_initial_scope(
+        self,
+    ) -> None:
+        case = self._review_convergence_case()
+        rereview = next(
+            event for event in case["events"] if event["action"] == "re-review"
+        )
+        for field in (
+            "required_changed_scope_complete",
+            "base_dimensions_complete",
+            "professional_risk_dimensions_complete",
+        ):
+            rereview.pop(field, None)
+        rereview["frozen_professional_risk_boundary_status"] = "preserved"
+        self.assertEqual([], EVAL._orchestration_case_errors(case))
+
+        weakened_initial = self._review_convergence_case()
+        initial_review = next(
+            event for event in weakened_initial["events"]
+            if event["action"] == "review"
+        )
+        initial_review.pop("professional_risk_dimensions_complete")
+        errors = EVAL._orchestration_case_errors(weakened_initial)
+        self.assertTrue(any("review-complete-pass" in error for error in errors), errors)
+
+        invalid_frozen_risk = self._review_convergence_case()
+        invalid_rereview = next(
+            event for event in invalid_frozen_risk["events"]
+            if event["action"] == "re-review"
+        )
+        invalid_rereview["frozen_professional_risk_boundary_status"] = "invalidated"
+        errors = EVAL._orchestration_case_errors(invalid_frozen_risk)
+        self.assertTrue(any("rereview-focus" in error for error in errors), errors)
 
     def test_rereview_scope_blocker_closes_round_then_routes_delta_without_repair(
         self,
@@ -2159,12 +2362,15 @@ class LightweightUtilityContractTests(unittest.TestCase):
             "task_id": "C",
             "review_round_id": "R-C-2",
             "relation": "scope-blocker",
+            "rereview_classification": "protected-invalidation",
             "category": "acceptance",
             "repair_required": False,
         }
         events.insert(second_review_index, scope_finding)
         events[second_review_index + 1].update(
-            verdict="findings", finding_ids=["F-C-SCOPE-R2"]
+            verdict="findings",
+            finding_ids=["F-C-SCOPE-R2"],
+            frozen_boundary_status="preserved",
         )
         events[-1:-1] = [
             {
@@ -2178,6 +2384,12 @@ class LightweightUtilityContractTests(unittest.TestCase):
                     "affected-review-boundaries",
                 ],
                 "analysis_scope": "delta",
+                "path_change_evidence": {
+                    "changed-hypothesis": False,
+                    "changed-material": True,
+                    "changed-gap": False,
+                    "changed-transition": False,
+                },
                 "professional_domain_changed": False,
                 "work_type_changed": False,
                 "material_risk_trigger_changed": False,
@@ -2193,26 +2405,150 @@ class LightweightUtilityContractTests(unittest.TestCase):
                             "Placement and Reuse",
                             "Contract / Data / Failure Impact",
                         ],
-                        "tasks": ["A", "B", "C"],
+                        "tasks": ["C"],
                         "dependencies": [],
                         "skills": [],
-                        "reviews": [
-                            "ai-code-review-refactor",
-                            "quality-test-gate",
-                            "security-privacy-gate",
-                        ],
+                        "reviews": ["security-privacy-gate"],
                     },
                     "unlisted": "preserved",
                 },
             }
         ]
 
-        errors, trace = EVAL._orchestration_case_result(case)
+        errors = EVAL._orchestration_case_errors(case)
+        self.assertTrue(
+            any("rereview-protected-invalidation" in error for error in errors),
+            errors,
+        )
 
+        rereview = next(
+            event for event in case["events"] if event["action"] == "re-review"
+        )
+        rereview["frozen_boundary_status"] = "invalidated"
+        errors = EVAL._orchestration_case_errors(case)
+        self.assertTrue(
+            any("completion-current-evidence" in error for error in errors),
+            errors,
+        )
+
+        case["events"].pop()
+        case["events"].extend(
+            [
+                {"action": "edit", "task_id": "C", "generation": 3},
+                {
+                    "action": "validate",
+                    "task_id": "C",
+                    "generation": 3,
+                    "evidence_id": "v-C-post-delta",
+                },
+            ]
+        )
+        case["events"].extend(
+            [
+                {
+                    **copy.deepcopy(rereview),
+                    "frozen_boundary_status": "preserved",
+                    "frozen_professional_risk_boundary_status": "preserved",
+                    "evidence_id": "r-ABC-post-delta",
+                    "covered_task_ids": ["C"],
+                    "review_skills": ["security-privacy-gate"],
+                    "specialist_obligations": ["security"],
+                    "risk_dimensions": ["correctness", "security"],
+                    "validation_evidence_ids": ["v-C-post-delta"],
+                    "verdict": "pass",
+                    "review_round_id": "R-ABC-POST-DELTA",
+                    "finding_ids": [],
+                },
+                {"action": "complete"},
+            ]
+        )
+        errors, trace = EVAL._orchestration_case_result(case)
         self.assertEqual([], errors)
         self.assertEqual(["F-C-SCOPE-R2"], trace["finding_routes"]["scope_blocker"])
         self.assertEqual(1, trace["repair_flow"]["repair_count"])
         self.assertEqual(["initial", "delta"], trace["analysis"]["kinds"])
+
+    def test_repeated_review_delta_without_path_change_blocks_after_two(self) -> None:
+        case = copy.deepcopy(
+            next(
+                item
+                for item in self.orchestration_cases
+                if item["id"] == "review-convergence-rereview-scope-blocker"
+            )
+        )
+        case["id"] = "review-delta-two-unchanged-blocked"
+        case.pop("retained_semantics", None)
+        first_delta = next(
+            event
+            for event in case["events"]
+            if event.get("analysis_kind") == "delta"
+        )
+        no_change = {
+            "changed-hypothesis": False,
+            "changed-material": False,
+            "changed-gap": False,
+            "changed-transition": False,
+        }
+        first_delta["path_change_evidence"] = copy.deepcopy(no_change)
+        case["events"].pop()
+        case["events"].pop()
+        second_round = "R-C-3"
+        case["events"].extend(
+            [
+                {
+                    "action": "finding",
+                    "finding_id": "F-C-SCOPE-R3",
+                    "task_id": "C",
+                    "review_round_id": second_round,
+                    "relation": "scope-blocker",
+                    "rereview_classification": "protected-invalidation",
+                    "category": "acceptance",
+                    "repair_required": False,
+                },
+                {
+                    **copy.deepcopy(
+                        next(
+                            event
+                            for event in case["events"]
+                            if event.get("action") == "re-review"
+                        )
+                    ),
+                    "evidence_id": "r-C3-protected",
+                    "review_round_id": second_round,
+                    "finding_ids": ["F-C-SCOPE-R3"],
+                    "frozen_boundary_status": "invalidated",
+                    "validation_evidence_ids": ["v-C3-post-delta"],
+                },
+                {
+                    **copy.deepcopy(first_delta),
+                    "path_change_evidence": copy.deepcopy(no_change),
+                    "delta_impact": {
+                        **copy.deepcopy(first_delta["delta_impact"]),
+                        "affected": {
+                            **copy.deepcopy(
+                                first_delta["delta_impact"]["affected"]
+                            ),
+                            "tasks": ["C"],
+                            "reviews": ["security-privacy-gate"],
+                        },
+                    },
+                },
+                {
+                    "action": "blocked",
+                    "task_id": "C",
+                    "reason": "review-delta-same-path-non-converged",
+                    "reviewed_scope": ["two protected invalidations"],
+                    "unreviewed_scope": ["no changed implementation path"],
+                },
+            ]
+        )
+
+        errors, trace = EVAL._orchestration_case_result(case)
+
+        self.assertEqual([], errors)
+        self.assertEqual("blocked", trace["completion"]["state"])
+        self.assertEqual(2, trace["analysis"]["same_path_failures_by_task"]["C"])
+        self.assertEqual(2, len(trace["analysis"]["review_delta_path_changes"]))
 
     def test_post_dispatch_blocked_review_requires_narrow_reason_and_proof(self) -> None:
         fixture = {
@@ -2417,8 +2753,8 @@ class LightweightUtilityContractTests(unittest.TestCase):
             any("review-post-dispatch-block" in error for error in errors), errors
         )
 
-    def test_progress_policy_has_no_fixed_repair_round_ceiling(self) -> None:
-        for cycle_count in (3, 6, 9):
+    def test_progress_policy_enforces_two_repair_rounds_per_task(self) -> None:
+        for cycle_count, expected_valid in ((2, True), (3, False)):
             with self.subTest(cycle_count=cycle_count):
                 case_id = f"unbounded-repair-progress-{cycle_count}"
                 steps = [
@@ -2447,7 +2783,11 @@ class LightweightUtilityContractTests(unittest.TestCase):
                     evidence_id = f"repair-validation-{cycle}"
                     steps.extend(
                         [
-                            {"actor": "task-agent", "action": "repair"},
+                            {
+                                "actor": "task-agent",
+                                "action": "repair",
+                                "task_id": "repair-task",
+                            },
                             {
                                 "actor": "task-agent",
                                 "action": "validate",
@@ -2471,13 +2811,94 @@ class LightweightUtilityContractTests(unittest.TestCase):
                     )
                 steps.append({"actor": "main-control-agent", "action": "close"})
 
-                self.assertEqual([], EVAL._progress_errors(case_id, steps))
+                errors = EVAL._progress_errors(case_id, steps)
+                if expected_valid:
+                    self.assertEqual([], errors)
+                else:
+                    self.assertTrue(
+                        any("repair-round-cap" in error for error in errors),
+                        errors,
+                    )
                 metrics = EVAL._progress_metrics(
                     {"id": case_id, "risk": "high"}, steps
                 )
                 self.assertTrue(
                     metrics["required_multi_agent_progress_satisfied"], metrics
                 )
+
+    def test_repair_budget_is_independent_by_task_and_survives_delta(self) -> None:
+        steps = [
+            {"actor": "task-agent", "action": "repair", "task_id": "A"},
+            {
+                "actor": "analysis-agent",
+                "action": "analysis",
+                "analysis_kind": "delta",
+            },
+            {"actor": "task-agent", "action": "repair", "task_id": "A"},
+            {"actor": "task-agent", "action": "repair", "task_id": "B"},
+            {
+                "actor": "review-agent",
+                "action": "re-review",
+                "review_round_id": "R-new-boundary",
+            },
+            {"actor": "task-agent", "action": "repair", "task_id": "B"},
+        ]
+        errors = EVAL._progress_errors("per-task-repair-budget", steps)
+        self.assertFalse(
+            any("repair-round-cap" in error for error in errors), errors
+        )
+
+        third_a = copy.deepcopy(steps)
+        third_a.append(
+            {"actor": "task-agent", "action": "repair", "task_id": "A"}
+        )
+        cap_errors = [
+            error
+            for error in EVAL._progress_errors(
+                "per-task-repair-budget-third-a", third_a
+            )
+            if "repair-round-cap" in error
+        ]
+        self.assertEqual(1, len(cap_errors), cap_errors)
+        self.assertIn("Task ID 'A'", cap_errors[0])
+
+    def test_review_input_ready_missing_each_fact_dispatches_zero_reviewers(self) -> None:
+        base = copy.deepcopy(
+            next(
+                case
+                for case in self.task_focus_cases
+                if case["id"] == "focus-review-ready-dispatch-once"
+            )
+        )
+        mutations = {
+            "latest-changed-paths": lambda inputs: inputs.update(
+                latest_changed_paths=False
+            ),
+            "exact-change-evidence": lambda inputs: inputs.update(
+                change_evidence_kind="unavailable"
+            ),
+            "post-latest-edit-validation": lambda inputs: inputs.update(
+                validation_generation=inputs["latest_material_edit_generation"] - 1
+            ),
+            "fixed-review-scope": lambda inputs: inputs.update(
+                review_scope_fixed=False
+            ),
+            "reviewer-consumption-capability": lambda inputs: inputs.update(
+                **{"reviewer-change-consume": "unsupported"}
+            ),
+        }
+        for name, mutate in mutations.items():
+            negative = copy.deepcopy(base)
+            negative["id"] = f"focus-review-missing-{name}"
+            mutate(negative["inputs"])
+            negative["decision"] = {
+                "review_input_ready": False,
+                "review_dispatches": 0,
+                "legacy_recovery_attempts": 0,
+                "completion": "blocked-before-review",
+            }
+            with self.subTest(missing=name):
+                self.assertEqual([], EVAL._task_focus_case_errors(negative))
 
     def test_post_dispatch_authority_invalidation_routes_main_delta_analysis(
         self,
@@ -2511,6 +2932,12 @@ class LightweightUtilityContractTests(unittest.TestCase):
                     "affected-review-boundaries",
                 ],
                 "analysis_scope": "delta",
+                "path_change_evidence": {
+                    "changed-hypothesis": False,
+                    "changed-material": True,
+                    "changed-gap": False,
+                    "changed-transition": False,
+                },
                 "professional_domain_changed": False,
                 "work_type_changed": False,
                 "material_risk_trigger_changed": False,
@@ -2816,6 +3243,12 @@ class LightweightUtilityContractTests(unittest.TestCase):
                 "affected-review-boundaries",
             ],
             "analysis_scope": "delta",
+            "path_change_evidence": {
+                "changed-hypothesis": False,
+                "changed-material": True,
+                "changed-gap": False,
+                "changed-transition": False,
+            },
             "professional_domain_changed": False,
             "work_type_changed": False,
             "material_risk_trigger_changed": False,
@@ -2831,14 +3264,10 @@ class LightweightUtilityContractTests(unittest.TestCase):
                         "Placement and Reuse",
                         "Contract / Data / Failure Impact",
                     ],
-                    "tasks": ["A", "B", "C"],
+                    "tasks": ["C"],
                     "dependencies": [],
                     "skills": [],
-                    "reviews": [
-                        "ai-code-review-refactor",
-                        "quality-test-gate",
-                        "security-privacy-gate",
-                    ],
+                    "reviews": ["security-privacy-gate"],
                 },
                 "unlisted": "preserved",
             },
@@ -2848,9 +3277,19 @@ class LightweightUtilityContractTests(unittest.TestCase):
         errors, trace = EVAL._orchestration_case_result(case)
 
         self.assertEqual([], errors)
+        actions = [event["action"] for event in case["events"]]
+        self.assertLess(actions.index("review"), actions.index("analysis", 1))
+        self.assertLess(actions.index("analysis", 1), actions.index("repair"))
+        self.assertLess(actions.index("repair"), actions.index("re-review"))
         self.assertEqual(["F-C-A"], trace["repair_flow"]["resolved_finding_ids"])
         self.assertEqual(["F-C-SCOPE"], trace["finding_routes"]["scope_blocker"])
         self.assertEqual(["F-C-ADJ"], trace["finding_routes"]["adjacent"])
+        self.assertTrue(
+            trace["analysis"]["review_delta_path_changes"][0][
+                "path_change_evidence"
+            ]["changed-material"]
+        )
+        self.assertEqual("complete", trace["completion"]["state"])
 
     def test_review_convergence_rejects_scope_blocker_analysis_before_close(self) -> None:
         case = copy.deepcopy(
@@ -3177,6 +3616,14 @@ class LightweightUtilityContractTests(unittest.TestCase):
                 "invalidated_claims": ["review:C", "validation:C"],
                 "fresh_validation_task_ids": ["C"],
                 "rereviewed_task_ids": ["C"],
+                "repair_counts_by_task": {"C": 1},
+                "cap_dispositions": {"C": "within-budget"},
+                "rereview_finding_classifications": [],
+                "current_review_round_ids": {
+                    "A": "R-C-1",
+                    "B": "R-C-1",
+                    "C": "R-C-2",
+                },
                 "resolved_finding_ids": ["F-C-A", "F-C-B"],
                 "batch_keys": [["R-C-1", "C"]],
             },

@@ -8989,6 +8989,23 @@ def _classify_professional_families(
             bool(re.search(r"\bno\s+middleware\s+impact\b", value))
             or bool(re.search(r"\bunrelated\s+source\s+inspection\b", value))
             or "terminology" in value
+            or (
+                "already-decided retry-count/backoff constant" in value
+                and all(
+                    boundary in value
+                    for boundary in (
+                        "retry identity",
+                        "idempotency",
+                        "replay",
+                        "lease ownership",
+                        "terminal resolution",
+                        "queue topology",
+                        "failure contract",
+                        "cross-service workflow",
+                    )
+                )
+                and "are unchanged" in value
+            )
         ),
         evidence=("middleware-surface",),
     )
@@ -15122,13 +15139,12 @@ def _route_impl(
             ),
         ),
     )
-    selector_cache_stampede = _FoundationSelectorSpec(
-        "cache-stampede-analysis",
+    selector_concurrency_control = _FoundationSelectorSpec(
+        "concurrency-control-analysis",
         ("concurrency-control",),
         (
-            "cache-stampede",
-            "single-flight",
-            "foundation-selector:cache-stampede-analysis",
+            "cache-stampede-or-lease-stale-ownership",
+            "foundation-selector:concurrency-control-analysis",
         ),
         (
             _FoundationSelectorOwnerBindingSpec(
@@ -15142,12 +15158,17 @@ def _route_impl(
         ("idempotency-retry-design",),
         (
             "backend-retry-idempotency",
+            "retry-replay-or-duplicate-side-effect",
             "foundation-selector:backend-idempotency-analysis",
         ),
         (
             _FoundationSelectorOwnerBindingSpec(
                 "engineering-change-analysis",
                 "ai-code-review-refactor",
+            ),
+            _FoundationSelectorOwnerBindingSpec(
+                "engineering-change-analysis",
+                "reliability-observability-gate",
             ),
         ),
     )
@@ -15202,9 +15223,21 @@ def _route_impl(
         selector_production_release.foundations[0],
     ]
     authority_cache_stampede_reliability_foundations = [
-        selector_cache_stampede.foundations[0],
+        selector_concurrency_control.foundations[0],
         *selector_security_anti_reliability.foundations,
     ]
+    authority_retry_lease_foundations = [
+        selector_concurrency_control.foundations[0],
+        selector_backend_idempotency.foundations[0],
+    ]
+    if tuple(authority_retry_lease_foundations) != (
+        _FOUNDATION_ALIAS_MEMBER_SUBSETS[
+            "retry-lease-terminal-resolution-analysis"
+        ]
+    ):
+        raise RoutingIntegrityError(
+            "retry/lease alias differs from its member authority"
+        )
     dependency_vulnerability_authority = foundation_selector_by_id.get(
         "dynamic-foundation:dependency-vulnerability-scanning"
     )
@@ -16712,8 +16745,86 @@ def _route_impl(
             rule_id="cache-stampede-reliability-controls",
             stage="reliability",
             precedence_class="runtime-risk",
-            match_evidence=list(selector_cache_stampede.evidence_ids),
+            match_evidence=list(selector_concurrency_control.evidence_ids),
             semantic_atoms=[],
+        )
+    repeated_side_effect_risk = (
+        "same side effect may occur twice" in text
+        and (
+            "retry/replay" in text
+            or "duplicate delivery" in text
+        )
+        and not re.search(
+            r"same side effect may occur twice[^.;!?]{0,80}"
+            r"(?:is|are|remain|remains) unchanged",
+            text,
+        )
+    )
+    lease_stale_overlap_risk = (
+        "lease expiry" in text
+        and (
+            "stale worker" in text
+            or "stale-worker ownership" in text
+        )
+        and (
+            "overlap another execution" in text
+            or "overlapping execution" in text
+        )
+        and not re.search(
+            r"lease expiry[^.;!?]{0,180}(?:stale worker|stale-worker "
+            r"ownership)[^.;!?]{0,180}(?:overlap another execution|"
+            r"overlapping execution)[^.;!?]{0,80}"
+            r"(?:is|are|remain|remains) unchanged",
+            text,
+        )
+    )
+    retry_unknown_outcome_risk = (
+        "duplicate delivery has an unknown side-effect outcome" in text
+        and "terminal resolution is required" in text
+    )
+    reliability_contrast_boundaries_fixed = (
+        all(
+            boundary in text
+            for boundary in (
+                "queue topology",
+                "failure contract",
+                "cross-service workflow",
+            )
+        )
+        and (
+            "are unchanged" in text
+            or "remain unchanged" in text
+        )
+    )
+    combined_retry_lease_risk = (
+        "owner is known" in text
+        and retry_unknown_outcome_risk
+        and lease_stale_overlap_risk
+        and reliability_contrast_boundaries_fixed
+    )
+    if combined_retry_lease_risk:
+        add_candidate(
+            "analyzed",
+            "analysis-agent",
+            "engineering-change-analysis",
+            authority_retry_lease_foundations,
+            "reliability-observability-gate",
+            rule_id="retry-lease-terminal-resolution-analysis",
+            stage="reliability",
+            precedence_class="runtime-risk",
+            match_evidence=[
+                *selector_concurrency_control.evidence_ids,
+                *selector_backend_idempotency.evidence_ids,
+            ],
+            semantic_atoms=[],
+        )
+    elif lease_stale_overlap_risk:
+        add_foundation_selector(
+            selector_concurrency_control,
+            "analyzed",
+            "analysis-agent",
+            stage="reliability",
+            precedence_class="runtime-risk",
         )
     legacy_reliability_signal_match = any(
         word in text for word in ("outage", "slo", "degradation")
@@ -16781,7 +16892,14 @@ def _route_impl(
             precedence_class="artifact-review",
             match_evidence=["engineering-brief", "task-plan"],
         )
-    if "backend retry idempotency" in text:
+    if (
+        (
+            "backend retry idempotency" in text
+            or repeated_side_effect_risk
+        )
+        and not combined_retry_lease_risk
+        and not lease_stale_overlap_risk
+    ):
         add_foundation_selector(
             selector_backend_idempotency,
             "analyzed",

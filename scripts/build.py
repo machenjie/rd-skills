@@ -1056,15 +1056,10 @@ def _project_layer3_reference(item: SkillItem, markdown: str) -> str:
                 f"{source_heading!r} section, found {len(values)}"
             )
         output.extend(["", f"## {projected_heading}", "", values[0]])
-    output.extend(_compact_jit_reference_delivery_lines(None))
-
     projected = "\n".join(output).rstrip() + "\n"
     _projected_h1, projected_sections = _markdown_heading_sections(projected)
     projected_headings = list(projected_sections)
-    expected_headings = [
-        *[target for _source, target in section_contract],
-        "JIT Reference Delivery",
-    ]
+    expected_headings = [target for _source, target in section_contract]
     if projected_headings != expected_headings:
         raise BuildError(
             f"{item.name}: projected headings {projected_headings} do not match "
@@ -1200,7 +1195,8 @@ def _write_compact_skill_root_projection(
                 f"one non-empty {heading!r} section"
             )
         output.extend(["", f"## {heading}", "", values[0]])
-    output.extend(_compact_jit_reference_delivery_lines(selector_name))
+    if selector_name is not None:
+        output.extend(_compact_jit_reference_delivery_lines(selector_name))
     output.append("")
     skill_file.write_text("\n".join(output), encoding="utf-8")
 
@@ -1211,13 +1207,7 @@ def _compact_jit_reference_delivery_lines(
     """Return the built-only selector anchor; authority stays in its JSON row."""
 
     if selector_name is None:
-        return [
-            "",
-            "## JIT Reference Delivery",
-            "",
-            "Current-Professional JIT. Exact skips it; never select/reroute/preload",
-            "index/catalog.",
-        ]
+        return []
     selector_path = (
         "engineering-control-plane/references/selectors/"
         f"{selector_name}.json"

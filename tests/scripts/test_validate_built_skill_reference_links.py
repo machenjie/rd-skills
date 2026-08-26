@@ -39,6 +39,11 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
         skill_root.mkdir(parents=True)
         fixed_lines = [
             "# Sample Professional",
+            "## JIT Reference Delivery",
+            "",
+            "JIT: `engineering-control-plane/references/selectors/"
+            "sample-professional.json`. Exact skips it; never select/reroute/preload",
+            "index/catalog.",
             "## Layer 3 Delivery",
             "",
             "No Foundation or Domain Layer 3 items are assigned to this Skill.",
@@ -100,6 +105,38 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
                 ),
                 errors,
             )
+
+    def test_rejects_missing_or_duplicate_professional_jit_anchor(self) -> None:
+        for mutation in ("missing", "duplicate"):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as temporary:
+                profile_root = self._write_profile(Path(temporary), 120)
+                skill = profile_root / "sample-professional/SKILL.md"
+                text = skill.read_text(encoding="utf-8")
+                block = (
+                    "## JIT Reference Delivery\n\n"
+                    "JIT: `engineering-control-plane/references/selectors/"
+                    "sample-professional.json`. Exact skips it; never select/reroute/preload\n"
+                    "index/catalog.\n"
+                )
+                self.assertEqual(1, text.count(block))
+                skill.write_text(
+                    text.replace(block, "", 1)
+                    if mutation == "missing"
+                    else text.replace(block, block + "\n" + block, 1),
+                    encoding="utf-8",
+                )
+                errors: list[str] = []
+                VALIDATOR._validate_profile(
+                    profile_root, errors, enforce_source_mapping=False
+                )
+                self.assertTrue(
+                    any(
+                        "exactly one Professional JIT Reference Delivery and selector path"
+                        in error
+                        for error in errors
+                    ),
+                    errors,
+                )
 
     def test_rejects_missing_or_unknown_compiled_layer3_format(self) -> None:
         for value in (None, "authoring-root-v1"):
@@ -198,10 +235,7 @@ class CompiledLayer3ReadabilityTests(unittest.TestCase):
             "## Anti-Patterns\n\n"
             "- Reject evidence that predates the final edit.\n\n"
             "## Stop Conditions\n\n"
-            "- Stop when the owner is unknown.\n\n"
-            "## JIT Reference Delivery\n\n"
-            "Current-Professional JIT. Exact skips it; never select/reroute/preload\n"
-            "index/catalog.\n"
+            "- Stop when the owner is unknown.\n"
         )
 
     def test_rejects_41_word_sentence_in_compiled_projection(self) -> None:
@@ -339,6 +373,35 @@ class CompiledLayer3ReadabilityTests(unittest.TestCase):
                 path, "sample-foundation", "foundation", errors
             )
             self.assertEqual([], errors)
+
+    def test_rejects_layer3_jit_and_control_policy(self) -> None:
+        forbidden = (
+            "## JIT Reference Delivery",
+            "Current-Professional JIT",
+            "engineering-control-plane/references/selectors/sample.json",
+            "never select/reroute/preload",
+            "index/catalog",
+        )
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            for value in forbidden:
+                with self.subTest(value=value):
+                    path = root / "sample-foundation.md"
+                    path.write_text(
+                        self._projection(
+                            "Keep the changed ownership boundary explicit."
+                        )
+                        + f"\n{value}\n",
+                        encoding="utf-8",
+                    )
+                    errors: list[str] = []
+                    VALIDATOR._validate_compiled_layer3_projection(
+                        path, "sample-foundation", "foundation", errors
+                    )
+                    self.assertTrue(
+                        any("Layer 3 JIT/control policy is forbidden" in error for error in errors),
+                        errors,
+                    )
 
 
 if __name__ == "__main__":

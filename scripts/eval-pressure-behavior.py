@@ -96,7 +96,8 @@ def evaluate_pressure_cases(
         "evaluation_kind": "captured-pressure-fixtures",
         "evidence_limitations": [
             "Cases are checked-in captures; no agent or host permission system was executed.",
-            "Scores prove fixture conformance only, not host performance, production accuracy, or adoption.",
+            "Scores prove fixture conformance only; they are not real-host or Copilot execution evidence.",
+            "Captured fixtures do not prove host performance, production accuracy, adoption, or installed behavior.",
         ],
         "cases_checked": len(results),
         "errors": errors,

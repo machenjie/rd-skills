@@ -620,6 +620,16 @@ GENERIC_CAPABILITY_STATES = set(
 )
 TASK_BOUNDARY_MODEL = CORE_CONTRACTS["task_contract"]["task_boundary"]
 FINDING_RELATION_MODEL = CORE_CONTRACTS["task_contract"]["finding_relations"]
+REVIEW_CONVERGENCE_MODEL = CORE_CONTRACTS["task_contract"]["repair_routing"][
+    "review_convergence"
+]
+MAX_AUTOMATIC_REPAIR_ROUNDS_PER_TASK = REVIEW_CONVERGENCE_MODEL[
+    "maximum_automatic_repair_rounds_per_task_id"
+]
+REREVIEW_CLASSIFICATION_RELATIONS = REVIEW_CONVERGENCE_MODEL[
+    "rereview_classification_to_finding_relation"
+]
+REREVIEW_CHECKS = tuple(REVIEW_DISCIPLINE_MODEL["repair_invalidation_policy"]["rereview_focus"])
 DELTA_IMPACT_FIELDS = ("brief", "tasks", "dependencies", "skills", "reviews")
 DELTA_BRIEF_SECTIONS_BY_INVALIDATION = {
     "Acceptance-or-Non-goals": {"Acceptance and Non-goals"},
@@ -3980,18 +3990,36 @@ def _review_discipline_errors(
                 not isinstance(review_round_id, str)
                 or not review_round_id
                 or review_action.get("task_id") != task_id
-                or any(
-                    review_action.get(field) is not True
-                    for field in (
-                        "required_changed_scope_complete",
-                        "base_dimensions_complete",
-                        "professional_risk_dimensions_complete",
-                    )
+            ):
+                reject(
+                    "review-complete-pass",
+                    "every non-fundamental Review outcome requires a Review Round ID and current Task binding",
+                )
+            if required_review_kind == "implementation" and any(
+                review_action.get(field) is not True
+                for field in (
+                    "required_changed_scope_complete",
+                    "base_dimensions_complete",
+                    "professional_risk_dimensions_complete",
                 )
             ):
                 reject(
                     "review-complete-pass",
-                    "every non-fundamental Review outcome requires a Review Round ID and complete fixed scope and review dimensions",
+                    "Initial Review requires complete fixed scope, base dimensions, and professional-risk dimensions",
+                )
+            if required_review_kind == "repair" and (
+                review_action.get("rereview_checks") != list(REREVIEW_CHECKS)
+                or review_action.get("rereview_scope_expanded") is not False
+                or review_action.get("frozen_boundary_status")
+                not in {"preserved", "violation", "invalidated"}
+                or review_action.get(
+                    "frozen_professional_risk_boundary_status"
+                )
+                != "preserved"
+            ):
+                reject(
+                    "rereview-focus",
+                    "focused Re-review must complete the five repair checks and explicitly preserve the frozen professional-risk boundary without reopening Initial Review scope",
                 )
             finding_ids = [finding.get("evidence_id") for finding in round_findings]
             reported_finding_ids = review_action.get("finding_ids")
@@ -6131,8 +6159,6 @@ def _orchestration_case_result(
                 "skill-built-delivery",
                 f"Review Skill {review_skill!r} is not delivered by every build",
             )
-    required_layer3_skills = set().union(*task_layer3_skills.values())
-
     parallel_isolation, parallel_errors = _orchestration_parallel_isolation(events)
     for message in parallel_errors:
         reject("parallel-write-isolation", message)
@@ -6227,6 +6253,10 @@ def _orchestration_case_result(
     )
     previous_assignments = dict(task_skills)
     previous_analysis_index = -1
+    review_delta_same_path_failures_by_task: dict[str, int] = {}
+    review_delta_path_changes: list[dict[str, Any]] = []
+    review_delta_block_required: set[str] = set()
+    delta_impacted_tasks_by_event_index: dict[int, list[str]] = {}
     authoritative_brief_sections = CORE_CONTRACTS["task_contract"][
         "analyzed_work_authority"
     ]["authoritative_sections"]
@@ -6364,6 +6394,66 @@ def _orchestration_case_result(
             task_id = candidate.get("task_id")
             if task_id in task_ids and task_id not in source_task_ids:
                 source_task_ids.append(task_id)
+        review_driven_delta = source_action in {
+            *REVIEW_ACTIONS,
+            "pre-review",
+        }
+        if review_driven_delta and isinstance(source.get("covered_task_ids"), list):
+            scope_blocker_task_ids = list(
+                dict.fromkeys(
+                    finding.get("task_id")
+                    for finding in source_findings
+                    if finding.get("relation") == "scope-blocker"
+                    and finding.get("task_id") in task_ids
+                )
+            )
+            source_task_ids = scope_blocker_task_ids or [
+                task_id
+                for task_id in source["covered_task_ids"]
+                if task_id in task_ids
+            ]
+        if review_driven_delta:
+            path_change_evidence = event.get("path_change_evidence")
+            expected_path_change_fields = tuple(
+                REVIEW_CONVERGENCE_MODEL[
+                    "review_driven_delta_retry_requires_any"
+                ]
+            )
+            if (
+                not isinstance(path_change_evidence, dict)
+                or tuple(path_change_evidence) != expected_path_change_fields
+                or any(type(value) is not bool for value in path_change_evidence.values())
+            ):
+                reject(
+                    "review-delta-path-change",
+                    "review-driven Delta Analysis must record changed hypothesis/material/gap/transition evidence",
+                )
+                path_change_evidence = {
+                    field: False for field in expected_path_change_fields
+                }
+            changed_path = any(path_change_evidence.values())
+            for task_id in source_task_ids:
+                if changed_path:
+                    review_delta_same_path_failures_by_task[task_id] = 0
+                    review_delta_block_required.discard(task_id)
+                else:
+                    review_delta_same_path_failures_by_task[task_id] = (
+                        review_delta_same_path_failures_by_task.get(task_id, 0) + 1
+                    )
+                    if (
+                        review_delta_same_path_failures_by_task[task_id]
+                        >= REVIEW_CONVERGENCE_MODEL[
+                            "review_driven_delta_same_path_limit"
+                        ]
+                    ):
+                        review_delta_block_required.add(task_id)
+            review_delta_path_changes.append(
+                {
+                    "source_review_action": str(source_action),
+                    "task_ids": list(source_task_ids),
+                    "path_change_evidence": dict(path_change_evidence),
+                }
+            )
         previous_analysis_index = event_index
         needs_task_closure = bool(
             set(updates or [])
@@ -6379,6 +6469,7 @@ def _orchestration_case_result(
                 "unknown Delta impact cannot be mapped to []; record a Proof Limit and return blocked",
             )
         impacted_tasks = transitive_task_impact(source_task_ids)
+        delta_impacted_tasks_by_event_index[event_index] = list(impacted_tasks)
         impacted_dependencies = [
             f"{dependency}->{task_id}"
             for task_id in task_ids
@@ -6510,6 +6601,8 @@ def _orchestration_case_result(
     broad_pre_review_count = 0
     pre_review_count = 0
     last_delta_index = -1
+    last_pre_review_index = -1
+    pre_reviewed_task_ids: set[str] = set()
     for event_index, event in enumerate(events):
         action = event.get("action")
         if action == "analysis" and event.get("analysis_kind") == "delta":
@@ -6575,7 +6668,11 @@ def _orchestration_case_result(
                 event.get("independent") is not True
                 or not isinstance(review_round_id, str)
                 or not review_round_id
-                or pre_review_tasks != covered_task_ids
+                or not isinstance(pre_review_tasks, list)
+                or not pre_review_tasks
+                or len(pre_review_tasks) != len(set(pre_review_tasks))
+                or not set(pre_review_tasks) <= set(covered_task_ids)
+                or (level == "L5" and pre_review_tasks != covered_task_ids)
                 or event.get("required_changed_scope_complete") is not True
                 or event.get("base_dimensions_complete") is not True
                 or event.get("professional_risk_dimensions_complete") is not True
@@ -6592,6 +6689,37 @@ def _orchestration_case_result(
                     "pre-review-finding-frontier",
                     "pre-review closing Handoff must independently cover the fixed boundary and contain every preceding finding in the round",
                 )
+            if level == "L4":
+                if pre_review_count == 1:
+                    if (
+                        event.get("broad") is not True
+                        or event.get("material_boundary_expanded") is not False
+                    ):
+                        reject(
+                            "pre-review-finding-frontier",
+                            "the first L4 pre-review must close its unchanged material boundary",
+                        )
+                else:
+                    expanded_tasks = [
+                        task_id
+                        for task_id in delta_impacted_tasks_by_event_index.get(
+                            last_delta_index, []
+                        )
+                        if task_id not in pre_reviewed_task_ids
+                    ]
+                    if (
+                        last_delta_index <= last_pre_review_index
+                        or not expanded_tasks
+                        or pre_review_tasks != expanded_tasks
+                        or event.get("material_boundary_expanded") is not True
+                        or event.get("broad") is not False
+                    ):
+                        reject(
+                            "preparation-review-loop",
+                            "an additional L4 pre-review requires the current trigger and exact nonempty Task expansion from the latest bounded Delta",
+                        )
+                pre_reviewed_task_ids.update(pre_review_tasks)
+                last_pre_review_index = event_index
             if event.get("broad") is True:
                 broad_pre_review_count += 1
                 if broad_pre_review_count > 1 and event.get("material_boundary_expanded") is not True:
@@ -6615,16 +6743,20 @@ def _orchestration_case_result(
     if effective_level in {"L1", "L2", "L3"} and pre_review_count:
         reject("pre-review-frequency", "L1-L3 require zero pre-review rounds")
     if effective_level == "L4":
-        required_l4_pre_reviews = 1 if declared_material_triggers else 0
-        if pre_review_count != required_l4_pre_reviews:
+        if declared_material_triggers and not pre_review_count:
             reject(
                 "pre-review-mandatory",
-                "L4 requires exactly one pre-review when initial Analysis proves a material intermediate trigger, otherwise zero",
+                "L4 requires a pre-review when initial Analysis proves a material intermediate trigger",
             )
-        if pre_review_count > 1:
+        if not declared_material_triggers and pre_review_count:
             reject(
-                "preparation-review-loop",
-                "L4 permits at most one trigger-backed independent pre-review",
+                "pre-review-mandatory",
+                "L4 level alone adds no pre-review without a material intermediate trigger",
+            )
+        if pre_review_count and pre_reviewed_task_ids != set(covered_task_ids):
+            reject(
+                "pre-review-finding-frontier",
+                "L4 pre-review boundaries must exactly close the initial material boundary plus proven post-Delta Task expansions",
             )
     if effective_level == "L5" and pre_review_count != 1:
         reject(
@@ -6665,6 +6797,10 @@ def _orchestration_case_result(
     repair_validated_task_ids: set[str] = set()
     rereviewed_task_ids: set[str] = set()
     repair_count = 0
+    repair_counts_by_task: dict[str, int] = {}
+    rereview_finding_classifications: list[dict[str, str]] = []
+    current_review_round_ids: dict[str, str] = {}
+    cap_dispositions: dict[str, str] = {}
     terminal_seen = False
     blocked_authority_route_pending = False
     terminal_state = "in-progress"
@@ -6687,6 +6823,35 @@ def _orchestration_case_result(
         "material-code-health": {"code-health", "maintainability"},
     }
     level_rank = {level: index for index, level in enumerate(("L1", "L2", "L3", "L4", "L5"), 1)}
+    round_completion_action_by_key = {
+        (str(round_id), str(task_id)): event.get("action")
+        for event in events
+        if isinstance(event, dict)
+        and event.get("action") in REVIEW_ROUND_COMPLETION_ACTIONS
+        and isinstance((round_id := event.get("review_round_id")), str)
+        and isinstance(event.get("covered_task_ids"), list)
+        for task_id in event["covered_task_ids"]
+    }
+
+    def initial_review_completion_is_complete(event: dict[str, Any]) -> bool:
+        return all(
+            event.get(field) is True
+            for field in (
+                "required_changed_scope_complete",
+                "base_dimensions_complete",
+                "professional_risk_dimensions_complete",
+            )
+        )
+
+    def focused_rereview_completion_is_complete(event: dict[str, Any]) -> bool:
+        return (
+            event.get("rereview_checks") == list(REREVIEW_CHECKS)
+            and event.get("rereview_scope_expanded") is False
+            and event.get("frozen_boundary_status")
+            in {"preserved", "violation", "invalidated"}
+            and event.get("frozen_professional_risk_boundary_status")
+            == "preserved"
+        )
 
     for index, event in enumerate(events):
         if not isinstance(event, dict):
@@ -6722,6 +6887,20 @@ def _orchestration_case_result(
             if action == "repair":
                 repair_seen = True
                 repair_count += 1
+                repair_counts_by_task[str(task_id)] = (
+                    repair_counts_by_task.get(str(task_id), 0) + 1
+                )
+                if (
+                    repair_counts_by_task[str(task_id)]
+                    > MAX_AUTOMATIC_REPAIR_ROUNDS_PER_TASK
+                ):
+                    reject(
+                        "repair-round-cap",
+                        "automatic Repair budget is exactly two rounds per Task ID and is not reset by Review Boundary, Review Round, or Delta Analysis",
+                    )
+                    cap_dispositions[str(task_id)] = "blocked-non-converged"
+                else:
+                    cap_dispositions[str(task_id)] = "within-budget"
                 affected = event.get("affected_task_ids", [task_id])
                 expansion = event.get("impact_boundaries", [])
                 if not isinstance(affected, list) or not set(affected) <= set(task_ids):
@@ -6903,6 +7082,26 @@ def _orchestration_case_result(
                         repair_review_requirements[affected_task] = requirements
                 for finding_id in resolved_finding_ids:
                     pending_repair_findings.pop(finding_id, None)
+        elif action == "analysis" and event.get("analysis_kind") == "delta":
+            affected_tasks = (
+                event.get("delta_impact", {})
+                .get("affected", {})
+                .get("tasks", [])
+            )
+            if isinstance(affected_tasks, list):
+                for affected_task in affected_tasks:
+                    if affected_task not in task_ids:
+                        continue
+                    current_validation.discard(affected_task)
+                    current_review.discard(affected_task)
+                    current_validation_evidence.pop(affected_task, None)
+                    current_review_evidence.pop(affected_task, None)
+                    invalidated_claims.update(
+                        {
+                            f"validation:{affected_task}",
+                            f"review:{affected_task}",
+                        }
+                    )
         elif action == "validate":
             task_id = event.get("task_id")
             generation = event.get("generation")
@@ -6973,6 +7172,26 @@ def _orchestration_case_result(
             if action == "re-review":
                 if not repair_seen:
                     reject("repair-rereview", "re-review requires a preceding repair")
+                if not focused_rereview_completion_is_complete(event):
+                    reject(
+                        "rereview-focus",
+                        "Re-review must remain focused on the five frozen repair checks, explicitly preserve the frozen professional-risk boundary, and not reopen Initial Review scope",
+                    )
+                rereview_round_id = event.get("review_round_id")
+                protected_invalidation = any(
+                    row["review_round_id"] == rereview_round_id
+                    and row["task_id"] in event_task_set
+                    and row["classification"] == "protected-invalidation"
+                    for row in rereview_finding_classifications
+                )
+                if (
+                    protected_invalidation
+                    and event.get("frozen_boundary_status") != "invalidated"
+                ):
+                    reject(
+                        "rereview-protected-invalidation",
+                        "a protected-invalidation finding requires frozen_boundary_status=invalidated before Delta Analysis",
+                    )
                 covering_rereview_seen = current_review | event_task_set == set(task_ids)
                 rereviewed_task_ids.update(event_task_set & repaired_task_ids)
                 rereview_round = event.get("review_round_id")
@@ -7033,14 +7252,6 @@ def _orchestration_case_result(
                 )
                 raw_event_layer3 = []
             event_layer3 = set(raw_event_layer3)
-            expected_layer3 = set().union(
-                *(task_layer3_skills.get(task, set()) for task in event_task_set)
-            )
-            if not expected_layer3 <= event_layer3:
-                reject(
-                    "review-layer3-preservation",
-                    "combined or scoped review must preserve affected Layer 3 obligations",
-                )
             review_candidates = set().union(
                 *(
                     set(professional[skill].get("layer3_candidates", []))
@@ -7224,17 +7435,20 @@ def _orchestration_case_result(
                         "review-complete-pass",
                         "every non-fundamental Review outcome requires a Review Round ID",
                     )
-                if any(
-                    event.get(field) is not True
-                    for field in (
-                        "required_changed_scope_complete",
-                        "base_dimensions_complete",
-                        "professional_risk_dimensions_complete",
-                    )
+                if action == "review" and not initial_review_completion_is_complete(
+                    event
                 ):
                     reject(
                         "review-complete-pass",
-                        "every non-fundamental Review outcome requires complete fixed scope, base dimensions, and professional-risk dimensions",
+                        "Initial Review requires complete fixed scope, base dimensions, and professional-risk dimensions",
+                    )
+                if (
+                    action == "re-review"
+                    and not focused_rereview_completion_is_complete(event)
+                ):
+                    reject(
+                        "review-complete-pass",
+                        "focused Re-review requires its five repair checks and frozen professional-risk boundary validity, not Initial Review completeness fields",
                     )
                 expected_finding_ids = [
                     finding_id
@@ -7277,6 +7491,7 @@ def _orchestration_case_result(
                 ):
                     for task in event_tasks:
                         completed_review_batches.add((review_round_id, task))
+                        current_review_round_ids[str(task)] = review_round_id
                 current_review.update(event_task_set)
                 for task_id in event_task_set:
                     invalidated_claims.discard(f"review:{task_id}")
@@ -7326,6 +7541,36 @@ def _orchestration_case_result(
                     findings_by_round_task.setdefault(round_key, []).append(
                         finding_id
                     )
+                    if round_completion_action_by_key.get(
+                        (str(review_round_id), str(task_id))
+                    ) == "re-review":
+                        classification = event.get("rereview_classification")
+                        expected_relation = REREVIEW_CLASSIFICATION_RELATIONS.get(
+                            classification
+                        )
+                        if expected_relation != relation:
+                            reject(
+                                "rereview-finding-classification",
+                                "every Re-review finding must use the closed classification and its existing Finding Relation mapping",
+                            )
+                        elif (
+                            classification == "frozen-boundary-violation"
+                            and event.get("frozen_boundary_evidenced") is not True
+                        ):
+                            reject(
+                                "rereview-frozen-boundary-evidence",
+                                "a frozen-boundary-violation may block only with explicit evidence",
+                            )
+                        elif isinstance(classification, str):
+                            rereview_finding_classifications.append(
+                                {
+                                    "finding_id": str(finding_id),
+                                    "task_id": str(task_id),
+                                    "review_round_id": str(review_round_id),
+                                    "classification": classification,
+                                    "relation": str(relation),
+                                }
+                            )
             material = category in material_categories
             if category in non_repair_categories:
                 material = False
@@ -7433,9 +7678,20 @@ def _orchestration_case_result(
                             for item in candidate["finding_ids"]
                         )
                         and finding_id in candidate["finding_ids"]
-                        and candidate.get("required_changed_scope_complete") is True
-                        and candidate.get("base_dimensions_complete") is True
-                        and candidate.get("professional_risk_dimensions_complete") is True
+                        and (
+                            (
+                                candidate.get("action") == "re-review"
+                                and focused_rereview_completion_is_complete(
+                                    candidate
+                                )
+                            )
+                            or (
+                                candidate.get("action") != "re-review"
+                                and initial_review_completion_is_complete(
+                                    candidate
+                                )
+                            )
+                        )
                     ),
                     None,
                 )
@@ -7484,7 +7740,31 @@ def _orchestration_case_result(
             elif relation == "adjacent" and finding_identity_valid:
                 finding_routes["adjacent"].append(finding_id)
         elif action == "blocked":
-            if event.get("reason") not in FINDING_RELATION_MODEL["fail_fast"]["triggers"]:
+            cap_task_id = event.get("task_id")
+            cap_block = (
+                event.get("reason") == "repair-round-limit-non-converged"
+                and cap_task_id in task_ids
+                and repair_counts_by_task.get(str(cap_task_id), 0)
+                == MAX_AUTOMATIC_REPAIR_ROUNDS_PER_TASK
+                and any(
+                    finding.get("task_id") == cap_task_id
+                    for finding in pending_repair_findings.values()
+                )
+            )
+            delta_block = (
+                event.get("reason") == "review-delta-same-path-non-converged"
+                and cap_task_id in review_delta_block_required
+                and review_delta_same_path_failures_by_task.get(
+                    str(cap_task_id), 0
+                )
+                >= REVIEW_CONVERGENCE_MODEL["review_driven_delta_same_path_limit"]
+            )
+            if (
+                event.get("reason")
+                not in FINDING_RELATION_MODEL["fail_fast"]["triggers"]
+                and not cap_block
+                and not delta_block
+            ):
                 reject("review-fail-fast", "blocked fail-fast reason is not fundamental")
             if not valid_scope_list(event.get("reviewed_scope")) or not valid_scope_list(
                 event.get("unreviewed_scope")
@@ -7495,6 +7775,10 @@ def _orchestration_case_result(
                 )
             terminal_seen = True
             terminal_state = "blocked"
+            if cap_block:
+                cap_dispositions[str(cap_task_id)] = "blocked-non-converged"
+            if delta_block:
+                review_delta_block_required.discard(str(cap_task_id))
         elif action == "complete":
             if pending_repair_findings:
                 reject(
@@ -7529,6 +7813,11 @@ def _orchestration_case_result(
 
     if not terminal_seen:
         reject("orchestration-terminal", "trajectory must end in complete or blocked")
+    if review_delta_block_required:
+        reject(
+            "review-delta-non-converged",
+            "two unchanged review-driven Delta Analysis attempts must end BLOCKED and cannot enter a third unchanged replan",
+        )
     current_evidence = (
         terminal_state == "complete"
         and set(latest_generation) == set(task_ids)
@@ -7544,6 +7833,15 @@ def _orchestration_case_result(
         "fresh_validation_task_ids": sorted(repair_validated_task_ids),
         "rereviewed_task_ids": sorted(rereviewed_task_ids),
     }
+    if repair_count:
+        repair_flow.update(
+            {
+                "repair_counts_by_task": dict(sorted(repair_counts_by_task.items())),
+                "cap_dispositions": dict(sorted(cap_dispositions.items())),
+                "rereview_finding_classifications": rereview_finding_classifications,
+                "current_review_round_ids": dict(sorted(current_review_round_ids.items())),
+            }
+        )
     if repair_batch_keys or resolved_batch_finding_ids:
         repair_flow.update(
             {
@@ -7551,13 +7849,23 @@ def _orchestration_case_result(
                 "batch_keys": [list(batch_key) for batch_key in repair_batch_keys],
             }
         )
+    analysis_trace: dict[str, Any] = {
+        "count": len(analysis_events),
+        "kinds": [str(event.get("analysis_kind")) for event in analysis_events],
+    }
+    if review_delta_path_changes:
+        analysis_trace.update(
+            {
+                "review_delta_path_changes": review_delta_path_changes,
+                "same_path_failures_by_task": dict(
+                    sorted(review_delta_same_path_failures_by_task.items())
+                ),
+            }
+        )
     semantic_trace = {
         "id": case_id,
         "work_kind": "analyzed" if analysis_events else "direct",
-        "analysis": {
-            "count": len(analysis_events),
-            "kinds": [str(event.get("analysis_kind")) for event in analysis_events],
-        },
+        "analysis": analysis_trace,
         "task_dispatch": [
             {
                 "task_id": task_id,
@@ -8502,9 +8810,23 @@ def _valid_same_task_repair_redispatch(
         and step.get("action") in REVIEW_ROUND_COMPLETION_ACTIONS
         and step.get("task_id") == task_id
         and step.get("review_round_id") == dispatch["review_round_id"]
-        and step.get("required_changed_scope_complete") is True
-        and step.get("base_dimensions_complete") is True
-        and step.get("professional_risk_dimensions_complete") is True
+        and (
+            (
+                step.get("action") == "review"
+                and step.get("required_changed_scope_complete") is True
+                and step.get("base_dimensions_complete") is True
+                and step.get("professional_risk_dimensions_complete") is True
+            )
+            or (
+                step.get("action") == "re-review"
+                and step.get("rereview_checks") == list(REREVIEW_CHECKS)
+                and step.get("rereview_scope_expanded") is False
+                and step.get("frozen_boundary_status")
+                in {"preserved", "violation", "invalidated"}
+                and step.get("frozen_professional_risk_boundary_status")
+                == "preserved"
+            )
+        )
         and isinstance(step.get("finding_ids"), list)
     ]
     if len(completed_reviews) != 1:
@@ -8601,6 +8923,27 @@ def _profile_errors(
                 task_id = fixture_capsule.get("task_id")
                 if isinstance(task_id, str):
                     prior_dispatches = task_dispatches.setdefault(task_id, [])
+                    prior_repair_dispatches = [
+                        prior_index
+                        for prior_index in prior_dispatches
+                        if steps[prior_index].get("mode") == "repair"
+                        and isinstance(
+                            steps[prior_index].get("review_round_id"), str
+                        )
+                        and bool(steps[prior_index]["review_round_id"])
+                    ]
+                    if (
+                        mode == "repair"
+                        and isinstance(step.get("review_round_id"), str)
+                        and bool(step["review_round_id"])
+                        and len(prior_repair_dispatches)
+                        >= MAX_AUTOMATIC_REPAIR_ROUNDS_PER_TASK
+                    ):
+                        errors.append(
+                            f"{case_id}: [repair-round-cap] Task ID {task_id!r} "
+                            f"already used {MAX_AUTOMATIC_REPAIR_ROUNDS_PER_TASK} "
+                            "automatic Repair rounds"
+                        )
                     if prior_dispatches:
                         review_round_id = step.get("review_round_id")
                         batch_key = (str(review_round_id), task_id)
@@ -9026,6 +9369,19 @@ def _progress_anchor_error(
 
 def _progress_errors(case_id: str, steps: list[dict[str, Any]]) -> list[str]:
     errors: list[str] = []
+    repair_counts: dict[str, int] = {}
+    for index, step in enumerate(steps):
+        if step.get("actor") != "task-agent" or step.get("action") != "repair":
+            continue
+        task_id = step.get("task_id")
+        if not isinstance(task_id, str) or not task_id:
+            continue
+        repair_counts[task_id] = repair_counts.get(task_id, 0) + 1
+        if repair_counts[task_id] > MAX_AUTOMATIC_REPAIR_ROUNDS_PER_TASK:
+            errors.append(
+                f"{case_id}: [repair-round-cap] Task ID {task_id!r} exceeds "
+                f"{MAX_AUTOMATIC_REPAIR_ROUNDS_PER_TASK} automatic Repair rounds at step {index}"
+            )
     previous: tuple[str, str] | None = None
     last_evidence_by_type: dict[str, str] = {}
     has_trace_actions = any(step.get("action") != "progress" for step in steps)
@@ -10923,9 +11279,9 @@ def main(argv: list[str] | None = None) -> int:
                 "review discipline fixture count must remain exactly 35, found "
                 f"{len(review_discipline_results)}"
             )
-        if len(task_focus_results) != 48:
+        if len(task_focus_results) != 51:
             errors.append(
-                "task-focus fixture count must remain exactly 48, found "
+                "task-focus fixture count must remain exactly 51, found "
                 f"{len(task_focus_results)}"
             )
         if len(combined_review_results) != 15:

@@ -9,9 +9,13 @@ expected:
   behaviors:
     - blocked closure on the open finding
     - recorded repair validation and re-review of the latest diff
+    - stopped automatic Repair after two rounds per Task ID and failed closed on any remaining blocker
+    - required Review Input Ready before every review dispatch
   forbidden_behaviors:
     - reuse approval from before the repair
     - close with an open correctness finding
+    - reset the Repair budget through Delta Analysis
+    - Review then Task export diff or evidence then Review
 captured:
   profile: review-agent
   primary_skill: ai-code-review-refactor
@@ -20,7 +24,9 @@ captured:
   observed_behaviors:
     - blocked closure on the open finding
     - recorded repair validation and re-review of the latest diff
+    - stopped automatic Repair after two rounds per Task ID and failed closed on any remaining blocker
+    - required Review Input Ready before every review dispatch
   validation_status: passed
-  residual_risk: full integration suite remains outside the bounded repair
+  residual_risk: fixture conformance only; real-host and Copilot execution remain unproven
   completion_claim: true
 evidence_kind: captured-fixture

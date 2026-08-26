@@ -823,6 +823,7 @@ PROMPT_MANAGED_PROJECTION_CONTRACTS = {
         "required_contracts": [
             "visible_evidence_contract",
             "review_discipline_contract",
+            "task_contract",
         ],
     },
     "closure-contract": {
@@ -1314,7 +1315,12 @@ def prompt_projection_block(
             + ".",
             "Current review-agent evidence: actual diff/every changed file/validation results/changed-scope-reviewed/high-risk-review-passed/blocking-findings-none|blocking-findings-resolved.",
             "not-required JIT-loads from the Handoff owner; Missing/inconsistent authority/binding fails closed→reissue.",
-            "Core repair_routing owns exact groups/batches/obligations/exclusions; scope-blocker→Main→Analysis. Core post_dispatch_block owns reasons/proof; protected invalidation→Main→Analysis; repair requires fresh validation/re-review.",
+            "The fixed Review Boundary closes first. Material current-task findings with the same Review Round ID+Task ID form exactly one Repair batch; cross-Task batch is forbidden. Adjacent record-only: no Repair/Analysis; ordinary finding no Analysis; scope-blocker or protected Authority/Brief invalidation→Main bounded Delta. Repair requires fresh validation/re-review: fresh validation, latest actual diff, fresh re-review.",
+            "Initial Review keeps the full fixed boundary/scope/base/professional-risk depth. Full-boundary completion applies only to Initial Review.",
+            "Focused Re-review checks inherited findings, repair diff/regressions, affected transitive dependents, and frozen Acceptance/Invariant/Contract/professional-risk boundaries.",
+            "Its focused completion explicitly preserves the frozen professional-risk boundary without reopening Initial scope.",
+            "Classify new findings inherited|repair-regression|frozen-boundary-violation|protected-invalidation|adjacent. Protected invalidation invalidates affected validation/review evidence before Delta→Task→fresh validation→PASS re-review; adjacent is residual-only.",
+            "At most 2 automatic Repair rounds per Task ID; Review Boundary/Review Round/Delta Analysis never reset the count. At cap: blocker→BLOCKED non-converged, protected invalidation→Main→Delta Analysis, adjacent/hardening-only may close the current contract; cap never implies PASS. Review-driven Delta Analysis follows the same two-failure changed hypothesis/material/gap/transition rule and cannot third-replan unchanged.",
             "No " + "/".join(forbidden) + ". review_discipline_contract and task_contract.finding_relations authoritative.",
             end,
         ]
@@ -4057,10 +4063,9 @@ def validate_core_contracts(
                     "rule_id": "analysis-localization",
                     "required_terms": [
                         "current source",
-                        "direct read",
-                        "search candidates",
+                        "direct read/search",
                         "minimum complete",
-                        "selectors only",
+                        "counts are selectors only",
                         "Proof Limit",
                         "never correctness/coverage conclusions",
                     ],
@@ -4070,12 +4075,12 @@ def validate_core_contracts(
                 {
                     "rule_id": "task-localization",
                     "required_terms": [
-                        "Current source",
-                        "direct read",
+                        "current source",
+                        "direct read/search",
                         "minimum complete",
+                        "bounded discovery",
                         "selectors only",
                         "Proof Limit",
-                        "anchors",
                         "never inherit correctness/coverage",
                     ],
                 }
@@ -4086,7 +4091,9 @@ def validate_core_contracts(
                     "required_terms": [
                         "independently",
                         "current source",
-                        "anchors are selectors",
+                        "direct read/search",
+                        "minimum complete",
+                        "selectors only",
                         "never inherit correctness/coverage",
                         "Proof Limit",
                     ],
@@ -4133,6 +4140,23 @@ def validate_core_contracts(
             },
             "contradiction_scope": "reopen-intersecting-claim-only",
             "material_proof_limit": "stop-before-edit-return-main",
+            "profile_projection": {
+                role: [
+                    {
+                        "rule_id": f"{role.removesuffix('-agent')}-evidence-closure",
+                        "required_terms": [
+                            "Evidence Closure:",
+                            "proved/not-applicable/Proof Limit",
+                            "no material risk",
+                            "new/invalidated/contradicted",
+                            "reopens affected only",
+                            "protected/material returns Main/Delta",
+                            "counts",
+                        ],
+                    }
+                ]
+                for role in ("analysis-agent", "task-agent", "review-agent")
+            },
         },
     }
     if evidence_localization != expected_evidence_localization:
@@ -4854,13 +4878,17 @@ def validate_core_contracts(
             )
         expected_preimplementation_convergence = {
             "L1-L3": "forbidden",
-            "L4": "existing-material-intermediate-trigger-only-once",
+            "L4": "material-intermediate-trigger-per-unchanged-boundary",
             "L5": "mandatory-independent",
             "keyword_only_trigger": "forbidden",
             "review_boundary": "fixed-and-complete-finding-frontier",
             "ordinary_finding": "record-and-continue-boundary",
             "finding_boundary_expansion": "forbidden",
             "post_delta_or_repair": "scoped-verification-or-scoped-rereview",
+            "post_delta_expanded_pre_review": (
+                "current-trigger-exact-nonempty-new-task-expansion-"
+                "material_boundary_expanded-true-broad-false"
+            ),
             "repeat_broad_review": (
                 "forbidden-without-protected-decision-or-material-boundary-expansion"
             ),
@@ -4897,10 +4925,17 @@ def validate_core_contracts(
             "ordinary_material_finding_action": (
                 "record-and-continue-fixed-review-boundary"
             ),
-            "completion_requirements": [
+            "initial_review_completion_requirements": [
                 "required-changed-scope",
                 "base-review-dimensions",
                 "required-professional-risk-dimensions",
+            ],
+            "rereview_completion_requirements": [
+                "inherited-finding-resolution",
+                "repair-diff-correctness",
+                "repair-regression",
+                "repair-affected-scope-and-transitive-dependents",
+                "frozen-acceptance-invariant-contract-and-professional-risk-boundary",
             ],
             "handoff_contents": (
                 "all-evidence-backed-findings-from-current-review-round-and-fixed-boundary"
@@ -4938,7 +4973,8 @@ def validate_core_contracts(
                 ],
             },
             "round_completion_actions": ["review", "re-review"],
-            "ordinary_outcomes_require_complete_boundary": True,
+            "initial_review_outcomes_require_complete_boundary": True,
+            "rereview_outcomes_require_focused_boundary": True,
             "pass_requires_no_blocking_findings": True,
         }
         if review_discipline["complete_review_pass"] != expected_complete_review_pass:
@@ -5122,10 +5158,19 @@ def validate_core_contracts(
             ],
             "retains": "unaffected-fresh-evidence",
             "rereview_focus": [
-                "original-finding-resolved",
-                "repair-diff-correct",
-                "affected-dependent-scope-safe",
+                "inherited-finding-resolution",
+                "repair-diff-correctness",
+                "repair-regression",
+                "repair-affected-scope-and-transitive-dependents",
+                "frozen-acceptance-invariant-contract-and-professional-risk-boundary",
             ],
+            "initial_review_rule": (
+                "complete-fixed-review-boundary-changed-scope-base-dimensions-"
+                "and-professional-risk-dimensions"
+            ),
+            "rereview_rule": (
+                "focused-rereview-only-without-reopening-frozen-boundary"
+            ),
             "scope_expansion_triggers": [
                 "public-or-shared-contract",
                 "schema",
@@ -5268,6 +5313,8 @@ def validate_core_contracts(
             "uniform-review-dimensions",
             "professional-risk-matrix",
             "repair-review-order",
+            "initial-review-and-focused-rereview",
+            "rereview-finding-classification",
             "review-frequency-and-subsumption",
             "validation-evidence-reuse",
             "material-findings-and-fail-fast",
@@ -5276,7 +5323,7 @@ def validate_core_contracts(
             errors.append(
                 "review_discipline_contract.profile_projection must define the "
                 "uniform dimensions, risk matrix, repair, frequency, reuse, finding, "
-                "and complete-pass rules"
+                "Initial/Re-review convergence, and complete-pass rules"
             )
         handoff_projection = review_discipline["handoff_projection"]
         if exact_keys(
@@ -7354,6 +7401,54 @@ def validate_core_contracts(
             "unrelated_changed_file": (
                 "remove-current-task-unrelated-edit-without-repairing-file"
             ),
+            "review_convergence": {
+                "maximum_automatic_repair_rounds_per_task_id": 2,
+                "budget_key": "Task ID",
+                "budget_reset_forbidden": [
+                    "Review Boundary ID",
+                    "Review Round ID",
+                    "Delta Analysis",
+                ],
+                "rereview_classifications": [
+                    "inherited",
+                    "repair-regression",
+                    "frozen-boundary-violation",
+                    "protected-invalidation",
+                    "adjacent",
+                ],
+                "rereview_classification_to_finding_relation": {
+                    "inherited": "current-task",
+                    "repair-regression": "current-task",
+                    "frozen-boundary-violation": "current-task",
+                    "protected-invalidation": "scope-blocker",
+                    "adjacent": "adjacent",
+                },
+                "blocking_classifications": [
+                    "inherited",
+                    "repair-regression",
+                    "frozen-boundary-violation",
+                ],
+                "frozen_boundary_violation_requires_evidence": True,
+                "cap_disposition": {
+                    "unresolved-blocker": "blocked-non-converged",
+                    "protected-decision-invalidated": "main-delta-analysis",
+                    "adjacent-or-hardening-only": (
+                        "close-current-contract-record-residual"
+                    ),
+                },
+                "cap_implies_pass": False,
+                "delta_analysis_budget_effect": (
+                    "preserve-per-task-repair-count"
+                ),
+                "review_driven_delta_same_path_limit": 2,
+                "review_driven_delta_retry_requires_any": [
+                    "changed-hypothesis",
+                    "changed-material",
+                    "changed-gap",
+                    "changed-transition",
+                ],
+                "third_unchanged_replan": "forbidden-blocked",
+            },
         }
         if task["repair_routing"] != expected_repair_routing:
             errors.append(

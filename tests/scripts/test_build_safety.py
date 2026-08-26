@@ -421,9 +421,17 @@ Own one bounded decision.
             BUILD._write_compact_layer3_root_projection(foundation, foundation_item)
             rendered_foundation = foundation_file.read_text(encoding="utf-8")
             self.assertEqual(
-                [*BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, "JIT Reference Delivery"],
+                list(BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS),
                 headings(rendered_foundation),
             )
+            for forbidden in (
+                "## JIT Reference Delivery",
+                "Current-Professional JIT",
+                "engineering-control-plane/references/selectors/",
+                "never select/reroute/preload",
+                "index/catalog",
+            ):
+                self.assertNotIn(forbidden, rendered_foundation)
             for source_only in ("Registry Trigger", "Inputs", "Output Contract"):
                 self.assertIn(f"## {source_only}", foundation_source)
                 self.assertNotIn(f"## {source_only}", rendered_foundation)
@@ -1258,7 +1266,6 @@ Preserve this second paragraph because the complete role defines the decision bo
                 "High-Value Rules",
                 "Anti-Patterns",
                 "Stop Conditions",
-                "JIT Reference Delivery",
             ],
             list(sections),
         )
@@ -1283,7 +1290,14 @@ Preserve this second paragraph because the complete role defines the decision bo
         self.assertNotIn("foundation-semantic-matcher/v1", rendered)
         self.assertNotIn("runtime matcher metadata sentinel", rendered)
         self.assertNotIn("## Targeted References", rendered)
-        self.assertIn("Current-Professional JIT", rendered)
+        for forbidden in (
+            "## JIT Reference Delivery",
+            "Current-Professional JIT",
+            "engineering-control-plane/references/selectors/",
+            "never select/reroute/preload",
+            "index/catalog",
+        ):
+            self.assertNotIn(forbidden, rendered)
 
     def test_occurrence_activation_metadata_is_not_rendered(self) -> None:
         body = """# sample-occurrence-activation
@@ -1439,7 +1453,8 @@ Own the occurrence-render-body-sentinel boundary.
             self.assertNotIn(forbidden, rendered_with)
         self.assertIn("occurrence-render-body-sentinel", rendered_with)
         self.assertNotIn("## Targeted References", rendered_with)
-        self.assertIn("Current-Professional JIT", rendered_with)
+        self.assertNotIn("## JIT Reference Delivery", rendered_with)
+        self.assertNotIn("Current-Professional JIT", rendered_with)
 
     def test_domain_layer3_projection_uses_domain_decision_sections(self) -> None:
         body = """# sample-domain
@@ -1502,7 +1517,6 @@ Own the complete domain boundary. Keep this second sentence.
                 "Professional Decision Rules",
                 "High-Value Gotchas",
                 "Stop / Escalation Conditions",
-                "JIT Reference Delivery",
             ],
             list(sections),
         )
@@ -1513,6 +1527,54 @@ Own the complete domain boundary. Keep this second sentence.
         self.assertNotIn("No task-local Reference is indexed", rendered)
         for heading in BUILD.LAYER3_PROJECTION_FORBIDDEN_HEADINGS:
             self.assertNotIn(f"## {heading}", rendered)
+
+    def test_four_foundation_replacement_rules_are_exact_and_decision_bearing(self) -> None:
+        expected = {
+            "data-migration-design": (
+                "Block destructive cleanup until readers retire and reconciliation, "
+                "recovery, and ownership are proven."
+            ),
+            "release-rollback": (
+                "Choose rollback only while old code reads current durable, provider, "
+                "and retained state."
+            ),
+            "version-compatibility": (
+                "Select a bridge from each failing producer-consumer or data direction "
+                "using current evidence."
+            ),
+            "permission-boundary-modeling": (
+                "Enforce permissions before collection outputs; define explicit behavior "
+                "for mixed tenant bulk actions."
+            ),
+        }
+        generic = (
+            "Load the named benchmark, checklist, or evidence Reference according to "
+            "the open output."
+        )
+        source_occurrences = 0
+        registries = BUILD._load_registries()
+        foundation_items = {
+            item.name: item
+            for item in BUILD._load_items("foundation", registries["foundation"])
+        }
+        for skill_name, rule in expected.items():
+            with self.subTest(skill=skill_name):
+                path = foundation_items[skill_name].path / "SKILL.md"
+                source = path.read_text(encoding="utf-8")
+                source_occurrences += source.count(generic)
+                _h1, sections = BUILD._markdown_heading_sections(source)
+                rules = [
+                    line.removeprefix("- ")
+                    for line in sections["High-Value Rules"][0].splitlines()
+                    if line.startswith("- ")
+                ]
+                self.assertEqual(3, len(rules))
+                self.assertIn(rule, rules)
+                self.assertEqual([], VALIDATION.foundation_content_class_errors(
+                    foundation_items[skill_name].registry,
+                    f"foundation_skills.{skill_name}",
+                ))
+        self.assertEqual(0, source_occurrences)
 
     def test_layer3_projection_fails_closed_on_missing_or_duplicate_sections(self) -> None:
         body = """# sample-foundation

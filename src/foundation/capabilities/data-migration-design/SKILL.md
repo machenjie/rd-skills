@@ -23,7 +23,7 @@ Own data-state transitions and cutover safety; exclude business rules and produc
 
 - Bind source and target authority plus mixed-version readers and writers to one cutover state.
 - Coordinate live writes and backfill through owned ordering, resumability, semantic validation, and recovery.
-- Load the named benchmark, checklist, or evidence Reference according to the open output.
+- Block destructive cleanup until readers retire and reconciliation, recovery, and ownership are proven.
 
 ## Anti-Patterns
 

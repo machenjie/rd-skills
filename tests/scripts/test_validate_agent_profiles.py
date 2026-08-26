@@ -80,7 +80,7 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         self.assertLessEqual(
             count_o200k_base_tokens(task), 635 - required_task_reduction
         )
-        self.assertLessEqual(count_o200k_base_tokens(review), 336)
+        self.assertLessEqual(count_o200k_base_tokens(review), 349)
         self.assertIn("Consume Main's bound effective Level", task)
         self.assertIn("Main-bound Level/depth/assurance", review)
         self.assertIn("never calculate or recompute", task)
@@ -90,19 +90,19 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         self.assertIn("Actual diff authoritative", review)
         self.assertIn("fresh re-review", review)
         self.assertIn(
-            "Non-fundamental outcomes require complete fixed Review Boundary",
+            "Initial Review completes fixed Review Boundary",
             review,
         )
-        self.assertIn("after ready dispatch block only", review)
+        self.assertIn("Ready-dispatch blocks", review)
         self.assertIn("Reviewed/Unreviewed Scope+Proof Limit", review)
-        self.assertIn("PASS requires no blockers", review)
+        self.assertIn("PASS=no blocker", review)
         for obligation in (
             "Depth only Level-added, never removed.",
-            "In current source, independently direct-read exact anchors; unknown location→search→minimum complete proof",
-            "Search/Top-K/summaries/digests/paths/command output/opaque refs select evidence, not completeness",
-            "Actual diff authoritative; every changed file required; missing evidence blocks.",
+            "independently direct read/search current source→minimum complete proof",
+            "counts/Top-K/files/summaries/digests/paths/output/opaque refs are selectors only",
+            "Actual diff authoritative; every changed file required; missing blocks",
             "older review cannot cover later edits.",
-            "Never edit, repair, dispatch or inherit implementer reasoning.",
+            "Never edit, repair, dispatch or inherit implementer reasoning",
         ):
             self.assertIn(obligation, review)
         self.assertNotIn("PASS requires the full changed scope", review)
@@ -683,6 +683,38 @@ class AgentProfileReadabilityTests(unittest.TestCase):
                     "capability" in output or "role-minimal projection" in output,
                     output,
                 )
+
+    def test_worker_evidence_closure_projection_survives_temp_host_render_and_mutation(
+        self,
+    ) -> None:
+        source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
+        enforcement = json.loads(
+            VALIDATOR.ENFORCEMENT_SOURCE.read_text(encoding="utf-8")
+        )
+        renderers = (
+            BUILDER._render_codex_profile,
+            BUILDER._render_claude_profile,
+            BUILDER._render_copilot_profile,
+        )
+        for profile in source["profiles"]:
+            if profile["name"] not in {"analysis-agent", "task-agent", "review-agent"}:
+                continue
+            role = profile["name"]
+            with self.subTest(role=role):
+                self.assertEqual(
+                    1,
+                    profile["instructions"].count("Evidence Closure:"),
+                )
+                for renderer in renderers:
+                    rendered = renderer(profile, enforcement)
+                    self.assertEqual(1, rendered.count("Evidence Closure:"))
+                result, output = self._mutated_source_result(
+                    role,
+                    "Evidence Closure:",
+                    "Evidence Completion:",
+                )
+                self.assertEqual(1, result, output)
+                self.assertIn("evidence closure", output.casefold())
 
     def test_analysis_and_review_profiles_load_relocated_decision_owners(self) -> None:
         source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))

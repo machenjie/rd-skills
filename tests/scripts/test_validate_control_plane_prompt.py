@@ -317,6 +317,41 @@ class ControlPromptProjectionTests(unittest.TestCase):
         )
         self.assertNotIn("Assignment initial", projections["closure-contract"])
 
+    def test_main_review_routing_projection_is_core_bound_and_mutation_closed(
+        self,
+    ) -> None:
+        managed = next(
+            item
+            for item in VALIDATOR.PROMPT_CONTRACT_MODEL["managed_projections"]
+            if item["id"] == "review-evidence-contract"
+        )
+        self.assertEqual(
+            [
+                "visible_evidence_contract",
+                "review_discipline_contract",
+                "task_contract",
+            ],
+            managed["required_contracts"],
+        )
+        text = VALIDATOR.PROMPT.read_text(encoding="utf-8")
+        for term in (
+            "fixed Review Boundary closes first",
+            "same Review Round ID+Task ID",
+            "exactly one Repair batch",
+            "cross-Task batch",
+            "adjacent record-only",
+            "ordinary finding no Analysis",
+            "scope-blocker or protected Authority/Brief invalidation",
+            "fresh validation, latest actual diff, fresh re-review",
+        ):
+            with self.subTest(term=term):
+                errors: list[str] = []
+                VALIDATOR._validate_concepts(self._remove_term(text, term), errors)
+                self.assertTrue(
+                    any("main-finding-repair-routing" in error for error in errors),
+                    errors,
+                )
+
     def test_missing_prompt_authoritative_template_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             reference_root = Path(raw) / "references"

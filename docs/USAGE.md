@@ -113,9 +113,15 @@ For implementation work, expect these observable stages:
 4. Independent review of the actual latest diff and all changed files.
 5. One same-Round, same-Task Repair batch for material current-task findings,
    preserving each finding's scope and proof obligations, followed by fresh
-   validation and covering re-review. A later re-review finding may create the
-   next same-Task batch. Scope blockers from review or re-review return to
-   Analysis and adjacent findings remain record-only.
+   validation and focused covering re-review. Initial Review remains complete;
+   Re-review checks only inherited findings, the Repair diff and regressions,
+   affected dependents, and frozen Acceptance/Invariant/Contract/risk boundaries;
+   it records frozen professional-risk validity without reopening Initial scope.
+   Each Task ID permits at most two automatic Repair rounds; Delta Analysis does
+   not reset the count. Remaining blockers fail closed, protected invalidation
+   returns to Analysis and invalidates affected validation/review evidence until
+   a changed Task, fresh validation, and PASS re-review, while adjacent findings
+   remain record-only.
 6. A visible closure handoff whose status is supported by current evidence.
 
 After Review Input Ready dispatch, a blocked Review is valid only when required
@@ -148,8 +154,9 @@ Evidence Ledger identifies current `latest-material-edit` and
 `validation-passed` claims. Closure also reports independent review findings,
 unverified scope, residual risk, and the next step.
 
-Repository evidence does not prove real-host enforcement or production
-correctness. Review the larger routes in the generated [Scenario
+Captured fixtures prove fixture conformance only; they are not real-host or
+Copilot execution evidence. Repository evidence does not prove real-host
+enforcement or production correctness. Review the larger routes in the generated [Scenario
 Showcase](SHOWCASE.md) and their source prompts in the [examples
 index](../examples/README.md). See [AI control boundaries](AI_CONTROL_BOUNDARIES.md)
 for enforcement limits and [Subagent model](SUBAGENT_MODEL.md) for detailed role

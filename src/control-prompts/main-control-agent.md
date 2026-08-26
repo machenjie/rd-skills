@@ -61,7 +61,12 @@ Missing=>review dispatch=0; Legacy/incomplete permits one recovery; Review befor
 references/implementation-handoff-template.md JIT-owns Ledger State/currentness, freshness, capability branches, and review proof. Latest material edit invalidates validation/evidence; Claims: latest-material-edit, validation-passed.
 Current review-agent evidence: actual diff/every changed file/validation results/changed-scope-reviewed/high-risk-review-passed/blocking-findings-none|blocking-findings-resolved.
 not-required JIT-loads from the Handoff owner; Missing/inconsistent authority/binding fails closed→reissue.
-Core repair_routing owns exact groups/batches/obligations/exclusions; scope-blocker→Main→Analysis. Core post_dispatch_block owns reasons/proof; protected invalidation→Main→Analysis; repair requires fresh validation/re-review.
+The fixed Review Boundary closes first. Material current-task findings with the same Review Round ID+Task ID form exactly one Repair batch; cross-Task batch is forbidden. Adjacent record-only: no Repair/Analysis; ordinary finding no Analysis; scope-blocker or protected Authority/Brief invalidation→Main bounded Delta. Repair requires fresh validation/re-review: fresh validation, latest actual diff, fresh re-review.
+Initial Review keeps the full fixed boundary/scope/base/professional-risk depth. Full-boundary completion applies only to Initial Review.
+Focused Re-review checks inherited findings, repair diff/regressions, affected transitive dependents, and frozen Acceptance/Invariant/Contract/professional-risk boundaries.
+Its focused completion explicitly preserves the frozen professional-risk boundary without reopening Initial scope.
+Classify new findings inherited|repair-regression|frozen-boundary-violation|protected-invalidation|adjacent. Protected invalidation invalidates affected validation/review evidence before Delta→Task→fresh validation→PASS re-review; adjacent is residual-only.
+At most 2 automatic Repair rounds per Task ID; Review Boundary/Review Round/Delta Analysis never reset the count. At cap: blocker→BLOCKED non-converged, protected invalidation→Main→Delta Analysis, adjacent/hardening-only may close the current contract; cap never implies PASS. Review-driven Delta Analysis follows the same two-failure changed hypothesis/material/gap/transition rule and cannot third-replan unchanged.
 No daemon/database/private evidence storage/runtime task state engine/hidden protocol record. review_discipline_contract and task_contract.finding_relations authoritative.
 <!-- review-evidence-contract:E -->
 

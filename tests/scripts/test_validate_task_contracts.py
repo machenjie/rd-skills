@@ -1789,6 +1789,36 @@ class CoreContractModelTests(unittest.TestCase):
         )
         self.assertEqual("unchanged-from-finding-task-id", repair["task_id_rule"])
         self.assertEqual("forbidden", repair["cross_task_batching"])
+        convergence = repair["review_convergence"]
+        self.assertEqual(2, convergence["maximum_automatic_repair_rounds_per_task_id"])
+        self.assertEqual("Task ID", convergence["budget_key"])
+        self.assertEqual(
+            ["Review Boundary ID", "Review Round ID", "Delta Analysis"],
+            convergence["budget_reset_forbidden"],
+        )
+        self.assertEqual(
+            {
+                "inherited": "current-task",
+                "repair-regression": "current-task",
+                "frozen-boundary-violation": "current-task",
+                "protected-invalidation": "scope-blocker",
+                "adjacent": "adjacent",
+            },
+            convergence["rereview_classification_to_finding_relation"],
+        )
+        self.assertEqual(
+            "blocked-non-converged",
+            convergence["cap_disposition"]["unresolved-blocker"],
+        )
+        self.assertEqual(
+            "main-delta-analysis",
+            convergence["cap_disposition"]["protected-decision-invalidated"],
+        )
+        self.assertEqual(
+            "close-current-contract-record-residual",
+            convergence["cap_disposition"]["adjacent-or-hardening-only"],
+        )
+        self.assertFalse(convergence["cap_implies_pass"])
         self.assertEqual(
             [
                 "Finding Relation",
@@ -2656,10 +2686,17 @@ class CoreContractModelTests(unittest.TestCase):
         self.assertEqual(
             {
                 "ordinary_material_finding_action": "record-and-continue-fixed-review-boundary",
-                "completion_requirements": [
+                "initial_review_completion_requirements": [
                     "required-changed-scope",
                     "base-review-dimensions",
                     "required-professional-risk-dimensions",
+                ],
+                "rereview_completion_requirements": [
+                    "inherited-finding-resolution",
+                    "repair-diff-correctness",
+                    "repair-regression",
+                    "repair-affected-scope-and-transitive-dependents",
+                    "frozen-acceptance-invariant-contract-and-professional-risk-boundary",
                 ],
                 "handoff_contents": "all-evidence-backed-findings-from-current-review-round-and-fixed-boundary",
                 "finding_expands_review_boundary": False,
@@ -2695,7 +2732,8 @@ class CoreContractModelTests(unittest.TestCase):
                     ],
                 },
                 "round_completion_actions": ["review", "re-review"],
-                "ordinary_outcomes_require_complete_boundary": True,
+                "initial_review_outcomes_require_complete_boundary": True,
+                "rereview_outcomes_require_focused_boundary": True,
                 "pass_requires_no_blocking_findings": True,
             },
             contract["complete_review_pass"],
@@ -3879,7 +3917,7 @@ class CoreContractModelTests(unittest.TestCase):
                     ]["capacity_ceiling"],
                     (case["id"], count_o200k_base_tokens(encoded)),
                 )
-        self.assertEqual(32, encoded_count)
+        self.assertEqual(30, encoded_count)
 
     def test_explicit_l1_is_a_base_not_an_automatic_or_historical_override(self) -> None:
         document = json.loads(AGENT_LIGHT_CASES.read_text(encoding="utf-8"))
@@ -4330,10 +4368,10 @@ class CoreContractModelTests(unittest.TestCase):
                         row["source_anchor"].startswith(f"fixture:{case['id']}:")
                     )
         self.assertEqual(
-            {"task": 16, "review": 16, "analysis": 8, "utility": 2},
+            {"task": 15, "review": 15, "analysis": 8, "utility": 2},
             counts,
         )
-        self.assertEqual({"L2": 14, "L3": 7, "L4": 11}, levels)
+        self.assertEqual({"L2": 12, "L3": 7, "L4": 11}, levels)
 
     def test_analysis_capsule_forbids_execution_level_extension(self) -> None:
         analysis = _first_fixture_step("analysis")

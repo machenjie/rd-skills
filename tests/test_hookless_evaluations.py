@@ -429,6 +429,21 @@ class HooklessEvaluationTests(unittest.TestCase):
         self.assertNotEqual(0, result.returncode)
         self.assertIn("unrecognized arguments", result.stderr)
 
+    def test_pressure_output_denies_real_host_and_copilot_execution_evidence(self) -> None:
+        result = self.run_script(
+            "scripts/eval-pressure-behavior.py",
+            "--format",
+            "json",
+            "--output-dir",
+            "none",
+        )
+        self.assertEqual(0, result.returncode, result.stderr or result.stdout)
+        source = (ROOT / "scripts/eval-pressure-behavior.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("fixture conformance only", source)
+        self.assertIn("not real-host or Copilot execution evidence", source)
+
     def test_professional_static_evaluation_contract(self) -> None:
         report = load_owned_eval_report(
             self,

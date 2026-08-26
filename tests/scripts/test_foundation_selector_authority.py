@@ -928,7 +928,7 @@ FOUNDATION_ALIAS_PRODUCER_FIXTURES = (
         ),
         "alias_id": "cache-stampede-reliability-controls",
         "source_ids": (
-            "cache-stampede-analysis",
+            "concurrency-control-analysis",
             "security-anti-reliability-only",
         ),
         "primary_skill": "engineering-change-analysis",
@@ -937,6 +937,27 @@ FOUNDATION_ALIAS_PRODUCER_FIXTURES = (
             "concurrency-control",
             "degradation-circuit-breaking",
             "observability",
+        ),
+    },
+    {
+        "fixture_id": "alias-retry-lease-terminal-resolution-analysis",
+        "prompt": (
+            "Analyze a reliability change where the owner is known; "
+            "duplicate delivery has an unknown side-effect outcome; lease "
+            "expiry permits stale-worker ownership and overlapping execution; "
+            "terminal resolution is required; queue topology, failure contract "
+            "and cross-service workflow remain unchanged."
+        ),
+        "alias_id": "retry-lease-terminal-resolution-analysis",
+        "source_ids": (
+            "backend-idempotency-analysis",
+            "concurrency-control-analysis",
+        ),
+        "primary_skill": "engineering-change-analysis",
+        "review_skill": "reliability-observability-gate",
+        "member_subset": (
+            "concurrency-control",
+            "idempotency-retry-design",
         ),
     },
 )
@@ -5149,8 +5170,8 @@ class _FoundationSelectorSpec:
             )
             for fixture in FOUNDATION_ALIAS_PRODUCER_FIXTURES
         }
-        self.assertEqual(37, len(FOUNDATION_ALIAS_PRODUCER_FIXTURES))
-        self.assertEqual(37, len(literal_variants))
+        self.assertEqual(38, len(FOUNDATION_ALIAS_PRODUCER_FIXTURES))
+        self.assertEqual(38, len(literal_variants))
 
         production_variants = {
             (alias_id, source_ids, primary_skill, review_skill)

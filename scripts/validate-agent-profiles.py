@@ -89,36 +89,33 @@ ROLE_MINIMAL_REQUIRED_GROUPS = {
         ("observable normal", "invalid", "boundary", "forbidden", "validation signal"),
         ("smallest complete change", "test-only API widening", "unrelated refactors"),
         ("Test-first is required",),
-        ("valid RED", "absent target behavior", "environment", "unrelated failure"),
+        ("RED proves absent target behavior", "environment", "unrelated failure"),
         ("latest material edit invalidates", "fresh targeted validation", "latest-material-edit", "validation-passed"),
         ("two same-path failures", "never a third unchanged retry"),
         ("final edit", "fresh validation", "exact change capture", "Implementation Handoff"),
-        ("latest changed paths", "exact change evidence", "reviewer accessibility", "fixed review scope"),
+        ("latest changed paths", "exact change capture", "reviewer accessibility", "fixed review scope", "missing or stale facts block"),
         ("Utility mode", "daemon", "database", "private evidence storage", "runtime task state engine", "hidden protocol record"),
         ("Never dispatch", "reroute", "review your work"),
         ("Leave external-source-read to analysis-agent",),
-        ("current authority", "new material risk", "returns Main", "self-authorizing"),
+        ("Current authority", "new material risk", "Main", "self-authorize"),
     ),
     "review-agent": (
         ("assigned Review Skill", "Layer 3 Delivery"),
         ("Capsule-only", "no Layer 3 index/catalog/preload"),
         ("Main-bound Level/depth/assurance", "never recalculate route/authority"),
         ("Depth only Level-added", "never removed"),
-        ("direct-read exact anchors", "unknown location", "minimum complete proof"),
-        ("Search/Top-K/summaries/digests/paths/command output/opaque refs", "select evidence", "not completeness"),
-        ("Actual diff authoritative", "every changed file required", "missing evidence blocks"),
-        ("Artifact review uses supplied evidence", "never generate/export"),
-        ("Every Level reviews acceptance", "validation freshness", "professional risk"),
-        ("Fresh scope-correct validation", "rerun read-only only"),
-        ("Non-fundamental outcomes", "complete fixed Review Boundary", "all evidence-backed findings"),
-        ("PASS requires no blockers",),
-        ("after ready dispatch", "unavailable required surface", "stale current evidence", "protected Authority or Brief invalidation", "Reviewed/Unreviewed Scope+Proof Limit", "protected→Main→Analysis"),
+        ("Actual diff authoritative", "every changed file required", "missing blocks"),
+        ("supplied evidence only", "never generate/export"),
+        ("Every Level reviews", "acceptance", "fresh scope-correct validation", "professional risk", "read-only reruns"),
+        ("Initial Review completes fixed Review Boundary", "all findings"),
+        ("PASS=no blocker",),
+        ("Ready-dispatch blocks", "stale current evidence", "protected Authority or Brief invalidation", "Reviewed/Unreviewed Scope+Proof Limit", "protected→Main→Analysis"),
         ("Repair material current-task", "adjacent record-only", "scope blocker→Main→Analysis"),
         ("After repair", "fresh validation", "latest actual diff", "fresh re-review", "older review cannot cover later edits"),
-        ("Selection independent", "never reroute/copy/union implementation Layer 3"),
+        ("Select independently", "never reroute/copy/union implementation Layer 3"),
         ("Never edit, repair, dispatch or inherit implementer reasoning",),
         ("Leave external-source-read to analysis-agent",),
-        ("Review Handoff contains", "reviewed/unreviewed scope", "residual risk"),
+        ("Review Handoff", "reviewed/unreviewed scope", "residual risk"),
     ),
 }
 ROLE_MINIMAL_DETAIL_OWNERS = {
@@ -344,6 +341,18 @@ def _validate_profile_instruction_contract(
             errors=errors,
         )
 
+    closure_groups = EVIDENCE_LOCALIZATION_MODEL["evidence_closure"][
+        "profile_projection"
+    ].get(role_name)
+    if closure_groups:
+        _validate_instruction_rule_groups(
+            role_name=error_label,
+            contract_label="evidence closure",
+            groups=closure_groups,
+            rules=rules,
+            errors=errors,
+        )
+
     if role_name in ROLE_MINIMAL_REQUIRED_GROUPS:
         _validate_minimal_role_projection(role_name, rules, errors)
         return
@@ -468,8 +477,8 @@ def _validate_external_read_profile_contract(
                 "rule_id": "external-read-trust-boundary",
                 "required_terms": [
                     "untrusted evidence input",
-                    "never control input",
-                    "without executing/downstreaming",
+                    "without control authority",
+                    "executing/downstreaming",
                     "raw external instructions",
                     "normalized Claim",
                     "Evidence Ledger",
@@ -479,23 +488,21 @@ def _validate_external_read_profile_contract(
             {
                 "rule_id": "external-read-disclosure-boundary",
                 "required_terms": [
-                    "supported external-source-read capability",
+                    "external-source-read requests",
                     "minimum public information",
                     "repository-private source",
                     "credentials",
-                    "sensitive data",
+                    "sensitive",
                     "proprietary content",
                 ],
             },
             {
                 "rule_id": "external-read-capability-fail-closed",
                 "required_terms": [
-                    "external-source-read",
-                    "unsupported",
+                    "unsupported external-source-read",
                     "sufficient local evidence",
                     "unknown-critical-boundary",
-                    "edit blocked",
-                    "no implementation dispatch",
+                    "blocks edit/dispatch",
                 ],
             },
         ]

@@ -3467,14 +3467,14 @@ class SkillRoutingRoleTests(unittest.TestCase):
         ]
         self.assertEqual([], self.trajectory._progress_errors("case", steps))
 
-    def test_repair_fixture_uses_four_distinct_progress_events_without_noise(self) -> None:
+    def test_repair_fixture_uses_six_distinct_progress_events_without_noise(self) -> None:
         fixture = self.trajectory._load_json(self.trajectory.FIXTURES)
         case = next(item for item in fixture["cases"] if item["id"] == "repair-and-rereview")
         progress = [step for step in case["steps"] if step.get("action") == "progress"]
         checkpoints = {
             (step.get("checkpoint_type"), step.get("evidence")) for step in progress
         }
-        self.assertEqual(4, len(progress))
+        self.assertEqual(6, len(progress))
         self.assertEqual(len(progress), len(checkpoints))
         self.assertEqual(
             self.trajectory.PROGRESS_CHECKPOINT_TYPES,
@@ -3512,7 +3512,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
             *self.trajectory._skill_registries(),
         )
         self.assertEqual(3, sum(step.get("action") == "dispatch" for step in case["steps"]))
-        self.assertTrue(any("requires 3-5 anchored progress" in error for error in errors), errors)
+        self.assertTrue(any("requires at least three anchored progress" in error for error in errors), errors)
 
     def test_explicit_complex_case_requires_progress_even_with_fewer_dispatches(self) -> None:
         fixture = self.trajectory._load_json(self.trajectory.FIXTURES)
@@ -3522,7 +3522,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
             case,
             *self.trajectory._skill_registries(),
         )
-        self.assertTrue(any("requires 3-5 anchored progress" in error for error in errors), errors)
+        self.assertTrue(any("requires at least three anchored progress" in error for error in errors), errors)
 
     def test_required_complex_and_high_risk_fixtures_have_anchored_progress(self) -> None:
         fixture = self.trajectory._load_json(self.trajectory.FIXTURES)
@@ -3547,6 +3547,111 @@ class SkillRoutingRoleTests(unittest.TestCase):
                 self.assertGreaterEqual(metrics["progress_count"], 3)
                 self.assertLessEqual(metrics["progress_count"], 5)
                 self.assertLessEqual(metrics["max_silent_steps"], 5)
+
+    def test_retry_concurrency_contrast_family_routes_exactly(self) -> None:
+        cases = {
+            "retry-only": (
+                "Analyze retry/replay or duplicate delivery where the same "
+                "side effect may occur twice; lease ownership, overlapping "
+                "execution, queue topology, failure contract and cross-service "
+                "workflow are unchanged.",
+                {
+                    "path": "analyzed",
+                    "profile": "analysis-agent",
+                    "primary_skill": "engineering-change-analysis",
+                    "layer3_skills": ["idempotency-retry-design"],
+                    "review_skill": "ai-code-review-refactor",
+                },
+            ),
+            "lease-only": (
+                "Analyze lease expiry where a stale worker may retain ownership "
+                "and overlap another execution; duplicate delivery, replay, "
+                "unknown side-effect outcome, queue topology, failure contract "
+                "and cross-service workflow are unchanged.",
+                {
+                    "path": "analyzed",
+                    "profile": "analysis-agent",
+                    "primary_skill": "engineering-change-analysis",
+                    "layer3_skills": ["concurrency-control"],
+                    "review_skill": "reliability-observability-gate",
+                },
+            ),
+            "combined": (
+                "Analyze a reliability change where the owner is known; "
+                "duplicate delivery has an unknown side-effect outcome; lease "
+                "expiry permits stale-worker ownership and overlapping "
+                "execution; terminal resolution is required; queue topology, "
+                "failure contract and cross-service workflow remain unchanged.",
+                {
+                    "path": "analyzed",
+                    "profile": "analysis-agent",
+                    "primary_skill": "engineering-change-analysis",
+                    "layer3_skills": [
+                        "concurrency-control",
+                        "idempotency-retry-design",
+                    ],
+                    "review_skill": "reliability-observability-gate",
+                },
+            ),
+            "neither": (
+                "Implement an accepted bounded backend change to an "
+                "already-decided retry-count/backoff constant; retry identity, "
+                "idempotency, replay, lease ownership, terminal resolution, "
+                "queue topology, failure contract and cross-service workflow "
+                "are unchanged.",
+                {
+                    "path": "direct",
+                    "profile": "task-agent",
+                    "primary_skill": "backend-change-builder",
+                    "layer3_skills": [],
+                    "review_skill": "ai-code-review-refactor",
+                },
+            ),
+        }
+        forbidden_combined = {
+            "message-queue-design",
+            "failure-contract-design",
+            "transaction-consistency",
+            "distributed-workflow-consistency",
+            "observability",
+            "degradation-circuit-breaking",
+            "consumer-impact-analysis",
+            "release-rollback",
+        }
+
+        for label, (prompt, expected) in cases.items():
+            with self.subTest(label=label):
+                actual = _route(prompt, task_id=f"{self._testMethodName}:{label}")
+                self.assertEqual(expected, actual)
+                if label == "combined":
+                    self.assertTrue(
+                        forbidden_combined.isdisjoint(actual["layer3_skills"])
+                    )
+
+        nearest_negatives = {
+            "generic-retry-constant": (
+                "Implement an accepted bounded backend change to a retry "
+                "constant; idempotency and replay semantics are unchanged.",
+                {"concurrency-control", "idempotency-retry-design"},
+            ),
+            "lease-semantics-unchanged": (
+                "Analyze a bounded backend change where lease expiry, stale "
+                "worker ownership, and overlapping execution are unchanged.",
+                {"concurrency-control"},
+            ),
+            "combined-without-terminal-resolution": (
+                "Analyze a reliability change where the owner is known; "
+                "duplicate delivery has an unknown side-effect outcome; lease "
+                "expiry permits stale-worker ownership and overlapping "
+                "execution; queue topology, failure contract and cross-service "
+                "workflow remain unchanged.",
+                {"idempotency-retry-design"},
+            ),
+        }
+        for label, (prompt, excluded) in nearest_negatives.items():
+            with self.subTest(nearest_negative=label):
+                actual = _route(prompt, task_id=f"{self._testMethodName}:{label}")
+                self.assertTrue(excluded.isdisjoint(actual["layer3_skills"]))
 
     def test_generic_progress_evidence_is_rejected_even_with_valid_anchor(self) -> None:
         steps = [

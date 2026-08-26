@@ -56,7 +56,7 @@ class SelectorJitDomainParityTests(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            180,
+            181,
             sum(len(record["owner_bindings"]) for record in authority["selectors"]),
         )
         oracle = ORACLE.oracle_admission_authority(

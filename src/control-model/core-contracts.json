@@ -504,13 +504,13 @@
     ],
     "profile_projection": {
       "analysis-agent": [
-        {"rule_id": "analysis-localization", "required_terms": ["current source", "direct read", "search candidates", "minimum complete", "selectors only", "Proof Limit", "never correctness/coverage conclusions"]}
+        {"rule_id": "analysis-localization", "required_terms": ["current source", "direct read/search", "minimum complete", "counts are selectors only", "Proof Limit", "never correctness/coverage conclusions"]}
       ],
       "task-agent": [
-        {"rule_id": "task-localization", "required_terms": ["Current source", "direct read", "minimum complete", "selectors only", "Proof Limit", "anchors", "never inherit correctness/coverage"]}
+        {"rule_id": "task-localization", "required_terms": ["current source", "direct read/search", "minimum complete", "bounded discovery", "selectors only", "Proof Limit", "never inherit correctness/coverage"]}
       ],
       "review-agent": [
-        {"rule_id": "review-localization", "required_terms": ["independently", "current source", "anchors are selectors", "never inherit correctness/coverage", "Proof Limit"]}
+        {"rule_id": "review-localization", "required_terms": ["independently", "current source", "direct read/search", "minimum complete", "selectors only", "never inherit correctness/coverage", "Proof Limit"]}
       ]
     },
     "cost_observation_fields": [
@@ -540,7 +540,18 @@
         "protected-or-material": "stop-edit-return-main-bounded-delta"
       },
       "contradiction_scope": "reopen-intersecting-claim-only",
-      "material_proof_limit": "stop-before-edit-return-main"
+      "material_proof_limit": "stop-before-edit-return-main",
+      "profile_projection": {
+        "analysis-agent": [
+          {"rule_id": "analysis-evidence-closure", "required_terms": ["Evidence Closure:", "proved/not-applicable/Proof Limit", "no material risk", "new/invalidated/contradicted", "reopens affected only", "protected/material returns Main/Delta", "counts"]}
+        ],
+        "task-agent": [
+          {"rule_id": "task-evidence-closure", "required_terms": ["Evidence Closure:", "proved/not-applicable/Proof Limit", "no material risk", "new/invalidated/contradicted", "reopens affected only", "protected/material returns Main/Delta", "counts"]}
+        ],
+        "review-agent": [
+          {"rule_id": "review-evidence-closure", "required_terms": ["Evidence Closure:", "proved/not-applicable/Proof Limit", "no material risk", "new/invalidated/contradicted", "reopens affected only", "protected/material returns Main/Delta", "counts"]}
+        ]
+      }
     }
   },
   "implementation_discipline_contract": {
@@ -788,13 +799,14 @@
     },
     "preimplementation_convergence": {
       "L1-L3": "forbidden",
-      "L4": "existing-material-intermediate-trigger-only-once",
+      "L4": "material-intermediate-trigger-per-unchanged-boundary",
       "L5": "mandatory-independent",
       "keyword_only_trigger": "forbidden",
       "review_boundary": "fixed-and-complete-finding-frontier",
       "ordinary_finding": "record-and-continue-boundary",
       "finding_boundary_expansion": "forbidden",
       "post_delta_or_repair": "scoped-verification-or-scoped-rereview",
+      "post_delta_expanded_pre_review": "current-trigger-exact-nonempty-new-task-expansion-material_boundary_expanded-true-broad-false",
       "repeat_broad_review": "forbidden-without-protected-decision-or-material-boundary-expansion",
       "preparation_loop": "forbidden-without-new-material-evidence"
     },
@@ -806,7 +818,8 @@
     },
     "complete_review_pass": {
       "ordinary_material_finding_action": "record-and-continue-fixed-review-boundary",
-      "completion_requirements": ["required-changed-scope", "base-review-dimensions", "required-professional-risk-dimensions"],
+      "initial_review_completion_requirements": ["required-changed-scope", "base-review-dimensions", "required-professional-risk-dimensions"],
+      "rereview_completion_requirements": ["inherited-finding-resolution", "repair-diff-correctness", "repair-regression", "repair-affected-scope-and-transitive-dependents", "frozen-acceptance-invariant-contract-and-professional-risk-boundary"],
       "handoff_contents": "all-evidence-backed-findings-from-current-review-round-and-fixed-boundary",
       "finding_expands_review_boundary": false,
       "early_block_triggers": ["fundamental-architecture-error", "invalid-public-contract", "major-security-defect", "acceptance-fundamentally-unmet"],
@@ -819,7 +832,8 @@
         "forbidden_reasons": ["ordinary-uncertainty", "ordinary-difficulty", "ordinary-finding", "continuable-evidence-gap"]
       },
       "round_completion_actions": ["review", "re-review"],
-      "ordinary_outcomes_require_complete_boundary": true,
+      "initial_review_outcomes_require_complete_boundary": true,
+      "rereview_outcomes_require_focused_boundary": true,
       "pass_requires_no_blocking_findings": true
     },
     "review_boundary_contract": {
@@ -871,7 +885,9 @@
       "default_scope": "intersecting-and-transitively-dependent-evidence-only",
       "invalidates": ["repair-intersecting-scope", "claims-dependent-on-modified-behavior", "transitive-repair-impact"],
       "retains": "unaffected-fresh-evidence",
-      "rereview_focus": ["original-finding-resolved", "repair-diff-correct", "affected-dependent-scope-safe"],
+      "rereview_focus": ["inherited-finding-resolution", "repair-diff-correctness", "repair-regression", "repair-affected-scope-and-transitive-dependents", "frozen-acceptance-invariant-contract-and-professional-risk-boundary"],
+      "initial_review_rule": "complete-fixed-review-boundary-changed-scope-base-dimensions-and-professional-risk-dimensions",
+      "rereview_rule": "focused-rereview-only-without-reopening-frozen-boundary",
       "scope_expansion_triggers": ["public-or-shared-contract", "schema", "common-abstraction", "ownership", "dependency-graph", "security-boundary", "transaction-or-concurrency-semantics", "integration-behavior"],
       "full-history-rereview-by-default": false
     },
@@ -922,6 +938,16 @@
         "exact_rule": "- After repair: fresh validation, latest actual diff, fresh re-review; invalidate only affected evidence; covering re-review closes, and older review cannot cover new edits."
       },
       {
+        "rule_id": "initial-review-and-focused-rereview",
+        "required_terms": ["Initial Review", "complete fixed Review Boundary", "changed scope", "base dimensions", "professional-risk dimensions", "Re-review", "inherited finding", "repair diff", "repair regression", "affected transitive dependents", "frozen Acceptance/Invariant/Contract/professional-risk boundary"],
+        "exact_rule": "- Initial Review completes the complete fixed Review Boundary, changed scope, base dimensions, and professional-risk dimensions. Re-review checks only inherited finding resolution, repair diff correctness, repair regression, affected transitive dependents, and the frozen Acceptance/Invariant/Contract/professional-risk boundary."
+      },
+      {
+        "rule_id": "rereview-finding-classification",
+        "required_terms": ["Re-review findings", "inherited/repair-regression/frozen-boundary-violation/protected-invalidation/adjacent", "protected-invalidation→Main→Delta Analysis", "adjacent is residual-only", "never Repair"],
+        "exact_rule": "- Re-review findings are inherited/repair-regression/frozen-boundary-violation/protected-invalidation/adjacent; protected-invalidation→Main→Delta Analysis, while adjacent is residual-only and never Repair."
+      },
+      {
         "rule_id": "review-frequency-and-subsumption",
         "required_terms": ["Level sets depth", "frequency comes only from Review/Risk Boundary and material delay risk", "never Task completion or categories", "same-or-stronger independent review", "Review Skills/Specialist obligations"],
         "exact_rule": "- Level sets depth; frequency comes only from Review/Risk Boundary and material delay risk, never Task completion or categories, and same-or-stronger independent review subsumes only with Review Skills/Specialist obligations covered."
@@ -933,18 +959,18 @@
       },
       {
         "rule_id": "material-findings-and-fail-fast",
-        "required_terms": ["Only material current-task findings", "acceptance/correctness/invariant/regression/security/reliability/material code health", "adjacent/optional/style/speculative/unrelated/future", "fail-fast blocked", "Reviewed/Unreviewed Scope", "post-dispatch required surface unavailable/current evidence stale/protected Authority or Brief invalidated", "Reviewed/Unreviewed Scope+Proof Limit", "protected invalidation Main→Analysis", "Every non-fundamental Review outcome", "PASS additionally requires no blocking findings"],
-        "exact_rule": "- Only material current-task findings affecting acceptance/correctness/invariant/regression/security/reliability/material code health require repair; adjacent/optional/style/speculative/unrelated/future work does not. Fundamental failure may fail-fast blocked with Reviewed/Unreviewed Scope. Post-dispatch required surface unavailable/current evidence stale/protected Authority or Brief invalidated may block with Reviewed/Unreviewed Scope+Proof Limit; protected invalidation Main→Analysis. Every non-fundamental Review outcome, including findings, requires the complete fixed Review Boundary; PASS additionally requires no blocking findings."
+        "required_terms": ["Only material current-task findings", "acceptance/correctness/invariant/regression/security/reliability/material code health", "adjacent/optional/style/speculative/unrelated/future", "fail-fast blocked", "Reviewed/Unreviewed Scope", "post-dispatch required surface unavailable/current evidence stale/protected Authority or Brief invalidated", "Reviewed/Unreviewed Scope+Proof Limit", "protected invalidation Main→Analysis", "Every non-fundamental Initial Review outcome", "focused Re-review outcome", "PASS additionally requires no blocking findings"],
+        "exact_rule": "- Only material current-task findings affecting acceptance/correctness/invariant/regression/security/reliability/material code health require repair; adjacent/optional/style/speculative/unrelated/future work does not. Fundamental failure may fail-fast blocked with Reviewed/Unreviewed Scope. Post-dispatch required surface unavailable/current evidence stale/protected Authority or Brief invalidated may block with Reviewed/Unreviewed Scope+Proof Limit; protected invalidation Main→Analysis. Every non-fundamental Initial Review outcome, including findings, requires the complete fixed Review Boundary; a focused Re-review outcome requires its five checks and frozen professional-risk validity without reopening Initial scope. PASS additionally requires no blocking findings."
       },
       {
         "rule_id": "complete-review-pass",
-        "required_terms": ["Ordinary findings do not end Review", "fixed Review Boundary", "required changed scope", "base dimensions", "professional-risk dimensions", "all evidence-backed findings"],
-        "exact_rule": "- Ordinary findings do not end Review: complete the fixed Review Boundary's required changed scope, base dimensions, and professional-risk dimensions, then return all evidence-backed findings."
+        "required_terms": ["Ordinary findings do not end Initial Review", "fixed Review Boundary", "required changed scope", "base dimensions", "professional-risk dimensions", "all evidence-backed findings"],
+        "exact_rule": "- Ordinary findings do not end Initial Review: complete the fixed Review Boundary's required changed scope, base dimensions, and professional-risk dimensions, then return all evidence-backed findings."
       }
     ],
     "handoff_projection": {
       "target": "review-handoff-template.md",
-      "required_terms": ["Core Review Discipline", "L1-L5", "actual latest diff", "every changed file", "observable acceptance", "validation freshness", "regression mechanism", "negative and boundary behavior", "ownership and placement", "unnecessary scope", "unverified scope", "residual risk", "Professional Risk Matrix", "correctness-invariants", "authority-security-privacy", "failure-recovery-concurrency", "performance-resources", "contracts-data-consumers", "tests-evidence", "maintainability-structure", "operations-documentation-release", "source-backed reason and evidence", "named registered Review Skill, scope, and reason", "fresh validation", "latest actual diff", "fresh re-review", "older review", "Effective Level determines review depth", "Review/Risk Boundary determines frequency", "same or stronger", "Covered Task IDs", "Review Skills", "Specialist obligations", "scope-correct", "trustworthy-oracle validation evidence", "Only material current-task findings", "ordinary finding does not end Review", "review and re-review", "required review evidence or surface becomes unavailable", "required current evidence becomes stale", "protected Authority or Engineering Brief is invalidated", "Proof Limit", "Every non-fundamental Review outcome", "PASS additionally requires no blocking findings", "all evidence-backed findings", "same Review Round and Task ID", "Finding Relation", "affected scope", "Acceptance or risk impact", "required validation", "required covering re-review", "cross-Task batching is forbidden", "Reviewed and Unreviewed Scope", "invalidate only Evidence whose Scope intersects the repair", "A covering scoped re-review satisfies Final Review"]
+      "required_terms": ["Core Review Discipline", "L1-L5", "actual latest diff", "every changed file", "observable acceptance", "validation freshness", "regression mechanism", "negative and boundary behavior", "ownership and placement", "unnecessary scope", "unverified scope", "residual risk", "Professional Risk Matrix", "correctness-invariants", "authority-security-privacy", "failure-recovery-concurrency", "performance-resources", "contracts-data-consumers", "tests-evidence", "maintainability-structure", "operations-documentation-release", "source-backed reason and evidence", "named registered Review Skill, scope, and reason", "fresh validation", "latest actual diff", "fresh re-review", "older review", "Effective Level determines review depth", "Review/Risk Boundary determines frequency", "same or stronger", "Covered Task IDs", "Review Skills", "Specialist obligations", "scope-correct", "trustworthy-oracle validation evidence", "Only material current-task findings", "ordinary finding does not end Review", "review and re-review", "required review evidence or surface becomes unavailable", "required current evidence becomes stale", "protected Authority or Engineering Brief is invalidated", "Proof Limit", "Every other Initial Review outcome", "focused Re-review outcome", "PASS additionally requires no blocking findings", "all evidence-backed findings", "same Review Round and Task ID", "Finding Relation", "affected scope", "Acceptance or risk impact", "required validation", "required covering re-review", "cross-Task batching is forbidden", "Reviewed and Unreviewed Scope", "invalidate only Evidence whose Scope intersects the repair", "A covering scoped re-review satisfies Final Review", "Initial Review", "Re-review", "inherited", "repair-regression", "frozen-boundary-violation", "protected-invalidation", "adjacent", "two automatic Repair rounds per Task ID", "Delta Analysis does not reset", "pre-decision evidence cannot close the changed protected decision"]
     }
   },
   "context_budget_contract": {
@@ -1495,7 +1521,32 @@
       "scope_blocker": "return-main-analysis",
       "adjacent": "report-defer-continue-primary-task",
       "adjacent_discovered_during_repair": "record-without-repair-expansion",
-      "unrelated_changed_file": "remove-current-task-unrelated-edit-without-repairing-file"
+      "unrelated_changed_file": "remove-current-task-unrelated-edit-without-repairing-file",
+      "review_convergence": {
+        "maximum_automatic_repair_rounds_per_task_id": 2,
+        "budget_key": "Task ID",
+        "budget_reset_forbidden": ["Review Boundary ID", "Review Round ID", "Delta Analysis"],
+        "rereview_classifications": ["inherited", "repair-regression", "frozen-boundary-violation", "protected-invalidation", "adjacent"],
+        "rereview_classification_to_finding_relation": {
+          "inherited": "current-task",
+          "repair-regression": "current-task",
+          "frozen-boundary-violation": "current-task",
+          "protected-invalidation": "scope-blocker",
+          "adjacent": "adjacent"
+        },
+        "blocking_classifications": ["inherited", "repair-regression", "frozen-boundary-violation"],
+        "frozen_boundary_violation_requires_evidence": true,
+        "cap_disposition": {
+          "unresolved-blocker": "blocked-non-converged",
+          "protected-decision-invalidated": "main-delta-analysis",
+          "adjacent-or-hardening-only": "close-current-contract-record-residual"
+        },
+        "cap_implies_pass": false,
+        "delta_analysis_budget_effect": "preserve-per-task-repair-count",
+        "review_driven_delta_same_path_limit": 2,
+        "review_driven_delta_retry_requires_any": ["changed-hypothesis", "changed-material", "changed-gap", "changed-transition"],
+        "third_unchanged_replan": "forbidden-blocked"
+      }
     },
     "same_pattern_scan": {
       "required": true,
@@ -1744,10 +1795,10 @@
   "prompt_contract": {
     "schema_version": 1,
     "path": "src/control-prompts/main-control-agent.md",
-    "document_sha256": "a08e0f293c87a70ce247cec5262744f2482f94063fb65c5d838beef421ba3bd9",
+    "document_sha256": "7de623ed7b6bf37e85eaae61970e4d6cad121f3365491b0cdf9b2cb1608cb269",
     "managed_projections": [
       {"id": "execution-level-contract", "section": "Execution Level and Validation", "required_contracts": ["execution_level_contract"]},
-      {"id": "review-evidence-contract", "section": "Review and Repair", "required_contracts": ["visible_evidence_contract", "review_discipline_contract"]},
+      {"id": "review-evidence-contract", "section": "Review and Repair", "required_contracts": ["visible_evidence_contract", "review_discipline_contract", "task_contract"]},
       {"id": "closure-contract", "section": "Closure", "required_contracts": ["visible_evidence_contract", "completion_state"]}
     ],
     "ordered_headings": [[1, "Main Control Agent"], [2, "Authorization"], [2, "Choose Exactly One Path"], [2, "Direct Task Routing"], [3, "Execution Level and Validation"], [2, "Analyzed Work"], [3, "Preparation Loop Breaker"], [2, "Scheduling and Context"], [2, "Review and Repair"], [2, "Progress"], [2, "Closure"]],
@@ -1776,6 +1827,7 @@
       {"id": "minimum-sufficient-review-boundaries", "section": "Review and Repair", "required_terms": ["review_discipline_contract", "authoritative"]},
       {"id": "review-obligation-subsumption", "section": "Review and Repair", "required_terms": ["review_discipline_contract", "authoritative"]},
       {"id": "material-finding-repair", "section": "Review and Repair", "required_terms": ["task_contract.finding_relations"]},
+      {"id": "main-finding-repair-routing", "section": "Review and Repair", "required_terms": ["fixed Review Boundary closes first", "same Review Round ID+Task ID", "exactly one Repair batch", "cross-Task batch", "adjacent record-only", "ordinary finding no Analysis", "scope-blocker or protected Authority/Brief invalidation", "fresh validation, latest actual diff, fresh re-review"]},
       {"id": "scoped-repair-invalidation", "section": "Review and Repair", "required_terms": ["review_discipline_contract", "authoritative"]},
       {"id": "event-driven-progress", "section": "Progress", "required_terms": ["Checkpoints", "start/path", "dispatch/batch", "validation", "review/close", "Report path/batch/outcome/supported completion/blockers"]},
       {"id": "evidence-backed-closure", "section": "Closure", "required_terms": ["`completed` only", "post-edit validation", "every changed file", "no blockers", "fresh validation", "re-review", "unverified scope", "residual risk", "current evidence scope covers claimed result", "Status: in_progress | blocked | partial | completed", "Diagnosis-only/answer-only", "fail-closed outcomes"]}
@@ -1813,7 +1865,7 @@
       ],
       "layer3-jit-delivery": [
         {"rule_id": "named-skill-delivery", "required_terms": ["load and follow exactly", "generated `## Layer 3 Delivery` section"]},
-        {"rule_id": "named-layer3-only", "required_terms": ["Load only capsule-named Layer 3 items", "Layer 3 index or catalog"]},
+        {"rule_id": "named-layer3-only", "required_terms": ["Load only capsule-named Layer 3 items", "no index/catalog"]},
         {"rule_id": "no-layer3-preload", "required_terms": ["Never preload Layer 3"]}
       ],
       "analysis-direct-answer": [
@@ -1835,7 +1887,7 @@
         {"rule_id": "task-contract-evidence", "required_terms": ["visible task-local Evidence Ledger", "explicit proof limits"]}
       ],
       "analysis-scope-boundary": [
-        {"rule_id": "analysis-permission-boundary", "required_terms": ["Remain read-only", "do not edit", "run mutating commands", "dispatch agents", "perform final review", "business execution"]}
+        {"rule_id": "analysis-permission-boundary", "required_terms": ["Remain read-only", "no edit/mutating commands", "dispatch agents", "final review", "business execution"]}
       ],
       "task-normal-mode": [
         {"rule_id": "normal-primary-skill", "required_terms": ["load and follow exactly", "primary Professional Skill", "normal implementation mode"]},

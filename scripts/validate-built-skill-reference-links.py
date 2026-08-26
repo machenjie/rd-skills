@@ -473,14 +473,12 @@ def _validate_compiled_layer3_projection(
             "High-Value Rules",
             "Anti-Patterns",
             "Stop Conditions",
-            "JIT Reference Delivery",
         ],
         "domain": [
             "Decision Boundary",
             "Professional Decision Rules",
             "High-Value Gotchas",
             "Stop / Escalation Conditions",
-            "JIT Reference Delivery",
         ],
     }.get(layer)
     if expected_headings is None:
@@ -519,12 +517,18 @@ def _validate_compiled_layer3_projection(
             f"{_display_path(path)}: compact compiled projection must not repeat "
             "the source Targeted References table"
         )
-    selector_anchor = "Current-Professional JIT"
-    if text.count(selector_anchor) != 1:
-        errors.append(
-            f"{_display_path(path)}: compact compiled projection must contain "
-            "exactly one current-Professional selector anchor"
-        )
+    for forbidden in (
+        "## JIT Reference Delivery",
+        "Current-Professional JIT",
+        "engineering-control-plane/references/selectors/",
+        "never select/reroute/preload",
+        "index/catalog",
+    ):
+        if forbidden in text:
+            errors.append(
+                f"{_display_path(path)}: Layer 3 JIT/control policy is forbidden: "
+                f"{forbidden!r}"
+            )
     decision_match = re.search(
         r"(?ms)^## Decision Boundary[ \t]*\n(?P<body>.*?)(?=^## |\Z)",
         text,
@@ -809,6 +813,19 @@ def _validate_rendered_professional_body(
         errors.append(
             f"{_display_path(skill_file)}: rendered Professional SKILL.md body has "
             f"{line_count} lines; maximum is {MAX_RENDERED_PROFESSIONAL_BODY_LINES}"
+        )
+    skill_name = skill_file.parent.name
+    selector_path = (
+        "engineering-control-plane/references/selectors/"
+        f"{skill_name}.json"
+    )
+    if (
+        body.count("## JIT Reference Delivery") != 1
+        or body.count(selector_path) != 1
+    ):
+        errors.append(
+            f"{_display_path(skill_file)}: rendered root must contain exactly one "
+            "Professional JIT Reference Delivery and selector path"
         )
 
 

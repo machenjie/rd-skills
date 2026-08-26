@@ -265,7 +265,7 @@ cases:
     expected: {path: analyzed, profile: analysis-agent, primary_skill: incident-response-coordinator, layer3_skills: [failure-diagnosis, observability], review_skill: reliability-observability-gate}
   - id: backend-idempotency
     main_execution: {producer: main-control-agent, task_id: backend-idempotency}
-    prompt: Implement backend retry idempotency for duplicate job delivery.
+    prompt: Analyze retry/replay or duplicate delivery where the same side effect may occur twice; lease ownership, overlapping execution, queue topology, failure contract and cross-service workflow are unchanged.
     expected: {path: analyzed, profile: analysis-agent, primary_skill: engineering-change-analysis, layer3_skills: [idempotency-retry-design], review_skill: ai-code-review-refactor}
   - id: frontend-direct
     main_execution: {producer: main-control-agent, task_id: frontend-direct, execution_level: L4, level_basis: {trigger_evaluations: [{id: public-api-event-schema-compatibility, status: matched, evidence_kind: analysis_handoff, source_anchor: "task:frontend-direct:routing-api", plausible_critical: false}], l1_eligibility: [], l2_eligibility: [], l5_assurance_eligibility: [], l5_confirmation: not-required, obligations: ["high-risk pre-implementation evidence"], unresolved: [], edit_status: allowed}}

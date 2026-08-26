@@ -1493,10 +1493,10 @@ G2_BASE_SUCCESSOR_CONTENT_HASHES = {
 
 C1D_CONTENT_HASHES = {
     "src/professional-skills/data-middleware-change-builder/SKILL.md": "51af820aededb532f57198975c6290b76e6c65b20e9c0ae2817171a9980c5db1",
-    "src/foundation/capabilities/data-migration-design/SKILL.md": "8b3651ba9b7a7a97203fe2dee1806a74a34f74e2250c573e9cd786b0932cc8fa",
+    "src/foundation/capabilities/data-migration-design/SKILL.md": "1c2d3921cfe7f848e03f32fb0031f49b0d5ff55d8e0f65a4bee4c6549cdc1649",
     "src/foundation/capabilities/data-migration-design/references/benchmarks-and-patterns.md": "2b46b6b6480cc0afb931df255730a143988a76d944ab9244a26ff02e0d633005",
-    "src/foundation/capabilities/release-rollback/SKILL.md": "738e04c280576f5392d91f822c605e2eed1916444aef7bf99b0aae48e2f4d453",
-    "src/foundation/capabilities/permission-boundary-modeling/SKILL.md": "7c522d072a783f995f195be77cc33496ca69d4720bc8335d40f595d784a9b9ff",
+    "src/foundation/capabilities/release-rollback/SKILL.md": "05bc0fa788fd635c9ce8948f64c7eb25846a083c1b6d33876ba95f4464ac0830",
+    "src/foundation/capabilities/permission-boundary-modeling/SKILL.md": "203526b8125b211ba3e965863598b66b1f7761568a130a6ccb9a2368210dc826",
 }
 
 C1D_UNCHANGED_REFERENCE_HASHES = {
@@ -1905,13 +1905,13 @@ C1F_FINAL_SOURCE_HASHES = {
 
 C1F_BUILT_PROJECTION_SPECS = {
     "src/professional-skills/repository-tooling-change-builder/SKILL.md": ("repository-tooling-change-builder", 261, "475a286d7143dba32bdab259bc4b121b8d769070b14641c8a12b12287507451b"),
-    "src/foundation/capabilities/design-pattern-selection/SKILL.md": (None, 222, "4def12ed23d185b7c07cc0752b08ac3bf54d2fc226c194439eb958a1045bcf9b"),
-    "src/foundation/capabilities/build-tool-professional-usage/SKILL.md": (None, 269, "69dc38e431ef7bcbd52bcf46c6ae7095419f88a7f7774c0e38128ffb0c472f04"),
-    "src/foundation/capabilities/targeted-validation-selection/SKILL.md": (None, 223, "33361cbcacb5926d779a486126acb5d4f5edb211655effedee3b6053aa763730"),
+    "src/foundation/capabilities/design-pattern-selection/SKILL.md": (None, 195, "3130d22eb8c266fecd01674d0eb4157a394fa44f6daa847eb247a642231402e4"),
+    "src/foundation/capabilities/build-tool-professional-usage/SKILL.md": (None, 242, "5e9b7d9061c8a254e2af385f5a68a765df7561e2877acb0717195631a3e8b90c"),
+    "src/foundation/capabilities/targeted-validation-selection/SKILL.md": (None, 196, "9a39ae25d5c91b2107be292255491ef256bb590180531377c563dbfde2f29ba4"),
     "src/professional-skills/reliability-observability-gate/SKILL.md": ("reliability-observability-gate", 341, "4b83912c8d1a6b97443e914407e2caeed34c0dc31a84244f4e8561000026961d"),
-    "src/foundation/capabilities/degradation-circuit-breaking/SKILL.md": (None, 209, "b51e91ee25cdacff81c852603e10b1762dea62d8619357a982912854964a919b"),
-    "src/foundation/capabilities/observability/SKILL.md": (None, 180, "e4ef41f730af8764196ca00ac1fb70771f9c637814e77b155393ed72b7589e2a"),
-    "src/foundation/capabilities/backup-recovery/SKILL.md": (None, 224, "bf473845a5b6d130ca9197b5c8c1810fc5fb9519114178f22a1c335810553582"),
+    "src/foundation/capabilities/degradation-circuit-breaking/SKILL.md": (None, 182, "9cb58c7134795ab8fa374bc6c99ed56a90a69678e9b4fe4ba3689f1696cc4046"),
+    "src/foundation/capabilities/observability/SKILL.md": (None, 153, "7f51058736e2e7138cac6032fb7a7c67e0c75ae7002ed9016e306330e77573ab"),
+    "src/foundation/capabilities/backup-recovery/SKILL.md": (None, 197, "1a02c085a6e5f5c64c637e78c6d9fda317b2c8c69fa4727580f3ef68b2f1e512"),
 }
 
 C1F_RULE_OWNER_ANCHORS = {
@@ -1932,7 +1932,7 @@ C1F_RULE_OWNER_ANCHORS = {
 C1G_FINAL_SOURCE_HASHES = {
     "src/professional-skills/delivery-release-gate/SKILL.md": "aaf5c2ea8078a3c794725303f2ce7c3372dd96569a4a0d5dc88bc82024fa1fda",
     "src/professional-skills/delivery-release-gate/references/delivery-output-and-gates.md": "e76f8bcbd7b0ae6a0b5aa27afd603fe49b7def9c240bad0eda4da1c336527db4",
-    "src/foundation/capabilities/version-compatibility/SKILL.md": "008bb557182e152938008b0f5e7175f5c2fb32eb44b9a7352b2a28e7591cfd75",
+    "src/foundation/capabilities/version-compatibility/SKILL.md": "8579ded9475e7b7faf3a740d4526e770be0270113be18090cc9496f3d5190f9f",
     "src/foundation/capabilities/version-compatibility/references/checklist.md": "28af459587f9e62605d26021e65a7473ce105db007c22ea47e9a74147f62ed32",
     "src/foundation/capabilities/version-compatibility/references/compatibility-benchmarks.md": "af7766cecc9f29fad1063a16234c6bf69cc7fb62148a6934c7b498de7d5eb893",
     "src/foundation/capabilities/version-compatibility/references/evidence-patterns.md": "ccb0ce11c7e7cf4006a9f9b7f898eb2bd2922d846b02bd35d9a9470308dce96c",
@@ -1944,13 +1944,13 @@ C1G_FINAL_SOURCE_HASHES = {
 C1G_PROTECTED_HASHES = {
     "src/professional-skills/delivery-release-gate/references/checklist.md": "9f103563d839016ca66f86aef9a6679584a2dcadceea553964e01ceccb7a65ce",
     "src/professional-skills/delivery-release-gate/references/release-evidence-patterns.md": "b87635cc9fec6209239e4d0458a09acded3d97a2438fe8367dceb447b549add6",
-    "src/foundation/capabilities/release-rollback/SKILL.md": "738e04c280576f5392d91f822c605e2eed1916444aef7bf99b0aae48e2f4d453",
+    "src/foundation/capabilities/release-rollback/SKILL.md": "05bc0fa788fd635c9ce8948f64c7eb25846a083c1b6d33876ba95f4464ac0830",
     "src/foundation/capabilities/release-rollback/references/benchmarks-and-patterns.md": "52bbecd74a4ef1a0dc599855dbbd38d4ba08563e2a5fd60e3a27d4bd10dc74c6",
     "src/foundation/capabilities/release-rollback/references/checklist.md": "e8a45f93dcb38522492d252a295e5a6dcd61f9899bada1f5001aededf85c4096",
     "src/foundation/capabilities/release-rollback/references/evidence-patterns.md": "c0081ac454f9f9fa8a7ebd30b30a41cffdf41db26d3140f9e694672c3c109e58",
     "src/foundation/capabilities/configuration-runtime-policy/references/checklist.md": "55406df248bce907803dffd55d3473109d149526cea056a4d5f7c9113954275d",
     "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
-    "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
+    "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
 }
 
 C1G_BUILT_PROJECTION_SPECS = {
@@ -1961,18 +1961,18 @@ C1G_BUILT_PROJECTION_SPECS = {
     ),
     "src/foundation/capabilities/release-rollback/SKILL.md": (
         None,
-        229,
-        "3e2150a21b3997726207b6ac9317c8077856708c87a481ac818898779c78229a",
+        202,
+        "835e5e1e0293876254330238e293a587e12e0eb1df04785e40cc8e4fb0fbd1f1",
     ),
     "src/foundation/capabilities/version-compatibility/SKILL.md": (
         None,
-        250,
-        "989a93e84c8ba897bdc8ba69113da520c11207996f1d64b7ad59b4810284ae91",
+        223,
+        "4a69ac9bc815c56bbc4f1de4633bea953f8f1fabd51609f9a2d4f3ec41b849f8",
     ),
     "src/foundation/capabilities/configuration-runtime-policy/SKILL.md": (
         None,
-        183,
-        "f91cb26ad5c184d9505fec203a388ee461fda50f6a9c1684abc83bda5bfb8237",
+        156,
+        "b091ad3b6d0b1316e5602af5e50852924897ef2d83ca01ffdf9431e78918d4f6",
     ),
 }
 
@@ -1991,7 +1991,7 @@ C1G_RULE_OWNER_ANCHORS = {
     ),
     "src/foundation/capabilities/version-compatibility/SKILL.md": (
         "Inventory evidence-backed consumers, retained state/messages, and version skew.",
-        "Load the named benchmark, checklist, or evidence Reference according to the open output.",
+        "Select a bridge from each failing producer-consumer or data direction using current evidence.",
     ),
     "src/foundation/capabilities/version-compatibility/references/checklist.md": (
         "Route field semantics to `dto-schema-design`, consumer inventory to `consumer-impact-analysis`, executable contracts to `contract-testing`, migration execution to `data-migration-design`, and rollout/rollback to `release-rollback`.",
@@ -2054,17 +2054,17 @@ C1J_PROTECTED_HASHES = {
     "src/foundation/capabilities/distributed-workflow-consistency/references/identity-state-and-unknown-outcomes.md": "7a0e547eee5e8b179d2d173058dc46bea0be9191858b6b810e475bbc3d7322d6",
     "src/foundation/capabilities/distributed-workflow-consistency/references/compensation-convergence-and-reconciliation.md": "4b8f50abb517dad40a6092b351e245b0db9ae9f0511189c8c7a625a4c1dcd104",
     "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
-    "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
+    "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
     "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-"scripts/build.py": "573d4d8e0ec0383d6a58e7c09d2aba237ed3b7b5e2283d4895174078754e1ade",
-"scripts/validation_utils.py": "d1edf15f9aa69892aa5747bf9b5ce108b61bafaee2ae363b283b42c4f221b761",
+"scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
+"scripts/validation_utils.py": "531d254618231555f8178f50e206a2c8fb696d882497ef006811b8e7c4a12285",
     "dist/universal/skills/dev/data-middleware-change-builder/SKILL.md": "22a41125147da43b01da304168205b8840d7ec6649a16c7727bd7719943696f3",
 }
 
 C1J_BUILT_PROJECTION_SPECS = {
-    "src/foundation/capabilities/concurrency-control/SKILL.md": (214, "3472b6ca5145616987527880780a6debd998414b3554cf85a6c43c1431ae3e5d"),
-    "src/foundation/capabilities/transaction-consistency/SKILL.md": (283, "e8c916c5260c27787c8ac9da1ce9b0f4eebe2972360ea6779f050721a2bd5c75"),
-    "src/foundation/capabilities/distributed-workflow-consistency/SKILL.md": (246, "c8d8f21a9a60dfe588db5a8157791781715b8293758a6d730ee38ad1dc3f65c6"),
+    "src/foundation/capabilities/concurrency-control/SKILL.md": (187, "da86b37fe1bbb867cb3fdb490d2033ae74447ce79b45022368910c93f4455b81"),
+    "src/foundation/capabilities/transaction-consistency/SKILL.md": (256, "643b2bf8abc8c6e0722f2cf1ef0cc22186363568672c5df2177cbe4ce2b13f22"),
+    "src/foundation/capabilities/distributed-workflow-consistency/SKILL.md": (219, "ece4b6e4da213da984ab4356bb3e868333af33bf3f39ac92a040e25128f4547a"),
 }
 
 C1J_REFERENCE_TOKENS = {
@@ -2126,10 +2126,10 @@ C1I_PROTECTED_HASHES = {
     "src/professional-skills/ai-code-review-refactor/SKILL.md": "cf548e3bc362edc9f5d5f8f488c88d2ae37e522dbf1f0ef9695a5d6601ddd213",
     "src/foundation/capabilities/refactoring/references/split-merge-cleanup-patterns.md": "96b49d2084c6c8834a044ce4700ea6135db4fede99f70a9a6a559c8dba10b2db",
     "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
-    "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
-"scripts/build.py": "573d4d8e0ec0383d6a58e7c09d2aba237ed3b7b5e2283d4895174078754e1ade",
-    "tests/scripts/test_build_safety.py": "cf574c06b5401d1fc3f294248c9a89729ec74b3b7c79c1e49e4932ea60cf6d46",
-"tests/test_hookless_build_install.py": "161fe06c81da70db766a65588789798f1308626a91f0127e112d20bbe1a2c427",
+    "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
+"scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
+    "tests/scripts/test_build_safety.py": "7bf345ed411ebc61a19410ad46514b6df8b6842106ff2a305ac710943d414107",
+"tests/test_hookless_build_install.py": "f94eee6b3d2aea953b50e39b8f9159bbca42c922b8b1d57fb9a12a7d6af5c716",
 }
 
 C1I_BUILT_PROJECTION_SPECS = {
@@ -2140,13 +2140,13 @@ C1I_BUILT_PROJECTION_SPECS = {
     ),
     "src/foundation/capabilities/test-data-management/SKILL.md": (
         None,
-        257,
-        "535ce74d430ee2cf20f237d416d8f0ec8b8f2c498cc7b262d2ab16624af16e65",
+        230,
+        "3c16dbc47cff347dacbeac21f09f76726a372d1e7831dc9300c6e7519affc6cd",
     ),
     "src/foundation/capabilities/test-strategy/SKILL.md": (
         None,
-        232,
-        "eb3ff8d61501d0a450aa9f72d60f5f96248791b06fb3b0cae7a57792d6780750",
+        205,
+        "48919bf53781aedbc92f440355c9481cb8a9046e31090a8bb7fca358f641f79e",
     ),
 }
 C1I_RULE_OWNER_ANCHORS = {
@@ -5800,17 +5800,17 @@ class ContextContentRelocationTests(unittest.TestCase):
             "data-migration-design": (
                 "Bind source and target authority plus mixed-version readers and writers to one cutover state.",
                 "Coordinate live writes and backfill through owned ordering, resumability, semantic validation, and recovery.",
-                "Load the named benchmark, checklist, or evidence Reference according to the open output.",
+                "Block destructive cleanup until readers retire and reconciliation, recovery, and ownership are proven.",
             ),
             "release-rollback": (
                 "Bind one release identity and current compatibility decision before exposure or recovery.",
                 "Give each changed surface an owned rollback, disable, compensation, restore, reconciliation, or forward-repair path.",
-                "Load the named benchmark, checklist, or evidence Reference according to the open output.",
+                "Choose rollback only while old code reads current durable, provider, and retained state.",
             ),
             "permission-boundary-modeling": (
                 "Resolve decision inputs from trusted identity, resource, relationship, policy, or lifecycle state.",
                 "Enforce the decision before protected disclosure or effect on each in-scope path.",
-                "Load the named benchmark, checklist, or evidence Reference according to the open output.",
+                "Enforce permissions before collection outputs; define explicit behavior for mixed tenant bulk actions.",
             ),
         }
         for owner, rules in expected_kernels.items():
@@ -5947,10 +5947,10 @@ class ContextContentRelocationTests(unittest.TestCase):
 
         protected_hashes = {
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
-            "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
+            "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-"scripts/build.py": "573d4d8e0ec0383d6a58e7c09d2aba237ed3b7b5e2283d4895174078754e1ade",
-"scripts/validation_utils.py": "d1edf15f9aa69892aa5747bf9b5ce108b61bafaee2ae363b283b42c4f221b761",
+"scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
+"scripts/validation_utils.py": "531d254618231555f8178f50e206a2c8fb696d882497ef006811b8e7c4a12285",
         }
         for path, expected_hash in protected_hashes.items():
             text = (ROOT / path).read_text(encoding="utf-8")
@@ -6059,7 +6059,7 @@ class ContextContentRelocationTests(unittest.TestCase):
             ).hexdigest(),
         )
         self.assertEqual(
-            "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
+            "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             hashlib.sha256(
                 (ROOT / "src/registry/foundation-skills.yaml").read_bytes()
             ).hexdigest(),
@@ -6391,7 +6391,7 @@ class ContextContentRelocationTests(unittest.TestCase):
         domain = VALIDATION.load_yaml_file(ROOT / "src/registry/domain-skills.yaml")
         registry_hashes = {
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
-            "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
+            "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
         }
         for path, expected_sha256 in registry_hashes.items():
@@ -6583,7 +6583,7 @@ class ContextContentRelocationTests(unittest.TestCase):
 
         for path, expected_sha256 in {
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
-            "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
+            "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
         }.items():
             self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -6624,9 +6624,9 @@ class ContextContentRelocationTests(unittest.TestCase):
 
         for path, expected_sha256 in {
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
-            "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
+            "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-"tests/scripts/test_eval_rendered_context_budget.py": "a27860d072162c741492b2b2dd7308fcbf26ce09d01bb073545a490a019abe4d",
+"tests/scripts/test_eval_rendered_context_budget.py": "17d0456b2df1eea84ffa14faf3a9f04e312ae2d4b68d1fdf14e25bb7e6baa215",
         }.items():
             with self.subTest(protected_hash=path):
                 self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -6862,16 +6862,27 @@ class ContextContentRelocationTests(unittest.TestCase):
             selection_owner="main-control-agent",
             exact_layer3=None,
         )
-        evidence_signals = ["cache-stampede", "distributed-effect-change"]
+        evidence_signals = [
+            "cache-stampede-or-lease-stale-ownership",
+            "distributed-effect-change",
+        ]
         receipt = VALIDATION.layer3_selector_runtime_selection_receipt(
             projection, evidence_signals=evidence_signals
+        )
+        self.assertEqual(
+            [
+                "concurrency-control-analysis",
+                "distributed-workflow-analysis",
+                "distributed-workflow-consistency-analysis",
+            ],
+            receipt["selector_ids"],
         )
         self.assertEqual(
             ["concurrency-control", "transaction-consistency", "distributed-workflow-consistency"],
             receipt["selected_layer3"],
         )
         self.assertEqual(
-            "781c2b9d96451b0dee91dfce30b51f91e692fee664219aa8a0c127e6a70f204e",
+            "23f0408560643c339c33bf05806fc6ab7e1c8929b892a2a2de28686f5b4fdd55",
             receipt["receipt_sha256"],
         )
         without_cache_stampede = VALIDATION.layer3_selector_runtime_selection_receipt(
@@ -6879,6 +6890,10 @@ class ContextContentRelocationTests(unittest.TestCase):
         )
         self.assertNotEqual(receipt["selected_layer3"], without_cache_stampede["selected_layer3"])
         self.assertNotEqual(receipt["receipt_sha256"], without_cache_stampede["receipt_sha256"])
+        self.assertNotIn(
+            "concurrency-control",
+            without_cache_stampede["selected_layer3"],
+        )
 
         authority = VALIDATION.reference_context_admissibility_authority(
             professional, foundation, domain, context="C1J data-middleware staged witness"
@@ -7164,12 +7179,29 @@ class ContextContentRelocationTests(unittest.TestCase):
         for owner, owner_spec in FRONTEND_JIT_OWNER_SPECS.items():
             root_path = ROOT / owner_spec["root"]
             root_text = root_path.read_text(encoding="utf-8")
-            projected_root = (
-                root_text.split("\n## Targeted References", 1)[0]
-                + "\n\n## JIT Reference Delivery\n\n"
-                + "Current-Professional JIT. Exact skips it; never select/reroute/preload\n"
-                + "index/catalog.\n"
+            _metadata, raw_frontmatter, body = VALIDATION.parse_frontmatter(
+                root_path
             )
+            h1_titles, sections = BUILD._markdown_heading_sections(body)
+            headings = (
+                BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS
+                if owner_spec["registry"] == "professional"
+                else BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS
+            )
+            output = ["---", raw_frontmatter, "---", "", f"# {h1_titles[0]}"]
+            for heading in headings:
+                values = sections.get(heading, [])
+                if not values and heading == "Inputs":
+                    continue
+                self.assertEqual(1, len(values))
+                output.extend(["", f"## {heading}", "", values[0]])
+            output.extend(
+                BUILD._compact_jit_reference_delivery_lines(
+                    owner if owner_spec["registry"] == "professional" else None
+                )
+            )
+            output.append("")
+            projected_root = "\n".join(output)
             with self.subTest(owner=owner, boundary="root-cap"):
                 self.assertLessEqual(
                     VALIDATION.count_o200k_base_tokens(projected_root),
@@ -7286,7 +7318,10 @@ class ContextContentRelocationTests(unittest.TestCase):
                     BUILD._markdown_heading_sections(projected_root)
                 )
                 self.assertEqual(
-                    [*headings, "JIT Reference Delivery"],
+                    [
+                        *headings,
+                        *(["JIT Reference Delivery"] if selector is not None else []),
+                    ],
                     list(projected_sections),
                 )
                 with self.subTest(owner=owner, boundary="root-cap"):
@@ -7684,9 +7719,9 @@ class ContextContentRelocationTests(unittest.TestCase):
         for path, expected_sha256 in {
             "src/professional-skills/security-privacy-gate/SKILL.md": "f11d7bdde385a27584a4b22e07cd389adc4c59d8933597433238c4ecc5ba7ae5",
             "src/domain-extensions/cloud-platform-extension/SKILL.md": "6c300ff1c468f83c7b75c54997c67539710e6f8e236fc655d4ecda5e806a4224",
-            "src/foundation/capabilities/permission-boundary-modeling/SKILL.md": "7c522d072a783f995f195be77cc33496ca69d4720bc8335d40f595d784a9b9ff",
+            "src/foundation/capabilities/permission-boundary-modeling/SKILL.md": "203526b8125b211ba3e965863598b66b1f7761568a130a6ccb9a2368210dc826",
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
-            "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
+            "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
         }.items():
             self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -7919,7 +7954,7 @@ class ContextContentRelocationTests(unittest.TestCase):
 
         for path, expected_hash in {
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
-            "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
+            "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
         }.items():
             self.assertEqual(expected_hash, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -8064,11 +8099,11 @@ class ContextContentRelocationTests(unittest.TestCase):
 
         for path, expected_sha256 in {
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
-            "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
+            "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-"scripts/build.py": "573d4d8e0ec0383d6a58e7c09d2aba237ed3b7b5e2283d4895174078754e1ade",
-"scripts/validation_utils.py": "d1edf15f9aa69892aa5747bf9b5ce108b61bafaee2ae363b283b42c4f221b761",
-            "evals/agent-light-trajectories/cases.yaml": "5102a1384d25228b68655fd9100db5fc3293bcf609d310c9564e9896c1a1dc22",
+"scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
+"scripts/validation_utils.py": "531d254618231555f8178f50e206a2c8fb696d882497ef006811b8e7c4a12285",
+            "evals/agent-light-trajectories/cases.yaml": "73012762a6c9cf9d5cf15febcf5f3777b271b53f2d26a0eaedef03b69a095240",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
         }.items():
             self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -8252,13 +8287,13 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/foundation/capabilities/powershell-professional-usage/SKILL.md": "cd32328dda6ccaa431388c220cac38b08988ad220eb2a8a29b8b2a69224ff27c",
             "src/professional-skills/platform-infrastructure-change-builder/references/kubernetes-source-contracts.md": "4408105827924db9af29351153865837a26a6e2c6e1075212668d00dee1830f6",
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
-            "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
+            "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-"scripts/build.py": "573d4d8e0ec0383d6a58e7c09d2aba237ed3b7b5e2283d4895174078754e1ade",
-"scripts/validation_utils.py": "d1edf15f9aa69892aa5747bf9b5ce108b61bafaee2ae363b283b42c4f221b761",
-            "evals/agent-light-trajectories/cases.yaml": "5102a1384d25228b68655fd9100db5fc3293bcf609d310c9564e9896c1a1dc22",
+"scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
+"scripts/validation_utils.py": "531d254618231555f8178f50e206a2c8fb696d882497ef006811b8e7c4a12285",
+            "evals/agent-light-trajectories/cases.yaml": "73012762a6c9cf9d5cf15febcf5f3777b271b53f2d26a0eaedef03b69a095240",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-"tests/scripts/test_eval_rendered_context_budget.py": "a27860d072162c741492b2b2dd7308fcbf26ce09d01bb073545a490a019abe4d",
+"tests/scripts/test_eval_rendered_context_budget.py": "17d0456b2df1eea84ffa14faf3a9f04e312ae2d4b68d1fdf14e25bb7e6baa215",
             "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
             "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
         }
@@ -8447,13 +8482,13 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/professional-skills/platform-infrastructure-change-builder/SKILL.md": "4d43548f48103571f863dc798d5023ae7ad18bd9a674cc74ec14557ee7a74d0a",
             "src/domain-extensions/cloud-platform-extension/SKILL.md": "6c300ff1c468f83c7b75c54997c67539710e6f8e236fc655d4ecda5e806a4224",
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
-            "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
+            "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-"scripts/build.py": "573d4d8e0ec0383d6a58e7c09d2aba237ed3b7b5e2283d4895174078754e1ade",
-"scripts/validation_utils.py": "d1edf15f9aa69892aa5747bf9b5ce108b61bafaee2ae363b283b42c4f221b761",
-            "evals/agent-light-trajectories/cases.yaml": "5102a1384d25228b68655fd9100db5fc3293bcf609d310c9564e9896c1a1dc22",
+"scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
+"scripts/validation_utils.py": "531d254618231555f8178f50e206a2c8fb696d882497ef006811b8e7c4a12285",
+            "evals/agent-light-trajectories/cases.yaml": "73012762a6c9cf9d5cf15febcf5f3777b271b53f2d26a0eaedef03b69a095240",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-"tests/scripts/test_eval_rendered_context_budget.py": "a27860d072162c741492b2b2dd7308fcbf26ce09d01bb073545a490a019abe4d",
+"tests/scripts/test_eval_rendered_context_budget.py": "17d0456b2df1eea84ffa14faf3a9f04e312ae2d4b68d1fdf14e25bb7e6baa215",
             "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
             "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
         }
@@ -8565,17 +8600,17 @@ class ContextContentRelocationTests(unittest.TestCase):
         self.assertEqual(611, max(tokens for tokens, _sha256, _roles, _outputs in reference_specs.values()))
 
         protected = {
-            "src/foundation/capabilities/data-migration-design/SKILL.md": "8b3651ba9b7a7a97203fe2dee1806a74a34f74e2250c573e9cd786b0932cc8fa",
+            "src/foundation/capabilities/data-migration-design/SKILL.md": "1c2d3921cfe7f848e03f32fb0031f49b0d5ff55d8e0f65a4bee4c6549cdc1649",
             "src/foundation/capabilities/transaction-consistency/SKILL.md": "076dff13a9468d13713ec106f5a96586f44635855f9600998209d197a8fb5308",
             "src/foundation/capabilities/distributed-workflow-consistency/SKILL.md": "df3a7d24a62d3aabc74405abeb7ce98376da7a049c3ec8b36c43c25694a98b2e",
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
-            "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
+            "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-"scripts/build.py": "573d4d8e0ec0383d6a58e7c09d2aba237ed3b7b5e2283d4895174078754e1ade",
-"scripts/validation_utils.py": "d1edf15f9aa69892aa5747bf9b5ce108b61bafaee2ae363b283b42c4f221b761",
-            "evals/agent-light-trajectories/cases.yaml": "5102a1384d25228b68655fd9100db5fc3293bcf609d310c9564e9896c1a1dc22",
+"scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
+"scripts/validation_utils.py": "531d254618231555f8178f50e206a2c8fb696d882497ef006811b8e7c4a12285",
+            "evals/agent-light-trajectories/cases.yaml": "73012762a6c9cf9d5cf15febcf5f3777b271b53f2d26a0eaedef03b69a095240",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-"tests/scripts/test_eval_rendered_context_budget.py": "a27860d072162c741492b2b2dd7308fcbf26ce09d01bb073545a490a019abe4d",
+"tests/scripts/test_eval_rendered_context_budget.py": "17d0456b2df1eea84ffa14faf3a9f04e312ae2d4b68d1fdf14e25bb7e6baa215",
             "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
             "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
         }
@@ -9121,16 +9156,16 @@ class ContextContentRelocationTests(unittest.TestCase):
 
         protected = {
             "src/domain-extensions/iot-embedded-extension/SKILL.md": "b36832cb68c5d2611c1c055e9b9efa9eeac6ecd5dd34f5f6e4062180045c38d4",
-            "src/foundation/capabilities/release-rollback/SKILL.md": "738e04c280576f5392d91f822c605e2eed1916444aef7bf99b0aae48e2f4d453",
-            "src/foundation/capabilities/version-compatibility/SKILL.md": "008bb557182e152938008b0f5e7175f5c2fb32eb44b9a7352b2a28e7591cfd75",
+            "src/foundation/capabilities/release-rollback/SKILL.md": "05bc0fa788fd635c9ce8948f64c7eb25846a083c1b6d33876ba95f4464ac0830",
+            "src/foundation/capabilities/version-compatibility/SKILL.md": "8579ded9475e7b7faf3a740d4526e770be0270113be18090cc9496f3d5190f9f",
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
-            "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
+            "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-"scripts/build.py": "573d4d8e0ec0383d6a58e7c09d2aba237ed3b7b5e2283d4895174078754e1ade",
-"scripts/validation_utils.py": "d1edf15f9aa69892aa5747bf9b5ce108b61bafaee2ae363b283b42c4f221b761",
-            "evals/agent-light-trajectories/cases.yaml": "5102a1384d25228b68655fd9100db5fc3293bcf609d310c9564e9896c1a1dc22",
+"scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
+"scripts/validation_utils.py": "531d254618231555f8178f50e206a2c8fb696d882497ef006811b8e7c4a12285",
+            "evals/agent-light-trajectories/cases.yaml": "73012762a6c9cf9d5cf15febcf5f3777b271b53f2d26a0eaedef03b69a095240",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-"tests/scripts/test_eval_rendered_context_budget.py": "a27860d072162c741492b2b2dd7308fcbf26ce09d01bb073545a490a019abe4d",
+"tests/scripts/test_eval_rendered_context_budget.py": "17d0456b2df1eea84ffa14faf3a9f04e312ae2d4b68d1fdf14e25bb7e6baa215",
             "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
             "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
         }
@@ -9418,14 +9453,14 @@ class ContextContentRelocationTests(unittest.TestCase):
 
         protected = {
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
-            "src/registry/foundation-skills.yaml": "385843496634f9e9ef4426790cacff211858cab4f73c6c15f521fc2732b5b8fd",
+            "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-"scripts/build.py": "573d4d8e0ec0383d6a58e7c09d2aba237ed3b7b5e2283d4895174078754e1ade",
-"scripts/validation_utils.py": "d1edf15f9aa69892aa5747bf9b5ce108b61bafaee2ae363b283b42c4f221b761",
-"tests/scripts/test_eval_rendered_context_budget.py": "a27860d072162c741492b2b2dd7308fcbf26ce09d01bb073545a490a019abe4d",
+"scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
+"scripts/validation_utils.py": "531d254618231555f8178f50e206a2c8fb696d882497ef006811b8e7c4a12285",
+"tests/scripts/test_eval_rendered_context_budget.py": "17d0456b2df1eea84ffa14faf3a9f04e312ae2d4b68d1fdf14e25bb7e6baa215",
             "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
             "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
-            "evals/agent-light-trajectories/cases.yaml": "5102a1384d25228b68655fd9100db5fc3293bcf609d310c9564e9896c1a1dc22",
+            "evals/agent-light-trajectories/cases.yaml": "73012762a6c9cf9d5cf15febcf5f3777b271b53f2d26a0eaedef03b69a095240",
         }
         for path, expected_sha256 in protected.items():
             self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())

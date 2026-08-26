@@ -23,7 +23,7 @@ Own permission authority, scope, enforcement, collection, bulk, denial, delegati
 
 - Resolve decision inputs from trusted identity, resource, relationship, policy, or lifecycle state.
 - Enforce the decision before protected disclosure or effect on each in-scope path.
-- Load the named benchmark, checklist, or evidence Reference according to the open output.
+- Enforce permissions before collection outputs; define explicit behavior for mixed tenant bulk actions.
 
 ## Anti-Patterns
 

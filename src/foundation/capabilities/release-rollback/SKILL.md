@@ -23,7 +23,7 @@ Own release identity, exposure, recovery, irreversible boundaries, and proof lim
 
 - Bind one release identity and current compatibility decision before exposure or recovery.
 - Give each changed surface an owned rollback, disable, compensation, restore, reconciliation, or forward-repair path.
-- Load the named benchmark, checklist, or evidence Reference according to the open output.
+- Choose rollback only while old code reads current durable, provider, and retained state.
 
 ## Anti-Patterns
 

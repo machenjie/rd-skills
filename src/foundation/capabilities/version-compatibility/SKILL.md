@@ -23,7 +23,7 @@ Define consumers, compatibility dimensions, mixed-version behavior, retirement, 
 
 - Inventory evidence-backed consumers, retained state/messages, and version skew.
 - Classify mixed-version behavior, migration, rollback readability, and retirement across the affected structural and semantic compatibility dimensions.
-- Load the named benchmark, checklist, or evidence Reference according to the open output.
+- Select a bridge from each failing producer-consumer or data direction using current evidence.
 
 ## Anti-Patterns
 

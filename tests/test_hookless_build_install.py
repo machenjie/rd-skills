@@ -143,6 +143,76 @@ class BuildArtifactConsumerContractTests(unittest.TestCase):
 
 
 class HooklessBuildInstallTests(unittest.TestCase):
+    def test_retry_lease_selector_authority_projects_for_supported_builds(
+        self,
+    ) -> None:
+        foundation = BUILD.load_yaml_file(
+            ROOT / "src/registry/foundation-skills.yaml"
+        )
+        professional = BUILD.load_yaml_file(
+            ROOT / "src/registry/professional-skills.yaml"
+        )
+        domain = BUILD.load_yaml_file(
+            ROOT / "src/registry/domain-skills.yaml"
+        )
+        authority = BUILD.layer3_selector_authority(
+            foundation,
+            professional,
+            domain,
+            context="temporary generated retry/lease selector projection",
+        )
+        alias = next(
+            row
+            for row in authority["aliases"]
+            if row["candidate_id"]
+            == "retry-lease-terminal-resolution-analysis"
+        )
+        self.assertEqual(
+            ["backend-idempotency-analysis", "concurrency-control-analysis"],
+            alias["source_selector_ids"],
+        )
+        self.assertEqual(
+            ["concurrency-control", "idempotency-retry-design"],
+            authority["alias_member_subsets"][
+                "retry-lease-terminal-resolution-analysis"
+            ],
+        )
+
+        with tempfile.TemporaryDirectory() as raw:
+            temporary_root = Path(raw)
+            for profile in BUILD.PROFILES:
+                destination = temporary_root / profile / "engineering-control-plane"
+                BUILD._write_control_layer3_selector_projections(destination)
+                complete = json.loads(
+                    (
+                        destination
+                        / "references/selectors/engineering-change-analysis/complete.json"
+                    ).read_text(encoding="utf-8")
+                )
+                analysis_surface = next(
+                    row
+                    for row in complete["profile_authority"]
+                    if row["profile"] == "analysis-agent"
+                )
+                selectors = {
+                    row["selector_id"]: row
+                    for row in analysis_surface["selectors"]
+                }
+                with self.subTest(profile=profile):
+                    self.assertEqual(
+                        ["idempotency-retry-design"],
+                        selectors["backend-idempotency-analysis"][
+                            "selectable_layer3"
+                        ],
+                    )
+                    self.assertEqual(
+                        ["concurrency-control"],
+                        selectors["concurrency-control-analysis"][
+                            "selectable_layer3"
+                        ],
+                    )
+                    self.assertNotIn("cache-stampede-analysis", selectors)
+
     def test_profile_counts_and_standard_skill_roots(self) -> None:
         expected = {"recommended": 27, "full": 40, "dev": 190}
         for profile, count in expected.items():
@@ -378,14 +448,12 @@ class HooklessBuildInstallTests(unittest.TestCase):
             "High-Value Rules",
             "Anti-Patterns",
             "Stop Conditions",
-            "JIT Reference Delivery",
         ]
         expected_domain = [
             "Decision Boundary",
             "Professional Decision Rules",
             "High-Value Gotchas",
             "Stop / Escalation Conditions",
-            "JIT Reference Delivery",
         ]
         forbidden = {
             "Registry Trigger",
@@ -427,6 +495,14 @@ class HooklessBuildInstallTests(unittest.TestCase):
                 ]
                 self.assertEqual(expected, headings)
                 self.assertFalse(forbidden & set(headings))
+                for forbidden_control in (
+                    "## JIT Reference Delivery",
+                    "Current-Professional JIT",
+                    "engineering-control-plane/references/selectors/",
+                    "never select/reroute/preload",
+                    "index/catalog",
+                ):
+                    self.assertNotIn(forbidden_control, text)
 
         nested = compiled_paths["recommended-foundation"][0]
         self.assertTrue(
@@ -484,14 +560,12 @@ class HooklessBuildInstallTests(unittest.TestCase):
             "Professional Decision Rules",
             "Stop / Escalation Conditions",
             "Output Contract",
-            "JIT Reference Delivery",
         ]
         expected_foundation_without_inputs = [
             "Skill Role",
             "High-Value Rules",
             "Anti-Patterns",
             "Stop Conditions",
-            "JIT Reference Delivery",
         ]
         expected_foundation_with_inputs = expected_foundation_without_inputs
 
@@ -592,6 +666,58 @@ class HooklessBuildInstallTests(unittest.TestCase):
                             item,
                         )
 
+    def test_temporary_generated_install_has_unique_professional_jit_and_no_layer3_control(self) -> None:
+        registries = BUILD._load_registries()
+        professional_items = BUILD._load_items(
+            "professional", registries["professional"]
+        )
+        layer3_items = [
+            *BUILD._load_items("foundation", registries["foundation"]),
+            *BUILD._load_items("domain", registries["domain"]),
+        ]
+        forbidden = (
+            "## JIT Reference Delivery",
+            "Current-Professional JIT",
+            "engineering-control-plane/references/selectors/",
+            "never select/reroute/preload",
+            "index/catalog",
+        )
+        with tempfile.TemporaryDirectory() as raw:
+            temporary_root = Path(raw)
+            for profile in BUILD.PROFILES:
+                profile_root = temporary_root / profile
+                control_root = profile_root / "engineering-control-plane"
+                BUILD._write_control_layer3_selector_projections(control_root)
+                for item in professional_items:
+                    with self.subTest(profile=profile, professional=item.name):
+                        skill_root = profile_root / item.name
+                        BUILD._copy_skill_tree(item.path, skill_root)
+                        BUILD._write_compact_professional_projection(skill_root, item)
+                        rendered = (skill_root / "SKILL.md").read_text(encoding="utf-8")
+                        selector = (
+                            "engineering-control-plane/references/selectors/"
+                            f"{item.name}.json"
+                        )
+                        self.assertEqual(1, rendered.count("## JIT Reference Delivery"))
+                        self.assertEqual(1, rendered.count(selector))
+                        self.assertTrue((profile_root / selector).is_file())
+                for item in layer3_items:
+                    with self.subTest(profile=profile, layer3=item.name):
+                        top_level = profile_root / f"layer3-{item.name}"
+                        BUILD._copy_skill_tree(item.path, top_level)
+                        BUILD._write_compact_layer3_root_projection(top_level, item)
+                        projections = [
+                            (top_level / "SKILL.md").read_text(encoding="utf-8")
+                        ]
+                        if (
+                            item.layer == "domain"
+                            or item.registry.get("delivery_scope") == "product"
+                        ):
+                            projections.append(BUILD._render_layer3_reference(item))
+                        for rendered in projections:
+                            for value in forbidden:
+                                self.assertNotIn(value, rendered)
+
     def test_source_profiles_use_compact_role_and_generated_delivery_rules(self) -> None:
         data = json.loads((ROOT / "src/agent-profiles/role-agents.json").read_text())
         core = json.loads((ROOT / "src/control-model/core-contracts.json").read_text())
@@ -670,9 +796,13 @@ class HooklessBuildInstallTests(unittest.TestCase):
                         ("daemon", "database", "runtime task state engine", "hidden protocol record"),
                     ),
                     "review-agent": (
-                        ("assigned Review Skill", "Layer 3 Delivery"),
-                        ("bound effective Level", "review depth", "never calculate or recompute"),
-                        ("delivered current", "every changed file", "missing evidence block"),
+                        (
+                            "Load and follow exactly",
+                            "assigned Review Skill",
+                            "Layer 3 Delivery",
+                        ),
+                        ("Main-bound Level/depth/assurance", "never recalculate route/authority"),
+                        ("Actual diff authoritative", "every changed file", "missing evidence blocks"),
                         ("fresh validation", "latest actual diff", "fresh re-review"),
                         ("assigned Review Handoff", "reviewed/unreviewed scope", "residual risk"),
                     ),
@@ -705,13 +835,24 @@ class HooklessBuildInstallTests(unittest.TestCase):
                     self.assertEqual(1, len(matches), rule_id)
 
             for host, (root, suffix) in built_profile_roots.items():
-                built_lines = (
-                    (root / f"{name}{suffix}")
-                    .read_text(encoding="utf-8")
-                    .splitlines()
-                )
+                rendered = {
+                    "codex": BUILD._render_codex_profile,
+                    "claude": BUILD._render_claude_profile,
+                    "copilot": BUILD._render_copilot_profile,
+                }[host](profile, BUILD._load_host_enforcement())
+                built_lines = rendered.splitlines()
                 for rule in rules:
                     self.assertIn(rule, built_lines, (host, name, rule))
+
+        review_rules = profiles["review-agent"]["instructions"]
+        for phrase in (
+            "Initial Review",
+            "Re-review",
+            "repair-regression",
+            "protected-invalidation",
+            "adjacent",
+        ):
+            self.assertIn(phrase, review_rules)
 
         self.assertEqual(
             core["prompt_contract"]["path"],

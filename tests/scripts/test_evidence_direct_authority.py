@@ -189,6 +189,32 @@ class EvidenceDirectAuthorityTests(unittest.TestCase):
             closure["stop_basis"],
         )
 
+    def test_core_projects_role_evidence_closure_without_second_authority(
+        self,
+    ) -> None:
+        closure = CORE_CONTRACTS["evidence_localization_contract"][
+            "evidence_closure"
+        ]
+        self.assertEqual(
+            ["analysis-agent", "task-agent", "review-agent"],
+            list(closure["profile_projection"]),
+        )
+        profiles = {
+            row["name"]: row["instructions"].splitlines()
+            for row in json.loads(PROFILES.read_text(encoding="utf-8"))["profiles"]
+        }
+        for role, projections in closure["profile_projection"].items():
+            with self.subTest(role=role):
+                self.assertEqual(1, len(projections))
+                terms = projections[0]["required_terms"]
+                self.assertEqual(
+                    1,
+                    sum(
+                        all(term.casefold() in line.casefold() for term in terms)
+                        for line in profiles[role]
+                    ),
+                )
+
     def test_worker_profiles_project_localization_with_review_independence(self) -> None:
         profiles = {
             row["name"]: row["instructions"]
@@ -453,13 +479,18 @@ class EvidenceDirectAuthorityTests(unittest.TestCase):
         ]
         self.assertEqual("forbidden", pre_review["L1-L3"])
         self.assertEqual(
-            "existing-material-intermediate-trigger-only-once",
+            "material-intermediate-trigger-per-unchanged-boundary",
             pre_review["L4"],
         )
         self.assertEqual("mandatory-independent", pre_review["L5"])
         self.assertEqual(
             "forbidden-without-protected-decision-or-material-boundary-expansion",
             pre_review["repeat_broad_review"],
+        )
+        self.assertEqual(
+            "current-trigger-exact-nonempty-new-task-expansion-"
+            "material_boundary_expanded-true-broad-false",
+            pre_review["post_delta_expanded_pre_review"],
         )
 
     def test_user_owned_choice_excludes_engineering_implementation_choices(self) -> None:
