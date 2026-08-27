@@ -1077,16 +1077,10 @@ class DocsCoreProjectionTests(unittest.TestCase):
             errors,
         )
 
-    def test_context_budget_projection_derives_main_evolution_target(self) -> None:
+    def test_context_budget_projection_uses_core_soft_and_hard_limits(self) -> None:
         contract = CORE_CONTRACTS["context_budget_contract"]
-        self.assertNotIn("release_target", contract["budget_classes"]["main"])
-        self.assertNotIn("evolution_target", contract["budget_classes"]["main"])
-        self.assertEqual(
-            80,
-            contract["budget_classes"]["main"][
-                "minimum_release_margin_tokens"
-            ],
-        )
+        main = contract["budget_classes"]["main"]
+        self.assertLess(main["soft_target"], main["hard_ceiling"])
         projection = CORE_CONTRACTS["docs_contract"][
             "context_budget_projections"
         ][0]
@@ -1095,7 +1089,7 @@ class DocsCoreProjectionTests(unittest.TestCase):
             projection,
         )
         self.assertIn(
-            "| Main always-loaded | 2200 | 0.10 | 220 | 1980 | 80 | 1900 |",
+            f"| Resident Runtime Budget | Main always-loaded | {main['soft_target']} | {main['hard_ceiling']} | provisional-migration-value |",
             rendered,
         )
 
@@ -1104,10 +1098,11 @@ class DocsCoreProjectionTests(unittest.TestCase):
             root = Path(raw)
             self._projected_docs(root)
             target = root / "docs" / "VALIDATION.md"
+            main = CORE_CONTRACTS["context_budget_contract"]["budget_classes"]["main"]
             target.write_text(
                 target.read_text(encoding="utf-8").replace(
-                    "| Main always-loaded | 2200 | 0.10 | 220 | 1980 | 80 | 1900 |",
-                    "| Main always-loaded | 2200 | 0.10 | 220 | 1980 | 0 | 1980 |",
+                    f"| Resident Runtime Budget | Main always-loaded | {main['soft_target']} | {main['hard_ceiling']} | provisional-migration-value |",
+                    f"| Resident Runtime Budget | Main always-loaded | {main['soft_target']} | {main['hard_ceiling'] - 1} | provisional-migration-value |",
                     1,
                 ),
                 encoding="utf-8",
@@ -1136,7 +1131,12 @@ class DocsCoreProjectionTests(unittest.TestCase):
             governance = root / "GOVERNANCE.md"
             governance.write_text(
                 governance.read_text(encoding="utf-8")
-                + "\nCurrent rendered Main maximum is 9999/1900 tokens.\n",
+                + "\nCurrent rendered Main maximum is 9999/"
+                + str(
+                    CORE_CONTRACTS["context_budget_contract"]["budget_classes"]
+                    ["main"]["hard_ceiling"]
+                )
+                + " tokens.\n",
                 encoding="utf-8",
             )
 
@@ -1155,10 +1155,11 @@ class DocsCoreProjectionTests(unittest.TestCase):
             root = Path(raw)
             self._governance_budget_inputs(root)
             governance = root / "GOVERNANCE.md"
+            main = CORE_CONTRACTS["context_budget_contract"]["budget_classes"]["main"]
             governance.write_text(
                 governance.read_text(encoding="utf-8").replace(
-                    "| Main always-loaded | 2200 |",
-                    "| Main always-loaded | 2199 |",
+                    f"| Main always-loaded | {main['soft_target']} | {main['hard_ceiling']} |",
+                    f"| Main always-loaded | {main['soft_target']} | {main['hard_ceiling'] - 1} |",
                     1,
                 ),
                 encoding="utf-8",
@@ -1188,7 +1189,7 @@ class DocsCoreProjectionTests(unittest.TestCase):
                     if mutation == "failed-status":
                         report["status"] = "fail"
                     else:
-                        report["budget_calibration"]["capacity_ceilings"]["main"] = 2199
+                        report["budget_governance"]["hard_ceilings"]["main"] -= 1
                     report_path.write_text(
                         json.dumps(report),
                         encoding="utf-8",
@@ -1200,7 +1201,7 @@ class DocsCoreProjectionTests(unittest.TestCase):
                 )
 
                 self.assertTrue(
-                    any("rendered context budget report" in error for error in errors),
+                    any("rendered context" in error for error in errors),
                     errors,
                 )
 

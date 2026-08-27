@@ -1104,7 +1104,7 @@ def _evaluate_token_pressure(
             fixed_route["required_review_skills"]
         ),
     }
-    budget = consumer.FROZEN_GATES["task"]
+    budget = consumer.CONTEXT_BUDGET_LIMITS["task"]["hard_ceiling"]
     components = [
         consumer._component(
             "route-obligations",
@@ -1121,10 +1121,9 @@ def _evaluate_token_pressure(
         components,
         required_route_obligations=obligations,
         budget_class="task",
-        token_budget=budget,
     )
     preserved = measurement["route_obligations_preserved"]
-    overflow = measurement["within_token_budget"] is False
+    overflow = measurement["within_hard_ceiling"] is False
     if not overflow:
         errors.append("Decision Eval token pressure did not exceed the real budget")
     if not preserved:
@@ -1133,7 +1132,7 @@ def _evaluate_token_pressure(
         "consumer": (
             "eval-rendered-context-budget:evaluate_route_obligation_context"
         ),
-        "token_budget": measurement["token_budget"],
+        "hard_ceiling": measurement["hard_ceiling"],
         "total_tokens": measurement["total_tokens"],
         "overflow_observed": overflow,
         "failure_id": measurement["failure_id"],

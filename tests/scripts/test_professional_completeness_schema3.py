@@ -366,6 +366,234 @@ def _stale_contract_baseline_artifacts(
 
 class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
     @staticmethod
+    def _historical_promotion_fixture() -> tuple[dict, dict[str, dict]]:
+        packet = _bootstrap_packet()
+        targets = []
+        for embedded_target in packet["professional_targets"]:
+            target = copy.deepcopy(embedded_target)
+            target.pop("review_binding")
+            targets.append(target)
+        bindings, _snapshot = PANEL._professional_v3_binding_state(
+            targets,
+            review_contract_fingerprint=packet[
+                "review_contract_fingerprint"
+            ],
+        )
+        raw = (
+            PANEL.ROOT
+            / PANEL.panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH
+        ).read_bytes()
+        value = (
+            PANEL.panel_attestation.parse_attestation_storage_selector_bytes(
+                raw
+            )
+        )
+        return value, bindings
+
+    @staticmethod
+    def _promotion_rows(
+        value: dict, bindings: dict[str, dict]
+    ) -> dict[str, set[str]]:
+        return {
+            row["skill_id"]: (
+                set(
+                    row["result"]["review_dependencies"][
+                        "reviewer_added_candidate_ids_union"
+                    ]
+                )
+                & set(
+                    bindings[row["skill_id"]]["adjacency"][
+                        "required_candidate_ids"
+                    ]
+                )
+            )
+            for row in value["findings"]
+            if set(
+                row["result"]["review_dependencies"][
+                    "reviewer_added_candidate_ids_union"
+                ]
+            )
+            & set(
+                bindings[row["skill_id"]]["adjacency"][
+                    "required_candidate_ids"
+                ]
+            )
+        }
+
+    def test_compact_fixture_normalizes_multiple_promotion_targets(self) -> None:
+        value, bindings = self._historical_promotion_fixture()
+        promotions = self._promotion_rows(value, bindings)
+        self.assertGreater(len(promotions), 1)
+
+        professional_support._normalize_historical_reviewer_added_promotions(
+            value, bindings=bindings
+        )
+
+        self.assertEqual({}, self._promotion_rows(value, bindings))
+        for row in value["findings"]:
+            skill_id = row["skill_id"]
+            dependencies = row["result"]["review_dependencies"]
+            vote_added = sorted(
+                {
+                    candidate_id
+                    for vote in row["votes"]
+                    for candidate_id in vote[
+                        "examined_adjacent_candidates"
+                    ]["reviewer_added_candidate_ids"]
+                }
+            )
+            self.assertEqual(
+                vote_added,
+                dependencies["reviewer_added_candidate_ids_union"],
+            )
+            self.assertEqual(
+                bindings[skill_id]["adjacency"]["required_candidate_ids"],
+                dependencies["required_candidate_ids"],
+            )
+            self.assertEqual(
+                sorted(
+                    set(dependencies["required_candidate_ids"])
+                    | set(vote_added)
+                ),
+                row["dependency_ids"],
+            )
+
+    def test_compact_fixture_normalizes_two_promotions_on_one_target(self) -> None:
+        value, bindings = self._historical_promotion_fixture()
+        promotions = self._promotion_rows(value, bindings)
+        skill_id, promoted_ids = next(
+            (skill_id, promoted_ids)
+            for skill_id, promoted_ids in promotions.items()
+            if len(promoted_ids) == 2
+        )
+
+        professional_support._normalize_historical_reviewer_added_promotions(
+            value, bindings=bindings
+        )
+
+        row = next(
+            row for row in value["findings"] if row["skill_id"] == skill_id
+        )
+        remaining = set(
+            row["result"]["review_dependencies"][
+                "reviewer_added_candidate_ids_union"
+            ]
+        )
+        self.assertTrue(promoted_ids <= set(
+            row["result"]["review_dependencies"][
+                "required_candidate_ids"
+            ]
+        ))
+        self.assertFalse(promoted_ids & remaining)
+
+    def test_compact_fixture_rejects_unknown_reviewer_added_candidate(
+        self,
+    ) -> None:
+        value, bindings = self._historical_promotion_fixture()
+        row = next(
+            row
+            for row in value["findings"]
+            if row["result"]["review_dependencies"][
+                "reviewer_added_candidate_ids_union"
+            ]
+        )
+        dependencies = row["result"]["review_dependencies"]
+        original = dependencies["reviewer_added_candidate_ids_union"][0]
+        unknown = "unknown-professional-candidate"
+        dependencies["reviewer_added_candidate_ids_union"] = sorted(
+            unknown if candidate_id == original else candidate_id
+            for candidate_id in dependencies[
+                "reviewer_added_candidate_ids_union"
+            ]
+        )
+        for vote in row["votes"]:
+            adjacency = vote["examined_adjacent_candidates"]
+            adjacency["reviewer_added_candidate_ids"] = sorted(
+                unknown if candidate_id == original else candidate_id
+                for candidate_id in adjacency[
+                    "reviewer_added_candidate_ids"
+                ]
+            )
+
+        with self.assertRaisesRegex(AssertionError, "candidates are unknown"):
+            professional_support._normalize_historical_reviewer_added_promotions(
+                value, bindings=bindings
+            )
+
+    def test_compact_fixture_rejects_reviewer_added_union_mismatch(
+        self,
+    ) -> None:
+        value, bindings = self._historical_promotion_fixture()
+        row = next(
+            row
+            for row in value["findings"]
+            if row["result"]["review_dependencies"][
+                "reviewer_added_candidate_ids_union"
+            ]
+        )
+        row["result"]["review_dependencies"][
+            "reviewer_added_candidate_ids_union"
+        ].pop()
+
+        with self.assertRaisesRegex(AssertionError, "union is inconsistent"):
+            professional_support._normalize_historical_reviewer_added_promotions(
+                value, bindings=bindings
+            )
+
+    def test_compact_fixture_rejects_missing_reviewer_added_material(
+        self,
+    ) -> None:
+        value, bindings = self._historical_promotion_fixture()
+        candidate_id = next(
+            candidate_id
+            for row in value["findings"]
+            for candidate_id in row["result"]["review_dependencies"][
+                "reviewer_added_candidate_ids_union"
+            ]
+        )
+        value["dependency_material_catalog"].pop(candidate_id)
+
+        with self.assertRaisesRegex(AssertionError, "material is missing"):
+            professional_support._normalize_historical_reviewer_added_promotions(
+                value, bindings=bindings
+            )
+
+    def test_production_authority_rejects_residual_promotion_overlap(
+        self,
+    ) -> None:
+        value, bindings = self._historical_promotion_fixture()
+        professional_support._normalize_historical_reviewer_added_promotions(
+            value, bindings=bindings
+        )
+        row = next(
+            row
+            for row in value["findings"]
+            if bindings[row["skill_id"]]["adjacency"][
+                "required_candidate_ids"
+            ]
+        )
+        candidate_id = bindings[row["skill_id"]]["adjacency"][
+            "required_candidate_ids"
+        ][0]
+        row["result"]["review_dependencies"][
+            "reviewer_added_candidate_ids_union"
+        ] = [candidate_id]
+        row["votes"][0]["examined_adjacent_candidates"][
+            "reviewer_added_candidate_ids"
+        ] = [candidate_id]
+        claims = PANEL._professional_authenticated_claims_from_findings(
+            value["findings"]
+        )
+
+        with self.assertRaisesRegex(
+            PANEL.PanelReviewError, "current authority is invalid"
+        ):
+            PANEL._professional_attestation_bindings_from_state(
+                current_bindings=bindings,
+                authenticated_claims=claims,
+            )
+
+    @staticmethod
     def _compact_attestation_finding(
         decisions: list[str],
     ) -> dict:

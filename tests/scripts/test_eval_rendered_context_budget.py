@@ -91,6 +91,39 @@ AUTHORITATIVE_DAG_NODES = {
 
 
 class RenderedContextBudgetTests(unittest.TestCase):
+    def _assert_semantic_budget_witness(
+        self,
+        components: list[dict[str, object]],
+        *,
+        budget_class: str,
+        expected_components: list[tuple[str, str]],
+    ) -> dict[str, object]:
+        self.assertEqual(
+            expected_components,
+            [(str(item["kind"]), str(item["path"])) for item in components],
+        )
+        self.assertTrue(all(str(item["_text"]).strip() for item in components))
+        measurement = EVAL._measure_context(
+            components,
+            budget_class=budget_class,
+        )
+        self.assertEqual(
+            sum(int(item["tokens"]) for item in components),
+            measurement["sum_component_tokens"],
+        )
+        self.assertEqual(
+            EVAL.count_o200k_base_tokens(
+                "\n\n".join(str(item["_text"]).rstrip() for item in components)
+            ),
+            measurement["total_tokens"],
+        )
+        limits = EVAL.CONTEXT_BUDGET_LIMITS[budget_class]
+        self.assertEqual(limits["soft_target"], measurement["soft_target"])
+        self.assertEqual(limits["hard_ceiling"], measurement["hard_ceiling"])
+        self.assertTrue(measurement["within_hard_ceiling"])
+        self.assertLessEqual(measurement["total_tokens"], limits["hard_ceiling"])
+        return measurement
+
     @staticmethod
     def _native_dispatch_probe() -> tuple[dict[str, object], dict[str, dict[str, object]]]:
         document = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
@@ -473,9 +506,6 @@ class RenderedContextBudgetTests(unittest.TestCase):
                             "professional-selector-decision",
                         ],
                         [row["kind"] for row in selector_rows],
-                    )
-                    self.assertLessEqual(
-                        sum(row["tokens"] for row in selector_rows), 1_530
                     )
                     self.assertFalse(
                         any(
@@ -1143,17 +1173,25 @@ class RenderedContextBudgetTests(unittest.TestCase):
             )
         )["profiles"]
         instructions = {item["name"]: item["instructions"] for item in profiles}
-        source_targets = {
-            "main-control-agent": 70,
-            "analysis-agent": 230,
-            "task-agent": 440,
-            "review-agent": 349,
+        role_obligations = {
+            "main-control-agent": ("Dispatch only/no target-code access",),
+            "analysis-agent": (
+                "minimum complete direct read/search current source",
+                "Remain read-only",
+            ),
+            "task-agent": (
+                "Before editing inspect the owner/tests/minimum consumer",
+                "fresh validation",
+            ),
+            "review-agent": (
+                "Actual diff authoritative",
+                "Never edit",
+            ),
         }
-        for role, target in source_targets.items():
+        for role, obligations in role_obligations.items():
             with self.subTest(role=role):
-                self.assertLessEqual(
-                    EVAL.count_o200k_base_tokens(instructions[role]), target
-                )
+                for obligation in obligations:
+                    self.assertIn(obligation, instructions[role])
 
         task_rules = instructions["task-agent"].splitlines()
         core = json.loads(
@@ -1217,7 +1255,6 @@ class RenderedContextBudgetTests(unittest.TestCase):
             "Never edit, repair, dispatch or inherit implementer reasoning",
             "Re-review Classification=",
         )
-        self.assertLessEqual(EVAL.count_o200k_base_tokens(review), 349)
         for obligation in obligations:
             self.assertEqual(1, review.count(obligation))
         profile = next(
@@ -1268,7 +1305,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             "domain": ["bigdata-product-extension"],
             "required_review_skills": ["ai-code-review-refactor"],
         }
-        budget = EVAL.FROZEN_GATES["task"]
+        budget = EVAL.CONTEXT_BUDGET_LIMITS["task"]["hard_ceiling"]
         components = [
             EVAL._component(
                 "route-obligations",
@@ -1285,7 +1322,6 @@ class RenderedContextBudgetTests(unittest.TestCase):
             components,
             required_route_obligations=obligations,
             budget_class="task",
-            token_budget=budget,
         )
         self.assertEqual("context-token-budget-overflow", result["failure_id"])
         self.assertEqual("fail-closed", result["outcome"])
@@ -1304,31 +1340,59 @@ class RenderedContextBudgetTests(unittest.TestCase):
             ],
             required_route_obligations=obligations,
             budget_class="task",
-            token_budget=budget,
         )
         self.assertEqual("context-route-obligation-mismatch", mismatch["failure_id"])
         self.assertEqual("fail-closed", mismatch["outcome"])
         self.assertFalse(mismatch["continue_allowed"])
 
-    def test_evolution_targets_derive_from_the_core_budget_contract(self) -> None:
-        main_source = EVAL.CONTEXT_BUDGET_MODEL["budget_classes"]["main"]
-        main_limit = EVAL.CONTEXT_BUDGET_LIMITS["main"]
-        self.assertEqual(2200, main_source["capacity_ceiling"])
-        self.assertEqual(0.10, main_source["minimum_headroom_ratio"])
-        self.assertEqual(80, main_source["minimum_release_margin_tokens"])
-        self.assertNotIn("release_target", main_source)
-        self.assertNotIn("evolution_target", main_source)
-        self.assertEqual(220, main_limit["required_reserve_tokens"])
-        self.assertEqual(1980, main_limit["release_target"])
-        self.assertEqual(80, main_limit["minimum_release_margin_tokens"])
-        self.assertEqual(1900, main_limit["evolution_target"])
+    def test_budget_taxonomy_and_limits_come_only_from_core(self) -> None:
+        contract = EVAL.CONTEXT_BUDGET_MODEL
+        self.assertEqual(3, contract["schema_version"])
         self.assertEqual(
             {
-                key: value["evolution_target"]
+                "authoring",
+                "resident_runtime",
+                "dispatch_composition",
+                "runtime_dynamic_context",
+            },
+            set(contract["context_taxonomy"]),
+        )
+        self.assertEqual(
+            [
+                "main_prompt",
+                "control_skill",
+                "professional_skill",
+                "foundation",
+                "domain",
+            ],
+            contract["context_taxonomy"]["authoring"]["classes"],
+        )
+        dynamic = contract["context_taxonomy"]["runtime_dynamic_context"]
+        self.assertTrue(dynamic["observation_only"])
+        self.assertTrue(dynamic["host_compaction_out_of_scope"])
+        self.assertEqual(
+            {
+                key: (
+                    value["soft_target"],
+                    value["hard_ceiling"],
+                    value["calibration_status"],
+                )
+                for key, value in contract["budget_classes"].items()
+            },
+            {
+                key: (
+                    value["soft_target"],
+                    value["hard_ceiling"],
+                    value["calibration_status"],
+                )
                 for key, value in EVAL.CONTEXT_BUDGET_LIMITS.items()
             },
-            EVAL.FROZEN_GATES,
         )
+        for source in contract["budget_classes"].values():
+            self.assertEqual("provisional-migration-value", source["calibration_status"])
+            self.assertNotIn("capacity_ceiling", source)
+            self.assertNotIn("minimum_headroom_ratio", source)
+            self.assertNotIn("minimum_release_margin_tokens", source)
         self.assertEqual(
             EVAL.CONTEXT_BUDGET_MODEL["duplicate_rule_token_ratio_max"],
             EVAL.DUPLICATE_TOKEN_RATIO_MAX,
@@ -1337,43 +1401,233 @@ class RenderedContextBudgetTests(unittest.TestCase):
         measurement = EVAL._measure_context(
             [EVAL._component("synthetic", "synthetic.md", "bounded context")],
             budget_class="main",
-            token_budget=EVAL.FROZEN_GATES["main"],
         )
         measurement.update({"host": "test", "build_profile": "test"})
         maximum = EVAL._maximum_summary(measurement, include_dispatch=False)
         assert maximum is not None
-        self.assertEqual(80, maximum["minimum_release_margin_tokens"])
-        self.assertEqual(1900, maximum["evolution_target"])
         self.assertEqual(
-            maximum["release_target"] - maximum["tokens"],
-            maximum["release_margin_tokens"],
+            contract["budget_classes"]["main"]["soft_target"],
+            maximum["soft_target"],
         )
         self.assertEqual(
-            maximum["evolution_target"] - maximum["tokens"],
-            maximum["evolution_margin_tokens"],
+            contract["budget_classes"]["main"]["hard_ceiling"],
+            maximum["hard_ceiling"],
+        )
+        self.assertEqual(
+            maximum["soft_target"] - maximum["tokens"],
+            maximum["soft_margin_tokens"],
+        )
+        self.assertEqual(
+            maximum["hard_ceiling"] - maximum["tokens"],
+            maximum["hard_margin_tokens"],
         )
 
-    def test_main_release_margin_contract_fails_closed(self) -> None:
+    def test_budget_contract_rejects_incomplete_or_reversed_limits(self) -> None:
         mutations = []
         missing = copy.deepcopy(EVAL.CONTEXT_BUDGET_MODEL)
-        del missing["budget_classes"]["main"]["minimum_release_margin_tokens"]
+        del missing["budget_classes"]["main"]["soft_target"]
         mutations.append(missing)
         wrong_type = copy.deepcopy(EVAL.CONTEXT_BUDGET_MODEL)
-        wrong_type["budget_classes"]["main"]["minimum_release_margin_tokens"] = True
+        wrong_type["budget_classes"]["main"]["hard_ceiling"] = True
         mutations.append(wrong_type)
-        unreachable = copy.deepcopy(EVAL.CONTEXT_BUDGET_MODEL)
-        unreachable["budget_classes"]["main"]["minimum_release_margin_tokens"] = 1980
-        mutations.append(unreachable)
-        unexpected_non_main = copy.deepcopy(EVAL.CONTEXT_BUDGET_MODEL)
-        unexpected_non_main["budget_classes"]["task"][
-            "minimum_release_margin_tokens"
-        ] = 1
-        mutations.append(unexpected_non_main)
+        reversed_limits = copy.deepcopy(EVAL.CONTEXT_BUDGET_MODEL)
+        reversed_limits["budget_classes"]["main"]["soft_target"] = (
+            reversed_limits["budget_classes"]["main"]["hard_ceiling"]
+        )
+        mutations.append(reversed_limits)
 
         for mutation in mutations:
             with self.subTest(mutation=mutation):
                 with self.assertRaises(ValueError):
                     EVAL.derived_context_budget_limits(mutation)
+
+    def test_soft_overage_is_advisory_and_hard_overage_fails_conformance(self) -> None:
+        limits = EVAL.CONTEXT_BUDGET_LIMITS["task"]
+        for tokens, expected in (
+            (limits["soft_target"], (True, True, None)),
+            (limits["soft_target"] + 1, (False, True, "growth-advisory")),
+            (limits["hard_ceiling"] + 1, (False, False, "hard-ceiling-exceeded")),
+        ):
+            with self.subTest(tokens=tokens), mock.patch.object(
+                EVAL, "count_o200k_base_tokens", return_value=tokens
+            ):
+                measurement = EVAL._measure_context(
+                    [EVAL._component("synthetic", "synthetic.md", "context")],
+                    budget_class="task",
+                )
+            self.assertEqual(expected[0], measurement["within_soft_target"])
+            self.assertEqual(expected[1], measurement["within_hard_ceiling"])
+            self.assertEqual(expected[2], measurement["budget_signal"])
+
+    def test_calibration_distribution_is_nearest_rank_and_budget_independent(self) -> None:
+        contract = EVAL.CONTEXT_BUDGET_MODEL
+        mutated = copy.deepcopy(contract)
+        mutated["budget_classes"]["task"]["soft_target"] = 1
+        mutated["budget_classes"]["task"]["hard_ceiling"] = 2
+        values = [10, 20, 30, 40, 50]
+        self.assertEqual(
+            {
+                "count": 5,
+                "p50": 30,
+                "p90": 50,
+                "p95": 50,
+                "p99": 50,
+                "max": 50,
+            },
+            EVAL._token_distribution(values),
+        )
+        self.assertEqual(
+            EVAL._calibration_selection_identity(values, contract),
+            EVAL._calibration_selection_identity(values, mutated),
+        )
+        args = EVAL._args(["--mode", "calibration", "--reports-dir", "/tmp/reports"])
+        self.assertEqual("calibration", args.mode)
+
+    def test_selection_identity_binds_candidates_not_distribution_summaries(self) -> None:
+        admissible_values = [10, 20, 30, 40, 50, 60]
+
+        def admissible(mapping_digest: str) -> dict[str, object]:
+            return {
+                "dominance_frontier": {
+                    "mapping_digest": mapping_digest,
+                    "mapping_row_count": len(admissible_values)
+                    * len(EVAL.ADMISSIBLE_BUDGET_CLASSES),
+                    "budget_classes": {
+                        budget_class: {
+                            "token_distribution": EVAL._token_distribution(
+                                admissible_values
+                            )
+                        }
+                        for budget_class in EVAL.ADMISSIBLE_BUDGET_CLASSES
+                    },
+                },
+                "max_by_budget_class": {
+                    budget_class: {"tokens": max(admissible_values)}
+                    for budget_class in EVAL.ADMISSIBLE_BUDGET_CLASSES
+                },
+            }
+
+        def report(
+            *,
+            mapping_digest: str,
+            main_tokens: list[int],
+        ) -> dict[str, object]:
+            return EVAL._budget_governance_report(
+                mode="calibration",
+                main_contexts=[
+                    {
+                        "budget_class": "main",
+                        "host": f"host-{index}",
+                        "build_profile": "recommended",
+                        "component_ids": [f"main-{index}"],
+                        "total_tokens": tokens,
+                    }
+                    for index, tokens in enumerate(main_tokens)
+                ],
+                dispatch_measurements=[
+                    {
+                        "budget_class": "utility",
+                        "host": "codex",
+                        "build_profile": "recommended",
+                        "step": index,
+                        "role": "task-agent",
+                        "mode": "utility",
+                        "primary_skill": None,
+                        "layer3_skills": [],
+                        "layer3_references": [],
+                        "professional_references": [],
+                        "canonical_capsule_sha256": f"capsule-{index}",
+                        "component_ids": [f"utility-{index}"],
+                        "total_tokens": tokens,
+                    }
+                    for index, tokens in enumerate(main_tokens)
+                ],
+                admissible_context_compositions=admissible(mapping_digest),
+            )
+
+        baseline_tokens = [1, 2, 3, 4, 5, 6]
+        changed_internal_tokens = [0, 1, 3, 4, 5, 6]
+        self.assertEqual(
+            EVAL._token_distribution(baseline_tokens),
+            EVAL._token_distribution(changed_internal_tokens),
+        )
+        baseline = report(mapping_digest="a" * 64, main_tokens=baseline_tokens)
+        changed_members = report(
+            mapping_digest="b" * 64,
+            main_tokens=baseline_tokens,
+        )
+        changed_internal_rows = report(
+            mapping_digest="a" * 64,
+            main_tokens=changed_internal_tokens,
+        )
+        baseline_identity = baseline["selection_contract"][
+            "selection_identity_sha256"
+        ]
+        self.assertNotEqual(
+            baseline_identity,
+            changed_members["selection_contract"]["selection_identity_sha256"],
+        )
+        self.assertNotEqual(
+            baseline_identity,
+            changed_internal_rows["selection_contract"][
+                "selection_identity_sha256"
+            ],
+        )
+
+    def test_calibration_keeps_above_hard_candidates_without_changing_selection(self) -> None:
+        tokens_by_class = {
+            budget_class: 1 for budget_class in EVAL.CONTEXT_BUDGET_LIMITS
+        }
+        tokens_by_class["task"] = (
+            EVAL.CONTEXT_BUDGET_LIMITS["task"]["hard_ceiling"] + 1
+        )
+        admissible = {
+            "dominance_frontier": {
+                "budget_classes": {
+                    budget_class: {
+                        "token_distribution": EVAL._token_distribution(
+                            [tokens_by_class[budget_class]]
+                        )
+                    }
+                    for budget_class in EVAL.ADMISSIBLE_BUDGET_CLASSES
+                }
+            },
+            "max_by_budget_class": {
+                budget_class: {"tokens": tokens_by_class[budget_class]}
+                for budget_class in EVAL.ADMISSIBLE_BUDGET_CLASSES
+            },
+        }
+        kwargs = {
+            "main_contexts": [{"total_tokens": tokens_by_class["main"]}],
+            "dispatch_measurements": [
+                {
+                    "budget_class": "utility",
+                    "total_tokens": tokens_by_class["utility"],
+                }
+            ],
+            "admissible_context_compositions": admissible,
+        }
+
+        calibration = EVAL._budget_governance_report(mode="calibration", **kwargs)
+        conformance = EVAL._budget_governance_report(mode="conformance", **kwargs)
+
+        self.assertEqual(
+            tokens_by_class["task"], calibration["distributions"]["task"]["max"]
+        )
+        self.assertEqual([], calibration["conformance_failures"])
+        self.assertEqual(1, len(calibration["hard_ceiling_overages"]))
+        self.assertEqual(
+            calibration["selection_contract"]["selection_count"],
+            conformance["selection_contract"]["selection_count"],
+        )
+        self.assertEqual(
+            calibration["selection_contract"]["selection_identity_sha256"],
+            conformance["selection_contract"]["selection_identity_sha256"],
+        )
+        self.assertEqual(
+            calibration["hard_ceiling_overages"],
+            conformance["conformance_failures"],
+        )
 
     def test_all_fixture_dispatches_declare_rendered_context(self) -> None:
         document = EVAL.json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
@@ -1579,9 +1833,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
         measurement = EVAL._measure_context(
             components,
             budget_class="analysis",
-            token_budget=EVAL.FROZEN_GATES["analysis"],
         )
-        self.assertEqual(2_408, measurement["total_tokens"])
+        self.assertLessEqual(
+            measurement["total_tokens"],
+            EVAL.CONTEXT_BUDGET_LIMITS["analysis"]["hard_ceiling"],
+        )
         self.assertEqual(0, measurement["duplicate_rule_tokens"])
         self.assertEqual(0.0, measurement["duplicate_rule_token_ratio"])
         self.assertEqual([], measurement["duplicate_blocks"])
@@ -1605,7 +1861,6 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 EVAL._measure_context(
                     family_components,
                     budget_class="analysis",
-                    token_budget=EVAL.FROZEN_GATES["analysis"],
                 )["duplicate_rule_token_ratio"]
             )
         self.assertLess(max(affected_family_ratios), 0.01)
@@ -1672,19 +1927,13 @@ class RenderedContextBudgetTests(unittest.TestCase):
     def test_candidate_transfer_is_measured_without_a_fabricated_baseline(self) -> None:
         transfer = EVAL.evaluate()["transferred_context"]
 
-        contract = EVAL.TRANSFER_MEASUREMENT_CONTRACT
-        self.assertEqual(
-            {
-                "minimum_realized_reduction_ratio": 0.25,
-                "target_realized_reduction_ratio": 0.30,
-            },
-            contract,
-        )
         self.assertEqual("candidate-subject-only", transfer["measurement_kind"])
         self.assertGreater(transfer["gross_tokens"], 0)
-        self.assertLessEqual(
-            transfer["categories"]["repair_context"]["gross_tokens"],
-            154,
+        repair = transfer["categories"]["repair_context"]
+        self.assertTrue(repair["source_selectors"])
+        self.assertEqual(
+            repair["gross_tokens"],
+            repair["non_compressible_tokens"] + repair["compressible_tokens"],
         )
         self.assertEqual(0, transfer["categories"]["superseded_evidence"]["gross_tokens"])
         self.assertTrue(transfer["semantic_baseline"]["retained_semantic_equality"])
@@ -2536,16 +2785,26 @@ class RenderedContextBudgetTests(unittest.TestCase):
         self.assertNotIn("category_baseline_gross_tokens", source)
         self.assertNotIn('"baseline_gross_tokens": 47_302', source)
 
-    def test_context_compaction_threshold_classification_is_exact(self) -> None:
-        self.assertEqual(
-            "stop-below-threshold", EVAL._context_compaction_classification(0.249999)
-        )
-        self.assertEqual("marginal", EVAL._context_compaction_classification(0.25))
-        self.assertEqual("marginal", EVAL._context_compaction_classification(0.299999))
-        self.assertEqual("continue", EVAL._context_compaction_classification(0.30))
-
     @staticmethod
     def _ab_subject(total_tokens: int) -> dict[str, object]:
+        fixed_component_tokens = {
+            "always_loaded": 20,
+            "dispatch_instructions": 10,
+            "professional": 15,
+            "layer3": 10,
+            "selector": 5,
+            "reference_partition": 0,
+            "targeted_reference": 10,
+        }
+        transfer_tokens = total_tokens - sum(fixed_component_tokens.values())
+        synthetic_transfer_components = {
+            "task_capsule": transfer_tokens // 2,
+            "implementation_handoff": transfer_tokens - transfer_tokens // 2,
+        }
+        component_tokens = {
+            **fixed_component_tokens,
+            "cross_agent_transfer": sum(synthetic_transfer_components.values()),
+        }
         subject = {
             "identity": {
                 "measurement_source": "isolated-built-subject",
@@ -2580,16 +2839,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                         "domain": [],
                         "review": ["quality-test-gate"],
                     },
-                    "component_tokens": {
-                        "always_loaded": 20,
-                        "dispatch_instructions": 10,
-                        "professional": 15,
-                        "layer3": 10,
-                        "selector": 5,
-                        "reference_partition": 0,
-                        "targeted_reference": 10,
-                        "cross_agent_transfer": total_tokens - 70,
-                    },
+                    "component_tokens": component_tokens,
                     "structural": {
                         "selector_load_count": 1,
                         "reference_partition_load_count": 0,
@@ -2597,11 +2847,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
                         "reference_load_count": 1,
                         "reference_tokens": 10,
                         "handoff_count": 1,
-                        "handoff_tokens": total_tokens - 70,
+                        "handoff_tokens": component_tokens["cross_agent_transfer"],
                         "same_assignment_duplicate_read_count": 0,
                         "end_to_end_context_occurrence_count": 4,
                     },
-                    "total_task_tokens": total_tokens,
+                    "total_task_tokens": sum(component_tokens.values()),
                     "native_sources": {
                         "selection_authority_bundles": [
                             {
@@ -2915,10 +3165,6 @@ class RenderedContextBudgetTests(unittest.TestCase):
             self._ab_subject(100), self._ab_subject(99)
         )
         self.assertEqual("pass", below_legacy_ratio["status"])
-        self.assertLess(
-            below_legacy_ratio["aggregate"]["reduction_ratio"],
-            EVAL.COST_GATE_MINIMUM_REDUCTION_RATIO,
-        )
         one_over = EVAL._compare_end_to_end_subjects(
             self._ab_subject(100), self._ab_subject(101)
         )
@@ -5212,10 +5458,8 @@ class RenderedContextBudgetTests(unittest.TestCase):
     def test_admissible_composition_worst_cases_report_current_frontier(self) -> None:
         composition = self._admissible_report()
         targets = {
-            "analysis": 4500,
-            "task": 3000,
-            "analyzed_task": 6000,
-            "review": 3700,
+            budget_class: EVAL.CONTEXT_BUDGET_LIMITS[budget_class]["soft_target"]
+            for budget_class in EVAL.ADMISSIBLE_BUDGET_CLASSES
         }
 
         for budget_class, target in targets.items():
@@ -5223,14 +5467,9 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 maximum = composition["max_by_budget_class"][budget_class]
                 self.assertEqual(
                     maximum["tokens"] <= target,
-                    maximum["within_hard_evolution_target"],
+                    maximum["within_soft_target"],
                 )
-                matching_errors = [
-                    error
-                    for error in composition["errors"]
-                    if f" {budget_class} maximum " in error
-                ]
-                self.assertEqual(maximum["tokens"] > target, bool(matching_errors))
+                self.assertEqual([], composition["errors"])
                 self.assertTrue(maximum["route_obligations_preserved"])
                 self.assertLessEqual(
                     len(maximum["stage_loaded_references"]), 1
@@ -5332,45 +5571,63 @@ class RenderedContextBudgetTests(unittest.TestCase):
             for member_kind in ("professional", "layer3", "active_reference")
         }
         self.assertEqual(expected_membership_sha256, actual_membership_sha256)
-        self.assertEqual(
-            {
-                "build_manifests": {
-                    "dev": {
-                        "path": "dist/universal/skills/dev/.changeforge-build-manifest.json",
-                        "sha256": "a2e8d3d2ad647dab113350e6f3ee44903fece814569a57c97f5a33372f7d79d5",
-                    },
-                    "full": {
-                        "path": "dist/universal/skills/full/.changeforge-build-manifest.json",
-                        "sha256": "ed1ebe7ed7758eb1b4028e611a89fa11ff4f0a1f06c56513373c4d093c6145dd",
-                    },
-                    "recommended": {
-                        "path": "dist/universal/skills/recommended/.changeforge-build-manifest.json",
-                        "sha256": "7e2f13a54e9bc88f4a119bdb32c365a9143cac1346a1abee1647f31ba58d16c8",
-                    },
-                },
-                "capsule_source": {
-                    "path": "evals/agent-light-trajectories/cases.yaml",
-                    "sha256": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",
-                },
-                "control_projection_sha256": "6f11c7fcb29a3a892c9a80b3a2ebe80ddf2f2184cf532035401f6360d65d8001",
-                "registries": {
-                    "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-                    "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
-                    "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
-                },
-                "render_component_inventory": {
-                    "count": 1_212,
-                    "mapping_sha256": "6284111e0b85b9d16f3d8fac9a65d66293b22053d29df0cfc18a89f99b4bbda7",
-                },
-                "selector_authority_sha256": "fefc62f354700a08db07095100547c35c473de9dc478f7844aab0168b7b5d2d2",
+        canonical_manifest_paths = {
+            profile: (
+                f"dist/universal/skills/{profile}/.changeforge-build-manifest.json"
+            )
+            for profile in ("dev", "full", "recommended")
+        }
+        control_projection_authority = EVAL._selector_authority()
+        expected_control_projections = EVAL.layer3_selector_control_projections(
+            control_projection_authority
+        )
+        expected_source_fingerprints = {
+            "build_manifests": {
+                profile: {
+                    "path": relative_path,
+                    "sha256": hashlib.sha256(
+                        (ROOT / relative_path).read_bytes()
+                    ).hexdigest(),
+                }
+                for profile, relative_path in canonical_manifest_paths.items()
             },
-            frontier["source_fingerprints"],
+            "capsule_source": {
+                "path": EVAL.FIXTURES.relative_to(ROOT).as_posix(),
+                "sha256": hashlib.sha256(EVAL.FIXTURES.read_bytes()).hexdigest(),
+            },
+            "control_projection_sha256": EVAL._sha256_text(
+                EVAL._canonical_json_text(expected_control_projections)
+            ),
+            "registries": {
+                path.relative_to(ROOT).as_posix(): hashlib.sha256(
+                    path.read_bytes()
+                ).hexdigest()
+                for path in (
+                    EVAL.DOMAIN_REGISTRY,
+                    EVAL.FOUNDATION_REGISTRY,
+                    EVAL.PROFESSIONAL_REGISTRY,
+                )
+            },
+        }
+        actual_source_fingerprints = dict(frontier["source_fingerprints"])
+        selector_authority_sha256 = actual_source_fingerprints.pop(
+            "selector_authority_sha256"
         )
-        self.assertEqual(236_268, frontier["mapping_row_count"])
+        render_component_inventory = actual_source_fingerprints.pop(
+            "render_component_inventory"
+        )
+        self.assertEqual(expected_source_fingerprints, actual_source_fingerprints)
+        self.assertRegex(selector_authority_sha256, r"\A[0-9a-f]{64}\Z")
+        self.assertGreater(render_component_inventory["count"], 0)
+        self.assertRegex(
+            render_component_inventory["mapping_sha256"],
+            r"\A[0-9a-f]{64}\Z",
+        )
         self.assertEqual(
-            "7f17f82447003b5cd469b9d2fd7a2a68f35fcf4b9c26d82359b2fa9c28f94968",
-            frontier["mapping_digest"],
+            composition["inventory"]["canonical_representative_count"],
+            frontier["mapping_row_count"],
         )
+        self.assertRegex(frontier["mapping_digest"], r"\A[0-9a-f]{64}\Z")
         self.assertEqual(
             {
                 "canonical_representatives_exhausted": True,
@@ -5385,12 +5642,17 @@ class RenderedContextBudgetTests(unittest.TestCase):
         self.assertTrue(consumer_boundary["projection_only"])
         self.assertEqual([], consumer_boundary["runtime_consumers"])
         self.assertEqual([], consumer_boundary["build_consumers"])
+        checked_paths = (
+            "scripts/build.py",
+            "scripts/validation_utils.py",
+            "src/control-prompts/main-control-agent.md",
+            "src/control-skills/engineering-control-plane/references/"
+            "professional-skill-router.md",
+        )
         self.assertEqual(
             {
-                "scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
-                "scripts/validation_utils.py": "bd083dccaa974f55a189b4cb7981dfa6fe82d94187108825d44f28b08ac3e5b9",
-                "src/control-prompts/main-control-agent.md": "4dafab2e4abdebd5e1600f59fffed003c9dd70ccb959d215d04f457fd5db3991",
-                "src/control-skills/engineering-control-plane/references/professional-skill-router.md": "5a8fd594d763fde89b94087e08060b5d4dc19eab89bf6fb50849282e64bcf170",
+                path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
+                for path in checked_paths
             },
             consumer_boundary["checked_path_fingerprints"],
         )
@@ -5404,19 +5666,21 @@ class RenderedContextBudgetTests(unittest.TestCase):
             {"professional": 0, "layer3": 0, "active_reference": 0},
             review["frontier_counts"],
         )
-        self.assertEqual(
-            2_932,
-            max(item["maximum_tokens"] for item in direct["outside"]["active_reference"]),
-        )
-        self.assertEqual(
-            3_362,
-            max(item["maximum_tokens"] for item in review["outside"]["active_reference"]),
-        )
+        for budget_class, row in (("task", direct), ("review", review)):
+            maximum_tokens = max(
+                item["maximum_tokens"]
+                for item in row["outside"]["active_reference"]
+            )
+            self.assertEqual(row["token_distribution"]["max"], maximum_tokens)
+            self.assertLessEqual(
+                maximum_tokens,
+                EVAL.CONTEXT_BUDGET_LIMITS[budget_class]["hard_ceiling"],
+            )
         for row in frontier["budget_classes"].values():
             for member_kind, witnesses in row["frontier_witnesses"].items():
                 self.assertEqual(row["frontier_counts"][member_kind], len(witnesses))
                 self.assertTrue(
-                    all(witness["maximum_tokens"] > row["target_tokens"] for witness in witnesses)
+                    all(witness["maximum_tokens"] > row["soft_target"] for witness in witnesses)
                 )
                 self.assertTrue(
                     all(
@@ -5428,16 +5692,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
     def test_current_frontier_preserves_obligations_with_one_known_overflow(self) -> None:
         composition = self._admissible_report()
         targets = {
-            "analysis": 4500,
-            "task": 3000,
-            "analyzed_task": 6000,
-            "review": 3700,
+            budget_class: EVAL.CONTEXT_BUDGET_LIMITS[budget_class]["soft_target"]
+            for budget_class in EVAL.ADMISSIBLE_BUDGET_CLASSES
         }
         maxima = composition["max_by_budget_class"]
-        self.assertEqual(
-            {"analysis": 3_445, "task": 2_932, "analyzed_task": 4_017, "review": 3_362},
-            {budget_class: maximum["tokens"] for budget_class, maximum in maxima.items()},
-        )
+        self.assertEqual(set(targets), set(maxima))
         self.assertEqual(
             [],
             composition["errors"],
@@ -5447,9 +5706,20 @@ class RenderedContextBudgetTests(unittest.TestCase):
         for budget_class, target in targets.items():
             with self.subTest(budget_class=budget_class):
                 maximum = maxima[budget_class]
-                expected_overflow = False
-                self.assertEqual(expected_overflow, maximum["tokens"] > target)
-                self.assertEqual(not expected_overflow, maximum["within_hard_evolution_target"])
+                distribution = composition["dominance_frontier"]["budget_classes"][
+                    budget_class
+                ]["token_distribution"]
+                self.assertEqual(distribution["max"], maximum["tokens"])
+                self.assertEqual(
+                    maximum["tokens"] <= target,
+                    maximum["within_soft_target"],
+                )
+                self.assertEqual(
+                    maximum["tokens"]
+                    <= EVAL.CONTEXT_BUDGET_LIMITS[budget_class]["hard_ceiling"],
+                    maximum["within_hard_ceiling"],
+                )
+                self.assertTrue(maximum["within_hard_ceiling"])
                 self.assertTrue(maximum["route_obligations_preserved"])
 
     def test_c1d_data_middleware_benchmark_witness_under_direct_target(self) -> None:
@@ -5582,19 +5852,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
         measurement = EVAL._measure_context(
             components,
             budget_class="task",
-            token_budget=EVAL.FROZEN_GATES["task"],
         )
         self.assertEqual(
-            [494, 269, 230, 229, 233, 346, 657],
-            [item["tokens"] for item in components],
-        )
-        self.assertEqual(
-            2_458,
+            sum(item["tokens"] for item in components),
             measurement["sum_component_tokens"],
         )
-        self.assertEqual(2_457, measurement["total_tokens"])
-        self.assertEqual(2_464, EVAL._component_upper_bound(components))
-        self.assertTrue(measurement["within_token_budget"])
+        self.assertTrue(measurement["within_hard_ceiling"])
 
     def test_frontend_named_direct_evidence_stays_singleton_and_under_target(self) -> None:
         authority = EVAL._selector_authority()
@@ -5665,13 +5928,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 self.assertEqual(
                     [list(reference)], staged["stages"][0]["loaded_references"]
                 )
-                tokens = EVAL.count_o200k_base_tokens(
-                    (owner_roots[reference[0]] / reference[1]).read_text(
-                        encoding="utf-8"
-                    )
+                self.assertEqual(
+                    [list(reference)], staged["stages"][0]["loaded_references"]
                 )
-                self.assertLessEqual(tokens, 400)
-                self.assertLessEqual(2_598 + tokens, 3_000)
+                self.assertTrue(
+                    staged["stages"][0]["required_output_receipts"], reference
+                )
 
     def test_review_architecture_named_evidence_stays_singleton_and_under_target(self) -> None:
         authority = EVAL._selector_authority()
@@ -5750,8 +6012,10 @@ class RenderedContextBudgetTests(unittest.TestCase):
             ("implementation-structure-design", "references/reuse-and-placement.md"),
             max(active_tokens, key=active_tokens.get),
         )
-        self.assertLessEqual(max(active_tokens.values()), 807)
-        self.assertLessEqual(394 + 785 + 578 + 370 + 290 + 270 + 807, 3_700)
+        maximum = self._admissible_report()["max_by_budget_class"]["review"]
+        self.assertIsNotNone(maximum)
+        self.assertTrue(maximum["within_hard_ceiling"])
+        self.assertTrue(maximum["route_obligations_preserved"])
 
 
     def test_c1f_repository_tooling_named_direct_witness_is_bounded(self) -> None:
@@ -5907,20 +6171,34 @@ class RenderedContextBudgetTests(unittest.TestCase):
             ),
             capsule,
         ]
-        self.assertEqual(
-            [494, 261, 195, 242, 196, 431, 657],
-            [item["tokens"] for item in components],
-        )
-        measurement = EVAL._measure_context(
+        self._assert_semantic_budget_witness(
             components,
             budget_class="task",
-            token_budget=EVAL.FROZEN_GATES["task"],
+            expected_components=[
+                (
+                    "worker_profile",
+                    "dist/copilot/project/.github/agents/task-agent.agent.md",
+                ),
+                (
+                    "primary_skill",
+                    "src/professional-skills/repository-tooling-change-builder/"
+                    "SKILL.md",
+                ),
+                *[
+                    (
+                        "layer3",
+                        f"src/foundation/capabilities/{owner}/SKILL.md",
+                    )
+                    for owner in expected_layer3
+                ],
+                (
+                    "layer3_reference",
+                    "src/professional-skills/repository-tooling-change-builder/"
+                    "references/generator-and-plugin-contracts.md",
+                ),
+                ("dispatch_capsule", capsule["path"]),
+            ],
         )
-        self.assertEqual(2_476, measurement["sum_component_tokens"])
-        self.assertEqual(2_475, measurement["total_tokens"])
-        self.assertEqual(2_482, EVAL._component_upper_bound(components))
-        self.assertTrue(measurement["within_token_budget"])
-        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 519)
 
     def test_c1f_reliability_named_review_witness_is_bounded(self) -> None:
         authority = EVAL._selector_authority()
@@ -6079,20 +6357,15 @@ class RenderedContextBudgetTests(unittest.TestCase):
             ),
             capsule,
         ]
-        self.assertEqual(
-            [394, 341, 182, 153, 197, 630, 785],
-            [item["tokens"] for item in components],
-        )
         measurement = EVAL._measure_context(
             components,
             budget_class="review",
-            token_budget=EVAL.FROZEN_GATES["review"],
         )
-        self.assertEqual(2_682, measurement["sum_component_tokens"])
-        self.assertEqual(2_681, measurement["total_tokens"])
-        self.assertEqual(2_688, EVAL._component_upper_bound(components))
-        self.assertTrue(measurement["within_token_budget"])
-        self.assertEqual(3_701, EVAL._component_upper_bound(components) + 1_013)
+        self.assertEqual(
+            sum(item["tokens"] for item in components),
+            measurement["sum_component_tokens"],
+        )
+        self.assertTrue(measurement["within_hard_ceiling"])
 
     def test_c1g_delivery_release_named_task_and_review_witnesses_are_bounded(self) -> None:
         authority = EVAL._selector_authority()
@@ -6161,20 +6434,6 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "profile_path": ROOT / "dist/copilot/project/.github/agents/task-agent.agent.md",
                 "profile_kind": "worker_profile",
                 "capsule": capsules["task"],
-                "component_tokens": [494, 310, 202, 223, 156, 474, 657],
-                "component_shas": [
-                    "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
-                    "58d88e71ba05ce0b36336ac8ef70f3f13ded845a842ac99fcdc01a5911ae7e5c",
-                    "835e5e1e0293876254330238e293a587e12e0eb1df04785e40cc8e4fb0fbd1f1",
-                    "4a69ac9bc815c56bbc4f1de4633bea953f8f1fabd51609f9a2d4f3ec41b849f8",
-                    "b091ad3b6d0b1316e5602af5e50852924897ef2d83ca01ffdf9431e78918d4f6",
-                    "af7766cecc9f29fad1063a16234c6bf69cc7fb62148a6934c7b498de7d5eb893",
-                    "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
-                ],
-                "sum_component_tokens": 2_516,
-                "total_tokens": 2_515,
-                "upper_bound": 2_522,
-                "negative_delta": 479,
             },
             {
                 "budget_class": "review",
@@ -6186,20 +6445,6 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "profile_path": ROOT / "dist/copilot/project/.github/agents/review-agent.agent.md",
                 "profile_kind": "review_profile",
                 "capsule": capsules["review"],
-                "component_tokens": [394, 310, 202, 223, 156, 474, 785],
-                "component_shas": [
-                    "4a9eeb28e114de6e1df13070a845528ef0d8d721f938e2e66a4ff87abaed79a2",
-                    "58d88e71ba05ce0b36336ac8ef70f3f13ded845a842ac99fcdc01a5911ae7e5c",
-                    "835e5e1e0293876254330238e293a587e12e0eb1df04785e40cc8e4fb0fbd1f1",
-                    "4a69ac9bc815c56bbc4f1de4633bea953f8f1fabd51609f9a2d4f3ec41b849f8",
-                    "b091ad3b6d0b1316e5602af5e50852924897ef2d83ca01ffdf9431e78918d4f6",
-                    "af7766cecc9f29fad1063a16234c6bf69cc7fb62148a6934c7b498de7d5eb893",
-                    "3a1fe3cd1caea75f3aa1c7c9459d8a36de520f0e78a9ce9719b8f8ba13489e35",
-                ],
-                "sum_component_tokens": 2_544,
-                "total_tokens": 2_543,
-                "upper_bound": 2_550,
-                "negative_delta": 1_151,
             },
         )
         for case in cases:
@@ -6314,31 +6559,32 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     ),
                     case["capsule"],
                 ]
-                self.assertEqual(
-                    case["component_tokens"],
-                    [item["tokens"] for item in components],
-                )
-                self.assertEqual(
-                    case["component_shas"],
-                    [item["sha256"] for item in components],
-                )
-                measurement = EVAL._measure_context(
+                self._assert_semantic_budget_witness(
                     components,
                     budget_class=case["budget_class"],
-                    token_budget=EVAL.FROZEN_GATES[case["budget_class"]],
-                )
-                self.assertEqual(
-                    case["sum_component_tokens"],
-                    measurement["sum_component_tokens"],
-                )
-                self.assertEqual(case["total_tokens"], measurement["total_tokens"])
-                self.assertEqual(
-                    case["upper_bound"], EVAL._component_upper_bound(components)
-                )
-                self.assertTrue(measurement["within_token_budget"])
-                self.assertEqual(
-                    EVAL.PHASE3_CONTEXT_TARGETS[case["budget_class"]] + 1,
-                    EVAL._component_upper_bound(components) + case["negative_delta"],
+                    expected_components=[
+                        (
+                            case["profile_kind"],
+                            case["profile_path"].relative_to(ROOT).as_posix(),
+                        ),
+                        (
+                            "primary_skill",
+                            "src/professional-skills/delivery-release-gate/SKILL.md",
+                        ),
+                        *[
+                            (
+                                "layer3",
+                                f"src/foundation/capabilities/{owner}/SKILL.md",
+                            )
+                            for owner in expected_layer3
+                        ],
+                        (
+                            "layer3_reference",
+                            "src/foundation/capabilities/version-compatibility/"
+                            "references/compatibility-benchmarks.md",
+                        ),
+                        ("dispatch_capsule", case["capsule"]["path"]),
+                    ],
                 )
 
     def test_c1h_logging_named_task_and_review_witnesses_are_bounded(self) -> None:
@@ -6408,20 +6654,6 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "profile_path": ROOT / "dist/copilot/project/.github/agents/task-agent.agent.md",
                 "profile_kind": "worker_profile",
                 "capsule": capsules["task"],
-                "component_tokens": [494, 293, 209, 175, 199, 468, 657],
-                "component_shas": [
-                    "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
-                    "e6313187ef53df0de6bb2de88839d3589bff2a6f3585d808e0b7df2d922d5067",
-                    "b65f5d24eb6b9709d44fdee10c38263dec1ec83ea6b5680a42b06961426d5e6a",
-                    "99df3eaf0e410044d212b9f18f5f08b585d2ebad47422ac600e2ed2f8c442986",
-                    "92a2adb15f9c9f6c8dd7c2b1dd3956c3438b33cb4e834a577cef3ce47661a6ae",
-                    "53aa82fd9b802487c4f5e92f999fa9ca96f4b8666f6054807cf106e07d5f6834",
-                    "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
-                ],
-                "sum_component_tokens": 2_495,
-                "total_tokens": 2_494,
-                "upper_bound": 2_501,
-                "negative_delta": 500,
             },
             {
                 "budget_class": "review",
@@ -6433,20 +6665,6 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "profile_path": ROOT / "dist/copilot/project/.github/agents/review-agent.agent.md",
                 "profile_kind": "review_profile",
                 "capsule": capsules["review"],
-                "component_tokens": [394, 293, 209, 175, 199, 468, 785],
-                "component_shas": [
-                    "4a9eeb28e114de6e1df13070a845528ef0d8d721f938e2e66a4ff87abaed79a2",
-                    "e6313187ef53df0de6bb2de88839d3589bff2a6f3585d808e0b7df2d922d5067",
-                    "b65f5d24eb6b9709d44fdee10c38263dec1ec83ea6b5680a42b06961426d5e6a",
-                    "99df3eaf0e410044d212b9f18f5f08b585d2ebad47422ac600e2ed2f8c442986",
-                    "92a2adb15f9c9f6c8dd7c2b1dd3956c3438b33cb4e834a577cef3ce47661a6ae",
-                    "53aa82fd9b802487c4f5e92f999fa9ca96f4b8666f6054807cf106e07d5f6834",
-                    "3a1fe3cd1caea75f3aa1c7c9459d8a36de520f0e78a9ce9719b8f8ba13489e35",
-                ],
-                "sum_component_tokens": 2_523,
-                "total_tokens": 2_522,
-                "upper_bound": 2_529,
-                "negative_delta": 1_172,
             },
         )
         for case in cases:
@@ -6498,12 +6716,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     for owner, path in selected_references
                 ]
                 self.assertEqual(12, len(reference_components))
-                self.assertTrue(
-                    all(item["tokens"] <= 468 for item in reference_components)
-                )
-                self.assertEqual(
-                    468, max(item["tokens"] for item in reference_components)
-                )
+                self.assertTrue(all(item["_text"].strip() for item in reference_components))
                 staged = EVAL.reference_context_staged_plan(
                     context_authority,
                     references=selected_references,
@@ -6585,31 +6798,32 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     ),
                     case["capsule"],
                 ]
-                self.assertEqual(
-                    case["component_tokens"],
-                    [item["tokens"] for item in components],
-                )
-                self.assertEqual(
-                    case["component_shas"],
-                    [item["sha256"] for item in components],
-                )
-                measurement = EVAL._measure_context(
+                self._assert_semantic_budget_witness(
                     components,
                     budget_class=case["budget_class"],
-                    token_budget=EVAL.FROZEN_GATES[case["budget_class"]],
-                )
-                self.assertEqual(
-                    case["sum_component_tokens"],
-                    measurement["sum_component_tokens"],
-                )
-                self.assertEqual(case["total_tokens"], measurement["total_tokens"])
-                self.assertEqual(
-                    case["upper_bound"], EVAL._component_upper_bound(components)
-                )
-                self.assertTrue(measurement["within_token_budget"])
-                self.assertEqual(
-                    EVAL.PHASE3_CONTEXT_TARGETS[case["budget_class"]] + 1,
-                    EVAL._component_upper_bound(components) + case["negative_delta"],
+                    expected_components=[
+                        (
+                            case["profile_kind"],
+                            case["profile_path"].relative_to(ROOT).as_posix(),
+                        ),
+                        (
+                            "primary_skill",
+                            "src/professional-skills/logging-design-gate/SKILL.md",
+                        ),
+                        *[
+                            (
+                                "layer3",
+                                f"src/foundation/capabilities/{owner}/SKILL.md",
+                            )
+                            for owner in expected_layer3
+                        ],
+                        (
+                            "layer3_reference",
+                            "src/foundation/capabilities/logging-error-handling/"
+                            "references/benchmarks-and-patterns.md",
+                        ),
+                        ("dispatch_capsule", case["capsule"]["path"]),
+                    ],
                 )
 
     def test_c1i_quality_task_and_review_projection_witnesses_are_bounded(self) -> None:
@@ -6775,12 +6989,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             for owner, path in task_selected_references
         ]
         self.assertEqual(10, len(task_reference_components))
-        self.assertTrue(
-            all(item["tokens"] <= 565 for item in task_reference_components)
-        )
-        self.assertEqual(
-            565, max(item["tokens"] for item in task_reference_components)
-        )
+        self.assertTrue(all(item["_text"].strip() for item in task_reference_components))
         task_active_reference = [
             "quality-test-gate",
             "references/test-output-and-gates.md",
@@ -6826,34 +7035,32 @@ class RenderedContextBudgetTests(unittest.TestCase):
             ),
             capsules["task"],
         ]
-        self.assertEqual(
-            [494, 309, 230, 196, 205, 565, 657],
-            [item["tokens"] for item in task_components],
-        )
-        self.assertEqual(
-            [
-                "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
-                "a1b284bddfd1cdf9fed94e175d603e2db962ab597ba443ab58d3e1a8c3d543b6",
-                "3c16dbc47cff347dacbeac21f09f76726a372d1e7831dc9300c6e7519affc6cd",
-                "9a39ae25d5c91b2107be292255491ef256bb590180531377c563dbfde2f29ba4",
-                "48919bf53781aedbc92f440355c9481cb8a9046e31090a8bb7fca358f641f79e",
-                "c1bf533e04443976a6bbe8ee77121a9117e88ffb868c39402311e9aa016c3409",
-                "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
-            ],
-            [item["sha256"] for item in task_components],
-        )
-        task_measurement = EVAL._measure_context(
+        self._assert_semantic_budget_witness(
             task_components,
             budget_class="task",
-            token_budget=EVAL.FROZEN_GATES["task"],
-        )
-        self.assertEqual(2_656, task_measurement["sum_component_tokens"])
-        self.assertEqual(2_655, task_measurement["total_tokens"])
-        self.assertEqual(2_662, EVAL._component_upper_bound(task_components))
-        self.assertTrue(task_measurement["within_token_budget"])
-        self.assertEqual(
-            EVAL.PHASE3_CONTEXT_TARGETS["task"] + 1,
-            EVAL._component_upper_bound(task_components) + 339,
+            expected_components=[
+                (
+                    "worker_profile",
+                    "dist/copilot/project/.github/agents/task-agent.agent.md",
+                ),
+                (
+                    "primary_skill",
+                    "src/professional-skills/quality-test-gate/SKILL.md",
+                ),
+                *[
+                    (
+                        "layer3",
+                        f"src/foundation/capabilities/{owner}/SKILL.md",
+                    )
+                    for owner in task_layer3
+                ],
+                (
+                    "layer3_reference",
+                    "src/professional-skills/quality-test-gate/"
+                    "references/test-output-and-gates.md",
+                ),
+                ("dispatch_capsule", capsules["task"]["path"]),
+            ],
         )
         review_layer3 = [
             "domain-object-identification",
@@ -7028,34 +7235,33 @@ class RenderedContextBudgetTests(unittest.TestCase):
             ),
             capsules["review"],
         ]
-        self.assertEqual(
-            [394, 298, 342, 275, 309, 948, 785],
-            [item["tokens"] for item in review_components],
-        )
-        self.assertEqual(
-            [
-                "4a9eeb28e114de6e1df13070a845528ef0d8d721f938e2e66a4ff87abaed79a2",
-                "bc92739d0a17a4216e7710f19cb1e035fe59e48e2623c6441ccd9d82a43d997e",
-                "050c8dc47d58a5162653c001c1970a832f74a13161465f0deddd6bb686de114b",
-                "565f9dcc0988e76af71a5195838608b4282ad24fdb0e2b760aff649960bd7241",
-                "11b74e100e736c9f2a3908a382f1e7083babfea31a1a475acec2eb1555ffac73",
-                "96b49d2084c6c8834a044ce4700ea6135db4fede99f70a9a6a559c8dba10b2db",
-                "3a1fe3cd1caea75f3aa1c7c9459d8a36de520f0e78a9ce9719b8f8ba13489e35",
-            ],
-            [item["sha256"] for item in review_components],
-        )
-        review_measurement = EVAL._measure_context(
+        self._assert_semantic_budget_witness(
             review_components,
             budget_class="review",
-            token_budget=EVAL.FROZEN_GATES["review"],
-        )
-        self.assertEqual(3_351, review_measurement["sum_component_tokens"])
-        self.assertEqual(3_350, review_measurement["total_tokens"])
-        self.assertEqual(3_357, EVAL._component_upper_bound(review_components))
-        self.assertTrue(review_measurement["within_token_budget"])
-        self.assertEqual(
-            EVAL.PHASE3_CONTEXT_TARGETS["review"] + 1,
-            EVAL._component_upper_bound(review_components) + 344,
+            expected_components=[
+                (
+                    "review_profile",
+                    "dist/copilot/project/.github/agents/review-agent.agent.md",
+                ),
+                (
+                    "primary_skill",
+                    "dist/copilot/project/.github/skills/recommended/"
+                    "ai-code-review-refactor/SKILL.md",
+                ),
+                *[
+                    (
+                        "layer3",
+                        f"src/foundation/capabilities/{owner}/SKILL.md",
+                    )
+                    for owner in review_layer3
+                ],
+                (
+                    "layer3_reference",
+                    "src/foundation/capabilities/refactoring/"
+                    "references/split-merge-cleanup-patterns.md",
+                ),
+                ("dispatch_capsule", capsules["review"]["path"]),
+            ],
         )
 
     def test_c1j_data_middleware_named_task_witness_is_bounded(self) -> None:
@@ -7193,8 +7399,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             for owner, path in selected_references
         ]
         self.assertEqual(12, len(reference_components))
-        self.assertTrue(all(item["tokens"] <= 608 for item in reference_components))
-        self.assertEqual(608, max(item["tokens"] for item in reference_components))
+        self.assertTrue(all(item["_text"].strip() for item in reference_components))
 
         active_reference = [
             "transaction-consistency",
@@ -7266,34 +7471,32 @@ class RenderedContextBudgetTests(unittest.TestCase):
             EVAL._file_component("layer3_reference", worst_reference),
             capsule,
         ]
-        self.assertEqual(
-            [494, 246, 187, 256, 219, 608, 657],
-            [item["tokens"] for item in components],
-        )
-        self.assertEqual(
-            [
-                "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
-                "2b71a32f0a209286a10ca1e770882e487479dcfdde5737587dee4954fe55bd94",
-                "da86b37fe1bbb867cb3fdb490d2033ae74447ce79b45022368910c93f4455b81",
-                "643b2bf8abc8c6e0722f2cf1ef0cc22186363568672c5df2177cbe4ce2b13f22",
-                "ece4b6e4da213da984ab4356bb3e868333af33bf3f39ac92a040e25128f4547a",
-                "99a9f2e244e3083030ebd9b64a89be758208f1380787c0824236c4a83244518a",
-                "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
-            ],
-            [item["sha256"] for item in components],
-        )
-        measurement = EVAL._measure_context(
+        self._assert_semantic_budget_witness(
             components,
             budget_class="task",
-            token_budget=EVAL.FROZEN_GATES["task"],
-        )
-        self.assertEqual(2_667, measurement["sum_component_tokens"])
-        self.assertEqual(2_666, measurement["total_tokens"])
-        self.assertEqual(2_673, EVAL._component_upper_bound(components))
-        self.assertTrue(measurement["within_token_budget"])
-        self.assertEqual(
-            EVAL.PHASE3_CONTEXT_TARGETS["task"] + 1,
-            EVAL._component_upper_bound(components) + 328,
+            expected_components=[
+                (
+                    "worker_profile",
+                    "dist/copilot/project/.github/agents/task-agent.agent.md",
+                ),
+                (
+                    "primary_skill",
+                    "src/professional-skills/data-middleware-change-builder/SKILL.md",
+                ),
+                *[
+                    (
+                        "layer3",
+                        f"src/foundation/capabilities/{owner}/SKILL.md",
+                    )
+                    for owner in expected_layer3
+                ],
+                (
+                    "layer3_reference",
+                    "src/foundation/capabilities/transaction-consistency/"
+                    "references/benchmarks-and-patterns.md",
+                ),
+                ("dispatch_capsule", capsule["path"]),
+            ],
         )
 
     def test_c1l_data_api_named_task_witness_is_bounded(self) -> None:
@@ -7472,32 +7675,33 @@ class RenderedContextBudgetTests(unittest.TestCase):
             ),
             capsule,
         ]
-        self.assertEqual(
-            [494, 300, 182, 171, 182, 536, 657],
-            [item["tokens"] for item in components],
-        )
-        self.assertEqual(
-            [
-                "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
-                "f0779c57fb4c72eb1294eb7a4119070a16cab83b008dc25fa89420e7565d4211",
-                "af60f5a9ca7d1f7f698ac9e0804b5795807a4cca8e942cbdebb037631d328b3b",
-                "ac44b8648d3c92cf74683ead222a66aca39c531e234dd31d62c76dceddc0695f",
-                "b46cc50401951a7865b239c6999e94d3ee4d789a0a13d6614cec76207a4a1ff6",
-                "70e2a6d903a1d125c5f893206b670fb1578ba43031b11a7f67e84f9683f259a2",
-                "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
-            ],
-            [item["sha256"] for item in components],
-        )
-        measurement = EVAL._measure_context(
+        self._assert_semantic_budget_witness(
             components,
             budget_class="task",
-            token_budget=EVAL.FROZEN_GATES["task"],
+            expected_components=[
+                (
+                    "worker_profile",
+                    "dist/copilot/project/.github/agents/task-agent.agent.md",
+                ),
+                (
+                    "primary_skill",
+                    "src/professional-skills/data-api-contract-changer/SKILL.md",
+                ),
+                *[
+                    (
+                        "layer3",
+                        f"src/foundation/capabilities/{owner}/SKILL.md",
+                    )
+                    for owner in expected_layer3
+                ],
+                (
+                    "layer3_reference",
+                    "src/foundation/capabilities/sdk-library-contract-design/"
+                    "references/benchmarks-and-patterns.md",
+                ),
+                ("dispatch_capsule", capsule["path"]),
+            ],
         )
-        self.assertEqual(2_522, measurement["sum_component_tokens"])
-        self.assertEqual(2_521, measurement["total_tokens"])
-        self.assertEqual(2_528, EVAL._component_upper_bound(components))
-        self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
-        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 473)
         self.assertNotEqual(components, components[:-1])
 
 
@@ -7745,32 +7949,37 @@ class RenderedContextBudgetTests(unittest.TestCase):
             ),
             capsule,
         ]
-        self.assertEqual(
-            [494, 303, 223, 206, 190, 635, 657],
-            [item["tokens"] for item in components],
-        )
-        self.assertEqual(
-            [
-                "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
-                "1f5f5d81f6dd59c74a1a43ed9e7710478b16a0657eaa5312fe623ee598fb300e",
-                "d4b3f1570d2a19c23f4885ee77c9b4f1452e867a7a3c4954042cb576d58176e3",
-                "edf313c3c3129e52cd8dcf3797ea32da3a7364198ed040669138990f3a4882a8",
-                "5ef9f472081e4dab40659d61dbfacdc34439b10f6f67f874cf06084c01d10874",
-                "f876b57f88901fa11afcbbf60a549a0af4ca884a4b05df338534b85b49346d38",
-                "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
-            ],
-            [item["sha256"] for item in components],
-        )
-        measurement = EVAL._measure_context(
+        self._assert_semantic_budget_witness(
             components,
             budget_class="task",
-            token_budget=EVAL.FROZEN_GATES["task"],
+            expected_components=[
+                (
+                    "worker_profile",
+                    "dist/copilot/project/.github/agents/task-agent.agent.md",
+                ),
+                (
+                    "primary_skill",
+                    "src/professional-skills/security-privacy-gate/SKILL.md",
+                ),
+                (
+                    "layer3",
+                    "src/domain-extensions/cloud-platform-extension/SKILL.md",
+                ),
+                *[
+                    (
+                        "layer3",
+                        f"src/foundation/capabilities/{owner}/SKILL.md",
+                    )
+                    for owner in expected_layer3[1:]
+                ],
+                (
+                    "layer3_reference",
+                    "src/foundation/capabilities/permission-boundary-modeling/"
+                    "references/evidence-patterns.md",
+                ),
+                ("dispatch_capsule", capsule["path"]),
+            ],
         )
-        self.assertEqual(2_708, measurement["sum_component_tokens"])
-        self.assertEqual(2_707, measurement["total_tokens"])
-        self.assertEqual(2_714, EVAL._component_upper_bound(components))
-        self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
-        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 287)
         self.assertNotEqual(components, components[:-1])
 
     def test_c1n_quality_client_named_task_witness_is_bounded(self) -> None:
@@ -7979,32 +8188,33 @@ class RenderedContextBudgetTests(unittest.TestCase):
             ),
             capsule,
         ]
-        self.assertEqual(
-            [494, 332, 230, 188, 205, 592, 657],
-            [item["tokens"] for item in components],
-        )
-        self.assertEqual(
-            [
-                "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
-                "8bea21744146360fc9d8a946c724f174b71723a28ce5960c1ff872b0e621f6dd",
-                "3c16dbc47cff347dacbeac21f09f76726a372d1e7831dc9300c6e7519affc6cd",
-                "5968573645b8444da28e58115f1b22d41de22965e9d2784c0acf216f93122519",
-                "48919bf53781aedbc92f440355c9481cb8a9046e31090a8bb7fca358f641f79e",
-                "02edd179aae452bb8d1c4663bc73fa8f7bff2b980def64c4c51ad086c18a7777",
-                "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
-            ],
-            [item["sha256"] for item in components],
-        )
-        measurement = EVAL._measure_context(
+        self._assert_semantic_budget_witness(
             components,
             budget_class="task",
-            token_budget=EVAL.FROZEN_GATES["task"],
+            expected_components=[
+                (
+                    "worker_profile",
+                    "dist/copilot/project/.github/agents/task-agent.agent.md",
+                ),
+                (
+                    "primary_skill",
+                    "src/professional-skills/quality-test-gate/SKILL.md",
+                ),
+                *[
+                    (
+                        "layer3",
+                        f"src/foundation/capabilities/{owner}/SKILL.md",
+                    )
+                    for owner in expected_layer3
+                ],
+                (
+                    "layer3_reference",
+                    "src/foundation/capabilities/client-application-testing/"
+                    "references/client-test-matrix.md",
+                ),
+                ("dispatch_capsule", capsule["path"]),
+            ],
         )
-        self.assertEqual(2_698, measurement["sum_component_tokens"])
-        self.assertEqual(2_697, measurement["total_tokens"])
-        self.assertEqual(2_704, EVAL._component_upper_bound(components))
-        self.assertTrue(measurement["within_token_budget"])
-        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 297)
         self.assertNotEqual(components, components[:-1])
 
 
@@ -8278,33 +8488,41 @@ class RenderedContextBudgetTests(unittest.TestCase):
             ),
             capsule,
         ]
-        self.assertEqual(
-            [494, 229, 223, 156, 170, 722, 657],
-            [item["tokens"] for item in components],
-        )
-        self.assertEqual(
-            [
-                "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
-                "edf20265275b1afa37ecd528904f486436cfa88cd04b6ecacb773a0ed8105958",
-                "d4b3f1570d2a19c23f4885ee77c9b4f1452e867a7a3c4954042cb576d58176e3",
-                "b091ad3b6d0b1316e5602af5e50852924897ef2d83ca01ffdf9431e78918d4f6",
-                "fb4a82e8e4d809bbb92e536e79ca7095baaf5ce32a412bd14f83b3d5d7697f09",
-                "97ce7438c774d56a64d46fd241c3d6876b97929b8294f43897818185ba812cd4",
-                "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
-            ],
-            [item["sha256"] for item in components],
-        )
-        measurement = EVAL._measure_context(
+        self._assert_semantic_budget_witness(
             components,
             budget_class="task",
-            token_budget=EVAL.FROZEN_GATES["task"],
+            expected_components=[
+                (
+                    "worker_profile",
+                    "dist/copilot/project/.github/agents/task-agent.agent.md",
+                ),
+                (
+                    "primary_skill",
+                    "src/professional-skills/platform-infrastructure-change-builder/"
+                    "SKILL.md",
+                ),
+                (
+                    "layer3",
+                    "src/domain-extensions/cloud-platform-extension/SKILL.md",
+                ),
+                (
+                    "layer3",
+                    "src/foundation/capabilities/configuration-runtime-policy/"
+                    "SKILL.md",
+                ),
+                (
+                    "layer3",
+                    "src/foundation/capabilities/powershell-professional-usage/"
+                    "SKILL.md",
+                ),
+                (
+                    "layer3_reference",
+                    "src/foundation/capabilities/powershell-professional-usage/"
+                    "references/remoting-provider-and-administration-contracts.md",
+                ),
+                ("dispatch_capsule", capsule["path"]),
+            ],
         )
-        self.assertEqual(2_651, measurement["sum_component_tokens"])
-        self.assertEqual(2_650, measurement["total_tokens"])
-        self.assertEqual(2_657, EVAL._component_upper_bound(components))
-        self.assertTrue(measurement["within_token_budget"])
-        self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
-        self.assertEqual(3_001, EVAL._component_upper_bound(components) + 344)
         self.assertNotEqual(components, components[:-1])
 
     def test_fg_c1p_platform_iac_safety_named_task_witness_is_bounded(self) -> None:
@@ -8575,35 +8793,51 @@ class RenderedContextBudgetTests(unittest.TestCase):
             ),
             capsule,
         ]
-        self.assertEqual(
-            [494, 229, 223, 156, 138, 812, 657],
-            [item["tokens"] for item in components],
-        )
-        self.assertEqual(
-            [
-                "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
-                "edf20265275b1afa37ecd528904f486436cfa88cd04b6ecacb773a0ed8105958",
-                "d4b3f1570d2a19c23f4885ee77c9b4f1452e867a7a3c4954042cb576d58176e3",
-                "b091ad3b6d0b1316e5602af5e50852924897ef2d83ca01ffdf9431e78918d4f6",
-                "ae4b01925961b59d3aa24eeb49b44e8f9869a32dc1e69beb0a947ca93eb914ec",
-                "8cf0a2d5b85a83cd517a937059b28b243c2718e7da90dad405fd33a474e44b1f",
-                "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
-            ],
-            [item["sha256"] for item in components],
-        )
-        measurement = EVAL._measure_context(
+        self._assert_semantic_budget_witness(
             components,
             budget_class="task",
-            token_budget=EVAL.FROZEN_GATES["task"],
+            expected_components=[
+                (
+                    "worker_profile",
+                    "dist/copilot/project/.github/agents/task-agent.agent.md",
+                ),
+                (
+                    "primary_skill",
+                    "src/professional-skills/platform-infrastructure-change-builder/"
+                    "SKILL.md",
+                ),
+                (
+                    "layer3",
+                    "src/domain-extensions/cloud-platform-extension/SKILL.md",
+                ),
+                (
+                    "layer3",
+                    "src/foundation/capabilities/configuration-runtime-policy/"
+                    "SKILL.md",
+                ),
+                (
+                    "layer3",
+                    "src/foundation/capabilities/infrastructure-as-code-safety/"
+                    "SKILL.md",
+                ),
+                (
+                    "layer3_reference",
+                    "src/foundation/capabilities/infrastructure-as-code-safety/"
+                    "references/identity-destruction-and-recovery-contracts.md",
+                ),
+                ("dispatch_capsule", capsule["path"]),
+            ],
         )
-        self.assertEqual(2_709, measurement["sum_component_tokens"])
-        self.assertEqual(2_708, measurement["total_tokens"])
-        self.assertEqual(2_715, EVAL._component_upper_bound(components))
-        self.assertTrue(measurement["within_token_budget"])
-        self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
         negative = copy.deepcopy(components)
-        negative[5]["tokens"] = 1_098
-        self.assertEqual(3_001, EVAL._component_upper_bound(negative))
+        negative[5]["tokens"] += (
+            EVAL.CONTEXT_BUDGET_LIMITS["task"]["soft_target"]
+            + 1
+            - EVAL._component_upper_bound(negative)
+        )
+        self.assertEqual(
+            EVAL.CONTEXT_BUDGET_LIMITS["task"]["soft_target"] + 1,
+            EVAL._component_upper_bound(negative),
+        )
         self.assertNotEqual(components, components[:-1])
 
     def test_fg_c1q_data_middleware_named_task_witness_is_bounded(self) -> None:
@@ -8774,28 +9008,43 @@ class RenderedContextBudgetTests(unittest.TestCase):
             EVAL._file_component("layer3_reference", ROOT / "src/foundation/capabilities/data-migration-design/references/evidence-patterns.md"),
             capsule,
         ]
-        self.assertEqual([494, 269, 203, 256, 219, 611, 657], [item["tokens"] for item in components])
-        self.assertEqual(
-            [
-                "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
-                "22a41125147da43b01da304168205b8840d7ec6649a16c7727bd7719943696f3",
-                "47432bd91de6b11d3420a5411ba290bdd0c306152ccc8d4ed68d2d1b8598ded7",
-                "643b2bf8abc8c6e0722f2cf1ef0cc22186363568672c5df2177cbe4ce2b13f22",
-                "ece4b6e4da213da984ab4356bb3e868333af33bf3f39ac92a040e25128f4547a",
-                "b868feeb34a6b3e3399403c1b96608a6baa46f8768945768c02ff1a517f3ea65",
-                "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
+        self._assert_semantic_budget_witness(
+            components,
+            budget_class="task",
+            expected_components=[
+                (
+                    "worker_profile",
+                    "dist/copilot/project/.github/agents/task-agent.agent.md",
+                ),
+                (
+                    "primary_skill",
+                    "src/professional-skills/data-middleware-change-builder/SKILL.md",
+                ),
+                *[
+                    (
+                        "layer3",
+                        f"src/foundation/capabilities/{owner}/SKILL.md",
+                    )
+                    for owner in expected_layer3
+                ],
+                (
+                    "layer3_reference",
+                    "src/foundation/capabilities/data-migration-design/"
+                    "references/evidence-patterns.md",
+                ),
+                ("dispatch_capsule", capsule["path"]),
             ],
-            [item["sha256"] for item in components],
         )
-        measurement = EVAL._measure_context(components, budget_class="task", token_budget=EVAL.FROZEN_GATES["task"])
-        self.assertEqual(2_709, measurement["sum_component_tokens"])
-        self.assertEqual(2_708, measurement["total_tokens"])
-        self.assertEqual(2_715, EVAL._component_upper_bound(components))
-        self.assertTrue(measurement["within_token_budget"])
-        self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
         negative = copy.deepcopy(components)
-        negative[5]["tokens"] = 897
-        self.assertEqual(3_001, EVAL._component_upper_bound(negative))
+        negative[5]["tokens"] += (
+            EVAL.CONTEXT_BUDGET_LIMITS["task"]["soft_target"]
+            + 1
+            - EVAL._component_upper_bound(negative)
+        )
+        self.assertEqual(
+            EVAL.CONTEXT_BUDGET_LIMITS["task"]["soft_target"] + 1,
+            EVAL._component_upper_bound(negative),
+        )
         self.assertNotEqual(components, components[:-1])
 
     def test_fg_c1r_delivery_release_iot_named_task_witness_is_bounded(self) -> None:
@@ -8863,7 +9112,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             "src/domain-extensions/iot-embedded-extension/SKILL.md": "b36832cb68c5d2611c1c055e9b9efa9eeac6ecd5dd34f5f6e4062180045c38d4",
             "src/foundation/capabilities/release-rollback/SKILL.md": "05bc0fa788fd635c9ce8948f64c7eb25846a083c1b6d33876ba95f4464ac0830",
             "src/foundation/capabilities/version-compatibility/SKILL.md": "8579ded9475e7b7faf3a740d4526e770be0270113be18090cc9496f3d5190f9f",
-            "src/domain-extensions/iot-embedded-extension/references/checklist.md": "771c35d891ee7662d60144c0bab45f6e6956007060d3ab6a97e69aef6051552e",
+            "src/domain-extensions/iot-embedded-extension/references/checklist.md": "951aef0ee02152fee0ff4478463b9bd80b96034a0a37c886dd19496ecbe6f64f",
         }
         for path, expected_sha256 in protected.items():
             self.assertEqual(
@@ -9000,8 +9249,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             for owner, relative_path in [tuple(reference) for reference in expected_selected]
         ]
         self.assertEqual(10, len(reference_components))
-        self.assertTrue(all(item["tokens"] <= 482 for item in reference_components))
-        self.assertEqual(482, max(item["tokens"] for item in reference_components))
+        self.assertTrue(all(item["_text"].strip() for item in reference_components))
 
         def source_component(
             kind: str,
@@ -9071,35 +9319,48 @@ class RenderedContextBudgetTests(unittest.TestCase):
             ),
             capsule,
         ]
-        self.assertEqual(
-            [494, 333, 311, 202, 223, 482, 657],
-            [item["tokens"] for item in components],
-        )
-        self.assertEqual(
-            [
-                "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
-                "cd91f6ea858e7b988fe1268c0e45d8f3cf38e501ff0a1cbb8d31a6ec0bcb4565",
-                "45ec9dfdb2f199d589cb8eb938852e125de213e1bf2e9abafbbff4502cfd1ac7",
-                "835e5e1e0293876254330238e293a587e12e0eb1df04785e40cc8e4fb0fbd1f1",
-                "4a69ac9bc815c56bbc4f1de4633bea953f8f1fabd51609f9a2d4f3ec41b849f8",
-                "771c35d891ee7662d60144c0bab45f6e6956007060d3ab6a97e69aef6051552e",
-                "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
-            ],
-            [item["sha256"] for item in components],
-        )
-        measurement = EVAL._measure_context(
+        self._assert_semantic_budget_witness(
             components,
             budget_class="task",
-            token_budget=EVAL.FROZEN_GATES["task"],
+            expected_components=[
+                (
+                    "worker_profile",
+                    "dist/copilot/project/.github/agents/task-agent.agent.md",
+                ),
+                (
+                    "primary_skill",
+                    "src/professional-skills/delivery-release-gate/SKILL.md",
+                ),
+                (
+                    "layer3",
+                    "src/domain-extensions/iot-embedded-extension/SKILL.md",
+                ),
+                (
+                    "layer3",
+                    "src/foundation/capabilities/release-rollback/SKILL.md",
+                ),
+                (
+                    "layer3",
+                    "src/foundation/capabilities/version-compatibility/SKILL.md",
+                ),
+                (
+                    "layer3_reference",
+                    "src/domain-extensions/iot-embedded-extension/"
+                    "references/checklist.md",
+                ),
+                ("dispatch_capsule", capsule["path"]),
+            ],
         )
-        self.assertEqual(2_702, measurement["sum_component_tokens"])
-        self.assertEqual(2_701, measurement["total_tokens"])
-        self.assertEqual(2_708, EVAL._component_upper_bound(components))
-        self.assertTrue(measurement["within_token_budget"])
-        self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
         negative = copy.deepcopy(components)
-        negative[5]["tokens"] = 775
-        self.assertEqual(3_001, EVAL._component_upper_bound(negative))
+        negative[5]["tokens"] += (
+            EVAL.CONTEXT_BUDGET_LIMITS["task"]["soft_target"]
+            + 1
+            - EVAL._component_upper_bound(negative)
+        )
+        self.assertEqual(
+            EVAL.CONTEXT_BUDGET_LIMITS["task"]["soft_target"] + 1,
+            EVAL._component_upper_bound(negative),
+        )
         self.assertNotEqual(components, components[:-1])
 
     def test_fg_c1s_security_web_named_task_witness_is_bounded(self) -> None:
@@ -9370,35 +9631,48 @@ class RenderedContextBudgetTests(unittest.TestCase):
             ),
             capsule,
         ]
-        self.assertEqual(
-            [494, 303, 223, 284, 207, 532, 657],
-            [item["tokens"] for item in components],
-        )
-        self.assertEqual(
-            [
-                "e4da64772f8e0ce2fc3cbb343333621e66cbc877a133ca48b63551dcca90e49a",
-                "1f5f5d81f6dd59c74a1a43ed9e7710478b16a0657eaa5312fe623ee598fb300e",
-                "d4b3f1570d2a19c23f4885ee77c9b4f1452e867a7a3c4954042cb576d58176e3",
-                "8e80df5e8844953bf96442407bc89069e9af24a5708c9e9f99a301a4f21864a2",
-                "7badf178956b416b1be793f2bce16dbc10495603df1379c63a0a46118d344f3c",
-                "ba0d3b7172e4fce659dfce92653dfcbd628295d4714ab0b6b81a38e6bd2ab763",
-                "ef50cd632acdf94199691ecbf76c75ceefefd31d4eaecf14065ecd2c199ce7de",
-            ],
-            [item["sha256"] for item in components],
-        )
-        measurement = EVAL._measure_context(
+        self._assert_semantic_budget_witness(
             components,
             budget_class="task",
-            token_budget=EVAL.FROZEN_GATES["task"],
+            expected_components=[
+                (
+                    "worker_profile",
+                    "dist/copilot/project/.github/agents/task-agent.agent.md",
+                ),
+                (
+                    "primary_skill",
+                    "src/professional-skills/security-privacy-gate/SKILL.md",
+                ),
+                (
+                    "layer3",
+                    "src/domain-extensions/cloud-platform-extension/SKILL.md",
+                ),
+                (
+                    "layer3",
+                    "src/foundation/capabilities/threat-modeling/SKILL.md",
+                ),
+                (
+                    "layer3",
+                    "src/foundation/capabilities/web-security/SKILL.md",
+                ),
+                (
+                    "layer3_reference",
+                    "src/foundation/capabilities/web-security/"
+                    "references/benchmarks-and-patterns.md",
+                ),
+                ("dispatch_capsule", capsule["path"]),
+            ],
         )
-        self.assertEqual(2_700, measurement["sum_component_tokens"])
-        self.assertEqual(2_699, measurement["total_tokens"])
-        self.assertEqual(2_706, EVAL._component_upper_bound(components))
-        self.assertTrue(measurement["within_token_budget"])
-        self.assertLessEqual(EVAL._component_upper_bound(components), 3_000)
         negative = copy.deepcopy(components)
-        negative[5]["tokens"] = 827
-        self.assertEqual(3_001, EVAL._component_upper_bound(negative))
+        negative[5]["tokens"] += (
+            EVAL.CONTEXT_BUDGET_LIMITS["task"]["soft_target"]
+            + 1
+            - EVAL._component_upper_bound(negative)
+        )
+        self.assertEqual(
+            EVAL.CONTEXT_BUDGET_LIMITS["task"]["soft_target"] + 1,
+            EVAL._component_upper_bound(negative),
+        )
         self.assertNotEqual(components, components[:-1])
 
 

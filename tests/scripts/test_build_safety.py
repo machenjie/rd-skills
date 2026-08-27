@@ -761,7 +761,7 @@ Own one bounded decision.
         self.assertIn("host without an Agent Profile", control)
         self.assertIn("references/main-control-agent.md", control)
 
-    def test_all_source_rendered_main_contexts_meet_evolution_target(self) -> None:
+    def test_all_source_rendered_main_contexts_meet_core_hard_ceiling(self) -> None:
         profiles = {
             profile["name"]: profile for profile in BUILD._load_agent_profiles()
         }
@@ -780,7 +780,7 @@ Own one bounded decision.
             control_text = (destination / "SKILL.md").read_text(encoding="utf-8")
 
         gate = derived_context_budget_limits(CONTEXT_BUDGET_MODEL)["main"][
-            "evolution_target"
+            "hard_ceiling"
         ]
         observed: dict[str, int] = {}
         for host, renderer in (

@@ -29,6 +29,22 @@ Support `task-agent` in owning bounded frontend interaction states within declar
 - When any named frontend decision remains unresolved, keep the change with its owner and load only the active named References whose contracts supply the required outputs.
 - No shared UI, hook, store, client, flag, or dependency without consumers, reuse, and deletion evidence.
 
+## High-Value Gotchas
+
+- Promoting feature-local state or a one-consumer component into a shared store or wrapper can hide domain assumptions and widen every failure and rollback path.
+- Duplicated derived state or an out-of-order response can overwrite fresher input, leave stale loading or error state, or make retry repeat the wrong transition.
+- A generic catch can collapse permission, validation, conflict, timeout, and terminal failures into a false recovery path.
+- Snapshot or automated accessibility success does not prove keyboard focus, live-region announcements, responsive overflow, or screen-reader recovery.
+
+## Execution Checklist
+
+- Inspect the current component owner, consumers, design-system alternatives, and deletion path before adding shared UI, a hook, store, client, flag, or dependency.
+- Trace local, form, URL, server-cache, global, and derived state through loading, empty, success, validation, permission, conflict, timeout, cancellation, stale-response, and retry transitions.
+- Run component or integration tests through accessible queries for the changed normal, failure, denied, cancellation, stale-response, and recovery paths.
+- Exercise the changed keyboard, focus, live-region, screen-reader, responsive, and text-overflow paths; record the artifact and proof limits.
+- Run a malicious-content and denied-path fixture when HTML, content, token, script, or browser-storage behavior changes.
+- Search sibling components, hooks, stores, validators, API clients, and tests for the same failure pattern; record hits, exclusions, and residual risk.
+
 ## Stop / Escalation Conditions
 
 - Stop implementation on unresolved authority, owner, behavior, or proof.

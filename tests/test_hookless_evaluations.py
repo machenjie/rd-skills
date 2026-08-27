@@ -311,34 +311,35 @@ class HooklessEvaluationTests(unittest.TestCase):
         self.assertEqual("o200k_base", rendered["tokenizer"])
         self.assertEqual(report["fixture_count"], rendered["fixture_count"])
         self.assertEqual(rendered["dispatch_count"] * 9, rendered["measurement_count"])
-        self.assertEqual([], rendered["budget_calibration"]["relaxations"])
-        self.assertEqual(
-            1980,
-            rendered["budget_calibration"]["release_targets"]["main"],
+        budget = rendered["budget_governance"]
+        core_budget = json.loads(
+            (ROOT / "src/control-model/core-contracts.json").read_text(
+                encoding="utf-8"
+            )
+        )["context_budget_contract"]
+        self.assertEqual("conformance", budget["mode"])
+        self.assertEqual([], budget["conformance_failures"])
+        self.assertFalse(
+            budget["selection_contract"]["budget_applied_to_candidate_selection"]
         )
         self.assertEqual(
-            80,
-            rendered["budget_calibration"]["minimum_release_margin_tokens"][
-                "main"
-            ],
+            {
+                key: value["soft_target"]
+                for key, value in core_budget["budget_classes"].items()
+            },
+            budget["soft_targets"],
         )
         self.assertEqual(
-            1900,
-            rendered["budget_calibration"]["evolution_targets"]["main"],
+            {
+                key: value["hard_ceiling"]
+                for key, value in core_budget["budget_classes"].items()
+            },
+            budget["hard_ceilings"],
         )
-        self.assertEqual(
-            rendered["budget_calibration"]["evolution_targets"],
-            rendered["budget_calibration"]["frozen_gates"],
-        )
-        self.assertGreaterEqual(
-            rendered["aggregate"]["max_main"]["release_margin_tokens"],
-            rendered["aggregate"]["max_main"][
-                "minimum_release_margin_tokens"
-            ],
-        )
+        self.assertTrue(rendered["aggregate"]["max_main"]["within_hard_ceiling"])
         self.assertLessEqual(
             rendered["aggregate"]["max_duplicate_rule_token_ratio"],
-            rendered["budget_calibration"]["duplicate_rule_token_ratio_max"],
+            budget["duplicate_rule_token_ratio_max"],
         )
         transferred = rendered["transferred_context"]
         self.assertEqual(

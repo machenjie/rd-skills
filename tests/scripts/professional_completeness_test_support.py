@@ -215,6 +215,149 @@ def _bootstrap_packet() -> dict:
     return copy.deepcopy(_bootstrap_packet_cached())
 
 
+def _normalize_historical_reviewer_added_promotions(
+    value: dict, *, bindings: dict[str, dict]
+) -> None:
+    """Reclassify authenticated reviewer-added candidates now required."""
+
+    findings = value.get("findings")
+    if not isinstance(findings, list):
+        raise AssertionError("Professional fixture findings are missing")
+    findings_by_id = {
+        row.get("skill_id"): row
+        for row in findings
+        if isinstance(row, dict) and isinstance(row.get("skill_id"), str)
+    }
+    if len(findings_by_id) != len(findings):
+        raise AssertionError("Professional fixture findings are not unique")
+
+    catalog = value.get("dependency_material_catalog")
+    if not isinstance(catalog, dict):
+        raise AssertionError(
+            "Professional fixture dependency material catalog is missing"
+        )
+    if set(findings_by_id) != set(bindings):
+        raise AssertionError(
+            "Professional fixture finding and binding coverage differs"
+        )
+    for skill_id, row in sorted(findings_by_id.items()):
+        binding = bindings[skill_id]
+        if not isinstance(binding, dict):
+            raise AssertionError(
+                f"Professional fixture binding is invalid: {skill_id}"
+            )
+        current_required_ids = binding["adjacency"][
+            "required_candidate_ids"
+        ]
+        if current_required_ids != sorted(set(current_required_ids)):
+            raise AssertionError(
+                f"Professional fixture required candidates are not canonical: {skill_id}"
+            )
+        current_required = set(current_required_ids)
+
+        review_dependencies = row["result"]["review_dependencies"]
+        historical_added_ids = review_dependencies[
+            "reviewer_added_candidate_ids_union"
+        ]
+        if historical_added_ids != sorted(set(historical_added_ids)):
+            raise AssertionError(
+                f"Professional fixture reviewer-added union is not canonical: {skill_id}"
+            )
+        historical_added = set(historical_added_ids)
+        promoted_ids = historical_added & current_required
+
+        observed_added: set[str] = set()
+        remaining_by_vote: list[list[str]] = []
+        for vote in row["votes"]:
+            adjacency = vote["examined_adjacent_candidates"]
+            added_ids = adjacency["reviewer_added_candidate_ids"]
+            if added_ids != sorted(set(added_ids)):
+                raise AssertionError(
+                    f"Professional fixture reviewer-added vote is not canonical: {skill_id}"
+                )
+            observed_added.update(added_ids)
+            remaining = sorted(set(added_ids) - promoted_ids)
+            adjacency["reviewer_added_candidate_ids"] = remaining
+            adjacency["required_count"] = len(current_required_ids)
+            adjacency["count"] = len(current_required_ids) + len(remaining)
+            remaining_by_vote.append(remaining)
+        if observed_added != historical_added:
+            raise AssertionError(
+                f"Professional fixture reviewer-added union is inconsistent: {skill_id}"
+            )
+
+        remaining_union = sorted(
+            {
+                candidate_id
+                for added_ids in remaining_by_vote
+                for candidate_id in added_ids
+            }
+        )
+        expected_remaining = sorted(historical_added - promoted_ids)
+        if remaining_union != expected_remaining:
+            raise AssertionError(
+                f"Professional fixture reviewer-added union is inconsistent: {skill_id}"
+            )
+        historical_unknown = sorted(historical_added - set(bindings))
+        if historical_unknown:
+            raise AssertionError(
+                f"Professional fixture reviewer-added candidates are unknown: {skill_id}"
+            )
+        dependency_ids = sorted(current_required | set(remaining_union))
+        unknown_dependencies = sorted(set(dependency_ids) - set(bindings))
+        if unknown_dependencies:
+            raise AssertionError(
+                f"Professional fixture promotion dependencies are unknown: {skill_id}"
+            )
+        missing_material = sorted(
+            candidate_id
+            for candidate_id in historical_added
+            if not isinstance(catalog.get(candidate_id), str)
+            or len(catalog[candidate_id]) != 64
+            or any(
+                character not in "0123456789abcdef"
+                for character in catalog[candidate_id]
+            )
+        )
+        if missing_material:
+            raise AssertionError(
+                f"Professional fixture reviewer-added material is missing or stale: {skill_id}"
+            )
+
+        review_dependencies["required_candidate_ids"] = copy.deepcopy(
+            current_required_ids
+        )
+        review_dependencies[
+            "reviewer_added_candidate_ids_union"
+        ] = remaining_union
+        review_dependencies["dependency_candidate_ids"] = dependency_ids
+        row["dependency_ids"] = dependency_ids
+        for candidate_id in dependency_ids:
+            catalog[candidate_id] = bindings[candidate_id][
+                "package_material_binding"
+            ]
+
+        metrics = row["result"]["evidence_metrics"]
+        metrics["required_adjacency_candidate_count"] = len(
+            current_required_ids
+        )
+        metrics["examined_adjacency_count"] = sum(
+            vote["examined_adjacent_candidates"]["count"]
+            for vote in row["votes"]
+        )
+        metrics["examined_required_adjacency_count"] = sum(
+            vote["examined_adjacent_candidates"]["required_count"]
+            for vote in row["votes"]
+        )
+        metrics["reviewer_added_adjacency_count"] = sum(
+            len(vote["examined_adjacent_candidates"][
+                "reviewer_added_candidate_ids"
+            ])
+            for vote in row["votes"]
+        )
+    value["dependency_material_catalog"] = dict(sorted(catalog.items()))
+
+
 def _current_compact_professional_fixture_bytes(
     targets: list[dict], *, review_contract_fingerprint: str
 ) -> bytes:
@@ -231,6 +374,9 @@ def _current_compact_professional_fixture_bytes(
     preliminary = (
         PANEL.panel_attestation.parse_attestation_storage_selector_bytes(raw)
     )
+    _normalize_historical_reviewer_added_promotions(
+        preliminary, bindings=bindings
+    )
     claims = PANEL._professional_authenticated_claims_from_findings(
         preliminary["findings"]
     )
@@ -238,9 +384,29 @@ def _current_compact_professional_fixture_bytes(
         current_bindings=bindings,
         authenticated_claims=claims,
     )
+    residual_overlaps = {
+        skill_id: sorted(
+            set(authority["required_candidate_ids"])
+            & set(authority["reviewer_added_candidate_ids_union"])
+        )
+        for skill_id, authority in authorities.items()
+        if set(authority["required_candidate_ids"])
+        & set(authority["reviewer_added_candidate_ids_union"])
+    }
+    if residual_overlaps:
+        raise AssertionError(
+            "Professional fixture retains reviewer-added/required overlap"
+        )
+    normalized_storage = copy.deepcopy(preliminary)
+    PANEL.panel_attestation._encode_professional_storage_in_place(
+        normalized_storage
+    )
+    normalized_raw = (
+        PANEL.panel_attestation._json_body(normalized_storage) + b"\n"
+    )
     value, _eligible_ids = (
         PANEL.panel_attestation.parse_professional_baseline_bytes(
-            raw,
+            normalized_raw,
             expected_path=(
                 PANEL.panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH
             ),

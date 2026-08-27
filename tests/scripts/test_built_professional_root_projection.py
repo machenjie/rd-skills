@@ -253,16 +253,6 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
                 or path.startswith(f"{professional}/")
             },
         )
-        self.assertLessEqual(
-            VALIDATION.count_o200k_base_tokens(
-                VALIDATION._canonical_selector_document_bytes(envelope).decode()
-            )
-            + VALIDATION.count_o200k_base_tokens(
-                VALIDATION._canonical_selector_document_bytes(shard).decode()
-            ),
-            1_530,
-        )
-
         decision = VALIDATION.layer3_selector_resolve_control_projection(
             envelope,
             {

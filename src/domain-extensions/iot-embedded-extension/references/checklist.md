@@ -1,5 +1,7 @@
 # IoT Embedded Extension Checklist
 
+Close triggered device and field-operation decisions.
+
 ## Lifecycle
 
 - Prove update recovery through image validation, atomic activation, last-known-good boot, power-loss behavior, mixed-fleet compatibility, rollback, and offline recovery.

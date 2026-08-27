@@ -58,7 +58,7 @@
     ],
     "authorities": [
       {"id": "roles-authority", "pointer": "/roles", "scope": "Four role capabilities and exclusive tool boundaries."},
-      {"id": "context-budget-authority", "pointer": "/context_budget_contract", "scope": "Rendered context ceilings, reserve ratios, and duplicate-context limit."},
+      {"id": "context-budget-authority", "pointer": "/context_budget_contract", "scope": "Authoring, resident-runtime, dispatch-composition, and observation-only dynamic-context taxonomy; rendered soft targets and hard ceilings; Calibration and Conformance policy; duplicate-context ratio."},
       {"id": "final-goal-authority", "pointer": "/final_goal_contract", "scope": "Runtime structural proxies plus deterministic Professional review carry and capsule-input cost limits."},
       {"id": "reference-contract-authority", "pointer": "/reference_contract", "scope": "Reference Contract v2 fields, role consumers, and required outputs."},
       {"id": "task-contract-authority", "pointer": "/task_contract", "scope": "Task Contract v2 fields, assignment state, scheduling, and templates."},
@@ -146,7 +146,7 @@
       {"id": "agent-lightweight-valid", "producer": "eval-agent-lightweight", "dimensions": ["core-model-control-loop", "minimum-sufficient-process-adaptive-control", "explicit-task-contract-behavior", "safe-parallelism-behavior-and-conflicts", "evidence-before-completion-behavior", "strong-user-feedback-progress-contract", "explicit-completion-state-behavior", "final-goal-structural-cost"], "capabilities": ["agent-lightweight-evaluation"], "predicates": [{"source": "process", "pointer": "/exit_code", "operator": "equals", "expected": 0}, {"source": "reports/hookless-control-plane-eval.json", "pointer": "/schema_version", "operator": "equals", "expected": 2}, {"source": "reports/hookless-control-plane-eval.json", "pointer": "/status", "operator": "equals", "expected": "pass"}, {"source": "reports/hookless-control-plane-eval.json", "pointer": "/errors", "operator": "equals", "expected": []}]},
       {"id": "final-goal-structural-costs", "producer": "eval-agent-lightweight", "dimensions": ["final-goal-structural-cost", "final-goal-verification-and-professionalism-cost"], "capabilities": ["structural-cost-evaluation"], "predicates": [{"source": "process", "pointer": "/exit_code", "operator": "equals", "expected": 0}, {"source": "reports/hookless-control-plane-eval.json", "pointer": "/aggregate_structural_proxies/subagent_count/max", "operator": "less_than_or_equal", "expected_from": {"authority": "final-goal-authority", "pointer": "/maximum_structural_proxies/subagent_count"}}, {"source": "reports/hookless-control-plane-eval.json", "pointer": "/aggregate_structural_proxies/control_turn_count/max", "operator": "less_than_or_equal", "expected_from": {"authority": "final-goal-authority", "pointer": "/maximum_structural_proxies/control_turn_count"}}, {"source": "reports/hookless-control-plane-eval.json", "pointer": "/aggregate_structural_proxies/duplicate_read_count/max", "operator": "less_than_or_equal", "expected_from": {"authority": "final-goal-authority", "pointer": "/maximum_structural_proxies/duplicate_read_count"}}, {"source": "reports/hookless-control-plane-eval.json", "pointer": "/aggregate_structural_proxies/verification_action_count/max", "operator": "less_than_or_equal", "expected_from": {"authority": "final-goal-authority", "pointer": "/maximum_structural_proxies/verification_action_count"}}]},
       {"id": "rendered-context-valid", "producer": "eval-rendered-context", "dimensions": ["context-isolation-rendered-budget", "final-goal-context-cost"], "capabilities": ["rendered-context-evaluation"], "predicates": [{"source": "process", "pointer": "/exit_code", "operator": "equals", "expected": 0}, {"source": "reports/rendered-context-budget.json", "pointer": "/schema_version", "operator": "equals", "expected": 2}, {"source": "reports/rendered-context-budget.json", "pointer": "/status", "operator": "equals", "expected": "pass"}, {"source": "reports/rendered-context-budget.json", "pointer": "/errors", "operator": "equals", "expected": []}]},
-      {"id": "final-goal-context-costs", "producer": "eval-rendered-context", "dimensions": ["final-goal-context-cost"], "capabilities": ["context-cost-evaluation"], "predicates": [{"source": "process", "pointer": "/exit_code", "operator": "equals", "expected": 0}, {"source": "reports/rendered-context-budget.json", "pointer": "/aggregate/max_main/capacity_ceiling", "operator": "equals", "expected_from": {"authority": "context-budget-authority", "pointer": "/budget_classes/main/capacity_ceiling"}}, {"source": "reports/rendered-context-budget.json", "pointer": "/aggregate/max_main/minimum_headroom_ratio", "operator": "equals", "expected_from": {"authority": "context-budget-authority", "pointer": "/budget_classes/main/minimum_headroom_ratio"}}, {"source": "reports/rendered-context-budget.json", "pointer": "/aggregate/max_main/minimum_release_margin_tokens", "operator": "equals", "expected_from": {"authority": "context-budget-authority", "pointer": "/budget_classes/main/minimum_release_margin_tokens"}}, {"source": "reports/rendered-context-budget.json", "pointer": "/aggregate/max_main/release_margin_tokens", "operator": "greater_than_or_equal", "expected_from": {"authority": "context-budget-authority", "pointer": "/budget_classes/main/minimum_release_margin_tokens"}}, {"source": "reports/rendered-context-budget.json", "pointer": "/aggregate/max_duplicate_rule_token_ratio", "operator": "less_than_or_equal", "expected_from": {"authority": "context-budget-authority", "pointer": "/duplicate_rule_token_ratio_max"}}]},
+      {"id": "final-goal-context-costs", "producer": "eval-rendered-context", "dimensions": ["final-goal-context-cost"], "capabilities": ["context-cost-evaluation"], "predicates": [{"source": "process", "pointer": "/exit_code", "operator": "equals", "expected": 0}, {"source": "reports/rendered-context-budget.json", "pointer": "/aggregate/max_main/soft_target", "operator": "equals", "expected_from": {"authority": "context-budget-authority", "pointer": "/budget_classes/main/soft_target"}}, {"source": "reports/rendered-context-budget.json", "pointer": "/aggregate/max_main/hard_ceiling", "operator": "equals", "expected_from": {"authority": "context-budget-authority", "pointer": "/budget_classes/main/hard_ceiling"}}, {"source": "reports/rendered-context-budget.json", "pointer": "/budget_governance/mode", "operator": "equals", "expected": "conformance"}, {"source": "reports/rendered-context-budget.json", "pointer": "/budget_governance/conformance_failures", "operator": "equals", "expected": []}, {"source": "reports/rendered-context-budget.json", "pointer": "/aggregate/max_duplicate_rule_token_ratio", "operator": "less_than_or_equal", "expected_from": {"authority": "context-budget-authority", "pointer": "/duplicate_rule_token_ratio_max"}}]},
       {"id": "context-control-valid", "producer": "eval-context-control", "dimensions": ["core-model-control-loop", "minimum-sufficient-process-loop-cost", "safe-parallelism-behavior-and-conflicts", "context-isolation-control-behavior", "final-goal-context-cost"], "capabilities": ["context-control-evaluation"], "predicates": [{"source": "process", "pointer": "/exit_code", "operator": "equals", "expected": 0}, {"source": "reports/context-control-plane-eval.json", "pointer": "/schema_version", "operator": "equals", "expected": 2}, {"source": "reports/context-control-plane-eval.json", "pointer": "/status", "operator": "equals", "expected": "pass"}, {"source": "reports/context-control-plane-eval.json", "pointer": "/errors", "operator": "equals", "expected": []}]},
       {"id": "agent-behavior-valid", "producer": "eval-agent-behavior", "dimensions": ["core-model-control-loop", "evidence-before-completion-behavior", "framework-transparency-behavior", "strong-user-feedback-behavior-under-pressure", "explicit-completion-state-behavior"], "capabilities": ["agent-behavior-evaluation"], "predicates": [{"source": "process", "pointer": "/exit_code", "operator": "equals", "expected": 0}]},
       {"id": "professional-samples-valid", "producer": "eval-professional-samples", "dimensions": ["professional-skill-injection-routing"], "capabilities": ["professional-sample-evaluation"], "predicates": [{"source": "process", "pointer": "/exit_code", "operator": "equals", "expected": 0}, {"source": "reports/professional-agent-samples-report.json", "pointer": "/schema_version", "operator": "equals", "expected": 2}, {"source": "reports/professional-agent-samples-report.json", "pointer": "/errors", "operator": "equals", "expected": []}]},
@@ -974,15 +974,36 @@
     }
   },
   "context_budget_contract": {
-    "schema_version": 2,
+    "schema_version": 3,
     "tokenizer": "o200k_base",
+    "policy_status": "provisional-migration-values-not-calibrated-optima",
+    "context_taxonomy": {
+      "authoring": {
+        "label": "Authoring Budget",
+        "classes": ["main_prompt", "control_skill", "professional_skill", "foundation", "domain"]
+      },
+      "resident_runtime": {
+        "label": "Resident Runtime Budget",
+        "classes": ["main"]
+      },
+      "dispatch_composition": {
+        "label": "Dispatch Composition Budget",
+        "classes": ["task", "analyzed_task", "analysis", "review", "utility"]
+      },
+      "runtime_dynamic_context": {
+        "label": "Runtime Dynamic Context",
+        "classes": ["repository_reads", "diff", "command_output", "tool_system_prompt", "conversation_history"],
+        "observation_only": true,
+        "host_compaction_out_of_scope": true
+      }
+    },
     "budget_classes": {
-      "main": {"label": "Main always-loaded", "capacity_ceiling": 2200, "minimum_headroom_ratio": 0.10, "minimum_release_margin_tokens": 80},
-      "task": {"label": "Direct Task dispatch", "capacity_ceiling": 3200, "minimum_headroom_ratio": 0.0},
-      "analyzed_task": {"label": "Analyzed Task dispatch", "capacity_ceiling": 6500, "minimum_headroom_ratio": 0.0},
-      "analysis": {"label": "Analysis dispatch", "capacity_ceiling": 5000, "minimum_headroom_ratio": 0.0},
-      "review": {"label": "Review dispatch", "capacity_ceiling": 4000, "minimum_headroom_ratio": 0.0},
-      "utility": {"label": "Utility dispatch", "capacity_ceiling": 2500, "minimum_headroom_ratio": 0.0}
+      "main": {"label": "Main always-loaded", "category": "resident_runtime", "soft_target": 2305, "hard_ceiling": 2650, "calibration_status": "provisional-migration-value"},
+      "task": {"label": "Direct Task dispatch", "category": "dispatch_composition", "soft_target": 3000, "hard_ceiling": 3200, "calibration_status": "provisional-migration-value"},
+      "analyzed_task": {"label": "Analyzed Task dispatch", "category": "dispatch_composition", "soft_target": 6000, "hard_ceiling": 6500, "calibration_status": "provisional-migration-value"},
+      "analysis": {"label": "Analysis dispatch", "category": "dispatch_composition", "soft_target": 4500, "hard_ceiling": 5000, "calibration_status": "provisional-migration-value"},
+      "review": {"label": "Review dispatch", "category": "dispatch_composition", "soft_target": 3700, "hard_ceiling": 4000, "calibration_status": "provisional-migration-value"},
+      "utility": {"label": "Utility dispatch", "category": "dispatch_composition", "soft_target": 2000, "hard_ceiling": 2500, "calibration_status": "provisional-migration-value"}
     },
     "duplicate_rule_token_ratio_max": 0.03
   },

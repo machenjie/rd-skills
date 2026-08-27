@@ -12,7 +12,6 @@ import sys
 import json
 import tokenize
 import unicodedata
-from decimal import Decimal, InvalidOperation, ROUND_CEILING
 from functools import lru_cache
 from itertools import combinations
 from pathlib import Path
@@ -846,10 +845,10 @@ PROFILE_EXACT_RULE_BINDINGS = frozenset(
 
 
 def derived_context_budget_limits(contract: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    """Derive release and evolution targets from the Core Model authority."""
+    """Validate and project soft/hard limits from the Core Model authority."""
 
-    if contract.get("schema_version") != 2:
-        raise ValueError("context budget contract must use schema_version 2")
+    if contract.get("schema_version") != 3:
+        raise ValueError("context budget contract must use schema_version 3")
 
     classes = contract.get("budget_classes")
     if not isinstance(classes, dict) or not classes:
@@ -858,68 +857,60 @@ def derived_context_budget_limits(contract: dict[str, Any]) -> dict[str, dict[st
     for budget_class, entry in classes.items():
         if not isinstance(entry, dict):
             raise ValueError(f"context budget class {budget_class!r} must be an object")
-        ceiling = entry.get("capacity_ceiling")
-        ratio_value = entry.get("minimum_headroom_ratio")
-        if not isinstance(ceiling, int) or isinstance(ceiling, bool) or ceiling <= 0:
+        expected_fields = {
+            "label",
+            "category",
+            "soft_target",
+            "hard_ceiling",
+            "calibration_status",
+        }
+        if set(entry) != expected_fields:
             raise ValueError(
-                f"context budget class {budget_class!r} capacity_ceiling must be positive"
+                f"context budget class {budget_class!r} fields must be exactly "
+                f"{sorted(expected_fields)}"
             )
-        if isinstance(ratio_value, bool) or not isinstance(ratio_value, (int, float)):
+        label = entry.get("label")
+        if not isinstance(label, str) or not label.strip():
             raise ValueError(
-                f"context budget class {budget_class!r} minimum_headroom_ratio must be numeric"
+                f"context budget class {budget_class!r} label must be non-empty text"
             )
-        try:
-            ratio = Decimal(str(ratio_value))
-        except InvalidOperation as exc:
+        category = entry.get("category")
+        if category not in {"resident_runtime", "dispatch_composition"}:
             raise ValueError(
-                f"context budget class {budget_class!r} minimum_headroom_ratio is invalid"
-            ) from exc
-        if ratio < 0 or ratio >= 1:
-            raise ValueError(
-                f"context budget class {budget_class!r} minimum_headroom_ratio must be in [0, 1)"
+                f"context budget class {budget_class!r} category is invalid"
             )
-        reserve = int(
-            (Decimal(ceiling) * ratio).to_integral_value(rounding=ROUND_CEILING)
-        )
-        release_target = ceiling - reserve
-        if release_target <= 0:
-            raise ValueError(
-                f"context budget class {budget_class!r} derived release target must be positive"
-            )
-        if budget_class == "main" and "minimum_release_margin_tokens" not in entry:
-            raise ValueError(
-                "context budget class 'main' must define minimum_release_margin_tokens"
-            )
+        soft_target = entry.get("soft_target")
+        hard_ceiling = entry.get("hard_ceiling")
         if (
-            budget_class != "main"
-            and "minimum_release_margin_tokens" in entry
+            not isinstance(soft_target, int)
+            or isinstance(soft_target, bool)
+            or soft_target <= 0
         ):
             raise ValueError(
-                "minimum_release_margin_tokens is allowed only for the main context"
+                f"context budget class {budget_class!r} soft_target must be positive"
             )
-        minimum_release_margin = entry.get("minimum_release_margin_tokens", 0)
         if (
-            not isinstance(minimum_release_margin, int)
-            or isinstance(minimum_release_margin, bool)
-            or minimum_release_margin < 0
+            not isinstance(hard_ceiling, int)
+            or isinstance(hard_ceiling, bool)
+            or hard_ceiling <= 0
         ):
             raise ValueError(
-                f"context budget class {budget_class!r} "
-                "minimum_release_margin_tokens must be a non-negative integer"
+                f"context budget class {budget_class!r} hard_ceiling must be positive"
             )
-        evolution_target = release_target - minimum_release_margin
-        if evolution_target <= 0:
+        if soft_target >= hard_ceiling:
             raise ValueError(
-                f"context budget class {budget_class!r} derived evolution target must be positive"
+                f"context budget class {budget_class!r} soft_target must be below hard_ceiling"
+            )
+        if entry.get("calibration_status") != "provisional-migration-value":
+            raise ValueError(
+                f"context budget class {budget_class!r} calibration_status must mark a provisional migration value"
             )
         limits[budget_class] = {
-            "label": entry.get("label"),
-            "capacity_ceiling": ceiling,
-            "minimum_headroom_ratio": float(ratio),
-            "required_reserve_tokens": reserve,
-            "release_target": release_target,
-            "minimum_release_margin_tokens": minimum_release_margin,
-            "evolution_target": evolution_target,
+            "label": label,
+            "category": category,
+            "soft_target": soft_target,
+            "hard_ceiling": hard_ceiling,
+            "calibration_status": entry["calibration_status"],
         }
     return limits
 
@@ -936,24 +927,41 @@ def context_budget_docs_projection_block(
         f"<!-- BEGIN CHANGEFORGE CONTEXT BUDGET PROJECTION: {identifier} -->",
         "Source: `src/control-model/core-contracts.json#/context_budget_contract`.",
         "",
-        "`required reserve = ceil(capacity ceiling * minimum headroom ratio)`; "
-        "`release target = capacity ceiling - required reserve`; "
-        "`evolution target = release target - minimum release margin`.",
-        "Release and evolution targets are derived and are not stored as second authorities.",
+        "Budget taxonomy and all Runtime/Rendered limits are owned only by Core. "
+        "Budget is a cost guardrail and never changes routing, required context, "
+        "or correctness obligations.",
         "",
-        "| Context | Capacity ceiling | Minimum headroom ratio | Required reserve | Release target | Minimum release margin | Evolution target |",
-        "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "Authoring Budget classes: "
+        + ", ".join(
+            item.replace("_", " ").title()
+            for item in contract["context_taxonomy"]["authoring"]["classes"]
+        )
+        + ".",
+        "Resident Runtime Budget classes: Main always-loaded.",
+        "Dispatch Composition Budget classes: Direct Task, Analyzed Task, Analysis, Review, Utility.",
+        "Runtime Dynamic Context classes: "
+        + ", ".join(
+            item.replace("_", " ").title()
+            for item in contract["context_taxonomy"]["runtime_dynamic_context"]["classes"]
+        )
+        + "; observation-only, with host conversation compaction out of scope.",
+        "",
+        "| Category | Context | Soft target | Hard ceiling | Calibration status |",
+        "| --- | --- | ---: | ---: | --- |",
     ]
     for limit in limits.values():
         lines.append(
-            f"| {limit['label']} | {limit['capacity_ceiling']} | "
-            f"{limit['minimum_headroom_ratio']:.2f} | "
-            f"{limit['required_reserve_tokens']} | {limit['release_target']} | "
-            f"{limit['minimum_release_margin_tokens']} | "
-            f"{limit['evolution_target']} |"
+            f"| {contract['context_taxonomy'][limit['category']]['label']} | "
+            f"{limit['label']} | {limit['soft_target']} | {limit['hard_ceiling']} | "
+            f"{limit['calibration_status']} |"
         )
     lines.extend(
         [
+            "",
+            "Soft-target overage is a growth advisory; hard-ceiling overage fails "
+            "Conformance. Calibration does not apply either limit to candidate selection or exit.",
+            "Required routing, Professional, Domain, Layer 3, Reference, Review, and Evidence "
+            "context is never truncated to satisfy a budget.",
             "",
             f"Tokenizer: `{contract['tokenizer']}`. Exact duplicate-rule ratio gate: "
             f"`{contract['duplicate_rule_token_ratio_max']:.2f}`.",
@@ -5378,6 +5386,8 @@ def validate_core_contracts(
     context_budget_fields = {
         "schema_version",
         "tokenizer",
+        "policy_status",
+        "context_taxonomy",
         "budget_classes",
         "duplicate_rule_token_ratio_max",
     }
@@ -5387,10 +5397,61 @@ def validate_core_contracts(
         "context_budget_contract",
     ):
         assert isinstance(context_budget, dict)
-        if context_budget["schema_version"] != 2:
-            errors.append("context_budget_contract.schema_version must be 2")
+        if context_budget["schema_version"] != 3:
+            errors.append("context_budget_contract.schema_version must be 3")
         if context_budget["tokenizer"] != "o200k_base":
             errors.append("context_budget_contract.tokenizer must be o200k_base")
+        if (
+            context_budget["policy_status"]
+            != "provisional-migration-values-not-calibrated-optima"
+        ):
+            errors.append(
+                "context_budget_contract.policy_status must mark provisional migration values"
+            )
+        taxonomy = context_budget["context_taxonomy"]
+        expected_taxonomy = {
+            "authoring": {
+                "label": "Authoring Budget",
+                "classes": [
+                    "main_prompt",
+                    "control_skill",
+                    "professional_skill",
+                    "foundation",
+                    "domain",
+                ],
+            },
+            "resident_runtime": {
+                "label": "Resident Runtime Budget",
+                "classes": ["main"],
+            },
+            "dispatch_composition": {
+                "label": "Dispatch Composition Budget",
+                "classes": [
+                    "task",
+                    "analyzed_task",
+                    "analysis",
+                    "review",
+                    "utility",
+                ],
+            },
+            "runtime_dynamic_context": {
+                "label": "Runtime Dynamic Context",
+                "classes": [
+                    "repository_reads",
+                    "diff",
+                    "command_output",
+                    "tool_system_prompt",
+                    "conversation_history",
+                ],
+                "observation_only": True,
+                "host_compaction_out_of_scope": True,
+            },
+        }
+        if taxonomy != expected_taxonomy:
+            errors.append(
+                "context_budget_contract.context_taxonomy must classify authoring, "
+                "resident runtime, dispatch composition, and observation-only dynamic context"
+            )
         budget_classes = context_budget["budget_classes"]
         expected_budget_classes = {
             "main",
@@ -5409,11 +5470,11 @@ def validate_core_contracts(
                 entry_context = f"context_budget_contract.budget_classes.{budget_class}"
                 expected_entry_fields = {
                     "label",
-                    "capacity_ceiling",
-                    "minimum_headroom_ratio",
+                    "category",
+                    "soft_target",
+                    "hard_ceiling",
+                    "calibration_status",
                 }
-                if budget_class == "main":
-                    expected_entry_fields.add("minimum_release_margin_tokens")
                 if not exact_keys(
                     entry,
                     expected_entry_fields,
@@ -5424,20 +5485,9 @@ def validate_core_contracts(
                 if not isinstance(entry["label"], str) or not entry["label"].strip():
                     errors.append(f"{entry_context}.label must be non-empty text")
             try:
-                limits = derived_context_budget_limits(context_budget)
+                derived_context_budget_limits(context_budget)
             except ValueError as exc:
                 errors.append(f"context_budget_contract: {exc}")
-                limits = {}
-            main_limit = limits.get("main")
-            if main_limit is not None and (
-                main_limit["capacity_ceiling"] != 2200
-                or main_limit["minimum_headroom_ratio"] != 0.10
-                or main_limit["minimum_release_margin_tokens"] != 80
-            ):
-                errors.append(
-                    "main context budget must use capacity_ceiling 2200 and "
-                    "minimum_headroom_ratio 0.10 with an 80-token minimum release margin"
-                )
         duplicate_ratio = context_budget["duplicate_rule_token_ratio_max"]
         if (
             isinstance(duplicate_ratio, bool)

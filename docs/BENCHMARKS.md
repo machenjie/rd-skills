@@ -136,27 +136,36 @@ typed semantic checks separately reject placeholder, repeated-token, and
 low-diversity fixture fields after field-specific path, command, input, and
 Utility-schema validation. The renderer is not shipped. Exact duplicate-rule
 accounting counts every extra normalized non-overlapping block occurrence,
-including repeats within a single loaded component. The report records each
-authoritative ceiling, reserve, and minimum release margin. It also records the
-derived release and evolution targets, observed maximum, actual margins, and
-capacity headroom ratio.
+including repeats within a single loaded component. Calibration reports the
+otherwise-valid nearest-rank P50/P90/P95/P99/max distribution without applying
+budget to selection or exit. Conformance records Core-derived soft/hard limits,
+observed maxima, both margins, growth advisories, and hard failures. Temporal
+growth distribution is explicit as unavailable until a comparable prior valid
+population exists.
 
 ## Rendered Context Budget Contract
 
 <!-- BEGIN CHANGEFORGE CONTEXT BUDGET PROJECTION: benchmarks-rendered-context-budget -->
 Source: `src/control-model/core-contracts.json#/context_budget_contract`.
 
-`required reserve = ceil(capacity ceiling * minimum headroom ratio)`; `release target = capacity ceiling - required reserve`; `evolution target = release target - minimum release margin`.
-Release and evolution targets are derived and are not stored as second authorities.
+Budget taxonomy and all Runtime/Rendered limits are owned only by Core. Budget is a cost guardrail and never changes routing, required context, or correctness obligations.
 
-| Context | Capacity ceiling | Minimum headroom ratio | Required reserve | Release target | Minimum release margin | Evolution target |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Main always-loaded | 2200 | 0.10 | 220 | 1980 | 80 | 1900 |
-| Direct Task dispatch | 3200 | 0.00 | 0 | 3200 | 0 | 3200 |
-| Analyzed Task dispatch | 6500 | 0.00 | 0 | 6500 | 0 | 6500 |
-| Analysis dispatch | 5000 | 0.00 | 0 | 5000 | 0 | 5000 |
-| Review dispatch | 4000 | 0.00 | 0 | 4000 | 0 | 4000 |
-| Utility dispatch | 2500 | 0.00 | 0 | 2500 | 0 | 2500 |
+Authoring Budget classes: Main Prompt, Control Skill, Professional Skill, Foundation, Domain.
+Resident Runtime Budget classes: Main always-loaded.
+Dispatch Composition Budget classes: Direct Task, Analyzed Task, Analysis, Review, Utility.
+Runtime Dynamic Context classes: Repository Reads, Diff, Command Output, Tool System Prompt, Conversation History; observation-only, with host conversation compaction out of scope.
+
+| Category | Context | Soft target | Hard ceiling | Calibration status |
+| --- | --- | ---: | ---: | --- |
+| Resident Runtime Budget | Main always-loaded | 2305 | 2650 | provisional-migration-value |
+| Dispatch Composition Budget | Direct Task dispatch | 3000 | 3200 | provisional-migration-value |
+| Dispatch Composition Budget | Analyzed Task dispatch | 6000 | 6500 | provisional-migration-value |
+| Dispatch Composition Budget | Analysis dispatch | 4500 | 5000 | provisional-migration-value |
+| Dispatch Composition Budget | Review dispatch | 3700 | 4000 | provisional-migration-value |
+| Dispatch Composition Budget | Utility dispatch | 2000 | 2500 | provisional-migration-value |
+
+Soft-target overage is a growth advisory; hard-ceiling overage fails Conformance. Calibration does not apply either limit to candidate selection or exit.
+Required routing, Professional, Domain, Layer 3, Reference, Review, and Evidence context is never truncated to satisfy a budget.
 
 Tokenizer: `o200k_base`. Exact duplicate-rule ratio gate: `0.03`.
 <!-- END CHANGEFORGE CONTEXT BUDGET PROJECTION: benchmarks-rendered-context-budget -->

@@ -3928,7 +3928,7 @@ class CoreContractModelTests(unittest.TestCase):
                     count_o200k_base_tokens(encoded),
                     CORE_CONTRACTS["context_budget_contract"]["budget_classes"][
                         "task"
-                    ]["capacity_ceiling"],
+                    ]["hard_ceiling"],
                     (case["id"], count_o200k_base_tokens(encoded)),
                 )
         self.assertEqual(30, encoded_count)
@@ -4919,11 +4919,13 @@ class CoreContractModelTests(unittest.TestCase):
         ]
         mutations.append(missing_template_schema)
 
-        relaxed_main_margin = copy.deepcopy(CORE_CONTRACTS)
-        relaxed_main_margin["context_budget_contract"]["budget_classes"][
+        invalid_main_order = copy.deepcopy(CORE_CONTRACTS)
+        invalid_main_order["context_budget_contract"]["budget_classes"][
             "main"
-        ]["minimum_release_margin_tokens"] = 79
-        mutations.append(relaxed_main_margin)
+        ]["soft_target"] = invalid_main_order["context_budget_contract"][
+            "budget_classes"
+        ]["main"]["hard_ceiling"]
+        mutations.append(invalid_main_order)
 
         prompt_heading = copy.deepcopy(CORE_CONTRACTS)
         prompt_heading["prompt_contract"]["ordered_headings"][1][1] = "Main Control Agent"

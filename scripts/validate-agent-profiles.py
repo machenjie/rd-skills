@@ -115,7 +115,7 @@ ROLE_MINIMAL_REQUIRED_GROUPS = {
         ("Select independently", "never reroute/copy/union implementation Layer 3"),
         ("Never edit, repair, dispatch or inherit implementer reasoning",),
         ("Leave external-source-read to analysis-agent",),
-        ("Review Handoff", "reviewed/unreviewed scope", "residual risk"),
+        ("assigned Review Handoff", "reviewed/unreviewed scope", "residual risk"),
         (
             "Re-review Classification",
             "Classification Evidence",

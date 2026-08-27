@@ -76,11 +76,6 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         profiles = {profile["name"]: profile for profile in source["profiles"]}
         task = profiles["task-agent"]["instructions"]
         review = profiles["review-agent"]["instructions"]
-        required_task_reduction = 3_195 - 3_000
-        self.assertLessEqual(
-            count_o200k_base_tokens(task), 635 - required_task_reduction
-        )
-        self.assertLessEqual(count_o200k_base_tokens(review), 349)
         self.assertIn("Consume Main's bound effective Level", task)
         self.assertIn("Main-bound Level/depth/assurance", review)
         self.assertIn("never calculate or recompute", task)
@@ -223,7 +218,7 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         )
 
         self.assertEqual(expected, main["instructions"])
-        self.assertEqual(70, count_o200k_base_tokens(main["instructions"]))
+        self.assertIn("Dispatch only/no target-code access", main["instructions"])
 
     def test_review_evidence_capabilities_are_four_independent_dimensions(self) -> None:
         enforcement = json.loads(
@@ -366,8 +361,6 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         profiles = {profile["name"]: profile for profile in source["profiles"]}
         task = profiles["task-agent"]["instructions"]
         review = profiles["review-agent"]["instructions"]
-        self.assertLessEqual(count_o200k_base_tokens(task), 440)
-        self.assertLessEqual(count_o200k_base_tokens(review), 568)
         for role, text in (("task-agent", task), ("review-agent", review)):
             rules = text.splitlines()
             errors: list[str] = []

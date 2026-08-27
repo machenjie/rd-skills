@@ -808,9 +808,9 @@
       "path": "src/professional-skills/engineering-change-analysis/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 3,
+      "decision_rule_count": 6,
       "gotcha_count": 1,
-      "line_count": 66
+      "line_count": 70
     },
     {
       "name": "acceptance-criteria-builder",
@@ -837,10 +837,10 @@
       "kind": "professional",
       "path": "src/professional-skills/high-risk-design-review/SKILL.md",
       "total_score": 100,
-      "status": "pass",
-      "decision_rule_count": 4,
+      "status": "needs-review",
+      "decision_rule_count": 1,
       "gotcha_count": 3,
-      "line_count": 65
+      "line_count": 63
     },
     {
       "name": "engineering-artifact-review",
@@ -878,9 +878,9 @@
       "path": "src/professional-skills/architecture-impact-reviewer/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 6,
-      "gotcha_count": 1,
-      "line_count": 72
+      "decision_rule_count": 3,
+      "gotcha_count": 3,
+      "line_count": 71
     },
     {
       "name": "data-api-contract-changer",
@@ -888,9 +888,9 @@
       "path": "src/professional-skills/data-api-contract-changer/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 4,
-      "gotcha_count": 3,
-      "line_count": 75
+      "decision_rule_count": 5,
+      "gotcha_count": 2,
+      "line_count": 71
     },
     {
       "name": "frontend-change-builder",
@@ -898,9 +898,9 @@
       "path": "src/professional-skills/frontend-change-builder/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 4,
-      "gotcha_count": 3,
-      "line_count": 72
+      "decision_rule_count": 2,
+      "gotcha_count": 4,
+      "line_count": 71
     },
     {
       "name": "backend-change-builder",
@@ -908,9 +908,9 @@
       "path": "src/professional-skills/backend-change-builder/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 5,
-      "gotcha_count": 3,
-      "line_count": 74
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 68
     },
     {
       "name": "data-middleware-change-builder",
@@ -918,19 +918,19 @@
       "path": "src/professional-skills/data-middleware-change-builder/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 4,
+      "decision_rule_count": 3,
       "gotcha_count": 3,
-      "line_count": 70
+      "line_count": 65
     },
     {
       "name": "integration-change-builder",
       "kind": "professional",
       "path": "src/professional-skills/integration-change-builder/SKILL.md",
       "total_score": 100,
-      "status": "pass",
-      "decision_rule_count": 7,
+      "status": "needs-review",
+      "decision_rule_count": 1,
       "gotcha_count": 3,
-      "line_count": 84
+      "line_count": 64
     },
     {
       "name": "quality-test-gate",
@@ -938,9 +938,9 @@
       "path": "src/professional-skills/quality-test-gate/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
-      "gotcha_count": 4,
-      "line_count": 82
+      "decision_rule_count": 3,
+      "gotcha_count": 2,
+      "line_count": 71
     },
     {
       "name": "security-privacy-gate",
@@ -948,9 +948,9 @@
       "path": "src/professional-skills/security-privacy-gate/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 6,
+      "decision_rule_count": 3,
       "gotcha_count": 2,
-      "line_count": 81
+      "line_count": 76
     },
     {
       "name": "reliability-observability-gate",
@@ -958,19 +958,19 @@
       "path": "src/professional-skills/reliability-observability-gate/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 5,
+      "decision_rule_count": 3,
       "gotcha_count": 3,
-      "line_count": 79
+      "line_count": 75
     },
     {
       "name": "logging-design-gate",
       "kind": "professional",
       "path": "src/professional-skills/logging-design-gate/SKILL.md",
       "total_score": 100,
-      "status": "pass",
-      "decision_rule_count": 6,
+      "status": "needs-review",
+      "decision_rule_count": 1,
       "gotcha_count": 3,
-      "line_count": 75
+      "line_count": 67
     },
     {
       "name": "delivery-release-gate",
@@ -978,9 +978,9 @@
       "path": "src/professional-skills/delivery-release-gate/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 4,
+      "decision_rule_count": 3,
       "gotcha_count": 3,
-      "line_count": 74
+      "line_count": 68
     },
     {
       "name": "ai-code-review-refactor",
@@ -988,19 +988,19 @@
       "path": "src/professional-skills/ai-code-review-refactor/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 2,
-      "line_count": 98
+      "decision_rule_count": 5,
+      "gotcha_count": 3,
+      "line_count": 64
     },
     {
       "name": "change-documentation-gate",
       "kind": "professional",
       "path": "src/professional-skills/change-documentation-gate/SKILL.md",
       "total_score": 100,
-      "status": "pass",
-      "decision_rule_count": 4,
+      "status": "needs-review",
+      "decision_rule_count": 1,
       "gotcha_count": 3,
-      "line_count": 74
+      "line_count": 70
     },
     {
       "name": "installed-client-change-builder",
@@ -1008,9 +1008,9 @@
       "path": "src/professional-skills/installed-client-change-builder/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
-      "gotcha_count": 5,
-      "line_count": 83
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 63
     },
     {
       "name": "platform-infrastructure-change-builder",
@@ -1018,19 +1018,19 @@
       "path": "src/professional-skills/platform-infrastructure-change-builder/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 6,
-      "gotcha_count": 5,
-      "line_count": 83
+      "decision_rule_count": 3,
+      "gotcha_count": 3,
+      "line_count": 67
     },
     {
       "name": "repository-tooling-change-builder",
       "kind": "professional",
       "path": "src/professional-skills/repository-tooling-change-builder/SKILL.md",
       "total_score": 100,
-      "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 6,
-      "line_count": 85
+      "status": "needs-review",
+      "decision_rule_count": 1,
+      "gotcha_count": 3,
+      "line_count": 65
     },
     {
       "name": "incident-response-coordinator",
@@ -1138,9 +1138,9 @@
       "path": "src/foundation/capabilities/interaction-state-modeling/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
-      "line_count": 52
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 50
     },
     {
       "name": "design-system-rules",
@@ -1158,9 +1158,9 @@
       "path": "src/foundation/capabilities/domain-object-identification/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 5,
-      "line_count": 63
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 55
     },
     {
       "name": "business-rule-extraction",
@@ -1198,9 +1198,9 @@
       "path": "src/foundation/capabilities/permission-boundary-modeling/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
-      "line_count": 52
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 46
     },
     {
       "name": "domain-event-modeling",
@@ -1228,9 +1228,9 @@
       "path": "src/foundation/capabilities/module-boundary-design/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
-      "line_count": 55
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 46
     },
     {
       "name": "layered-architecture-design",
@@ -1298,9 +1298,9 @@
       "path": "src/foundation/capabilities/api-contract-design/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
-      "line_count": 52
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
+      "line_count": 47
     },
     {
       "name": "dto-schema-design",
@@ -1328,9 +1328,9 @@
       "path": "src/foundation/capabilities/version-compatibility/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
-      "line_count": 52
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 47
     },
     {
       "name": "data-migration-design",
@@ -1338,9 +1338,9 @@
       "path": "src/foundation/capabilities/data-migration-design/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
-      "line_count": 52
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 46
     },
     {
       "name": "page-component-decomposition",
@@ -1368,9 +1368,9 @@
       "path": "src/foundation/capabilities/state-management-design/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
-      "line_count": 52
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 46
     },
     {
       "name": "form-validation-design",
@@ -1448,9 +1448,9 @@
       "path": "src/foundation/capabilities/authentication-authorization/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
-      "line_count": 52
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 46
     },
     {
       "name": "idempotency-retry-design",
@@ -1458,9 +1458,9 @@
       "path": "src/foundation/capabilities/idempotency-retry-design/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 3,
-      "line_count": 53
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
+      "line_count": 47
     },
     {
       "name": "async-job-design",
@@ -1478,9 +1478,9 @@
       "path": "src/foundation/capabilities/logging-error-handling/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 3,
-      "line_count": 54
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 47
     },
     {
       "name": "relational-database",
@@ -1519,8 +1519,8 @@
       "total_score": 100,
       "status": "pass",
       "decision_rule_count": 3,
-      "gotcha_count": 2,
-      "line_count": 54
+      "gotcha_count": 1,
+      "line_count": 46
     },
     {
       "name": "cache-design",
@@ -1558,9 +1558,9 @@
       "path": "src/foundation/capabilities/threat-modeling/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
-      "line_count": 52
+      "decision_rule_count": 5,
+      "gotcha_count": 1,
+      "line_count": 48
     },
     {
       "name": "input-validation",
@@ -1578,9 +1578,9 @@
       "path": "src/foundation/capabilities/web-security/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
-      "line_count": 52
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
+      "line_count": 48
     },
     {
       "name": "authentication-security",
@@ -1588,9 +1588,9 @@
       "path": "src/foundation/capabilities/authentication-security/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 5,
-      "gotcha_count": 2,
-      "line_count": 55
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 46
     },
     {
       "name": "secret-configuration-security",
@@ -1598,9 +1598,9 @@
       "path": "src/foundation/capabilities/secret-configuration-security/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
-      "line_count": 53
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 47
     },
     {
       "name": "dependency-vulnerability-scanning",
@@ -1608,9 +1608,9 @@
       "path": "src/foundation/capabilities/dependency-vulnerability-scanning/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 3,
-      "line_count": 54
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 46
     },
     {
       "name": "test-strategy",
@@ -1618,9 +1618,9 @@
       "path": "src/foundation/capabilities/test-strategy/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
-      "line_count": 54
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 46
     },
     {
       "name": "unit-testing",
@@ -1648,9 +1648,9 @@
       "path": "src/foundation/capabilities/contract-testing/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
-      "gotcha_count": 4,
-      "line_count": 53
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 46
     },
     {
       "name": "e2e-testing",
@@ -1668,9 +1668,9 @@
       "path": "src/foundation/capabilities/test-data-management/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
-      "line_count": 52
+      "decision_rule_count": 5,
+      "gotcha_count": 1,
+      "line_count": 49
     },
     {
       "name": "regression-testing",
@@ -1678,9 +1678,9 @@
       "path": "src/foundation/capabilities/regression-testing/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
-      "line_count": 54
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
+      "line_count": 48
     },
     {
       "name": "performance-budgeting",
@@ -1708,9 +1708,9 @@
       "path": "src/foundation/capabilities/concurrency-control/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 5,
-      "gotcha_count": 2,
-      "line_count": 55
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 46
     },
     {
       "name": "degradation-circuit-breaking",
@@ -1719,8 +1719,8 @@
       "total_score": 100,
       "status": "pass",
       "decision_rule_count": 5,
-      "gotcha_count": 5,
-      "line_count": 58
+      "gotcha_count": 1,
+      "line_count": 48
     },
     {
       "name": "observability",
@@ -1728,9 +1728,9 @@
       "path": "src/foundation/capabilities/observability/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 5,
-      "gotcha_count": 3,
-      "line_count": 56
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
+      "line_count": 47
     },
     {
       "name": "backup-recovery",
@@ -1738,9 +1738,9 @@
       "path": "src/foundation/capabilities/backup-recovery/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
-      "line_count": 54
+      "decision_rule_count": 6,
+      "gotcha_count": 1,
+      "line_count": 49
     },
     {
       "name": "project-initialization",
@@ -1788,9 +1788,9 @@
       "path": "src/foundation/capabilities/release-rollback/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
-      "line_count": 55
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 47
     },
     {
       "name": "task-handoff-context",
@@ -1818,9 +1818,9 @@
       "path": "src/foundation/capabilities/code-review/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 3,
-      "line_count": 53
+      "decision_rule_count": 5,
+      "gotcha_count": 1,
+      "line_count": 50
     },
     {
       "name": "refactoring",
@@ -1828,9 +1828,9 @@
       "path": "src/foundation/capabilities/refactoring/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
-      "line_count": 54
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 48
     },
     {
       "name": "documentation-generation",
@@ -1839,8 +1839,8 @@
       "total_score": 100,
       "status": "pass",
       "decision_rule_count": 6,
-      "gotcha_count": 4,
-      "line_count": 58
+      "gotcha_count": 1,
+      "line_count": 55
     },
     {
       "name": "failure-diagnosis",
@@ -1868,9 +1868,9 @@
       "path": "src/foundation/capabilities/technology-stack-selection/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
-      "gotcha_count": 4,
-      "line_count": 56
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 45
     },
     {
       "name": "language-runtime-selection",
@@ -1918,9 +1918,9 @@
       "path": "src/foundation/capabilities/package-dependency-management/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
-      "line_count": 55
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 49
     },
     {
       "name": "go-professional-usage",
@@ -2008,9 +2008,9 @@
       "path": "src/foundation/capabilities/sdk-library-contract-design/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 3,
-      "line_count": 53
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
+      "line_count": 47
     },
     {
       "name": "cli-daemon-interface-design",
@@ -2048,9 +2048,9 @@
       "path": "src/foundation/capabilities/implementation-structure-design/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 5,
-      "line_count": 67
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 58
     },
     {
       "name": "agent-execution-discipline",
@@ -2079,8 +2079,8 @@
       "total_score": 100,
       "status": "pass",
       "decision_rule_count": 7,
-      "gotcha_count": 4,
-      "line_count": 55
+      "gotcha_count": 1,
+      "line_count": 52
     },
     {
       "name": "design-pattern-selection",
@@ -2088,9 +2088,9 @@
       "path": "src/foundation/capabilities/design-pattern-selection/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
-      "gotcha_count": 4,
-      "line_count": 55
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
+      "line_count": 47
     },
     {
       "name": "testability-seam-design",
@@ -2128,9 +2128,9 @@
       "path": "src/foundation/capabilities/failure-contract-design/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
-      "gotcha_count": 6,
-      "line_count": 60
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 48
     },
     {
       "name": "configuration-runtime-policy",
@@ -2138,9 +2138,9 @@
       "path": "src/foundation/capabilities/configuration-runtime-policy/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
-      "gotcha_count": 6,
-      "line_count": 55
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 46
     },
     {
       "name": "model-boundary-mapping",
@@ -2148,9 +2148,9 @@
       "path": "src/foundation/capabilities/model-boundary-mapping/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 8,
-      "line_count": 58
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
+      "line_count": 47
     },
     {
       "name": "data-side-effect-flow-tracing",
@@ -2178,9 +2178,9 @@
       "path": "src/foundation/capabilities/consumer-impact-analysis/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 6,
-      "gotcha_count": 4,
-      "line_count": 52
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 46
     },
     {
       "name": "cleanup-deletion-governance",
@@ -2198,9 +2198,9 @@
       "path": "src/foundation/capabilities/minimal-correct-implementation/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
-      "line_count": 59
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 50
     },
     {
       "name": "repository-context-map",
@@ -2259,8 +2259,8 @@
       "total_score": 100,
       "status": "pass",
       "decision_rule_count": 5,
-      "gotcha_count": 3,
-      "line_count": 68
+      "gotcha_count": 1,
+      "line_count": 58
     },
     {
       "name": "targeted-validation-selection",
@@ -2268,9 +2268,9 @@
       "path": "src/foundation/capabilities/targeted-validation-selection/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
-      "line_count": 74
+      "decision_rule_count": 5,
+      "gotcha_count": 1,
+      "line_count": 61
     },
     {
       "name": "observable-action-sequence-analysis",
@@ -2318,9 +2318,9 @@
       "path": "src/foundation/capabilities/build-tool-professional-usage/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 3,
-      "line_count": 54
+      "decision_rule_count": 7,
+      "gotcha_count": 1,
+      "line_count": 51
     },
     {
       "name": "linux-systems-professional-usage",
@@ -2378,9 +2378,9 @@
       "path": "src/foundation/capabilities/accessibility-inclusive-design/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 3,
-      "line_count": 51
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 47
     },
     {
       "name": "client-application-testing",
@@ -2388,9 +2388,9 @@
       "path": "src/foundation/capabilities/client-application-testing/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 3,
-      "line_count": 51
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 44
     },
     {
       "name": "client-lifecycle-state-restoration",
@@ -2398,9 +2398,9 @@
       "path": "src/foundation/capabilities/client-lifecycle-state-restoration/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
-      "line_count": 52
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 44
     },
     {
       "name": "csharp-dotnet-professional-usage",
@@ -2408,9 +2408,9 @@
       "path": "src/foundation/capabilities/csharp-dotnet-professional-usage/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
-      "line_count": 58
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 46
     },
     {
       "name": "infrastructure-as-code-safety",
@@ -2418,9 +2418,9 @@
       "path": "src/foundation/capabilities/infrastructure-as-code-safety/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
-      "line_count": 60
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 45
     },
     {
       "name": "kotlin-professional-usage",
@@ -2428,9 +2428,9 @@
       "path": "src/foundation/capabilities/kotlin-professional-usage/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
-      "line_count": 58
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
+      "line_count": 46
     },
     {
       "name": "offline-sync-conflict-resolution",
@@ -2438,9 +2438,9 @@
       "path": "src/foundation/capabilities/offline-sync-conflict-resolution/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 3,
-      "line_count": 51
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
+      "line_count": 45
     },
     {
       "name": "powershell-professional-usage",
@@ -2448,9 +2448,9 @@
       "path": "src/foundation/capabilities/powershell-professional-usage/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
-      "line_count": 58
+      "decision_rule_count": 5,
+      "gotcha_count": 1,
+      "line_count": 47
     },
     {
       "name": "privacy-data-lifecycle",
@@ -2458,9 +2458,9 @@
       "path": "src/foundation/capabilities/privacy-data-lifecycle/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 3,
-      "line_count": 52
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 46
     },
     {
       "name": "swift-professional-usage",
@@ -2468,9 +2468,9 @@
       "path": "src/foundation/capabilities/swift-professional-usage/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
-      "line_count": 58
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 46
     },
     {
       "name": "web-platform-professional-usage",
@@ -2478,9 +2478,9 @@
       "path": "src/foundation/capabilities/web-platform-professional-usage/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 3,
-      "line_count": 52
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 51
     },
     {
       "name": "filesystem-process-safety",
@@ -2488,9 +2488,9 @@
       "path": "src/foundation/capabilities/filesystem-process-safety/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 6,
-      "line_count": 65
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 55
     },
     {
       "name": "nodejs-runtime-professional-usage",
@@ -2508,9 +2508,9 @@
       "path": "src/foundation/capabilities/tenant-isolation/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 8,
-      "line_count": 68
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
+      "line_count": 56
     },
     {
       "name": "distributed-workflow-consistency",
@@ -2518,9 +2518,9 @@
       "path": "src/foundation/capabilities/distributed-workflow-consistency/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 7,
-      "line_count": 67
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 50
     },
     {
       "name": "cryptography-key-lifecycle",
@@ -2528,9 +2528,9 @@
       "path": "src/foundation/capabilities/cryptography-key-lifecycle/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 9,
-      "line_count": 70
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 54
     },
     {
       "name": "audit-evidence-integrity",
@@ -2538,9 +2538,9 @@
       "path": "src/foundation/capabilities/audit-evidence-integrity/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 8,
-      "line_count": 71
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 52
     },
     {
       "name": "web3-product-extension",
@@ -2548,9 +2548,9 @@
       "path": "src/domain-extensions/web3-product-extension/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 9,
-      "gotcha_count": 5,
-      "line_count": 68
+      "decision_rule_count": 2,
+      "gotcha_count": 1,
+      "line_count": 57
     },
     {
       "name": "ai-product-extension",
@@ -2558,29 +2558,29 @@
       "path": "src/domain-extensions/ai-product-extension/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 10,
-      "gotcha_count": 5,
-      "line_count": 69
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 55
     },
     {
       "name": "bigdata-product-extension",
       "kind": "domain",
       "path": "src/domain-extensions/bigdata-product-extension/SKILL.md",
       "total_score": 100,
-      "status": "pass",
-      "decision_rule_count": 9,
-      "gotcha_count": 5,
-      "line_count": 68
+      "status": "needs-review",
+      "decision_rule_count": 1,
+      "gotcha_count": 1,
+      "line_count": 60
     },
     {
       "name": "iot-embedded-extension",
       "kind": "domain",
       "path": "src/domain-extensions/iot-embedded-extension/SKILL.md",
       "total_score": 100,
-      "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 5,
-      "line_count": 73
+      "status": "needs-review",
+      "decision_rule_count": 1,
+      "gotcha_count": 1,
+      "line_count": 57
     },
     {
       "name": "payment-trading-extension",
@@ -2588,9 +2588,9 @@
       "path": "src/domain-extensions/payment-trading-extension/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 9,
-      "gotcha_count": 5,
-      "line_count": 68
+      "decision_rule_count": 2,
+      "gotcha_count": 1,
+      "line_count": 65
     },
     {
       "name": "low-level-systems-extension",
@@ -2598,9 +2598,9 @@
       "path": "src/domain-extensions/low-level-systems-extension/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 9,
-      "gotcha_count": 5,
-      "line_count": 68
+      "decision_rule_count": 2,
+      "gotcha_count": 1,
+      "line_count": 59
     },
     {
       "name": "android-platform-extension",
@@ -2608,9 +2608,9 @@
       "path": "src/domain-extensions/android-platform-extension/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 9,
-      "gotcha_count": 5,
-      "line_count": 73
+      "decision_rule_count": 5,
+      "gotcha_count": 1,
+      "line_count": 76
     },
     {
       "name": "cloud-platform-extension",
@@ -2618,9 +2618,9 @@
       "path": "src/domain-extensions/cloud-platform-extension/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 9,
-      "gotcha_count": 4,
-      "line_count": 69
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "line_count": 63
     },
     {
       "name": "cross-platform-client-extension",
@@ -2628,9 +2628,9 @@
       "path": "src/domain-extensions/cross-platform-client-extension/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 10,
-      "gotcha_count": 4,
-      "line_count": 69
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
+      "line_count": 58
     },
     {
       "name": "ios-ipados-platform-extension",
@@ -2638,9 +2638,9 @@
       "path": "src/domain-extensions/ios-ipados-platform-extension/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 12,
-      "gotcha_count": 4,
-      "line_count": 73
+      "decision_rule_count": 5,
+      "gotcha_count": 1,
+      "line_count": 74
     },
     {
       "name": "linux-desktop-platform-extension",
@@ -2648,9 +2648,9 @@
       "path": "src/domain-extensions/linux-desktop-platform-extension/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 7,
-      "gotcha_count": 4,
-      "line_count": 69
+      "decision_rule_count": 5,
+      "gotcha_count": 1,
+      "line_count": 75
     },
     {
       "name": "macos-platform-extension",
@@ -2658,9 +2658,9 @@
       "path": "src/domain-extensions/macos-platform-extension/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 11,
-      "gotcha_count": 4,
-      "line_count": 72
+      "decision_rule_count": 5,
+      "gotcha_count": 1,
+      "line_count": 74
     },
     {
       "name": "windows-platform-extension",
@@ -2668,9 +2668,9 @@
       "path": "src/domain-extensions/windows-platform-extension/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
-      "line_count": 71
+      "decision_rule_count": 5,
+      "gotcha_count": 1,
+      "line_count": 75
     }
   ]
 }

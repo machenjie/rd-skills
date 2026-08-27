@@ -518,6 +518,7 @@
         "consumer": "eval-rendered-context-budget:evaluate_route_obligation_context",
         "continue_allowed": false,
         "failure_id": "context-token-budget-overflow",
+        "hard_ceiling": 3200,
         "observed_route_obligations": {
           "domain": [
             "bigdata-product-extension"
@@ -557,7 +558,6 @@
           ]
         },
         "route_obligations_preserved": true,
-        "token_budget": 3200,
         "total_tokens": 25645
       }
     },

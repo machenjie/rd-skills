@@ -91,7 +91,14 @@ class LightweightLayer3ReferenceTests(unittest.TestCase):
             for step in dispatches
             for logical_id in step.get("layer3_references", [])
         ]
-        self.assertEqual((16, 38, 8), (len(cases), len(dispatches), len(logical_ids)))
+        fixture_dispatch_count = sum(
+            step.get("action") == "dispatch"
+            for case in cases
+            for step in case["steps"]
+        )
+        self.assertEqual(16, len(cases))
+        self.assertEqual(fixture_dispatch_count, len(dispatches))
+        self.assertEqual(8, len(logical_ids))
         self.assertLessEqual(
             max(len(step.get("layer3_references", [])) for step in dispatches),
             2,

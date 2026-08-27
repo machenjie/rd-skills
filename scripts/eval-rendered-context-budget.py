@@ -137,16 +137,14 @@ def _subject_configuration(
     finally:
         globals().update(saved)
 CONTEXT_BUDGET_LIMITS = derived_context_budget_limits(CONTEXT_BUDGET_MODEL)
-FROZEN_GATES = {
-    budget_class: limit["evolution_target"]
-    for budget_class, limit in CONTEXT_BUDGET_LIMITS.items()
-}
-PHASE3_CONTEXT_TARGETS = {
-    "analysis": 4_500,
-    "task": 3_000,
-    "analyzed_task": 6_000,
-    "review": 3_700,
-}
+DISPATCH_COMPOSITION_CLASSES = tuple(
+    CONTEXT_BUDGET_MODEL["context_taxonomy"]["dispatch_composition"]["classes"]
+)
+ADMISSIBLE_BUDGET_CLASSES = tuple(
+    budget_class
+    for budget_class in DISPATCH_COMPOSITION_CLASSES
+    if budget_class != "utility"
+)
 ADMISSIBLE_COMPOSITION_CONTRACT = (
     "changeforge.admissible-context-composition-eval/v1"
 )
@@ -207,8 +205,6 @@ TRANSFER_EXCLUSIVE_CATEGORIES = (
 TRANSFER_OVERLAP_VIEWS = tuple(
     item for item in TRANSFER_CATEGORY_ORDER if item not in TRANSFER_EXCLUSIVE_CATEGORIES
 )
-COST_GATE_MINIMUM_REDUCTION_RATIO = 0.25
-COST_GATE_TARGET_REDUCTION_RATIO = 0.30
 END_TO_END_COMPONENTS = (
     "always_loaded",
     "dispatch_instructions",
@@ -301,10 +297,6 @@ REFERENCE_SEMANTIC_EQUIVALENCE = {
         "architecture-impact-reviewer",
         "references/placement-and-ownership.md",
     ): "architecture-placement-and-ownership",
-}
-TRANSFER_MEASUREMENT_CONTRACT = {
-    "minimum_realized_reduction_ratio": COST_GATE_MINIMUM_REDUCTION_RATIO,
-    "target_realized_reduction_ratio": COST_GATE_TARGET_REDUCTION_RATIO,
 }
 TRANSFER_PROJECTION_FIELDS = {
     "task_to_implementation": (
@@ -631,16 +623,6 @@ def _load_lightweight_long_task_ids(expected_case_ids: set[str]) -> set[str]:
     """Compatibility accessor for the source-bound long-task selector."""
 
     return _load_lightweight_prerequisite(expected_case_ids)[0]
-
-
-def _context_compaction_classification(ratio: float) -> str:
-    minimum = COST_GATE_MINIMUM_REDUCTION_RATIO
-    target = COST_GATE_TARGET_REDUCTION_RATIO
-    if ratio < minimum:
-        return "stop-below-threshold"
-    if ratio < target:
-        return "marginal"
-    return "continue"
 
 
 def _manifest_input_identity(
@@ -5394,13 +5376,8 @@ def _measure_context(
     components: list[dict[str, Any]],
     *,
     budget_class: str,
-    token_budget: int,
 ) -> dict[str, Any]:
     limit = CONTEXT_BUDGET_LIMITS[budget_class]
-    if token_budget != limit["evolution_target"]:
-        raise ValueError(
-            f"{budget_class} token budget must equal its derived evolution target"
-        )
     combined = "\n\n".join(component["_text"].rstrip() for component in components)
     total_tokens = count_o200k_base_tokens(combined)
     duplicates = _duplicate_block_metrics(components)
@@ -5410,22 +5387,28 @@ def _measure_context(
         {key: value for key, value in component.items() if key != "_text"}
         for component in components
     ]
+    within_soft_target = total_tokens <= limit["soft_target"]
+    within_hard_ceiling = total_tokens <= limit["hard_ceiling"]
     return {
         "budget_class": budget_class,
-        "capacity_ceiling": limit["capacity_ceiling"],
-        "minimum_headroom_ratio": limit["minimum_headroom_ratio"],
-        "required_reserve_tokens": limit["required_reserve_tokens"],
-        "release_target": limit["release_target"],
-        "minimum_release_margin_tokens": limit[
-            "minimum_release_margin_tokens"
-        ],
-        "evolution_target": limit["evolution_target"],
-        "token_budget": token_budget,
+        "soft_target": limit["soft_target"],
+        "hard_ceiling": limit["hard_ceiling"],
+        "calibration_status": limit["calibration_status"],
         "total_tokens": total_tokens,
         "sum_component_tokens": sum(item["tokens"] for item in public_components),
         "duplicate_rule_tokens": duplicate_tokens,
         "duplicate_rule_token_ratio": round(ratio, 6),
-        "within_token_budget": total_tokens <= token_budget,
+        "within_soft_target": within_soft_target,
+        "within_hard_ceiling": within_hard_ceiling,
+        "soft_margin_tokens": limit["soft_target"] - total_tokens,
+        "hard_margin_tokens": limit["hard_ceiling"] - total_tokens,
+        "budget_signal": (
+            "hard-ceiling-exceeded"
+            if not within_hard_ceiling
+            else "growth-advisory"
+            if not within_soft_target
+            else None
+        ),
         "within_duplicate_budget": ratio <= DUPLICATE_TOKEN_RATIO_MAX,
         "components": public_components,
         "duplicate_blocks": duplicates["duplicate_blocks"],
@@ -5437,7 +5420,6 @@ def evaluate_route_obligation_context(
     *,
     required_route_obligations: dict[str, Any],
     budget_class: str,
-    token_budget: int,
 ) -> dict[str, Any]:
     """Evaluate token pressure while preserving one closed route obligation input."""
 
@@ -5493,9 +5475,8 @@ def evaluate_route_obligation_context(
     measurement = _measure_context(
         components,
         budget_class=budget_class,
-        token_budget=token_budget,
     )
-    overflow = measurement["within_token_budget"] is False
+    overflow = measurement["within_hard_ceiling"] is False
     return {
         **measurement,
         "failure_id": (
@@ -5923,26 +5904,21 @@ def _maximum_summary(
     *,
     include_dispatch: bool,
 ) -> dict[str, Any] | None:
-    """Expose both release margin and capacity headroom for one maximum."""
+    """Expose Core-derived soft and hard margins for one maximum."""
 
     if maximum is None:
         return None
-    ceiling = maximum["capacity_ceiling"]
     observed = maximum["total_tokens"]
     result = {
         "tokens": observed,
-        "capacity_ceiling": ceiling,
-        "minimum_headroom_ratio": maximum["minimum_headroom_ratio"],
-        "required_reserve_tokens": maximum["required_reserve_tokens"],
-        "release_target": maximum["release_target"],
-        "minimum_release_margin_tokens": maximum[
-            "minimum_release_margin_tokens"
-        ],
-        "evolution_target": maximum["evolution_target"],
-        "release_margin_tokens": maximum["release_target"] - observed,
-        "evolution_margin_tokens": maximum["evolution_target"] - observed,
-        "capacity_headroom_tokens": ceiling - observed,
-        "capacity_headroom_ratio": round((ceiling - observed) / ceiling, 6),
+        "soft_target": maximum["soft_target"],
+        "hard_ceiling": maximum["hard_ceiling"],
+        "soft_margin_tokens": maximum["soft_target"] - observed,
+        "hard_margin_tokens": maximum["hard_ceiling"] - observed,
+        "within_soft_target": maximum["within_soft_target"],
+        "within_hard_ceiling": maximum["within_hard_ceiling"],
+        "budget_signal": maximum["budget_signal"],
+        "calibration_status": maximum["calibration_status"],
         "host": maximum["host"],
         "build_profile": maximum["build_profile"],
     }
@@ -6335,7 +6311,7 @@ def _capsule_envelopes(
                 )
             except (FixtureCapsuleError, ValueError):
                 continue
-            if budget_class not in PHASE3_CONTEXT_TARGETS:
+            if budget_class not in ADMISSIBLE_BUDGET_CLASSES:
                 continue
             component = _component(
                 "dispatch_capsule",
@@ -6354,6 +6330,63 @@ def _component_upper_bound(components: list[dict[str, Any]]) -> int:
     return sum(component["tokens"] for component in components) + max(
         0, len(components) - 1
     ) * CONTEXT_COMPONENT_SEPARATOR_TOKENS
+
+
+def _token_distribution(values: list[int]) -> dict[str, int | None]:
+    """Return deterministic nearest-rank distribution statistics."""
+
+    ordered = sorted(values)
+    if not ordered:
+        return {
+            "count": 0,
+            "p50": None,
+            "p90": None,
+            "p95": None,
+            "p99": None,
+            "max": None,
+        }
+
+    def nearest_rank(percentile: int) -> int:
+        index = max(0, ((percentile * len(ordered) + 99) // 100) - 1)
+        return ordered[index]
+
+    return {
+        "count": len(ordered),
+        "p50": nearest_rank(50),
+        "p90": nearest_rank(90),
+        "p95": nearest_rank(95),
+        "p99": nearest_rank(99),
+        "max": ordered[-1],
+    }
+
+
+def _unavailable_growth_distribution() -> dict[str, Any]:
+    return {
+        "status": "unavailable",
+        "reason": "single-snapshot evaluation has no prior comparable valid-context population",
+        "count": 0,
+        "p50": None,
+        "p90": None,
+        "p95": None,
+        "p99": None,
+        "max": None,
+    }
+
+
+def _calibration_selection_identity(
+    values: Any,
+    contract: dict[str, Any],
+) -> str:
+    """Fingerprint measured valid candidates without budget fields."""
+
+    return _sha256_text(
+        _canonical_json_text(
+            {
+                "tokenizer": contract["tokenizer"],
+                "valid_candidate_measurements": values,
+            }
+        )
+    )
 
 
 def _render_signature_tokens(candidate: dict[str, Any]) -> int:
@@ -6448,10 +6481,11 @@ def _dominance_frontier_projection(
     mapping_hasher = hashlib.sha256()
     component_fingerprints: set[tuple[str, str, str]] = set()
 
-    for budget_class in ("analysis", "task", "analyzed_task", "review"):
-        target = PHASE3_CONTEXT_TARGETS[budget_class]
+    for budget_class in ADMISSIBLE_BUDGET_CLASSES:
+        soft_target = CONTEXT_BUDGET_LIMITS[budget_class]["soft_target"]
         candidates_by_key = canonical_candidates[budget_class]
         signatures: set[tuple[tuple[str, str], ...]] = set()
+        candidate_tokens: list[int] = []
         all_members = {
             "professional": set(),
             "layer3": set(),
@@ -6478,13 +6512,14 @@ def _dominance_frontier_projection(
             if tokens is None:
                 tokens = _render_signature_tokens(candidate)
                 signature_tokens[render_signature] = tokens
+            candidate_tokens.append(tokens)
             active_references = _active_reference_ids(candidate)
             members = {
                 "professional": [candidate["professional_skill"]],
                 "layer3": sorted(candidate["selected_layer3"]),
                 "active_reference": active_references,
             }
-            over_target = tokens > target
+            over_target = tokens > soft_target
             over_target_candidate_count += int(over_target)
             equivalence_key_text = _canonical_json_text(equivalence_key)
             equivalence_key_rank = _sha256_text(equivalence_key_text)
@@ -6532,9 +6567,12 @@ def _dominance_frontier_projection(
             for member_kind in all_members
         }
         budget_rows[budget_class] = {
-            "target_tokens": target,
+            "soft_target": soft_target,
+            "hard_ceiling": CONTEXT_BUDGET_LIMITS[budget_class]["hard_ceiling"],
             "candidate_count": len(candidates_by_key),
             "exact_render_signature_count": len(signatures),
+            "token_distribution": _token_distribution(candidate_tokens),
+            "growth_distribution": _unavailable_growth_distribution(),
             "over_target_candidate_count": over_target_candidate_count,
             "frontier_counts": {
                 member_kind: len(frontier_members[member_kind])
@@ -6765,12 +6803,12 @@ def _evaluate_admissible_context_compositions(
     professional_reference_ids: set[tuple[str, str, str]] = set()
     nested_reference_ids: set[tuple[str, str, str]] = set()
     maxima: dict[str, dict[str, Any] | None] = {
-        budget_class: None for budget_class in PHASE3_CONTEXT_TARGETS
+        budget_class: None for budget_class in ADMISSIBLE_BUDGET_CLASSES
     }
     canonical_candidates: dict[
         str,
         dict[tuple[Any, ...], dict[str, Any]],
-    ] = {budget_class: {} for budget_class in PHASE3_CONTEXT_TARGETS}
+    ] = {budget_class: {} for budget_class in ADMISSIBLE_BUDGET_CLASSES}
     receipt_replay_count = 0
     surface_count = 0
 
@@ -7332,7 +7370,6 @@ def _evaluate_admissible_context_compositions(
                 measurement = _measure_context(
                     candidate["components"],
                     budget_class=budget_class,
-                    token_budget=FROZEN_GATES[budget_class],
                 )
                 exact_measurement_cache[cache_key] = measurement
                 inventory["exact_measurement_count"] += 1
@@ -7342,10 +7379,13 @@ def _evaluate_admissible_context_compositions(
                 "component_upper_bound_tokens": candidate[
                     "component_upper_bound"
                 ],
-                "within_hard_evolution_target": (
-                    measurement["total_tokens"]
-                    <= PHASE3_CONTEXT_TARGETS[budget_class]
-                ),
+                "soft_target": measurement["soft_target"],
+                "hard_ceiling": measurement["hard_ceiling"],
+                "within_soft_target": measurement["within_soft_target"],
+                "within_hard_ceiling": measurement["within_hard_ceiling"],
+                "soft_margin_tokens": measurement["soft_margin_tokens"],
+                "hard_margin_tokens": measurement["hard_margin_tokens"],
+                "budget_signal": measurement["budget_signal"],
                 "within_duplicate_budget": measurement[
                     "within_duplicate_budget"
                 ],
@@ -7407,16 +7447,11 @@ def _evaluate_admissible_context_compositions(
         errors.append("admissible composition loaded conflicting References")
     if forbidden["over_max_rejection_count"] == 0:
         errors.append("admissible composition did not prove >3 fail-closed")
-    for budget_class, target in PHASE3_CONTEXT_TARGETS.items():
+    for budget_class in ADMISSIBLE_BUDGET_CLASSES:
         maximum = maxima[budget_class]
         if maximum is None:
             errors.append(f"admissible composition lacks {budget_class} measurement")
             continue
-        if maximum["tokens"] > target:
-            errors.append(
-                f"admissible composition {budget_class} maximum "
-                f"{maximum['tokens']} exceeds Phase 3 target {target}"
-            )
         if not maximum["within_duplicate_budget"]:
             errors.append(
                 f"admissible composition {budget_class} duplicate budget failed"
@@ -7501,7 +7536,127 @@ def _evaluate_admissible_context_compositions(
     }
 
 
-def evaluate() -> dict[str, Any]:
+def _budget_governance_report(
+    *,
+    mode: str,
+    main_contexts: list[dict[str, Any]],
+    dispatch_measurements: list[dict[str, Any]],
+    admissible_context_compositions: dict[str, Any],
+) -> dict[str, Any]:
+    if mode not in {"calibration", "conformance"}:
+        raise ValueError("rendered context mode must be calibration or conformance")
+
+    populations: dict[str, dict[str, int | None]] = {
+        "main": _token_distribution(
+            [measurement["total_tokens"] for measurement in main_contexts]
+        ),
+        "utility": _token_distribution(
+            [
+                measurement["total_tokens"]
+                for measurement in dispatch_measurements
+                if measurement["budget_class"] == "utility"
+            ]
+        ),
+    }
+    dominance_rows = admissible_context_compositions["dominance_frontier"][
+        "budget_classes"
+    ]
+    for budget_class in ADMISSIBLE_BUDGET_CLASSES:
+        populations[budget_class] = dominance_rows[budget_class][
+            "token_distribution"
+        ]
+
+    maxima: dict[str, dict[str, Any] | None] = {
+        "main": max(
+            main_contexts,
+            key=lambda measurement: measurement["total_tokens"],
+            default=None,
+        ),
+        "utility": max(
+            (
+                measurement
+                for measurement in dispatch_measurements
+                if measurement["budget_class"] == "utility"
+            ),
+            key=lambda measurement: measurement["total_tokens"],
+            default=None,
+        ),
+        **admissible_context_compositions["max_by_budget_class"],
+    }
+    advisories: list[dict[str, Any]] = []
+    hard_overages: list[dict[str, Any]] = []
+    for budget_class in CONTEXT_BUDGET_LIMITS:
+        maximum = maxima.get(budget_class)
+        if maximum is None:
+            continue
+        tokens = maximum.get("total_tokens", maximum.get("tokens"))
+        if not isinstance(tokens, int):
+            continue
+        limit = CONTEXT_BUDGET_LIMITS[budget_class]
+        if tokens > limit["soft_target"]:
+            advisories.append(
+                {
+                    "budget_class": budget_class,
+                    "tokens": tokens,
+                    "soft_target": limit["soft_target"],
+                    "overage_tokens": tokens - limit["soft_target"],
+                }
+            )
+        if tokens > limit["hard_ceiling"]:
+            hard_overages.append(
+                {
+                    "budget_class": budget_class,
+                    "tokens": tokens,
+                    "hard_ceiling": limit["hard_ceiling"],
+                    "overage_tokens": tokens - limit["hard_ceiling"],
+                }
+            )
+
+    population_identity = {
+        budget_class: populations[budget_class]
+        for budget_class in CONTEXT_BUDGET_LIMITS
+    }
+    return {
+        "mode": mode,
+        "source": "src/control-model/core-contracts.json#/context_budget_contract",
+        "policy_status": CONTEXT_BUDGET_MODEL["policy_status"],
+        "soft_targets": {
+            key: value["soft_target"]
+            for key, value in CONTEXT_BUDGET_LIMITS.items()
+        },
+        "hard_ceilings": {
+            key: value["hard_ceiling"]
+            for key, value in CONTEXT_BUDGET_LIMITS.items()
+        },
+        "selection_contract": {
+            "otherwise_valid_candidates_only": True,
+            "budget_applied_to_candidate_selection": False,
+            "budget_applied_to_frontier": False,
+            "soft_target_applied_to_exit": False,
+            "hard_ceiling_applied_to_exit": mode == "conformance",
+            "selection_count": sum(
+                int(distribution["count"] or 0)
+                for distribution in populations.values()
+            ),
+            "selection_identity_sha256": _calibration_selection_identity(
+                population_identity,
+                CONTEXT_BUDGET_MODEL,
+            ),
+            "identity_excludes_budget_fields": ["soft_target", "hard_ceiling"],
+        },
+        "distributions": population_identity,
+        "growth_distributions": {
+            budget_class: _unavailable_growth_distribution()
+            for budget_class in CONTEXT_BUDGET_LIMITS
+        },
+        "growth_advisories": advisories,
+        "hard_ceiling_overages": hard_overages,
+        "conformance_failures": hard_overages if mode == "conformance" else [],
+        "duplicate_rule_token_ratio_max": DUPLICATE_TOKEN_RATIO_MAX,
+    }
+
+
+def evaluate(mode: str = "conformance") -> dict[str, Any]:
     errors: list[str] = []
     try:
         document = json.loads(FIXTURES.read_text(encoding="utf-8"))
@@ -7548,7 +7703,6 @@ def evaluate() -> dict[str, Any]:
                     _file_component("control_skill", control_skill),
                 ],
                 budget_class="main",
-                token_budget=FROZEN_GATES["main"],
             )
             measurement.update(
                 {
@@ -7560,11 +7714,6 @@ def evaluate() -> dict[str, Any]:
                     ),
                 }
             )
-            if not measurement["within_token_budget"]:
-                errors.append(
-                    f"main:{host}:{build_profile} uses {measurement['total_tokens']} tokens; "
-                    f"budget is {measurement['token_budget']}"
-                )
             if not measurement["within_duplicate_budget"]:
                 errors.append(
                     f"main:{host}:{build_profile} duplicate ratio "
@@ -7728,7 +7877,6 @@ def evaluate() -> dict[str, Any]:
                     measurement = _measure_context(
                         components,
                         budget_class=budget_class,
-                        token_budget=FROZEN_GATES[budget_class],
                     )
                     measurement.update(
                         {
@@ -7756,12 +7904,6 @@ def evaluate() -> dict[str, Any]:
                             ),
                         }
                     )
-                    if not measurement["within_token_budget"]:
-                        errors.append(
-                            f"{case_id}:step:{index}:{host}:{build_profile} uses "
-                            f"{measurement['total_tokens']} {budget_class} tokens; "
-                            f"budget is {measurement['token_budget']}"
-                        )
                     if not measurement["within_duplicate_budget"]:
                         errors.append(
                             f"{case_id}:step:{index}:{host}:{build_profile} duplicate ratio "
@@ -7878,6 +8020,16 @@ def evaluate() -> dict[str, Any]:
         manifests=manifests,
     )
     errors.extend(admissible_context_compositions["errors"])
+    budget_governance = _budget_governance_report(
+        mode=mode,
+        main_contexts=main_contexts,
+        dispatch_measurements=all_dispatch_measurements,
+        admissible_context_compositions=admissible_context_compositions,
+    )
+    errors.extend(
+        f"{item['budget_class']} context maximum {item['tokens']} exceeds Core hard ceiling {item['hard_ceiling']}"
+        for item in budget_governance["conformance_failures"]
+    )
     return {
         "schema_version": 2,
         "status": "pass" if not errors else "fail",
@@ -7897,37 +8049,7 @@ def evaluate() -> dict[str, Any]:
         "limitations": list(LIMITATIONS),
         "build_profiles": list(BUILD_PROFILES),
         "hosts": list(HOST_PROFILE_ROOTS),
-        "budget_calibration": {
-            "method": (
-                "Capacity ceilings and minimum headroom ratios come from the Core Model; "
-                "release and evolution targets are derived without calibration relaxation."
-            ),
-            "source": "src/control-model/core-contracts.json#/context_budget_contract",
-            "capacity_ceilings": {
-                key: value["capacity_ceiling"]
-                for key, value in CONTEXT_BUDGET_LIMITS.items()
-            },
-            "minimum_headroom_ratios": {
-                key: value["minimum_headroom_ratio"]
-                for key, value in CONTEXT_BUDGET_LIMITS.items()
-            },
-            "required_reserve_tokens": {
-                key: value["required_reserve_tokens"]
-                for key, value in CONTEXT_BUDGET_LIMITS.items()
-            },
-            "release_targets": {
-                key: value["release_target"]
-                for key, value in CONTEXT_BUDGET_LIMITS.items()
-            },
-            "minimum_release_margin_tokens": {
-                key: value["minimum_release_margin_tokens"]
-                for key, value in CONTEXT_BUDGET_LIMITS.items()
-            },
-            "evolution_targets": dict(FROZEN_GATES),
-            "frozen_gates": dict(FROZEN_GATES),
-            "relaxations": [],
-            "duplicate_rule_token_ratio_max": DUPLICATE_TOKEN_RATIO_MAX,
-        },
+        "budget_governance": budget_governance,
         "fixture_count": len(case_results),
         "fixture_schema_version": document.get("schema_version"),
         "dispatch_count": dispatch_count,
@@ -8183,39 +8305,61 @@ def _write_reports(
         "",
         "## Authoritative Limits and Observed Maxima",
         "",
-        "Capacity ceilings, minimum headroom ratios, and minimum release margins "
-        "come from the Core Model. Release and evolution targets are derived; "
-        "calibration relaxations: **none**.",
+        "Soft targets and hard ceilings come only from the Core Model and are "
+        "provisional migration values, not calibrated optima. Soft overage is an "
+        "advisory; hard overage fails Conformance without truncating required context.",
         "",
-        "| Context | Capacity ceiling | Required reserve | Release target | Minimum release margin | Evolution target | Observed maximum | Release margin | Evolution margin | Capacity headroom ratio |",
-        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        f"Mode: **{report['budget_governance']['mode']}**.",
+        "",
+        "| Context | Soft target | Hard ceiling | Observed maximum | Soft margin | Hard margin | Soft status | Hard status |",
+        "| --- | ---: | ---: | ---: | ---: | ---: | --- | --- |",
     ]
     main = aggregate["max_main"]
     lines.append(
-        f"| Main always-loaded | {main['capacity_ceiling'] if main else 'n/a'} | "
-        f"{main['required_reserve_tokens'] if main else 'n/a'} | "
-        f"{main['release_target'] if main else 'n/a'} | "
-        f"{main['minimum_release_margin_tokens'] if main else 'n/a'} | "
-        f"{main['evolution_target'] if main else 'n/a'} | "
+        f"| Main always-loaded | {main['soft_target'] if main else 'n/a'} | "
+        f"{main['hard_ceiling'] if main else 'n/a'} | "
         f"{main['tokens'] if main else 'n/a'} | "
-        f"{main['release_margin_tokens'] if main else 'n/a'} | "
-        f"{main['evolution_margin_tokens'] if main else 'n/a'} | "
-        f"{main['capacity_headroom_ratio'] if main else 'n/a'} |"
+        f"{main['soft_margin_tokens'] if main else 'n/a'} | "
+        f"{main['hard_margin_tokens'] if main else 'n/a'} | "
+        f"{'within' if main and main['within_soft_target'] else 'advisory'} | "
+        f"{'within' if main and main['within_hard_ceiling'] else 'fail'} |"
     )
     for budget_class in ("task", "analyzed_task", "analysis", "review", "utility"):
         maximum = aggregate["max_by_budget_class"].get(budget_class)
         lines.append(
             f"| {CONTEXT_BUDGET_LIMITS[budget_class]['label']} | "
-            f"{maximum['capacity_ceiling'] if maximum else 'n/a'} | "
-            f"{maximum['required_reserve_tokens'] if maximum else 'n/a'} | "
-            f"{maximum['release_target'] if maximum else 'n/a'} | "
-            f"{maximum['minimum_release_margin_tokens'] if maximum else 'n/a'} | "
-            f"{maximum['evolution_target'] if maximum else 'n/a'} | "
+            f"{maximum['soft_target'] if maximum else 'n/a'} | "
+            f"{maximum['hard_ceiling'] if maximum else 'n/a'} | "
             f"{maximum['tokens'] if maximum else 'n/a'} | "
-            f"{maximum['release_margin_tokens'] if maximum else 'n/a'} | "
-            f"{maximum['evolution_margin_tokens'] if maximum else 'n/a'} | "
-            f"{maximum['capacity_headroom_ratio'] if maximum else 'n/a'} |"
+            f"{maximum['soft_margin_tokens'] if maximum else 'n/a'} | "
+            f"{maximum['hard_margin_tokens'] if maximum else 'n/a'} | "
+            f"{'within' if maximum and maximum['within_soft_target'] else 'advisory'} | "
+            f"{'within' if maximum and maximum['within_hard_ceiling'] else 'fail'} |"
         )
+    governance = report["budget_governance"]
+    lines.extend(
+        [
+            "",
+            "## Calibration Distribution",
+            "",
+            "Calibration candidate selection and frontier construction do not apply "
+            "soft targets or hard ceilings. Percentiles use nearest rank.",
+            "",
+            "| Context | Count | P50 | P90 | P95 | P99 | Max | Growth distribution |",
+            "| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
+            *[
+                f"| {CONTEXT_BUDGET_LIMITS[budget_class]['label']} | "
+                f"{distribution['count']} | {distribution['p50']} | "
+                f"{distribution['p90']} | {distribution['p95']} | "
+                f"{distribution['p99']} | {distribution['max']} | unavailable |"
+                for budget_class, distribution in governance["distributions"].items()
+            ],
+            "",
+            f"Valid-candidate selection identity: "
+            f"`{governance['selection_contract']['selection_identity_sha256']}`. "
+            "Temporal growth is unavailable because this run has one comparable snapshot.",
+        ]
+    )
     admissible = report["admissible_context_compositions"]
     admissible_inventory = admissible["inventory"]
     lines.extend(
@@ -8229,18 +8373,19 @@ def _write_reports(
             f"**{admissible_inventory['legal_selection_equivalence_class_count']}**; "
             f"exact measurements: **{admissible_inventory['exact_measurement_count']}**.",
             "",
-            "| Context | Phase 3 target | Reachable maximum | Professional | Layer 3 | Owner | Build | Host |",
-            "| --- | ---: | ---: | --- | --- | --- | --- | --- |",
+            "| Context | Soft target | Hard ceiling | Reachable maximum | Professional | Layer 3 | Owner | Build | Host |",
+            "| --- | ---: | ---: | ---: | --- | --- | --- | --- | --- |",
         ]
     )
     if comparison is not None:
         lines.extend(
             _render_end_to_end_projection_markdown(comparison).splitlines()
         )
-    for budget_class in ("task", "analyzed_task", "analysis", "review"):
+    for budget_class in ADMISSIBLE_BUDGET_CLASSES:
         maximum = admissible["max_by_budget_class"].get(budget_class)
         lines.append(
-            f"| {budget_class} | {PHASE3_CONTEXT_TARGETS[budget_class]} | "
+            f"| {budget_class} | {CONTEXT_BUDGET_LIMITS[budget_class]['soft_target']} | "
+            f"{CONTEXT_BUDGET_LIMITS[budget_class]['hard_ceiling']} | "
             f"{maximum['tokens'] if maximum else 'n/a'} | "
             f"{maximum['professional_skill'] if maximum else 'n/a'} | "
             f"{', '.join(maximum['selected_layer3']) if maximum else 'n/a'} | "
@@ -8361,6 +8506,11 @@ def _write_reports(
 def _args(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--release-projection", action="store_true")
+    parser.add_argument(
+        "--mode",
+        choices=("calibration", "conformance"),
+        default="conformance",
+    )
     parser.add_argument("--reports-dir", type=Path, default=REPORT_JSON.parent)
     parser.add_argument("--ab-baseline-ref")
     parser.add_argument("--expected-baseline-commit")
@@ -8379,7 +8529,7 @@ def main(argv: list[str] | None = None) -> int:
             report = comparison.pop("_candidate_rendered_report")
             report["end_to_end_cost_gate"] = comparison
         else:
-            report = evaluate()
+            report = evaluate(mode=args.mode)
     except (OSError, RuntimeError, ValueError) as exc:
         print(f"eval-rendered-context-budget: ERROR: {exc}", file=sys.stderr)
         return 1

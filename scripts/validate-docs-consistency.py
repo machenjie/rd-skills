@@ -1187,7 +1187,7 @@ def _governance_context_budget_authority_block(
 ) -> str:
     contract = core_contracts["context_budget_contract"]
     rows = [
-        f"| {row['label']} | {row['capacity_ceiling']} |"
+        f"| {row['label']} | {row['soft_target']} | {row['hard_ceiling']} |"
         for row in contract["budget_classes"].values()
     ]
     return "\n".join(
@@ -1200,16 +1200,16 @@ def _governance_context_budget_authority_block(
             "IDs, margins, duplicate-rule ratio, and pass/fail status. Governance records no",
             "current measurement snapshot.",
             "",
-            "The fixed capacity ceilings below come from",
+            "The provisional migration soft targets and hard ceilings below come from",
             "`src/control-model/core-contracts.json#/context_budget_contract`. They are",
-            "constraints, not current measurements.",
+            "guardrails, not current measurements or calibrated optima.",
             "",
-            "| Context | Fixed capacity ceiling |",
-            "| --- | ---: |",
+            "| Context | Soft target | Hard ceiling |",
+            "| --- | ---: | ---: |",
             *rows,
             "",
             "The report must exist, have `status: pass`, report no errors, and project these",
-            "ceilings unchanged. Run `python3 scripts/eval-rendered-context-budget.py` to",
+            "limits unchanged. Run `python3 scripts/eval-rendered-context-budget.py --mode conformance` to",
             "refresh current evidence.",
             GOVERNANCE_BUDGET_END,
         ]
@@ -1266,14 +1266,15 @@ def _governance_context_budget_errors(
             re.IGNORECASE,
         ),
         re.compile(
-            r"\b(?:capacity\s+)?ceilings?\b[^\n]{0,80}\b\d{3,5}\b",
+            r"\b(?:soft\s+targets?|hard\s+ceilings?|ceilings?)\b"
+            r"[^\n]{0,80}\b\d{3,5}\b",
             re.IGNORECASE,
         ),
     )
     if any(pattern.search(outside) for pattern in snapshot_patterns):
         errors.append(
             "GOVERNANCE.md: must not copy current rendered measurements or "
-            "declare budget ceilings outside the fixed ceiling authority block"
+            "declare budget limits outside the Core-derived authority block"
         )
 
     report_path = _governance_budget_report_path(
@@ -1305,23 +1306,25 @@ def _governance_context_budget_errors(
         )
 
     limits = derived_context_budget_limits(core_contracts["context_budget_contract"])
-    expected_ceilings = {
-        budget_class: limit["capacity_ceiling"]
+    expected_soft_targets = {
+        budget_class: limit["soft_target"]
         for budget_class, limit in limits.items()
     }
-    expected_evolution = {
-        budget_class: limit["evolution_target"]
+    expected_hard_ceilings = {
+        budget_class: limit["hard_ceiling"]
         for budget_class, limit in limits.items()
     }
-    calibration = report.get("budget_calibration")
+    governance = report.get("budget_governance")
     if (
-        not isinstance(calibration, dict)
-        or calibration.get("capacity_ceilings") != expected_ceilings
-        or calibration.get("evolution_targets") != expected_evolution
+        not isinstance(governance, dict)
+        or governance.get("mode") != "conformance"
+        or governance.get("soft_targets") != expected_soft_targets
+        or governance.get("hard_ceilings") != expected_hard_ceilings
+        or governance.get("conformance_failures") != []
     ):
         errors.append(
-            f"{GOVERNANCE_BUDGET_REPORT}: rendered context budget report ceilings "
-            "or evolution targets do not match Core"
+            f"{GOVERNANCE_BUDGET_REPORT}: rendered context Conformance limits "
+            "or failure state do not match Core"
         )
     aggregate = report.get("aggregate")
     maxima: dict[str, object] = {}
@@ -1330,12 +1333,13 @@ def _governance_context_budget_errors(
         by_class = aggregate.get("max_by_budget_class")
         if isinstance(by_class, dict):
             maxima.update(by_class)
-    for budget_class, ceiling in expected_ceilings.items():
+    for budget_class, soft_target in expected_soft_targets.items():
         maximum = maxima.get(budget_class)
         if (
             not isinstance(maximum, dict)
-            or maximum.get("capacity_ceiling") != ceiling
-            or maximum.get("evolution_target") != expected_evolution[budget_class]
+            or maximum.get("soft_target") != soft_target
+            or maximum.get("hard_ceiling") != expected_hard_ceilings[budget_class]
+            or maximum.get("within_hard_ceiling") is not True
         ):
             errors.append(
                 f"{GOVERNANCE_BUDGET_REPORT}: rendered context budget report "

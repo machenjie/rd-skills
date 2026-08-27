@@ -1,5 +1,10 @@
 # AI Product Extension Checklist
 
+Close active AI authority, evaluation, failure, fallback, and residual-risk
+decisions.
+
+## Authority, Data, And Evaluation Evidence
+
 - Define user-facing evidence authority across source evidence, model inference, uncertainty, abstention, independent verification, and human review. The contract covers unavailable evidence, fallback, appeal, correction, and explicit degraded decisions.
 - Keep low-impact output proportional without universal citations for creative or low-impact output.
 - Govern retrieval data and indexes by source permission, tenant, retention, redaction, deletion, ownership, version, namespace, refresh, and freshness. Verify revocation across active and fallback serving indexes, with a bounded lag.
@@ -10,6 +15,9 @@
 - Record judge identity or assignment, model version, rubric, calibration, scoring direction, disagreement, overrides, and adjudication. Independent or blinded review applies when variance or automation bias can change consequential decisions.
 - Compare baseline and treatment across representative success, boundary, refusal, hallucination-prone, adversarial, and regression cases by consequential cohort.
 - Derive evaluation thresholds and sample effort from harm, prevalence, and observed variance.
+
+## Behavioral And Runtime Assurance
+
 - Record deployable lineage for applicable behavior-bearing prompts, models, providers, retrievers, embeddings, indexes, tool schemas, safety policies, data snapshots, and evaluators.
 - Bind prompt and response cache identity to principal, tenant, visibility, and behavior-bearing versions. Invalidate affected cache entries and proof when those inputs change.
 - Exercise reachable timeout, rate-limit, retrieval, tool, refusal, unsafe-output, truncation, and configured fallback failures. Verify compatible refusal, structured output, tool authority, required evidence, and safety behavior.

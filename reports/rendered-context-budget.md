@@ -8,7 +8,7 @@ Compiled Layer 3 format: **ai-consumption-v1**
 
 Tokenizer: **o200k_base**
 
-Fixtures: **16**; dispatches: **38**; host/profile measurements: **342**.
+Fixtures: **16**; dispatches: **40**; host/profile measurements: **360**.
 Explicit nested Layer 3 Reference loads: **8**; logical IDs: **ai-product-extension/references/checklist.md, module-boundary-design/references/benchmarks-and-enforcement.md, payment-trading-extension/references/duplicate-financial-effect-control.md, release-rollback/references/benchmarks-and-patterns.md, release-rollback/references/evidence-patterns.md, test-strategy/references/checklist.md, transaction-consistency/references/evidence-patterns.md, web-security/references/checklist.md**.
 Measured nested Reference components across host/profile combinations: **72**.
 
@@ -18,40 +18,57 @@ The Control Prompt is embedded in each rendered Main Profile and is not added a 
 
 ## Authoritative Limits and Observed Maxima
 
-Capacity ceilings, minimum headroom ratios, and minimum release margins come from the Core Model. Release and evolution targets are derived; calibration relaxations: **none**.
+Soft targets and hard ceilings come only from the Core Model and are provisional migration values, not calibrated optima. Soft overage is an advisory; hard overage fails Conformance without truncating required context.
 
-| Context | Capacity ceiling | Required reserve | Release target | Minimum release margin | Evolution target | Observed maximum | Release margin | Evolution margin | Capacity headroom ratio |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Main always-loaded | 2200 | 220 | 1980 | 80 | 1900 | 1874 | 106 | 26 | 0.148182 |
-| Direct Task dispatch | 3200 | 0 | 3200 | 0 | 3200 | 2023 | 1177 | 1177 | 0.367812 |
-| Analyzed Task dispatch | 6500 | 0 | 6500 | 0 | 6500 | 3829 | 2671 | 2671 | 0.410923 |
-| Analysis dispatch | 5000 | 0 | 5000 | 0 | 5000 | 2538 | 2462 | 2462 | 0.4924 |
-| Review dispatch | 4000 | 0 | 4000 | 0 | 4000 | 2273 | 1727 | 1727 | 0.43175 |
-| Utility dispatch | 2500 | 0 | 2500 | 0 | 2500 | 826 | 1674 | 1674 | 0.6696 |
+Mode: **conformance**.
+
+| Context | Soft target | Hard ceiling | Observed maximum | Soft margin | Hard margin | Soft status | Hard status |
+| --- | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| Main always-loaded | 2305 | 2650 | 2177 | 128 | 473 | within | within |
+| Direct Task dispatch | 3000 | 3200 | 2025 | 975 | 1175 | within | within |
+| Analyzed Task dispatch | 6000 | 6500 | 3750 | 2250 | 2750 | within | within |
+| Analysis dispatch | 4500 | 5000 | 2400 | 2100 | 2600 | within | within |
+| Review dispatch | 3700 | 4000 | 2216 | 1484 | 1784 | within | within |
+| Utility dispatch | 2000 | 2500 | 828 | 1172 | 1672 | within | within |
+
+## Calibration Distribution
+
+Calibration candidate selection and frontier construction do not apply soft targets or hard ceilings. Percentiles use nearest rank.
+
+| Context | Count | P50 | P90 | P95 | P99 | Max | Growth distribution |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| Main always-loaded | 9 | 2170 | 2177 | 2177 | 2177 | 2177 | unavailable |
+| Direct Task dispatch | 19281 | 2187 | 2641 | 2704 | 2816 | 2934 | unavailable |
+| Analyzed Task dispatch | 66150 | 2685 | 3196 | 3351 | 3566 | 4019 | unavailable |
+| Analysis dispatch | 112828 | 1790 | 2126 | 2310 | 2658 | 3445 | unavailable |
+| Review dispatch | 38009 | 2364 | 2811 | 3003 | 3174 | 3363 | unavailable |
+| Utility dispatch | 18 | 806 | 828 | 828 | 828 | 828 | unavailable |
+
+Valid-candidate selection identity: `ff46d0016e10152275089381c2780ea4f16c46dc620c6ca77c50db60a9914769`. Temporal growth is unavailable because this run has one comparable snapshot.
 
 ## Admissible Context Composition Gate
 
-Contract: **changeforge.admissible-context-composition-eval/v1**; selector owner surfaces: **65**; canonical legal selection equivalence classes: **14035**; exact measurements: **6**.
+Contract: **changeforge.admissible-context-composition-eval/v1**; selector owner surfaces: **65**; canonical legal selection equivalence classes: **14051**; exact measurements: **6**.
 
-| Context | Phase 3 target | Reachable maximum | Professional | Layer 3 | Owner | Build | Host |
-| --- | ---: | ---: | --- | --- | --- | --- | --- |
-| task | 3000 | 2999 | installed-client-change-builder | cross-platform-client-extension, ios-ipados-platform-extension, kotlin-professional-usage | main-control-agent | dev | copilot |
-| analyzed_task | 6000 | 4098 | backend-change-builder | failure-diagnosis, filesystem-process-safety, nodejs-runtime-professional-usage | engineering-brief | dev | copilot |
-| analysis | 4500 | 3583 | engineering-change-analysis | iot-embedded-extension, failure-diagnosis, package-dependency-management | main-control-agent | dev | claude |
-| review | 3700 | 3474 | ai-code-review-refactor | domain-object-identification, implementation-structure-design, refactoring | engineering-brief | dev | codex |
+| Context | Soft target | Hard ceiling | Reachable maximum | Professional | Layer 3 | Owner | Build | Host |
+| --- | ---: | ---: | ---: | --- | --- | --- | --- | --- |
+| task | 3000 | 3200 | 2934 | change-documentation-gate | documentation-generation | main-control-agent | dev | copilot |
+| analyzed_task | 6000 | 6500 | 4019 | backend-change-builder | failure-diagnosis, filesystem-process-safety, nodejs-runtime-professional-usage | engineering-brief | dev | copilot |
+| analysis | 4500 | 5000 | 3445 | engineering-change-analysis | iot-embedded-extension, failure-diagnosis, package-dependency-management | main-control-agent | dev | claude |
+| review | 3700 | 4000 | 3363 | ai-code-review-refactor | domain-object-identification, implementation-structure-design, refactoring | engineering-brief | dev | copilot |
 
 ### Dominance Frontier Projection
 
 | Context | Canonical candidates | Exact render signatures | Over target |
 | --- | ---: | ---: | ---: |
-| analysis | 112828 | 46158 | 0 |
 | task | 19281 | 19281 | 0 |
 | analyzed_task | 66150 | 66150 | 0 |
-| review | 37819 | 16546 | 0 |
+| analysis | 112828 | 46158 | 0 |
+| review | 38009 | 16641 | 0 |
 
 Global Task/Review frontier counts: professional=0, layer3=0, active_reference=0; safe complement: professional=17, layer3=68, active_reference=267.
 
-Mapping digest: `f64a2ad8b872bb8828521a0f75ef95170bad26df63f909644028a866cd373642`; runtime consumers: **0**; build consumers: **0**.
+Mapping digest: `e0f64819d75f714f76df8f56e8b3a3a017d8190a00cf951a03dec84f6c3b4192`; runtime consumers: **0**; build consumers: **0**.
 
 Coverage: analysis_foundation_domain=yes, analyzed_task_three_layer3=yes, review_domain_foundation=yes, nested_targeted_references=yes, direct_main_owner=yes, initial_analysis_main_owner=yes, analyzed_brief_owner=yes, direct_false_worst_excluded=yes.
 
@@ -66,13 +83,13 @@ Forbidden-combination evidence: >3 rejected=47; unauthorized exact rejected=65; 
 - Sequenced Reference stages are source-owned; only canonically replayed engineering-brief Task/Review carriers may replace a predecessor body, while other owner surfaces conservatively co-load.
 - Reported maxima are exact for the deterministic canonical representatives; the full inventory count and dominance mapping remain available separately.
 
-Maximum exact normalized duplicate-rule ratio: **0.021695** (gate: **0.03**; margin: **0.008305**).
+Maximum exact normalized duplicate-rule ratio: **0.003737** (gate: **0.03**; margin: **0.026263**).
 
 Discovery metadata is reported separately because actual host discovery injection is not observed.
 
 ## Transferred Context Measurement
 
-Gross exclusive transferred-context tokens: **14358**; non-compressible: **14358**; compressible: **0**; ratio: **0.0**.
+Gross exclusive transferred-context tokens: **14640**; non-compressible: **14640**; compressible: **0**; ratio: **0.0**.
 
 Long tasks joined from lightweight required progress: **9**. Candidate-only transfer measurements carry no baseline claim.
 

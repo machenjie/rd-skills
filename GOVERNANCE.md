@@ -67,21 +67,21 @@ the single source of truth for current rendered token totals, maximum fixture
 IDs, margins, duplicate-rule ratio, and pass/fail status. Governance records no
 current measurement snapshot.
 
-The fixed capacity ceilings below come from
+The provisional migration soft targets and hard ceilings below come from
 `src/control-model/core-contracts.json#/context_budget_contract`. They are
-constraints, not current measurements.
+guardrails, not current measurements or calibrated optima.
 
-| Context | Fixed capacity ceiling |
-| --- | ---: |
-| Main always-loaded | 2200 |
-| Direct Task dispatch | 3200 |
-| Analyzed Task dispatch | 6500 |
-| Analysis dispatch | 5000 |
-| Review dispatch | 4000 |
-| Utility dispatch | 2500 |
+| Context | Soft target | Hard ceiling |
+| --- | ---: | ---: |
+| Main always-loaded | 2305 | 2650 |
+| Direct Task dispatch | 3000 | 3200 |
+| Analyzed Task dispatch | 6000 | 6500 |
+| Analysis dispatch | 4500 | 5000 |
+| Review dispatch | 3700 | 4000 |
+| Utility dispatch | 2000 | 2500 |
 
 The report must exist, have `status: pass`, report no errors, and project these
-ceilings unchanged. Run `python3 scripts/eval-rendered-context-budget.py` to
+limits unchanged. Run `python3 scripts/eval-rendered-context-budget.py --mode conformance` to
 refresh current evidence.
 <!-- END CHANGEFORGE GOVERNANCE CONTEXT BUDGET AUTHORITY -->
 

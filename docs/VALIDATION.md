@@ -358,22 +358,41 @@ Record every skipped or unavailable check, affected scope, proof limit, and
 residual risk. A failed command remains failed until its cause is verified and
 the relevant command passes after the final fix.
 
+Run Calibration to a temporary report directory before canonical Conformance:
+
+```bash
+python3 scripts/eval-rendered-context-budget.py --mode calibration --reports-dir /private/tmp/rd-skills-budget-calibration
+python3 scripts/eval-rendered-context-budget.py --mode conformance
+```
+
+Calibration measures the otherwise-valid population without using budget for
+selection, frontier construction, rejection, or exit. Conformance applies the
+Core-derived hard ceiling after complete context measurement and records soft
+growth advisories separately.
+
 ## Rendered Context Budget Contract
 
 <!-- BEGIN CHANGEFORGE CONTEXT BUDGET PROJECTION: validation-rendered-context-budget -->
 Source: `src/control-model/core-contracts.json#/context_budget_contract`.
 
-`required reserve = ceil(capacity ceiling * minimum headroom ratio)`; `release target = capacity ceiling - required reserve`; `evolution target = release target - minimum release margin`.
-Release and evolution targets are derived and are not stored as second authorities.
+Budget taxonomy and all Runtime/Rendered limits are owned only by Core. Budget is a cost guardrail and never changes routing, required context, or correctness obligations.
 
-| Context | Capacity ceiling | Minimum headroom ratio | Required reserve | Release target | Minimum release margin | Evolution target |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Main always-loaded | 2200 | 0.10 | 220 | 1980 | 80 | 1900 |
-| Direct Task dispatch | 3200 | 0.00 | 0 | 3200 | 0 | 3200 |
-| Analyzed Task dispatch | 6500 | 0.00 | 0 | 6500 | 0 | 6500 |
-| Analysis dispatch | 5000 | 0.00 | 0 | 5000 | 0 | 5000 |
-| Review dispatch | 4000 | 0.00 | 0 | 4000 | 0 | 4000 |
-| Utility dispatch | 2500 | 0.00 | 0 | 2500 | 0 | 2500 |
+Authoring Budget classes: Main Prompt, Control Skill, Professional Skill, Foundation, Domain.
+Resident Runtime Budget classes: Main always-loaded.
+Dispatch Composition Budget classes: Direct Task, Analyzed Task, Analysis, Review, Utility.
+Runtime Dynamic Context classes: Repository Reads, Diff, Command Output, Tool System Prompt, Conversation History; observation-only, with host conversation compaction out of scope.
+
+| Category | Context | Soft target | Hard ceiling | Calibration status |
+| --- | --- | ---: | ---: | --- |
+| Resident Runtime Budget | Main always-loaded | 2305 | 2650 | provisional-migration-value |
+| Dispatch Composition Budget | Direct Task dispatch | 3000 | 3200 | provisional-migration-value |
+| Dispatch Composition Budget | Analyzed Task dispatch | 6000 | 6500 | provisional-migration-value |
+| Dispatch Composition Budget | Analysis dispatch | 4500 | 5000 | provisional-migration-value |
+| Dispatch Composition Budget | Review dispatch | 3700 | 4000 | provisional-migration-value |
+| Dispatch Composition Budget | Utility dispatch | 2000 | 2500 | provisional-migration-value |
+
+Soft-target overage is a growth advisory; hard-ceiling overage fails Conformance. Calibration does not apply either limit to candidate selection or exit.
+Required routing, Professional, Domain, Layer 3, Reference, Review, and Evidence context is never truncated to satisfy a budget.
 
 Tokenizer: `o200k_base`. Exact duplicate-rule ratio gate: `0.03`.
 <!-- END CHANGEFORGE CONTEXT BUDGET PROJECTION: validation-rendered-context-budget -->
@@ -423,7 +442,7 @@ python3 scripts/eval-skill-professionalism.py
 python3 scripts/eval-professional-benchmarks.py
 python3 scripts/validate-professional-routing-coverage.py
 python3 scripts/eval-agent-lightweight.py
-python3 scripts/eval-rendered-context-budget.py
+python3 scripts/eval-rendered-context-budget.py --mode conformance
 python3 scripts/eval-context-control-plane.py
 python3 scripts/eval-agent-behavior.py --format json --output-dir evals/agent-behavior/outputs
 python3 scripts/eval-professional-agent-samples.py --promoted-only --strict

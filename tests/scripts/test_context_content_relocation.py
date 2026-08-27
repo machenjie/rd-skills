@@ -1399,6 +1399,9 @@ G2_BASE_B8_NEW_ANCHORS = {
 - Record judge identity or assignment, model version, rubric, calibration, scoring direction, disagreement, overrides, and adjudication. Independent or blinded review applies when variance or automation bias can change consequential decisions.
 - Compare baseline and treatment across representative success, boundary, refusal, hallucination-prone, adversarial, and regression cases by consequential cohort.
 - Derive evaluation thresholds and sample effort from harm, prevalence, and observed variance.
+
+## Behavioral And Runtime Assurance
+
 - Record deployable lineage for applicable behavior-bearing prompts, models, providers, retrievers, embeddings, indexes, tool schemas, safety policies, data snapshots, and evaluators.
 - Bind prompt and response cache identity to principal, tenant, visibility, and behavior-bearing versions. Invalidate affected cache entries and proof when those inputs change.
 - Exercise reachable timeout, rate-limit, retrieval, tool, refusal, unsafe-output, truncation, and configured fallback failures. Verify compatible refusal, structured output, tool authority, required evidence, and safety behavior.
@@ -1446,7 +1449,7 @@ G2_BASE_B1_COMPACTIONS = (
     ("data-api-contract-changer", "src/professional-skills/data-api-contract-changer/SKILL.md", "fae6390621baa0c3081f9d63f908a8b285326ba4944161fd166be6313f1391ba", "c0a371b449b95793909b7ae1349c0084833385038909926356bc7c96dd5f73ed", ("Own evidenced data", "Stop on unresolved compatibility", "producer and consumer changes")),
     ("data-middleware-change-builder", "src/professional-skills/data-middleware-change-builder/SKILL.md", "605b1faa0069e848f428540746f13aac43012451c2d0e021fdc270a6a9932769", "51af820aededb532f57198975c6290b76e6c65b20e9c0ae2817171a9980c5db1", ("Map ownership, failure, recovery, and proof.", "Load one Reference for its open output.", "replay and reconciliation evidence")),
     ("delivery-release-gate", "src/professional-skills/delivery-release-gate/SKILL.md", "02e96a5daea2d9a390314eae547f86e61ed5528fec3eb3c043c6019e75112e2b", "aaf5c2ea8078a3c794725303f2ce7c3372dd96569a4a0d5dc88bc82024fa1fda", ("select rollout", "Block stale artifact/environment, authority, containment, compatibility/migration, infrastructure-state, or recovery evidence.", "go/no-go verdict")),
-    ("frontend-change-builder", "src/professional-skills/frontend-change-builder/SKILL.md", "e69b53e752c8faba5e5e47e5e5f2200767abcf0b8eb6e369a9e71f1035276b6a", "72b501379de4feb495528125132c2cf50120a9cdfad704da5f9e48b2b039ad8b", ("frontend interaction states", "Stop implementation", "residual UX risk")),
+    ("frontend-change-builder", "src/professional-skills/frontend-change-builder/SKILL.md", "e69b53e752c8faba5e5e47e5e5f2200767abcf0b8eb6e369a9e71f1035276b6a", "6c45536c129fae6306d6bba7ec2c90322bff073d34b9c80c16d75e9cc15f7f42", ("frontend interaction states", "Stop implementation", "residual UX risk")),
     ("high-risk-design-review", "src/professional-skills/high-risk-design-review/SKILL.md", "89755cd877dcf8b55bee60a3da9d450e13cc7cf8c5056222ef773c8e213845b2", "cef593ac51134204e4b05992664ac38d6f61ff80362b4ffd8c67f8f06507f1d7", ("high-risk Engineering Brief", "Stop when source evidence", "First Executable Slice assessment")),
     ("installed-client-change-builder", "src/professional-skills/installed-client-change-builder/SKILL.md", "c2ae0c2737397ada23ff0460603bdb78782e12fc8c20dad0841343790ac93b09", "40b877e360ef3e6dfb793d13a3a5def396b53c77b177366946a8c7391bf7659c", ("Preserve the accepted route/targets through active named References and carriers.", "Stop on unresolved target, owner, client contract, artifact, or environment.", "Changed placement, framework/version, native owner/behavior")),
     ("integration-change-builder", "src/professional-skills/integration-change-builder/SKILL.md", "d7b87f093953c972fbf68cf0141678c0daaea60396d60ba247c30ea844e66766", "617d1818769c1b0fd35289cef58fa998eff25bb47302a9a240e6160afbf5628b", ("external integration change", "Block unknown provider/environment/credential/reconciliation authority", "unresolved provider risk")),
@@ -1496,7 +1499,7 @@ C1D_CONTENT_HASHES = {
     "src/foundation/capabilities/data-migration-design/SKILL.md": "1c2d3921cfe7f848e03f32fb0031f49b0d5ff55d8e0f65a4bee4c6549cdc1649",
     "src/foundation/capabilities/data-migration-design/references/benchmarks-and-patterns.md": "2b46b6b6480cc0afb931df255730a143988a76d944ab9244a26ff02e0d633005",
     "src/foundation/capabilities/release-rollback/SKILL.md": "05bc0fa788fd635c9ce8948f64c7eb25846a083c1b6d33876ba95f4464ac0830",
-    "src/foundation/capabilities/permission-boundary-modeling/SKILL.md": "203526b8125b211ba3e965863598b66b1f7761568a130a6ccb9a2368210dc826",
+    "src/foundation/capabilities/permission-boundary-modeling/SKILL.md": "72ae5933a81a933be7861e8be62e2c033043bcc13e0043db1ab2caeafcf2cf32",
 }
 
 C1D_UNCHANGED_REFERENCE_HASHES = {
@@ -1523,9 +1526,9 @@ POST_B_TASK_CONTENT_HASHES = {
 
 POST_B_TASK_BUILT_TOKENS = {
     "src/professional-skills/installed-client-change-builder/SKILL.md": 216,
-    "src/foundation/capabilities/client-lifecycle-state-restoration/SKILL.md": 183,
-    "src/foundation/capabilities/offline-sync-conflict-resolution/SKILL.md": 207,
-    "src/foundation/capabilities/state-management-design/SKILL.md": 187,
+    "src/foundation/capabilities/client-lifecycle-state-restoration/SKILL.md": 156,
+    "src/foundation/capabilities/offline-sync-conflict-resolution/SKILL.md": 180,
+    "src/foundation/capabilities/state-management-design/SKILL.md": 160,
     "src/foundation/capabilities/offline-sync-conflict-resolution/references/sync-reconciliation-contracts.md": 466,
 }
 
@@ -1686,7 +1689,7 @@ POST_B_REVIEW_CONTENT_HASHES = {
 }
 
 POST_B_REVIEW_BUILT_TOKENS = {
-    "src/domain-extensions/cross-platform-client-extension/SKILL.md": 265,
+    "src/domain-extensions/cross-platform-client-extension/SKILL.md": 238,
     "src/professional-skills/ai-code-review-refactor/references/review-output-and-gates.md": 533,
 }
 
@@ -1833,7 +1836,6 @@ FRONTEND_JIT_OWNER_SPECS = {
     "frontend-change-builder": {
         "root": "src/professional-skills/frontend-change-builder/SKILL.md",
         "registry": "professional",
-        "cap": 270,
         "removed": ("references/frontend-output-and-gates.md",),
         "references": {
             "references/component-placement-and-reuse-gates.md": ("targeted", ("task-agent",), ("boundary-decision", "selected-approach", "residual-risk"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor")),
@@ -1847,7 +1849,6 @@ FRONTEND_JIT_OWNER_SPECS = {
     "interaction-state-modeling": {
         "root": "src/foundation/capabilities/interaction-state-modeling/SKILL.md",
         "registry": "foundation",
-        "cap": 290,
         "removed": ("references/benchmarks-and-patterns.md", "references/evidence-patterns.md"),
         "references": {
             "references/state-semantics-benchmark-anchors.md": ("benchmark-pattern", ALL_ROLES, ("option-comparison", "selected-approach"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor")),
@@ -1861,7 +1862,6 @@ FRONTEND_JIT_OWNER_SPECS = {
     "accessibility-inclusive-design": {
         "root": "src/foundation/capabilities/accessibility-inclusive-design/SKILL.md",
         "registry": "foundation",
-        "cap": 330,
         "removed": ("references/inclusive-interaction-contracts.md",),
         "references": {
             "references/semantic-keyboard-and-focus-contracts.md": ("targeted", ALL_ROLES, ("selected-approach", "boundary-decision", "proof-limit"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor")),
@@ -1873,7 +1873,6 @@ FRONTEND_JIT_OWNER_SPECS = {
     "web-platform-professional-usage": {
         "root": "src/foundation/capabilities/web-platform-professional-usage/SKILL.md",
         "registry": "foundation",
-        "cap": 340,
         "removed": ("references/document-event-rendering-contracts.md", "references/navigation-network-background-contracts.md"),
         "references": {
             "references/document-semantics-and-accessibility-tree-contracts.md": ("targeted", ALL_ROLES, ("selected-approach", "boundary-decision", "proof-limit"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor")),
@@ -2057,7 +2056,7 @@ C1J_PROTECTED_HASHES = {
     "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
     "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
 "scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
-"scripts/validation_utils.py": "bd083dccaa974f55a189b4cb7981dfa6fe82d94187108825d44f28b08ac3e5b9",
+"scripts/validation_utils.py": "bf12aad978ed7fea8add11f391c4b31c0a72f71dfb083bfd5c4ed0e0ce4facf3",
     "dist/universal/skills/dev/data-middleware-change-builder/SKILL.md": "22a41125147da43b01da304168205b8840d7ec6649a16c7727bd7719943696f3",
 }
 
@@ -2128,8 +2127,8 @@ C1I_PROTECTED_HASHES = {
     "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
     "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
 "scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
-    "tests/scripts/test_build_safety.py": "7bf345ed411ebc61a19410ad46514b6df8b6842106ff2a305ac710943d414107",
-"tests/test_hookless_build_install.py": "f94eee6b3d2aea953b50e39b8f9159bbca42c922b8b1d57fb9a12a7d6af5c716",
+    "tests/scripts/test_build_safety.py": "f07da052ee9f91bf71c4c6413caee462ec831eed0746ac153441a2805e60c0cf",
+"tests/test_hookless_build_install.py": "1f8dae4902d1a3fef6a1394fbd6f12c01f9102dfd3c4bed84983ea328f1d495f",
 }
 
 C1I_BUILT_PROJECTION_SPECS = {
@@ -2255,46 +2254,42 @@ REVIEW_JIT_OWNER_SPECS = {
     "architecture-impact-reviewer": {
         "root": "src/professional-skills/architecture-impact-reviewer/SKILL.md",
         "registry": "professional",
-        "cap": 415,
         "removed": ("references/architecture-output-and-gates.md",),
         "references": {
-            "references/placement-and-ownership.md": ("targeted", ("analysis-agent", "review-agent"), ("boundary-decision", "selected-approach", "residual-risk"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor"), 650),
-            "references/consumer-and-data-impact.md": ("targeted", ("analysis-agent", "review-agent"), ("boundary-decision", "validation-plan", "residual-risk"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor"), 650),
-            "references/dependency-topology-and-enforcement.md": ("targeted", ("analysis-agent", "review-agent"), ("boundary-decision", "gate-decision", "validation-plan", "residual-risk"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor"), 650),
-            "references/reversibility-evolution-and-proof-limits.md": ("targeted", ("analysis-agent", "review-agent"), ("decision-record", "validation-plan", "proof-limit", "residual-risk"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor"), 650),
-            "references/checklist.md": ("decision-checklist", ("analysis-agent", "review-agent"), ("checklist-result", "residual-risk"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor"), 650),
-            "references/solution-optimality.md": ("targeted", ("analysis-agent", "review-agent"), ("selected-approach", "residual-risk"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor"), 650),
+            "references/placement-and-ownership.md": ("targeted", ("analysis-agent", "review-agent"), ("boundary-decision", "selected-approach", "residual-risk"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor")),
+            "references/consumer-and-data-impact.md": ("targeted", ("analysis-agent", "review-agent"), ("boundary-decision", "validation-plan", "residual-risk"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor")),
+            "references/dependency-topology-and-enforcement.md": ("targeted", ("analysis-agent", "review-agent"), ("boundary-decision", "gate-decision", "validation-plan", "residual-risk"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor")),
+            "references/reversibility-evolution-and-proof-limits.md": ("targeted", ("analysis-agent", "review-agent"), ("decision-record", "validation-plan", "proof-limit", "residual-risk"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor")),
+            "references/checklist.md": ("decision-checklist", ("analysis-agent", "review-agent"), ("checklist-result", "residual-risk"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor")),
+            "references/solution-optimality.md": ("targeted", ("analysis-agent", "review-agent"), ("selected-approach", "residual-risk"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor")),
         },
     },
     "module-boundary-design": {
         "root": "src/foundation/capabilities/module-boundary-design/SKILL.md",
         "registry": "foundation",
-        "cap": 290,
         "removed": ("references/module-decomposition.md",),
         "references": {
-            "references/boundary-kind-and-authority.md": ("targeted", ("analysis-agent", "review-agent"), ("boundary-decision", "decision-record", "residual-risk"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor"), 600),
-            "references/split-merge-and-move-decisions.md": ("targeted", ("analysis-agent", "review-agent"), ("boundary-decision", "selected-approach", "residual-risk"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor"), 600),
-            "references/benchmarks-and-enforcement.md": ("benchmark-pattern", ("analysis-agent", "review-agent"), ("option-comparison", "selected-approach"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor"), None),
+            "references/boundary-kind-and-authority.md": ("targeted", ("analysis-agent", "review-agent"), ("boundary-decision", "decision-record", "residual-risk"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor")),
+            "references/split-merge-and-move-decisions.md": ("targeted", ("analysis-agent", "review-agent"), ("boundary-decision", "selected-approach", "residual-risk"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor")),
+            "references/benchmarks-and-enforcement.md": ("benchmark-pattern", ("analysis-agent", "review-agent"), ("option-comparison", "selected-approach"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor")),
         },
     },
     "implementation-structure-design": {
         "root": "src/foundation/capabilities/implementation-structure-design/SKILL.md",
         "registry": "foundation",
-        "cap": None,
         "removed": (),
         "references": {
-            "references/object-module-decomposition.md": ("targeted", ("task-agent", "review-agent", "analysis-agent"), ("decision-record", "validation-plan", "proof-limit", "residual-risk"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor"), None),
-            "references/reuse-and-placement.md": ("targeted", ("task-agent", "review-agent", "analysis-agent"), ("selected-approach", "validation-plan", "proof-limit", "residual-risk"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor"), None),
-            "references/evidence-patterns.md": ("evidence-pattern", ("task-agent", "review-agent", "analysis-agent"), ("evidence-record", "validation-plan", "proof-limit", "residual-risk"), "repo-resolvable-fact", (), None),
+            "references/object-module-decomposition.md": ("targeted", ("task-agent", "review-agent", "analysis-agent"), ("decision-record", "validation-plan", "proof-limit", "residual-risk"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor")),
+            "references/reuse-and-placement.md": ("targeted", ("task-agent", "review-agent", "analysis-agent"), ("selected-approach", "validation-plan", "proof-limit", "residual-risk"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor")),
+            "references/evidence-patterns.md": ("evidence-pattern", ("task-agent", "review-agent", "analysis-agent"), ("evidence-record", "validation-plan", "proof-limit", "residual-risk"), "repo-resolvable-fact", ()),
         },
     },
     "technology-stack-selection": {
         "root": "src/foundation/capabilities/technology-stack-selection/SKILL.md",
         "registry": "foundation",
-        "cap": 270,
         "removed": (),
         "references": {
-            "references/benchmarks-and-patterns.md": ("benchmark-pattern", ALL_ROLES, ("option-comparison", "selected-approach"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor"), 800),
+            "references/benchmarks-and-patterns.md": ("benchmark-pattern", ALL_ROLES, ("option-comparison", "selected-approach"), "route-or-material-unknown", ("acceptance", "scope", "material-risk-floor")),
         },
     },
 }
@@ -5155,7 +5150,10 @@ class ContextContentRelocationTests(unittest.TestCase):
         )
         root_tokens = VALIDATION.count_o200k_base_tokens(root_text)
         self.assertEqual(834, root_tokens)
-        self.assertLess(root_tokens, 900)
+        hard_tokens = VALIDATION.LAYER_ROOT_CONTENT_BUDGETS["domain-extension"][
+            "hard_tokens"
+        ]
+        self.assertLessEqual(root_tokens, hard_tokens)
 
         reference_tokens = {}
         for filename in WEB3_REFERENCE_SPECS:
@@ -5380,7 +5378,10 @@ class ContextContentRelocationTests(unittest.TestCase):
 
         root_tokens = VALIDATION.count_o200k_base_tokens(root_text)
         self.assertEqual(820, root_tokens)
-        self.assertLess(root_tokens, 900)
+        hard_tokens = VALIDATION.LAYER_ROOT_CONTENT_BUDGETS["domain-extension"][
+            "hard_tokens"
+        ]
+        self.assertLessEqual(root_tokens, hard_tokens)
         reference_tokens = {
             filename: VALIDATION.count_o200k_base_tokens(
                 (ROOT / BIGDATA_REFERENCE_PREFIX / filename).read_text(encoding="utf-8")
@@ -5559,9 +5560,13 @@ class ContextContentRelocationTests(unittest.TestCase):
             "systems invariant, selected mechanism, safety/compatibility and measurement evidence, validation result, proof limits, unverified state space, and residual risk",
         ):
             self.assertEqual(1, root_text.count(exact_kernel))
-        self.assertEqual(870, VALIDATION.count_o200k_base_tokens(root_text))
+        root_tokens = VALIDATION.count_o200k_base_tokens(root_text)
+        self.assertEqual(870, root_tokens)
         self.assertEqual(59, len(root_text.splitlines()))
-        self.assertLess(VALIDATION.count_o200k_base_tokens(root_text), 900)
+        hard_tokens = VALIDATION.LAYER_ROOT_CONTENT_BUDGETS["domain-extension"][
+            "hard_tokens"
+        ]
+        self.assertLessEqual(root_tokens, hard_tokens)
 
         expected_tokens = [144, 138, 88, 166, 232]
         expected_lines = [9, 9, 8, 10, 11]
@@ -5810,7 +5815,8 @@ class ContextContentRelocationTests(unittest.TestCase):
             "permission-boundary-modeling": (
                 "Resolve decision inputs from trusted identity, resource, relationship, policy, or lifecycle state.",
                 "Enforce the decision before protected disclosure or effect on each in-scope path.",
-                "Enforce permissions before collection outputs; define explicit behavior for mixed tenant bulk actions.",
+                "Enforce permissions before collection outputs.",
+                "Define explicit behavior for mixed tenant bulk actions.",
             ),
         }
         for owner, rules in expected_kernels.items():
@@ -5826,7 +5832,7 @@ class ContextContentRelocationTests(unittest.TestCase):
                 self.assertIsNotNone(section)
                 assert section is not None
                 self.assertEqual(
-                    3,
+                    4 if owner == "permission-boundary-modeling" else 3,
                     sum(
                         line.startswith("- ")
                         for line in section.group("body").splitlines()
@@ -5873,9 +5879,9 @@ class ContextContentRelocationTests(unittest.TestCase):
 
         root_projections = {
             "src/professional-skills/installed-client-change-builder/SKILL.md": ("installed-client-change-builder", "24ac55f2e860ff7b0ec41f18d95b543a024f79157741552f60c064778da6a7ac", 216),
-            "src/foundation/capabilities/privacy-data-lifecycle/SKILL.md": (None, "838f2e94146c5d2eab8f5d8d932c4b2aaa74bd64ede1844bc28c2ff5f5bf5356", 230),
-            "src/foundation/capabilities/csharp-dotnet-professional-usage/SKILL.md": (None, "57b3d446e87d2aa2293476c1b34e2fe8b38b5332b7428b407fa1995c251ac20c", 247),
-            "src/foundation/capabilities/swift-professional-usage/SKILL.md": (None, "5a873c77a0b41cbabd5836a26973987f4b44ddc84b24f18620d09648e1361623", 250),
+            "src/foundation/capabilities/privacy-data-lifecycle/SKILL.md": (None, "812a7b33179c2132640434073f1ab76a2eba8d3ede2889f1918ca6227ef4d32a", 203),
+            "src/foundation/capabilities/csharp-dotnet-professional-usage/SKILL.md": (None, "e62d85db942fed7f78f2a8328b2c6bbf74268c114a036eacfe9486ca1888b8c9", 220),
+            "src/foundation/capabilities/swift-professional-usage/SKILL.md": (None, "e5c008a2ea1f0fc46320ed269896357f90367fae8c608fb221628f5530f12716", 223),
         }
         for path, (selector, expected_hash, expected_tokens) in root_projections.items():
             _metadata, raw_frontmatter, body = VALIDATION.parse_frontmatter(ROOT / path)
@@ -5934,23 +5940,20 @@ class ContextContentRelocationTests(unittest.TestCase):
             path: VALIDATION.count_o200k_base_tokens((ROOT / path).read_text(encoding="utf-8"))
             for path in reference_paths
         }
-        self.assertLessEqual(max(reference_tokens.values()), 671)
         self.assertEqual(671, max(reference_tokens.values()))
 
-        self.assertEqual(943, sum(item[2] for item in root_projections.values()))
-        projected_sum = 3_466 - (1_079 - 943) - (1_010 - 671)
-        self.assertEqual(2_991, projected_sum)
-        self.assertEqual(2_990, projected_sum - 1)
-        self.assertEqual(2_997, projected_sum + 6)
-        self.assertLessEqual(projected_sum + 6, 3_000)
-        self.assertGreater(projected_sum + 10, 3_000)
+        self.assertEqual(862, sum(item[2] for item in root_projections.values()))
+        projected_sum = 3_466 - (1_079 - 862) - (1_010 - 671)
+        self.assertEqual(2_910, projected_sum)
+        self.assertEqual(2_909, projected_sum - 1)
+        self.assertEqual(2_916, projected_sum + 6)
 
         protected_hashes = {
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
             "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
 "scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
-"scripts/validation_utils.py": "bd083dccaa974f55a189b4cb7981dfa6fe82d94187108825d44f28b08ac3e5b9",
+"scripts/validation_utils.py": "bf12aad978ed7fea8add11f391c4b31c0a72f71dfb083bfd5c4ed0e0ce4facf3",
         }
         for path, expected_hash in protected_hashes.items():
             text = (ROOT / path).read_text(encoding="utf-8")
@@ -6037,7 +6040,7 @@ class ContextContentRelocationTests(unittest.TestCase):
                 projected = "\n".join(output)
             else:
                 projected = text
-            with self.subTest(token_budget=path):
+            with self.subTest(token_snapshot=path):
                 self.assertEqual(
                     expected_tokens,
                     VALIDATION.count_o200k_base_tokens(projected),
@@ -6249,13 +6252,11 @@ class ContextContentRelocationTests(unittest.TestCase):
                 "src/foundation/capabilities/offline-sync-conflict-resolution/references/sync-reconciliation-contracts.md"
             ],
         ]
-        self.assertEqual(2_613, sum(components))
+        self.assertEqual(2_532, sum(components))
         separator_tokens = VALIDATION.count_o200k_base_tokens("\n\n")
         self.assertEqual(1, separator_tokens)
         component_upper = sum(components) + separator_tokens * (len(components) - 1)
-        self.assertEqual(2_619, component_upper)
-        self.assertLessEqual(component_upper, 3_000)
-        self.assertEqual(3_001, component_upper + 382)
+        self.assertEqual(2_538, component_upper)
 
     def test_post_b_ai_review_cross_platform_jit_is_lossless_and_bounded(
         self,
@@ -6340,7 +6341,7 @@ class ContextContentRelocationTests(unittest.TestCase):
             VALIDATION.count_o200k_base_tokens(cross_projection),
         )
         self.assertEqual(
-            "e7ae448387f1d7f79e38bdb876d09c80f1b798be00fd2fe4bb6f98c7e9f89b8f",
+            "5143be9395d317fb6f5ee119e50e39a5cac3698b10066e264247e992aa78eada",
             hashlib.sha256(cross_projection.encode("utf-8")).hexdigest(),
         )
         review_reference_path = (
@@ -6364,13 +6365,13 @@ class ContextContentRelocationTests(unittest.TestCase):
                 "src/foundation/capabilities/design-pattern-selection/SKILL.md",
                 BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS,
                 None,
-                222,
+                195,
             ),
             (
                 "src/foundation/capabilities/implementation-structure-design/SKILL.md",
                 BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS,
                 None,
-                302,
+                275,
             ),
         )
         for path, headings, selector, expected_tokens in fixed_root_specs:
@@ -6541,19 +6542,17 @@ class ContextContentRelocationTests(unittest.TestCase):
         components = [
             561,
             275,
-            222,
-            302,
+            195,
+            275,
             785,
             POST_B_REVIEW_BUILT_TOKENS[cross_path],
             POST_B_REVIEW_BUILT_TOKENS[review_reference_path],
         ]
-        self.assertEqual(2_943, sum(components))
+        self.assertEqual(2_862, sum(components))
         separator_tokens = VALIDATION.count_o200k_base_tokens("\n\n")
         self.assertEqual(1, separator_tokens)
         component_upper = sum(components) + separator_tokens * (len(components) - 1)
-        self.assertEqual(2_949, component_upper)
-        self.assertLessEqual(component_upper, 3_700)
-        self.assertEqual(3_701, component_upper + 752)
+        self.assertEqual(2_868, component_upper)
 
     def test_c1f_repository_and_reliability_content_is_lossless_and_bounded(self) -> None:
         for path, expected_sha256 in C1F_FINAL_SOURCE_HASHES.items():
@@ -6592,12 +6591,10 @@ class ContextContentRelocationTests(unittest.TestCase):
         self.assertEqual(2_329, task_fixed)
         self.assertEqual(2_760, task_fixed + 431)
         self.assertEqual(2_766, task_fixed + 431 + 6)
-        self.assertLessEqual(task_fixed + 431 + 6, 3_000)
         review_fixed = 561 + 341 + 209 + 180 + 224 + 785
         self.assertEqual(2_300, review_fixed)
         self.assertEqual(2_930, review_fixed + 630)
         self.assertEqual(2_936, review_fixed + 630 + 6)
-        self.assertLessEqual(review_fixed + 630 + 6, 3_700)
 
     def test_fg_r1c_reliability_reference_frontier_is_complete_and_bounded(self) -> None:
         reference_specs = {
@@ -6626,7 +6623,7 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
             "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-"tests/scripts/test_eval_rendered_context_budget.py": "f325f95baac9c4b4c320456d4aac4a7bad9dc536927deae5c66d66df6a29b5c3",
+"tests/scripts/test_eval_rendered_context_budget.py": "fae8220779a59de92fca6d372f3f99b7650c75b8c1b1abb42389345f551bcaaf",
         }.items():
             with self.subTest(protected_hash=path):
                 self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -6637,8 +6634,6 @@ class ContextContentRelocationTests(unittest.TestCase):
         self.assertEqual(2_961, 3_503 - (1_183 - root_tokens) - (943 - 630))
         self.assertEqual(2_960, 3_502 - (1_183 - root_tokens) - (943 - 630))
         self.assertEqual(2_967, 3_509 - (1_183 - root_tokens) - (943 - 630))
-        self.assertLessEqual(2_967, 3_000)
-        self.assertEqual(3_001, 2_967 + 34)
 
     def test_c1g_delivery_compatibility_and_configuration_content_is_lossless_and_bounded(self) -> None:
         for path, expected_sha256 in C1G_FINAL_SOURCE_HASHES.items():
@@ -6784,11 +6779,9 @@ class ContextContentRelocationTests(unittest.TestCase):
         task_components = [697, 310, 229, 250, 183, 474, 657]
         self.assertEqual(2_800, sum(task_components))
         self.assertEqual(2_806, sum(task_components) + 6)
-        self.assertLessEqual(sum(task_components) + 6, 3_000)
         review_components = [561, 310, 229, 250, 183, 474, 785]
         self.assertEqual(2_792, sum(review_components))
         self.assertEqual(2_798, sum(review_components) + 6)
-        self.assertLessEqual(sum(review_components) + 6, 3_700)
 
     def test_c1j_data_middleware_content_is_lossless_and_route_stable(self) -> None:
         mismatches = []
@@ -6963,7 +6956,6 @@ class ContextContentRelocationTests(unittest.TestCase):
         task_components = [697, 269, 214, 283, 246, 608, 657]
         self.assertEqual(2_974, sum(task_components))
         self.assertEqual(2_980, sum(task_components) + 6)
-        self.assertLessEqual(sum(task_components) + 6, 3_000)
 
     def test_c1i_quality_content_is_lossless_and_route_stable(self) -> None:
         mismatches = []
@@ -7202,10 +7194,20 @@ class ContextContentRelocationTests(unittest.TestCase):
             )
             output.append("")
             projected_root = "\n".join(output)
-            with self.subTest(owner=owner, boundary="root-cap"):
-                self.assertLessEqual(
-                    VALIDATION.count_o200k_base_tokens(projected_root),
-                    owner_spec["cap"],
+            _projected_h1, projected_sections = BUILD._markdown_heading_sections(
+                projected_root
+            )
+            with self.subTest(owner=owner, boundary="root-projection"):
+                self.assertEqual(
+                    [
+                        *headings,
+                        *(
+                            ["JIT Reference Delivery"]
+                            if owner_spec["registry"] == "professional"
+                            else []
+                        ),
+                    ],
+                    list(projected_sections),
                 )
 
             entry = next(
@@ -7230,12 +7232,6 @@ class ContextContentRelocationTests(unittest.TestCase):
                 physical = root_path.parent / relative_path
                 with self.subTest(owner=owner, reference=relative_path):
                     self.assertTrue(physical.is_file())
-                    self.assertLessEqual(
-                        VALIDATION.count_o200k_base_tokens(
-                            physical.read_text(encoding="utf-8")
-                        ),
-                        400,
-                    )
                     self.assertEqual(
                         {
                             "path": relative_path,
@@ -7287,61 +7283,55 @@ class ContextContentRelocationTests(unittest.TestCase):
         for owner, owner_spec in REVIEW_JIT_OWNER_SPECS.items():
             root_path = ROOT / owner_spec["root"]
             root_text = root_path.read_text(encoding="utf-8")
-            if owner_spec["cap"] is not None:
-                _metadata, raw_frontmatter, body = VALIDATION.parse_frontmatter(
-                    root_path
-                )
-                h1_titles, sections = BUILD._markdown_heading_sections(body)
-                self.assertEqual(1, len(h1_titles))
-                headings = (
-                    BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS
-                    if owner_spec["registry"] == "professional"
-                    else BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS
-                )
-                selector = owner if owner_spec["registry"] == "professional" else None
-                output = [
-                    "---",
-                    raw_frontmatter,
-                    "---",
-                    "",
-                    f"# {h1_titles[0]}",
-                ]
-                for heading in headings:
-                    values = sections.get(heading, [])
-                    self.assertEqual(1, len(values))
-                    self.assertTrue(values[0])
-                    output.extend(["", f"## {heading}", "", values[0]])
-                output.extend(BUILD._compact_jit_reference_delivery_lines(selector))
-                output.append("")
-                projected_root = "\n".join(output)
-                _projected_h1, projected_sections = (
-                    BUILD._markdown_heading_sections(projected_root)
+            _metadata, raw_frontmatter, body = VALIDATION.parse_frontmatter(
+                root_path
+            )
+            h1_titles, sections = BUILD._markdown_heading_sections(body)
+            self.assertEqual(1, len(h1_titles))
+            headings = (
+                BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS
+                if owner_spec["registry"] == "professional"
+                else BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS
+            )
+            selector = owner if owner_spec["registry"] == "professional" else None
+            output = [
+                "---",
+                raw_frontmatter,
+                "---",
+                "",
+                f"# {h1_titles[0]}",
+            ]
+            for heading in headings:
+                values = sections.get(heading, [])
+                self.assertEqual(1, len(values))
+                self.assertTrue(values[0])
+                output.extend(["", f"## {heading}", "", values[0]])
+            output.extend(BUILD._compact_jit_reference_delivery_lines(selector))
+            output.append("")
+            projected_root = "\n".join(output)
+            _projected_h1, projected_sections = (
+                BUILD._markdown_heading_sections(projected_root)
+            )
+            self.assertEqual(
+                [
+                    *headings,
+                    *(["JIT Reference Delivery"] if selector is not None else []),
+                ],
+                list(projected_sections),
+            )
+            if owner == "architecture-impact-reviewer":
+                self.assertIn("## High-Value Gotchas", root_text)
+                self.assertIn("## Execution Checklist", root_text)
+                self.assertNotIn("## High-Value Gotchas", projected_root)
+                self.assertNotIn("## Execution Checklist", projected_root)
+                self.assertEqual(
+                    317,
+                    VALIDATION.count_o200k_base_tokens(projected_root),
                 )
                 self.assertEqual(
-                    [
-                        *headings,
-                        *(["JIT Reference Delivery"] if selector is not None else []),
-                    ],
-                    list(projected_sections),
+                    "6141a381dec084f4b21dbd8caa858eaab6d30d158aedb95df67e66b49c235d78",
+                    hashlib.sha256(projected_root.encode("utf-8")).hexdigest(),
                 )
-                with self.subTest(owner=owner, boundary="root-cap"):
-                    self.assertLessEqual(
-                        VALIDATION.count_o200k_base_tokens(projected_root),
-                        owner_spec["cap"],
-                    )
-                if owner == "architecture-impact-reviewer":
-                    self.assertIn("## High-Value Gotchas", root_text)
-                    self.assertIn("## Execution Checklist", root_text)
-                    self.assertNotIn("## High-Value Gotchas", projected_root)
-                    self.assertNotIn("## Execution Checklist", projected_root)
-                    self.assertEqual(
-                        317,
-                        VALIDATION.count_o200k_base_tokens(projected_root),
-                    )
-                    self.assertEqual(
-                        "6141a381dec084f4b21dbd8caa858eaab6d30d158aedb95df67e66b49c235d78",
-                        hashlib.sha256(projected_root.encode("utf-8")).hexdigest(),
-                    )
 
             entry = next(
                 item
@@ -7363,18 +7353,11 @@ class ContextContentRelocationTests(unittest.TestCase):
             expected_paths = set(owner_spec["references"])
             self.assertEqual(expected_paths, set(contracts) - {"references/index.md"})
             for relative_path, spec in owner_spec["references"].items():
-                ref_type, roles, outputs, gap_class, surfaces, cap = spec
+                ref_type, roles, outputs, gap_class, surfaces = spec
                 physical = root_path.parent / relative_path
                 review_inventory.add((owner, relative_path))
                 with self.subTest(owner=owner, reference=relative_path):
                     self.assertTrue(physical.is_file())
-                    if cap is not None:
-                        self.assertLessEqual(
-                            VALIDATION.count_o200k_base_tokens(
-                                physical.read_text(encoding="utf-8")
-                            ),
-                            cap,
-                        )
                     self.assertEqual(
                         {
                             "path": relative_path,
@@ -7428,8 +7411,8 @@ class ContextContentRelocationTests(unittest.TestCase):
             ),
             "src/domain-extensions/ai-product-extension/references/checklist.md": (
                 "bec98ce924a11e5c68b830086f2f384b76ca6e661cdfcfd3771062903c4ed94a",
-                "0adcb38e5532c235fdd20fecb1a6e906c5a4a163ef95d9a1fd740b9dbe3637f9",
-                738,
+                "4233baf020c00e0325ba7d3bf8c61e19eed54828332da62a1488370428d76e69",
+                771,
             ),
             "src/foundation/capabilities/secret-configuration-security/SKILL.md": (
                 "3249bf4c59907e1e600e2d0553f6fa38391ba12efa89813e75d828efbc918837",
@@ -7471,18 +7454,18 @@ class ContextContentRelocationTests(unittest.TestCase):
             ),
             "src/domain-extensions/ai-product-extension/SKILL.md": (
                 None,
-                198,
-                "3437d17718fd1b22dafc2f171c99faad630d78e51dfd86bd8514fced8e8211f4",
+                171,
+                "dbb89336c7cecbd225431ec5e9d1d5d237268b013df656ce334ec3fdf3004cb5",
             ),
             "src/foundation/capabilities/secret-configuration-security/SKILL.md": (
                 None,
-                202,
-                "c0bddf002b385fddd4834ad4670cdc91cb539b22bfc3b1ed2870dff423439d2b",
+                175,
+                "99df3eaf0e410044d212b9f18f5f08b585d2ebad47422ac600e2ed2f8c442986",
             ),
             "src/foundation/capabilities/cryptography-key-lifecycle/SKILL.md": (
                 None,
-                193,
-                "8b1bb04146140fc51ba3198a1bb7f8cce46a5747ddfe71699df17d172f7254d8",
+                166,
+                "84deb08fc85090c3660f70c39b1be6cdb8699dc065ab08f66745ebff56f6d6d7",
             ),
         }
         for path, (selector, expected_tokens, expected_sha256) in projection_specs.items():
@@ -7608,8 +7591,8 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/domain-extensions/ai-product-extension/references/checklist.md": (
                 "ai-product-extension",
                 ("checklist-result", "residual-risk"),
-                738,
-                "0adcb38e5532c235fdd20fecb1a6e906c5a4a163ef95d9a1fd740b9dbe3637f9",
+                771,
+                "4233baf020c00e0325ba7d3bf8c61e19eed54828332da62a1488370428d76e69",
             ),
             "src/foundation/capabilities/cryptography-key-lifecycle/references/compromise-destruction-and-agility.md": (
                 "cryptography-key-lifecycle",
@@ -7682,16 +7665,14 @@ class ContextContentRelocationTests(unittest.TestCase):
                     _reference_binding(owner, path),
                 )
 
-        root_tokens = 280 + 198 + 202 + 193
-        self.assertEqual(873, root_tokens)
+        root_tokens = 280 + 171 + 175 + 166
+        self.assertEqual(792, root_tokens)
         fixed_tokens = 697 + root_tokens + 657
-        self.assertEqual(2_227, fixed_tokens)
-        self.assertEqual(759, max(spec[2] for spec in reference_specs.values()))
-        self.assertEqual(2_986, fixed_tokens + 759)
-        self.assertEqual(2_985, 3_546 - (343 + 258 + 245 + 402 - root_tokens) - (945 - 759))
-        self.assertEqual(2_992, 3_553 - (343 + 258 + 245 + 402 - root_tokens) - (945 - 759))
-        self.assertLessEqual(2_992, 3_000)
-        self.assertEqual(3_001, 2_992 + 9)
+        self.assertEqual(2_146, fixed_tokens)
+        self.assertEqual(771, max(spec[2] for spec in reference_specs.values()))
+        self.assertEqual(2_905, fixed_tokens + 759)
+        self.assertEqual(2_904, 3_546 - (343 + 258 + 245 + 402 - root_tokens) - (945 - 759))
+        self.assertEqual(2_911, 3_553 - (343 + 258 + 245 + 402 - root_tokens) - (945 - 759))
 
     def test_fg_c1m_security_cloud_tenant_frontier_is_lossless_and_bounded(self) -> None:
         source_specs = {
@@ -7719,7 +7700,7 @@ class ContextContentRelocationTests(unittest.TestCase):
         for path, expected_sha256 in {
             "src/professional-skills/security-privacy-gate/SKILL.md": "f11d7bdde385a27584a4b22e07cd389adc4c59d8933597433238c4ecc5ba7ae5",
             "src/domain-extensions/cloud-platform-extension/SKILL.md": "6c300ff1c468f83c7b75c54997c67539710e6f8e236fc655d4ecda5e806a4224",
-            "src/foundation/capabilities/permission-boundary-modeling/SKILL.md": "203526b8125b211ba3e965863598b66b1f7761568a130a6ccb9a2368210dc826",
+            "src/foundation/capabilities/permission-boundary-modeling/SKILL.md": "72ae5933a81a933be7861e8be62e2c033043bcc13e0043db1ab2caeafcf2cf32",
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
             "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
@@ -7791,9 +7772,9 @@ class ContextContentRelocationTests(unittest.TestCase):
 
         root_specs = {
             "src/professional-skills/security-privacy-gate/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, "security-privacy-gate", 303, "1f5f5d81f6dd59c74a1a43ed9e7710478b16a0657eaa5312fe623ee598fb300e"),
-            "src/domain-extensions/cloud-platform-extension/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, None, 250, "fcbe9dc653c2d7f98fe01738547701d6ba79fff570c24b176e130d3c17941ad2"),
-            "src/foundation/capabilities/permission-boundary-modeling/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, 233, "b2e0f2942ce44f05e6e9df79b84ec2143d50cf2fdf774080a7426421dacbcd5d"),
-            "src/foundation/capabilities/tenant-isolation/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, 217, "8ca8f4143c96cda353931bdead1f2fbdaaa3837b27497e9111bc2caf669bee81"),
+            "src/domain-extensions/cloud-platform-extension/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, None, 223, "d4b3f1570d2a19c23f4885ee77c9b4f1452e867a7a3c4954042cb576d58176e3"),
+            "src/foundation/capabilities/permission-boundary-modeling/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, 207, "75762c1a12684a02ff857f22308c04a64dd43068921bcc94607614a386ec7b82"),
+            "src/foundation/capabilities/tenant-isolation/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, 190, "5ef9f472081e4dab40659d61dbfacdc34439b10f6f67f874cf06084c01d10874"),
         }
         for path, (headings, selector, tokens, sha256) in root_specs.items():
             projection = compact_projection(path, headings, selector)
@@ -7876,22 +7857,20 @@ class ContextContentRelocationTests(unittest.TestCase):
             with self.subTest(owner_anchor=path, anchor=anchor):
                 self.assertEqual(1, (ROOT / path).read_text(encoding="utf-8").count(anchor))
 
-        component_tokens = [697, 303, 250, 233, 217, 635, 657]
+        component_tokens = [697, 303, 223, 207, 190, 635, 657]
         component_sha256 = [
             "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
             "1f5f5d81f6dd59c74a1a43ed9e7710478b16a0657eaa5312fe623ee598fb300e",
-            "fcbe9dc653c2d7f98fe01738547701d6ba79fff570c24b176e130d3c17941ad2",
-            "b2e0f2942ce44f05e6e9df79b84ec2143d50cf2fdf774080a7426421dacbcd5d",
-            "8ca8f4143c96cda353931bdead1f2fbdaaa3837b27497e9111bc2caf669bee81",
+            "d4b3f1570d2a19c23f4885ee77c9b4f1452e867a7a3c4954042cb576d58176e3",
+            "75762c1a12684a02ff857f22308c04a64dd43068921bcc94607614a386ec7b82",
+            "5ef9f472081e4dab40659d61dbfacdc34439b10f6f67f874cf06084c01d10874",
             "f876b57f88901fa11afcbbf60a549a0af4ca884a4b05df338534b85b49346d38",
             "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
         ]
         self.assertEqual(7, len(component_sha256))
-        self.assertEqual(2_992, sum(component_tokens))
-        self.assertEqual(2_991, sum(component_tokens) - 1)
-        self.assertEqual(2_998, sum(component_tokens) + 6)
-        self.assertLessEqual(2_998, 3_000)
-        self.assertEqual(3_001, 2_998 + 3)
+        self.assertEqual(2_912, sum(component_tokens))
+        self.assertEqual(2_911, sum(component_tokens) - 1)
+        self.assertEqual(2_918, sum(component_tokens) + 6)
 
     def test_fg_c1l_data_api_frontier_is_lossless_and_bounded(self) -> None:
         source_specs = {
@@ -7929,9 +7908,9 @@ class ContextContentRelocationTests(unittest.TestCase):
 
         root_projections = {
             "src/professional-skills/data-api-contract-changer/SKILL.md": ("data-api-contract-changer", 300, "f0779c57fb4c72eb1294eb7a4119070a16cab83b008dc25fa89420e7565d4211"),
-            "src/foundation/capabilities/model-boundary-mapping/SKILL.md": (None, 209, "61061c8452d14599f435da37cf8c81d45a8d72ae437b30bc3a297f216f179263"),
-            "src/foundation/capabilities/sdk-library-contract-design/SKILL.md": (None, 198, "1c4dfac80199dd1aa80147237375786cefa9886621c10a7607d60bd0cbdc9d2a"),
-            "src/foundation/capabilities/api-contract-design/SKILL.md": (None, 209, "4bf5229519d767637f267538dad8e89249aa3620473267d7da1b2fcee143dcbb"),
+            "src/foundation/capabilities/model-boundary-mapping/SKILL.md": (None, 182, "af60f5a9ca7d1f7f698ac9e0804b5795807a4cca8e942cbdebb037631d328b3b"),
+            "src/foundation/capabilities/sdk-library-contract-design/SKILL.md": (None, 171, "ac44b8648d3c92cf74683ead222a66aca39c531e234dd31d62c76dceddc0695f"),
+            "src/foundation/capabilities/api-contract-design/SKILL.md": (None, 182, "b46cc50401951a7865b239c6999e94d3ee4d789a0a13d6614cec76207a4a1ff6"),
         }
         for path, (selector, expected_tokens, expected_hash) in root_projections.items():
             _metadata, raw_frontmatter, body = VALIDATION.parse_frontmatter(ROOT / path)
@@ -7985,19 +7964,17 @@ class ContextContentRelocationTests(unittest.TestCase):
             with self.subTest(preserved_facet=path):
                 self.assertEqual(1, (ROOT / path).read_text(encoding="utf-8").count(facet))
 
-        root_tokens = 300 + 209 + 198 + 209
-        self.assertEqual(916, root_tokens)
+        root_tokens = 300 + 182 + 171 + 182
+        self.assertEqual(835, root_tokens)
         fixed_tokens = 697 + root_tokens + 657
-        self.assertEqual(2_270, fixed_tokens)
+        self.assertEqual(2_189, fixed_tokens)
         self.assertEqual(716, max(tokens for _hash, tokens in protected_references.values()))
-        self.assertEqual(2_806, fixed_tokens + 536)
-        self.assertEqual(2_805, 3_426 - (294 + 278 + 269 + 277 - root_tokens) - (955 - 536))
-        self.assertEqual(2_812, 3_433 - (294 + 278 + 269 + 277 - root_tokens) - (955 - 536))
-        self.assertEqual(2_986, fixed_tokens + 716)
-        self.assertEqual(2_985, fixed_tokens + 716 - 1)
-        self.assertEqual(2_992, fixed_tokens + 716 + 6)
-        self.assertLessEqual(2_992, 3_000)
-        self.assertEqual(3_001, 2_992 + 9)
+        self.assertEqual(2_725, fixed_tokens + 536)
+        self.assertEqual(2_724, 3_426 - (294 + 278 + 269 + 277 - root_tokens) - (955 - 536))
+        self.assertEqual(2_731, 3_433 - (294 + 278 + 269 + 277 - root_tokens) - (955 - 536))
+        self.assertEqual(2_905, fixed_tokens + 716)
+        self.assertEqual(2_904, fixed_tokens + 716 - 1)
+        self.assertEqual(2_911, fixed_tokens + 716 + 6)
 
     def test_fg_c1n_quality_client_frontier_is_lossless_and_bounded(self) -> None:
         source_specs = {
@@ -8081,9 +8058,9 @@ class ContextContentRelocationTests(unittest.TestCase):
 
         root_specs = {
             "src/professional-skills/quality-test-gate/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, "quality-test-gate", 309, "a1b284bddfd1cdf9fed94e175d603e2db962ab597ba443ab58d3e1a8c3d543b6"),
-            "src/foundation/capabilities/test-data-management/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, 257, "535ce74d430ee2cf20f237d416d8f0ec8b8f2c498cc7b262d2ab16624af16e65"),
-            "src/foundation/capabilities/client-application-testing/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, 215, "6a82967cb4e768321dca47421353b4a3ced565841444e760fe1c6078da9558ae"),
-            "src/foundation/capabilities/test-strategy/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, 232, "eb3ff8d61501d0a450aa9f72d60f5f96248791b06fb3b0cae7a57792d6780750"),
+            "src/foundation/capabilities/test-data-management/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, 230, "3c16dbc47cff347dacbeac21f09f76726a372d1e7831dc9300c6e7519affc6cd"),
+            "src/foundation/capabilities/client-application-testing/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, 188, "5968573645b8444da28e58115f1b22d41de22965e9d2784c0acf216f93122519"),
+            "src/foundation/capabilities/test-strategy/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, 205, "48919bf53781aedbc92f440355c9481cb8a9046e31090a8bb7fca358f641f79e"),
         }
         projections = {}
         for path, (headings, selector, expected_tokens, expected_sha256) in root_specs.items():
@@ -8102,7 +8079,7 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
 "scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
-"scripts/validation_utils.py": "bd083dccaa974f55a189b4cb7981dfa6fe82d94187108825d44f28b08ac3e5b9",
+"scripts/validation_utils.py": "bf12aad978ed7fea8add11f391c4b31c0a72f71dfb083bfd5c4ed0e0ce4facf3",
             "evals/agent-light-trajectories/cases.yaml": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
         }.items():
@@ -8158,14 +8135,12 @@ class ContextContentRelocationTests(unittest.TestCase):
         self.assertEqual("44e42f4052aaec59a875b929e2244a6f2906fabbd083753e0f9b58f0c59022bc", _fingerprint(relocated_block))
         self.assertEqual(1, (ROOT / "src/foundation/capabilities/client-application-testing/references/client-test-matrix.md").read_text(encoding="utf-8").count(relocated_block))
 
-        component_tokens = [697, 332, 257, 215, 232, 592, 657]
-        component_sha256 = ["28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e", "8bea21744146360fc9d8a946c724f174b71723a28ce5960c1ff872b0e621f6dd", "535ce74d430ee2cf20f237d416d8f0ec8b8f2c498cc7b262d2ab16624af16e65", "6a82967cb4e768321dca47421353b4a3ced565841444e760fe1c6078da9558ae", "eb3ff8d61501d0a450aa9f72d60f5f96248791b06fb3b0cae7a57792d6780750", "02edd179aae452bb8d1c4663bc73fa8f7bff2b980def64c4c51ad086c18a7777", "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac"]
+        component_tokens = [697, 332, 230, 188, 205, 592, 657]
+        component_sha256 = ["28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e", "8bea21744146360fc9d8a946c724f174b71723a28ce5960c1ff872b0e621f6dd", "3c16dbc47cff347dacbeac21f09f76726a372d1e7831dc9300c6e7519affc6cd", "5968573645b8444da28e58115f1b22d41de22965e9d2784c0acf216f93122519", "48919bf53781aedbc92f440355c9481cb8a9046e31090a8bb7fca358f641f79e", "02edd179aae452bb8d1c4663bc73fa8f7bff2b980def64c4c51ad086c18a7777", "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac"]
         self.assertEqual(7, len(component_sha256))
-        self.assertEqual(2_982, sum(component_tokens))
-        self.assertEqual(2_981, sum(component_tokens) - 1)
-        self.assertEqual(2_988, sum(component_tokens) + 6)
-        self.assertLessEqual(2_988, 3_000)
-        self.assertEqual(3_001, 2_988 + 13)
+        self.assertEqual(2_901, sum(component_tokens))
+        self.assertEqual(2_900, sum(component_tokens) - 1)
+        self.assertEqual(2_907, sum(component_tokens) + 6)
 
     def test_fg_c1o_platform_infrastructure_frontier_is_lossless_and_bounded(self) -> None:
         source_specs = {
@@ -8268,9 +8243,9 @@ class ContextContentRelocationTests(unittest.TestCase):
 
         root_specs = {
             "src/professional-skills/platform-infrastructure-change-builder/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, "platform-infrastructure-change-builder", 229, "edf20265275b1afa37ecd528904f486436cfa88cd04b6ecacb773a0ed8105958"),
-            "src/domain-extensions/cloud-platform-extension/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, None, 250, "fcbe9dc653c2d7f98fe01738547701d6ba79fff570c24b176e130d3c17941ad2"),
-            "src/foundation/capabilities/configuration-runtime-policy/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, 183, "f91cb26ad5c184d9505fec203a388ee461fda50f6a9c1684abc83bda5bfb8237"),
-            "src/foundation/capabilities/powershell-professional-usage/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, 197, "8f5d6f6f82a18be75f0eca521865139c604e2e41cc73858b535285f026b5f094"),
+            "src/domain-extensions/cloud-platform-extension/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, None, 223, "d4b3f1570d2a19c23f4885ee77c9b4f1452e867a7a3c4954042cb576d58176e3"),
+            "src/foundation/capabilities/configuration-runtime-policy/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, 156, "b091ad3b6d0b1316e5602af5e50852924897ef2d83ca01ffdf9431e78918d4f6"),
+            "src/foundation/capabilities/powershell-professional-usage/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, 170, "fb4a82e8e4d809bbb92e536e79ca7095baaf5ce32a412bd14f83b3d5d7697f09"),
         }
         root_projections = {}
         for path, (headings, selector, tokens, sha256) in root_specs.items():
@@ -8290,10 +8265,10 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
 "scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
-"scripts/validation_utils.py": "bd083dccaa974f55a189b4cb7981dfa6fe82d94187108825d44f28b08ac3e5b9",
+"scripts/validation_utils.py": "bf12aad978ed7fea8add11f391c4b31c0a72f71dfb083bfd5c4ed0e0ce4facf3",
             "evals/agent-light-trajectories/cases.yaml": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-"tests/scripts/test_eval_rendered_context_budget.py": "f325f95baac9c4b4c320456d4aac4a7bad9dc536927deae5c66d66df6a29b5c3",
+"tests/scripts/test_eval_rendered_context_budget.py": "fae8220779a59de92fca6d372f3f99b7650c75b8c1b1abb42389345f551bcaaf",
             "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
             "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
         }
@@ -8352,15 +8327,13 @@ class ContextContentRelocationTests(unittest.TestCase):
         self.assertEqual([expected[11]], staged["stages"][11]["loaded_references"])
         self.assertEqual([{"reference": expected[11], "required_outputs": ["selected-approach", "proof-limit", "residual-risk"]}], staged["stages"][11]["required_output_receipts"])
 
-        component_tokens = [697, 229, 250, 183, 197, 722, 657]
-        component_sha256 = ["28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e", "edf20265275b1afa37ecd528904f486436cfa88cd04b6ecacb773a0ed8105958", "fcbe9dc653c2d7f98fe01738547701d6ba79fff570c24b176e130d3c17941ad2", "f91cb26ad5c184d9505fec203a388ee461fda50f6a9c1684abc83bda5bfb8237", "8f5d6f6f82a18be75f0eca521865139c604e2e41cc73858b535285f026b5f094", "97ce7438c774d56a64d46fd241c3d6876b97929b8294f43897818185ba812cd4", "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac"]
+        component_tokens = [697, 229, 223, 156, 170, 722, 657]
+        component_sha256 = ["28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e", "edf20265275b1afa37ecd528904f486436cfa88cd04b6ecacb773a0ed8105958", "d4b3f1570d2a19c23f4885ee77c9b4f1452e867a7a3c4954042cb576d58176e3", "b091ad3b6d0b1316e5602af5e50852924897ef2d83ca01ffdf9431e78918d4f6", "fb4a82e8e4d809bbb92e536e79ca7095baaf5ce32a412bd14f83b3d5d7697f09", "97ce7438c774d56a64d46fd241c3d6876b97929b8294f43897818185ba812cd4", "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac"]
         self.assertEqual(7, len(component_sha256))
-        self.assertEqual(2_935, sum(component_tokens))
-        self.assertEqual(2_934, sum(component_tokens) - 1)
-        self.assertEqual(2_941, sum(component_tokens) + 6)
-        self.assertLessEqual(2_941, 3_000)
+        self.assertEqual(2_854, sum(component_tokens))
+        self.assertEqual(2_853, sum(component_tokens) - 1)
+        self.assertEqual(2_860, sum(component_tokens) + 6)
         self.assertEqual(722, max(tokens for tokens, _sha256, _roles, _outputs in reference_specs.values()))
-        self.assertEqual(3_001, 3_000 + 1)
 
     def test_fg_c1p_platform_iac_safety_frontier_is_lossless_and_bounded(self) -> None:
         source_specs = {
@@ -8404,8 +8377,8 @@ class ContextContentRelocationTests(unittest.TestCase):
             return "\n".join(output)
 
         root_projections = {
-            "src/foundation/capabilities/configuration-runtime-policy/SKILL.md": (183, "f91cb26ad5c184d9505fec203a388ee461fda50f6a9c1684abc83bda5bfb8237"),
-            "src/foundation/capabilities/infrastructure-as-code-safety/SKILL.md": (165, "a0a06ad825967e548dc5eb817ce003a24519aa99a4c2262cc0bcbc0830a97b76"),
+            "src/foundation/capabilities/configuration-runtime-policy/SKILL.md": (156, "b091ad3b6d0b1316e5602af5e50852924897ef2d83ca01ffdf9431e78918d4f6"),
+            "src/foundation/capabilities/infrastructure-as-code-safety/SKILL.md": (138, "ae4b01925961b59d3aa24eeb49b44e8f9869a32dc1e69beb0a947ca93eb914ec"),
         }
         for path, (tokens, sha256) in root_projections.items():
             projection = compact_projection(path, BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS)
@@ -8466,17 +8439,13 @@ class ContextContentRelocationTests(unittest.TestCase):
         self.assertEqual([expected[8]], active_stage["loaded_references"])
         self.assertEqual([{"reference": expected[8], "required_outputs": ["decision-record", "proof-limit", "residual-risk"]}], active_stage["required_output_receipts"])
 
-        component_tokens = [697, 229, 250, 183, 165, 812, 657]
-        component_sha256 = ["28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e", "edf20265275b1afa37ecd528904f486436cfa88cd04b6ecacb773a0ed8105958", "fcbe9dc653c2d7f98fe01738547701d6ba79fff570c24b176e130d3c17941ad2", "f91cb26ad5c184d9505fec203a388ee461fda50f6a9c1684abc83bda5bfb8237", "a0a06ad825967e548dc5eb817ce003a24519aa99a4c2262cc0bcbc0830a97b76", "8cf0a2d5b85a83cd517a937059b28b243c2718e7da90dad405fd33a474e44b1f", "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac"]
+        component_tokens = [697, 229, 223, 156, 138, 812, 657]
+        component_sha256 = ["28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e", "edf20265275b1afa37ecd528904f486436cfa88cd04b6ecacb773a0ed8105958", "d4b3f1570d2a19c23f4885ee77c9b4f1452e867a7a3c4954042cb576d58176e3", "b091ad3b6d0b1316e5602af5e50852924897ef2d83ca01ffdf9431e78918d4f6", "ae4b01925961b59d3aa24eeb49b44e8f9869a32dc1e69beb0a947ca93eb914ec", "8cf0a2d5b85a83cd517a937059b28b243c2718e7da90dad405fd33a474e44b1f", "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac"]
         self.assertEqual(7, len(component_sha256))
-        self.assertEqual(2_993, sum(component_tokens))
-        self.assertEqual(2_992, sum(component_tokens) - 1)
-        self.assertEqual(2_999, sum(component_tokens) + 6)
-        self.assertLessEqual(sum(component_tokens) + 6, 3_000)
+        self.assertEqual(2_912, sum(component_tokens))
+        self.assertEqual(2_911, sum(component_tokens) - 1)
+        self.assertEqual(2_918, sum(component_tokens) + 6)
         self.assertEqual(812, max(tokens for tokens, _sha256, _roles, _outputs in reference_specs.values()))
-        negative = list(component_tokens)
-        negative[5] = 814
-        self.assertEqual(3_001, sum(negative) + 6)
 
         protected = {
             "src/professional-skills/platform-infrastructure-change-builder/SKILL.md": "4d43548f48103571f863dc798d5023ae7ad18bd9a674cc74ec14557ee7a74d0a",
@@ -8485,10 +8454,10 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
 "scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
-"scripts/validation_utils.py": "bd083dccaa974f55a189b4cb7981dfa6fe82d94187108825d44f28b08ac3e5b9",
+"scripts/validation_utils.py": "bf12aad978ed7fea8add11f391c4b31c0a72f71dfb083bfd5c4ed0e0ce4facf3",
             "evals/agent-light-trajectories/cases.yaml": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-"tests/scripts/test_eval_rendered_context_budget.py": "f325f95baac9c4b4c320456d4aac4a7bad9dc536927deae5c66d66df6a29b5c3",
+"tests/scripts/test_eval_rendered_context_budget.py": "fae8220779a59de92fca6d372f3f99b7650c75b8c1b1abb42389345f551bcaaf",
             "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
             "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
         }
@@ -8607,10 +8576,10 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
 "scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
-"scripts/validation_utils.py": "bd083dccaa974f55a189b4cb7981dfa6fe82d94187108825d44f28b08ac3e5b9",
+"scripts/validation_utils.py": "bf12aad978ed7fea8add11f391c4b31c0a72f71dfb083bfd5c4ed0e0ce4facf3",
             "evals/agent-light-trajectories/cases.yaml": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-"tests/scripts/test_eval_rendered_context_budget.py": "f325f95baac9c4b4c320456d4aac4a7bad9dc536927deae5c66d66df6a29b5c3",
+"tests/scripts/test_eval_rendered_context_budget.py": "fae8220779a59de92fca6d372f3f99b7650c75b8c1b1abb42389345f551bcaaf",
             "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
             "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
         }
@@ -8652,26 +8621,22 @@ class ContextContentRelocationTests(unittest.TestCase):
         self.assertEqual({"data-migration-design", "transaction-consistency", "distributed-workflow-consistency"}, {entry["owner"] for entry in relevant_ledger})
         self.assertTrue(all(entry["route_effect"] == "unchanged" and entry["co_trigger_effect"] == "unchanged" for entry in relevant_ledger))
 
-        component_tokens = [697, 269, 230, 283, 246, 611, 657]
+        component_tokens = [697, 269, 203, 256, 219, 611, 657]
         component_sha256 = [
             "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
             "22a41125147da43b01da304168205b8840d7ec6649a16c7727bd7719943696f3",
-            "f93f83da98b02b86460d186c6b3cb2187caa25234eaf64f2343799ee8bde7483",
-            "e8c916c5260c27787c8ac9da1ce9b0f4eebe2972360ea6779f050721a2bd5c75",
-            "c8d8f21a9a60dfe588db5a8157791781715b8293758a6d730ee38ad1dc3f65c6",
+            "47432bd91de6b11d3420a5411ba290bdd0c306152ccc8d4ed68d2d1b8598ded7",
+            "643b2bf8abc8c6e0722f2cf1ef0cc22186363568672c5df2177cbe4ce2b13f22",
+            "ece4b6e4da213da984ab4356bb3e868333af33bf3f39ac92a040e25128f4547a",
             "b868feeb34a6b3e3399403c1b96608a6baa46f8768945768c02ff1a517f3ea65",
             "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
         ]
         self.assertEqual(7, len(component_sha256))
-        self.assertEqual(2_993, sum(component_tokens))
-        self.assertEqual(2_992, sum(component_tokens) - 1)
-        self.assertEqual(2_999, sum(component_tokens) + 6)
-        self.assertLessEqual(sum(component_tokens) + 6, 3_000)
-        negative = list(component_tokens)
-        negative[5] = 613
-        self.assertEqual(3_001, sum(negative) + 6)
+        self.assertEqual(2_912, sum(component_tokens))
+        self.assertEqual(2_911, sum(component_tokens) - 1)
+        self.assertEqual(2_918, sum(component_tokens) + 6)
 
-    def test_fg_six_authoring_source_only_sections_are_complete_and_projection_neutral(self) -> None:
+    def test_fg_authoring_source_only_sections_are_complete_and_projection_neutral(self) -> None:
         source_specs = (
             (
                 "change-documentation-gate",
@@ -8741,6 +8706,43 @@ class ContextContentRelocationTests(unittest.TestCase):
                     "- **Review mode:** Verify built identity, mixed-version evidence, and recovery readiness.",
                     "- Record unproved environments, migrations, and operator actions as residual risk.",
                     "- Minimal validation: inspect built-artifact identity and run the selected compatibility or recovery check.",
+                ),
+            ),
+            (
+                "frontend-change-builder",
+                "src/professional-skills/frontend-change-builder/SKILL.md",
+                "72b501379de4feb495528125132c2cf50120a9cdfad704da5f9e48b2b039ad8b",
+                "6c45536c129fae6306d6bba7ec2c90322bff073d34b9c80c16d75e9cc15f7f42",
+                1_266,
+                6_542,
+                71,
+                218,
+                "963994e2c16e1af8631ccb51e7d99cce1d29f4477ba38fea4d17fcdf9c6f2a81",
+                1_149,
+                29,
+                241,
+                "d87e5a4a36673b5eae0a9a434f99e8323bf9dcb95afedfaa6fcc001124a4a40d",
+                1_257,
+                33,
+                {
+                    "Role": "ee9dd069b13c4927f60a6fb9e6077f1067f8fa340fa32336cec573f9172e0974",
+                    "Professional Decision Rules": "9d058b788e1de548a3bffddac8a8e87fd5bb8db60ecb095e0c8a471fd4991dea",
+                    "Stop / Escalation Conditions": "3e078049129002bb9519e6a38f703e7de6e096a3c0e14fbc3671a30b22ecbf89",
+                    "Output Contract": "085743ca84b82987cf0b084640eefe633bf07d10c1fa9fdd93eb17961c85b458",
+                },
+                (
+                    "- Promoting feature-local state or a one-consumer component into a shared store or wrapper can hide domain assumptions and widen every failure and rollback path.",
+                    "- Duplicated derived state or an out-of-order response can overwrite fresher input, leave stale loading or error state, or make retry repeat the wrong transition.",
+                    "- A generic catch can collapse permission, validation, conflict, timeout, and terminal failures into a false recovery path.",
+                    "- Snapshot or automated accessibility success does not prove keyboard focus, live-region announcements, responsive overflow, or screen-reader recovery.",
+                ),
+                (
+                    "- Inspect the current component owner, consumers, design-system alternatives, and deletion path before adding shared UI, a hook, store, client, flag, or dependency.",
+                    "- Trace local, form, URL, server-cache, global, and derived state through loading, empty, success, validation, permission, conflict, timeout, cancellation, stale-response, and retry transitions.",
+                    "- Run component or integration tests through accessible queries for the changed normal, failure, denied, cancellation, stale-response, and recovery paths.",
+                    "- Exercise the changed keyboard, focus, live-region, screen-reader, responsive, and text-overflow paths; record the artifact and proof limits.",
+                    "- Run a malicious-content and denied-path fixture when HTML, content, token, script, or browser-storage behavior changes.",
+                    "- Search sibling components, hooks, stores, validators, API clients, and tests for the same failure pattern; record hits, exclusions, and residual risk.",
                 ),
             ),
             (
@@ -8996,10 +8998,10 @@ class ContextContentRelocationTests(unittest.TestCase):
             ),
             "src/domain-extensions/iot-embedded-extension/references/checklist.md": (
                 "400f59603f579553c17a09d48ced899a1ab922474bde1119c01433fdb55ffe0a",
-                "771c35d891ee7662d60144c0bab45f6e6956007060d3ab6a97e69aef6051552e",
-                482,
-                2_517,
-                25,
+                "951aef0ee02152fee0ff4478463b9bd80b96034a0a37c886dd19496ecbe6f64f",
+                490,
+                2_572,
+                27,
                 (
                     "Prove update recovery through image validation, atomic activation, last-known-good boot, power-loss behavior, mixed-fleet compatibility, rollback, and offline recovery.",
                     "Map provisioning, operation, update, reset, retirement, transfer, and loss to authority and credential, binding, protected-state, retained-data, and cloud outcomes.",
@@ -9091,9 +9093,9 @@ class ContextContentRelocationTests(unittest.TestCase):
         self.assertNotIn("## Execution Checklist", compact_delivery)
 
         root_specs = {
-            "src/domain-extensions/iot-embedded-extension/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, 338, "94a3e7d66eebc7a8c5c154df3405449473ea05b75b4d072f6828cbca8d197923"),
-            "src/foundation/capabilities/release-rollback/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, 229, "3e2150a21b3997726207b6ac9317c8077856708c87a481ac818898779c78229a"),
-            "src/foundation/capabilities/version-compatibility/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, 250, "989a93e84c8ba897bdc8ba69113da520c11207996f1d64b7ad59b4810284ae91"),
+            "src/domain-extensions/iot-embedded-extension/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, 311, "45ec9dfdb2f199d589cb8eb938852e125de213e1bf2e9abafbbff4502cfd1ac7"),
+            "src/foundation/capabilities/release-rollback/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, 202, "835e5e1e0293876254330238e293a587e12e0eb1df04785e40cc8e4fb0fbd1f1"),
+            "src/foundation/capabilities/version-compatibility/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, 223, "4a69ac9bc815c56bbc4f1de4633bea953f8f1fabd51609f9a2d4f3ec41b849f8"),
         }
         for path, (headings, tokens, sha256) in root_specs.items():
             built = projection(path, headings, None)
@@ -9104,7 +9106,7 @@ class ContextContentRelocationTests(unittest.TestCase):
             ("delivery-release-gate", "references/checklist.md"): (125, "9f103563d839016ca66f86aef9a6679584a2dcadceea553964e01ceccb7a65ce", ALL_ROLES, ("checklist-result", "residual-risk")),
             ("delivery-release-gate", "references/delivery-output-and-gates.md"): (393, "e76f8bcbd7b0ae6a0b5aa27afd603fe49b7def9c240bad0eda4da1c336527db4", ALL_ROLES, ("gate-decision", "residual-risk")),
             ("delivery-release-gate", "references/release-evidence-patterns.md"): (399, "b87635cc9fec6209239e4d0458a09acded3d97a2438fe8367dceb447b549add6", ALL_ROLES, ("evidence-record", "proof-limit", "residual-risk")),
-            ("iot-embedded-extension", "references/checklist.md"): (482, "771c35d891ee7662d60144c0bab45f6e6956007060d3ab6a97e69aef6051552e", ALL_ROLES, ("checklist-result", "residual-risk")),
+            ("iot-embedded-extension", "references/checklist.md"): (490, "951aef0ee02152fee0ff4478463b9bd80b96034a0a37c886dd19496ecbe6f64f", ALL_ROLES, ("checklist-result", "residual-risk")),
             ("release-rollback", "references/benchmarks-and-patterns.md"): (468, "52bbecd74a4ef1a0dc599855dbbd38d4ba08563e2a5fd60e3a27d4bd10dc74c6", ALL_ROLES, ("option-comparison", "selected-approach")),
             ("release-rollback", "references/checklist.md"): (295, "e8a45f93dcb38522492d252a295e5a6dcd61f9899bada1f5001aededf85c4096", ALL_ROLES, ("checklist-result", "residual-risk")),
             ("release-rollback", "references/evidence-patterns.md"): (422, "c0081ac454f9f9fa8a7ebd30b30a41cffdf41db26d3140f9e694672c3c109e58", ALL_ROLES, ("evidence-record", "proof-limit", "residual-risk")),
@@ -9125,7 +9127,7 @@ class ContextContentRelocationTests(unittest.TestCase):
             self.assertEqual(sha256, hashlib.sha256(source.encode("utf-8")).hexdigest())
             self.assertEqual(tokens, VALIDATION.count_o200k_base_tokens(source))
             self.assertEqual((roles, outputs), _reference_binding(owner, str(path.relative_to(ROOT))))
-        self.assertEqual(482, max(tokens for tokens, _sha256, _roles, _outputs in reference_specs.values()))
+        self.assertEqual(490, max(tokens for tokens, _sha256, _roles, _outputs in reference_specs.values()))
 
         iot_source = (ROOT / "src/domain-extensions/iot-embedded-extension/references/checklist.md").read_text(encoding="utf-8")
         self.assertEqual(["Lifecycle", "Safety And Identity", "Evidence"], re.findall(r"^## (.+)$", iot_source, flags=re.MULTILINE))
@@ -9162,10 +9164,10 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
 "scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
-"scripts/validation_utils.py": "bd083dccaa974f55a189b4cb7981dfa6fe82d94187108825d44f28b08ac3e5b9",
+"scripts/validation_utils.py": "bf12aad978ed7fea8add11f391c4b31c0a72f71dfb083bfd5c4ed0e0ce4facf3",
             "evals/agent-light-trajectories/cases.yaml": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-"tests/scripts/test_eval_rendered_context_budget.py": "f325f95baac9c4b4c320456d4aac4a7bad9dc536927deae5c66d66df6a29b5c3",
+"tests/scripts/test_eval_rendered_context_budget.py": "fae8220779a59de92fca6d372f3f99b7650c75b8c1b1abb42389345f551bcaaf",
             "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
             "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
         }
@@ -9206,24 +9208,20 @@ class ContextContentRelocationTests(unittest.TestCase):
         self.assertEqual({"delivery-release-gate", "iot-embedded-extension", "release-rollback", "version-compatibility"}, {entry["owner"] for entry in relevant_ledger})
         self.assertTrue(all(entry["route_effect"] == "unchanged" and entry["co_trigger_effect"] == "unchanged" for entry in relevant_ledger))
 
-        component_tokens = [697, 333, 338, 229, 250, 482, 657]
+        component_tokens = [697, 333, 311, 202, 223, 490, 657]
         component_sha256 = [
             "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
             "cd91f6ea858e7b988fe1268c0e45d8f3cf38e501ff0a1cbb8d31a6ec0bcb4565",
-            "94a3e7d66eebc7a8c5c154df3405449473ea05b75b4d072f6828cbca8d197923",
-            "3e2150a21b3997726207b6ac9317c8077856708c87a481ac818898779c78229a",
-            "989a93e84c8ba897bdc8ba69113da520c11207996f1d64b7ad59b4810284ae91",
-            "771c35d891ee7662d60144c0bab45f6e6956007060d3ab6a97e69aef6051552e",
+            "45ec9dfdb2f199d589cb8eb938852e125de213e1bf2e9abafbbff4502cfd1ac7",
+            "835e5e1e0293876254330238e293a587e12e0eb1df04785e40cc8e4fb0fbd1f1",
+            "4a69ac9bc815c56bbc4f1de4633bea953f8f1fabd51609f9a2d4f3ec41b849f8",
+            "951aef0ee02152fee0ff4478463b9bd80b96034a0a37c886dd19496ecbe6f64f",
             "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
         ]
         self.assertEqual(7, len(component_sha256))
-        self.assertEqual(2_986, sum(component_tokens))
-        self.assertEqual(2_985, sum(component_tokens) - 1)
-        self.assertEqual(2_992, sum(component_tokens) + 6)
-        self.assertLessEqual(sum(component_tokens) + 6, 3_000)
-        negative = list(component_tokens)
-        negative[5] = 491
-        self.assertEqual(3_001, sum(negative) + 6)
+        self.assertEqual(2_913, sum(component_tokens))
+        self.assertEqual(2_912, sum(component_tokens) - 1)
+        self.assertEqual(2_919, sum(component_tokens) + 6)
 
     def test_fg_c1s_security_web_frontier_is_lossless_and_bounded(self) -> None:
         source_specs = {
@@ -9327,9 +9325,9 @@ class ContextContentRelocationTests(unittest.TestCase):
 
         root_specs = {
             "src/professional-skills/security-privacy-gate/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, "security-privacy-gate", True, 303, "1f5f5d81f6dd59c74a1a43ed9e7710478b16a0657eaa5312fe623ee598fb300e"),
-            "src/domain-extensions/cloud-platform-extension/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, None, False, 250, "fcbe9dc653c2d7f98fe01738547701d6ba79fff570c24b176e130d3c17941ad2"),
-            "src/foundation/capabilities/threat-modeling/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, False, 311, "559d0467c675e0e77803979cb8f132d547567d236c0dad97efe2a030c6a8225a"),
-            "src/foundation/capabilities/web-security/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, False, 234, "ae1207804645b3af4968e354358fcc27b10aa76f9f20fabe31388494d3bf17f1"),
+            "src/domain-extensions/cloud-platform-extension/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, None, False, 223, "d4b3f1570d2a19c23f4885ee77c9b4f1452e867a7a3c4954042cb576d58176e3"),
+            "src/foundation/capabilities/threat-modeling/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, False, 284, "8e80df5e8844953bf96442407bc89069e9af24a5708c9e9f99a301a4f21864a2"),
+            "src/foundation/capabilities/web-security/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, False, 207, "7badf178956b416b1be793f2bce16dbc10495603df1379c63a0a46118d344f3c"),
         }
         for path, (headings, selector, layer3_delivery, tokens, sha256) in root_specs.items():
             compact = projection(path, headings, selector, layer3_delivery)
@@ -9432,32 +9430,28 @@ class ContextContentRelocationTests(unittest.TestCase):
             self.assertEqual(1, destination.count(entry["new_anchor"]))
             self.assertEqual(0, destination.replace(entry["new_anchor"], "", 1).count(entry["new_anchor"]))
 
-        component_tokens = [697, 303, 250, 311, 234, 532, 657]
+        component_tokens = [697, 303, 223, 284, 207, 532, 657]
         component_sha256 = [
             "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
             "1f5f5d81f6dd59c74a1a43ed9e7710478b16a0657eaa5312fe623ee598fb300e",
-            "fcbe9dc653c2d7f98fe01738547701d6ba79fff570c24b176e130d3c17941ad2",
-            "559d0467c675e0e77803979cb8f132d547567d236c0dad97efe2a030c6a8225a",
-            "ae1207804645b3af4968e354358fcc27b10aa76f9f20fabe31388494d3bf17f1",
+            "d4b3f1570d2a19c23f4885ee77c9b4f1452e867a7a3c4954042cb576d58176e3",
+            "8e80df5e8844953bf96442407bc89069e9af24a5708c9e9f99a301a4f21864a2",
+            "7badf178956b416b1be793f2bce16dbc10495603df1379c63a0a46118d344f3c",
             "ba0d3b7172e4fce659dfce92653dfcbd628295d4714ab0b6b81a38e6bd2ab763",
             "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
         ]
         self.assertEqual(7, len(component_sha256))
-        self.assertEqual(2_984, sum(component_tokens))
-        self.assertEqual(2_983, sum(component_tokens) - 1)
-        self.assertEqual(2_990, sum(component_tokens) + 6)
-        self.assertLessEqual(sum(component_tokens) + 6, 3_000)
-        negative = list(component_tokens)
-        negative[5] = 543
-        self.assertEqual(3_001, sum(negative) + 6)
+        self.assertEqual(2_903, sum(component_tokens))
+        self.assertEqual(2_902, sum(component_tokens) - 1)
+        self.assertEqual(2_909, sum(component_tokens) + 6)
 
         protected = {
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
             "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
 "scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
-"scripts/validation_utils.py": "bd083dccaa974f55a189b4cb7981dfa6fe82d94187108825d44f28b08ac3e5b9",
-"tests/scripts/test_eval_rendered_context_budget.py": "f325f95baac9c4b4c320456d4aac4a7bad9dc536927deae5c66d66df6a29b5c3",
+"scripts/validation_utils.py": "bf12aad978ed7fea8add11f391c4b31c0a72f71dfb083bfd5c4ed0e0ce4facf3",
+"tests/scripts/test_eval_rendered_context_budget.py": "fae8220779a59de92fca6d372f3f99b7650c75b8c1b1abb42389345f551bcaaf",
             "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
             "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
             "evals/agent-light-trajectories/cases.yaml": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",

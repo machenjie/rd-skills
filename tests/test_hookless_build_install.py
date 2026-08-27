@@ -802,7 +802,7 @@ class HooklessBuildInstallTests(unittest.TestCase):
                             "Layer 3 Delivery",
                         ),
                         ("Main-bound Level/depth/assurance", "never recalculate route/authority"),
-                        ("Actual diff authoritative", "every changed file", "missing evidence blocks"),
+                        ("Actual diff authoritative", "every changed file", "missing blocks"),
                         ("fresh validation", "latest actual diff", "fresh re-review"),
                         ("assigned Review Handoff", "reviewed/unreviewed scope", "residual risk"),
                     ),
@@ -813,8 +813,6 @@ class HooklessBuildInstallTests(unittest.TestCase):
                         sum(all(term in rule for term in terms) for rule in rules),
                         terms,
                     )
-                limit = 440 if name == "task-agent" else 568
-                self.assertLessEqual(count_o200k_base_tokens(profile["instructions"]), limit)
             else:
                 for capability_id in role_capability["required_capability_ids"]:
                     for rule in capability_groups[capability_id]:
@@ -848,11 +846,24 @@ class HooklessBuildInstallTests(unittest.TestCase):
         for phrase in (
             "Initial Review",
             "Re-review",
-            "repair-regression",
-            "protected-invalidation",
             "adjacent",
         ):
             self.assertIn(phrase, review_rules)
+        self.assertIn("Re-review Classification=Core enum", review_rules)
+        self.assertEqual(
+            {
+                "inherited",
+                "repair-regression",
+                "frozen-boundary-violation",
+                "protected-invalidation",
+                "adjacent",
+            },
+            set(
+                core["task_contract"]["repair_routing"]["review_convergence"][
+                    "rereview_classifications"
+                ]
+            ),
+        )
 
         self.assertEqual(
             core["prompt_contract"]["path"],

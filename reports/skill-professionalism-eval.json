@@ -783,7 +783,7 @@
     "domain": 13
   },
   "error_count": 0,
-  "warning_count": 0,
+  "warning_count": 7,
   "professional_review_risk_matrix": {
     "selector": "professional-skills.yaml role_support contains review-agent",
     "covered_skill_count": 11,
@@ -802,7 +802,15 @@
     ]
   },
   "errors": [],
-  "warnings": [],
+  "warnings": [
+    "src/professional-skills/high-risk-design-review/SKILL.md: fewer than two explicit Professional Decision Rules",
+    "src/professional-skills/integration-change-builder/SKILL.md: fewer than two explicit Professional Decision Rules",
+    "src/professional-skills/logging-design-gate/SKILL.md: fewer than two explicit Professional Decision Rules",
+    "src/professional-skills/change-documentation-gate/SKILL.md: fewer than two explicit Professional Decision Rules",
+    "src/professional-skills/repository-tooling-change-builder/SKILL.md: fewer than two explicit Professional Decision Rules",
+    "src/domain-extensions/bigdata-product-extension/SKILL.md: fewer than two explicit Professional Decision Rules",
+    "src/domain-extensions/iot-embedded-extension/SKILL.md: fewer than two explicit Professional Decision Rules"
+  ],
   "results": [
     {
       "name": "engineering-control-plane",
@@ -1013,8 +1021,8 @@
         "configuration-runtime-policy",
         "dependency-vulnerability-scanning"
       ],
-      "line_count": 66,
-      "decision_rule_count": 3,
+      "line_count": 70,
+      "decision_rule_count": 6,
       "gotcha_count": 1,
       "reference_count": 7,
       "routing_coverage_count": 103,
@@ -1118,7 +1126,7 @@
       "name": "high-risk-design-review",
       "kind": "professional",
       "path": "src/professional-skills/high-risk-design-review/SKILL.md",
-      "status": "pass",
+      "status": "needs-review",
       "authoring_score": 100,
       "required_sections": [
         "Role",
@@ -1137,7 +1145,9 @@
       "broken_references": [],
       "unlinked_references": [],
       "errors": [],
-      "warnings": [],
+      "warnings": [
+        "fewer than two explicit Professional Decision Rules"
+      ],
       "role_support": [
         "review-agent"
       ],
@@ -1158,8 +1168,8 @@
         "technology-stack-selection",
         "module-boundary-design"
       ],
-      "line_count": 65,
-      "decision_rule_count": 4,
+      "line_count": 63,
+      "decision_rule_count": 1,
       "gotcha_count": 3,
       "reference_count": 1,
       "routing_coverage_count": 3,
@@ -1365,10 +1375,10 @@
         "microservice-splitting",
         "technology-stack-selection"
       ],
-      "line_count": 72,
-      "decision_rule_count": 6,
-      "gotcha_count": 1,
-      "reference_count": 4,
+      "line_count": 71,
+      "decision_rule_count": 3,
+      "gotcha_count": 3,
+      "reference_count": 7,
       "routing_coverage_count": 98,
       "benchmark_coverage_count": 1
     },
@@ -1422,9 +1432,9 @@
         "model-boundary-mapping",
         "sdk-library-contract-design"
       ],
-      "line_count": 75,
-      "decision_rule_count": 4,
-      "gotcha_count": 3,
+      "line_count": 71,
+      "decision_rule_count": 5,
+      "gotcha_count": 2,
       "reference_count": 4,
       "routing_coverage_count": 4,
       "benchmark_coverage_count": 2
@@ -1479,10 +1489,10 @@
         "configuration-runtime-policy",
         "dependency-vulnerability-scanning"
       ],
-      "line_count": 72,
-      "decision_rule_count": 4,
-      "gotcha_count": 3,
-      "reference_count": 6,
+      "line_count": 71,
+      "decision_rule_count": 2,
+      "gotcha_count": 4,
+      "reference_count": 11,
       "routing_coverage_count": 10,
       "benchmark_coverage_count": 2
     },
@@ -1560,9 +1570,9 @@
         "configuration-runtime-policy",
         "dependency-vulnerability-scanning"
       ],
-      "line_count": 74,
-      "decision_rule_count": 5,
-      "gotcha_count": 3,
+      "line_count": 68,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 6,
       "routing_coverage_count": 26,
       "benchmark_coverage_count": 11
@@ -1626,8 +1636,8 @@
         "configuration-runtime-policy",
         "dependency-vulnerability-scanning"
       ],
-      "line_count": 70,
-      "decision_rule_count": 4,
+      "line_count": 65,
+      "decision_rule_count": 3,
       "gotcha_count": 3,
       "reference_count": 4,
       "routing_coverage_count": 7,
@@ -1637,7 +1647,7 @@
       "name": "integration-change-builder",
       "kind": "professional",
       "path": "src/professional-skills/integration-change-builder/SKILL.md",
-      "status": "pass",
+      "status": "needs-review",
       "authoring_score": 100,
       "required_sections": [
         "Role",
@@ -1656,7 +1666,9 @@
       "broken_references": [],
       "unlinked_references": [],
       "errors": [],
-      "warnings": [],
+      "warnings": [
+        "fewer than two explicit Professional Decision Rules"
+      ],
       "role_support": [
         "analysis-agent",
         "task-agent"
@@ -1682,8 +1694,8 @@
         "configuration-runtime-policy",
         "dependency-vulnerability-scanning"
       ],
-      "line_count": 84,
-      "decision_rule_count": 7,
+      "line_count": 64,
+      "decision_rule_count": 1,
       "gotcha_count": 3,
       "reference_count": 3,
       "routing_coverage_count": 3,
@@ -1740,9 +1752,9 @@
         "client-application-testing",
         "bigdata-product-extension"
       ],
-      "line_count": 82,
-      "decision_rule_count": 7,
-      "gotcha_count": 4,
+      "line_count": 71,
+      "decision_rule_count": 3,
+      "gotcha_count": 2,
       "reference_count": 4,
       "routing_coverage_count": 6,
       "benchmark_coverage_count": 5
@@ -1809,8 +1821,8 @@
         "cryptography-key-lifecycle",
         "audit-evidence-integrity"
       ],
-      "line_count": 81,
-      "decision_rule_count": 6,
+      "line_count": 76,
+      "decision_rule_count": 3,
       "gotcha_count": 2,
       "reference_count": 4,
       "routing_coverage_count": 17,
@@ -1871,8 +1883,8 @@
         "profiling",
         "cloud-platform-extension"
       ],
-      "line_count": 79,
-      "decision_rule_count": 5,
+      "line_count": 75,
+      "decision_rule_count": 3,
       "gotcha_count": 3,
       "reference_count": 5,
       "routing_coverage_count": 9,
@@ -1882,7 +1894,7 @@
       "name": "logging-design-gate",
       "kind": "professional",
       "path": "src/professional-skills/logging-design-gate/SKILL.md",
-      "status": "pass",
+      "status": "needs-review",
       "authoring_score": 100,
       "required_sections": [
         "Role",
@@ -1901,7 +1913,9 @@
       "broken_references": [],
       "unlinked_references": [],
       "errors": [],
-      "warnings": [],
+      "warnings": [
+        "fewer than two explicit Professional Decision Rules"
+      ],
       "role_support": [
         "task-agent",
         "review-agent"
@@ -1920,8 +1934,8 @@
         "secret-configuration-security",
         "audit-evidence-integrity"
       ],
-      "line_count": 75,
-      "decision_rule_count": 6,
+      "line_count": 67,
+      "decision_rule_count": 1,
       "gotcha_count": 3,
       "reference_count": 4,
       "routing_coverage_count": 7,
@@ -1979,8 +1993,8 @@
         "kubernetes-gateway",
         "project-initialization"
       ],
-      "line_count": 74,
-      "decision_rule_count": 4,
+      "line_count": 68,
+      "decision_rule_count": 3,
       "gotcha_count": 3,
       "reference_count": 4,
       "routing_coverage_count": 7,
@@ -2047,9 +2061,9 @@
         "web3-product-extension",
         "low-level-systems-extension"
       ],
-      "line_count": 98,
-      "decision_rule_count": 8,
-      "gotcha_count": 2,
+      "line_count": 64,
+      "decision_rule_count": 5,
+      "gotcha_count": 3,
       "reference_count": 5,
       "routing_coverage_count": 82,
       "benchmark_coverage_count": 5
@@ -2058,7 +2072,7 @@
       "name": "change-documentation-gate",
       "kind": "professional",
       "path": "src/professional-skills/change-documentation-gate/SKILL.md",
-      "status": "pass",
+      "status": "needs-review",
       "authoring_score": 100,
       "required_sections": [
         "Role",
@@ -2077,7 +2091,9 @@
       "broken_references": [],
       "unlinked_references": [],
       "errors": [],
-      "warnings": [],
+      "warnings": [
+        "fewer than two explicit Professional Decision Rules"
+      ],
       "role_support": [
         "task-agent",
         "review-agent"
@@ -2095,8 +2111,8 @@
         "consumer-impact-analysis",
         "api-contract-design"
       ],
-      "line_count": 74,
-      "decision_rule_count": 4,
+      "line_count": 70,
+      "decision_rule_count": 1,
       "gotcha_count": 3,
       "reference_count": 4,
       "routing_coverage_count": 4,
@@ -2161,10 +2177,10 @@
         "configuration-runtime-policy",
         "dependency-vulnerability-scanning"
       ],
-      "line_count": 83,
-      "decision_rule_count": 7,
-      "gotcha_count": 5,
-      "reference_count": 2,
+      "line_count": 63,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "reference_count": 8,
       "routing_coverage_count": 9,
       "benchmark_coverage_count": 1
     },
@@ -2213,9 +2229,9 @@
         "configuration-runtime-policy",
         "dependency-vulnerability-scanning"
       ],
-      "line_count": 83,
-      "decision_rule_count": 6,
-      "gotcha_count": 5,
+      "line_count": 67,
+      "decision_rule_count": 3,
+      "gotcha_count": 3,
       "reference_count": 2,
       "routing_coverage_count": 3,
       "benchmark_coverage_count": 0
@@ -2224,7 +2240,7 @@
       "name": "repository-tooling-change-builder",
       "kind": "professional",
       "path": "src/professional-skills/repository-tooling-change-builder/SKILL.md",
-      "status": "pass",
+      "status": "needs-review",
       "authoring_score": 100,
       "required_sections": [
         "Role",
@@ -2243,7 +2259,9 @@
       "broken_references": [],
       "unlinked_references": [],
       "errors": [],
-      "warnings": [],
+      "warnings": [
+        "fewer than two explicit Professional Decision Rules"
+      ],
       "role_support": [
         "task-agent"
       ],
@@ -2268,9 +2286,9 @@
         "configuration-runtime-policy",
         "dependency-vulnerability-scanning"
       ],
-      "line_count": 85,
-      "decision_rule_count": 8,
-      "gotcha_count": 6,
+      "line_count": 65,
+      "decision_rule_count": 1,
+      "gotcha_count": 3,
       "reference_count": 3,
       "routing_coverage_count": 8,
       "benchmark_coverage_count": 0
@@ -2693,10 +2711,10 @@
         "no task-local interaction state modeling decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 52,
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
-      "reference_count": 3,
+      "line_count": 50,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "reference_count": 7,
       "routing_coverage_count": 2,
       "benchmark_coverage_count": 1
     },
@@ -2770,9 +2788,9 @@
         "DTO table schema UI label or comment changes without domain identity lifecycle aggregate invariant or writer authority"
       ],
       "layer3_candidates": [],
-      "line_count": 63,
-      "decision_rule_count": 8,
-      "gotcha_count": 5,
+      "line_count": 55,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 3,
       "benchmark_coverage_count": 1
@@ -2919,9 +2937,9 @@
         "no task-local permission policy or enforcement decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 52,
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
+      "line_count": 46,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 8,
       "benchmark_coverage_count": 3
@@ -3031,10 +3049,10 @@
         "system architecture style or fixed layer responsibility selection"
       ],
       "layer3_candidates": [],
-      "line_count": 55,
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
-      "reference_count": 2,
+      "line_count": 46,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "reference_count": 3,
       "routing_coverage_count": 3,
       "benchmark_coverage_count": 1
     },
@@ -3291,9 +3309,9 @@
         "no task-local api contract design decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 52,
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
+      "line_count": 47,
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 4,
       "benchmark_coverage_count": 2
@@ -3401,9 +3419,9 @@
         "no task-local version compatibility decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 52,
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
+      "line_count": 47,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 10,
       "benchmark_coverage_count": 3
@@ -3439,9 +3457,9 @@
         "no task-local data migration design decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 52,
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
+      "line_count": 46,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 1,
       "benchmark_coverage_count": 2
@@ -3549,9 +3567,9 @@
         "no task-local state management design decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 52,
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
+      "line_count": 46,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 8,
       "benchmark_coverage_count": 0
@@ -3845,9 +3863,9 @@
         "no task-local authenticated-subject authority propagation or authorization-handoff decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 52,
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
+      "line_count": 46,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 0,
       "benchmark_coverage_count": 1
@@ -3883,9 +3901,9 @@
         "no task-local idempotency retry design decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 53,
-      "decision_rule_count": 8,
-      "gotcha_count": 3,
+      "line_count": 47,
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 1,
       "benchmark_coverage_count": 3
@@ -3957,9 +3975,9 @@
         "no task-local logging error handling decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 54,
-      "decision_rule_count": 8,
-      "gotcha_count": 3,
+      "line_count": 47,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 5,
       "benchmark_coverage_count": 2
@@ -4103,9 +4121,9 @@
         "no task-local transaction consistency decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 54,
+      "line_count": 46,
       "decision_rule_count": 3,
-      "gotcha_count": 2,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 5,
       "benchmark_coverage_count": 1
@@ -4256,9 +4274,9 @@
         "no task-local protected asset trust boundary abuse path or control-placement decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 52,
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
+      "line_count": 48,
+      "decision_rule_count": 5,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 9,
       "benchmark_coverage_count": 0
@@ -4332,9 +4350,9 @@
         "no task-local reachable web boundary or sink behavior changes"
       ],
       "layer3_candidates": [],
-      "line_count": 52,
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
+      "line_count": 48,
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 1,
       "benchmark_coverage_count": 2
@@ -4370,9 +4388,9 @@
         "no task-local authentication security decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 55,
-      "decision_rule_count": 5,
-      "gotcha_count": 2,
+      "line_count": 46,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 1,
       "benchmark_coverage_count": 0
@@ -4409,9 +4427,9 @@
         "configuration change contains no secret or security-sensitive value and does not alter an exposure boundary"
       ],
       "layer3_candidates": [],
-      "line_count": 53,
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
+      "line_count": 47,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 3,
       "benchmark_coverage_count": 2
@@ -4447,9 +4465,9 @@
         "only package-manager mechanics or version selection changes and no package-risk acceptance is required"
       ],
       "layer3_candidates": [],
-      "line_count": 54,
-      "decision_rule_count": 8,
-      "gotcha_count": 3,
+      "line_count": 46,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 7,
       "benchmark_coverage_count": 0
@@ -4485,9 +4503,9 @@
         "one test level and command are already fixed or the task only implements tests or decides release readiness"
       ],
       "layer3_candidates": [],
-      "line_count": 54,
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
+      "line_count": 46,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 0,
       "benchmark_coverage_count": 5
@@ -4599,9 +4617,9 @@
         "the change has no independent consumer expectation compatibility transition or retained message replay risk"
       ],
       "layer3_candidates": [],
-      "line_count": 53,
-      "decision_rule_count": 7,
-      "gotcha_count": 4,
+      "line_count": 46,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 1,
       "benchmark_coverage_count": 0
@@ -4675,9 +4693,9 @@
         "no task-local test data management decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 52,
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
+      "line_count": 49,
+      "decision_rule_count": 5,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 0,
       "benchmark_coverage_count": 0
@@ -4713,9 +4731,9 @@
         "no accepted defect incident review finding or equivalent recurrence mechanism exists"
       ],
       "layer3_candidates": [],
-      "line_count": 54,
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
+      "line_count": 48,
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 4,
       "benchmark_coverage_count": 2
@@ -4826,9 +4844,9 @@
         "no task-local concurrency control decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 55,
-      "decision_rule_count": 5,
-      "gotcha_count": 2,
+      "line_count": 46,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 2,
       "benchmark_coverage_count": 0
@@ -4864,9 +4882,9 @@
         "no task-local degradation circuit breaking decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 58,
+      "line_count": 48,
       "decision_rule_count": 5,
-      "gotcha_count": 5,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 7,
       "benchmark_coverage_count": 1
@@ -4902,9 +4920,9 @@
         "no task-local observability decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 56,
-      "decision_rule_count": 5,
-      "gotcha_count": 3,
+      "line_count": 47,
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 9,
       "benchmark_coverage_count": 6
@@ -4939,9 +4957,9 @@
         "work changes backup job mechanics without changing protected scope restore semantics or a recovery readiness claim"
       ],
       "layer3_candidates": [],
-      "line_count": 54,
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
+      "line_count": 49,
+      "decision_rule_count": 6,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 5,
       "benchmark_coverage_count": 0
@@ -5127,9 +5145,9 @@
         "work is limited to pipeline mechanics image construction cluster resources data migration execution or local validation with no release decision"
       ],
       "layer3_candidates": [],
-      "line_count": 55,
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
+      "line_count": 47,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 8,
       "benchmark_coverage_count": 2
@@ -5241,9 +5259,9 @@
         "no task-local code review decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 53,
-      "decision_rule_count": 8,
-      "gotcha_count": 3,
+      "line_count": 50,
+      "decision_rule_count": 5,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 1,
       "benchmark_coverage_count": 3
@@ -5280,9 +5298,9 @@
         "existence pattern placement module ownership or behavior change remains unresolved"
       ],
       "layer3_candidates": [],
-      "line_count": 54,
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
+      "line_count": 48,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 9,
       "benchmark_coverage_count": 1
@@ -5319,9 +5337,9 @@
         "an implementation diff has no separate documentation artifact"
       ],
       "layer3_candidates": [],
-      "line_count": 58,
+      "line_count": 55,
       "decision_rule_count": 6,
-      "gotcha_count": 4,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 4,
       "benchmark_coverage_count": 0
@@ -5445,9 +5463,9 @@
         "architecture or policy fixes the stack and no new technology commitment or migration is proposed"
       ],
       "layer3_candidates": [],
-      "line_count": 56,
-      "decision_rule_count": 7,
-      "gotcha_count": 4,
+      "line_count": 45,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 1,
       "routing_coverage_count": 2,
       "benchmark_coverage_count": 0
@@ -5642,9 +5660,9 @@
         "no task-local package dependency management decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 55,
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
+      "line_count": 49,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 2,
       "benchmark_coverage_count": 0
@@ -6001,9 +6019,9 @@
         "no task-local sdk library contract design decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 53,
-      "decision_rule_count": 8,
-      "gotcha_count": 3,
+      "line_count": 47,
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 1,
       "benchmark_coverage_count": 0
@@ -6169,9 +6187,9 @@
         "current owner and repository convention already fix placement"
       ],
       "layer3_candidates": [],
-      "line_count": 67,
-      "decision_rule_count": 8,
-      "gotcha_count": 5,
+      "line_count": 58,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 7,
       "benchmark_coverage_count": 2
@@ -6287,9 +6305,9 @@
         "the task is behavior-preserving movement language semantics or runtime performance with no remaining code-clarity decision"
       ],
       "layer3_candidates": [],
-      "line_count": 55,
+      "line_count": 52,
       "decision_rule_count": 7,
-      "gotcha_count": 4,
+      "gotcha_count": 1,
       "reference_count": 2,
       "routing_coverage_count": 1,
       "benchmark_coverage_count": 1
@@ -6328,9 +6346,9 @@
         "the unresolved decision is placement refactoring language performance or public API shape without a pattern choice"
       ],
       "layer3_candidates": [],
-      "line_count": 55,
-      "decision_rule_count": 7,
-      "gotcha_count": 4,
+      "line_count": 47,
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
       "reference_count": 1,
       "routing_coverage_count": 4,
       "benchmark_coverage_count": 0
@@ -6485,9 +6503,9 @@
         "no task-local failure contract design decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 60,
-      "decision_rule_count": 7,
-      "gotcha_count": 6,
+      "line_count": 48,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 2,
       "benchmark_coverage_count": 1
@@ -6523,9 +6541,9 @@
         "no task-local configuration runtime policy decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 55,
-      "decision_rule_count": 7,
-      "gotcha_count": 6,
+      "line_count": 46,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 8,
       "benchmark_coverage_count": 0
@@ -6561,9 +6579,9 @@
         "no task-local model boundary mapping decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 58,
-      "decision_rule_count": 8,
-      "gotcha_count": 8,
+      "line_count": 47,
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 1,
       "benchmark_coverage_count": 0
@@ -6675,9 +6693,9 @@
         "no task-local consumer impact analysis decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 52,
-      "decision_rule_count": 6,
-      "gotcha_count": 4,
+      "line_count": 46,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 2,
       "benchmark_coverage_count": 1
@@ -6754,9 +6772,9 @@
         "the open question is placement pattern package policy public contract clarity or performance rather than whether structure is needed"
       ],
       "layer3_candidates": [],
-      "line_count": 59,
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
+      "line_count": 50,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 1,
       "routing_coverage_count": 4,
       "benchmark_coverage_count": 0
@@ -6991,9 +7009,9 @@
         "first failure has a verified cause and materially different next action"
       ],
       "layer3_candidates": [],
-      "line_count": 68,
+      "line_count": 58,
       "decision_rule_count": 5,
-      "gotcha_count": 3,
+      "gotcha_count": 1,
       "reference_count": 1,
       "routing_coverage_count": 0,
       "benchmark_coverage_count": 0
@@ -7031,9 +7049,9 @@
         "exact commands and their acceptance and risk coverage are already established"
       ],
       "layer3_candidates": [],
-      "line_count": 74,
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
+      "line_count": 61,
+      "decision_rule_count": 5,
+      "gotcha_count": 1,
       "reference_count": 1,
       "routing_coverage_count": 7,
       "benchmark_coverage_count": 0
@@ -7229,9 +7247,9 @@
         "no task-local build tool professional usage decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 54,
-      "decision_rule_count": 8,
-      "gotcha_count": 3,
+      "line_count": 51,
+      "decision_rule_count": 7,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 7,
       "benchmark_coverage_count": 0
@@ -7470,10 +7488,10 @@
         "no user interface change or only a platform accessibility API or design-system consistency"
       ],
       "layer3_candidates": [],
-      "line_count": 51,
-      "decision_rule_count": 8,
-      "gotcha_count": 3,
-      "reference_count": 1,
+      "line_count": 47,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "reference_count": 4,
       "routing_coverage_count": 2,
       "benchmark_coverage_count": 0
     },
@@ -7508,9 +7526,9 @@
         "pure backend API-contract component-only browser or general test-portfolio decision without installed-client risk"
       ],
       "layer3_candidates": [],
-      "line_count": 51,
-      "decision_rule_count": 8,
-      "gotcha_count": 3,
+      "line_count": 44,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 1,
       "routing_coverage_count": 0,
       "benchmark_coverage_count": 0
@@ -7548,9 +7566,9 @@
         "one platform API without a shared state rule"
       ],
       "layer3_candidates": [],
-      "line_count": 52,
-      "decision_rule_count": 7,
-      "gotcha_count": 3,
+      "line_count": 44,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 1,
       "routing_coverage_count": 0,
       "benchmark_coverage_count": 0
@@ -7588,9 +7606,9 @@
         "MSIX identity signing manifest packaging metadata or Windows policy without C#/.NET semantics"
       ],
       "layer3_candidates": [],
-      "line_count": 58,
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
+      "line_count": 46,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 2,
       "routing_coverage_count": 0,
       "benchmark_coverage_count": 0
@@ -7629,9 +7647,9 @@
         "provider quota or platform policy without infrastructure-as-code source"
       ],
       "layer3_candidates": [],
-      "line_count": 60,
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
+      "line_count": 45,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 2,
       "routing_coverage_count": 3,
       "benchmark_coverage_count": 0
@@ -7669,9 +7687,9 @@
         "Android manifest permission packaging signing or platform metadata without Kotlin semantics"
       ],
       "layer3_candidates": [],
-      "line_count": 58,
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
+      "line_count": 46,
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
       "reference_count": 2,
       "routing_coverage_count": 0,
       "benchmark_coverage_count": 0
@@ -7707,9 +7725,9 @@
         "online-only client no sync behavior change or backend-wide transaction or distributed-consistency policy"
       ],
       "layer3_candidates": [],
-      "line_count": 51,
-      "decision_rule_count": 8,
-      "gotcha_count": 3,
+      "line_count": 45,
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
       "reference_count": 1,
       "routing_coverage_count": 0,
       "benchmark_coverage_count": 0
@@ -7747,9 +7765,9 @@
         "POSIX shell or Windows policy without PowerShell semantics"
       ],
       "layer3_candidates": [],
-      "line_count": 58,
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
+      "line_count": 47,
+      "decision_rule_count": 5,
+      "gotcha_count": 1,
       "reference_count": 2,
       "routing_coverage_count": 0,
       "benchmark_coverage_count": 0
@@ -7785,9 +7803,9 @@
         "no personal or sensitive data change or only authentication secret cryptographic legal or one client local-data API"
       ],
       "layer3_candidates": [],
-      "line_count": 52,
-      "decision_rule_count": 8,
-      "gotcha_count": 3,
+      "line_count": 46,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 2,
       "routing_coverage_count": 0,
       "benchmark_coverage_count": 0
@@ -7825,9 +7843,9 @@
         "iOS/macOS entitlement signing provisioning packaging or configuration without Swift semantics"
       ],
       "layer3_candidates": [],
-      "line_count": 58,
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
+      "line_count": 46,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 2,
       "routing_coverage_count": 0,
       "benchmark_coverage_count": 0
@@ -7863,10 +7881,10 @@
         "installed native client non-browser backend general frontend workflow or TypeScript-only decision"
       ],
       "layer3_candidates": [],
-      "line_count": 52,
-      "decision_rule_count": 8,
-      "gotcha_count": 3,
-      "reference_count": 2,
+      "line_count": 51,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
+      "reference_count": 8,
       "routing_coverage_count": 2,
       "benchmark_coverage_count": 0
     },
@@ -7903,9 +7921,9 @@
         "path difference or writability alone without a less-trusted writer or reachable material impact"
       ],
       "layer3_candidates": [],
-      "line_count": 65,
-      "decision_rule_count": 8,
-      "gotcha_count": 6,
+      "line_count": 55,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 2,
       "routing_coverage_count": 1,
       "benchmark_coverage_count": 0
@@ -7981,9 +7999,9 @@
         "no tenant identity propagation isolation or privileged lifecycle boundary changes"
       ],
       "layer3_candidates": [],
-      "line_count": 68,
-      "decision_rule_count": 8,
-      "gotcha_count": 8,
+      "line_count": 56,
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 0,
       "benchmark_coverage_count": 0
@@ -8020,9 +8038,9 @@
         "no independently committed participant effect or durable workflow state changes"
       ],
       "layer3_candidates": [],
-      "line_count": 67,
-      "decision_rule_count": 8,
-      "gotcha_count": 7,
+      "line_count": 50,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 0,
       "benchmark_coverage_count": 0
@@ -8059,9 +8077,9 @@
         "no cryptographic construction key transition decryptability or compromise boundary changes"
       ],
       "layer3_candidates": [],
-      "line_count": 70,
-      "decision_rule_count": 8,
-      "gotcha_count": 9,
+      "line_count": 54,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 0,
       "benchmark_coverage_count": 0
@@ -8098,9 +8116,9 @@
         "no audit-evidence integrity lifecycle export or privileged access boundary changes"
       ],
       "layer3_candidates": [],
-      "line_count": 71,
-      "decision_rule_count": 8,
-      "gotcha_count": 8,
+      "line_count": 52,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 0,
       "benchmark_coverage_count": 0
@@ -8147,10 +8165,10 @@
         "hash or signature terminology without chain or custody behavior"
       ],
       "layer3_candidates": [],
-      "line_count": 68,
-      "decision_rule_count": 9,
-      "gotcha_count": 5,
-      "reference_count": 1,
+      "line_count": 57,
+      "decision_rule_count": 2,
+      "gotcha_count": 1,
+      "reference_count": 7,
       "routing_coverage_count": 5,
       "benchmark_coverage_count": 1
     },
@@ -8196,9 +8214,9 @@
         "AI terminology, static algorithms, or ordinary search without a model decision"
       ],
       "layer3_candidates": [],
-      "line_count": 69,
-      "decision_rule_count": 10,
-      "gotcha_count": 5,
+      "line_count": 55,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 1,
       "routing_coverage_count": 8,
       "benchmark_coverage_count": 1
@@ -8207,7 +8225,7 @@
       "name": "bigdata-product-extension",
       "kind": "domain",
       "path": "src/domain-extensions/bigdata-product-extension/SKILL.md",
-      "status": "pass",
+      "status": "needs-review",
       "authoring_score": 100,
       "required_sections": [
         "Role",
@@ -8226,7 +8244,9 @@
       "broken_references": [],
       "unlinked_references": [],
       "errors": [],
-      "warnings": [],
+      "warnings": [
+        "fewer than two explicit Professional Decision Rules"
+      ],
       "role_support": [
         "analysis-agent",
         "task-agent",
@@ -8245,10 +8265,10 @@
         "single-database large-table work without a distributed pipeline, replay, or downstream consumer boundary"
       ],
       "layer3_candidates": [],
-      "line_count": 68,
-      "decision_rule_count": 9,
-      "gotcha_count": 5,
-      "reference_count": 1,
+      "line_count": 60,
+      "decision_rule_count": 1,
+      "gotcha_count": 1,
+      "reference_count": 5,
       "routing_coverage_count": 5,
       "benchmark_coverage_count": 1
     },
@@ -8256,7 +8276,7 @@
       "name": "iot-embedded-extension",
       "kind": "domain",
       "path": "src/domain-extensions/iot-embedded-extension/SKILL.md",
-      "status": "pass",
+      "status": "needs-review",
       "authoring_score": 100,
       "required_sections": [
         "Role",
@@ -8275,7 +8295,9 @@
       "broken_references": [],
       "unlinked_references": [],
       "errors": [],
-      "warnings": [],
+      "warnings": [
+        "fewer than two explicit Professional Decision Rules"
+      ],
       "role_support": [
         "analysis-agent",
         "task-agent",
@@ -8296,9 +8318,9 @@
         "protocol documentation or cloud-only APIs without device or firmware behavior"
       ],
       "layer3_candidates": [],
-      "line_count": 73,
-      "decision_rule_count": 8,
-      "gotcha_count": 5,
+      "line_count": 57,
+      "decision_rule_count": 1,
+      "gotcha_count": 1,
       "reference_count": 1,
       "routing_coverage_count": 5,
       "benchmark_coverage_count": 1
@@ -8347,10 +8369,10 @@
         "price display or ordinary orders without funds, ledger, settlement, or execution state"
       ],
       "layer3_candidates": [],
-      "line_count": 68,
-      "decision_rule_count": 9,
-      "gotcha_count": 5,
-      "reference_count": 1,
+      "line_count": 65,
+      "decision_rule_count": 2,
+      "gotcha_count": 1,
+      "reference_count": 10,
       "routing_coverage_count": 8,
       "benchmark_coverage_count": 1
     },
@@ -8399,10 +8421,10 @@
         "C++ or Rust usage without a native ABI, OS, or resource boundary"
       ],
       "layer3_candidates": [],
-      "line_count": 68,
-      "decision_rule_count": 9,
-      "gotcha_count": 5,
-      "reference_count": 1,
+      "line_count": 59,
+      "decision_rule_count": 2,
+      "gotcha_count": 1,
+      "reference_count": 5,
       "routing_coverage_count": 5,
       "benchmark_coverage_count": 1
     },
@@ -8444,10 +8466,10 @@
         "store rollout signing authorization or release approval"
       ],
       "layer3_candidates": [],
-      "line_count": 73,
-      "decision_rule_count": 9,
-      "gotcha_count": 5,
-      "reference_count": 7,
+      "line_count": 76,
+      "decision_rule_count": 5,
+      "gotcha_count": 1,
+      "reference_count": 14,
       "routing_coverage_count": 6,
       "benchmark_coverage_count": 1
     },
@@ -8488,9 +8510,9 @@
         "release authorization or production mutation"
       ],
       "layer3_candidates": [],
-      "line_count": 69,
-      "decision_rule_count": 9,
-      "gotcha_count": 4,
+      "line_count": 63,
+      "decision_rule_count": 3,
+      "gotcha_count": 1,
       "reference_count": 5,
       "routing_coverage_count": 2,
       "benchmark_coverage_count": 0
@@ -8532,9 +8554,9 @@
         "unknown target language-only Web PWA backend infrastructure or release authorization"
       ],
       "layer3_candidates": [],
-      "line_count": 69,
-      "decision_rule_count": 10,
-      "gotcha_count": 4,
+      "line_count": 58,
+      "decision_rule_count": 4,
+      "gotcha_count": 1,
       "reference_count": 4,
       "routing_coverage_count": 2,
       "benchmark_coverage_count": 0
@@ -8576,10 +8598,10 @@
         "store rollout signing authorization or release approval"
       ],
       "layer3_candidates": [],
-      "line_count": 73,
-      "decision_rule_count": 12,
-      "gotcha_count": 4,
-      "reference_count": 6,
+      "line_count": 74,
+      "decision_rule_count": 5,
+      "gotcha_count": 1,
+      "reference_count": 12,
       "routing_coverage_count": 3,
       "benchmark_coverage_count": 0
     },
@@ -8620,10 +8642,10 @@
         "distribution rollout authorization or independent review"
       ],
       "layer3_candidates": [],
-      "line_count": 69,
-      "decision_rule_count": 7,
-      "gotcha_count": 4,
-      "reference_count": 7,
+      "line_count": 75,
+      "decision_rule_count": 5,
+      "gotcha_count": 1,
+      "reference_count": 14,
       "routing_coverage_count": 2,
       "benchmark_coverage_count": 0
     },
@@ -8664,10 +8686,10 @@
         "release signing notarization or rollout authorization"
       ],
       "layer3_candidates": [],
-      "line_count": 72,
-      "decision_rule_count": 11,
-      "gotcha_count": 4,
-      "reference_count": 6,
+      "line_count": 74,
+      "decision_rule_count": 5,
+      "gotcha_count": 1,
+      "reference_count": 12,
       "routing_coverage_count": 2,
       "benchmark_coverage_count": 0
     },
@@ -8709,10 +8731,10 @@
         "release signing or rollout authorization"
       ],
       "layer3_candidates": [],
-      "line_count": 71,
-      "decision_rule_count": 8,
-      "gotcha_count": 4,
-      "reference_count": 7,
+      "line_count": 75,
+      "decision_rule_count": 5,
+      "gotcha_count": 1,
+      "reference_count": 14,
       "routing_coverage_count": 4,
       "benchmark_coverage_count": 0
     }
