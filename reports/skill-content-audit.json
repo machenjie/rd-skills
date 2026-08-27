@@ -159077,17 +159077,11 @@
       "status": "pass"
     },
     "formal_release": {
-      "blockers": [
-        {
-          "id": "semantic-decision-application-invalid",
-          "message": "semantic fixed detector contract is stale"
-        }
-      ],
-      "status": "blocked"
+      "blockers": [],
+      "status": "pass"
     },
     "limitations": [
-      "The authoring gate validates deterministic source content and does not attest semantic disposition application currentness.",
-      "Formal release remains blocked: semantic-decision-application-invalid: semantic fixed detector contract is stale"
+      "The authoring gate validates deterministic source content and does not attest semantic disposition application currentness."
     ],
     "schema_version": 1,
     "selected_gate": "authoring"
@@ -308200,22 +308194,19 @@
   },
   "schema_version": 10,
   "semantic_disposition_application": {
-    "applied_count": 0,
+    "applied_count": 218,
     "completed_rewrite_count": 0,
     "decision": {
       "path": "evals/expert-panel/semantic-disposition.json",
-      "sha256": null
+      "sha256": "e06056332598db8b046f015b83c4bf5dbaaf317e69171ff76f4ce3416a00f6a9"
     },
     "decision_kind": "changeforge.semantic-disposition-attestation",
-    "error": {
-      "id": "semantic-decision-application-invalid",
-      "message": "semantic fixed detector contract is stale"
-    },
+    "error": null,
     "kind": "changeforge.semantic-disposition-application",
-    "review_id": null,
+    "review_id": "semantic-budget-governance-authoring-20260827-r1",
     "schema_version": 1,
-    "status": "invalid",
-    "target_count": 0
+    "status": "current",
+    "target_count": 218
   },
   "skill_detector": {
     "classification_values": [
