@@ -761,6 +761,46 @@ class AgentProfileReadabilityTests(unittest.TestCase):
                     findings,
                 )
 
+    def test_task_handoff_is_losslessly_sentence_split(self) -> None:
+        source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
+        profiles = {profile["name"]: profile for profile in source["profiles"]}
+        instructions = profiles["task-agent"]["instructions"]
+        rules = instructions.splitlines()
+        handoff_line = next(
+            index
+            for index, rule in enumerate(rules, start=1)
+            if rule.startswith("- Handoff after final edit+fresh validation:")
+        )
+        handoff_rule = rules[handoff_line - 1]
+        for sentence in (
+            "Implementation Handoff/Main readiness.",
+            "Completion gate: missing or stale facts block.",
+            "Recovery boundary: no recovery Task.",
+        ):
+            self.assertIn(sentence, handoff_rule)
+        self.assertEqual(
+            1,
+            sum(
+                profile["instructions"].count("no recovery Task")
+                for profile in profiles.values()
+            ),
+        )
+        errors: list[str] = []
+        findings = VALIDATOR.validate_ai_readability(
+            instructions,
+            "task-agent#instructions",
+            errors,
+        )
+        self.assertEqual([], errors)
+        self.assertFalse(
+            any(
+                finding["line"] == handoff_line
+                and finding["band"] in {"tighten", "hard-fail"}
+                for finding in findings
+            ),
+            findings,
+        )
+
     def test_analysis_and_review_profiles_load_relocated_decision_owners(self) -> None:
         source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
         profiles = {item["name"]: item["instructions"] for item in source["profiles"]}

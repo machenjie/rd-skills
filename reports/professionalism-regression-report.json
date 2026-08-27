@@ -53,7 +53,7 @@
     "source": "skill-content-audit.json#ai_readability",
     "readiness_scope": "agent-facing-ai-readability",
     "schema_version": 2,
-    "source_fingerprint": "d510abd3e2f8039c4bc4f93b302df7e0d0b11bd9c0b2cd4452ee15f8d8cd379d",
+    "source_fingerprint": "f91261bda6e56a3237c15276a3b6d3db708def1777d1a8f2b4dc66cbe52608d0",
     "source_fingerprint_document_count": 1001,
     "contract": {
       "bullet_decision_max": 1,
@@ -65,8 +65,8 @@
     },
     "documents": 1001,
     "advisory_documents": 330,
-    "review_as_complex_sentences": 825,
-    "tighten_sentences": 12,
+    "review_as_complex_sentences": 826,
+    "tighten_sentences": 11,
     "hard_fail_sentences": 0,
     "compound_bullets": 0,
     "advisory_sentences": 837,
@@ -86,8 +86,8 @@
         "compound_bullets": 0,
         "documents": 4,
         "hard_fail_sentences": 0,
-        "review_as_complex_sentences": 0,
-        "tighten_sentences": 1
+        "review_as_complex_sentences": 1,
+        "tighten_sentences": 0
       },
       "control-prompt": {
         "advisory_documents": 0,
@@ -363,7 +363,7 @@
         "current_source_fingerprints": {
           "actionability_detector_contract": "5980b6a90aff04f345c4549c0522f4e493ea9d23f4b7d7aa334a51359aed575e",
           "readability_detector_contract": "f224da76c77a25ed73086603711647c0d728bbab7669870224a7031f3a6cca4f",
-          "readability_target_manifest": "d2a6986f11c1d8f8c62ee56a3ca875aabc84717f7a1d661ee6ee833a390099c2"
+          "readability_target_manifest": "2b829454e9c54dda1bfdcf1deb04df113d7bb47c4d8b8a5cb327afb8eb382d6d"
         },
         "attested_by": null,
         "attested_on": null,
@@ -637,7 +637,7 @@
     {
       "category": "ai-readability-advisory",
       "target": "skill-content-audit.json#ai_readability",
-      "message": "advisory_documents=330; review_as_complex_sentences=825; tighten_sentences=12",
+      "message": "advisory_documents=330; review_as_complex_sentences=826; tighten_sentences=11",
       "severity": "warning"
     }
   ],

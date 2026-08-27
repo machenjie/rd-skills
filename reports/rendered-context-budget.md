@@ -25,11 +25,11 @@ Mode: **conformance**.
 | Context | Soft target | Hard ceiling | Observed maximum | Soft margin | Hard margin | Soft status | Hard status |
 | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |
 | Main always-loaded | 2305 | 2650 | 2177 | 128 | 473 | within | within |
-| Direct Task dispatch | 3000 | 3200 | 2028 | 972 | 1172 | within | within |
-| Analyzed Task dispatch | 6000 | 6500 | 3753 | 2247 | 2747 | within | within |
+| Direct Task dispatch | 3000 | 3200 | 2034 | 966 | 1166 | within | within |
+| Analyzed Task dispatch | 6000 | 6500 | 3759 | 2241 | 2741 | within | within |
 | Analysis dispatch | 4500 | 5000 | 2403 | 2097 | 2597 | within | within |
 | Review dispatch | 3700 | 4000 | 2219 | 1481 | 1781 | within | within |
-| Utility dispatch | 2000 | 2500 | 831 | 1169 | 1669 | within | within |
+| Utility dispatch | 2000 | 2500 | 837 | 1163 | 1663 | within | within |
 
 ## Calibration Distribution
 
@@ -38,13 +38,13 @@ Calibration candidate selection and frontier construction do not apply soft targ
 | Context | Count | P50 | P90 | P95 | P99 | Max | Growth distribution |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 | Main always-loaded | 9 | 2170 | 2177 | 2177 | 2177 | 2177 | unavailable |
-| Direct Task dispatch | 19281 | 2190 | 2646 | 2712 | 2819 | 2937 | unavailable |
-| Analyzed Task dispatch | 66150 | 2688 | 3199 | 3354 | 3569 | 4022 | unavailable |
+| Direct Task dispatch | 19281 | 2196 | 2652 | 2718 | 2825 | 2943 | unavailable |
+| Analyzed Task dispatch | 66150 | 2694 | 3205 | 3360 | 3575 | 4028 | unavailable |
 | Analysis dispatch | 112828 | 1793 | 2129 | 2313 | 2661 | 3448 | unavailable |
 | Review dispatch | 38009 | 2367 | 2814 | 3006 | 3177 | 3366 | unavailable |
-| Utility dispatch | 18 | 809 | 831 | 831 | 831 | 831 | unavailable |
+| Utility dispatch | 18 | 815 | 837 | 837 | 837 | 837 | unavailable |
 
-Valid-candidate selection identity: `c8e0fafda467748598b41a7c10e27b336a3861ae588dec04ecd45fd462e9a488`. Temporal growth is unavailable because this run has one comparable snapshot.
+Valid-candidate selection identity: `f8c1f44888d352d33bf6a2c8b5786a16c803db413009d7f14052dbfa04b8432d`. Temporal growth is unavailable because this run has one comparable snapshot.
 
 ## Admissible Context Composition Gate
 
@@ -52,8 +52,8 @@ Contract: **changeforge.admissible-context-composition-eval/v1**; selector owner
 
 | Context | Soft target | Hard ceiling | Reachable maximum | Professional | Layer 3 | Owner | Build | Host |
 | --- | ---: | ---: | ---: | --- | --- | --- | --- | --- |
-| task | 3000 | 3200 | 2937 | change-documentation-gate | documentation-generation | main-control-agent | dev | copilot |
-| analyzed_task | 6000 | 6500 | 4022 | backend-change-builder | failure-diagnosis, filesystem-process-safety, nodejs-runtime-professional-usage | engineering-brief | dev | copilot |
+| task | 3000 | 3200 | 2943 | change-documentation-gate | documentation-generation | main-control-agent | dev | copilot |
+| analyzed_task | 6000 | 6500 | 4028 | backend-change-builder | failure-diagnosis, filesystem-process-safety, nodejs-runtime-professional-usage | engineering-brief | dev | copilot |
 | analysis | 4500 | 5000 | 3448 | engineering-change-analysis | iot-embedded-extension, failure-diagnosis, package-dependency-management | main-control-agent | dev | claude |
 | review | 3700 | 4000 | 3366 | ai-code-review-refactor | domain-object-identification, implementation-structure-design, refactoring | engineering-brief | dev | codex |
 
@@ -68,7 +68,7 @@ Contract: **changeforge.admissible-context-composition-eval/v1**; selector owner
 
 Global Task/Review frontier counts: professional=0, layer3=0, active_reference=0; safe complement: professional=17, layer3=68, active_reference=267.
 
-Mapping digest: `0eff5c34e708edd5e3608dfce8fcb1447dc7157ddfab79f0b2192c3208634a89`; runtime consumers: **0**; build consumers: **0**.
+Mapping digest: `35e116ca423a2d2ea5792a0cf6ca201c60f92cfab1396eab8addbcf8d89a88a0`; runtime consumers: **0**; build consumers: **0**.
 
 Coverage: analysis_foundation_domain=yes, analyzed_task_three_layer3=yes, review_domain_foundation=yes, nested_targeted_references=yes, direct_main_owner=yes, initial_analysis_main_owner=yes, analyzed_brief_owner=yes, direct_false_worst_excluded=yes.
 
@@ -83,7 +83,7 @@ Forbidden-combination evidence: >3 rejected=47; unauthorized exact rejected=65; 
 - Sequenced Reference stages are source-owned; only canonically replayed engineering-brief Task/Review carriers may replace a predecessor body, while other owner surfaces conservatively co-load.
 - Reported maxima are exact for the deterministic canonical representatives; the full inventory count and dominance mapping remain available separately.
 
-Maximum exact normalized duplicate-rule ratio: **0.003733** (gate: **0.03**; margin: **0.026267**).
+Maximum exact normalized duplicate-rule ratio: **0.003727** (gate: **0.03**; margin: **0.026273**).
 
 Discovery metadata is reported separately because actual host discovery injection is not observed.
 
