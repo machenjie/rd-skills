@@ -96,6 +96,9 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         self.assertIn("Ready-dispatch blocks", review)
         self.assertIn("Reviewed/Unreviewed Scope+Proof Limit", review)
         self.assertIn("PASS=no blocker", review)
+        self.assertIn("Re-review Classification", review)
+        self.assertIn("Classification Evidence", review)
+        self.assertIn("no prose inference", review)
         for obligation in (
             "Depth only Level-added, never removed.",
             "independently direct read/search current source→minimum complete proof",

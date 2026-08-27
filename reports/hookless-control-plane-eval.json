@@ -560,6 +560,7 @@
       "error_codes": [
         "guard-c-observable-acceptance",
         "guard-g-adaptive-testing",
+        "rereview-focus",
         "review-input-change-capture",
         "review-input-dispatch-binding",
         "review-input-evidence-generation",
@@ -926,6 +927,7 @@
         "review-rejects-reviewer-repair: [reviewer-mutation] review-agent must never edit or repair; found 'repair' at step 2",
         "review-rejects-reviewer-repair: [review-kind] actual material actions require repair review; review_kind='implementation' contradicts the derived requirement",
         "review-rejects-reviewer-repair: [review-kind] derived 'repair' review kind requires one of ['re-review']",
+        "review-rejects-reviewer-repair: [rereview-focus] focused Re-review must complete the five repair checks and explicitly preserve the frozen professional-risk boundary without reopening Initial Review scope",
         "review-rejects-reviewer-repair: [review-input-evidence-generation] exact change evidence must use the current material generation",
         "review-rejects-reviewer-repair: [review-input-validation] Handoff validation must bind the unique passing validation after the latest material edit",
         "review-rejects-reviewer-repair: [review-input-change-capture] the same Task must capture exact current change evidence once after fresh validation and before its Handoff",
@@ -978,7 +980,8 @@
       "matches_expected": true,
       "errors": [
         "review-rejects-repair-as-implementation: [review-kind] actual material actions require repair review; review_kind='implementation' contradicts the derived requirement",
-        "review-rejects-repair-as-implementation: [review-kind] derived 'repair' review kind requires one of ['re-review']"
+        "review-rejects-repair-as-implementation: [review-kind] derived 'repair' review kind requires one of ['re-review']",
+        "review-rejects-repair-as-implementation: [rereview-focus] focused Re-review must complete the five repair checks and explicitly preserve the frozen professional-risk boundary without reopening Initial Review scope"
       ]
     },
     {
@@ -988,6 +991,7 @@
       "actual_valid": false,
       "matches_expected": true,
       "errors": [
+        "review-rejects-repair-order: [rereview-focus] focused Re-review must complete the five repair checks and explicitly preserve the frozen professional-risk boundary without reopening Initial Review scope",
         "review-rejects-repair-order: [review-input-dispatch] normal review requires exactly one review dispatch after the current Handoff gate",
         "review-rejects-repair-order: [review-input-handoff] normal review requires one current Implementation Handoff after validation and before review dispatch",
         "review-rejects-repair-order: [review-input-gate] review dispatch requires one derived Main readiness gate after the current Handoff",
@@ -1126,7 +1130,7 @@
       ]
     }
   ],
-  "task_focus_fixture_count": 46,
+  "task_focus_fixture_count": 51,
   "task_focus_fixtures": [
     {
       "id": "focus-current-diff-blocker",
@@ -1397,6 +1401,30 @@
       "errors": []
     },
     {
+      "id": "focus-review-missing-latest-changed-paths-blocked",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-missing-fixed-scope-blocked",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-review-missing-reviewer-consumption-blocked",
+      "scenario": "review-readiness",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
       "id": "focus-review-readonly-reviewer-accessible",
       "scenario": "review-readiness",
       "expected_valid": true,
@@ -1507,9 +1535,25 @@
       "actual_valid": true,
       "matches_expected": true,
       "errors": []
+    },
+    {
+      "id": "l4-risk-depth-not-frequency",
+      "scenario": "review-level",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "engineering-choice-not-user-choice",
+      "scenario": "engineering-choice",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
     }
   ],
-  "orchestration_fixture_count": 29,
+  "orchestration_fixture_count": 36,
   "orchestration_fixtures": [
     {
       "id": "dedup-combined-multi-task",
@@ -1550,11 +1594,12 @@
       "matches_expected": true,
       "errors": [
         "dedup-reject-untriggered-delta: [analysis-decision-invalidation] Delta Analysis requires a protected decision invalidation",
+        "dedup-reject-untriggered-delta: [delta-invalidation-source] Delta requires the immediately preceding evidence or completed Review event to establish the same protected/material invalidation",
         "dedup-reject-untriggered-delta: [delta-impact-proof-limit] unknown Delta impact cannot be mapped to []; record a Proof Limit and return blocked",
         "dedup-reject-untriggered-delta: [delta-impact-exact] Delta Impact must exactly project proven invalidated decisions and transitive affected sets; unlisted remains preserved",
         "dedup-reject-untriggered-delta: [review-validation-binding] every review must bind current-generation validation evidence",
         "dedup-reject-untriggered-delta: [review-complete-pass] every non-fundamental Review outcome requires a Review Round ID",
-        "dedup-reject-untriggered-delta: [review-complete-pass] every non-fundamental Review outcome requires complete fixed scope, base dimensions, and professional-risk dimensions",
+        "dedup-reject-untriggered-delta: [review-complete-pass] Initial Review requires complete fixed scope, base dimensions, and professional-risk dimensions",
         "dedup-reject-untriggered-delta: [review-complete-pass] the closing Review Handoff must contain every evidence-backed Finding from the fixed round and boundary"
       ],
       "retained_semantic_equality": null
@@ -1565,12 +1610,13 @@
       "actual_valid": false,
       "matches_expected": true,
       "errors": [
+        "dedup-reject-untriggered-reroute: [delta-invalidation-source] Delta requires the immediately preceding evidence or completed Review event to establish the same protected/material invalidation",
         "dedup-reject-untriggered-reroute: [analysis-skill-routing] Skill assignments must be preserved when domain, work type, and material risk are unchanged",
         "dedup-reject-untriggered-reroute: [delta-impact-exact] Delta Analysis must declare every category proven affected by impact closure: ['affected-skill-assignments']",
         "dedup-reject-untriggered-reroute: [delta-impact-exact] Delta Impact must exactly project proven invalidated decisions and transitive affected sets; unlisted remains preserved",
         "dedup-reject-untriggered-reroute: [review-validation-binding] every review must bind current-generation validation evidence",
         "dedup-reject-untriggered-reroute: [review-complete-pass] every non-fundamental Review outcome requires a Review Round ID",
-        "dedup-reject-untriggered-reroute: [review-complete-pass] every non-fundamental Review outcome requires complete fixed scope, base dimensions, and professional-risk dimensions",
+        "dedup-reject-untriggered-reroute: [review-complete-pass] Initial Review requires complete fixed scope, base dimensions, and professional-risk dimensions",
         "dedup-reject-untriggered-reroute: [review-complete-pass] the closing Review Handoff must contain every evidence-backed Finding from the fixed round and boundary"
       ],
       "retained_semantic_equality": null
@@ -1584,7 +1630,7 @@
         "dedup-reject-missing-review-skill: [review-skill-preservation] combined or scoped review must preserve required Review Skills",
         "dedup-reject-missing-review-skill: [review-validation-binding] every review must bind current-generation validation evidence",
         "dedup-reject-missing-review-skill: [review-complete-pass] every non-fundamental Review outcome requires a Review Round ID",
-        "dedup-reject-missing-review-skill: [review-complete-pass] every non-fundamental Review outcome requires complete fixed scope, base dimensions, and professional-risk dimensions",
+        "dedup-reject-missing-review-skill: [review-complete-pass] Initial Review requires complete fixed scope, base dimensions, and professional-risk dimensions",
         "dedup-reject-missing-review-skill: [review-complete-pass] the closing Review Handoff must contain every evidence-backed Finding from the fixed round and boundary"
       ],
       "retained_semantic_equality": null
@@ -1632,7 +1678,7 @@
       "errors": [
         "dedup-reject-nonmaterial-repair: [review-validation-binding] every review must bind current-generation validation evidence",
         "dedup-reject-nonmaterial-repair: [review-complete-pass] every non-fundamental Review outcome requires a Review Round ID",
-        "dedup-reject-nonmaterial-repair: [review-complete-pass] every non-fundamental Review outcome requires complete fixed scope, base dimensions, and professional-risk dimensions",
+        "dedup-reject-nonmaterial-repair: [review-complete-pass] Initial Review requires complete fixed scope, base dimensions, and professional-risk dimensions",
         "dedup-reject-nonmaterial-repair: [review-complete-pass] the closing Review Handoff must contain every evidence-backed Finding from the fixed round and boundary",
         "dedup-reject-nonmaterial-repair: [review-complete-pass] every Finding must name a current Review Round and Task ID",
         "dedup-reject-nonmaterial-repair: [material-finding-repair] only material current-task findings create a Repair obligation"
@@ -1663,7 +1709,7 @@
       "errors": [
         "dedup-reject-mechanical-revalidation: [validation-evidence-reuse] independence alone does not justify mechanically repeating valid validation",
         "dedup-reject-mechanical-revalidation: [review-complete-pass] every non-fundamental Review outcome requires a Review Round ID",
-        "dedup-reject-mechanical-revalidation: [review-complete-pass] every non-fundamental Review outcome requires complete fixed scope, base dimensions, and professional-risk dimensions",
+        "dedup-reject-mechanical-revalidation: [review-complete-pass] Initial Review requires complete fixed scope, base dimensions, and professional-risk dimensions",
         "dedup-reject-mechanical-revalidation: [review-complete-pass] the closing Review Handoff must contain every evidence-backed Finding from the fixed round and boundary"
       ],
       "retained_semantic_equality": null
@@ -1675,7 +1721,7 @@
       "matches_expected": true,
       "errors": [
         "dedup-reject-reused-finding-id-after-repair: [review-complete-pass] every non-fundamental Review outcome requires a Review Round ID",
-        "dedup-reject-reused-finding-id-after-repair: [review-complete-pass] every non-fundamental Review outcome requires complete fixed scope, base dimensions, and professional-risk dimensions",
+        "dedup-reject-reused-finding-id-after-repair: [review-complete-pass] Initial Review requires complete fixed scope, base dimensions, and professional-risk dimensions",
         "dedup-reject-reused-finding-id-after-repair: [review-complete-pass] the closing Review Handoff must contain every evidence-backed Finding from the fixed round and boundary",
         "dedup-reject-reused-finding-id-after-repair: [review-complete-pass] every Finding must name a current Review Round and Task ID",
         "dedup-reject-reused-finding-id-after-repair: [finding-obligation] round-bound material Finding must declare affected scope, impact, validation, and covering re-review",
@@ -1711,7 +1757,7 @@
       "errors": [
         "duplicate-same-scope-analysis: [analysis-decision-invalidation] Analyzed Work requires exactly one complete initial Analysis",
         "duplicate-same-scope-analysis: [review-complete-pass] every non-fundamental Review outcome requires a Review Round ID",
-        "duplicate-same-scope-analysis: [review-complete-pass] every non-fundamental Review outcome requires complete fixed scope, base dimensions, and professional-risk dimensions",
+        "duplicate-same-scope-analysis: [review-complete-pass] Initial Review requires complete fixed scope, base dimensions, and professional-risk dimensions",
         "duplicate-same-scope-analysis: [review-complete-pass] the closing Review Handoff must contain every evidence-backed Finding from the fixed round and boundary"
       ],
       "retained_semantic_equality": null
@@ -1724,7 +1770,7 @@
       "errors": [
         "review-every-edit-task: [review-boundary-frequency] per-Task review plus final review is forbidden without a real intermediate risk boundary",
         "review-every-edit-task: [review-complete-pass] every non-fundamental Review outcome requires a Review Round ID",
-        "review-every-edit-task: [review-complete-pass] every non-fundamental Review outcome requires complete fixed scope, base dimensions, and professional-risk dimensions",
+        "review-every-edit-task: [review-complete-pass] Initial Review requires complete fixed scope, base dimensions, and professional-risk dimensions",
         "review-every-edit-task: [review-complete-pass] the closing Review Handoff must contain every evidence-backed Finding from the fixed round and boundary"
       ],
       "retained_semantic_equality": null
@@ -1747,7 +1793,7 @@
       "matches_expected": true,
       "errors": [
         "extra-final-review-after-covering-rereview: [review-complete-pass] every non-fundamental Review outcome requires a Review Round ID",
-        "extra-final-review-after-covering-rereview: [review-complete-pass] every non-fundamental Review outcome requires complete fixed scope, base dimensions, and professional-risk dimensions",
+        "extra-final-review-after-covering-rereview: [review-complete-pass] Initial Review requires complete fixed scope, base dimensions, and professional-risk dimensions",
         "extra-final-review-after-covering-rereview: [review-complete-pass] the closing Review Handoff must contain every evidence-backed Finding from the fixed round and boundary",
         "extra-final-review-after-covering-rereview: [review-complete-pass] every Finding must name a current Review Round and Task ID",
         "extra-final-review-after-covering-rereview: [finding-obligation] round-bound material Finding must declare affected scope, impact, validation, and covering re-review",
@@ -1764,7 +1810,7 @@
       "errors": [
         "rerun-valid-validation-without-invalidation: [validation-evidence-reuse] current valid validation must be reused unless an invalidation or reproduction trigger requires rerun",
         "rerun-valid-validation-without-invalidation: [review-complete-pass] every non-fundamental Review outcome requires a Review Round ID",
-        "rerun-valid-validation-without-invalidation: [review-complete-pass] every non-fundamental Review outcome requires complete fixed scope, base dimensions, and professional-risk dimensions",
+        "rerun-valid-validation-without-invalidation: [review-complete-pass] Initial Review requires complete fixed scope, base dimensions, and professional-risk dimensions",
         "rerun-valid-validation-without-invalidation: [review-complete-pass] the closing Review Handoff must contain every evidence-backed Finding from the fixed round and boundary"
       ],
       "retained_semantic_equality": null
@@ -1777,7 +1823,7 @@
       "errors": [
         "reuse-validation-after-material-edit: [review-validation-binding] review validation evidence must uniquely cover each reviewed Task at its current generation",
         "reuse-validation-after-material-edit: [review-complete-pass] every non-fundamental Review outcome requires a Review Round ID",
-        "reuse-validation-after-material-edit: [review-complete-pass] every non-fundamental Review outcome requires complete fixed scope, base dimensions, and professional-risk dimensions",
+        "reuse-validation-after-material-edit: [review-complete-pass] Initial Review requires complete fixed scope, base dimensions, and professional-risk dimensions",
         "reuse-validation-after-material-edit: [review-complete-pass] the closing Review Handoff must contain every evidence-backed Finding from the fixed round and boundary",
         "reuse-validation-after-material-edit: [completion-current-evidence] completion requires current validation after every Task's latest material edit",
         "reuse-validation-after-material-edit: [completion-current-evidence] completion cannot rely on invalidated repair evidence"
@@ -1791,7 +1837,7 @@
       "matches_expected": true,
       "errors": [
         "repair-without-fresh-validation: [review-complete-pass] every non-fundamental Review outcome requires a Review Round ID",
-        "repair-without-fresh-validation: [review-complete-pass] every non-fundamental Review outcome requires complete fixed scope, base dimensions, and professional-risk dimensions",
+        "repair-without-fresh-validation: [review-complete-pass] Initial Review requires complete fixed scope, base dimensions, and professional-risk dimensions",
         "repair-without-fresh-validation: [review-complete-pass] the closing Review Handoff must contain every evidence-backed Finding from the fixed round and boundary",
         "repair-without-fresh-validation: [review-complete-pass] every Finding must name a current Review Round and Task ID",
         "repair-without-fresh-validation: [finding-obligation] round-bound material Finding must declare affected scope, impact, validation, and covering re-review",
@@ -1809,7 +1855,7 @@
       "matches_expected": true,
       "errors": [
         "repair-without-rereview: [review-complete-pass] every non-fundamental Review outcome requires a Review Round ID",
-        "repair-without-rereview: [review-complete-pass] every non-fundamental Review outcome requires complete fixed scope, base dimensions, and professional-risk dimensions",
+        "repair-without-rereview: [review-complete-pass] Initial Review requires complete fixed scope, base dimensions, and professional-risk dimensions",
         "repair-without-rereview: [review-complete-pass] the closing Review Handoff must contain every evidence-backed Finding from the fixed round and boundary",
         "repair-without-rereview: [review-complete-pass] every Finding must name a current Review Round and Task ID",
         "repair-without-rereview: [finding-obligation] round-bound material Finding must declare affected scope, impact, validation, and covering re-review",
@@ -1842,6 +1888,69 @@
       "matches_expected": true,
       "errors": [],
       "retained_semantic_equality": true
+    },
+    {
+      "id": "accepted-brief-noninvalidation-events-no-analysis",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": [],
+      "retained_semantic_equality": true
+    },
+    {
+      "id": "adjacent-finding-no-analysis",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": [],
+      "retained_semantic_equality": true
+    },
+    {
+      "id": "pre-review-complete-finding-frontier",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": [],
+      "retained_semantic_equality": true
+    },
+    {
+      "id": "pre-review-delta-scoped-verification",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": [],
+      "retained_semantic_equality": true
+    },
+    {
+      "id": "l4-expanded-material-boundary-second-prereview",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": [],
+      "retained_semantic_equality": true
+    },
+    {
+      "id": "l4-unchanged-boundary-second-prereview",
+      "expected_valid": false,
+      "actual_valid": false,
+      "matches_expected": true,
+      "errors": [
+        "l4-unchanged-boundary-second-prereview: [preparation-review-loop] an additional L4 pre-review requires the current trigger and exact nonempty Task expansion from the latest bounded Delta",
+        "l4-unchanged-boundary-second-prereview: [orchestration-terminal] trajectory must end in complete or blocked"
+      ],
+      "retained_semantic_equality": null
+    },
+    {
+      "id": "preparation-review-loop-forbidden",
+      "expected_valid": false,
+      "actual_valid": false,
+      "matches_expected": true,
+      "errors": [
+        "preparation-review-loop-forbidden: [preparation-review-loop] an additional L4 pre-review requires the current trigger and exact nonempty Task expansion from the latest bounded Delta",
+        "preparation-review-loop-forbidden: [preparation-review-loop] broad pre-review cannot repeat without protected or material boundary expansion",
+        "preparation-review-loop-forbidden: [orchestration-terminal] trajectory must end in complete or blocked"
+      ],
+      "retained_semantic_equality": null
     }
   ],
   "semantic_traces": [
@@ -2149,14 +2258,15 @@
         }
       ],
       "validation": {
-        "fresh_count": 2,
+        "fresh_count": 3,
         "fresh_evidence_ids": [
           "v-A",
+          "v-A2",
           "v-B"
         ],
         "reuse_count": 2,
         "reused_evidence_ids": [
-          "v-A",
+          "v-A2",
           "v-B"
         ],
         "rerun_count": 0
@@ -2203,8 +2313,8 @@
         "current_validation_evidence": [
           {
             "task_id": "A",
-            "generation": 1,
-            "evidence_id": "v-A"
+            "generation": 2,
+            "evidence_id": "v-A2"
           },
           {
             "task_id": "B",
@@ -2215,11 +2325,11 @@
         "current_review_evidence": [
           {
             "task_id": "A",
-            "evidence_id": "review-6"
+            "evidence_id": "review-9"
           },
           {
             "task_id": "B",
-            "evidence_id": "review-6"
+            "evidence_id": "review-9"
           }
         ],
         "invalidated_claims": []
@@ -2620,6 +2730,18 @@
         "rereviewed_task_ids": [
           "C"
         ],
+        "repair_counts_by_task": {
+          "C": 1
+        },
+        "cap_dispositions": {
+          "C": "within-budget"
+        },
+        "rereview_finding_classifications": [],
+        "current_review_round_ids": {
+          "A": "R-C-1",
+          "B": "R-C-1",
+          "C": "R-C-2"
+        },
         "resolved_finding_ids": [
           "F-C-A",
           "F-C-B"
@@ -2762,6 +2884,19 @@
           "A:B",
           "B"
         ],
+        "repair_counts_by_task": {
+          "A:B": 1,
+          "B": 1
+        },
+        "cap_dispositions": {
+          "A:B": "within-budget",
+          "B": "within-budget"
+        },
+        "rereview_finding_classifications": [],
+        "current_review_round_ids": {
+          "A:B": "R-final",
+          "B": "R-final"
+        },
         "resolved_finding_ids": [
           "F-AB",
           "F-B"
@@ -2823,7 +2958,24 @@
         "kinds": [
           "initial",
           "delta"
-        ]
+        ],
+        "review_delta_path_changes": [
+          {
+            "source_review_action": "review",
+            "task_ids": [
+              "C"
+            ],
+            "path_change_evidence": {
+              "changed-hypothesis": false,
+              "changed-material": true,
+              "changed-gap": false,
+              "changed-transition": false
+            }
+          }
+        ],
+        "same_path_failures_by_task": {
+          "C": 0
+        }
       },
       "task_dispatch": [
         {
@@ -2879,6 +3031,16 @@
         "rereviewed_task_ids": [
           "C"
         ],
+        "repair_counts_by_task": {
+          "C": 1
+        },
+        "cap_dispositions": {
+          "C": "within-budget"
+        },
+        "rereview_finding_classifications": [],
+        "current_review_round_ids": {
+          "C": "R-C-MIX-2"
+        },
         "resolved_finding_ids": [
           "F-C-CURRENT"
         ],
@@ -3277,7 +3439,15 @@
         ],
         "rereviewed_task_ids": [
           "A"
-        ]
+        ],
+        "repair_counts_by_task": {
+          "A": 1
+        },
+        "cap_dispositions": {
+          "A": "within-budget"
+        },
+        "rereview_finding_classifications": [],
+        "current_review_round_ids": {}
       },
       "parallel_isolation": "serialized-events",
       "completion": {
@@ -3773,7 +3943,15 @@
         ],
         "rereviewed_task_ids": [
           "A"
-        ]
+        ],
+        "repair_counts_by_task": {
+          "A": 1
+        },
+        "cap_dispositions": {
+          "A": "within-budget"
+        },
+        "rereview_finding_classifications": [],
+        "current_review_round_ids": {}
       },
       "parallel_isolation": "serialized-events",
       "completion": {
@@ -4014,7 +4192,15 @@
         "fresh_validation_task_ids": [],
         "rereviewed_task_ids": [
           "A"
-        ]
+        ],
+        "repair_counts_by_task": {
+          "A": 1
+        },
+        "cap_dispositions": {
+          "A": "within-budget"
+        },
+        "rereview_finding_classifications": [],
+        "current_review_round_ids": {}
       },
       "parallel_isolation": "serialized-events",
       "completion": {
@@ -4095,7 +4281,15 @@
         "fresh_validation_task_ids": [
           "A"
         ],
-        "rereviewed_task_ids": []
+        "rereviewed_task_ids": [],
+        "repair_counts_by_task": {
+          "A": 1
+        },
+        "cap_dispositions": {
+          "A": "within-budget"
+        },
+        "rereview_finding_classifications": [],
+        "current_review_round_ids": {}
       },
       "parallel_isolation": "serialized-events",
       "completion": {
@@ -4205,6 +4399,27 @@
         "rereviewed_task_ids": [
           "C"
         ],
+        "repair_counts_by_task": {
+          "C": 2
+        },
+        "cap_dispositions": {
+          "C": "within-budget"
+        },
+        "rereview_finding_classifications": [
+          {
+            "finding_id": "F-C-C",
+            "task_id": "C",
+            "review_round_id": "R-C-2",
+            "classification": "repair-regression",
+            "classification_evidence": "the first repair diff regresses correctness",
+            "relation": "current-task"
+          }
+        ],
+        "current_review_round_ids": {
+          "A": "R-C-1",
+          "B": "R-C-1",
+          "C": "R-C-3"
+        },
         "resolved_finding_ids": [
           "F-C-A",
           "F-C-B",
@@ -4268,7 +4483,17 @@
         ],
         "invalidated_claims": []
       },
-      "proof_limit": "deterministic-structural-fixture-only"
+      "proof_limit": "deterministic-structural-fixture-only",
+      "rereview_finding_classifications": [
+        {
+          "finding_id": "F-C-C",
+          "task_id": "C",
+          "review_round_id": "R-C-2",
+          "classification": "repair-regression",
+          "classification_evidence": "the first repair diff regresses correctness",
+          "relation": "current-task"
+        }
+      ]
     },
     {
       "id": "review-convergence-rereview-scope-blocker",
@@ -4278,7 +4503,24 @@
         "kinds": [
           "initial",
           "delta"
-        ]
+        ],
+        "review_delta_path_changes": [
+          {
+            "source_review_action": "re-review",
+            "task_ids": [
+              "C"
+            ],
+            "path_change_evidence": {
+              "changed-hypothesis": false,
+              "changed-material": true,
+              "changed-gap": false,
+              "changed-transition": false
+            }
+          }
+        ],
+        "same_path_failures_by_task": {
+          "C": 0
+        }
       },
       "task_dispatch": [
         {
@@ -4298,19 +4540,21 @@
         }
       ],
       "validation": {
-        "fresh_count": 4,
+        "fresh_count": 5,
         "fresh_evidence_ids": [
           "v-A1",
           "v-B1",
           "v-C1",
-          "v-C2"
+          "v-C2",
+          "v-C3-post-delta"
         ],
-        "reuse_count": 4,
+        "reuse_count": 5,
         "reused_evidence_ids": [
           "v-A1",
           "v-B1",
           "v-C1",
-          "v-C2"
+          "v-C2",
+          "v-C3-post-delta"
         ],
         "rerun_count": 0
       },
@@ -4333,9 +4577,10 @@
         ]
       },
       "review": {
-        "count": 2,
+        "count": 3,
         "actions": [
           "review",
+          "re-review",
           "re-review"
         ]
       },
@@ -4354,6 +4599,27 @@
         "rereviewed_task_ids": [
           "C"
         ],
+        "repair_counts_by_task": {
+          "C": 1
+        },
+        "cap_dispositions": {
+          "C": "within-budget"
+        },
+        "rereview_finding_classifications": [
+          {
+            "finding_id": "F-C-SCOPE-R2",
+            "task_id": "C",
+            "review_round_id": "R-C-2",
+            "classification": "protected-invalidation",
+            "classification_evidence": "current evidence invalidates the protected Acceptance boundary",
+            "relation": "scope-blocker"
+          }
+        ],
+        "current_review_round_ids": {
+          "A": "R-C-1",
+          "B": "R-C-1",
+          "C": "R-C-3"
+        },
         "resolved_finding_ids": [
           "F-C-A",
           "F-C-B"
@@ -4392,8 +4658,8 @@
           },
           {
             "task_id": "C",
-            "generation": 2,
-            "evidence_id": "v-C2"
+            "generation": 3,
+            "evidence_id": "v-C3-post-delta"
           }
         ],
         "current_review_evidence": [
@@ -4407,7 +4673,7 @@
           },
           {
             "task_id": "C",
-            "evidence_id": "r-C2"
+            "evidence_id": "r-C3-post-delta"
           }
         ],
         "invalidated_claims": []
@@ -4418,7 +4684,17 @@
           "F-C-SCOPE-R2"
         ],
         "adjacent": []
-      }
+      },
+      "rereview_finding_classifications": [
+        {
+          "finding_id": "F-C-SCOPE-R2",
+          "task_id": "C",
+          "review_round_id": "R-C-2",
+          "classification": "protected-invalidation",
+          "classification_evidence": "current evidence invalidates the protected Acceptance boundary",
+          "relation": "scope-blocker"
+        }
+      ]
     },
     {
       "id": "review-post-dispatch-authority-delta",
@@ -4428,7 +4704,24 @@
         "kinds": [
           "initial",
           "delta"
-        ]
+        ],
+        "review_delta_path_changes": [
+          {
+            "source_review_action": "review",
+            "task_ids": [
+              "A"
+            ],
+            "path_change_evidence": {
+              "changed-hypothesis": false,
+              "changed-material": true,
+              "changed-gap": false,
+              "changed-transition": false
+            }
+          }
+        ],
+        "same_path_failures_by_task": {
+          "A": 0
+        }
       },
       "task_dispatch": [
         {
@@ -4494,6 +4787,653 @@
         ]
       },
       "proof_limit": "deterministic-structural-fixture-only"
+    },
+    {
+      "id": "accepted-brief-noninvalidation-events-no-analysis",
+      "work_kind": "analyzed",
+      "analysis": {
+        "count": 1,
+        "kinds": [
+          "initial"
+        ]
+      },
+      "task_dispatch": [
+        {
+          "task_id": "A",
+          "primary_skill": "backend-change-builder",
+          "layer3_skills": []
+        }
+      ],
+      "validation": {
+        "fresh_count": 1,
+        "fresh_evidence_ids": [
+          "v-A"
+        ],
+        "reuse_count": 1,
+        "reused_evidence_ids": [
+          "v-A"
+        ],
+        "rerun_count": 0
+      },
+      "review_boundary": {
+        "covered_task_ids": [
+          "A"
+        ],
+        "effective_level": "L3",
+        "required_review_skills": [
+          "ai-code-review-refactor"
+        ],
+        "required_changed_scope": [
+          "A"
+        ]
+      },
+      "review": {
+        "count": 1,
+        "actions": [
+          "review"
+        ]
+      },
+      "repair_flow": {
+        "repair_count": 0,
+        "affected_task_ids": [],
+        "invalidated_claims": [],
+        "fresh_validation_task_ids": [],
+        "rereviewed_task_ids": []
+      },
+      "parallel_isolation": "serialized-events",
+      "completion": {
+        "state": "complete",
+        "current_evidence": true,
+        "current_validation_task_ids": [
+          "A"
+        ],
+        "current_review_task_ids": [
+          "A"
+        ],
+        "current_validation_evidence": [
+          {
+            "task_id": "A",
+            "generation": 1,
+            "evidence_id": "v-A"
+          }
+        ],
+        "current_review_evidence": [
+          {
+            "task_id": "A",
+            "evidence_id": "r-A"
+          }
+        ],
+        "invalidated_claims": []
+      },
+      "proof_limit": "deterministic-structural-fixture-only"
+    },
+    {
+      "id": "adjacent-finding-no-analysis",
+      "work_kind": "analyzed",
+      "analysis": {
+        "count": 1,
+        "kinds": [
+          "initial"
+        ]
+      },
+      "task_dispatch": [
+        {
+          "task_id": "A",
+          "primary_skill": "backend-change-builder",
+          "layer3_skills": []
+        }
+      ],
+      "validation": {
+        "fresh_count": 1,
+        "fresh_evidence_ids": [
+          "v-A"
+        ],
+        "reuse_count": 1,
+        "reused_evidence_ids": [
+          "v-A"
+        ],
+        "rerun_count": 0
+      },
+      "review_boundary": {
+        "covered_task_ids": [
+          "A"
+        ],
+        "effective_level": "L3",
+        "required_review_skills": [
+          "ai-code-review-refactor"
+        ],
+        "required_changed_scope": [
+          "A"
+        ]
+      },
+      "review": {
+        "count": 1,
+        "actions": [
+          "review"
+        ]
+      },
+      "repair_flow": {
+        "repair_count": 0,
+        "affected_task_ids": [],
+        "invalidated_claims": [],
+        "fresh_validation_task_ids": [],
+        "rereviewed_task_ids": []
+      },
+      "parallel_isolation": "serialized-events",
+      "completion": {
+        "state": "complete",
+        "current_evidence": true,
+        "current_validation_task_ids": [
+          "A"
+        ],
+        "current_review_task_ids": [
+          "A"
+        ],
+        "current_validation_evidence": [
+          {
+            "task_id": "A",
+            "generation": 1,
+            "evidence_id": "v-A"
+          }
+        ],
+        "current_review_evidence": [
+          {
+            "task_id": "A",
+            "evidence_id": "r-A"
+          }
+        ],
+        "invalidated_claims": []
+      },
+      "proof_limit": "deterministic-structural-fixture-only",
+      "finding_routes": {
+        "scope_blocker": [],
+        "adjacent": [
+          "F-adj"
+        ]
+      }
+    },
+    {
+      "id": "pre-review-complete-finding-frontier",
+      "work_kind": "analyzed",
+      "analysis": {
+        "count": 1,
+        "kinds": [
+          "initial"
+        ]
+      },
+      "task_dispatch": [
+        {
+          "task_id": "A",
+          "primary_skill": "backend-change-builder",
+          "layer3_skills": []
+        }
+      ],
+      "validation": {
+        "fresh_count": 1,
+        "fresh_evidence_ids": [
+          "v-A"
+        ],
+        "reuse_count": 1,
+        "reused_evidence_ids": [
+          "v-A"
+        ],
+        "rerun_count": 0
+      },
+      "review_boundary": {
+        "covered_task_ids": [
+          "A"
+        ],
+        "effective_level": "L4",
+        "required_review_skills": [
+          "ai-code-review-refactor"
+        ],
+        "required_changed_scope": [
+          "A"
+        ]
+      },
+      "review": {
+        "count": 1,
+        "actions": [
+          "review"
+        ]
+      },
+      "repair_flow": {
+        "repair_count": 0,
+        "affected_task_ids": [],
+        "invalidated_claims": [],
+        "fresh_validation_task_ids": [],
+        "rereviewed_task_ids": []
+      },
+      "parallel_isolation": "serialized-events",
+      "completion": {
+        "state": "complete",
+        "current_evidence": true,
+        "current_validation_task_ids": [
+          "A"
+        ],
+        "current_review_task_ids": [
+          "A"
+        ],
+        "current_validation_evidence": [
+          {
+            "task_id": "A",
+            "generation": 1,
+            "evidence_id": "v-A"
+          }
+        ],
+        "current_review_evidence": [
+          {
+            "task_id": "A",
+            "evidence_id": "r-A"
+          }
+        ],
+        "invalidated_claims": []
+      },
+      "proof_limit": "deterministic-structural-fixture-only",
+      "finding_routes": {
+        "scope_blocker": [],
+        "adjacent": [
+          "F-PRE-ADJ"
+        ]
+      }
+    },
+    {
+      "id": "pre-review-delta-scoped-verification",
+      "work_kind": "analyzed",
+      "analysis": {
+        "count": 2,
+        "kinds": [
+          "initial",
+          "delta"
+        ],
+        "review_delta_path_changes": [
+          {
+            "source_review_action": "pre-review",
+            "task_ids": [
+              "A"
+            ],
+            "path_change_evidence": {
+              "changed-hypothesis": false,
+              "changed-material": true,
+              "changed-gap": false,
+              "changed-transition": false
+            }
+          }
+        ],
+        "same_path_failures_by_task": {
+          "A": 0
+        }
+      },
+      "task_dispatch": [
+        {
+          "task_id": "A",
+          "primary_skill": "backend-change-builder",
+          "layer3_skills": []
+        }
+      ],
+      "validation": {
+        "fresh_count": 1,
+        "fresh_evidence_ids": [
+          "v-A"
+        ],
+        "reuse_count": 1,
+        "reused_evidence_ids": [
+          "v-A"
+        ],
+        "rerun_count": 0
+      },
+      "review_boundary": {
+        "covered_task_ids": [
+          "A"
+        ],
+        "effective_level": "L4",
+        "required_review_skills": [
+          "ai-code-review-refactor"
+        ],
+        "required_changed_scope": [
+          "A"
+        ]
+      },
+      "review": {
+        "count": 1,
+        "actions": [
+          "review"
+        ]
+      },
+      "repair_flow": {
+        "repair_count": 0,
+        "affected_task_ids": [],
+        "invalidated_claims": [],
+        "fresh_validation_task_ids": [],
+        "rereviewed_task_ids": []
+      },
+      "parallel_isolation": "serialized-events",
+      "completion": {
+        "state": "complete",
+        "current_evidence": true,
+        "current_validation_task_ids": [
+          "A"
+        ],
+        "current_review_task_ids": [
+          "A"
+        ],
+        "current_validation_evidence": [
+          {
+            "task_id": "A",
+            "generation": 1,
+            "evidence_id": "v-A"
+          }
+        ],
+        "current_review_evidence": [
+          {
+            "task_id": "A",
+            "evidence_id": "r-A"
+          }
+        ],
+        "invalidated_claims": []
+      },
+      "proof_limit": "deterministic-structural-fixture-only",
+      "finding_routes": {
+        "scope_blocker": [
+          "F-PRE-SCOPE"
+        ],
+        "adjacent": []
+      }
+    },
+    {
+      "id": "l4-expanded-material-boundary-second-prereview",
+      "work_kind": "analyzed",
+      "analysis": {
+        "count": 2,
+        "kinds": [
+          "initial",
+          "delta"
+        ],
+        "review_delta_path_changes": [
+          {
+            "source_review_action": "pre-review",
+            "task_ids": [
+              "A"
+            ],
+            "path_change_evidence": {
+              "changed-hypothesis": false,
+              "changed-material": true,
+              "changed-gap": false,
+              "changed-transition": false
+            }
+          }
+        ],
+        "same_path_failures_by_task": {
+          "A": 0
+        }
+      },
+      "task_dispatch": [
+        {
+          "task_id": "A",
+          "primary_skill": "backend-change-builder",
+          "layer3_skills": []
+        },
+        {
+          "task_id": "B",
+          "primary_skill": "backend-change-builder",
+          "layer3_skills": []
+        }
+      ],
+      "validation": {
+        "fresh_count": 2,
+        "fresh_evidence_ids": [
+          "v-A",
+          "v-B"
+        ],
+        "reuse_count": 2,
+        "reused_evidence_ids": [
+          "v-A",
+          "v-B"
+        ],
+        "rerun_count": 0
+      },
+      "review_boundary": {
+        "covered_task_ids": [
+          "A",
+          "B"
+        ],
+        "effective_level": "L4",
+        "required_review_skills": [
+          "ai-code-review-refactor"
+        ],
+        "required_changed_scope": [
+          "A",
+          "B"
+        ]
+      },
+      "review": {
+        "count": 1,
+        "actions": [
+          "review"
+        ]
+      },
+      "repair_flow": {
+        "repair_count": 0,
+        "affected_task_ids": [],
+        "invalidated_claims": [],
+        "fresh_validation_task_ids": [],
+        "rereviewed_task_ids": []
+      },
+      "parallel_isolation": "serialized-events",
+      "completion": {
+        "state": "complete",
+        "current_evidence": true,
+        "current_validation_task_ids": [
+          "A",
+          "B"
+        ],
+        "current_review_task_ids": [
+          "A",
+          "B"
+        ],
+        "current_validation_evidence": [
+          {
+            "task_id": "A",
+            "generation": 1,
+            "evidence_id": "v-A"
+          },
+          {
+            "task_id": "B",
+            "generation": 1,
+            "evidence_id": "v-B"
+          }
+        ],
+        "current_review_evidence": [
+          {
+            "task_id": "A",
+            "evidence_id": "r-AB"
+          },
+          {
+            "task_id": "B",
+            "evidence_id": "r-AB"
+          }
+        ],
+        "invalidated_claims": []
+      },
+      "proof_limit": "deterministic-structural-fixture-only",
+      "finding_routes": {
+        "scope_blocker": [
+          "F-PRE-EXPAND-SCOPE"
+        ],
+        "adjacent": []
+      }
+    },
+    {
+      "id": "l4-unchanged-boundary-second-prereview",
+      "work_kind": "analyzed",
+      "analysis": {
+        "count": 2,
+        "kinds": [
+          "initial",
+          "delta"
+        ],
+        "review_delta_path_changes": [
+          {
+            "source_review_action": "pre-review",
+            "task_ids": [
+              "A"
+            ],
+            "path_change_evidence": {
+              "changed-hypothesis": false,
+              "changed-material": true,
+              "changed-gap": false,
+              "changed-transition": false
+            }
+          }
+        ],
+        "same_path_failures_by_task": {
+          "A": 0
+        }
+      },
+      "task_dispatch": [
+        {
+          "task_id": "A",
+          "primary_skill": "backend-change-builder",
+          "layer3_skills": []
+        }
+      ],
+      "validation": {
+        "fresh_count": 0,
+        "fresh_evidence_ids": [],
+        "reuse_count": 0,
+        "reused_evidence_ids": [],
+        "rerun_count": 0
+      },
+      "review_boundary": {
+        "covered_task_ids": [
+          "A"
+        ],
+        "effective_level": "L4",
+        "required_review_skills": [
+          "ai-code-review-refactor"
+        ],
+        "required_changed_scope": [
+          "A"
+        ]
+      },
+      "review": {
+        "count": 0,
+        "actions": []
+      },
+      "repair_flow": {
+        "repair_count": 0,
+        "affected_task_ids": [],
+        "invalidated_claims": [],
+        "fresh_validation_task_ids": [],
+        "rereviewed_task_ids": []
+      },
+      "parallel_isolation": "serialized-events",
+      "completion": {
+        "state": "in-progress",
+        "current_evidence": false,
+        "current_validation_task_ids": [],
+        "current_review_task_ids": [],
+        "current_validation_evidence": [],
+        "current_review_evidence": [],
+        "invalidated_claims": [
+          "review:A",
+          "validation:A"
+        ]
+      },
+      "proof_limit": "deterministic-structural-fixture-only",
+      "finding_routes": {
+        "scope_blocker": [
+          "F-PRE-UNCHANGED-SCOPE"
+        ],
+        "adjacent": []
+      }
+    },
+    {
+      "id": "preparation-review-loop-forbidden",
+      "work_kind": "analyzed",
+      "analysis": {
+        "count": 2,
+        "kinds": [
+          "initial",
+          "delta"
+        ],
+        "review_delta_path_changes": [
+          {
+            "source_review_action": "pre-review",
+            "task_ids": [
+              "A"
+            ],
+            "path_change_evidence": {
+              "changed-hypothesis": false,
+              "changed-material": true,
+              "changed-gap": false,
+              "changed-transition": false
+            }
+          }
+        ],
+        "same_path_failures_by_task": {
+          "A": 0
+        }
+      },
+      "task_dispatch": [
+        {
+          "task_id": "A",
+          "primary_skill": "backend-change-builder",
+          "layer3_skills": []
+        }
+      ],
+      "validation": {
+        "fresh_count": 0,
+        "fresh_evidence_ids": [],
+        "reuse_count": 0,
+        "reused_evidence_ids": [],
+        "rerun_count": 0
+      },
+      "review_boundary": {
+        "covered_task_ids": [
+          "A"
+        ],
+        "effective_level": "L4",
+        "required_review_skills": [
+          "ai-code-review-refactor"
+        ],
+        "required_changed_scope": [
+          "A"
+        ]
+      },
+      "review": {
+        "count": 0,
+        "actions": []
+      },
+      "repair_flow": {
+        "repair_count": 0,
+        "affected_task_ids": [],
+        "invalidated_claims": [],
+        "fresh_validation_task_ids": [],
+        "rereviewed_task_ids": []
+      },
+      "parallel_isolation": "serialized-events",
+      "completion": {
+        "state": "in-progress",
+        "current_evidence": false,
+        "current_validation_task_ids": [],
+        "current_review_task_ids": [],
+        "current_validation_evidence": [],
+        "current_review_evidence": [],
+        "invalidated_claims": [
+          "review:A",
+          "validation:A"
+        ]
+      },
+      "proof_limit": "deterministic-structural-fixture-only",
+      "finding_routes": {
+        "scope_blocker": [
+          "F-PRE-LOOP-SCOPE"
+        ],
+        "adjacent": [
+          "F-PRE-LOOP-ADJ"
+        ]
+      }
     }
   ],
   "combined_review_fixture_count": 15,
@@ -4773,7 +5713,7 @@
       "errors": []
     }
   ],
-  "evidence_localization_fixture_count": 19,
+  "evidence_localization_fixture_count": 27,
   "evidence_localization_fixtures": [
     {
       "id": "localization-known-exact-zero-search",
@@ -4785,11 +5725,48 @@
         "owner"
       ],
       "proof_limit_recorded": false,
+      "evidence_closed": true,
+      "reopening_count": 0,
       "expected_valid": true,
       "quality_gate": {
         "passed": true,
         "error_codes": [],
         "errors": []
+      },
+      "cost_observation": {
+        "search_count": 0,
+        "exact_read_count": 1,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 0,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 392,
+        "time_to_owner_proof_step": 2,
+        "time_to_first_edit_step": 4
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "localization-missing-close-before-edit",
+      "actor": "task-agent",
+      "worker_action": "not-applicable",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [
+        "owner"
+      ],
+      "proof_limit_recorded": false,
+      "evidence_closed": false,
+      "reopening_count": 0,
+      "expected_valid": false,
+      "quality_gate": {
+        "passed": false,
+        "error_codes": [
+          "evidence-closure-before-action"
+        ],
+        "errors": [
+          "localization-missing-close-before-edit: [evidence-closure-before-action] edit or worker continuation requires complete current Evidence Closure"
+        ]
       },
       "cost_observation": {
         "search_count": 0,
@@ -4817,6 +5794,8 @@
         "validation-boundary"
       ],
       "proof_limit_recorded": false,
+      "evidence_closed": true,
+      "reopening_count": 0,
       "expected_valid": true,
       "quality_gate": {
         "passed": true,
@@ -4830,9 +5809,9 @@
         "repeated_read_count": 0,
         "search_result_volume": 3,
         "truncated_search_count": 0,
-        "evidence_byte_proxy": 1268,
+        "evidence_byte_proxy": 1292,
         "time_to_owner_proof_step": 6,
-        "time_to_first_edit_step": 7
+        "time_to_first_edit_step": 8
       },
       "matches_expected": true
     },
@@ -4844,6 +5823,8 @@
       "fallback_used": false,
       "covered_evidence": [],
       "proof_limit_recorded": true,
+      "evidence_closed": false,
+      "reopening_count": 0,
       "expected_valid": true,
       "quality_gate": {
         "passed": true,
@@ -4871,6 +5852,8 @@
       "fallback_used": false,
       "covered_evidence": [],
       "proof_limit_recorded": false,
+      "evidence_closed": false,
+      "reopening_count": 0,
       "expected_valid": false,
       "quality_gate": {
         "passed": false,
@@ -4904,6 +5887,8 @@
       "fallback_used": false,
       "covered_evidence": [],
       "proof_limit_recorded": false,
+      "evidence_closed": false,
+      "reopening_count": 0,
       "expected_valid": true,
       "quality_gate": {
         "passed": true,
@@ -4931,6 +5916,8 @@
       "fallback_used": false,
       "covered_evidence": [],
       "proof_limit_recorded": false,
+      "evidence_closed": false,
+      "reopening_count": 0,
       "expected_valid": false,
       "quality_gate": {
         "passed": false,
@@ -4957,7 +5944,7 @@
     {
       "id": "localization-indirect-consumer-proof-limit",
       "actor": "analysis-agent",
-      "worker_action": "not-applicable",
+      "worker_action": "return-main-analysis",
       "authority_preserved": true,
       "fallback_used": false,
       "covered_evidence": [
@@ -4965,6 +5952,8 @@
         "owner"
       ],
       "proof_limit_recorded": true,
+      "evidence_closed": false,
+      "reopening_count": 0,
       "expected_valid": true,
       "quality_gate": {
         "passed": true,
@@ -4987,11 +5976,13 @@
     {
       "id": "localization-top-k-proof-limit",
       "actor": "analysis-agent",
-      "worker_action": "not-applicable",
+      "worker_action": "return-main-analysis",
       "authority_preserved": true,
       "fallback_used": false,
       "covered_evidence": [],
       "proof_limit_recorded": true,
+      "evidence_closed": false,
+      "reopening_count": 0,
       "expected_valid": true,
       "quality_gate": {
         "passed": true,
@@ -5021,6 +6012,8 @@
         "owner"
       ],
       "proof_limit_recorded": false,
+      "evidence_closed": false,
+      "reopening_count": 0,
       "expected_valid": true,
       "quality_gate": {
         "passed": true,
@@ -5050,6 +6043,8 @@
         "consumer"
       ],
       "proof_limit_recorded": false,
+      "evidence_closed": false,
+      "reopening_count": 0,
       "expected_valid": false,
       "quality_gate": {
         "passed": false,
@@ -5081,6 +6076,8 @@
       "fallback_used": false,
       "covered_evidence": [],
       "proof_limit_recorded": false,
+      "evidence_closed": false,
+      "reopening_count": 0,
       "expected_valid": false,
       "quality_gate": {
         "passed": false,
@@ -5115,6 +6112,8 @@
         "owner"
       ],
       "proof_limit_recorded": false,
+      "evidence_closed": false,
+      "reopening_count": 0,
       "expected_valid": false,
       "quality_gate": {
         "passed": false,
@@ -5148,6 +6147,8 @@
         "owner"
       ],
       "proof_limit_recorded": false,
+      "evidence_closed": true,
+      "reopening_count": 0,
       "expected_valid": true,
       "quality_gate": {
         "passed": true,
@@ -5161,9 +6162,9 @@
         "repeated_read_count": 0,
         "search_result_volume": 0,
         "truncated_search_count": 0,
-        "evidence_byte_proxy": 432,
+        "evidence_byte_proxy": 456,
         "time_to_owner_proof_step": 3,
-        "time_to_first_edit_step": 4
+        "time_to_first_edit_step": 5
       },
       "matches_expected": true
     },
@@ -5175,6 +6176,8 @@
       "fallback_used": false,
       "covered_evidence": [],
       "proof_limit_recorded": false,
+      "evidence_closed": false,
+      "reopening_count": 0,
       "expected_valid": false,
       "quality_gate": {
         "passed": false,
@@ -5208,6 +6211,8 @@
         "owner"
       ],
       "proof_limit_recorded": false,
+      "evidence_closed": false,
+      "reopening_count": 0,
       "expected_valid": true,
       "quality_gate": {
         "passed": true,
@@ -5237,6 +6242,8 @@
         "owner"
       ],
       "proof_limit_recorded": false,
+      "evidence_closed": false,
+      "reopening_count": 0,
       "expected_valid": false,
       "quality_gate": {
         "passed": false,
@@ -5270,6 +6277,8 @@
         "owner"
       ],
       "proof_limit_recorded": false,
+      "evidence_closed": false,
+      "reopening_count": 0,
       "expected_valid": true,
       "quality_gate": {
         "passed": true,
@@ -5304,6 +6313,8 @@
         "validation-boundary"
       ],
       "proof_limit_recorded": false,
+      "evidence_closed": true,
+      "reopening_count": 0,
       "expected_valid": true,
       "quality_gate": {
         "passed": true,
@@ -5317,7 +6328,7 @@
         "repeated_read_count": 0,
         "search_result_volume": 4,
         "truncated_search_count": 0,
-        "evidence_byte_proxy": 1504,
+        "evidence_byte_proxy": 1528,
         "time_to_owner_proof_step": 0,
         "time_to_first_edit_step": 0
       },
@@ -5331,6 +6342,8 @@
       "fallback_used": false,
       "covered_evidence": [],
       "proof_limit_recorded": false,
+      "evidence_closed": false,
+      "reopening_count": 0,
       "expected_valid": false,
       "quality_gate": {
         "passed": false,
@@ -5351,6 +6364,243 @@
         "search_result_volume": 0,
         "truncated_search_count": 0,
         "evidence_byte_proxy": 48,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "closure-known-exact-extra-discovery",
+      "actor": "task-agent",
+      "worker_action": "continue",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [
+        "owner"
+      ],
+      "proof_limit_recorded": false,
+      "evidence_closed": true,
+      "reopening_count": 0,
+      "expected_valid": false,
+      "quality_gate": {
+        "passed": false,
+        "error_codes": [
+          "discovery-after-evidence-closure",
+          "known-exact-discovery"
+        ],
+        "errors": [
+          "closure-known-exact-extra-discovery: [discovery-after-evidence-closure] search/read after closure requires a new or invalidated Evidence Requirement",
+          "closure-known-exact-extra-discovery: [known-exact-discovery] known exact source must not search"
+        ]
+      },
+      "cost_observation": {
+        "search_count": 1,
+        "exact_read_count": 1,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 1,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 120,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "closure-unrelated-nearby-search",
+      "actor": "analysis-agent",
+      "worker_action": "not-applicable",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [
+        "owner"
+      ],
+      "proof_limit_recorded": false,
+      "evidence_closed": true,
+      "reopening_count": 0,
+      "expected_valid": false,
+      "quality_gate": {
+        "passed": false,
+        "error_codes": [
+          "discovery-after-evidence-closure"
+        ],
+        "errors": [
+          "closure-unrelated-nearby-search: [discovery-after-evidence-closure] search/read after closure requires a new or invalidated Evidence Requirement"
+        ]
+      },
+      "cost_observation": {
+        "search_count": 2,
+        "exact_read_count": 1,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 2,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 152,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "closure-unclosed-contract-bounded-discovery",
+      "actor": "task-agent",
+      "worker_action": "continue",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [
+        "consumer",
+        "contract"
+      ],
+      "proof_limit_recorded": false,
+      "evidence_closed": true,
+      "reopening_count": 0,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 1,
+        "exact_read_count": 3,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 3,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 264,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "closure-top-k-only-completeness",
+      "actor": "analysis-agent",
+      "worker_action": "not-applicable",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [],
+      "proof_limit_recorded": false,
+      "evidence_closed": true,
+      "reopening_count": 0,
+      "expected_valid": false,
+      "quality_gate": {
+        "passed": false,
+        "error_codes": [
+          "selector-as-proof"
+        ],
+        "errors": [
+          "closure-top-k-only-completeness: [selector-as-proof] selector or inherited evidence cannot prove a material claim"
+        ]
+      },
+      "cost_observation": {
+        "search_count": 1,
+        "exact_read_count": 0,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 5,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 88,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "closure-claim-local-reopening",
+      "actor": "task-agent",
+      "worker_action": "continue",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [
+        "contract"
+      ],
+      "proof_limit_recorded": false,
+      "evidence_closed": true,
+      "reopening_count": 1,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 0,
+        "exact_read_count": 2,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 0,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 200,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "closure-material-invalidation-continued-edit",
+      "actor": "task-agent",
+      "worker_action": "continue",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [
+        "contract"
+      ],
+      "proof_limit_recorded": false,
+      "evidence_closed": false,
+      "reopening_count": 1,
+      "expected_valid": false,
+      "quality_gate": {
+        "passed": false,
+        "error_codes": [
+          "evidence-closure-before-action",
+          "material-before-edit"
+        ],
+        "errors": [
+          "closure-material-invalidation-continued-edit: [evidence-closure-before-action] edit or worker continuation requires complete current Evidence Closure",
+          "closure-material-invalidation-continued-edit: [material-before-edit] material discovery must return Main before edit",
+          "closure-material-invalidation-continued-edit: [material-before-edit] protected/material invalidation must stop edit and return Main for bounded Delta"
+        ]
+      },
+      "cost_observation": {
+        "search_count": 0,
+        "exact_read_count": 1,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 0,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 144,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 4
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "closure-material-invalidation-main-delta",
+      "actor": "task-agent",
+      "worker_action": "return-main-analysis",
+      "authority_preserved": true,
+      "fallback_used": false,
+      "covered_evidence": [
+        "contract"
+      ],
+      "proof_limit_recorded": false,
+      "evidence_closed": false,
+      "reopening_count": 1,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 0,
+        "exact_read_count": 1,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 0,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 112,
         "time_to_owner_proof_step": 0,
         "time_to_first_edit_step": 0
       },
@@ -5981,17 +7231,17 @@
       "metrics": {
         "time_to_first_productive_action_step": 3,
         "time_to_first_edit_step": 3,
-        "total_completion_steps": 43,
-        "control_turn_count": 19,
-        "subagent_count": 8,
+        "total_completion_steps": 32,
+        "control_turn_count": 14,
+        "subagent_count": 6,
         "duplicate_read_count": 0,
         "same_assignment_duplicate_read_count": 0,
         "selector_load_count": 2,
-        "reference_load_count": 8,
-        "handoff_count": 8,
-        "end_to_end_context_occurrence_count": 18,
-        "verification_action_count": 8,
-        "loaded_skill_count": 8,
+        "reference_load_count": 6,
+        "handoff_count": 6,
+        "end_to_end_context_occurrence_count": 14,
+        "verification_action_count": 6,
+        "loaded_skill_count": 6,
         "loaded_layer3_reference_count": 0,
         "analysis_used": false,
         "preparation_loop_detected": false,
@@ -6002,13 +7252,13 @@
         "utility_workspace_diff_unchanged": false,
         "review_after_final_edit": true,
         "repair_has_rereview": true,
-        "implementation_discipline_event_count": 4,
-        "implementation_internal_evidence_event_count": 28,
-        "review_discipline_event_count": 4,
-        "progress_count": 9,
-        "productive_action_count": 20,
+        "implementation_discipline_event_count": 3,
+        "implementation_internal_evidence_event_count": 21,
+        "review_discipline_event_count": 3,
+        "progress_count": 6,
+        "productive_action_count": 15,
         "max_silent_steps": 5,
-        "progress_to_productive_action_ratio": 0.45,
+        "progress_to_productive_action_ratio": 0.4,
         "required_progress_for_multi_agent": true,
         "explicit_complex_or_high_risk": false,
         "required_multi_agent_progress_satisfied": true
@@ -6370,19 +7620,29 @@
     },
     "total_completion_steps": {
       "median": 15.0,
-      "max": 43
+      "max": 32
     },
     "control_turn_count": {
       "median": 8.0,
-      "max": 19
+      "max": 9,
+      "observed_max": 14,
+      "per_case_exception_ids": [
+        "repair-and-rereview"
+      ]
     },
     "subagent_count": {
       "median": 3.0,
-      "max": 8
+      "max": 4,
+      "observed_max": 6,
+      "per_case_exception_ids": [
+        "repair-and-rereview"
+      ]
     },
     "duplicate_read_count": {
       "median": 0.0,
-      "max": 0
+      "max": 0,
+      "observed_max": 0,
+      "per_case_exception_ids": []
     },
     "same_assignment_duplicate_read_count": {
       "median": 0.0,
@@ -6394,19 +7654,23 @@
     },
     "reference_load_count": {
       "median": 3.0,
-      "max": 8
+      "max": 6
     },
     "handoff_count": {
       "median": 3.0,
-      "max": 8
+      "max": 6
     },
     "end_to_end_context_occurrence_count": {
       "median": 9.0,
-      "max": 18
+      "max": 14
     },
     "verification_action_count": {
       "median": 2.0,
-      "max": 8
+      "max": 3,
+      "observed_max": 6,
+      "per_case_exception_ids": [
+        "repair-and-rereview"
+      ]
     },
     "loaded_skill_count": {
       "median": 5.5,
@@ -6422,18 +7686,18 @@
     },
     "progress_count": {
       "median": 3.0,
-      "max": 9
+      "max": 6
     },
     "productive_action_count": {
       "median": 6.0,
-      "max": 20
+      "max": 15
     },
     "max_silent_steps": {
       "median": 4.5,
       "max": 9
     },
     "progress_to_productive_action_ratio": {
-      "median": 0.428571,
+      "median": 0.4142855,
       "max": 0.5
     }
   },

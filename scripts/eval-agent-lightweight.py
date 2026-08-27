@@ -7184,6 +7184,12 @@ def _orchestration_case_result(
                     and row["classification"] == "protected-invalidation"
                     for row in rereview_finding_classifications
                 )
+                frozen_boundary_violation = any(
+                    row["review_round_id"] == rereview_round_id
+                    and row["task_id"] in event_task_set
+                    and row["classification"] == "frozen-boundary-violation"
+                    for row in rereview_finding_classifications
+                )
                 if (
                     protected_invalidation
                     and event.get("frozen_boundary_status") != "invalidated"
@@ -7191,6 +7197,14 @@ def _orchestration_case_result(
                     reject(
                         "rereview-protected-invalidation",
                         "a protected-invalidation finding requires frozen_boundary_status=invalidated before Delta Analysis",
+                    )
+                if (
+                    frozen_boundary_violation
+                    and event.get("frozen_boundary_status") != "violation"
+                ):
+                    reject(
+                        "rereview-frozen-boundary-violation",
+                        "a frozen-boundary-violation finding requires frozen_boundary_status=violation",
                     )
                 covering_rereview_seen = current_review | event_task_set == set(task_ids)
                 rereviewed_task_ids.update(event_task_set & repaired_task_ids)
@@ -7541,10 +7555,14 @@ def _orchestration_case_result(
                     findings_by_round_task.setdefault(round_key, []).append(
                         finding_id
                     )
-                    if round_completion_action_by_key.get(
+                    round_completion_action = round_completion_action_by_key.get(
                         (str(review_round_id), str(task_id))
-                    ) == "re-review":
+                    )
+                    if round_completion_action == "re-review":
                         classification = event.get("rereview_classification")
+                        classification_evidence = event.get(
+                            "classification_evidence"
+                        )
                         expected_relation = REREVIEW_CLASSIFICATION_RELATIONS.get(
                             classification
                         )
@@ -7555,11 +7573,22 @@ def _orchestration_case_result(
                             )
                         elif (
                             classification == "frozen-boundary-violation"
-                            and event.get("frozen_boundary_evidenced") is not True
+                            and (
+                                not isinstance(classification_evidence, str)
+                                or not classification_evidence.strip()
+                            )
                         ):
                             reject(
                                 "rereview-frozen-boundary-evidence",
-                                "a frozen-boundary-violation may block only with explicit evidence",
+                                "a frozen-boundary-violation may block only with explicit Classification Evidence",
+                            )
+                        elif (
+                            not isinstance(classification_evidence, str)
+                            or not classification_evidence.strip()
+                        ):
+                            reject(
+                                "rereview-classification-evidence",
+                                "every Re-review finding requires non-empty Classification Evidence",
                             )
                         elif isinstance(classification, str):
                             rereview_finding_classifications.append(
@@ -7568,9 +7597,19 @@ def _orchestration_case_result(
                                     "task_id": str(task_id),
                                     "review_round_id": str(review_round_id),
                                     "classification": classification,
+                                    "classification_evidence": (
+                                        classification_evidence.strip()
+                                    ),
                                     "relation": str(relation),
                                 }
                             )
+                    elif round_completion_action == "review" and event.get(
+                        "rereview_classification"
+                    ) not in {None, "not-applicable"}:
+                        reject(
+                            "initial-review-classification",
+                            "Initial Review may omit Re-review Classification or mark it not-applicable",
+                        )
             material = category in material_categories
             if category in non_repair_categories:
                 material = False
@@ -7919,6 +7958,10 @@ def _orchestration_case_result(
     }
     if finding_routes["scope_blocker"] or finding_routes["adjacent"]:
         semantic_trace["finding_routes"] = finding_routes
+    if rereview_finding_classifications:
+        semantic_trace["rereview_finding_classifications"] = (
+            rereview_finding_classifications
+        )
     return list(dict.fromkeys(errors)), semantic_trace
 
 
@@ -7983,6 +8026,76 @@ def _orchestration_fixture_results(
                 f"{case_id}: orchestration result does not match expectation: {case_errors}"
             )
     return results, errors
+
+
+def _hookless_report_currentness_errors(
+    report: object,
+    orchestration_results: list[dict[str, Any]],
+    evaluator_errors: list[str],
+) -> list[str]:
+    """Compare the tracked report with the current bounded semantic reducer."""
+
+    if not isinstance(report, dict):
+        return ["hookless-report-currentness: report must be an object"]
+    report_traces = report.get("semantic_traces")
+    if not isinstance(report_traces, list):
+        return ["hookless-report-currentness: semantic_traces must be a list"]
+    current_traces = [
+        result.get("semantic_trace")
+        for result in orchestration_results
+        if isinstance(result, dict)
+    ]
+
+    def summary(traces: list[object]) -> dict[str, object]:
+        valid = [trace for trace in traces if isinstance(trace, dict)]
+        return {
+            "semantic_trace_ids": [trace.get("id") for trace in valid],
+            "repair_counts": [
+                (
+                    trace.get("id"),
+                    (trace.get("repair_flow") or {}).get("repair_count"),
+                )
+                for trace in valid
+            ],
+            "review_actions": [
+                (
+                    trace.get("id"),
+                    (trace.get("review") or {}).get("actions"),
+                )
+                for trace in valid
+            ],
+            "cap_dispositions": [
+                (
+                    trace.get("id"),
+                    (trace.get("repair_flow") or {}).get(
+                        "cap_dispositions", {}
+                    ),
+                )
+                for trace in valid
+            ],
+        }
+
+    expected = summary(current_traces)
+    actual = summary(report_traces)
+    errors: list[str] = []
+    expected_status = "pass" if not evaluator_errors else "fail"
+    if report.get("status") != expected_status:
+        errors.append("hookless-report-currentness: status differs")
+    if report.get("orchestration_fixture_count") != len(orchestration_results):
+        errors.append(
+            "hookless-report-currentness: orchestration_fixture_count differs"
+        )
+    if report_traces != current_traces:
+        errors.append("hookless-report-currentness: semantic_traces differ")
+    for field in (
+        "semantic_trace_ids",
+        "repair_counts",
+        "review_actions",
+        "cap_dispositions",
+    ):
+        if actual[field] != expected[field]:
+            errors.append(f"hookless-report-currentness: {field} differs")
+    return errors
 
 
 def _combined_review_case_errors(case: object) -> list[str]:

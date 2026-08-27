@@ -116,6 +116,13 @@ ROLE_MINIMAL_REQUIRED_GROUPS = {
         ("Never edit, repair, dispatch or inherit implementer reasoning",),
         ("Leave external-source-read to analysis-agent",),
         ("Review Handoff", "reviewed/unreviewed scope", "residual risk"),
+        (
+            "Re-review Classification",
+            "Classification Evidence",
+            "frozen",
+            "Initial",
+            "no prose inference",
+        ),
     ),
 }
 ROLE_MINIMAL_DETAIL_OWNERS = {

@@ -104,6 +104,7 @@ class ControlPromptProjectionTests(unittest.TestCase):
     ) -> None:
         text = VALIDATOR.PROMPT.read_text(encoding="utf-8")
         limit = VALIDATOR.PROMPT_MAX_O200K_BASE_TOKENS
+        self.assertEqual(1750, limit)
 
         accepted_errors: list[str] = []
         with mock.patch.object(
@@ -334,6 +335,14 @@ class ControlPromptProjectionTests(unittest.TestCase):
             managed["required_contracts"],
         )
         text = VALIDATOR.PROMPT.read_text(encoding="utf-8")
+        rendered = VALIDATOR.prompt_projection_block(
+            VALIDATOR.CORE_CONTRACTS,
+            managed,
+        )
+        self.assertEqual(
+            rendered,
+            VALIDATOR.extract_section_body(text, managed["section"]),
+        )
         for term in (
             "fixed Review Boundary closes first",
             "same Review Round ID+Task ID",
@@ -343,6 +352,9 @@ class ControlPromptProjectionTests(unittest.TestCase):
             "ordinary finding no Analysis",
             "scope-blocker or protected Authority/Brief invalidation",
             "fresh validation, latest actual diff, fresh re-review",
+            "Re-review Classification",
+            "Classification Evidence",
+            "no prose inference",
         ):
             with self.subTest(term=term):
                 errors: list[str] = []
@@ -351,6 +363,20 @@ class ControlPromptProjectionTests(unittest.TestCase):
                     any("main-finding-repair-routing" in error for error in errors),
                     errors,
                 )
+
+        mutation = self._remove_term(text, "Classification Evidence")
+        projection_errors = VALIDATOR.prompt_projection_errors(
+            mutation,
+            VALIDATOR.CORE_CONTRACTS,
+        )
+        self.assertTrue(
+            any("exact Core Model rendering" in error for error in projection_errors),
+            projection_errors,
+        )
+        self.assertTrue(
+            any("whole-document SHA-256" in error for error in projection_errors),
+            projection_errors,
+        )
 
     def test_missing_prompt_authoritative_template_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

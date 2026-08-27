@@ -2146,6 +2146,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
             "review_round_id": "R-C-2",
             "relation": "current-task",
             "rereview_classification": "repair-regression",
+            "classification_evidence": "repair diff regresses correctness",
             "category": "correctness-or-invariant",
             "impact_dimensions": ["correctness"],
             "repair_required": True,
@@ -2234,6 +2235,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
             "review_round_id": final_review["review_round_id"],
             "relation": "current-task",
             "rereview_classification": "repair-regression",
+            "classification_evidence": "second repair regresses security",
             "category": "security-or-reliability",
             "impact_dimensions": ["security"],
             "repair_required": True,
@@ -2363,6 +2365,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
             "review_round_id": "R-C-2",
             "relation": "scope-blocker",
             "rereview_classification": "protected-invalidation",
+            "classification_evidence": "current evidence invalidates Acceptance",
             "category": "acceptance",
             "repair_required": False,
         }
@@ -2468,6 +2471,100 @@ class LightweightUtilityContractTests(unittest.TestCase):
         self.assertEqual(1, trace["repair_flow"]["repair_count"])
         self.assertEqual(["initial", "delta"], trace["analysis"]["kinds"])
 
+    def test_rereview_classification_fields_fail_closed_and_initial_is_optional(
+        self,
+    ) -> None:
+        valid = copy.deepcopy(
+            next(
+                item
+                for item in self.orchestration_cases
+                if item["id"] == "review-convergence-second-repair"
+            )
+        )
+        valid.pop("retained_semantics", None)
+        self.assertEqual([], EVAL._orchestration_case_errors(valid))
+        finding = next(
+            event
+            for event in valid["events"]
+            if event.get("rereview_classification") == "repair-regression"
+        )
+
+        for field, expected in (
+            ("rereview_classification", "rereview-finding-classification"),
+            ("classification_evidence", "rereview-classification-evidence"),
+        ):
+            with self.subTest(missing=field):
+                probe = copy.deepcopy(valid)
+                next(
+                    event
+                    for event in probe["events"]
+                    if event.get("finding_id") == finding["finding_id"]
+                ).pop(field)
+                errors = EVAL._orchestration_case_errors(probe)
+                self.assertTrue(any(expected in error for error in errors), errors)
+
+        frozen = copy.deepcopy(valid)
+        frozen_finding = next(
+            event
+            for event in frozen["events"]
+            if event.get("finding_id") == finding["finding_id"]
+        )
+        frozen_finding["rereview_classification"] = "frozen-boundary-violation"
+        frozen_finding.pop("classification_evidence")
+        next(
+            event
+            for event in frozen["events"]
+            if event.get("action") == "re-review"
+            and event.get("review_round_id") == frozen_finding["review_round_id"]
+        )["frozen_boundary_status"] = "violation"
+        errors = EVAL._orchestration_case_errors(frozen)
+        self.assertTrue(
+            any("rereview-frozen-boundary-evidence" in error for error in errors),
+            errors,
+        )
+        frozen_finding["classification_evidence"] = (
+            "the repair diff violates the frozen accepted contract"
+        )
+        self.assertEqual([], EVAL._orchestration_case_errors(frozen))
+        frozen_review = next(
+            event
+            for event in frozen["events"]
+            if event.get("action") == "re-review"
+            and event.get("review_round_id") == frozen_finding["review_round_id"]
+        )
+        frozen_review["frozen_boundary_status"] = "preserved"
+        errors = EVAL._orchestration_case_errors(frozen)
+        self.assertTrue(
+            any("rereview-frozen-boundary-violation" in error for error in errors),
+            errors,
+        )
+
+        preserved_review = next(
+            event
+            for event in valid["events"]
+            if event.get("action") == "re-review"
+            and event.get("review_round_id") == finding["review_round_id"]
+        )
+        self.assertEqual("preserved", preserved_review["frozen_boundary_status"])
+        self.assertEqual([], EVAL._orchestration_case_errors(valid))
+
+        initial = self._review_convergence_case()
+        initial_finding = next(
+            event
+            for event in initial["events"]
+            if event.get("action") == "finding"
+        )
+        self.assertNotIn("rereview_classification", initial_finding)
+        self.assertEqual([], EVAL._orchestration_case_errors(initial))
+        initial_finding["rereview_classification"] = "not-applicable"
+        self.assertEqual([], EVAL._orchestration_case_errors(initial))
+        initial_finding["rereview_classification"] = "inherited"
+        errors = EVAL._orchestration_case_errors(initial)
+        self.assertTrue(
+            any("initial-review-classification" in error for error in errors),
+            errors,
+        )
+
     def test_repeated_review_delta_without_path_change_blocks_after_two(self) -> None:
         case = copy.deepcopy(
             next(
@@ -2502,6 +2599,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
                     "review_round_id": second_round,
                     "relation": "scope-blocker",
                     "rereview_classification": "protected-invalidation",
+                    "classification_evidence": "protected decision remains invalidated",
                     "category": "acceptance",
                     "repair_required": False,
                 },
@@ -3684,6 +3782,135 @@ class LightweightUtilityContractTests(unittest.TestCase):
             with self.subTest(bounded_trace=result["id"]):
                 self.assertTrue(trace)
                 self.assertTrue(forbidden_trace_fields.isdisjoint(trace))
+
+    def test_tracked_hookless_report_matches_current_evaluator_and_orchestration_fixtures(
+        self,
+    ) -> None:
+        results, evaluator_errors = EVAL._orchestration_fixture_results(
+            copy.deepcopy(self.orchestration_cases)
+        )
+        self.assertEqual([], evaluator_errors)
+        report = json.loads(EVAL.REPORT_JSON.read_text(encoding="utf-8"))
+        self.assertEqual(
+            [],
+            EVAL._hookless_report_currentness_errors(
+                report,
+                results,
+                evaluator_errors,
+            ),
+        )
+        mutations = []
+        status = copy.deepcopy(report)
+        status["status"] = "fail"
+        mutations.append(("status", status))
+        count = copy.deepcopy(report)
+        count["orchestration_fixture_count"] += 1
+        mutations.append(("orchestration_fixture_count", count))
+        trace_ids = copy.deepcopy(report)
+        trace_ids["semantic_traces"][0]["id"] = "stale-semantic-trace"
+        mutations.append(("semantic_trace_ids", trace_ids))
+        repair_counts = copy.deepcopy(report)
+        repair_trace = next(
+            trace
+            for trace in repair_counts["semantic_traces"]
+            if trace["repair_flow"]["repair_count"]
+        )
+        repair_trace["repair_flow"]["repair_count"] += 1
+        mutations.append(("repair_counts", repair_counts))
+        review_actions = copy.deepcopy(report)
+        rereview_trace = next(
+            trace
+            for trace in review_actions["semantic_traces"]
+            if "re-review" in trace["review"]["actions"]
+        )
+        rereview_trace["review"]["actions"] = ["review"]
+        mutations.append(("review_actions", review_actions))
+        cap_dispositions = copy.deepcopy(report)
+        cap_trace = next(
+            trace
+            for trace in cap_dispositions["semantic_traces"]
+            if trace["repair_flow"].get("cap_dispositions")
+        )
+        cap_trace["repair_flow"]["cap_dispositions"] = {}
+        mutations.append(("cap_dispositions", cap_dispositions))
+        for expected, stale in mutations:
+            with self.subTest(stale=expected):
+                errors = EVAL._hookless_report_currentness_errors(
+                    stale,
+                    results,
+                    evaluator_errors,
+                )
+                self.assertTrue(any(expected in error for error in errors), errors)
+
+    def test_hookless_currentness_closes_classification_and_evidence_payloads(
+        self,
+    ) -> None:
+        results, evaluator_errors = EVAL._orchestration_fixture_results(
+            copy.deepcopy(self.orchestration_cases)
+        )
+        self.assertEqual([], evaluator_errors)
+        report = {
+            "status": "pass",
+            "orchestration_fixture_count": len(results),
+            "semantic_traces": [
+                copy.deepcopy(result["semantic_trace"]) for result in results
+            ],
+        }
+        self.assertEqual(
+            [],
+            EVAL._hookless_report_currentness_errors(
+                report,
+                results,
+                evaluator_errors,
+            ),
+        )
+        classification_trace = next(
+            trace
+            for trace in report["semantic_traces"]
+            if trace.get("rereview_finding_classifications")
+        )
+        self.assertTrue(classification_trace["rereview_finding_classifications"])
+
+        mutations = []
+        stale_classification = copy.deepcopy(report)
+        stale_classification_trace = next(
+            trace
+            for trace in stale_classification["semantic_traces"]
+            if trace.get("rereview_finding_classifications")
+        )
+        stale_classification_trace["rereview_finding_classifications"][0][
+            "classification"
+        ] = "inherited"
+        mutations.append(stale_classification)
+        stale_evidence = copy.deepcopy(report)
+        stale_evidence_trace = next(
+            trace
+            for trace in stale_evidence["semantic_traces"]
+            if trace.get("rereview_finding_classifications")
+        )
+        stale_evidence_trace["rereview_finding_classifications"][0][
+            "classification_evidence"
+        ] = "stale classification evidence"
+        mutations.append(stale_evidence)
+        stale_current_evidence = copy.deepcopy(report)
+        current_evidence_trace = next(
+            trace
+            for trace in stale_current_evidence["semantic_traces"]
+            if trace.get("completion", {}).get("current_evidence") is True
+        )
+        current_evidence_trace["completion"]["current_evidence"] = False
+        mutations.append(stale_current_evidence)
+
+        for stale in mutations:
+            errors = EVAL._hookless_report_currentness_errors(
+                stale,
+                results,
+                evaluator_errors,
+            )
+            self.assertTrue(
+                any("semantic_traces" in error for error in errors),
+                errors,
+            )
 
     def test_orchestration_direct_work_has_zero_analysis(self) -> None:
         direct = copy.deepcopy(

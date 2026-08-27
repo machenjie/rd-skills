@@ -1595,6 +1595,8 @@ class CoreContractModelTests(unittest.TestCase):
         finding_shape = "\n".join(
             (
                 "Finding Relation: current-task / scope-blocker / adjacent",
+                "Re-review Classification: inherited / repair-regression / frozen-boundary-violation / protected-invalidation / adjacent / not-applicable for Initial Review",
+                "Classification Evidence:",
                 "Review Round ID:",
                 "Task ID:",
                 "Severity:",
@@ -1613,9 +1615,21 @@ class CoreContractModelTests(unittest.TestCase):
             "material `current-task` findings",
             "structured fields without prose inference",
             "exactly one canonical Task Contract v2 Repair",
+            "frozen-boundary-violation requires explicit Classification Evidence",
         ):
             with self.subTest(term=term):
                 self.assertIn(term, review)
+
+        prompt = (ROOT / "src/control-prompts/main-control-agent.md").read_text(
+            encoding="utf-8"
+        )
+        for term in (
+            "Re-review Classification",
+            "Classification Evidence",
+            "no prose inference",
+        ):
+            with self.subTest(surface="main", term=term):
+                self.assertIn(term, prompt)
 
     def test_review_boundary_projections_derive_all_core_fields(self) -> None:
         fields = CORE_CONTRACTS["review_discipline_contract"][

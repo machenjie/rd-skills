@@ -64,6 +64,12 @@ material `current-task` blockers. `protected-invalidation` is a `scope-blocker`
 and returns through Main to Delta Analysis. `adjacent` is residual/follow-up
 only, cannot block, and never enters Repair. A Re-review discovery is not
 mandatory current-task work without this classification and evidence.
+Every Re-review finding must expose non-empty `Re-review Classification` and
+`Classification Evidence` fields. A `frozen-boundary-violation` requires
+explicit Classification Evidence that identifies the violated frozen
+Acceptance, Invariant, Contract, or professional-risk boundary. Initial Review
+may omit both fields or use `not-applicable`; Main consumes these structured
+fields without prose inference.
 
 Main groups the material `current-task` findings by the existing Review Round
 ID and Task ID and emits exactly one canonical Task Contract v2 Repair
@@ -175,6 +181,8 @@ an implementation diff review.
 For each implementation or repair finding, state fields in this order:
 
 Finding Relation: current-task / scope-blocker / adjacent
+Re-review Classification: inherited / repair-regression / frozen-boundary-violation / protected-invalidation / adjacent / not-applicable for Initial Review
+Classification Evidence:
 Review Round ID:
 Task ID:
 Severity:
@@ -185,7 +193,10 @@ Acceptance or risk impact:
 Required validation:
 Required covering re-review:
 
-Finding Relation appears before severity or blocker. Do not invent private
+Re-review findings require both classification fields; Initial Review may omit
+them or mark `Re-review Classification: not-applicable`.
+frozen-boundary-violation requires explicit Classification Evidence. Finding
+Relation appears before severity or blocker. Do not invent private
 identifiers; use only the handoff-visible Finding, Review Round, and Task
 identities. Pre-implementation artifact review may use its artifact-specific
 finding shape without implementation Finding Relation.

@@ -3593,6 +3593,23 @@ class SkillRoutingRoleTests(unittest.TestCase):
                     "review_skill": "reliability-observability-gate",
                 },
             ),
+            "combined-without-terminal-resolution": (
+                "Analyze a reliability change where the owner is known; "
+                "duplicate delivery has an unknown side-effect outcome; lease "
+                "expiry permits stale-worker ownership and overlapping "
+                "execution; queue topology, failure contract and cross-service "
+                "workflow remain unchanged.",
+                {
+                    "path": "analyzed",
+                    "profile": "analysis-agent",
+                    "primary_skill": "engineering-change-analysis",
+                    "layer3_skills": [
+                        "concurrency-control",
+                        "idempotency-retry-design",
+                    ],
+                    "review_skill": "reliability-observability-gate",
+                },
+            ),
             "neither": (
                 "Implement an accepted bounded backend change to an "
                 "already-decided retry-count/backoff constant; retry identity, "
@@ -3623,7 +3640,7 @@ class SkillRoutingRoleTests(unittest.TestCase):
             with self.subTest(label=label):
                 actual = _route(prompt, task_id=f"{self._testMethodName}:{label}")
                 self.assertEqual(expected, actual)
-                if label == "combined":
+                if label.startswith("combined"):
                     self.assertTrue(
                         forbidden_combined.isdisjoint(actual["layer3_skills"])
                     )
@@ -3638,14 +3655,6 @@ class SkillRoutingRoleTests(unittest.TestCase):
                 "Analyze a bounded backend change where lease expiry, stale "
                 "worker ownership, and overlapping execution are unchanged.",
                 {"concurrency-control"},
-            ),
-            "combined-without-terminal-resolution": (
-                "Analyze a reliability change where the owner is known; "
-                "duplicate delivery has an unknown side-effect outcome; lease "
-                "expiry permits stale-worker ownership and overlapping "
-                "execution; queue topology, failure contract and cross-service "
-                "workflow remain unchanged.",
-                {"idempotency-retry-design"},
             ),
         }
         for label, (prompt, excluded) in nearest_negatives.items():

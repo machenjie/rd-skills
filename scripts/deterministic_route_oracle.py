@@ -16778,9 +16778,24 @@ def _route_impl(
             text,
         )
     )
-    retry_unknown_outcome_risk = (
-        "duplicate delivery has an unknown side-effect outcome" in text
-        and "terminal resolution is required" in text
+    unknown_side_effect_outcome_risk = (
+        (
+            "unknown side-effect outcome" in text
+            or "unknown side effect outcome" in text
+        )
+        and (
+            "retry" in text
+            or "replay" in text
+            or "duplicate delivery" in text
+        )
+        and not re.search(
+            r"unknown (?:side-effect|side effect) outcome[^.;!?]{0,80}"
+            r"(?:is|are|remain|remains) unchanged",
+            text,
+        )
+    )
+    idempotency_retry_risk = (
+        repeated_side_effect_risk or unknown_side_effect_outcome_risk
     )
     reliability_contrast_boundaries_fixed = (
         all(
@@ -16798,7 +16813,7 @@ def _route_impl(
     )
     combined_retry_lease_risk = (
         "owner is known" in text
-        and retry_unknown_outcome_risk
+        and idempotency_retry_risk
         and lease_stale_overlap_risk
         and reliability_contrast_boundaries_fixed
     )
@@ -16895,7 +16910,7 @@ def _route_impl(
     if (
         (
             "backend retry idempotency" in text
-            or repeated_side_effect_risk
+            or idempotency_retry_risk
         )
         and not combined_retry_lease_risk
         and not lease_stale_overlap_risk

@@ -1215,7 +1215,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             "Actual diff authoritative; every changed file required; missing blocks",
             "older review cannot cover later edits.",
             "Never edit, repair, dispatch or inherit implementer reasoning",
-            "Re-review classification:",
+            "Re-review Classification=",
         )
         self.assertLessEqual(EVAL.count_o200k_base_tokens(review), 349)
         for obligation in obligations:
@@ -5337,20 +5337,20 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "build_manifests": {
                     "dev": {
                         "path": "dist/universal/skills/dev/.changeforge-build-manifest.json",
-                        "sha256": "3bd499eaad45e39962f6df06e67d27bca465d65c7abe45b395e18cde3ceeab5c",
+                        "sha256": "a2e8d3d2ad647dab113350e6f3ee44903fece814569a57c97f5a33372f7d79d5",
                     },
                     "full": {
                         "path": "dist/universal/skills/full/.changeforge-build-manifest.json",
-                        "sha256": "34f6167c233206a2052ef404402e8103221182618d2d4163cc99011c9135700a",
+                        "sha256": "ed1ebe7ed7758eb1b4028e611a89fa11ff4f0a1f06c56513373c4d093c6145dd",
                     },
                     "recommended": {
                         "path": "dist/universal/skills/recommended/.changeforge-build-manifest.json",
-                        "sha256": "2be454e0568d2a0c334faee281535a69e57b0b62efb46f275954f9b15ac61401",
+                        "sha256": "7e2f13a54e9bc88f4a119bdb32c365a9143cac1346a1abee1647f31ba58d16c8",
                     },
                 },
                 "capsule_source": {
                     "path": "evals/agent-light-trajectories/cases.yaml",
-                    "sha256": "73012762a6c9cf9d5cf15febcf5f3777b271b53f2d26a0eaedef03b69a095240",
+                    "sha256": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",
                 },
                 "control_projection_sha256": "6f11c7fcb29a3a892c9a80b3a2ebe80ddf2f2184cf532035401f6360d65d8001",
                 "registries": {
@@ -5360,7 +5360,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 },
                 "render_component_inventory": {
                     "count": 1_212,
-                    "mapping_sha256": "99e6faaf590bc763fbd556ab141350aa3ca595106b3bb73565f239776fd6bdee",
+                    "mapping_sha256": "6284111e0b85b9d16f3d8fac9a65d66293b22053d29df0cfc18a89f99b4bbda7",
                 },
                 "selector_authority_sha256": "fefc62f354700a08db07095100547c35c473de9dc478f7844aab0168b7b5d2d2",
             },
@@ -5368,7 +5368,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         )
         self.assertEqual(236_268, frontier["mapping_row_count"])
         self.assertEqual(
-            "3ae0152d2c5986b788a972830f520b2514f6c781b6f410cd6730f68a561a41fc",
+            "7f17f82447003b5cd469b9d2fd7a2a68f35fcf4b9c26d82359b2fa9c28f94968",
             frontier["mapping_digest"],
         )
         self.assertEqual(
@@ -5388,8 +5388,8 @@ class RenderedContextBudgetTests(unittest.TestCase):
         self.assertEqual(
             {
                 "scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
-                "scripts/validation_utils.py": "531d254618231555f8178f50e206a2c8fb696d882497ef006811b8e7c4a12285",
-                "src/control-prompts/main-control-agent.md": "7de623ed7b6bf37e85eaae61970e4d6cad121f3365491b0cdf9b2cb1608cb269",
+                "scripts/validation_utils.py": "bd083dccaa974f55a189b4cb7981dfa6fe82d94187108825d44f28b08ac3e5b9",
+                "src/control-prompts/main-control-agent.md": "4dafab2e4abdebd5e1600f59fffed003c9dd70ccb959d215d04f457fd5db3991",
                 "src/control-skills/engineering-control-plane/references/professional-skill-router.md": "5a8fd594d763fde89b94087e08060b5d4dc19eab89bf6fb50849282e64bcf170",
             },
             consumer_boundary["checked_path_fingerprints"],
@@ -5405,11 +5405,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
             review["frontier_counts"],
         )
         self.assertEqual(
-            2_999,
+            2_932,
             max(item["maximum_tokens"] for item in direct["outside"]["active_reference"]),
         )
         self.assertEqual(
-            3_431,
+            3_362,
             max(item["maximum_tokens"] for item in review["outside"]["active_reference"]),
         )
         for row in frontier["budget_classes"].values():
@@ -5435,7 +5435,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         }
         maxima = composition["max_by_budget_class"]
         self.assertEqual(
-            {"analysis": 3_583, "task": 2_999, "analyzed_task": 4_098, "review": 3_431},
+            {"analysis": 3_445, "task": 2_932, "analyzed_task": 4_017, "review": 3_362},
             {budget_class: maximum["tokens"] for budget_class, maximum in maxima.items()},
         )
         self.assertEqual(

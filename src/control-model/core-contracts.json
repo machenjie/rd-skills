@@ -1795,7 +1795,7 @@
   "prompt_contract": {
     "schema_version": 1,
     "path": "src/control-prompts/main-control-agent.md",
-    "document_sha256": "7de623ed7b6bf37e85eaae61970e4d6cad121f3365491b0cdf9b2cb1608cb269",
+    "document_sha256": "4dafab2e4abdebd5e1600f59fffed003c9dd70ccb959d215d04f457fd5db3991",
     "managed_projections": [
       {"id": "execution-level-contract", "section": "Execution Level and Validation", "required_contracts": ["execution_level_contract"]},
       {"id": "review-evidence-contract", "section": "Review and Repair", "required_contracts": ["visible_evidence_contract", "review_discipline_contract", "task_contract"]},
@@ -1827,7 +1827,7 @@
       {"id": "minimum-sufficient-review-boundaries", "section": "Review and Repair", "required_terms": ["review_discipline_contract", "authoritative"]},
       {"id": "review-obligation-subsumption", "section": "Review and Repair", "required_terms": ["review_discipline_contract", "authoritative"]},
       {"id": "material-finding-repair", "section": "Review and Repair", "required_terms": ["task_contract.finding_relations"]},
-      {"id": "main-finding-repair-routing", "section": "Review and Repair", "required_terms": ["fixed Review Boundary closes first", "same Review Round ID+Task ID", "exactly one Repair batch", "cross-Task batch", "adjacent record-only", "ordinary finding no Analysis", "scope-blocker or protected Authority/Brief invalidation", "fresh validation, latest actual diff, fresh re-review"]},
+      {"id": "main-finding-repair-routing", "section": "Review and Repair", "required_terms": ["fixed Review Boundary closes first", "same Review Round ID+Task ID", "exactly one Repair batch", "cross-Task batch", "adjacent record-only", "ordinary finding no Analysis", "scope-blocker or protected Authority/Brief invalidation", "fresh validation, latest actual diff, fresh re-review", "Re-review Classification", "Classification Evidence", "no prose inference"]},
       {"id": "scoped-repair-invalidation", "section": "Review and Repair", "required_terms": ["review_discipline_contract", "authoritative"]},
       {"id": "event-driven-progress", "section": "Progress", "required_terms": ["Checkpoints", "start/path", "dispatch/batch", "validation", "review/close", "Report path/batch/outcome/supported completion/blockers"]},
       {"id": "evidence-backed-closure", "section": "Closure", "required_terms": ["`completed` only", "post-edit validation", "every changed file", "no blockers", "fresh validation", "re-review", "unverified scope", "residual risk", "current evidence scope covers claimed result", "Status: in_progress | blocked | partial | completed", "Diagnosis-only/answer-only", "fail-closed outcomes"]}
