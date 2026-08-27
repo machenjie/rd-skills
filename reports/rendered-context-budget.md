@@ -25,11 +25,11 @@ Mode: **conformance**.
 | Context | Soft target | Hard ceiling | Observed maximum | Soft margin | Hard margin | Soft status | Hard status |
 | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |
 | Main always-loaded | 2305 | 2650 | 2177 | 128 | 473 | within | within |
-| Direct Task dispatch | 3000 | 3200 | 2025 | 975 | 1175 | within | within |
-| Analyzed Task dispatch | 6000 | 6500 | 3750 | 2250 | 2750 | within | within |
-| Analysis dispatch | 4500 | 5000 | 2400 | 2100 | 2600 | within | within |
-| Review dispatch | 3700 | 4000 | 2216 | 1484 | 1784 | within | within |
-| Utility dispatch | 2000 | 2500 | 828 | 1172 | 1672 | within | within |
+| Direct Task dispatch | 3000 | 3200 | 2028 | 972 | 1172 | within | within |
+| Analyzed Task dispatch | 6000 | 6500 | 3753 | 2247 | 2747 | within | within |
+| Analysis dispatch | 4500 | 5000 | 2403 | 2097 | 2597 | within | within |
+| Review dispatch | 3700 | 4000 | 2219 | 1481 | 1781 | within | within |
+| Utility dispatch | 2000 | 2500 | 831 | 1169 | 1669 | within | within |
 
 ## Calibration Distribution
 
@@ -38,13 +38,13 @@ Calibration candidate selection and frontier construction do not apply soft targ
 | Context | Count | P50 | P90 | P95 | P99 | Max | Growth distribution |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 | Main always-loaded | 9 | 2170 | 2177 | 2177 | 2177 | 2177 | unavailable |
-| Direct Task dispatch | 19281 | 2187 | 2641 | 2704 | 2816 | 2934 | unavailable |
-| Analyzed Task dispatch | 66150 | 2685 | 3196 | 3351 | 3566 | 4019 | unavailable |
-| Analysis dispatch | 112828 | 1790 | 2126 | 2310 | 2658 | 3445 | unavailable |
-| Review dispatch | 38009 | 2364 | 2811 | 3003 | 3174 | 3363 | unavailable |
-| Utility dispatch | 18 | 806 | 828 | 828 | 828 | 828 | unavailable |
+| Direct Task dispatch | 19281 | 2190 | 2646 | 2712 | 2819 | 2937 | unavailable |
+| Analyzed Task dispatch | 66150 | 2688 | 3199 | 3354 | 3569 | 4022 | unavailable |
+| Analysis dispatch | 112828 | 1793 | 2129 | 2313 | 2661 | 3448 | unavailable |
+| Review dispatch | 38009 | 2367 | 2814 | 3006 | 3177 | 3366 | unavailable |
+| Utility dispatch | 18 | 809 | 831 | 831 | 831 | 831 | unavailable |
 
-Valid-candidate selection identity: `6b5ba791f34462249547d7134de05926c78a6ec86469a3428356d2c5920b193d`. Temporal growth is unavailable because this run has one comparable snapshot.
+Valid-candidate selection identity: `c8e0fafda467748598b41a7c10e27b336a3861ae588dec04ecd45fd462e9a488`. Temporal growth is unavailable because this run has one comparable snapshot.
 
 ## Admissible Context Composition Gate
 
@@ -52,10 +52,10 @@ Contract: **changeforge.admissible-context-composition-eval/v1**; selector owner
 
 | Context | Soft target | Hard ceiling | Reachable maximum | Professional | Layer 3 | Owner | Build | Host |
 | --- | ---: | ---: | ---: | --- | --- | --- | --- | --- |
-| task | 3000 | 3200 | 2934 | change-documentation-gate | documentation-generation | main-control-agent | dev | copilot |
-| analyzed_task | 6000 | 6500 | 4019 | backend-change-builder | failure-diagnosis, filesystem-process-safety, nodejs-runtime-professional-usage | engineering-brief | dev | copilot |
-| analysis | 4500 | 5000 | 3445 | engineering-change-analysis | iot-embedded-extension, failure-diagnosis, package-dependency-management | main-control-agent | dev | claude |
-| review | 3700 | 4000 | 3363 | ai-code-review-refactor | domain-object-identification, implementation-structure-design, refactoring | engineering-brief | dev | copilot |
+| task | 3000 | 3200 | 2937 | change-documentation-gate | documentation-generation | main-control-agent | dev | copilot |
+| analyzed_task | 6000 | 6500 | 4022 | backend-change-builder | failure-diagnosis, filesystem-process-safety, nodejs-runtime-professional-usage | engineering-brief | dev | copilot |
+| analysis | 4500 | 5000 | 3448 | engineering-change-analysis | iot-embedded-extension, failure-diagnosis, package-dependency-management | main-control-agent | dev | claude |
+| review | 3700 | 4000 | 3366 | ai-code-review-refactor | domain-object-identification, implementation-structure-design, refactoring | engineering-brief | dev | codex |
 
 ### Dominance Frontier Projection
 
@@ -68,7 +68,7 @@ Contract: **changeforge.admissible-context-composition-eval/v1**; selector owner
 
 Global Task/Review frontier counts: professional=0, layer3=0, active_reference=0; safe complement: professional=17, layer3=68, active_reference=267.
 
-Mapping digest: `e0f64819d75f714f76df8f56e8b3a3a017d8190a00cf951a03dec84f6c3b4192`; runtime consumers: **0**; build consumers: **0**.
+Mapping digest: `0eff5c34e708edd5e3608dfce8fcb1447dc7157ddfab79f0b2192c3208634a89`; runtime consumers: **0**; build consumers: **0**.
 
 Coverage: analysis_foundation_domain=yes, analyzed_task_three_layer3=yes, review_domain_foundation=yes, nested_targeted_references=yes, direct_main_owner=yes, initial_analysis_main_owner=yes, analyzed_brief_owner=yes, direct_false_worst_excluded=yes.
 
@@ -83,7 +83,7 @@ Forbidden-combination evidence: >3 rejected=47; unauthorized exact rejected=65; 
 - Sequenced Reference stages are source-owned; only canonically replayed engineering-brief Task/Review carriers may replace a predecessor body, while other owner surfaces conservatively co-load.
 - Reported maxima are exact for the deterministic canonical representatives; the full inventory count and dominance mapping remain available separately.
 
-Maximum exact normalized duplicate-rule ratio: **0.003737** (gate: **0.03**; margin: **0.026263**).
+Maximum exact normalized duplicate-rule ratio: **0.003733** (gate: **0.03**; margin: **0.026267**).
 
 Discovery metadata is reported separately because actual host discovery injection is not observed.
 

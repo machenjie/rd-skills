@@ -712,6 +712,55 @@ class AgentProfileReadabilityTests(unittest.TestCase):
                 self.assertEqual(1, result, output)
                 self.assertIn("evidence closure", output.casefold())
 
+    def test_worker_evidence_closure_is_losslessly_sentence_split(self) -> None:
+        source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
+        profiles = {profile["name"]: profile for profile in source["profiles"]}
+        selector_limits = {
+            "analysis-agent": (
+                "Selector limit: counts are selectors only, never "
+                "correctness/coverage conclusions."
+            ),
+            "task-agent": (
+                "Selector limit: counts are selectors only; never inherit "
+                "correctness/coverage."
+            ),
+            "review-agent": (
+                "Selector limit: counts/Top-K/files/summaries/digests/paths/output/"
+                "opaque refs are selectors only; never inherit correctness/coverage."
+            ),
+        }
+        for role, selector_limit in selector_limits.items():
+            with self.subTest(role=role):
+                instructions = profiles[role]["instructions"]
+                rules = instructions.splitlines()
+                closure_line = next(
+                    index
+                    for index, rule in enumerate(rules, start=1)
+                    if rule.startswith("- Evidence Closure:")
+                )
+                closure_rule = rules[closure_line - 1]
+                for sentence in (
+                    ". New/invalidated/contradicted reopens affected only.",
+                    "Protected/material returns Main/Delta.",
+                    selector_limit,
+                ):
+                    self.assertIn(sentence, closure_rule)
+                errors: list[str] = []
+                findings = VALIDATOR.validate_ai_readability(
+                    instructions,
+                    f"{role}#instructions",
+                    errors,
+                )
+                self.assertEqual([], errors)
+                self.assertFalse(
+                    any(
+                        finding["line"] == closure_line
+                        and finding["kind"] == "sentence-length"
+                        for finding in findings
+                    ),
+                    findings,
+                )
+
     def test_analysis_and_review_profiles_load_relocated_decision_owners(self) -> None:
         source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
         profiles = {item["name"]: item["instructions"] for item in source["profiles"]}

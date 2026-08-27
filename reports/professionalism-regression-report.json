@@ -53,7 +53,7 @@
     "source": "skill-content-audit.json#ai_readability",
     "readiness_scope": "agent-facing-ai-readability",
     "schema_version": 2,
-    "source_fingerprint": "4057bfa622b353e45aaf00c72e836f672f9416ef6194b4df2df40f6a5c99b3d5",
+    "source_fingerprint": "d510abd3e2f8039c4bc4f93b302df7e0d0b11bd9c0b2cd4452ee15f8d8cd379d",
     "source_fingerprint_document_count": 1001,
     "contract": {
       "bullet_decision_max": 1,
@@ -64,12 +64,12 @@
       "schema_version": 2
     },
     "documents": 1001,
-    "advisory_documents": 332,
-    "review_as_complex_sentences": 828,
+    "advisory_documents": 330,
+    "review_as_complex_sentences": 825,
     "tighten_sentences": 12,
     "hard_fail_sentences": 0,
     "compound_bullets": 0,
-    "advisory_sentences": 840,
+    "advisory_sentences": 837,
     "blocker_findings": 0,
     "hard_gate_ready": true,
     "by_surface": {
@@ -82,11 +82,11 @@
         "tighten_sentences": 0
       },
       "agent-profile-instructions": {
-        "advisory_documents": 3,
+        "advisory_documents": 1,
         "compound_bullets": 0,
         "documents": 4,
         "hard_fail_sentences": 0,
-        "review_as_complex_sentences": 3,
+        "review_as_complex_sentences": 0,
         "tighten_sentences": 1
       },
       "control-prompt": {
@@ -363,7 +363,7 @@
         "current_source_fingerprints": {
           "actionability_detector_contract": "5980b6a90aff04f345c4549c0522f4e493ea9d23f4b7d7aa334a51359aed575e",
           "readability_detector_contract": "f224da76c77a25ed73086603711647c0d728bbab7669870224a7031f3a6cca4f",
-          "readability_target_manifest": "02d7a8cf8484f0164347f24598925924ac5328be8ddb10f11837a551c56120e9"
+          "readability_target_manifest": "d2a6986f11c1d8f8c62ee56a3ca875aabc84717f7a1d661ee6ee833a390099c2"
         },
         "attested_by": null,
         "attested_on": null,
@@ -382,7 +382,7 @@
         "panel_artifact_schema_version": null,
         "required_density_disposition_count": 21,
         "applied_density_disposition_count": 0,
-        "required_readability_disposition_count": 332,
+        "required_readability_disposition_count": 330,
         "applied_readability_disposition_count": 0,
         "required_actionability_disposition_count": 0,
         "applied_actionability_disposition_count": 0,
@@ -637,7 +637,7 @@
     {
       "category": "ai-readability-advisory",
       "target": "skill-content-audit.json#ai_readability",
-      "message": "advisory_documents=332; review_as_complex_sentences=828; tighten_sentences=12",
+      "message": "advisory_documents=330; review_as_complex_sentences=825; tighten_sentences=12",
       "severity": "warning"
     }
   ],

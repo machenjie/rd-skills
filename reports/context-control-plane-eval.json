@@ -47,11 +47,11 @@
     },
     "max_by_budget_class": {
       "analysis": {
-        "tokens": 2400,
+        "tokens": 2403,
         "soft_target": 4500,
         "hard_ceiling": 5000,
-        "soft_margin_tokens": 2100,
-        "hard_margin_tokens": 2600,
+        "soft_margin_tokens": 2097,
+        "hard_margin_tokens": 2597,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -62,11 +62,11 @@
         "primary_skill": "engineering-change-analysis"
       },
       "task": {
-        "tokens": 2025,
+        "tokens": 2028,
         "soft_target": 3000,
         "hard_ceiling": 3200,
-        "soft_margin_tokens": 975,
-        "hard_margin_tokens": 1175,
+        "soft_margin_tokens": 972,
+        "hard_margin_tokens": 1172,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -77,11 +77,11 @@
         "primary_skill": "backend-change-builder"
       },
       "analyzed_task": {
-        "tokens": 3750,
+        "tokens": 3753,
         "soft_target": 6000,
         "hard_ceiling": 6500,
-        "soft_margin_tokens": 2250,
-        "hard_margin_tokens": 2750,
+        "soft_margin_tokens": 2247,
+        "hard_margin_tokens": 2747,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -92,11 +92,11 @@
         "primary_skill": "delivery-release-gate"
       },
       "review": {
-        "tokens": 2216,
+        "tokens": 2219,
         "soft_target": 3700,
         "hard_ceiling": 4000,
-        "soft_margin_tokens": 1484,
-        "hard_margin_tokens": 1784,
+        "soft_margin_tokens": 1481,
+        "hard_margin_tokens": 1781,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -107,11 +107,11 @@
         "primary_skill": "architecture-impact-reviewer"
       },
       "utility": {
-        "tokens": 828,
+        "tokens": 831,
         "soft_target": 2000,
         "hard_ceiling": 2500,
-        "soft_margin_tokens": 1172,
-        "hard_margin_tokens": 1672,
+        "soft_margin_tokens": 1169,
+        "hard_margin_tokens": 1669,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -122,8 +122,8 @@
         "primary_skill": null
       }
     },
-    "max_duplicate_rule_token_ratio": 0.003737,
-    "duplicate_rule_token_ratio_margin": 0.026263,
+    "max_duplicate_rule_token_ratio": 0.003733,
+    "duplicate_rule_token_ratio_margin": 0.026267,
     "max_discovery_metadata_tokens": 8514,
     "loaded_layer3_reference_count": 8,
     "measured_layer3_reference_component_count": 72,
