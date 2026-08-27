@@ -7700,6 +7700,7 @@ def _aggregate_readability_ballots(
         )
         for path, value in ballot_values
     ]
+    validated.sort(key=lambda item: item[1]["voter"]["voter_id"])
     voter_ids = [value["voter"]["voter_id"] for _path, value in validated]
     agent_ids = [value["voter"]["agent_id"] for _path, value in validated]
     roles = [value["voter"]["role"] for _path, value in validated]
@@ -8322,6 +8323,7 @@ def _aggregate_semantic_disposition_ballots(
         (path, validate_ballot(packet, value, packet_sha256=packet_sha256))
         for path, value in ballot_values
     ]
+    validated.sort(key=lambda item: item[1]["voter"]["voter_id"])
     voter_ids = [value["voter"]["voter_id"] for _path, value in validated]
     agent_ids = [value["voter"]["agent_id"] for _path, value in validated]
     roles = [value["voter"]["role"] for _path, value in validated]

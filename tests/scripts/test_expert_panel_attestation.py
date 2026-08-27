@@ -1309,6 +1309,34 @@ def _current_professional_attestation_fixture() -> tuple[dict, dict]:
 
 
 class ExpertPanelAttestationRepairTests(unittest.TestCase):
+    def test_semantic_attestation_rejects_reversed_identity_arrays(self) -> None:
+        bindings = _semantic_expected_bindings()
+        for label, mutate, error in (
+            (
+                "reviewers",
+                lambda value: value.update(
+                    reviewers=list(reversed(value["reviewers"]))
+                ),
+                "reviewer identities are not canonical",
+            ),
+            (
+                "votes",
+                lambda value: value["findings"][0].update(
+                    votes=list(reversed(value["findings"][0]["votes"]))
+                ),
+                "target voters must be sorted and unique",
+            ),
+        ):
+            changed = semantic_fixture()
+            mutate(changed)
+            with self.subTest(label=label), self.assertRaisesRegex(
+                ATTESTATION.AttestationError, error
+            ):
+                ATTESTATION.validate_attestation(
+                    changed,
+                    expected_semantic_current_bindings=bindings,
+                )
+
     def test_current_compact_storage_schema_is_v2(self) -> None:
         self.assertEqual(2, ATTESTATION.ATTESTATION_SCHEMA_VERSION)
         self.assertEqual(

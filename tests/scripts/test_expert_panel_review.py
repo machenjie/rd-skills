@@ -1607,6 +1607,78 @@ Route current work to `candidate-a`.
         self.assertEqual(2, decision["winning_votes"])
         self.assertEqual(["expert-2", "expert-3"], decision["supporting_voters"])
 
+    def test_readability_aggregate_is_ballot_permutation_invariant(self) -> None:
+        packet = _packet()
+        with tempfile.TemporaryDirectory(dir=ROOT) as raw:
+            root = Path(raw)
+            packet_path = root / "packet.json"
+            _write_json(packet_path, packet)
+            digest = hashlib.sha256(packet_path.read_bytes()).hexdigest()
+            ballot_values = []
+            for voter, decision in enumerate(
+                (
+                    "accepted-current-readability",
+                    "tracked-tightening",
+                    "tracked-tightening",
+                ),
+                start=1,
+            ):
+                path = root / f"expert-{voter}.json"
+                value = _ballot(
+                    packet,
+                    digest,
+                    voter=voter,
+                    readability_decision=decision,
+                )
+                _write_json(path, value)
+                ballot_values.append((path, value))
+
+            ordered = PANEL.aggregate_ballots(
+                packet=packet,
+                packet_path=packet_path,
+                ballot_values=ballot_values,
+                decided_on="2026-07-16",
+            )
+            permuted = PANEL.aggregate_ballots(
+                packet=packet,
+                packet_path=packet_path,
+                ballot_values=[
+                    ballot_values[2],
+                    ballot_values[0],
+                    ballot_values[1],
+                ],
+                decided_on="2026-07-16",
+            )
+
+        self.assertEqual(
+            json.dumps(ordered, sort_keys=True, separators=(",", ":")),
+            json.dumps(permuted, sort_keys=True, separators=(",", ":")),
+        )
+        self.assertEqual(
+            sorted(voter["voter_id"] for voter in permuted["voters"]),
+            [voter["voter_id"] for voter in permuted["voters"]],
+        )
+        for field in ("content_decisions", "readability_decisions"):
+            for decision in permuted[field]:
+                self.assertEqual(
+                    sorted(decision["supporting_voters"]),
+                    decision["supporting_voters"],
+                )
+                self.assertEqual(
+                    sorted(decision["dissenting_voters"]),
+                    decision["dissenting_voters"],
+                )
+                self.assertEqual(
+                    sorted(
+                        row["voter_id"]
+                        for row in decision["winning_rationales"]
+                    ),
+                    [
+                        row["voter_id"]
+                        for row in decision["winning_rationales"]
+                    ],
+                )
+
     def test_panel_rejects_duplicate_agent_or_role(self) -> None:
         packet = _packet()
         with tempfile.TemporaryDirectory() as raw:
@@ -3468,9 +3540,21 @@ Route current work to `candidate-a`.
             attestation_selector=selector,
         )
 
-        self.assertEqual(205, len(selected["semantic_targets"]))
+        expected_axis_counts = {
+            axis: sum(
+                axis == "root"
+                or candidate.get("detector_status") == "candidate"
+                for candidate in audit[f"{axis}_content"]
+                ["semantic_advisories"]["candidates"]
+            )
+            for axis in ("root", "reference")
+        }
         self.assertEqual(
-            {"root": 70, "reference": 135},
+            sum(expected_axis_counts.values()),
+            len(selected["semantic_targets"]),
+        )
+        self.assertEqual(
+            expected_axis_counts,
             selected["panel_contract"]["required_axis_target_counts"],
         )
 
@@ -3487,8 +3571,17 @@ Route current work to `candidate-a`.
         )
 
         self.assertEqual(original, audit)
+        expected_axis_counts = {
+            axis: sum(
+                axis == "root"
+                or candidate.get("detector_status") == "candidate"
+                for candidate in original[f"{axis}_content"]
+                ["semantic_advisories"]["candidates"]
+            )
+            for axis in ("root", "reference")
+        }
         self.assertEqual(
-            {"root": 70, "reference": 135},
+            expected_axis_counts,
             packet["panel_contract"]["required_axis_target_counts"],
         )
         PANEL.validate_semantic_packet_current(packet, original)
@@ -4274,6 +4367,95 @@ Route current work to `candidate-a`.
             len(packet["semantic_targets"]),
             record["summary"]["semantic_dispositions"]["rewrite"],
         )
+
+    def test_semantic_aggregate_is_permutation_invariant_and_attestable(self) -> None:
+        audit = _semantic_audit_with_synthetic_delta()
+        packet = PANEL.prepare_semantic_disposition_packet(
+            audit=audit,
+            review_id="semantic-permutation-review",
+            created_on="2026-07-16",
+        )
+        with tempfile.TemporaryDirectory(dir=ROOT) as raw:
+            root = Path(raw)
+            packet_path = root / "packet.json"
+            _write_json(packet_path, packet)
+            digest = hashlib.sha256(packet_path.read_bytes()).hexdigest()
+            ballot_values = []
+            for voter, disposition in enumerate(
+                (
+                    "false-positive",
+                    "valid-contextual-rule",
+                    "valid-contextual-rule",
+                ),
+                start=1,
+            ):
+                path = root / f"semantic-expert-{voter}.json"
+                value = _semantic_ballot(
+                    packet,
+                    digest,
+                    voter=voter,
+                    disposition=disposition,
+                )
+                _write_json(path, value)
+                ballot_values.append((path, value))
+
+            ordered = PANEL.aggregate_ballots(
+                packet=packet,
+                packet_path=packet_path,
+                ballot_values=ballot_values,
+                decided_on="2026-07-16",
+            )
+            permuted = PANEL.aggregate_ballots(
+                packet=packet,
+                packet_path=packet_path,
+                ballot_values=[
+                    ballot_values[2],
+                    ballot_values[0],
+                    ballot_values[1],
+                ],
+                decided_on="2026-07-16",
+            )
+            self.assertEqual(
+                json.dumps(ordered, sort_keys=True, separators=(",", ":")),
+                json.dumps(permuted, sort_keys=True, separators=(",", ":")),
+            )
+            decision_path = root / "decision.json"
+            _write_json(decision_path, permuted)
+            PANEL.validate_decision_record(
+                permuted, record_path=decision_path
+            )
+            compact = PANEL._semantic_attestation_from_decision(
+                permuted,
+                decision_path=decision_path,
+                audit=audit,
+            )
+
+        self.assertEqual(
+            sorted(voter["voter_id"] for voter in permuted["voters"]),
+            [voter["voter_id"] for voter in permuted["voters"]],
+        )
+        for decision in permuted["semantic_decisions"]:
+            for field in ("supporting_voters", "dissenting_voters"):
+                self.assertEqual(sorted(decision[field]), decision[field])
+            self.assertEqual(
+                sorted(
+                    row["voter_id"]
+                    for row in decision["ballot_rationales"]
+                ),
+                [
+                    row["voter_id"]
+                    for row in decision["ballot_rationales"]
+                ],
+            )
+        self.assertEqual(
+            sorted(reviewer["voter_id"] for reviewer in compact["reviewers"]),
+            [reviewer["voter_id"] for reviewer in compact["reviewers"]],
+        )
+        for finding in compact["findings"]:
+            self.assertEqual(
+                sorted(vote["voter_id"] for vote in finding["votes"]),
+                [vote["voter_id"] for vote in finding["votes"]],
+            )
 
 
 if __name__ == "__main__":
