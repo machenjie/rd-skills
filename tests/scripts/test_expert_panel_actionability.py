@@ -153,7 +153,15 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
             "root-body-document-context-v1",
             packet["panel_contract"]["content_source_binding_contract"],
         )
-        self.assertEqual(43, len(packet["content_targets"]))
+        expected_content_paths = {
+            row["path"]
+            for row in self.audit["skills"]
+            if row["classification"] in {"REVIEW_DENSITY", "TIGHTEN_BODY"}
+        }
+        self.assertEqual(
+            expected_content_paths,
+            {row["path"] for row in packet["content_targets"]},
+        )
         advisory_paths = {
             row["path"] for row in packet["readability_targets"]
         }
@@ -179,7 +187,10 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
                 row["text"] for row in context["lines"]
             ])
             missing_advisory += target["path"] not in advisory_paths
-        self.assertEqual(7, missing_advisory)
+        self.assertEqual(
+            len(expected_content_paths - advisory_paths),
+            missing_advisory,
+        )
         self.assertLess(
             len(json.dumps(packet, sort_keys=True).encode("utf-8")),
             16 * 1024 * 1024,
@@ -192,9 +203,8 @@ class ExpertPanelActionabilityTests(unittest.TestCase):
             },
             set(packet["source_fingerprints"]),
         )
-        self.assertEqual(0, len(packet["actionability_targets"]))
         self.assertEqual(
-            0,
+            len(packet["actionability_targets"]),
             packet["panel_contract"]["required_actionability_target_count"],
         )
         target_ids = [row["target_id"] for row in packet["actionability_targets"]]

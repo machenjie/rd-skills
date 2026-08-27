@@ -923,7 +923,7 @@ FG_C1K_LANGUAGE_NEW_ANCHORS = {
     "3e3e8d31d5073263f36e1185b40101b06f55dfc8a2cd7d5c3cbfecdf59b03c7e": "| ARC | Strong edges through closure, delegate, task, timer, notification, Objective-C, cache; release owners, prove teardown/retention. |",
     "e730e5e27b933e49a3b241c04fdacd3ae768dd84ca74ded7b347302840d2aa39": "| Actor | Mutable state, sync/async entry, hops, reentrancy invariant, `nonisolated`, UI owner. | Suspension invalidates state or unsafe escape bypasses isolation. |",
     "384d9c79e5578a96aa37e9d9ed8f5734f83785dd72a53e11e03230771aa95f14": "- Exercise completion, cancellation before/during suspension, owner teardown, and callback outcomes.",
-    "c67379d6adc0e93256ba9e75b884bd39b9b4128b26373aac71eef5cbf93ce342": "| Protocol/generic | Associated type, `Self`, specialization, storage, heterogeneous collection, compatibility; cross affected type boundary. |",
+    "c67379d6adc0e93256ba9e75b884bd39b9b4128b26373aac71eef5cbf93ce342": "| Protocol/generic | Associated type, `Self`, specialization, storage, heterogeneous collection, compatibility. Separately store the protocol existential and cross an associated-type boundary; record erased and static relationships independently of lifetime probes. |",
     "830765ceea5721623632a2378a4b527bb88b22bd384d889f6ad6e494681b5e01": "| Optional | Named `nil`, binding/chaining/default, force precondition, nesting, public/Objective-C representation; exercise absent/present/invalid paths. |",
     "efb585e1aacdf62aa4e941450bf331915bd184cb8779298b1d816ff52d945661": "| Objective-C | Nullability, selector, ownership, block lifetime, bridging copy, error, availability, caller. | IUO, copied collection, or retained callback changes meaning. |",
     "61bf7ec5e5c7c9b4dac1072d48626e2300c267fa01c53299c04872925383d95c": "| SwiftUI | View/model identity, state owner, observation, main-actor mutation, task cancellation, restoration, disposal. | Recreation, stale mutation, repeated effect, off-owner update. |",
@@ -5852,13 +5852,13 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/foundation/capabilities/csharp-dotnet-professional-usage/references/runtime-deployment-and-interop-contracts.md": ("9b301a2ffa740333fd99a8775e36af9278d7181abab9cebf52b6a92153ff12bb", 669),
             "src/foundation/capabilities/swift-professional-usage/SKILL.md": ("9634eab0f722a56206d531b274d5ab7a2c340a4ecb3bdda240cd7f9e43a99620", 476),
             "src/foundation/capabilities/swift-professional-usage/references/concurrency-interop-and-ui-contracts.md": ("6f62745217d0de2936a76f58372e05acf4f8ae0524e7ae24d23acf4a717524b9", 671),
-            "src/foundation/capabilities/swift-professional-usage/references/value-memory-and-type-contracts.md": ("740caeae10cc30b6c80655ecf5155b713e52762281b4fa9c0b73ea39d3662528", 671),
+            "src/foundation/capabilities/swift-professional-usage/references/value-memory-and-type-contracts.md": ("82908869cfaa458fe9712ede1704ea10370f04d4b0ef73adea304ee0d465b24c", 742),
         }
-        for path, (expected_hash, expected_tokens) in source_specs.items():
+        for path, (expected_hash, token_snapshot) in source_specs.items():
             text = (ROOT / path).read_text(encoding="utf-8")
             with self.subTest(source=path):
                 self.assertEqual(expected_hash, hashlib.sha256(text.encode("utf-8")).hexdigest())
-                self.assertEqual(expected_tokens, VALIDATION.count_o200k_base_tokens(text))
+                self.assertEqual(token_snapshot, VALIDATION.count_o200k_base_tokens(text))
 
         protected_references = {
             "src/professional-skills/installed-client-change-builder/references/dotnet-maui-framework-contracts.md": ("a2443e016ae5e270f6e3f625cc9de4c580b4d5419031c092f9212284539a5baa", 125),
@@ -5940,13 +5940,21 @@ class ContextContentRelocationTests(unittest.TestCase):
             path: VALIDATION.count_o200k_base_tokens((ROOT / path).read_text(encoding="utf-8"))
             for path in reference_paths
         }
-        self.assertEqual(671, max(reference_tokens.values()))
+        expected_reference_max = max(
+            token_snapshot
+            for path, (_digest, token_snapshot) in {
+                **source_specs,
+                **protected_references,
+            }.items()
+            if path in reference_paths
+        )
+        self.assertEqual(expected_reference_max, max(reference_tokens.values()))
 
         self.assertEqual(862, sum(item[2] for item in root_projections.values()))
-        projected_sum = 3_466 - (1_079 - 862) - (1_010 - 671)
-        self.assertEqual(2_910, projected_sum)
-        self.assertEqual(2_909, projected_sum - 1)
-        self.assertEqual(2_916, projected_sum + 6)
+        projected_sum = 3_466 - (1_079 - 862) - (1_010 - expected_reference_max)
+        self.assertEqual(2_981, projected_sum)
+        self.assertEqual(2_980, projected_sum - 1)
+        self.assertEqual(2_987, projected_sum + 6)
 
         protected_hashes = {
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
@@ -8269,8 +8277,8 @@ class ContextContentRelocationTests(unittest.TestCase):
             "evals/agent-light-trajectories/cases.yaml": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
 "tests/scripts/test_eval_rendered_context_budget.py": "9bf0e6bcecc728ec21b54c704b459d75ba8c9499dfd2f52232b1e1b2ce6d51e6",
-            "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
-            "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
+            "scripts/audit-skill-content.py": "09c9125c0071d970f214b56fc6913bfc3f3e76000e5693a6f47cd5bc46f712a6",
+            "tests/scripts/test_validate_root_content.py": "e3309a2dd9768fdb052221627bf29ba1edc16fe9496b49637bdc928af6d134bd",
         }
         for path, expected_sha256 in protected.items():
             self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -8458,8 +8466,8 @@ class ContextContentRelocationTests(unittest.TestCase):
             "evals/agent-light-trajectories/cases.yaml": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
 "tests/scripts/test_eval_rendered_context_budget.py": "9bf0e6bcecc728ec21b54c704b459d75ba8c9499dfd2f52232b1e1b2ce6d51e6",
-            "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
-            "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
+            "scripts/audit-skill-content.py": "09c9125c0071d970f214b56fc6913bfc3f3e76000e5693a6f47cd5bc46f712a6",
+            "tests/scripts/test_validate_root_content.py": "e3309a2dd9768fdb052221627bf29ba1edc16fe9496b49637bdc928af6d134bd",
         }
         for path, expected_sha256 in protected.items():
             self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -8580,8 +8588,8 @@ class ContextContentRelocationTests(unittest.TestCase):
             "evals/agent-light-trajectories/cases.yaml": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
 "tests/scripts/test_eval_rendered_context_budget.py": "9bf0e6bcecc728ec21b54c704b459d75ba8c9499dfd2f52232b1e1b2ce6d51e6",
-            "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
-            "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
+            "scripts/audit-skill-content.py": "09c9125c0071d970f214b56fc6913bfc3f3e76000e5693a6f47cd5bc46f712a6",
+            "tests/scripts/test_validate_root_content.py": "e3309a2dd9768fdb052221627bf29ba1edc16fe9496b49637bdc928af6d134bd",
         }
         for path, expected_sha256 in protected.items():
             self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -9168,8 +9176,8 @@ class ContextContentRelocationTests(unittest.TestCase):
             "evals/agent-light-trajectories/cases.yaml": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
 "tests/scripts/test_eval_rendered_context_budget.py": "9bf0e6bcecc728ec21b54c704b459d75ba8c9499dfd2f52232b1e1b2ce6d51e6",
-            "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
-            "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
+            "scripts/audit-skill-content.py": "09c9125c0071d970f214b56fc6913bfc3f3e76000e5693a6f47cd5bc46f712a6",
+            "tests/scripts/test_validate_root_content.py": "e3309a2dd9768fdb052221627bf29ba1edc16fe9496b49637bdc928af6d134bd",
         }
         for path, expected_sha256 in protected.items():
             self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -9452,8 +9460,8 @@ class ContextContentRelocationTests(unittest.TestCase):
 "scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
 "scripts/validation_utils.py": "a210359ac8241667822bbe9c908dc37b54e2f115032e238f77f1edecc8d7a8e9",
 "tests/scripts/test_eval_rendered_context_budget.py": "9bf0e6bcecc728ec21b54c704b459d75ba8c9499dfd2f52232b1e1b2ce6d51e6",
-            "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
-            "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
+            "scripts/audit-skill-content.py": "09c9125c0071d970f214b56fc6913bfc3f3e76000e5693a6f47cd5bc46f712a6",
+            "tests/scripts/test_validate_root_content.py": "e3309a2dd9768fdb052221627bf29ba1edc16fe9496b49637bdc928af6d134bd",
             "evals/agent-light-trajectories/cases.yaml": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",
         }
         for path, expected_sha256 in protected.items():

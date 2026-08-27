@@ -102472,7 +102472,7 @@
       {
         "check_bullets": true,
         "compound_bullet_count": 0,
-        "content_fingerprint": "740caeae10cc30b6c80655ecf5155b713e52762281b4fa9c0b73ea39d3662528",
+        "content_fingerprint": "82908869cfaa458fe9712ede1704ea10370f04d4b0ef73adea304ee0d465b24c",
         "document_context": {
           "line_count": 30,
           "line_offset": 0,
@@ -102523,11 +102523,11 @@
             },
             {
               "line": 12,
-              "text": "| Weak/unowned | `weak` for valid absence; `unowned` under live-referent invariant. Test accepted trap in isolation; otherwise prove lifetime/teardown. |"
+              "text": "| Weak/unowned | For the ownership choice, choose `weak` for valid absence and `unowned` only when every affected reachable access is protected by a live-referent lifetime invariant. For each affected reachable `unowned` access whose contract explicitly accepts a trap, exercise invalid lifetime only in an isolated expected-crash harness. For other `unowned` uses, prove the lifetime invariant and teardown without deliberately dereferencing after deallocation. |"
             },
             {
               "line": 13,
-              "text": "| Protocol/generic | Associated type, `Self`, specialization, storage, heterogeneous collection, compatibility; cross affected type boundary. |"
+              "text": "| Protocol/generic | Associated type, `Self`, specialization, storage, heterogeneous collection, compatibility. Separately store the protocol existential and cross an associated-type boundary; record erased and static relationships independently of lifetime probes. |"
             },
             {
               "line": 14,
@@ -102598,8 +102598,8 @@
               "text": "- Reject value syntax, ARC, `weak`/`unowned`, protocol, or `Sendable` as immutability, lifetime, or race-freedom proof."
             }
           ],
-          "sha256": "740caeae10cc30b6c80655ecf5155b713e52762281b4fa9c0b73ea39d3662528",
-          "text": "# Swift Value, Memory, And Type Contracts\n\nUse for identity, ownership, representation, or error decisions.\n\n## Decision And Probe Matrix\n\n| Boundary | Contract and probe |\n| --- | --- |\n| Value/reference | Identity, mutation owner, copy independence/cost, shared references; copy then mutate across identity. |\n| Copy-on-write | Storage sharing, detachment, uniqueness, nested aliases, unproved thread boundary; measure independence/allocation. |\n| ARC | Strong edges through closure, delegate, task, timer, notification, Objective-C, cache; release owners, prove teardown/retention. |\n| Weak/unowned | `weak` for valid absence; `unowned` under live-referent invariant. Test accepted trap in isolation; otherwise prove lifetime/teardown. |\n| Protocol/generic | Associated type, `Self`, specialization, storage, heterogeneous collection, compatibility; cross affected type boundary. |\n| Opaque/existential | `some` for one hidden producer type; `any` for erased storage/dispatch; record lost static relationships. |\n| Optional | Named `nil`, binding/chaining/default, force precondition, nesting, public/Objective-C representation; exercise absent/present/invalid paths. |\n| Error | Domain failure, cancellation, programmer fault, partial result, cleanup failure, `throws`/`Result`/callback/`NSError` translation; exercise each. |\n| Wrapper | Storage, initialization, projection, mutation/observation owner, serialization, isolation; test API outcomes. |\n\n## Primary Sources\n\n[values](https://www.swift.org/documentation/articles/value-and-reference-types.html), [types](https://docs.swift.org/swift-book/LanguageGuide/ClassesAndStructures.html), [ARC](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/automaticreferencecounting/), [protocols](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/protocols/), [opaque](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/opaquetypes/), [generics](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/generics/), [errors](https://docs.swift.org/swift-book/LanguageGuide/ErrorHandling.html), [optional](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/thebasics/), [chaining](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/optionalchaining/), [wrappers](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/properties/). Accessed 2026-07-24.\n\n## Proof Limits\n\nSources require language mode, compiler, library, target, and packages. They do not prove copy cost, uniqueness, lifetime, Objective-C annotations, observation, compatibility, deep immutability, or concurrency safety.\n\n## Required Record And Rejections\n\n- Record identity/copy representation, Optional/API outcomes, ownership graph, error mapping, invalid/teardown, versions, limits, residual risk.\n- Reject value syntax, ARC, `weak`/`unowned`, protocol, or `Sendable` as immutability, lifetime, or race-freedom proof.\n"
+          "sha256": "82908869cfaa458fe9712ede1704ea10370f04d4b0ef73adea304ee0d465b24c",
+          "text": "# Swift Value, Memory, And Type Contracts\n\nUse for identity, ownership, representation, or error decisions.\n\n## Decision And Probe Matrix\n\n| Boundary | Contract and probe |\n| --- | --- |\n| Value/reference | Identity, mutation owner, copy independence/cost, shared references; copy then mutate across identity. |\n| Copy-on-write | Storage sharing, detachment, uniqueness, nested aliases, unproved thread boundary; measure independence/allocation. |\n| ARC | Strong edges through closure, delegate, task, timer, notification, Objective-C, cache; release owners, prove teardown/retention. |\n| Weak/unowned | For the ownership choice, choose `weak` for valid absence and `unowned` only when every affected reachable access is protected by a live-referent lifetime invariant. For each affected reachable `unowned` access whose contract explicitly accepts a trap, exercise invalid lifetime only in an isolated expected-crash harness. For other `unowned` uses, prove the lifetime invariant and teardown without deliberately dereferencing after deallocation. |\n| Protocol/generic | Associated type, `Self`, specialization, storage, heterogeneous collection, compatibility. Separately store the protocol existential and cross an associated-type boundary; record erased and static relationships independently of lifetime probes. |\n| Opaque/existential | `some` for one hidden producer type; `any` for erased storage/dispatch; record lost static relationships. |\n| Optional | Named `nil`, binding/chaining/default, force precondition, nesting, public/Objective-C representation; exercise absent/present/invalid paths. |\n| Error | Domain failure, cancellation, programmer fault, partial result, cleanup failure, `throws`/`Result`/callback/`NSError` translation; exercise each. |\n| Wrapper | Storage, initialization, projection, mutation/observation owner, serialization, isolation; test API outcomes. |\n\n## Primary Sources\n\n[values](https://www.swift.org/documentation/articles/value-and-reference-types.html), [types](https://docs.swift.org/swift-book/LanguageGuide/ClassesAndStructures.html), [ARC](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/automaticreferencecounting/), [protocols](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/protocols/), [opaque](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/opaquetypes/), [generics](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/generics/), [errors](https://docs.swift.org/swift-book/LanguageGuide/ErrorHandling.html), [optional](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/thebasics/), [chaining](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/optionalchaining/), [wrappers](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/properties/). Accessed 2026-07-24.\n\n## Proof Limits\n\nSources require language mode, compiler, library, target, and packages. They do not prove copy cost, uniqueness, lifetime, Objective-C annotations, observation, compatibility, deep immutability, or concurrency safety.\n\n## Required Record And Rejections\n\n- Record identity/copy representation, Optional/API outcomes, ownership graph, error mapping, invalid/teardown, versions, limits, residual risk.\n- Reject value syntax, ARC, `weak`/`unowned`, protocol, or `Sendable` as immutability, lifetime, or race-freedom proof.\n"
         },
         "document_id": "src/foundation/capabilities/swift-professional-usage/references/value-memory-and-type-contracts.md#reference",
         "document_part": "reference",
@@ -158989,7 +158989,7 @@
     "source_fingerprint": {
       "algorithm": "sha256",
       "document_count": 1001,
-      "value": "1e4a5656a0d8d394ac3c967b57ba0df8f45f2b3f0f74b6941d256722f9ea9f21"
+      "value": "4057bfa622b353e45aaf00c72e836f672f9416ef6194b4df2df40f6a5c99b3d5"
     },
     "summary": {
       "advisory_documents": 332,
@@ -159187,7 +159187,7 @@
           "existing_indexed": 169,
           "indexed": 169,
           "indexed_lines": 4954,
-          "indexed_tokens": 74262,
+          "indexed_tokens": 74333,
           "structural_advisory_references": 0
         },
         "template": {
@@ -159225,7 +159225,7 @@
           "existing_indexed": 390,
           "indexed": 390,
           "indexed_lines": 10464,
-          "indexed_tokens": 197316,
+          "indexed_tokens": 197387,
           "missing": 0,
           "orphan": 0,
           "physical": 391,
@@ -159271,7 +159271,7 @@
       "source_fingerprint": {
         "algorithm": "sha256",
         "document_count": 974,
-        "value": "05717b5fafacf197733b3f24b8ee8e9aa6fd12bb0aececadafad6258fb18539c"
+        "value": "cd4e3a9bf8fb377d3322418fbd0b5e5b80fa86fb72e2fe49f337f532acb28bf5"
       },
       "source_precedence": [
         "local",
@@ -216480,7 +216480,7 @@
         "owner": "swift-professional-usage",
         "path": "src/foundation/capabilities/swift-professional-usage/references/value-memory-and-type-contracts.md",
         "reference_type": null,
-        "token_count": 671
+        "token_count": 742
       },
       {
         "advisory_kind": "evidence-pattern",
@@ -241498,6 +241498,60 @@
           "unresolved": false
         },
         {
+          "candidate_id": "5f8c756f0c2c514b2a005c9e5298b906cf51f4329ac7f49890823e07d67a3829",
+          "content_fingerprint": null,
+          "detector_status": "downgraded",
+          "disposition": null,
+          "disposition_record": null,
+          "downgrade_reasons": [
+            "scoped_only_restriction"
+          ],
+          "evidence_fingerprint": null,
+          "finding": "unconditional_absolute_candidate",
+          "fingerprint": "13fb810d3aa88963c7ca5b950aed95103e5aa2e5e6cf5f46e2309fdf134c6256",
+          "governance_status": "detector-downgraded",
+          "layer": "foundation",
+          "occurrence_count": 1,
+          "occurrences": [
+            {
+              "detector_status": "downgraded",
+              "downgrade_reason": "scoped_only_restriction",
+              "layer": "foundation",
+              "lines": {
+                "end": 12,
+                "start": 12
+              },
+              "owner": "swift-professional-usage",
+              "path": "src/foundation/capabilities/swift-professional-usage/references/value-memory-and-type-contracts.md",
+              "preview": "For each affected reachable `unowned` access whose contract explicitly accepts a trap, exercise invalid lifetime only in an isolated expected-crash harness.",
+              "semantic_contexts": [
+                "heading:decision and probe matrix",
+                "preceding_conditional_language",
+                "reference-kind:targeted",
+                "table-header:contract and probe",
+                "unit-kind:table-cell"
+              ],
+              "signals": [
+                "only"
+              ],
+              "tokens": 28
+            }
+          ],
+          "owner": "swift-professional-usage",
+          "path": "src/foundation/capabilities/swift-professional-usage/references/value-memory-and-type-contracts.md",
+          "preview": "For each affected reachable `unowned` access whose contract explicitly accepts a trap, exercise invalid lifetime only in an isolated expected-crash harness.",
+          "priority": null,
+          "resolved": false,
+          "scope": "src/foundation/capabilities/swift-professional-usage/references/value-memory-and-type-contracts.md",
+          "signals": [
+            "only"
+          ],
+          "skill_owner": "swift-professional-usage",
+          "tokens": 28,
+          "total_tokens": 28,
+          "unresolved": false
+        },
+        {
           "candidate_id": "f4122a30e4e5800d54f01dbe3350b299736922b71880980cb3fb4b07b9b69ab2",
           "content_fingerprint": null,
           "detector_status": "downgraded",
@@ -258259,6 +258313,61 @@
           "skill_owner": "frontend-api-integration",
           "tokens": 33,
           "total_tokens": 33,
+          "unresolved": false
+        },
+        {
+          "candidate_id": "9c8938e798dc22e138d6ccfecc0c5b90e18034b9e4584d5cec4c835b42373795",
+          "content_fingerprint": null,
+          "detector_status": "downgraded",
+          "disposition": null,
+          "disposition_record": null,
+          "downgrade_reasons": [
+            "same_sentence_conditional_language"
+          ],
+          "evidence_fingerprint": null,
+          "finding": "unconditional_absolute_candidate",
+          "fingerprint": "68a93cbb4d04dec997ee0a1fdf601d734914de7d1d3416f43ed0d9f8019d4083",
+          "governance_status": "detector-downgraded",
+          "layer": "foundation",
+          "occurrence_count": 1,
+          "occurrences": [
+            {
+              "detector_status": "downgraded",
+              "downgrade_reason": "same_sentence_conditional_language",
+              "layer": "foundation",
+              "lines": {
+                "end": 12,
+                "start": 12
+              },
+              "owner": "swift-professional-usage",
+              "path": "src/foundation/capabilities/swift-professional-usage/references/value-memory-and-type-contracts.md",
+              "preview": "For the ownership choice, choose `weak` for valid absence and `unowned` only when every affected reachable access is protected by a live-referent lifetime invariant.",
+              "semantic_contexts": [
+                "heading:decision and probe matrix",
+                "reference-kind:targeted",
+                "table-header:contract and probe",
+                "unit-kind:table-cell"
+              ],
+              "signals": [
+                "every",
+                "only"
+              ],
+              "tokens": 34
+            }
+          ],
+          "owner": "swift-professional-usage",
+          "path": "src/foundation/capabilities/swift-professional-usage/references/value-memory-and-type-contracts.md",
+          "preview": "For the ownership choice, choose `weak` for valid absence and `unowned` only when every affected reachable access is protected by a live-referent lifetime invariant.",
+          "priority": null,
+          "resolved": false,
+          "scope": "src/foundation/capabilities/swift-professional-usage/references/value-memory-and-type-contracts.md",
+          "signals": [
+            "every",
+            "only"
+          ],
+          "skill_owner": "swift-professional-usage",
+          "tokens": 34,
+          "total_tokens": 34,
           "unresolved": false
         },
         {
@@ -293650,12 +293759,12 @@
             "valid_contextual_rule": 6
           },
           "unconditional_absolute_candidate": {
-            "detector_downgraded": 855,
+            "detector_downgraded": 857,
             "false_positive": 27,
             "p0_unresolved": 0,
             "p1_unresolved": 0,
             "p2_unresolved": 0,
-            "raw": 996,
+            "raw": 998,
             "resolved": 141,
             "rewrite": 0,
             "time_bounded_exception": 0,
@@ -293664,7 +293773,7 @@
             "valid_contextual_rule": 114
           }
         },
-        "detector_downgraded_candidates": 855,
+        "detector_downgraded_candidates": 857,
         "false_positive_candidates": 27,
         "group_metrics": {
           "exact_normalized_duplicate_block": {
@@ -293681,7 +293790,7 @@
         "p0_unresolved_candidates": 0,
         "p1_unresolved_candidates": 0,
         "p2_unresolved_candidates": 0,
-        "raw_candidates": 1003,
+        "raw_candidates": 1005,
         "resolved_candidates": 148,
         "rewrite_candidates": 0,
         "strict_unresolved": {
@@ -293711,7 +293820,7 @@
       "existing_indexed_references": 611,
       "indexed_lines": 16635,
       "indexed_reference_entries": 611,
-      "indexed_tokens": 280510,
+      "indexed_tokens": 280581,
       "indexed_unique_paths": 611,
       "load_when_prefaces": 40,
       "missing_effective_do_not_load_when": 0,
@@ -293731,13 +293840,13 @@
       "reference_type_prefaces": 5,
       "references_with_empty_headings": 1,
       "semantic_absolute_p0_p1_unresolved": 0,
-      "semantic_detector_downgraded_candidates": 855,
+      "semantic_detector_downgraded_candidates": 857,
       "semantic_disposition_applied": 148,
       "semantic_disposition_configured": 148,
       "semantic_disposition_errors": 0,
       "semantic_fixed_number_unresolved": 0,
       "semantic_p2_rewrite_advisories": 0,
-      "semantic_raw_candidates": 1003,
+      "semantic_raw_candidates": 1005,
       "semantic_resolved_candidates": 148,
       "semantic_rewrite_candidates": 0,
       "semantic_templated_group_unresolved": 0,
@@ -293785,7 +293894,7 @@
           "existing_reference_count": 390,
           "indexed_reference_count": 390,
           "semantic_absolute_p0_p1_unresolved_count": 0,
-          "semantic_candidate_count": 603,
+          "semantic_candidate_count": 605,
           "semantic_fixed_number_unresolved_count": 0,
           "semantic_templated_group_unresolved_count": 0,
           "semantic_unresolved_count": 0,
@@ -302043,14 +302152,14 @@
       "derivation_snapshot": {
         "compact_documents": 128,
         "complex_documents": 22,
-        "date": "2026-08-21",
+        "date": "2026-08-28",
         "distribution_max_tokens": 663,
         "foundation_documents": 150,
         "max_token_word_ratio": 1.673,
         "max_words": 475,
         "mean_token_word_ratio": 1.435,
-        "mean_tokens": 436.633,
-        "mean_words": 306.287,
+        "mean_tokens": 436.64,
+        "mean_words": 306.293,
         "median_token_word_ratio": 1.415,
         "min_tokens": 138,
         "min_words": 94,
@@ -302068,8 +302177,8 @@
         "p95_words": 436,
         "p99_tokens": 654,
         "p99_words": 454,
-        "sum_tokens": 65495,
-        "sum_words": 45943
+        "sum_tokens": 65496,
+        "sum_words": 45944
       },
       "hard_token_limit": 900,
       "registry_schema_version": 8,
@@ -308217,10 +308326,10 @@
     ],
     "detector_fingerprint": {
       "algorithm": "sha256",
-      "value": "0ceca07af3c4b32f39fe385844c25555e06197ee487962698c54b0760cd8371e"
+      "value": "28d010440e2161d2bd15364c5505270ffbf5033a6f65eac171ab8a1336bce66b"
     },
     "detector_source_manifest": {
-      "aggregate_source_digest": "0ceca07af3c4b32f39fe385844c25555e06197ee487962698c54b0760cd8371e",
+      "aggregate_source_digest": "28d010440e2161d2bd15364c5505270ffbf5033a6f65eac171ab8a1336bce66b",
       "contract_fields": {
         "finding_fields": [
           "family",
@@ -308280,7 +308389,7 @@
       "source_manifest": [
         {
           "path": "scripts/audit-skill-content.py",
-          "sha256": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab"
+          "sha256": "09c9125c0071d970f214b56fc6913bfc3f3e76000e5693a6f47cd5bc46f712a6"
         },
         {
           "path": "scripts/validation_utils.py",

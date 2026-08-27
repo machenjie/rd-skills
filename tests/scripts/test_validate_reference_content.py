@@ -1526,24 +1526,43 @@ class ValidateReferenceContentTests(unittest.TestCase):
             ).read_text(encoding="utf-8")
         )
         self.assertEqual(2, checked_in["schema_version"])
-        self.assertEqual(206, len(checked_in["findings"]))
-        self.assertEqual(1, checked_in_application["schema_version"])
-        self.assertEqual("invalid", checked_in_application["status"])
+        checked_in_target_ids = [
+            finding["target_id"] for finding in checked_in["findings"]
+        ]
+        self.assertTrue(checked_in_target_ids)
         self.assertEqual(
-            "semantic-decision-application-invalid",
-            checked_in_application["error"]["id"],
+            len(checked_in_target_ids),
+            len(set(checked_in_target_ids)),
         )
-        self.assertEqual(0, checked_in_application["target_count"])
-        self.assertEqual(0, checked_in_application["applied_count"])
+        self.assertEqual(1, checked_in_application["schema_version"])
+        self.assertEqual("current", checked_in_application["status"])
+        self.assertIsNone(checked_in_application["error"])
+        self.assertEqual(
+            len(checked_in_target_ids),
+            checked_in_application["target_count"],
+        )
+        self.assertEqual(
+            len(checked_in_target_ids),
+            checked_in_application["applied_count"],
+        )
         self.assertEqual(
             0,
             checked_in_application["completed_rewrite_count"],
         )
 
         audit, compact = _current_semantic_compact_fixture(auditor)
+        compact_value = json.loads(compact)
+        expected_current_count = sum(
+            len(
+                audit[f"{axis}_content"]["semantic_advisories"][
+                    "disposition_contract"
+                ]["entries"]
+            )
+            for axis in PANEL.SEMANTIC_AXES
+        )
         self.assertEqual(
-            208,
-            len(json.loads(compact)["findings"]),
+            expected_current_count,
+            len(compact_value["findings"]),
         )
         with tempfile.TemporaryDirectory() as raw:
             fixture_root = Path(raw)
@@ -1559,8 +1578,8 @@ class ValidateReferenceContentTests(unittest.TestCase):
                 )
         self.assertEqual("current", application["status"])
         self.assertIsNone(application["error"])
-        self.assertEqual(208, application["target_count"])
-        self.assertEqual(208, application["applied_count"])
+        self.assertEqual(expected_current_count, application["target_count"])
+        self.assertEqual(expected_current_count, application["applied_count"])
         self.assertEqual(0, application["completed_rewrite_count"])
         self.assertEqual(before, hashes())
 

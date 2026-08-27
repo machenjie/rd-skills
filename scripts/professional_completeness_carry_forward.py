@@ -119,6 +119,33 @@ class ProfessionalCarryForwardError(ValueError):
     """Raised when an internal carry or capsule projection is not canonical."""
 
 
+class ProfessionalReviewerAddedRequiredRelationshipDrift(
+    ProfessionalCarryForwardError
+):
+    """Reviewer-added candidates became required after all authority checks."""
+
+    def __init__(self, overlaps: Mapping[str, Sequence[str]]) -> None:
+        canonical = tuple(
+            (
+                skill_id,
+                tuple(sorted(set(candidate_ids))),
+            )
+            for skill_id, candidate_ids in sorted(overlaps.items())
+            if candidate_ids
+        )
+        if not canonical:
+            raise ValueError("Professional relationship drift must be non-empty")
+        self.overlaps = canonical
+        rendered = "; ".join(
+            f"{skill_id}={','.join(candidate_ids)}"
+            for skill_id, candidate_ids in canonical
+        )
+        super().__init__(
+            "Professional reviewer-added candidates overlap current required "
+            f"relationships: {rendered}"
+        )
+
+
 def canonical_json_bytes(value: object) -> bytes:
     """Return deterministic UTF-8 JSON bytes without claiming artifact status."""
 
@@ -643,6 +670,7 @@ def professional_current_authority(
         for skill_id, binding in bindings.items()
     }
     authority: dict[str, dict[str, Any]] = {}
+    relationship_overlaps: dict[str, tuple[str, ...]] = {}
     for skill_id, binding in bindings.items():
         claims = authenticated_claims[skill_id]
         if not isinstance(claims, dict) or set(claims) != {
@@ -664,16 +692,15 @@ def professional_current_authority(
             claims["reviewer_added_candidate_ids_union"],
             label=f"{skill_id}.reviewer_added_candidate_ids_union",
         )
-        if set(reviewer_added_ids) & set(required_ids):
-            raise ProfessionalCarryForwardError(
-                f"{skill_id} reviewer-added candidates overlap required candidates"
-            )
         unknown_added = sorted(set(reviewer_added_ids) - set(bindings))
         if unknown_added:
             raise ProfessionalCarryForwardError(
                 f"{skill_id} reviewer-added candidates are unknown: "
                 + ", ".join(unknown_added)
             )
+        overlap = tuple(sorted(set(reviewer_added_ids) & set(required_ids)))
+        if overlap:
+            relationship_overlaps[skill_id] = overlap
         if (
             not isinstance(votes, dict)
             or len(votes) != panel_contracts.PROFESSIONAL_PANEL_SIZE
@@ -750,6 +777,10 @@ def professional_current_authority(
             "evidence_metrics": copy.deepcopy(metrics),
             "origin": copy.deepcopy(origin),
         }
+    if relationship_overlaps:
+        raise ProfessionalReviewerAddedRequiredRelationshipDrift(
+            relationship_overlaps
+        )
     return authority
 
 

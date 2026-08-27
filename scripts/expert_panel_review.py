@@ -18,7 +18,7 @@ from datetime import date
 from functools import lru_cache
 from pathlib import Path, PurePosixPath
 from types import ModuleType
-from typing import Any, Callable
+from typing import Any, Callable, Iterable
 
 try:
     from validation_utils import (
@@ -784,6 +784,38 @@ PROFESSIONAL_V3_GROUNDING_STOP_WORDS = (
 
 class PanelReviewError(ValueError):
     """Raised when a panel artifact violates the closed voting contract."""
+
+
+class ProfessionalReviewerAddedRequiredPromotionDrift(PanelReviewError):
+    """A trusted reviewer-added candidate became required by current authority."""
+
+    def __init__(
+        self,
+        skill_id: str,
+        candidate_ids: Iterable[str],
+        *,
+        overlaps: dict[str, Iterable[str]] | None = None,
+    ) -> None:
+        self.skill_id = skill_id
+        self.candidate_ids = tuple(sorted(candidate_ids))
+        normalized_overlaps = overlaps or {skill_id: self.candidate_ids}
+        self.overlaps = tuple(
+            (
+                overlap_skill_id,
+                tuple(sorted(overlap_candidate_ids)),
+            )
+            for overlap_skill_id, overlap_candidate_ids in sorted(
+                normalized_overlaps.items()
+            )
+        )
+        super().__init__(
+            "Professional reviewer-added candidates became current required "
+            "candidates: "
+            + "; ".join(
+                f"{overlap_skill_id}={','.join(overlap_candidate_ids)}"
+                for overlap_skill_id, overlap_candidate_ids in self.overlaps
+            )
+        )
 
 
 def _closed_validation_mode(value: object) -> str:
@@ -16191,6 +16223,16 @@ def _professional_attestation_bindings_from_state(
             current_bindings,
             authenticated_claims=authenticated_claims,
         )
+    except (
+        professional_carry
+        .ProfessionalReviewerAddedRequiredRelationshipDrift
+    ) as exc:
+        skill_id, candidate_ids = exc.overlaps[0]
+        raise ProfessionalReviewerAddedRequiredPromotionDrift(
+            skill_id,
+            candidate_ids,
+            overlaps=dict(exc.overlaps),
+        ) from exc
     except professional_carry.ProfessionalCarryForwardError as exc:
         raise PanelReviewError(
             "Professional current authority is invalid"

@@ -6329,6 +6329,11 @@ def _expert_panel_currentness_drift(exc: Exception) -> bool:
     message = str(exc)
     if isinstance(
         exc,
+        expert_panel.ProfessionalReviewerAddedRequiredPromotionDrift,
+    ):
+        return True
+    if isinstance(
+        exc,
         expert_panel.panel_attestation.AttestationCurrentnessError,
     ):
         return message in {

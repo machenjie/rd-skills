@@ -9,8 +9,8 @@ Use for identity, ownership, representation, or error decisions.
 | Value/reference | Identity, mutation owner, copy independence/cost, shared references; copy then mutate across identity. |
 | Copy-on-write | Storage sharing, detachment, uniqueness, nested aliases, unproved thread boundary; measure independence/allocation. |
 | ARC | Strong edges through closure, delegate, task, timer, notification, Objective-C, cache; release owners, prove teardown/retention. |
-| Weak/unowned | `weak` for valid absence; `unowned` under live-referent invariant. Test accepted trap in isolation; otherwise prove lifetime/teardown. |
-| Protocol/generic | Associated type, `Self`, specialization, storage, heterogeneous collection, compatibility; cross affected type boundary. |
+| Weak/unowned | For the ownership choice, choose `weak` for valid absence and `unowned` only when every affected reachable access is protected by a live-referent lifetime invariant. For each affected reachable `unowned` access whose contract explicitly accepts a trap, exercise invalid lifetime only in an isolated expected-crash harness. For other `unowned` uses, prove the lifetime invariant and teardown without deliberately dereferencing after deallocation. |
+| Protocol/generic | Associated type, `Self`, specialization, storage, heterogeneous collection, compatibility. Separately store the protocol existential and cross an associated-type boundary; record erased and static relationships independently of lifetime probes. |
 | Opaque/existential | `some` for one hidden producer type; `any` for erased storage/dispatch; record lost static relationships. |
 | Optional | Named `nil`, binding/chaining/default, force precondition, nesting, public/Objective-C representation; exercise absent/present/invalid paths. |
 | Error | Domain failure, cancellation, programmer fault, partial result, cleanup failure, `throws`/`Result`/callback/`NSError` translation; exercise each. |

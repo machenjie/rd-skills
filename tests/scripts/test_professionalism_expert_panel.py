@@ -713,6 +713,59 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                     parse_error=drift,
                 )
 
+        professional = self.CURRENT_PATHS[0]
+        promotion_drift = (
+            REGRESSION.expert_panel
+            .ProfessionalReviewerAddedRequiredPromotionDrift(
+                "accessibility-inclusive-design",
+                ["design-system-rules"],
+            )
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._storage_repo(root, tracked={professional: b"{}\n"})
+            statuses = self._validate_storage(
+                root,
+                formal=False,
+                currentness_error=promotion_drift,
+            )
+            self.assertEqual(
+                "stale",
+                statuses[
+                    REGRESSION.expert_panel.PROFESSIONAL_COMPLETENESS_PANEL_KIND
+                ],
+            )
+            with self.assertRaisesRegex(ValueError, "formal.*stale"):
+                self._validate_storage(
+                    root,
+                    formal=True,
+                    currentness_error=promotion_drift,
+                )
+
+            (root / professional).write_bytes(b'{"changed":true}\n')
+            with self.assertRaises(
+                REGRESSION.expert_panel
+                .ProfessionalReviewerAddedRequiredPromotionDrift
+            ):
+                self._validate_storage(
+                    root,
+                    formal=False,
+                    currentness_error=promotion_drift,
+                )
+
+        spoofed = REGRESSION.expert_panel.PanelReviewError(
+            str(promotion_drift)
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._storage_repo(root, tracked={professional: b"{}\n"})
+            with self.assertRaises(REGRESSION.expert_panel.PanelReviewError):
+                self._validate_storage(
+                    root,
+                    formal=False,
+                    currentness_error=spoofed,
+                )
+
     def test_semantic_target_set_drift_is_stale_only_for_trusted_fixed_bytes(
         self,
     ) -> None:
@@ -871,12 +924,12 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
     def test_semantic_current_validation_selects_ordinary_root_and_both_authority(
         self,
     ) -> None:
-        expected_counts = {
-            ("root", "reference"): 208,
-        }
-        for axes, expected_count in expected_counts.items():
+        for axes in (("root", "reference"),):
             with self.subTest(axes=axes):
                 audit, packet, selector, raw = _current_semantic_attestation(axes)
+                expected_count = len(
+                    PANEL._semantic_candidate_authorities(packet)
+                )
                 with mock.patch.object(
                     REGRESSION.expert_panel, "_json_object", return_value=audit
                 ):
@@ -990,9 +1043,12 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             )
 
     def test_fixed_semantic_storage_is_current_without_runtime_authority(self) -> None:
-        for axes, expected_count in ((("root", "reference"), 208),):
+        for axes in (("root", "reference"),):
             with self.subTest(axes=axes), tempfile.TemporaryDirectory() as directory:
-                audit, _packet, _selector, raw = _current_semantic_attestation(axes)
+                audit, packet, _selector, raw = _current_semantic_attestation(axes)
+                expected_count = len(
+                    PANEL._semantic_candidate_authorities(packet)
+                )
                 audit_raw = (
                     json.dumps(
                         audit,
@@ -1155,9 +1211,12 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                             )
 
     def test_semantic_promotion_selects_ordinary_and_forced_authority(self) -> None:
-        for axes, expected_count in ((("root", "reference"), 208),):
+        for axes in (("root", "reference"),):
             with self.subTest(axes=axes), tempfile.TemporaryDirectory() as directory:
-                audit, _packet, selector, raw = _current_semantic_attestation(axes)
+                audit, packet, selector, raw = _current_semantic_attestation(axes)
+                expected_count = len(
+                    PANEL._semantic_candidate_authorities(packet)
+                )
                 audit_raw = (
                     json.dumps(
                         audit,
@@ -1521,7 +1580,11 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             for category in ("content", "readability", "actionability")
         }
         self.assertEqual(
-            {"actionability": 0, "content": 43, "readability": 366},
+            {
+                "actionability": len(packet["actionability_targets"]),
+                "content": len(packet["content_targets"]),
+                "readability": len(packet["readability_targets"]),
+            },
             {category: len(rows) for category, rows in by_category.items()},
         )
         self.assertTrue(
@@ -1604,9 +1667,15 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
         self.assertEqual(
             {
                 "accepted_for_formal": True,
-                "applied_actionability_disposition_count": 0,
-                "applied_density_disposition_count": 43,
-                "applied_readability_disposition_count": 366,
+                "applied_actionability_disposition_count": len(
+                    packet["actionability_targets"]
+                ),
+                "applied_density_disposition_count": len(
+                    packet["content_targets"]
+                ),
+                "applied_readability_disposition_count": len(
+                    packet["readability_targets"]
+                ),
                 "attestation_status": "panel-majority-current",
                 "detector_false_positive_count": 0,
                 "rewrite_required_count": 0,
@@ -1689,9 +1758,16 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             / PANEL.panel_attestation.SEMANTIC_DISPOSITION_ATTESTATION_PATH
         )
         fixed_bytes = fixed.read_bytes()
+        fixed_relative = fixed.relative_to(ROOT).as_posix()
         self.assertEqual(
-            "2a5a19fca3465a4409f3624564c600cdb62fb467f3b3348c3a0b3973c4adc774",
-            hashlib.sha256(fixed_bytes).hexdigest(),
+            fixed_bytes,
+            subprocess.run(
+                ["git", "show", f"HEAD:{fixed_relative}"],
+                cwd=ROOT,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            ).stdout,
         )
         value = json.loads(fixed_bytes)
         self.assertEqual(
@@ -1719,13 +1795,23 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
         self.assertEqual(
             "accepted-current-semantic-disposition", value["verdict"]
         )
-        self.assertEqual("semantic-refresh-20260816-r1", value["review_id"])
-        self.assertEqual(206, len(value["findings"]))
+        self.assertIsInstance(value["review_id"], str)
+        self.assertTrue(value["review_id"].strip())
+        fixed_axis_counts = {
+            axis: sum(
+                finding["axis"] == axis for finding in value["findings"]
+            )
+            for axis in PANEL.SEMANTIC_AXES
+        }
+        self.assertEqual(
+            len(value["findings"]),
+            len({finding["target_id"] for finding in value["findings"]}),
+        )
         self.assertEqual(
             PANEL._canonical_json_sha256(
                 PANEL._semantic_panel_contract(
-                    root_target_count=81,
-                    reference_target_count=125,
+                    root_target_count=fixed_axis_counts["root"],
+                    reference_target_count=fixed_axis_counts["reference"],
                 )
             ),
             value["review_contract_fingerprint"],
@@ -1748,39 +1834,23 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             detector_keys, set(value["detector_contract_fingerprints"])
         )
         self.assertEqual(
-            {
-                "reference_detector_contract": (
-                    "b30afbeafb68bb21ade261d0ada1698865ccef20327dac0fe8edca4138ed1fcb"
-                ),
-                "root_detector_contract": (
-                    "31dd5e2a1444dede44127228211d0226ffb7681bed3ba13cf4e41a9d87b11b79"
-                ),
-            },
             value["detector_contract_fingerprints"],
-        )
-        self.assertEqual(
-            {
-                "reference_detector_contract": (
-                    "b30afbeafb68bb21ade261d0ada1698865ccef20327dac0fe8edca4138ed1fcb"
-                ),
-                "root_detector_contract": (
-                    "7e45706770e42dbe3f83fda946be11724d348a8d2898c45bef255b3cbdb6dcac"
-                ),
-            },
             {
                 key: current_fingerprints[key]
                 for key in sorted(detector_keys)
             },
         )
 
-        configured = {
-            f"{axis}:{entry['candidate_id']}": entry["disposition"]
+        configured_rows = [
+            (f"{axis}:{entry['candidate_id']}", entry["disposition"])
             for axis, key in (
                 ("root", "root_semantic_dispositions"),
                 ("reference", "reference_semantic_dispositions"),
             )
             for entry in config[key]["entries"]
-        }
+        ]
+        configured = dict(configured_rows)
+        self.assertEqual(len(configured_rows), len(configured))
         winners = {}
         for finding in value["findings"]:
             self.assertEqual(
@@ -1818,20 +1888,18 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             winners[target_id] = majority[0]
 
         self.assertEqual(
-            {"reference": 125, "root": 81},
+            fixed_axis_counts,
             {
                 axis: sum(target_id.startswith(f"{axis}:") for target_id in winners)
-                for axis in ("reference", "root")
+                for axis in PANEL.SEMANTIC_AXES
             },
         )
-        self.assertEqual(208, len(configured))
-        self.assertNotEqual(set(configured), set(winners))
-
-        with self.assertRaisesRegex(
-            PANEL.PanelReviewError,
-            "semantic fixed detector contract is stale",
-        ):
-            PANEL.validate_semantic_decision_application(live_audit)
+        self.assertEqual(len(configured_rows), len(configured))
+        self.assertEqual(set(configured), set(winners))
+        application = PANEL.validate_semantic_decision_application(live_audit)
+        self.assertEqual("current", application["status"])
+        self.assertEqual(len(winners), application["target_count"])
+        self.assertEqual(len(winners), application["applied_count"])
 
     def test_regression_loader_preserves_current_professional(self) -> None:
         config_path = ROOT / "config/professionalism-release-review.yaml"

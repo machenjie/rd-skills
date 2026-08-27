@@ -161,11 +161,11 @@ THRESHOLDS = {
 }
 
 FOUNDATION_DERIVATION_SNAPSHOT = {
-    "date": "2026-08-21",
+    "date": "2026-08-28",
     "foundation_documents": 150,
     "compact_documents": 128,
     "complex_documents": 22,
-    "sum_tokens": 65495,
+    "sum_tokens": 65496,
     "min_tokens": 138,
     "p25_tokens": 269,
     "p50_tokens": 511,
@@ -174,8 +174,8 @@ FOUNDATION_DERIVATION_SNAPSHOT = {
     "p95_tokens": 628,
     "p99_tokens": 654,
     "distribution_max_tokens": 663,
-    "mean_tokens": 436.633,
-    "sum_words": 45943,
+    "mean_tokens": 436.64,
+    "sum_words": 45944,
     "min_words": 94,
     "p25_words": 182,
     "p50_words": 357,
@@ -184,7 +184,7 @@ FOUNDATION_DERIVATION_SNAPSHOT = {
     "p95_words": 436,
     "p99_words": 454,
     "max_words": 475,
-    "mean_words": 306.287,
+    "mean_words": 306.293,
     "median_token_word_ratio": 1.415,
     "p90_token_word_ratio": 1.552,
     "p95_token_word_ratio": 1.593,

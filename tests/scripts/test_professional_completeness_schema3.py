@@ -585,13 +585,261 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
             value["findings"]
         )
 
-        with self.assertRaisesRegex(
-            PANEL.PanelReviewError, "current authority is invalid"
-        ):
+        with self.assertRaises(
+            PANEL.ProfessionalReviewerAddedRequiredPromotionDrift
+        ) as raised:
             PANEL._professional_attestation_bindings_from_state(
                 current_bindings=bindings,
                 authenticated_claims=claims,
             )
+        self.assertEqual(row["skill_id"], raised.exception.skill_id)
+        self.assertEqual((candidate_id,), raised.exception.candidate_ids)
+        self.assertEqual(
+            ((row["skill_id"], (candidate_id,)),),
+            raised.exception.overlaps,
+        )
+        self.assertIsInstance(
+            raised.exception.__cause__,
+            PANEL.professional_carry
+            .ProfessionalReviewerAddedRequiredRelationshipDrift,
+        )
+
+    def test_production_authority_accumulates_every_valid_promotion_overlap(
+        self,
+    ) -> None:
+        value, bindings = self._historical_promotion_fixture()
+        professional_support._normalize_historical_reviewer_added_promotions(
+            value, bindings=bindings
+        )
+        claims = PANEL._professional_authenticated_claims_from_findings(
+            value["findings"]
+        )
+        expected = []
+        for skill_id in sorted(bindings):
+            required_ids = bindings[skill_id]["adjacency"][
+                "required_candidate_ids"
+            ]
+            if not required_ids:
+                continue
+            candidate_id = required_ids[0]
+            claims[skill_id]["reviewer_added_candidate_ids_union"] = [
+                candidate_id
+            ]
+            expected.append((skill_id, (candidate_id,)))
+            if len(expected) == 2:
+                break
+        self.assertEqual(2, len(expected))
+
+        with self.assertRaises(
+            PANEL.ProfessionalReviewerAddedRequiredPromotionDrift
+        ) as raised:
+            PANEL._professional_attestation_bindings_from_state(
+                current_bindings=bindings,
+                authenticated_claims=claims,
+            )
+
+        self.assertEqual(tuple(expected), raised.exception.overlaps)
+
+    def test_promotion_overlap_never_masks_other_authority_defects(
+        self,
+    ) -> None:
+        value, bindings = self._historical_promotion_fixture()
+        professional_support._normalize_historical_reviewer_added_promotions(
+            value, bindings=bindings
+        )
+        claims = PANEL._professional_authenticated_claims_from_findings(
+            value["findings"]
+        )
+        overlap_skill_id = next(
+            skill_id
+            for skill_id in sorted(bindings)
+            if bindings[skill_id]["adjacency"]["required_candidate_ids"]
+        )
+        overlap_candidate_id = bindings[overlap_skill_id]["adjacency"][
+            "required_candidate_ids"
+        ][0]
+        later_skill_id = next(
+            skill_id
+            for skill_id in reversed(sorted(bindings))
+            if skill_id != overlap_skill_id
+        )
+
+        def with_overlap() -> dict[str, dict]:
+            changed = copy.deepcopy(claims)
+            changed[overlap_skill_id][
+                "reviewer_added_candidate_ids_union"
+            ] = [overlap_candidate_id]
+            return changed
+
+        cases = []
+
+        invalid_vote = with_overlap()
+        invalid_vote[overlap_skill_id]["vote_authorities"].pop(
+            next(iter(invalid_vote[overlap_skill_id]["vote_authorities"]))
+        )
+        cases.append(
+            (
+                "invalid-vote-authority",
+                invalid_vote,
+                f"{overlap_skill_id} authenticated Professional claims are invalid",
+            )
+        )
+
+        invalid_metrics = with_overlap()
+        invalid_metrics[overlap_skill_id]["evidence_metrics"].pop(
+            next(iter(invalid_metrics[overlap_skill_id]["evidence_metrics"]))
+        )
+        cases.append(
+            (
+                "invalid-evidence-metrics",
+                invalid_metrics,
+                f"{overlap_skill_id} authenticated Professional claims are invalid",
+            )
+        )
+
+        invalid_origin = with_overlap()
+        invalid_origin[overlap_skill_id]["origin"]["origin_commit"] = "invalid"
+        cases.append(
+            (
+                "invalid-origin",
+                invalid_origin,
+                f"{overlap_skill_id} authenticated Professional claims are invalid",
+            )
+        )
+
+        invalid_later = with_overlap()
+        invalid_later[later_skill_id]["origin"]["origin_commit"] = "invalid"
+        cases.append(
+            (
+                "malformed-later-package",
+                invalid_later,
+                f"{later_skill_id} authenticated Professional claims are invalid",
+            )
+        )
+
+        unknown_union = with_overlap()
+        unknown_union[overlap_skill_id][
+            "reviewer_added_candidate_ids_union"
+        ] = sorted([overlap_candidate_id, "unknown-professional-skill"])
+        cases.append(
+            (
+                "unknown-reviewer-added",
+                unknown_union,
+                f"{overlap_skill_id} reviewer-added candidates are unknown",
+            )
+        )
+
+        missing_union = with_overlap()
+        missing_union[overlap_skill_id].pop(
+            "reviewer_added_candidate_ids_union"
+        )
+        cases.append(
+            (
+                "missing-union",
+                missing_union,
+                f"{overlap_skill_id} authenticated Professional claims are incomplete",
+            )
+        )
+
+        duplicate_union = with_overlap()
+        duplicate_union[overlap_skill_id][
+            "reviewer_added_candidate_ids_union"
+        ] = [overlap_candidate_id, overlap_candidate_id]
+        cases.append(
+            (
+                "non-canonical-union",
+                duplicate_union,
+                f"{overlap_skill_id}.reviewer_added_candidate_ids_union must be sorted and unique",
+            )
+        )
+
+        missing_coverage = with_overlap()
+        missing_coverage.pop(later_skill_id)
+        cases.append(
+            (
+                "missing-package-coverage",
+                missing_coverage,
+                "Professional current package authority coverage is stale",
+            )
+        )
+
+        for label, changed, expected_error in cases:
+            with self.subTest(label=label), self.assertRaisesRegex(
+                PANEL.professional_carry.ProfessionalCarryForwardError,
+                expected_error,
+            ):
+                PANEL.professional_carry.professional_current_authority(
+                    bindings,
+                    authenticated_claims=changed,
+                )
+            with self.subTest(label=f"panel-{label}"), self.assertRaises(
+                PANEL.PanelReviewError
+            ) as raised:
+                PANEL._professional_attestation_bindings_from_state(
+                    current_bindings=bindings,
+                    authenticated_claims=changed,
+                )
+            self.assertIs(PANEL.PanelReviewError, type(raised.exception))
+
+    def test_current_authority_without_overlap_remains_complete(
+        self,
+    ) -> None:
+        value, bindings = self._historical_promotion_fixture()
+        professional_support._normalize_historical_reviewer_added_promotions(
+            value, bindings=bindings
+        )
+        claims = PANEL._professional_authenticated_claims_from_findings(
+            value["findings"]
+        )
+
+        authority = PANEL.professional_carry.professional_current_authority(
+            bindings,
+            authenticated_claims=claims,
+        )
+
+        self.assertEqual(list(bindings), list(authority))
+        self.assertTrue(
+            all(
+                not (
+                    set(row["required_candidate_ids"])
+                    & set(row["reviewer_added_candidate_ids_union"])
+                )
+                for row in authority.values()
+            )
+        )
+
+    def test_production_authority_keeps_non_promotion_failures_generic(
+        self,
+    ) -> None:
+        value, bindings = self._historical_promotion_fixture()
+        professional_support._normalize_historical_reviewer_added_promotions(
+            value, bindings=bindings
+        )
+        claims = PANEL._professional_authenticated_claims_from_findings(
+            value["findings"]
+        )
+        first_skill_id = sorted(claims)[0]
+
+        cases = {
+            "missing-coverage": lambda candidate: candidate.pop(first_skill_id),
+            "unknown-reviewer-added": lambda candidate: candidate[first_skill_id].update(
+                reviewer_added_candidate_ids_union=["unknown-professional-skill"]
+            ),
+            "invalid-vote-coverage": lambda candidate: candidate[first_skill_id][
+                "vote_authorities"
+            ].pop(next(iter(candidate[first_skill_id]["vote_authorities"]))),
+        }
+        for label, mutate in cases.items():
+            changed = copy.deepcopy(claims)
+            mutate(changed)
+            with self.subTest(label=label), self.assertRaises(
+                PANEL.PanelReviewError
+            ) as raised:
+                PANEL._professional_attestation_bindings_from_state(
+                    current_bindings=bindings,
+                    authenticated_claims=changed,
+                )
+            self.assertIs(PANEL.PanelReviewError, type(raised.exception))
 
     @staticmethod
     def _compact_attestation_finding(

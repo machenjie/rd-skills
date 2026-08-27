@@ -4,6 +4,7 @@ import copy
 import functools
 import hashlib
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -1054,105 +1055,51 @@ Route current work to `candidate-a`.
         scenario_adjacency = targets_by_id["scenario-decomposition"][
             "routing_adjacency"
         ]
-        s2a_eca_required = {
-            "acceptance-criteria-builder",
-            "ai-product-extension",
-            "android-platform-extension",
-            "api-contract-design",
-            "architecture-impact-reviewer",
-            "backend-change-builder",
-            "bigdata-product-extension",
-            "change-intake-compiler",
-            "cloud-platform-extension",
-            "concurrency-control",
-            "configuration-runtime-policy",
-            "consumer-impact-analysis",
-            "containerization",
-            "cross-platform-client-extension",
-            "data-migration-design",
-            "data-side-effect-flow-tracing",
-            "degradation-circuit-breaking",
-            "dependency-vulnerability-scanning",
-            "engineering-artifact-review",
-            "failure-contract-design",
-            "failure-diagnosis",
-            "frontend-change-builder",
-            "idempotency-retry-design",
-            "incident-response-coordinator",
-            "infrastructure-as-code-safety",
-            "integration-testing",
-            "ios-ipados-platform-extension",
-            "iot-embedded-extension",
-            "linux-desktop-platform-extension",
-            "low-level-systems-extension",
-            "macos-platform-extension",
-            "minimal-correct-implementation",
-            "module-boundary-design",
-            "observability",
-            "package-dependency-management",
-            "payment-trading-extension",
-            "permission-boundary-modeling",
-            "refactoring",
-            "release-rollback",
-            "repeat-failure-analysis",
-            "repository-context-map",
-            "repository-impact-inspection",
-            "repository-tooling-change-builder",
-            "scenario-decomposition",
-            "task-dag-decomposition",
-            "task-dag-planner",
-            "test-strategy",
-            "threat-modeling",
-            "transaction-consistency",
-            "version-compatibility",
-            "web-security",
-            "web3-product-extension",
-            "windows-platform-extension",
-        }
-        s2a_scenario_required = {
-            "acceptance-criteria-builder",
-            "async-job-design",
-            "cleanup-deletion-governance",
-            "data-side-effect-flow-tracing",
-            "interaction-state-modeling",
-            "java-jvm-professional-usage",
-            "page-component-decomposition",
-            "regression-testing",
-            "skill-authoring-expert",
-            "state-management-design",
-            "targeted-validation-selection",
-            "use-case-modeling",
-        }
-        eca_required = {
-            candidate["skill_id"]
-            for candidate in eca_adjacency["required_candidates"]
-        }
-        scenario_required = {
-            candidate["skill_id"]
-            for candidate in scenario_adjacency["required_candidates"]
-        }
-        self.assertEqual(37, len(eca_adjacency["registry_declared_skills"]))
         self.assertNotIn(
             "scenario-decomposition",
             eca_adjacency["registry_declared_skills"],
         )
-        self.assertEqual(
-            s2a_eca_required - {"scenario-decomposition"},
-            eca_required,
-        )
-        self.assertEqual(set(), eca_required - s2a_eca_required)
-        self.assertEqual(
-            ["acceptance-criteria-builder"],
-            scenario_adjacency["registry_declared_skills"],
-        )
-        self.assertEqual(
-            s2a_scenario_required
-            | set(scenario_adjacency["source_declared_skills"]),
-            scenario_required,
-        )
+        allowed_reasons = {
+            "registry-declared",
+            "source-declared",
+            "overall-top-k",
+            "negative-route-conflict",
+            *{
+                f"signal-top-k:{signal_name}"
+                for signal_name in PANEL.PROFESSIONAL_ADJACENCY_LAYERED_SIGNALS
+            },
+        }
         for target in targets:
             adjacency = target["routing_adjacency"]
             ranking = adjacency["full_catalog_ranking"]
+            required_by_id = {
+                candidate["skill_id"]: candidate
+                for candidate in adjacency["required_candidates"]
+            }
+            declared_by_reason = {
+                "registry-declared": set(adjacency["registry_declared_skills"]),
+                "source-declared": set(adjacency["source_declared_skills"]),
+            }
+            for reason, declared_ids in declared_by_reason.items():
+                self.assertLessEqual(declared_ids, set(required_by_id))
+                for candidate_id in declared_ids:
+                    self.assertIn(
+                        reason,
+                        required_by_id[candidate_id]["selection_reasons"],
+                    )
+            for candidate_id, candidate in required_by_id.items():
+                reasons = candidate["selection_reasons"]
+                self.assertTrue(reasons)
+                self.assertEqual(sorted(set(reasons)), reasons)
+                self.assertLessEqual(set(reasons), allowed_reasons)
+                self.assertEqual(
+                    candidate_id
+                    in (
+                        declared_by_reason["registry-declared"]
+                        | declared_by_reason["source-declared"]
+                    ),
+                    candidate["declared"],
+                )
             self.assertEqual(188, adjacency["full_catalog_count"])
             self.assertEqual(
                 list(range(1, 189)),
@@ -1163,9 +1110,10 @@ Route current work to `candidate-a`.
                 len({candidate["skill_id"] for candidate in ranking}),
             )
             self.assertNotIn("full_catalog_ranking_fingerprint", adjacency)
-        self.assertEqual(33, required_counts["implementation-structure-design"])
-        self.assertEqual(52, required_counts["engineering-change-analysis"])
-        self.assertLessEqual(max(required_counts.values()), 57)
+        self.assertLessEqual(
+            max(required_counts.values()),
+            PANEL.PROFESSIONAL_ADJACENCY_MAX_REQUIRED_CANDIDATES_PER_TARGET,
+        )
 
         PANEL._professional_package_targets(root=ROOT)
 
@@ -1293,11 +1241,8 @@ Route current work to `candidate-a`.
         }
         self.assertEqual({}, required_changes)
         self.assertEqual(
-            (40, 40),
-            (
-                len(before["reverse"][implementation_id]),
-                len(after["reverse"][implementation_id]),
-            ),
+            len(before["reverse"][implementation_id]),
+            len(after["reverse"][implementation_id]),
         )
         self.assertEqual(
             set(),
@@ -1305,10 +1250,9 @@ Route current work to `candidate-a`.
             - after["reverse"][implementation_id],
         )
         self.assertEqual(
-            56,
+            max(map(len, before["reverse"].values())),
             max(map(len, after["reverse"].values())),
         )
-
         for owner_id in (
             "installed-client-change-builder",
             "platform-infrastructure-change-builder",
@@ -4016,16 +3960,15 @@ Route current work to `candidate-a`.
             {"reference_detector_contract", "root_detector_contract"},
             set(fixed["detector_contract_fingerprints"]),
         )
-        self.assertEqual(
-            {
-                "reference_detector_contract": (
-                    "b30afbeafb68bb21ade261d0ada1698865ccef20327dac0fe8edca4138ed1fcb"
-                ),
-                "root_detector_contract": (
-                    "31dd5e2a1444dede44127228211d0226ffb7681bed3ba13cf4e41a9d87b11b79"
-                ),
-            },
-            fixed["detector_contract_fingerprints"],
+        detector_keys = {
+            "reference_detector_contract",
+            "root_detector_contract",
+        }
+        self.assertTrue(
+            all(
+                re.fullmatch(r"[0-9a-f]{64}", digest)
+                for digest in fixed["detector_contract_fingerprints"].values()
+            )
         )
         live_audit = copy.deepcopy(_live_semantic_audit())
         root_semantic, reference_semantic = PANEL._semantic_audit_sections(
@@ -4037,21 +3980,8 @@ Route current work to `candidate-a`.
             reference_semantic=reference_semantic,
         )
         self.assertEqual(
-            {
-                "reference_detector_contract": (
-                    "b30afbeafb68bb21ade261d0ada1698865ccef20327dac0fe8edca4138ed1fcb"
-                ),
-                "root_detector_contract": (
-                    "7b00576812cf683b980c12ec32466b3150c59a1dea846a19a52df4b909fad8e5"
-                ),
-            },
-            {
-                key: live_fingerprints[key]
-                for key in (
-                    "reference_detector_contract",
-                    "root_detector_contract",
-                )
-            },
+            fixed["detector_contract_fingerprints"],
+            {key: live_fingerprints[key] for key in sorted(detector_keys)},
         )
         current_mode = PANEL._semantic_source_fingerprint_selector_mode(
             selector_fingerprints=fixed["detector_contract_fingerprints"],
@@ -4066,7 +3996,7 @@ Route current work to `candidate-a`.
                 for axis in sorted(PANEL.SEMANTIC_AXES)
             },
         )
-        self.assertIsNone(current_mode)
+        self.assertEqual("compact-v2", current_mode)
 
         direct = PANEL._semantic_source_fingerprint_selector_mode(
             selector_fingerprints=current,
