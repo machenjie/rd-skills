@@ -1198,9 +1198,9 @@
       "path": "src/foundation/capabilities/permission-boundary-modeling/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 3,
+      "decision_rule_count": 4,
       "gotcha_count": 1,
-      "line_count": 46
+      "line_count": 47
     },
     {
       "name": "domain-event-modeling",

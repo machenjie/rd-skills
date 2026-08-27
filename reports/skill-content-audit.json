@@ -304362,10 +304362,10 @@
     ],
     "detector_fingerprint": {
       "algorithm": "sha256",
-      "value": "1bf07ca011eb2077ec472a654c7bc515774316ee43b027a408db187da0bb54d6"
+      "value": "0ceca07af3c4b32f39fe385844c25555e06197ee487962698c54b0760cd8371e"
     },
     "detector_source_manifest": {
-      "aggregate_source_digest": "1bf07ca011eb2077ec472a654c7bc515774316ee43b027a408db187da0bb54d6",
+      "aggregate_source_digest": "0ceca07af3c4b32f39fe385844c25555e06197ee487962698c54b0760cd8371e",
       "contract_fields": {
         "finding_fields": [
           "family",
@@ -304429,7 +304429,7 @@
         },
         {
           "path": "scripts/validation_utils.py",
-          "sha256": "bf12aad978ed7fea8add11f391c4b31c0a72f71dfb083bfd5c4ed0e0ce4facf3"
+          "sha256": "a210359ac8241667822bbe9c908dc37b54e2f115032e238f77f1edecc8d7a8e9"
         }
       ]
     },

@@ -44,7 +44,7 @@ Calibration candidate selection and frontier construction do not apply soft targ
 | Review dispatch | 38009 | 2364 | 2811 | 3003 | 3174 | 3363 | unavailable |
 | Utility dispatch | 18 | 806 | 828 | 828 | 828 | 828 | unavailable |
 
-Valid-candidate selection identity: `ff46d0016e10152275089381c2780ea4f16c46dc620c6ca77c50db60a9914769`. Temporal growth is unavailable because this run has one comparable snapshot.
+Valid-candidate selection identity: `6b5ba791f34462249547d7134de05926c78a6ec86469a3428356d2c5920b193d`. Temporal growth is unavailable because this run has one comparable snapshot.
 
 ## Admissible Context Composition Gate
 

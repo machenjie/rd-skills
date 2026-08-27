@@ -56,7 +56,7 @@
       "soft_target_applied_to_exit": false,
       "hard_ceiling_applied_to_exit": true,
       "selection_count": 236295,
-      "selection_identity_sha256": "ff46d0016e10152275089381c2780ea4f16c46dc620c6ca77c50db60a9914769",
+      "selection_identity_sha256": "6b5ba791f34462249547d7134de05926c78a6ec86469a3428356d2c5920b193d",
       "identity_excludes_budget_fields": [
         "soft_target",
         "hard_ceiling"
@@ -27725,15 +27725,15 @@
         "build_manifests": {
           "recommended": {
             "path": "dist/universal/skills/recommended/.changeforge-build-manifest.json",
-            "sha256": "4591c7630082272e7de34685b6c554bdaa0088214728126a8d2c6dc7d5326e90"
+            "sha256": "85ea8d5a026ea913ba665f17140ca5d8ec8a964726cb7e674307225e0e9c4890"
           },
           "full": {
             "path": "dist/universal/skills/full/.changeforge-build-manifest.json",
-            "sha256": "9cef8326e4835fd163d79e6ff03b0aa65a55e8cb368ddcd8853f51037ffc7825"
+            "sha256": "702482400186289d7c1a07168df0dec103f963795be1817fafbe28282c7ff5c9"
           },
           "dev": {
             "path": "dist/universal/skills/dev/.changeforge-build-manifest.json",
-            "sha256": "6ad642ec77a4696c06dfac5cefa587c8f985232781b30f6d25f7d9b799d9b979"
+            "sha256": "250be66ad120159f461ca8d51520256761a2f8e85f75ef52d3e3c2a554299284"
           }
         },
         "selector_authority_sha256": "fefc62f354700a08db07095100547c35c473de9dc478f7844aab0168b7b5d2d2",
@@ -27751,7 +27751,7 @@
         "build_consumers": [],
         "checked_path_fingerprints": {
           "scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
-          "scripts/validation_utils.py": "bf12aad978ed7fea8add11f391c4b31c0a72f71dfb083bfd5c4ed0e0ce4facf3",
+          "scripts/validation_utils.py": "a210359ac8241667822bbe9c908dc37b54e2f115032e238f77f1edecc8d7a8e9",
           "src/control-prompts/main-control-agent.md": "4dafab2e4abdebd5e1600f59fffed003c9dd70ccb959d215d04f457fd5db3991",
           "src/control-skills/engineering-control-plane/references/professional-skill-router.md": "7c3b698c0ee2d1a145beb8cd5624095479703ce884b2cf86f13e5971a5beaf55"
         }

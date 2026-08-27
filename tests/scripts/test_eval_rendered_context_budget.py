@@ -1512,6 +1512,14 @@ class RenderedContextBudgetTests(unittest.TestCase):
             mapping_digest: str,
             main_tokens: list[int],
         ) -> dict[str, object]:
+            def component(kind: str, path: str, tokens: int) -> dict[str, object]:
+                return {
+                    "kind": kind,
+                    "path": path,
+                    "sha256": hashlib.sha256(path.encode("utf-8")).hexdigest(),
+                    "tokens": tokens,
+                }
+
             return EVAL._budget_governance_report(
                 mode="calibration",
                 main_contexts=[
@@ -1519,7 +1527,9 @@ class RenderedContextBudgetTests(unittest.TestCase):
                         "budget_class": "main",
                         "host": f"host-{index}",
                         "build_profile": "recommended",
-                        "component_ids": [f"main-{index}"],
+                        "components": [
+                            component("rendered_main_profile", f"main-{index}", tokens)
+                        ],
                         "total_tokens": tokens,
                     }
                     for index, tokens in enumerate(main_tokens)
@@ -1537,7 +1547,9 @@ class RenderedContextBudgetTests(unittest.TestCase):
                         "layer3_references": [],
                         "professional_references": [],
                         "canonical_capsule_sha256": f"capsule-{index}",
-                        "component_ids": [f"utility-{index}"],
+                        "components": [
+                            component("dispatch_capsule", f"utility-{index}", tokens)
+                        ],
                         "total_tokens": tokens,
                     }
                     for index, tokens in enumerate(main_tokens)
@@ -1583,6 +1595,8 @@ class RenderedContextBudgetTests(unittest.TestCase):
         )
         admissible = {
             "dominance_frontier": {
+                "mapping_digest": "0" * 64,
+                "mapping_row_count": len(EVAL.ADMISSIBLE_BUDGET_CLASSES),
                 "budget_classes": {
                     budget_class: {
                         "token_distribution": EVAL._token_distribution(
@@ -1598,10 +1612,43 @@ class RenderedContextBudgetTests(unittest.TestCase):
             },
         }
         kwargs = {
-            "main_contexts": [{"total_tokens": tokens_by_class["main"]}],
+            "main_contexts": [
+                {
+                    "budget_class": "main",
+                    "host": "codex",
+                    "build_profile": "recommended",
+                    "components": [
+                        {
+                            "kind": "rendered_main_profile",
+                            "path": "main",
+                            "sha256": "1" * 64,
+                            "tokens": tokens_by_class["main"],
+                        }
+                    ],
+                    "total_tokens": tokens_by_class["main"],
+                }
+            ],
             "dispatch_measurements": [
                 {
                     "budget_class": "utility",
+                    "host": "codex",
+                    "build_profile": "recommended",
+                    "step": 1,
+                    "role": "task-agent",
+                    "mode": "utility",
+                    "primary_skill": None,
+                    "layer3_skills": [],
+                    "layer3_references": [],
+                    "professional_references": [],
+                    "canonical_capsule_sha256": "2" * 64,
+                    "components": [
+                        {
+                            "kind": "dispatch_capsule",
+                            "path": "utility",
+                            "sha256": "3" * 64,
+                            "tokens": tokens_by_class["utility"],
+                        }
+                    ],
                     "total_tokens": tokens_by_class["utility"],
                 }
             ],

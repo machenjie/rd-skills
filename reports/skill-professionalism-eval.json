@@ -2937,8 +2937,8 @@
         "no task-local permission policy or enforcement decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 46,
-      "decision_rule_count": 3,
+      "line_count": 47,
+      "decision_rule_count": 4,
       "gotcha_count": 1,
       "reference_count": 3,
       "routing_coverage_count": 8,

@@ -48,6 +48,68 @@ def _module_without_tiktoken() -> Iterator[tuple[ModuleType, list[str]]]:
 
 
 class ValidationUtilsDependencyBoundaryTests(unittest.TestCase):
+    def test_context_budget_taxonomy_and_rendered_categories_are_bijective(self) -> None:
+        with _module_without_tiktoken() as (module, _imports):
+            contract = module.CORE_CONTRACTS["context_budget_contract"]
+            mutations: list[tuple[str, dict[str, object]]] = []
+
+            swapped_entry = copy.deepcopy(contract)
+            swapped_entry["budget_classes"]["main"][
+                "category"
+            ] = "dispatch_composition"
+            mutations.append(("swapped-entry", swapped_entry))
+
+            missing = copy.deepcopy(contract)
+            missing["context_taxonomy"]["resident_runtime"]["classes"] = []
+            mutations.append(("missing", missing))
+
+            unknown = copy.deepcopy(contract)
+            unknown["context_taxonomy"]["dispatch_composition"]["classes"].append(
+                "unknown"
+            )
+            mutations.append(("unknown", unknown))
+
+            overlap = copy.deepcopy(contract)
+            overlap["context_taxonomy"]["dispatch_composition"]["classes"].append(
+                "main"
+            )
+            mutations.append(("overlap", overlap))
+
+            duplicate = copy.deepcopy(contract)
+            duplicate["context_taxonomy"]["resident_runtime"]["classes"].append(
+                "main"
+            )
+            mutations.append(("duplicate", duplicate))
+
+            authoring_leak = copy.deepcopy(contract)
+            authoring_leak["context_taxonomy"]["authoring"]["classes"].append(
+                "main"
+            )
+            mutations.append(("authoring-leak", authoring_leak))
+
+            dynamic_leak = copy.deepcopy(contract)
+            dynamic_leak["context_taxonomy"]["runtime_dynamic_context"][
+                "classes"
+            ].append("task")
+            mutations.append(("dynamic-leak", dynamic_leak))
+
+            swapped_taxonomy = copy.deepcopy(contract)
+            swapped_taxonomy["context_taxonomy"]["resident_runtime"][
+                "classes"
+            ].remove("main")
+            swapped_taxonomy["context_taxonomy"]["dispatch_composition"][
+                "classes"
+            ].append("main")
+            mutations.append(("swapped-taxonomy", swapped_taxonomy))
+
+            for label, mutation in mutations:
+                with self.subTest(label=label):
+                    with self.assertRaises(ValueError):
+                        module.derived_context_budget_limits(mutation)
+                    core = copy.deepcopy(module.CORE_CONTRACTS)
+                    core["context_budget_contract"] = mutation
+                    self.assertTrue(module.validate_core_contracts(core))
+
     def test_unit_dependency_audit_rejects_workspace_outputs_not_temp_fixture_text(self) -> None:
         with _module_without_tiktoken() as (module, _imports), tempfile.TemporaryDirectory() as raw:
             root = Path(raw)

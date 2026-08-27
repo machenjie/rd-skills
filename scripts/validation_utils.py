@@ -912,6 +912,80 @@ def derived_context_budget_limits(contract: dict[str, Any]) -> dict[str, dict[st
             "hard_ceiling": hard_ceiling,
             "calibration_status": entry["calibration_status"],
         }
+
+    taxonomy = contract.get("context_taxonomy")
+    expected_taxonomy_categories = {
+        "authoring",
+        "resident_runtime",
+        "dispatch_composition",
+        "runtime_dynamic_context",
+    }
+    if not isinstance(taxonomy, dict) or set(taxonomy) != expected_taxonomy_categories:
+        raise ValueError(
+            "context budget taxonomy must define authoring, resident_runtime, "
+            "dispatch_composition, and runtime_dynamic_context"
+        )
+
+    def taxonomy_classes(category: str) -> list[str]:
+        entry = taxonomy.get(category)
+        if not isinstance(entry, dict):
+            raise ValueError(f"context budget taxonomy {category!r} must be an object")
+        values = entry.get("classes")
+        if (
+            not isinstance(values, list)
+            or any(not isinstance(value, str) or not value for value in values)
+        ):
+            raise ValueError(
+                f"context budget taxonomy {category!r} classes must be text names"
+            )
+        if len(values) != len(set(values)):
+            raise ValueError(
+                f"context budget taxonomy {category!r} classes must be unique"
+            )
+        return values
+
+    resident_classes = taxonomy_classes("resident_runtime")
+    dispatch_classes = taxonomy_classes("dispatch_composition")
+    authoring_classes = taxonomy_classes("authoring")
+    dynamic_classes = taxonomy_classes("runtime_dynamic_context")
+    resident_set = set(resident_classes)
+    dispatch_set = set(dispatch_classes)
+    rendered_classes = set(limits)
+    if resident_set & dispatch_set:
+        raise ValueError(
+            "resident_runtime and dispatch_composition taxonomy classes must be disjoint"
+        )
+    if resident_set | dispatch_set != rendered_classes:
+        raise ValueError(
+            "resident_runtime and dispatch_composition taxonomy classes must cover "
+            "every rendered budget class exactly once"
+        )
+    resident_entries = {
+        name for name, entry in limits.items() if entry["category"] == "resident_runtime"
+    }
+    dispatch_entries = {
+        name
+        for name, entry in limits.items()
+        if entry["category"] == "dispatch_composition"
+    }
+    if resident_set != resident_entries:
+        raise ValueError(
+            "resident_runtime taxonomy classes must equal rendered classes with "
+            "category resident_runtime"
+        )
+    if dispatch_set != dispatch_entries:
+        raise ValueError(
+            "dispatch_composition taxonomy classes must equal rendered classes with "
+            "category dispatch_composition"
+        )
+    unsupported_rendered = rendered_classes & (
+        set(authoring_classes) | set(dynamic_classes)
+    )
+    if unsupported_rendered:
+        raise ValueError(
+            "authoring and runtime_dynamic_context taxonomy classes cannot be rendered "
+            f"budget classes: {sorted(unsupported_rendered)}"
+        )
     return limits
 
 

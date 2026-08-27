@@ -6373,17 +6373,90 @@ def _unavailable_growth_distribution() -> dict[str, Any]:
     }
 
 
+def _main_utility_selection_rows(
+    main_contexts: list[dict[str, Any]],
+    dispatch_measurements: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Project stable measured rows for classes outside the dominance mapping."""
+
+    rows: list[dict[str, Any]] = []
+    for measurement in [
+        *main_contexts,
+        *(
+            item
+            for item in dispatch_measurements
+            if item.get("budget_class") == "utility"
+        ),
+    ]:
+        budget_class = measurement.get("budget_class")
+        if budget_class not in {"main", "utility"}:
+            raise ValueError(
+                "selection identity rows may contain only main or utility measurements"
+            )
+        components = measurement.get("components")
+        if not isinstance(components, list) or not components:
+            raise ValueError(
+                f"{budget_class} selection identity requires measured components"
+            )
+        render_signature = [
+            {
+                key: component[key]
+                for key in ("kind", "path", "sha256", "tokens")
+            }
+            for component in components
+        ]
+        candidate_identity = {
+            "host": measurement.get("host"),
+            "build_profile": measurement.get("build_profile"),
+        }
+        if budget_class == "utility":
+            candidate_identity.update(
+                {
+                    "step": measurement.get("step"),
+                    "role": measurement.get("role"),
+                    "mode": measurement.get("mode"),
+                    "primary_skill": measurement.get("primary_skill"),
+                    "layer3_skills": measurement.get("layer3_skills", []),
+                    "layer3_references": measurement.get(
+                        "layer3_references", []
+                    ),
+                    "professional_references": measurement.get(
+                        "professional_references", []
+                    ),
+                    "canonical_capsule_sha256": measurement.get(
+                        "canonical_capsule_sha256"
+                    ),
+                }
+            )
+        tokens = measurement.get("total_tokens")
+        if not isinstance(tokens, int) or isinstance(tokens, bool):
+            raise ValueError(
+                f"{budget_class} selection identity requires measured integer tokens"
+            )
+        rows.append(
+            {
+                "budget_class": budget_class,
+                "candidate_identity": candidate_identity,
+                "render_signature_sha256": _sha256_text(
+                    _canonical_json_text(render_signature)
+                ),
+                "tokens": tokens,
+            }
+        )
+    return sorted(rows, key=_canonical_json_text)
+
+
 def _calibration_selection_identity(
-    values: Any,
+    selected_valid_candidate_rows: Any,
     contract: dict[str, Any],
 ) -> str:
-    """Fingerprint measured valid candidates without budget fields."""
+    """Fingerprint canonical measured valid-candidate rows without budget fields."""
 
     return _sha256_text(
         _canonical_json_text(
             {
                 "tokenizer": contract["tokenizer"],
-                "valid_candidate_measurements": values,
+                "valid_candidate_measurements": selected_valid_candidate_rows,
             }
         )
     )
@@ -7612,10 +7685,34 @@ def _budget_governance_report(
                 }
             )
 
-    population_identity = {
+    distributions = {
         budget_class: populations[budget_class]
         for budget_class in CONTEXT_BUDGET_LIMITS
     }
+    dominance_frontier = admissible_context_compositions["dominance_frontier"]
+    main_utility_rows = _main_utility_selection_rows(
+        main_contexts,
+        dispatch_measurements,
+    )
+    population_identity = {
+        "admissible_composition_candidates": {
+            "budget_classes": list(ADMISSIBLE_BUDGET_CLASSES),
+            "mapping_row_count": dominance_frontier["mapping_row_count"],
+            "mapping_digest": dominance_frontier["mapping_digest"],
+        },
+        "main_and_utility_candidates": main_utility_rows,
+    }
+    selection_count = sum(
+        int(distribution["count"] or 0) for distribution in distributions.values()
+    )
+    bound_selection_count = (
+        dominance_frontier["mapping_row_count"] + len(main_utility_rows)
+    )
+    if bound_selection_count != selection_count:
+        raise ValueError(
+            "selection identity coverage does not match measured valid-candidate count: "
+            f"bound={bound_selection_count}, measured={selection_count}"
+        )
     return {
         "mode": mode,
         "source": "src/control-model/core-contracts.json#/context_budget_contract",
@@ -7634,17 +7731,14 @@ def _budget_governance_report(
             "budget_applied_to_frontier": False,
             "soft_target_applied_to_exit": False,
             "hard_ceiling_applied_to_exit": mode == "conformance",
-            "selection_count": sum(
-                int(distribution["count"] or 0)
-                for distribution in populations.values()
-            ),
+            "selection_count": selection_count,
             "selection_identity_sha256": _calibration_selection_identity(
                 population_identity,
                 CONTEXT_BUDGET_MODEL,
             ),
             "identity_excludes_budget_fields": ["soft_target", "hard_ceiling"],
         },
-        "distributions": population_identity,
+        "distributions": distributions,
         "growth_distributions": {
             budget_class: _unavailable_growth_distribution()
             for budget_class in CONTEXT_BUDGET_LIMITS
@@ -7962,7 +8056,6 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
         if max_duplicate
         else []
     )
-    component_catalog = _compact_component_catalog(duplicate_candidates)
     transfer_rows = [
         _case_transfer_measurement(case)
         for _fixture_group, case in cases
@@ -8026,6 +8119,7 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
         dispatch_measurements=all_dispatch_measurements,
         admissible_context_compositions=admissible_context_compositions,
     )
+    component_catalog = _compact_component_catalog(duplicate_candidates)
     errors.extend(
         f"{item['budget_class']} context maximum {item['tokens']} exceeds Core hard ceiling {item['hard_ceiling']}"
         for item in budget_governance["conformance_failures"]

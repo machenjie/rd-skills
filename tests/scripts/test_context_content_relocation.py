@@ -2056,7 +2056,7 @@ C1J_PROTECTED_HASHES = {
     "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
     "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
 "scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
-"scripts/validation_utils.py": "bf12aad978ed7fea8add11f391c4b31c0a72f71dfb083bfd5c4ed0e0ce4facf3",
+"scripts/validation_utils.py": "a210359ac8241667822bbe9c908dc37b54e2f115032e238f77f1edecc8d7a8e9",
     "dist/universal/skills/dev/data-middleware-change-builder/SKILL.md": "22a41125147da43b01da304168205b8840d7ec6649a16c7727bd7719943696f3",
 }
 
@@ -5953,7 +5953,7 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
 "scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
-"scripts/validation_utils.py": "bf12aad978ed7fea8add11f391c4b31c0a72f71dfb083bfd5c4ed0e0ce4facf3",
+"scripts/validation_utils.py": "a210359ac8241667822bbe9c908dc37b54e2f115032e238f77f1edecc8d7a8e9",
         }
         for path, expected_hash in protected_hashes.items():
             text = (ROOT / path).read_text(encoding="utf-8")
@@ -6623,7 +6623,7 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
             "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-"tests/scripts/test_eval_rendered_context_budget.py": "fae8220779a59de92fca6d372f3f99b7650c75b8c1b1abb42389345f551bcaaf",
+"tests/scripts/test_eval_rendered_context_budget.py": "9bf0e6bcecc728ec21b54c704b459d75ba8c9499dfd2f52232b1e1b2ce6d51e6",
         }.items():
             with self.subTest(protected_hash=path):
                 self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -8079,7 +8079,7 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
 "scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
-"scripts/validation_utils.py": "bf12aad978ed7fea8add11f391c4b31c0a72f71dfb083bfd5c4ed0e0ce4facf3",
+"scripts/validation_utils.py": "a210359ac8241667822bbe9c908dc37b54e2f115032e238f77f1edecc8d7a8e9",
             "evals/agent-light-trajectories/cases.yaml": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
         }.items():
@@ -8265,10 +8265,10 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
 "scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
-"scripts/validation_utils.py": "bf12aad978ed7fea8add11f391c4b31c0a72f71dfb083bfd5c4ed0e0ce4facf3",
+"scripts/validation_utils.py": "a210359ac8241667822bbe9c908dc37b54e2f115032e238f77f1edecc8d7a8e9",
             "evals/agent-light-trajectories/cases.yaml": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-"tests/scripts/test_eval_rendered_context_budget.py": "fae8220779a59de92fca6d372f3f99b7650c75b8c1b1abb42389345f551bcaaf",
+"tests/scripts/test_eval_rendered_context_budget.py": "9bf0e6bcecc728ec21b54c704b459d75ba8c9499dfd2f52232b1e1b2ce6d51e6",
             "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
             "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
         }
@@ -8454,10 +8454,10 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
 "scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
-"scripts/validation_utils.py": "bf12aad978ed7fea8add11f391c4b31c0a72f71dfb083bfd5c4ed0e0ce4facf3",
+"scripts/validation_utils.py": "a210359ac8241667822bbe9c908dc37b54e2f115032e238f77f1edecc8d7a8e9",
             "evals/agent-light-trajectories/cases.yaml": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-"tests/scripts/test_eval_rendered_context_budget.py": "fae8220779a59de92fca6d372f3f99b7650c75b8c1b1abb42389345f551bcaaf",
+"tests/scripts/test_eval_rendered_context_budget.py": "9bf0e6bcecc728ec21b54c704b459d75ba8c9499dfd2f52232b1e1b2ce6d51e6",
             "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
             "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
         }
@@ -8576,10 +8576,10 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
 "scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
-"scripts/validation_utils.py": "bf12aad978ed7fea8add11f391c4b31c0a72f71dfb083bfd5c4ed0e0ce4facf3",
+"scripts/validation_utils.py": "a210359ac8241667822bbe9c908dc37b54e2f115032e238f77f1edecc8d7a8e9",
             "evals/agent-light-trajectories/cases.yaml": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-"tests/scripts/test_eval_rendered_context_budget.py": "fae8220779a59de92fca6d372f3f99b7650c75b8c1b1abb42389345f551bcaaf",
+"tests/scripts/test_eval_rendered_context_budget.py": "9bf0e6bcecc728ec21b54c704b459d75ba8c9499dfd2f52232b1e1b2ce6d51e6",
             "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
             "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
         }
@@ -9164,10 +9164,10 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
 "scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
-"scripts/validation_utils.py": "bf12aad978ed7fea8add11f391c4b31c0a72f71dfb083bfd5c4ed0e0ce4facf3",
+"scripts/validation_utils.py": "a210359ac8241667822bbe9c908dc37b54e2f115032e238f77f1edecc8d7a8e9",
             "evals/agent-light-trajectories/cases.yaml": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-"tests/scripts/test_eval_rendered_context_budget.py": "fae8220779a59de92fca6d372f3f99b7650c75b8c1b1abb42389345f551bcaaf",
+"tests/scripts/test_eval_rendered_context_budget.py": "9bf0e6bcecc728ec21b54c704b459d75ba8c9499dfd2f52232b1e1b2ce6d51e6",
             "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
             "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
         }
@@ -9450,8 +9450,8 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
 "scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
-"scripts/validation_utils.py": "bf12aad978ed7fea8add11f391c4b31c0a72f71dfb083bfd5c4ed0e0ce4facf3",
-"tests/scripts/test_eval_rendered_context_budget.py": "fae8220779a59de92fca6d372f3f99b7650c75b8c1b1abb42389345f551bcaaf",
+"scripts/validation_utils.py": "a210359ac8241667822bbe9c908dc37b54e2f115032e238f77f1edecc8d7a8e9",
+"tests/scripts/test_eval_rendered_context_budget.py": "9bf0e6bcecc728ec21b54c704b459d75ba8c9499dfd2f52232b1e1b2ce6d51e6",
             "scripts/audit-skill-content.py": "19075d5a17baf72de6da658f113e3b029720a927fd8723885b6806d97a74cfab",
             "tests/scripts/test_validate_root_content.py": "432ed062a7f2f71cc0c23ac90c0fc3d06aaa85901c3376965ff6291dd2a306fc",
             "evals/agent-light-trajectories/cases.yaml": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",
