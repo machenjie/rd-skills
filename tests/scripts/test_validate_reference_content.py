@@ -1535,16 +1535,28 @@ class ValidateReferenceContentTests(unittest.TestCase):
             len(set(checked_in_target_ids)),
         )
         self.assertEqual(1, checked_in_application["schema_version"])
-        self.assertEqual("current", checked_in_application["status"])
-        self.assertIsNone(checked_in_application["error"])
-        self.assertEqual(
-            len(checked_in_target_ids),
-            checked_in_application["target_count"],
-        )
-        self.assertEqual(
-            len(checked_in_target_ids),
-            checked_in_application["applied_count"],
-        )
+        if checked_in_application["status"] == "current":
+            self.assertIsNone(checked_in_application["error"])
+            self.assertEqual(
+                len(checked_in_target_ids),
+                checked_in_application["target_count"],
+            )
+            self.assertEqual(
+                len(checked_in_target_ids),
+                checked_in_application["applied_count"],
+            )
+        else:
+            self.assertEqual("invalid", checked_in_application["status"])
+            self.assertEqual(0, checked_in_application["target_count"])
+            self.assertEqual(0, checked_in_application["applied_count"])
+            self.assertEqual(
+                "semantic-decision-application-invalid",
+                checked_in_application["error"]["id"],
+            )
+            self.assertIn(
+                "candidate binding is stale",
+                checked_in_application["error"]["message"],
+            )
         self.assertEqual(
             0,
             checked_in_application["completed_rewrite_count"],

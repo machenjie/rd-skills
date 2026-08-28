@@ -53,10 +53,16 @@ class TaskDagDecompositionContractTests(unittest.TestCase):
             for path in sorted((SKILL_DIR / "references").glob("*.md"))
         )
         foundation_entries = load_yaml_file(REGISTRY)["foundation_skills"]
+        selector_rows = load_yaml_file(REGISTRY)["selector_authority"]["selectors"]
         cls.entry = next(
             entry
             for entry in foundation_entries
             if entry["name"] == "task-dag-decomposition"
+        )
+        cls.selector = next(
+            row
+            for row in selector_rows
+            if row["selector_id"] == "accepted-brief-task-dag"
         )
         professional_entries = load_yaml_file(PROFESSIONAL_REGISTRY)[
             "professional_skills"
@@ -188,7 +194,28 @@ class TaskDagDecompositionContractTests(unittest.TestCase):
             "derived artifacts, not a parallel analysis authority.",
             decision_section.group("body").casefold().replace("\n  ", " "),
         )
-        self.assertIn("task-dag-decomposition", self.router)
+        self.assertEqual(
+            ["task-dag-decomposition"],
+            self.selector["selectable_layer3"],
+        )
+        self.assertEqual(
+            {
+                "kind": "direct-static",
+                "symbol": "_route_impl",
+            },
+            self.selector["source"],
+        )
+        self.assertEqual(
+            [
+                {
+                    "primary_skill": "task-dag-planner",
+                    "review_skill": "engineering-artifact-review",
+                }
+            ],
+            self.selector["owner_bindings"],
+        )
+        self.assertNotIn("task-dag-decomposition", self.router)
+        self.assertIn("global Router carries no Layer 3 payload", self.router)
         self.assertNotIn("layer3: [task-dag-decomposition]", self.routing_scenarios)
         self.assertIn("control_path: direct", self.routing_scenarios)
         self.assertIn("analysis: null", self.routing_scenarios)

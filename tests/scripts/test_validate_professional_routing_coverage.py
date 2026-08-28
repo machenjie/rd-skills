@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import importlib.util
+import json
 import sys
 import tempfile
 import unittest
@@ -11,26 +12,48 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/validate-professional-routing-coverage.py"
 ROUTE_SCRIPT = ROOT / "scripts/eval-routing.py"
+SCRIPTS = str(ROOT / "scripts")
+if SCRIPTS not in sys.path:
+    sys.path.insert(0, SCRIPTS)
+
+import validation_utils as VALIDATION  # noqa: E402
 
 
 def _l4_main_execution_yaml(task_id: str) -> str:
-    return (
-        "    main_execution:\n"
-        "      producer: main-control-agent\n"
-        f"      task_id: {task_id}\n"
-        "      execution_level: L4\n"
-        "      level_basis:\n"
-        "        trigger_evaluations:\n"
-        "          - id: public-api-event-schema-compatibility\n"
-        "            status: matched\n"
-        "            evidence_kind: analysis_handoff\n"
-        f"            source_anchor: task:{task_id}:routing-api\n"
-        "            plausible_critical: false\n"
-        "        l2_eligibility: []\n"
-        "        obligations: [high-risk pre-implementation evidence]\n"
-        "        unresolved: []\n"
-        "        edit_status: allowed\n"
+    contract = VALIDATION.CORE_CONTRACTS["execution_level_contract"]
+    trigger_evaluations = {
+        row["id"]: {
+            "status": "not_matched",
+            "evidence_kind": "analysis_handoff",
+            "source_anchor": f"task:{task_id}:trigger:{row['id']}",
+            "plausible_critical": False,
+        }
+        for row in contract["trigger_registry"]
+    }
+    l2_evaluations = {
+        row["id"]: {
+            "status": "false",
+            "evidence_kind": "analysis_handoff",
+            "source_anchor": f"task:{task_id}:l2:{row['id']}",
+        }
+        for row in contract["l2_eligibility"]
+    }
+    computed = VALIDATION.compute_execution_level(
+        requested="L4",
+        trigger_evaluations=trigger_evaluations,
+        l2_evaluations=l2_evaluations,
     )
+    payload = {
+        "producer": "main-control-agent",
+        "task_id": task_id,
+        "execution_level": computed["effective_level"],
+        "level_basis": computed["level_basis"],
+    }
+    return "    main_execution: " + json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+    ) + "\n"
 
 
 def _load_module():

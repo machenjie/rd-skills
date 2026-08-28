@@ -89,9 +89,6 @@ EXPECTED_POLICY = {
         },
     }
 }
-PROTECTED_ROWS_SHA256 = (
-    "afb4d47d4c8b9d165c21cdd6d97db5cca4e458fba1c311312a25d0267181f81e"
-)
 T2E_ECA_DOMAIN_ADDITIONS = {
     "ai-product-extension",
     "android-platform-extension",
@@ -252,31 +249,6 @@ def _direct_rule_ids() -> set[str]:
     return ids
 
 
-def _protected_rows_digest(data: dict[str, object]) -> str:
-    rows = data["professional_skills"]
-    projected = []
-    for row in rows:
-        protected = {
-            key: value
-            for key, value in row.items()
-            if key not in {"routing_mode", "routing_family"}
-        }
-        if row.get("name") == "engineering-change-analysis":
-            protected["layer3_candidates"] = [
-                candidate
-                for candidate in protected["layer3_candidates"]
-                if candidate not in T2E_ECA_DOMAIN_ADDITIONS
-            ]
-        projected.append(protected)
-    payload = json.dumps(
-        projected,
-        sort_keys=True,
-        separators=(",", ":"),
-        ensure_ascii=False,
-    ).encode("utf-8")
-    return hashlib.sha256(payload).hexdigest()
-
-
 def _route(prompt: str, registry: object | None = None) -> dict[str, object]:
     parameters = inspect.signature(ORACLE.route_with_trace).parameters
     if "professional_registry" not in parameters:
@@ -373,12 +345,19 @@ class ProfessionalRegistryRoutingContractTests(unittest.TestCase):
                 "routing_family" in row,
                 row["name"],
             )
-        protected_rows_digest = _protected_rows_digest(data)
-        self.assertNotEqual(
-            "a46d2ae429fb520714d5ab38d11df43477c18589d5ec473939215d2f2dc510dc",
-            protected_rows_digest,
+        authority = VALIDATION.professional_automatic_routing_authority(data)
+        self.assertEqual(EXPECTED_POLICY, authority["policy"])
+        self.assertEqual(
+            {
+                row["routing_family"]: {
+                    "name": row["name"],
+                    "layer3_candidates": list(row["layer3_candidates"]),
+                }
+                for row in rows
+                if row["routing_mode"] == "automatic"
+            },
+            authority["owners_by_family"],
         )
-        self.assertEqual(PROTECTED_ROWS_SHA256, protected_rows_digest)
 
     def test_strict_authority_rejects_malformed_mode_family_and_policy(self) -> None:
         builder = getattr(
@@ -2293,23 +2272,24 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
             )
         )
 
-        mutated = copy.deepcopy(ORACLE._DYNAMIC_FOUNDATION_OWNER_BINDINGS)
-        mutated[selector_id] = (
-            *mutated[selector_id],
-            (
-                "implementation-owner:frontend-change-builder",
-                None,
-                "frontend",
-                "frontend-change-builder",
-                "security-privacy-gate",
-            ),
+        mutated_registry = copy.deepcopy(
+            load_yaml_file(ROOT / "src" / "registry" / "foundation-skills.yaml")
         )
-        with patch.object(
-            ORACLE,
-            "_DYNAMIC_FOUNDATION_OWNER_BINDINGS",
-            mutated,
-        ), self.assertRaises(ORACLE.RoutingIntegrityError):
-            ORACLE.oracle_admission_authority()
+        mutated_selector = next(
+            row
+            for row in mutated_registry["selector_authority"]["selectors"]
+            if row["selector_id"] == selector_id
+        )
+        mutated_selector["owner_bindings"].append(
+            {
+                "primary_skill": "frontend-change-builder",
+                "review_skill": "security-privacy-gate",
+            }
+        )
+        with self.assertRaises(ORACLE.RoutingIntegrityError):
+            ORACLE.oracle_admission_authority(
+                foundation_registry=mutated_registry,
+            )
 
     def test_repository_path_permission_priority_and_security_anti_trigger(self) -> None:
         repository_cases = {
@@ -2560,7 +2540,7 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
             if not line.startswith("|") or line.startswith("|---"):
                 continue
             cells = tuple(cell.strip() for cell in line.strip("|").split("|"))
-            if len(cells) == 5 and cells[0] != "Signal":
+            if len(cells) == 4 and cells[0] != "Task signal":
                 router_rows.append(cells)
 
         security_rows = [
@@ -2580,7 +2560,6 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
             (
                 "analysis-agent",
                 "engineering-change-analysis",
-                "payment-trading-extension, repository-context-map",
                 "architecture-impact-reviewer",
             ),
             payment_rows[0][1:],
@@ -2626,11 +2605,7 @@ class ImplementationFamilyClassifierTests(unittest.TestCase):
             payment_fixture["expected"]["primary_skill"],
         )
         self.assertEqual(
-            payment_rows[0][3].split(", "),
-            payment_fixture["expected"]["layer3_skills"],
-        )
-        self.assertEqual(
-            payment_rows[0][4],
+            payment_rows[0][3],
             payment_fixture["expected"]["review_skill"],
         )
         self.assertEqual(
