@@ -35,6 +35,14 @@ SPEC.loader.exec_module(BEHAVIOR)
 COMPARISON_MANIFEST = (
     ROOT / "evals" / "agent-behavior" / "comparison-fixtures" / "structural.yaml"
 )
+SKILL_EFFICACY_PATH = (
+    ROOT
+    / "src"
+    / "foundation"
+    / "capabilities"
+    / "skill-efficacy-benchmark"
+    / "SKILL.md"
+)
 
 
 class AgentBehaviorComparisonTests(unittest.TestCase):
@@ -128,6 +136,38 @@ class AgentBehaviorComparisonTests(unittest.TestCase):
         self.assertEqual(
             "not_collected",
             contract["live_capture_contract"]["effective_live_evidence_status"],
+        )
+
+    def test_skill_distinguishes_incomplete_structural_and_live_evidence(self) -> None:
+        contract = CORE_CONTRACTS["behavior_eval_contract"]
+        structural_class = next(
+            item for item in contract["evidence_classes"] if item.startswith("structural")
+        )
+        live_class = next(
+            item for item in contract["evidence_classes"] if item.startswith("live")
+        )
+        missing_live_verdict = contract["verdict_policy"]["missing-live-agent-data"]
+        source = SKILL_EFFICACY_PATH.read_text(encoding="utf-8")
+
+        self.assertIn(
+            "A comparison missing its baseline or treatment is incomplete, has no "
+            "evidence class, and supports no efficacy claim.",
+            source,
+        )
+        self.assertIn(
+            "A complete structural baseline/treatment comparison with live behavior "
+            f"not collected has evidence class `{structural_class}` and final verdict "
+            f"`{missing_live_verdict}`.",
+            source,
+        )
+        self.assertIn(
+            "A valid complete live comparison has evidence class "
+            f"`{live_class}` and uses the Core behavior-evaluation verdict mapping.",
+            source,
+        )
+        self.assertNotIn(
+            "Classify missing-baseline evidence as `structural-only`",
+            source,
         )
 
     def test_contract_rejects_runtime_dependency_and_duplicate_metric(self) -> None:

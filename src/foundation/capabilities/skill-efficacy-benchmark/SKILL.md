@@ -23,12 +23,12 @@ Evaluate whether a Skill, Profile, route, Reference, or benchmark improves agent
 ## High-Value Rules
 
 - Reject real-world efficacy claims without representative baseline and treatment evidence for the same task.
-- Classify missing-baseline evidence as `structural-only` with final verdict `not_enough_evidence` and no empirical or real-world efficacy claim.
+- A comparison missing its baseline or treatment is incomplete, has no evidence class, and supports no efficacy claim.
+- A complete structural baseline/treatment comparison with live behavior not collected has evidence class `structural_only` and final verdict `not_enough_evidence`.
+- A valid complete live comparison has evidence class `live_agent` and uses the Core behavior-evaluation verdict mapping.
 - Define each benchmark's task, baseline, treatment, metrics, verdict, caveats, and reproducible input boundary.
 - Measure token and turn overhead or record them as not collected rather than omitting the limitation.
 - Separate structural fixture validation from empirical agent behavior when stating what the evidence proves.
-- Measure over-routing and under-routing risk as well as selected-task success.
-- When references form the treatment, select an explicit required allow-list and reject an unbounded catalog treatment.
 - Classify changed Skill, Profile, routing, reference, validation, and benchmark surfaces as behavioral unless current evidence proves docs-only impact.
 
 ## Anti-Patterns
@@ -36,6 +36,7 @@ Evaluate whether a Skill, Profile, route, Reference, or benchmark improves agent
 - A benchmark can be useful even when overhead is `not_collected`; the caveat must be explicit.
 - A structural fixture validates schema and evaluation plumbing, not live agent productivity.
 - The unit of comparison is the same task under baseline and treatment conditions.
+- A reference treatment without an explicit required allow-list is unbounded and invalid.
 - Blind bindings, metrics, directions, evidence classes, or verdicts not derived from Core are invalid.
 - A packet that co-locates the oracle, observations, verifier-owned captures, or post-capture reveal, or binds opaque arms differently, is invalid.
 - Capture metadata is not live evidence without capture bytes, digest, ordered baseline/candidate source identity, provenance, and controlled-binding agreement.
@@ -49,7 +50,7 @@ Evaluate whether a Skill, Profile, route, Reference, or benchmark improves agent
 - Escalate when a change makes an empirical efficacy claim without baseline/treatment data.
 - Escalate when a fixture passes by matching keywords but does not test the professional behavior claimed.
 - Escalate when token or turn overhead is omitted.
-- Escalate when routing improvements hide over-routing drag or under-routing safety gaps.
+- Escalate when a benchmark omits over-routing or under-routing risk.
 - Escalate when benchmark data includes raw prompts, secrets, user-specific source material, or unbounded command output.
 
 ## Output Contract
