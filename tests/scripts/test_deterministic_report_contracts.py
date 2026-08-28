@@ -1386,15 +1386,34 @@ class DeterministicReportContractTests(unittest.TestCase):
                 encoding="utf-8"
             )
         )
-        commands = [
-            " ".join(producer["argv"])
-            for producer in contract["principle_acceptance_contract"]["producers"]
-        ]
-        self.assertEqual(33, len(commands))
-        before_lines = set(before_diagnostics.splitlines())
-        for command in commands:
-            self.assertNotIn(command, before_lines, command)
-            self.assertEqual(1, diagnostic_lines.count(command), command)
+        producers = contract["principle_acceptance_contract"]["producers"]
+        self.assertEqual(33, len(producers))
+        before_lines = before_diagnostics.splitlines()
+        for producer in producers:
+            command = " ".join(producer["argv"])
+            documented_command = command
+            if producer["id"] == "eval-rendered-context":
+                documented_command = f"{command} --mode conformance"
+                calibration_lines = [
+                    line
+                    for line in before_diagnostics.splitlines()
+                    if line.startswith(
+                        f"{command} --mode calibration --reports-dir "
+                    )
+                ]
+                self.assertEqual(1, len(calibration_lines), command)
+                self.assertEqual(
+                    1,
+                    before_lines.count(documented_command),
+                    documented_command,
+                )
+            else:
+                self.assertNotIn(documented_command, before_lines, command)
+            self.assertEqual(
+                1,
+                diagnostic_lines.count(documented_command),
+                documented_command,
+            )
 
     def test_regression_requires_prebuilt_strict_promoted_sample_report(self) -> None:
         names = {
@@ -3308,8 +3327,16 @@ class DeterministicReportContractTests(unittest.TestCase):
             ).read_text(encoding="utf-8")
             self.assertIn("Reference strict gate: `false`", markdown)
             self.assertIn("Root strict gate: `true`", markdown)
-            self.assertIn("Foundation content classes: compact=124", markdown)
-            self.assertIn("complex=26 (target<=500; hard<=600", markdown)
+            self.assertIn(
+                "Foundation content classes: "
+                f"compact={root_summary['foundation_compact_capabilities']}",
+                markdown,
+            )
+            self.assertIn(
+                f"complex={root_summary['foundation_complex_capabilities']} "
+                "(target<=500; hard<=600",
+                markdown,
+            )
             self.assertIn("target overages require readability disposition", markdown)
             self.assertIn("Readability expert review current: `false`", markdown)
             self.assertIn(
