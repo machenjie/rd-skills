@@ -1532,19 +1532,19 @@ Own the complete domain boundary. Keep this second sentence.
         expected = {
             "data-migration-design": (
                 "Block destructive cleanup until readers retire and reconciliation, "
-                "recovery, and ownership are proven."
+                "recovery, and ownership are proven.",
             ),
             "release-rollback": (
                 "Choose rollback only while old code reads current durable, provider, "
-                "and retained state."
+                "and retained state.",
             ),
             "version-compatibility": (
                 "Select a bridge from each failing producer-consumer or data direction "
-                "using current evidence."
+                "using current evidence.",
             ),
             "permission-boundary-modeling": (
-                "Enforce permissions before collection outputs; define explicit behavior "
-                "for mixed tenant bulk actions."
+                "Enforce permissions before collection outputs.",
+                "Define explicit behavior for mixed tenant bulk actions.",
             ),
         }
         generic = (
@@ -1557,7 +1557,7 @@ Own the complete domain boundary. Keep this second sentence.
             item.name: item
             for item in BUILD._load_items("foundation", registries["foundation"])
         }
-        for skill_name, rule in expected.items():
+        for skill_name, required_rules in expected.items():
             with self.subTest(skill=skill_name):
                 path = foundation_items[skill_name].path / "SKILL.md"
                 source = path.read_text(encoding="utf-8")
@@ -1568,8 +1568,7 @@ Own the complete domain boundary. Keep this second sentence.
                     for line in sections["High-Value Rules"][0].splitlines()
                     if line.startswith("- ")
                 ]
-                self.assertEqual(3, len(rules))
-                self.assertIn(rule, rules)
+                self.assertEqual(list(required_rules), rules[-len(required_rules):])
                 self.assertEqual([], VALIDATION.foundation_content_class_errors(
                     foundation_items[skill_name].registry,
                     f"foundation_skills.{skill_name}",

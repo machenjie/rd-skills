@@ -1466,7 +1466,7 @@ G2_BASE_SUCCESSOR_CONTENT_HASHES = {
 } | {
     "src/professional-skills/platform-infrastructure-change-builder/references/iac-source-contracts.md": (
         "66e25bbe199f8e7ca2062fe4aa525d574f5eacb40a829e20c91e05b56add90dd",
-        "ac76ff616b46e89bc3fbe32c02bb270161ae132d97162b38ba36866ae2148b29",
+        "a0265060cbbe58e1ac9771511848498335614965a9110aa2af55298773168570",
     ),
     "src/professional-skills/security-privacy-gate/references/security-output-and-gates.md": (
         "067ac9a3ae149ca3fc2572b1473ebbf5678e5eb3fc634267081a54c70968850a",
@@ -6631,7 +6631,7 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/professional-skills.yaml": "32a3b49da13930f3baccf54dbd8de12064b1f07d273b2948dfaeb12586eaf49a",
             "src/registry/foundation-skills.yaml": "acc753428c36a7c024459a13537475ebc249840786bd4b5beb9d219ec0365622",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-"tests/scripts/test_eval_rendered_context_budget.py": "9bf0e6bcecc728ec21b54c704b459d75ba8c9499dfd2f52232b1e1b2ce6d51e6",
+"tests/scripts/test_eval_rendered_context_budget.py": "43eb73ce754feb5a94aae73692feb5210e99ce504d7de2cf45084d117fee9ff0",
         }.items():
             with self.subTest(protected_hash=path):
                 self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -8150,10 +8150,75 @@ class ContextContentRelocationTests(unittest.TestCase):
         self.assertEqual(2_900, sum(component_tokens) - 1)
         self.assertEqual(2_907, sum(component_tokens) + 6)
 
+    def test_iac_sources_preserve_provider_binding_without_inline_url_enumerations(
+        self,
+    ) -> None:
+        source = (
+            ROOT
+            / "src/professional-skills/platform-infrastructure-change-builder/references/iac-source-contracts.md"
+        ).read_text(encoding="utf-8")
+        expected_urls = {
+            "Terraform": [
+                "https://developer.hashicorp.com/terraform/language/state/purpose",
+                "https://developer.hashicorp.com/terraform/language/state/locking",
+                "https://developer.hashicorp.com/terraform/cli/commands/plan",
+                "https://developer.hashicorp.com/terraform/language/expressions/references",
+                "https://developer.hashicorp.com/terraform/language/import",
+                "https://developer.hashicorp.com/terraform/language/block/moved",
+                "https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle",
+                "https://developer.hashicorp.com/terraform/language/files/dependency-lock",
+                "https://developer.hashicorp.com/terraform/cli/state/recover",
+            ],
+            "OpenTofu": [
+                "https://opentofu.org/docs/cli/commands/plan/",
+                "https://opentofu.org/docs/language/state/locking/",
+                "https://opentofu.org/docs/language/state/backends/",
+                "https://opentofu.org/docs/language/state/encryption/",
+                "https://opentofu.org/docs/language/files/dependency-lock/",
+            ],
+            "Pulumi": [
+                "https://www.pulumi.com/docs/reference/state/",
+                "https://www.pulumi.com/docs/iac/operations/stack-management/update-plans/",
+                "https://www.pulumi.com/docs/iac/concepts/resources/names/",
+                "https://www.pulumi.com/docs/iac/concepts/resources/options/aliases/",
+                "https://www.pulumi.com/docs/iac/concepts/resources/options/protect/",
+                "https://www.pulumi.com/docs/iac/concepts/secrets/",
+            ],
+            "CloudFormation": [
+                "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html",
+                "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/drift-aware-change-sets.html",
+                "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-continueupdaterollback.html",
+                "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/protect-stack-resources.html",
+                "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-protect-stacks.html",
+            ],
+        }
+        blocks = {
+            match.group("provider"): match.group(0)
+            for match in re.finditer(
+                r"^- \*\*(?P<provider>[^*:]+):\*\*.*?(?=^- \*\*|^## |\Z)",
+                source,
+                flags=re.MULTILINE | re.DOTALL,
+            )
+        }
+        self.assertEqual(set(expected_urls), set(blocks))
+        for provider, urls in expected_urls.items():
+            with self.subTest(provider=provider):
+                self.assertEqual(urls, re.findall(r"https?://[^\s)>]+", blocks[provider]))
+        for provider in ("Terraform", "OpenTofu", "Pulumi", "CloudFormation"):
+            with self.subTest(readable_source_list=provider):
+                url_lines = [
+                    line for line in blocks[provider].splitlines() if "https://" in line
+                ]
+                self.assertTrue(url_lines)
+                self.assertTrue(
+                    all(line.startswith("    - [") for line in url_lines)
+                )
+                self.assertTrue(all(line.count("https://") == 1 for line in url_lines))
+
     def test_fg_c1o_platform_infrastructure_frontier_is_lossless_and_bounded(self) -> None:
         source_specs = {
             "src/professional-skills/platform-infrastructure-change-builder/SKILL.md": ("48271a02cccb87ce375b3707c463d3ab6e2169d22e73b30c49e65d0a1f02f2de", "4d43548f48103571f863dc798d5023ae7ad18bd9a674cc74ec14557ee7a74d0a", 652),
-            "src/professional-skills/platform-infrastructure-change-builder/references/iac-source-contracts.md": ("85c27e27eb48cdfcfc84a58d758bf6b52d23ebde6bc23ba8feba286ca4acf226", "ac76ff616b46e89bc3fbe32c02bb270161ae132d97162b38ba36866ae2148b29", 701),
+            "src/professional-skills/platform-infrastructure-change-builder/references/iac-source-contracts.md": ("ac76ff616b46e89bc3fbe32c02bb270161ae132d97162b38ba36866ae2148b29", "a0265060cbbe58e1ac9771511848498335614965a9110aa2af55298773168570", 864),
             "src/foundation/capabilities/powershell-professional-usage/references/pipeline-error-and-native-contracts.md": ("5db3112e97f40af7b37867397407e58a6803a9fbe8920433499e598b5cfd4296", "ab30d62d5e947340effe9918dd49546f2e69c47806b049c4f125673260833c8e", 653),
             "src/foundation/capabilities/powershell-professional-usage/references/remoting-provider-and-administration-contracts.md": ("24bdac4de57d63660ac03c94426434b2bb84f019e97ec172f7c32895e1864b68", "97ce7438c774d56a64d46fd241c3d6876b97929b8294f43897818185ba812cd4", 722),
         }
@@ -8276,7 +8341,7 @@ class ContextContentRelocationTests(unittest.TestCase):
 "scripts/validation_utils.py": "a210359ac8241667822bbe9c908dc37b54e2f115032e238f77f1edecc8d7a8e9",
             "evals/agent-light-trajectories/cases.yaml": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-"tests/scripts/test_eval_rendered_context_budget.py": "9bf0e6bcecc728ec21b54c704b459d75ba8c9499dfd2f52232b1e1b2ce6d51e6",
+"tests/scripts/test_eval_rendered_context_budget.py": "43eb73ce754feb5a94aae73692feb5210e99ce504d7de2cf45084d117fee9ff0",
             "scripts/audit-skill-content.py": "09c9125c0071d970f214b56fc6913bfc3f3e76000e5693a6f47cd5bc46f712a6",
             "tests/scripts/test_validate_root_content.py": "e3309a2dd9768fdb052221627bf29ba1edc16fe9496b49637bdc928af6d134bd",
         }
@@ -8292,7 +8357,7 @@ class ContextContentRelocationTests(unittest.TestCase):
             ("configuration-runtime-policy", "references/benchmarks-and-patterns.md"): (455, "9ef96a4caa8a66abad659cd04a1dbe7fced550efcf94907f1bd143eb2f94a53b", TASK_FIRST_ROLES, ("option-comparison", "selected-approach")),
             ("configuration-runtime-policy", "references/checklist.md"): (378, "55406df248bce907803dffd55d3473109d149526cea056a4d5f7c9113954275d", TASK_FIRST_ROLES, ("checklist-result", "residual-risk")),
             ("configuration-runtime-policy", "references/evidence-patterns.md"): (436, "11db23aaedf78b0f5629b894c25bf3725b38559e6a216219bd63f3018aadfca4", TASK_FIRST_ROLES, ("evidence-record", "proof-limit", "residual-risk")),
-            ("platform-infrastructure-change-builder", "references/iac-source-contracts.md"): (701, "ac76ff616b46e89bc3fbe32c02bb270161ae132d97162b38ba36866ae2148b29", ("task-agent",), ("proof-limit", "selected-approach", "validation-plan")),
+            ("platform-infrastructure-change-builder", "references/iac-source-contracts.md"): (864, "a0265060cbbe58e1ac9771511848498335614965a9110aa2af55298773168570", ("task-agent",), ("proof-limit", "selected-approach", "validation-plan")),
             ("platform-infrastructure-change-builder", "references/kubernetes-source-contracts.md"): (600, "4408105827924db9af29351153865837a26a6e2c6e1075212668d00dee1830f6", ("task-agent",), ("proof-limit", "selected-approach", "validation-plan")),
             ("powershell-professional-usage", "references/pipeline-error-and-native-contracts.md"): (653, "ab30d62d5e947340effe9918dd49546f2e69c47806b049c4f125673260833c8e", TASK_FIRST_ROLES, ("decision-record", "residual-risk")),
             ("powershell-professional-usage", "references/remoting-provider-and-administration-contracts.md"): (722, "97ce7438c774d56a64d46fd241c3d6876b97929b8294f43897818185ba812cd4", TASK_FIRST_ROLES, ("selected-approach", "proof-limit", "residual-risk")),
@@ -8341,7 +8406,18 @@ class ContextContentRelocationTests(unittest.TestCase):
         self.assertEqual(2_854, sum(component_tokens))
         self.assertEqual(2_853, sum(component_tokens) - 1)
         self.assertEqual(2_860, sum(component_tokens) + 6)
-        self.assertEqual(722, max(tokens for tokens, _sha256, _roles, _outputs in reference_specs.values()))
+        self.assertEqual(
+            reference_specs[
+                (
+                    "platform-infrastructure-change-builder",
+                    "references/iac-source-contracts.md",
+                )
+            ][0],
+            max(
+                tokens
+                for tokens, _sha256, _roles, _outputs in reference_specs.values()
+            ),
+        )
 
     def test_fg_c1p_platform_iac_safety_frontier_is_lossless_and_bounded(self) -> None:
         source_specs = {
@@ -8405,7 +8481,7 @@ class ContextContentRelocationTests(unittest.TestCase):
             ("configuration-runtime-policy", "references/evidence-patterns.md"): (436, "11db23aaedf78b0f5629b894c25bf3725b38559e6a216219bd63f3018aadfca4", TASK_FIRST_ROLES, ("evidence-record", "proof-limit", "residual-risk")),
             ("infrastructure-as-code-safety", "references/identity-destruction-and-recovery-contracts.md"): (812, "8cf0a2d5b85a83cd517a937059b28b243c2718e7da90dad405fd33a474e44b1f", ALL_ROLES, ("decision-record", "proof-limit", "residual-risk")),
             ("infrastructure-as-code-safety", "references/state-plan-and-drift-contracts.md"): (809, "d1d0bbf5306aaa75e25a9ed6a08d0d7c5b0066b75dd091cb276b63da58892bc6", ALL_ROLES, ("decision-record", "proof-limit", "residual-risk")),
-            ("platform-infrastructure-change-builder", "references/iac-source-contracts.md"): (701, "ac76ff616b46e89bc3fbe32c02bb270161ae132d97162b38ba36866ae2148b29", ("task-agent",), ("proof-limit", "selected-approach", "validation-plan")),
+            ("platform-infrastructure-change-builder", "references/iac-source-contracts.md"): (864, "a0265060cbbe58e1ac9771511848498335614965a9110aa2af55298773168570", ("task-agent",), ("proof-limit", "selected-approach", "validation-plan")),
             ("platform-infrastructure-change-builder", "references/kubernetes-source-contracts.md"): (600, "4408105827924db9af29351153865837a26a6e2c6e1075212668d00dee1830f6", ("task-agent",), ("proof-limit", "selected-approach", "validation-plan")),
         }
         selected_references = tuple(reference_specs)
@@ -8453,7 +8529,18 @@ class ContextContentRelocationTests(unittest.TestCase):
         self.assertEqual(2_912, sum(component_tokens))
         self.assertEqual(2_911, sum(component_tokens) - 1)
         self.assertEqual(2_918, sum(component_tokens) + 6)
-        self.assertEqual(812, max(tokens for tokens, _sha256, _roles, _outputs in reference_specs.values()))
+        self.assertEqual(
+            reference_specs[
+                (
+                    "platform-infrastructure-change-builder",
+                    "references/iac-source-contracts.md",
+                )
+            ][0],
+            max(
+                tokens
+                for tokens, _sha256, _roles, _outputs in reference_specs.values()
+            ),
+        )
 
         protected = {
             "src/professional-skills/platform-infrastructure-change-builder/SKILL.md": "4d43548f48103571f863dc798d5023ae7ad18bd9a674cc74ec14557ee7a74d0a",
@@ -8465,7 +8552,7 @@ class ContextContentRelocationTests(unittest.TestCase):
 "scripts/validation_utils.py": "a210359ac8241667822bbe9c908dc37b54e2f115032e238f77f1edecc8d7a8e9",
             "evals/agent-light-trajectories/cases.yaml": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-"tests/scripts/test_eval_rendered_context_budget.py": "9bf0e6bcecc728ec21b54c704b459d75ba8c9499dfd2f52232b1e1b2ce6d51e6",
+"tests/scripts/test_eval_rendered_context_budget.py": "43eb73ce754feb5a94aae73692feb5210e99ce504d7de2cf45084d117fee9ff0",
             "scripts/audit-skill-content.py": "09c9125c0071d970f214b56fc6913bfc3f3e76000e5693a6f47cd5bc46f712a6",
             "tests/scripts/test_validate_root_content.py": "e3309a2dd9768fdb052221627bf29ba1edc16fe9496b49637bdc928af6d134bd",
         }
@@ -8587,7 +8674,7 @@ class ContextContentRelocationTests(unittest.TestCase):
 "scripts/validation_utils.py": "a210359ac8241667822bbe9c908dc37b54e2f115032e238f77f1edecc8d7a8e9",
             "evals/agent-light-trajectories/cases.yaml": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-"tests/scripts/test_eval_rendered_context_budget.py": "9bf0e6bcecc728ec21b54c704b459d75ba8c9499dfd2f52232b1e1b2ce6d51e6",
+"tests/scripts/test_eval_rendered_context_budget.py": "43eb73ce754feb5a94aae73692feb5210e99ce504d7de2cf45084d117fee9ff0",
             "scripts/audit-skill-content.py": "09c9125c0071d970f214b56fc6913bfc3f3e76000e5693a6f47cd5bc46f712a6",
             "tests/scripts/test_validate_root_content.py": "e3309a2dd9768fdb052221627bf29ba1edc16fe9496b49637bdc928af6d134bd",
         }
@@ -9175,7 +9262,7 @@ class ContextContentRelocationTests(unittest.TestCase):
 "scripts/validation_utils.py": "a210359ac8241667822bbe9c908dc37b54e2f115032e238f77f1edecc8d7a8e9",
             "evals/agent-light-trajectories/cases.yaml": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",
             "tests/scripts/test_reference_registry_jit.py": "c4730adbdb7a5bdbae7ab24d979f563a2fab17d5fb634d83326a00d0dd00ad85",
-"tests/scripts/test_eval_rendered_context_budget.py": "9bf0e6bcecc728ec21b54c704b459d75ba8c9499dfd2f52232b1e1b2ce6d51e6",
+"tests/scripts/test_eval_rendered_context_budget.py": "43eb73ce754feb5a94aae73692feb5210e99ce504d7de2cf45084d117fee9ff0",
             "scripts/audit-skill-content.py": "09c9125c0071d970f214b56fc6913bfc3f3e76000e5693a6f47cd5bc46f712a6",
             "tests/scripts/test_validate_root_content.py": "e3309a2dd9768fdb052221627bf29ba1edc16fe9496b49637bdc928af6d134bd",
         }
@@ -9459,7 +9546,7 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
 "scripts/build.py": "305d0c3a50ec31067f79249e3dd8a4ce49dc61e8a6a72a621740e367cc933211",
 "scripts/validation_utils.py": "a210359ac8241667822bbe9c908dc37b54e2f115032e238f77f1edecc8d7a8e9",
-"tests/scripts/test_eval_rendered_context_budget.py": "9bf0e6bcecc728ec21b54c704b459d75ba8c9499dfd2f52232b1e1b2ce6d51e6",
+"tests/scripts/test_eval_rendered_context_budget.py": "43eb73ce754feb5a94aae73692feb5210e99ce504d7de2cf45084d117fee9ff0",
             "scripts/audit-skill-content.py": "09c9125c0071d970f214b56fc6913bfc3f3e76000e5693a6f47cd5bc46f712a6",
             "tests/scripts/test_validate_root_content.py": "e3309a2dd9768fdb052221627bf29ba1edc16fe9496b49637bdc928af6d134bd",
             "evals/agent-light-trajectories/cases.yaml": "66b058586ae63308133d9b50047b52b7103d0d3653642a5d58bf417fdcb564d2",

@@ -8332,7 +8332,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
 
         for path, expected_sha256 in {
             "src/professional-skills/platform-infrastructure-change-builder/SKILL.md": "4d43548f48103571f863dc798d5023ae7ad18bd9a674cc74ec14557ee7a74d0a",
-            "src/professional-skills/platform-infrastructure-change-builder/references/iac-source-contracts.md": "ac76ff616b46e89bc3fbe32c02bb270161ae132d97162b38ba36866ae2148b29",
+            "src/professional-skills/platform-infrastructure-change-builder/references/iac-source-contracts.md": "a0265060cbbe58e1ac9771511848498335614965a9110aa2af55298773168570",
             "src/foundation/capabilities/powershell-professional-usage/references/pipeline-error-and-native-contracts.md": "ab30d62d5e947340effe9918dd49546f2e69c47806b049c4f125673260833c8e",
             "src/foundation/capabilities/powershell-professional-usage/references/remoting-provider-and-administration-contracts.md": "97ce7438c774d56a64d46fd241c3d6876b97929b8294f43897818185ba812cd4",
         }.items():

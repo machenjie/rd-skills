@@ -7,13 +7,38 @@ Official pages were recorded as accessed on 2026-07-24.
 ## Tool Contracts And Sources
 
 - **Terraform:** state/identity/locking, unknowns/targeting, import/move/lifecycle, recovery, and dependency locks.
-  Sources: https://developer.hashicorp.com/terraform/language/state/purpose https://developer.hashicorp.com/terraform/language/state/locking https://developer.hashicorp.com/terraform/cli/commands/plan https://developer.hashicorp.com/terraform/language/expressions/references https://developer.hashicorp.com/terraform/language/import https://developer.hashicorp.com/terraform/language/block/moved https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle https://developer.hashicorp.com/terraform/language/files/dependency-lock https://developer.hashicorp.com/terraform/cli/state/recover
+  Sources:
+    - [State purpose](https://developer.hashicorp.com/terraform/language/state/purpose)
+    - [State locking](https://developer.hashicorp.com/terraform/language/state/locking)
+    - [Plan](https://developer.hashicorp.com/terraform/cli/commands/plan)
+    - [Expression references](https://developer.hashicorp.com/terraform/language/expressions/references)
+    - [Import](https://developer.hashicorp.com/terraform/language/import)
+    - [Moved blocks](https://developer.hashicorp.com/terraform/language/block/moved)
+    - [Lifecycle](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle)
+    - [Dependency lock](https://developer.hashicorp.com/terraform/language/files/dependency-lock)
+    - [State recovery](https://developer.hashicorp.com/terraform/cli/state/recover)
 - **OpenTofu:** versioned plan/backend/lock/encryption/key recovery; do not infer Terraform equivalence.
-  Sources: https://opentofu.org/docs/cli/commands/plan/ https://opentofu.org/docs/language/state/locking/ https://opentofu.org/docs/language/state/backends/ https://opentofu.org/docs/language/state/encryption/ https://opentofu.org/docs/language/files/dependency-lock/
+  Sources:
+    - [Plan](https://opentofu.org/docs/cli/commands/plan/)
+    - [State locking](https://opentofu.org/docs/language/state/locking/)
+    - [State backends](https://opentofu.org/docs/language/state/backends/)
+    - [State encryption](https://opentofu.org/docs/language/state/encryption/)
+    - [Dependency lock](https://opentofu.org/docs/language/files/dependency-lock/)
 - **Pulumi:** backend/stack/refresh, identity/alias/protection/replacement, unknowns, and secret evidence.
-  Sources: https://www.pulumi.com/docs/reference/state/ https://www.pulumi.com/docs/iac/operations/stack-management/update-plans/ https://www.pulumi.com/docs/iac/concepts/resources/names/ https://www.pulumi.com/docs/iac/concepts/resources/options/aliases/ https://www.pulumi.com/docs/iac/concepts/resources/options/protect/ https://www.pulumi.com/docs/iac/concepts/secrets/
+  Sources:
+    - [State and backends](https://www.pulumi.com/docs/reference/state/)
+    - [Update plans](https://www.pulumi.com/docs/iac/operations/stack-management/update-plans/)
+    - [Resource names](https://www.pulumi.com/docs/iac/concepts/resources/names/)
+    - [Aliases](https://www.pulumi.com/docs/iac/concepts/resources/options/aliases/)
+    - [Protection](https://www.pulumi.com/docs/iac/concepts/resources/options/protect/)
+    - [Secrets](https://www.pulumi.com/docs/iac/concepts/secrets/)
 - **CloudFormation:** template/parameters, identity, change set/drift, policy/protection, and rollback recovery.
-  Sources: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/drift-aware-change-sets.html https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-continueupdaterollback.html https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/protect-stack-resources.html https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-protect-stacks.html
+  Sources:
+    - [Change sets](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html)
+    - [Drift-aware change sets](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/drift-aware-change-sets.html)
+    - [Continue update rollback](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-continueupdaterollback.html)
+    - [Resource protection](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/protect-stack-resources.html)
+    - [Stack termination protection](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-protect-stacks.html)
 
 ## Version Limit
 

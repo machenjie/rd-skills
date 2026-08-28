@@ -37,7 +37,7 @@
       "ai_readability_compound_bullet": 0,
       "ai_readability_hard_fail": 0,
       "ai_readability_review_as_complex": 152,
-      "ai_readability_tighten": 6,
+      "ai_readability_tighten": 5,
       "classification_block": 0,
       "classification_review_density": 18,
       "classification_tighten_body": 3,
@@ -53,7 +53,7 @@
     "source": "skill-content-audit.json#ai_readability",
     "readiness_scope": "agent-facing-ai-readability",
     "schema_version": 2,
-    "source_fingerprint": "f91261bda6e56a3237c15276a3b6d3db708def1777d1a8f2b4dc66cbe52608d0",
+    "source_fingerprint": "ac1891a625cd11dd626696ddc7e76c014cd47930ead0173ac1bb231d194f198e",
     "source_fingerprint_document_count": 1001,
     "contract": {
       "bullet_decision_max": 1,
@@ -64,12 +64,12 @@
       "schema_version": 2
     },
     "documents": 1001,
-    "advisory_documents": 330,
-    "review_as_complex_sentences": 826,
-    "tighten_sentences": 11,
+    "advisory_documents": 329,
+    "review_as_complex_sentences": 824,
+    "tighten_sentences": 10,
     "hard_fail_sentences": 0,
     "compound_bullets": 0,
-    "advisory_sentences": 837,
+    "advisory_sentences": 834,
     "blocker_findings": 0,
     "hard_gate_ready": true,
     "by_surface": {
@@ -170,12 +170,12 @@
         "tighten_sentences": 4
       },
       "professional-reference": {
-        "advisory_documents": 38,
+        "advisory_documents": 37,
         "compound_bullets": 0,
         "documents": 109,
         "hard_fail_sentences": 0,
-        "review_as_complex_sentences": 77,
-        "tighten_sentences": 2
+        "review_as_complex_sentences": 75,
+        "tighten_sentences": 1
       },
       "professional-skill-body": {
         "advisory_documents": 3,
@@ -203,7 +203,7 @@
     "decision_item_limit": 15,
     "effective_preface_schema_version": 3,
     "strict_ready_basis": "reference-strict-v4",
-    "source_fingerprint": "cd4e3a9bf8fb377d3322418fbd0b5e5b80fa86fb72e2fe49f337f532acb28bf5",
+    "source_fingerprint": "ec94a0fb1c74f7c727a0acf091300c427208279e1669522ef67ab6862c063698",
     "source_fingerprint_document_count": 974,
     "indexed_references": 611,
     "existing_indexed_references": 611,
@@ -326,7 +326,7 @@
     "schema_version": 10,
     "reference": {
       "scope": "reference-content",
-      "source_fingerprint": "cd4e3a9bf8fb377d3322418fbd0b5e5b80fa86fb72e2fe49f337f532acb28bf5",
+      "source_fingerprint": "ec94a0fb1c74f7c727a0acf091300c427208279e1669522ef67ab6862c063698",
       "strict_ready_basis": "reference-strict-v4",
       "structural_strict_ready": true,
       "semantic_triage_complete": true,
@@ -363,7 +363,7 @@
         "current_source_fingerprints": {
           "actionability_detector_contract": "5980b6a90aff04f345c4549c0522f4e493ea9d23f4b7d7aa334a51359aed575e",
           "readability_detector_contract": "f224da76c77a25ed73086603711647c0d728bbab7669870224a7031f3a6cca4f",
-          "readability_target_manifest": "2b829454e9c54dda1bfdcf1deb04df113d7bb47c4d8b8a5cb327afb8eb382d6d"
+          "readability_target_manifest": "ec81d8386bafe46b1428052e05edf475a06567886e7574ef4bc150411e09fc64"
         },
         "attested_by": null,
         "attested_on": null,
@@ -382,7 +382,7 @@
         "panel_artifact_schema_version": null,
         "required_density_disposition_count": 21,
         "applied_density_disposition_count": 0,
-        "required_readability_disposition_count": 330,
+        "required_readability_disposition_count": 329,
         "applied_readability_disposition_count": 0,
         "required_actionability_disposition_count": 0,
         "applied_actionability_disposition_count": 0,
@@ -500,7 +500,7 @@
     },
     "routing_neutral_isolated_material_binding_sensitivity": {
       "case_count": 189,
-      "full_rereview_deduplicated_capsule_input_bytes_proxy": 116812161,
+      "full_rereview_deduplicated_capsule_input_bytes_proxy": 116814012,
       "fresh_target_count": {
         "min": 3,
         "sum": 3257,
@@ -510,17 +510,17 @@
       },
       "input_ratio_ppm": {
         "min": 34686,
-        "sum": 25562395,
-        "mean": 135250,
-        "p95": 249839,
-        "max": 356137
+        "sum": 25564631,
+        "mean": 135262,
+        "p95": 249851,
+        "max": 356147
       },
       "named_isolated_case": {
         "skill_id": "acceptance-criteria-builder",
         "fresh_target_count": 8,
         "carried_forward_target_count": 181,
-        "canonical_capsule_input_bytes_proxy": 9778827,
-        "input_ratio_ppm": 83714
+        "canonical_capsule_input_bytes_proxy": 9780678,
+        "input_ratio_ppm": 83728
       }
     },
     "representative_routing_adjacency_mutation": {
@@ -637,7 +637,7 @@
     {
       "category": "ai-readability-advisory",
       "target": "skill-content-audit.json#ai_readability",
-      "message": "advisory_documents=330; review_as_complex_sentences=826; tighten_sentences=11",
+      "message": "advisory_documents=329; review_as_complex_sentences=824; tighten_sentences=10",
       "severity": "warning"
     }
   ],

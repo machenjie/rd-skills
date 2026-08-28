@@ -148,12 +148,12 @@
         "tighten_sentences": 4
       },
       "professional-reference": {
-        "advisory_documents": 38,
+        "advisory_documents": 37,
         "compound_bullets": 0,
         "documents": 109,
         "hard_fail_sentences": 0,
-        "review_as_complex_sentences": 77,
-        "tighten_sentences": 2
+        "review_as_complex_sentences": 75,
+        "tighten_sentences": 1
       },
       "professional-skill-body": {
         "advisory_documents": 3,
@@ -129774,9 +129774,9 @@
       {
         "check_bullets": true,
         "compound_bullet_count": 0,
-        "content_fingerprint": "ac76ff616b46e89bc3fbe32c02bb270161ae132d97162b38ba36866ae2148b29",
+        "content_fingerprint": "a0265060cbbe58e1ac9771511848498335614965a9110aa2af55298773168570",
         "document_context": {
-          "line_count": 32,
+          "line_count": 57,
           "line_offset": 0,
           "lines": [
             {
@@ -129817,114 +129817,214 @@
             },
             {
               "line": 10,
-              "text": "  Sources: https://developer.hashicorp.com/terraform/language/state/purpose https://developer.hashicorp.com/terraform/language/state/locking https://developer.hashicorp.com/terraform/cli/commands/plan https://developer.hashicorp.com/terraform/language/expressions/references https://developer.hashicorp.com/terraform/language/import https://developer.hashicorp.com/terraform/language/block/moved https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle https://developer.hashicorp.com/terraform/language/files/dependency-lock https://developer.hashicorp.com/terraform/cli/state/recover"
+              "text": "  Sources:"
             },
             {
               "line": 11,
-              "text": "- **OpenTofu:** versioned plan/backend/lock/encryption/key recovery; do not infer Terraform equivalence."
+              "text": "    - [State purpose](https://developer.hashicorp.com/terraform/language/state/purpose)"
             },
             {
               "line": 12,
-              "text": "  Sources: https://opentofu.org/docs/cli/commands/plan/ https://opentofu.org/docs/language/state/locking/ https://opentofu.org/docs/language/state/backends/ https://opentofu.org/docs/language/state/encryption/ https://opentofu.org/docs/language/files/dependency-lock/"
+              "text": "    - [State locking](https://developer.hashicorp.com/terraform/language/state/locking)"
             },
             {
               "line": 13,
-              "text": "- **Pulumi:** backend/stack/refresh, identity/alias/protection/replacement, unknowns, and secret evidence."
+              "text": "    - [Plan](https://developer.hashicorp.com/terraform/cli/commands/plan)"
             },
             {
               "line": 14,
-              "text": "  Sources: https://www.pulumi.com/docs/reference/state/ https://www.pulumi.com/docs/iac/operations/stack-management/update-plans/ https://www.pulumi.com/docs/iac/concepts/resources/names/ https://www.pulumi.com/docs/iac/concepts/resources/options/aliases/ https://www.pulumi.com/docs/iac/concepts/resources/options/protect/ https://www.pulumi.com/docs/iac/concepts/secrets/"
+              "text": "    - [Expression references](https://developer.hashicorp.com/terraform/language/expressions/references)"
             },
             {
               "line": 15,
-              "text": "- **CloudFormation:** template/parameters, identity, change set/drift, policy/protection, and rollback recovery."
+              "text": "    - [Import](https://developer.hashicorp.com/terraform/language/import)"
             },
             {
               "line": 16,
-              "text": "  Sources: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/drift-aware-change-sets.html https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-continueupdaterollback.html https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/protect-stack-resources.html https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-protect-stacks.html"
+              "text": "    - [Moved blocks](https://developer.hashicorp.com/terraform/language/block/moved)"
             },
             {
               "line": 17,
-              "text": ""
+              "text": "    - [Lifecycle](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle)"
             },
             {
               "line": 18,
-              "text": "## Version Limit"
+              "text": "    - [Dependency lock](https://developer.hashicorp.com/terraform/language/files/dependency-lock)"
             },
             {
               "line": 19,
-              "text": ""
+              "text": "    - [State recovery](https://developer.hashicorp.com/terraform/cli/state/recover)"
             },
             {
               "line": 20,
-              "text": "Rolling sources do not prove current tool/provider/module/backend, target, experimental/regional behavior, or live state."
+              "text": "- **OpenTofu:** versioned plan/backend/lock/encryption/key recovery; do not infer Terraform equivalence."
             },
             {
               "line": 21,
-              "text": ""
+              "text": "  Sources:"
             },
             {
               "line": 22,
-              "text": "## Required Record"
+              "text": "    - [Plan](https://opentofu.org/docs/cli/commands/plan/)"
             },
             {
               "line": 23,
-              "text": ""
+              "text": "    - [State locking](https://opentofu.org/docs/language/state/locking/)"
             },
             {
               "line": 24,
-              "text": "Return tool/version, target, source/state/lock/writer/identity, fresh proposal unknown/targeting limits, destructive/secret effects, recovery owner, and live-state/no-production limits."
+              "text": "    - [State backends](https://opentofu.org/docs/language/state/backends/)"
             },
             {
               "line": 25,
-              "text": ""
+              "text": "    - [State encryption](https://opentofu.org/docs/language/state/encryption/)"
             },
             {
               "line": 26,
-              "text": "## Professional Decision Rules"
+              "text": "    - [Dependency lock](https://opentofu.org/docs/language/files/dependency-lock/)"
             },
             {
               "line": 27,
-              "text": ""
+              "text": "- **Pulumi:** backend/stack/refresh, identity/alias/protection/replacement, unknowns, and secret evidence."
             },
             {
               "line": 28,
-              "text": "- Separate state layers; change the smallest owner; bind secret-free non-mutating proposal evidence to target and versions."
+              "text": "  Sources:"
             },
             {
               "line": 29,
-              "text": ""
+              "text": "    - [State and backends](https://www.pulumi.com/docs/reference/state/)"
             },
             {
               "line": 30,
-              "text": "## High-Value Gotchas"
+              "text": "    - [Update plans](https://www.pulumi.com/docs/iac/operations/stack-management/update-plans/)"
             },
             {
               "line": 31,
-              "text": ""
+              "text": "    - [Resource names](https://www.pulumi.com/docs/iac/concepts/resources/names/)"
             },
             {
               "line": 32,
+              "text": "    - [Aliases](https://www.pulumi.com/docs/iac/concepts/resources/options/aliases/)"
+            },
+            {
+              "line": 33,
+              "text": "    - [Protection](https://www.pulumi.com/docs/iac/concepts/resources/options/protect/)"
+            },
+            {
+              "line": 34,
+              "text": "    - [Secrets](https://www.pulumi.com/docs/iac/concepts/secrets/)"
+            },
+            {
+              "line": 35,
+              "text": "- **CloudFormation:** template/parameters, identity, change set/drift, policy/protection, and rollback recovery."
+            },
+            {
+              "line": 36,
+              "text": "  Sources:"
+            },
+            {
+              "line": 37,
+              "text": "    - [Change sets](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html)"
+            },
+            {
+              "line": 38,
+              "text": "    - [Drift-aware change sets](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/drift-aware-change-sets.html)"
+            },
+            {
+              "line": 39,
+              "text": "    - [Continue update rollback](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-continueupdaterollback.html)"
+            },
+            {
+              "line": 40,
+              "text": "    - [Resource protection](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/protect-stack-resources.html)"
+            },
+            {
+              "line": 41,
+              "text": "    - [Stack termination protection](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-protect-stacks.html)"
+            },
+            {
+              "line": 42,
+              "text": ""
+            },
+            {
+              "line": 43,
+              "text": "## Version Limit"
+            },
+            {
+              "line": 44,
+              "text": ""
+            },
+            {
+              "line": 45,
+              "text": "Rolling sources do not prove current tool/provider/module/backend, target, experimental/regional behavior, or live state."
+            },
+            {
+              "line": 46,
+              "text": ""
+            },
+            {
+              "line": 47,
+              "text": "## Required Record"
+            },
+            {
+              "line": 48,
+              "text": ""
+            },
+            {
+              "line": 49,
+              "text": "Return tool/version, target, source/state/lock/writer/identity, fresh proposal unknown/targeting limits, destructive/secret effects, recovery owner, and live-state/no-production limits."
+            },
+            {
+              "line": 50,
+              "text": ""
+            },
+            {
+              "line": 51,
+              "text": "## Professional Decision Rules"
+            },
+            {
+              "line": 52,
+              "text": ""
+            },
+            {
+              "line": 53,
+              "text": "- Separate state layers; change the smallest owner; bind secret-free non-mutating proposal evidence to target and versions."
+            },
+            {
+              "line": 54,
+              "text": ""
+            },
+            {
+              "line": 55,
+              "text": "## High-Value Gotchas"
+            },
+            {
+              "line": 56,
+              "text": ""
+            },
+            {
+              "line": 57,
               "text": "- Proposal evidence is neither execution authority nor convergence proof."
             }
           ],
-          "sha256": "ac76ff616b46e89bc3fbe32c02bb270161ae132d97162b38ba36866ae2148b29",
-          "text": "# IaC Source Contracts\n\nLoad for a named source, state, identity, or proposal decision. Terraform, OpenTofu, Pulumi, and CloudFormation are non-equivalent. Treat proposal evidence as non-authorizing unless separate production-mutation authority is confirmed.\n\nOfficial pages were recorded as accessed on 2026-07-24.\n\n## Tool Contracts And Sources\n\n- **Terraform:** state/identity/locking, unknowns/targeting, import/move/lifecycle, recovery, and dependency locks.\n  Sources: https://developer.hashicorp.com/terraform/language/state/purpose https://developer.hashicorp.com/terraform/language/state/locking https://developer.hashicorp.com/terraform/cli/commands/plan https://developer.hashicorp.com/terraform/language/expressions/references https://developer.hashicorp.com/terraform/language/import https://developer.hashicorp.com/terraform/language/block/moved https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle https://developer.hashicorp.com/terraform/language/files/dependency-lock https://developer.hashicorp.com/terraform/cli/state/recover\n- **OpenTofu:** versioned plan/backend/lock/encryption/key recovery; do not infer Terraform equivalence.\n  Sources: https://opentofu.org/docs/cli/commands/plan/ https://opentofu.org/docs/language/state/locking/ https://opentofu.org/docs/language/state/backends/ https://opentofu.org/docs/language/state/encryption/ https://opentofu.org/docs/language/files/dependency-lock/\n- **Pulumi:** backend/stack/refresh, identity/alias/protection/replacement, unknowns, and secret evidence.\n  Sources: https://www.pulumi.com/docs/reference/state/ https://www.pulumi.com/docs/iac/operations/stack-management/update-plans/ https://www.pulumi.com/docs/iac/concepts/resources/names/ https://www.pulumi.com/docs/iac/concepts/resources/options/aliases/ https://www.pulumi.com/docs/iac/concepts/resources/options/protect/ https://www.pulumi.com/docs/iac/concepts/secrets/\n- **CloudFormation:** template/parameters, identity, change set/drift, policy/protection, and rollback recovery.\n  Sources: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/drift-aware-change-sets.html https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-continueupdaterollback.html https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/protect-stack-resources.html https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-protect-stacks.html\n\n## Version Limit\n\nRolling sources do not prove current tool/provider/module/backend, target, experimental/regional behavior, or live state.\n\n## Required Record\n\nReturn tool/version, target, source/state/lock/writer/identity, fresh proposal unknown/targeting limits, destructive/secret effects, recovery owner, and live-state/no-production limits.\n\n## Professional Decision Rules\n\n- Separate state layers; change the smallest owner; bind secret-free non-mutating proposal evidence to target and versions.\n\n## High-Value Gotchas\n\n- Proposal evidence is neither execution authority nor convergence proof.\n"
+          "sha256": "a0265060cbbe58e1ac9771511848498335614965a9110aa2af55298773168570",
+          "text": "# IaC Source Contracts\n\nLoad for a named source, state, identity, or proposal decision. Terraform, OpenTofu, Pulumi, and CloudFormation are non-equivalent. Treat proposal evidence as non-authorizing unless separate production-mutation authority is confirmed.\n\nOfficial pages were recorded as accessed on 2026-07-24.\n\n## Tool Contracts And Sources\n\n- **Terraform:** state/identity/locking, unknowns/targeting, import/move/lifecycle, recovery, and dependency locks.\n  Sources:\n    - [State purpose](https://developer.hashicorp.com/terraform/language/state/purpose)\n    - [State locking](https://developer.hashicorp.com/terraform/language/state/locking)\n    - [Plan](https://developer.hashicorp.com/terraform/cli/commands/plan)\n    - [Expression references](https://developer.hashicorp.com/terraform/language/expressions/references)\n    - [Import](https://developer.hashicorp.com/terraform/language/import)\n    - [Moved blocks](https://developer.hashicorp.com/terraform/language/block/moved)\n    - [Lifecycle](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle)\n    - [Dependency lock](https://developer.hashicorp.com/terraform/language/files/dependency-lock)\n    - [State recovery](https://developer.hashicorp.com/terraform/cli/state/recover)\n- **OpenTofu:** versioned plan/backend/lock/encryption/key recovery; do not infer Terraform equivalence.\n  Sources:\n    - [Plan](https://opentofu.org/docs/cli/commands/plan/)\n    - [State locking](https://opentofu.org/docs/language/state/locking/)\n    - [State backends](https://opentofu.org/docs/language/state/backends/)\n    - [State encryption](https://opentofu.org/docs/language/state/encryption/)\n    - [Dependency lock](https://opentofu.org/docs/language/files/dependency-lock/)\n- **Pulumi:** backend/stack/refresh, identity/alias/protection/replacement, unknowns, and secret evidence.\n  Sources:\n    - [State and backends](https://www.pulumi.com/docs/reference/state/)\n    - [Update plans](https://www.pulumi.com/docs/iac/operations/stack-management/update-plans/)\n    - [Resource names](https://www.pulumi.com/docs/iac/concepts/resources/names/)\n    - [Aliases](https://www.pulumi.com/docs/iac/concepts/resources/options/aliases/)\n    - [Protection](https://www.pulumi.com/docs/iac/concepts/resources/options/protect/)\n    - [Secrets](https://www.pulumi.com/docs/iac/concepts/secrets/)\n- **CloudFormation:** template/parameters, identity, change set/drift, policy/protection, and rollback recovery.\n  Sources:\n    - [Change sets](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html)\n    - [Drift-aware change sets](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/drift-aware-change-sets.html)\n    - [Continue update rollback](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-continueupdaterollback.html)\n    - [Resource protection](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/protect-stack-resources.html)\n    - [Stack termination protection](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-protect-stacks.html)\n\n## Version Limit\n\nRolling sources do not prove current tool/provider/module/backend, target, experimental/regional behavior, or live state.\n\n## Required Record\n\nReturn tool/version, target, source/state/lock/writer/identity, fresh proposal unknown/targeting limits, destructive/secret effects, recovery owner, and live-state/no-production limits.\n\n## Professional Decision Rules\n\n- Separate state layers; change the smallest owner; bind secret-free non-mutating proposal evidence to target and versions.\n\n## High-Value Gotchas\n\n- Proposal evidence is neither execution authority nor convergence proof.\n"
         },
         "document_id": "src/professional-skills/platform-infrastructure-change-builder/references/iac-source-contracts.md#reference",
         "document_part": "reference",
         "hard_fail_count": 0,
-        "highest_advisory_band": "tighten",
+        "highest_advisory_band": null,
         "line_offset": 0,
         "owner": "platform-infrastructure-change-builder",
         "path": "src/professional-skills/platform-infrastructure-change-builder/references/iac-source-contracts.md",
-        "review_as_complex_count": 2,
+        "review_as_complex_count": 0,
         "source_selector": {
           "kind": "whole-file",
           "path": "src/professional-skills/platform-infrastructure-change-builder/references/iac-source-contracts.md"
         },
         "surface": "professional-reference",
-        "tighten_count": 1
+        "tighten_count": 0
       },
       {
         "check_bullets": true,
@@ -158385,90 +158485,6 @@
         "words": 26
       },
       {
-        "band": "tighten",
-        "decisions": null,
-        "document_id": "src/professional-skills/platform-infrastructure-change-builder/references/iac-source-contracts.md#reference",
-        "finding_id": "964fe9c973dd549b19c6508d12cae741054309d759b4bc08f9097f57238b8569",
-        "kind": "sentence-length",
-        "line": 10,
-        "preview": "Sources: https://developer.hashicorp.com/terraform/language/state/purpose https://developer.hashicorp.com/terraform/language/state/locking https://developer.hashicorp.com/terraform",
-        "sentence": "Sources: https://developer.hashicorp.com/terraform/language/state/purpose https://developer.hashicorp.com/terraform/language/state/locking https://developer.hashicorp.com/terraform/cli/commands/plan https://developer.hashicorp.com/terraform/language/expressions/references https://developer.hashicorp.com/terraform/language/import https://developer.hashicorp.com/terraform/language/block/moved https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle https://developer.hashicorp.com/terraform/language/files/dependency-lock https://developer.hashicorp.com/terraform/cli/state/recover",
-        "sentence_fingerprint": "39478dec2618166b890edf6386d0aec13c7453cec8b9633780a8ef5fed1fec28",
-        "severity": "advisory",
-        "source_span": {
-          "end_column": 605,
-          "end_line": 10,
-          "end_offset": 1068,
-          "lines": [
-            {
-              "line": 10,
-              "text": "  Sources: https://developer.hashicorp.com/terraform/language/state/purpose https://developer.hashicorp.com/terraform/language/state/locking https://developer.hashicorp.com/terraform/cli/commands/plan https://developer.hashicorp.com/terraform/language/expressions/references https://developer.hashicorp.com/terraform/language/import https://developer.hashicorp.com/terraform/language/block/moved https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle https://developer.hashicorp.com/terraform/language/files/dependency-lock https://developer.hashicorp.com/terraform/cli/state/recover"
-            }
-          ],
-          "sha256": "9af43614a35b1345e8a0138d890e88036761964f8c92399bee4aa3e37d20ba17",
-          "start_column": 3,
-          "start_line": 10,
-          "start_offset": 466
-        },
-        "words": 37
-      },
-      {
-        "band": "review-as-complex",
-        "decisions": null,
-        "document_id": "src/professional-skills/platform-infrastructure-change-builder/references/iac-source-contracts.md#reference",
-        "finding_id": "3f0839768cb7309c67abb72d1173ad7d801ecaec43db1dee650f829978832858",
-        "kind": "sentence-length",
-        "line": 14,
-        "preview": "Sources: https://www.pulumi.com/docs/reference/state/ https://www.pulumi.com/docs/iac/operations/stack-management/update-plans/ https://www.pulumi.com/docs/iac/concepts/resources/n",
-        "sentence": "Sources: https://www.pulumi.com/docs/reference/state/ https://www.pulumi.com/docs/iac/operations/stack-management/update-plans/ https://www.pulumi.com/docs/iac/concepts/resources/names/ https://www.pulumi.com/docs/iac/concepts/resources/options/aliases/ https://www.pulumi.com/docs/iac/concepts/resources/options/protect/ https://www.pulumi.com/docs/iac/concepts/secrets/",
-        "sentence_fingerprint": "6aeaa6eda6282a6e51e99111495ac0e4cff90ddcc440a18d450c112577502920",
-        "severity": "advisory",
-        "source_span": {
-          "end_column": 374,
-          "end_line": 14,
-          "end_offset": 1922,
-          "lines": [
-            {
-              "line": 14,
-              "text": "  Sources: https://www.pulumi.com/docs/reference/state/ https://www.pulumi.com/docs/iac/operations/stack-management/update-plans/ https://www.pulumi.com/docs/iac/concepts/resources/names/ https://www.pulumi.com/docs/iac/concepts/resources/options/aliases/ https://www.pulumi.com/docs/iac/concepts/resources/options/protect/ https://www.pulumi.com/docs/iac/concepts/secrets/"
-            }
-          ],
-          "sha256": "580791ca24f574dcc6c84f4f0ed6d842814bb04538d507ba36028381dd25b18d",
-          "start_column": 3,
-          "start_line": 14,
-          "start_offset": 1551
-        },
-        "words": 25
-      },
-      {
-        "band": "review-as-complex",
-        "decisions": null,
-        "document_id": "src/professional-skills/platform-infrastructure-change-builder/references/iac-source-contracts.md#reference",
-        "finding_id": "4aa4fc3c40a4b1c5736b707d78a2f28d15238f76589391a18a0b9fe9468aaf65",
-        "kind": "sentence-length",
-        "line": 16,
-        "preview": "Sources: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/dri",
-        "sentence": "Sources: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/drift-aware-change-sets.html https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-continueupdaterollback.html https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/protect-stack-resources.html https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-protect-stacks.html",
-        "sentence_fingerprint": "2326d2cec53e8633eb9852123eeb163258d484a00cd3843655bed3d7e99560bf",
-        "severity": "advisory",
-        "source_span": {
-          "end_column": 510,
-          "end_line": 16,
-          "end_offset": 2545,
-          "lines": [
-            {
-              "line": 16,
-              "text": "  Sources: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets.html https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/drift-aware-change-sets.html https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-continueupdaterollback.html https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/protect-stack-resources.html https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-protect-stacks.html"
-            }
-          ],
-          "sha256": "336b88482ba63f2502b929d533f6e333bfd241f5e9c88685cfe1319aefdbfe9a",
-          "start_column": 3,
-          "start_line": 16,
-          "start_offset": 2038
-        },
-        "words": 31
-      },
-      {
         "band": "review-as-complex",
         "decisions": null,
         "document_id": "src/professional-skills/platform-infrastructure-change-builder/references/kubernetes-source-contracts.md#reference",
@@ -158905,18 +158921,18 @@
     "source_fingerprint": {
       "algorithm": "sha256",
       "document_count": 1001,
-      "value": "f91261bda6e56a3237c15276a3b6d3db708def1777d1a8f2b4dc66cbe52608d0"
+      "value": "ac1891a625cd11dd626696ddc7e76c014cd47930ead0173ac1bb231d194f198e"
     },
     "summary": {
-      "advisory_documents": 330,
-      "advisory_sentences": 837,
+      "advisory_documents": 329,
+      "advisory_sentences": 834,
       "blocker_findings": 0,
       "compound_bullets": 0,
       "documents": 1001,
       "hard_fail_sentences": 0,
       "hard_gate_ready": true,
-      "review_as_complex_sentences": 826,
-      "tighten_sentences": 11
+      "review_as_complex_sentences": 824,
+      "tighten_sentences": 10
     }
   },
   "common_lines": {
@@ -159102,8 +159118,8 @@
         "targeted": {
           "existing_indexed": 169,
           "indexed": 169,
-          "indexed_lines": 4954,
-          "indexed_tokens": 74333,
+          "indexed_lines": 4979,
+          "indexed_tokens": 74496,
           "structural_advisory_references": 0
         },
         "template": {
@@ -159151,8 +159167,8 @@
         "professional": {
           "existing_indexed": 109,
           "indexed": 109,
-          "indexed_lines": 2480,
-          "indexed_tokens": 41284,
+          "indexed_lines": 2505,
+          "indexed_tokens": 41447,
           "missing": 0,
           "orphan": 0,
           "physical": 109,
@@ -159187,7 +159203,7 @@
       "source_fingerprint": {
         "algorithm": "sha256",
         "document_count": 974,
-        "value": "cd4e3a9bf8fb377d3322418fbd0b5e5b80fa86fb72e2fe49f337f532acb28bf5"
+        "value": "ec94a0fb1c74f7c727a0acf091300c427208279e1669522ef67ab6862c063698"
       },
       "source_precedence": [
         "local",
@@ -171095,7 +171111,7 @@
         "decision_headings": [
           {
             "level": 2,
-            "line": 26,
+            "line": 51,
             "title": "Professional Decision Rules"
           }
         ],
@@ -171107,10 +171123,10 @@
             "decision_item_count": 1,
             "heading": "Professional Decision Rules",
             "heading_lines": [
-              26
+              51
             ],
             "level": 2,
-            "line": 26,
+            "line": 51,
             "list_item_count": 1,
             "table_item_count": 0
           }
@@ -171201,22 +171217,22 @@
           },
           {
             "level": 2,
-            "line": 18,
+            "line": 43,
             "title": "Version Limit"
           },
           {
             "level": 2,
-            "line": 22,
+            "line": 47,
             "title": "Required Record"
           },
           {
             "level": 2,
-            "line": 26,
+            "line": 51,
             "title": "Professional Decision Rules"
           },
           {
             "level": 2,
-            "line": 30,
+            "line": 55,
             "title": "High-Value Gotchas"
           }
         ],
@@ -171226,12 +171242,12 @@
         "invalid_decision_section_headings": [],
         "kind": "targeted",
         "layer": "professional",
-        "line_count": 32,
+        "line_count": 57,
         "max_decision_section_item_count": 1,
         "owner": "platform-infrastructure-change-builder",
         "path": "src/professional-skills/platform-infrastructure-change-builder/references/iac-source-contracts.md",
         "reference_type": null,
-        "token_count": 701
+        "token_count": 864
       },
       {
         "advisory_kind": "targeted",
@@ -293734,9 +293750,9 @@
       "effective_required_output": 611,
       "exactly_one_h1": 610,
       "existing_indexed_references": 611,
-      "indexed_lines": 16635,
+      "indexed_lines": 16660,
       "indexed_reference_entries": 611,
-      "indexed_tokens": 280581,
+      "indexed_tokens": 280744,
       "indexed_unique_paths": 611,
       "load_when_prefaces": 40,
       "missing_effective_do_not_load_when": 0,
@@ -310087,7 +310103,6 @@
       "reference_link_count": 2,
       "repeated_phrase_count": 0,
       "review_reasons": [
-        "ai_readability_tighten",
         "ai_readability_review_as_complex"
       ],
       "review_state": "REVIEW_READABILITY",
@@ -322864,7 +322879,7 @@
       "ai_readability_compound_bullet": 0,
       "ai_readability_hard_fail": 0,
       "ai_readability_review_as_complex": 152,
-      "ai_readability_tighten": 6,
+      "ai_readability_tighten": 5,
       "classification_block": 0,
       "classification_review_density": 18,
       "classification_tighten_body": 3,
