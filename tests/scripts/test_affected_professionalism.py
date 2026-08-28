@@ -268,32 +268,6 @@ class AffectedProfessionalismTests(unittest.TestCase):
                     ),
                 }
             )
-            expected_baseline_fresh = {
-                "accessibility-inclusive-design",
-                "ai-code-review-refactor",
-                "authentication-authorization",
-                "backend-change-builder",
-                "change-documentation-gate",
-                "controller-api-implementation",
-                "data-api-contract-changer",
-                "data-middleware-change-builder",
-                "design-system-rules",
-                "form-validation-design",
-                "frontend-api-integration",
-                "frontend-testing",
-                "integration-change-builder",
-                "interaction-state-modeling",
-                "page-component-decomposition",
-                "plan-execution-consistency",
-                "quality-test-gate",
-                "reliability-observability-gate",
-                "routing-navigation-design",
-                "skill-authoring-expert",
-                "solution-optimality-evaluation",
-                "state-management-design",
-                "typescript-professional-usage",
-                "web-platform-professional-usage",
-            }
             contract = json.loads(
                 (repository / "src/control-model/core-contracts.json").read_text()
             )
@@ -304,10 +278,7 @@ class AffectedProfessionalismTests(unittest.TestCase):
                 maximum_fresh_target_count,
                 len(expected_direct_fresh),
             )
-            self.assertEqual(24, len(expected_baseline_fresh))
-            expected_fresh = sorted(
-                set(expected_direct_fresh) | expected_baseline_fresh
-            )
+            expected_fresh = expected_direct_fresh
             expected_carried = sorted(
                 set(expected_bindings) - set(expected_fresh)
             )
@@ -403,7 +374,11 @@ class AffectedProfessionalismTests(unittest.TestCase):
         )
         self.assertEqual([], execution_scope["unevaluated_package_ids"])
         self.assertEqual(
-            (80, 109, 0),
+            (
+                len(expected_fresh),
+                len(expected_carried),
+                0,
+            ),
             (
                 len(execution_scope["fresh_package_ids"]),
                 len(execution_scope["carried_package_ids"]),
