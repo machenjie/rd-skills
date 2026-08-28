@@ -1924,6 +1924,12 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                 ],
             )
         )
+        current_fixed = (
+            ROOT
+            / PANEL.panel_attestation
+            .PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH
+        ).read_bytes()
+        self.assertEqual(current_fixed, fixed_bytes)
         fixture = tempfile.TemporaryDirectory()
         self.addCleanup(fixture.cleanup)
         validation_root = Path(fixture.name)
@@ -1935,7 +1941,22 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
         fixed.write_bytes(fixed_bytes)
         fixed_bytes = fixed.read_bytes()
         fixed_sha256 = hashlib.sha256(fixed_bytes).hexdigest()
+        # Annotated byte snapshot for the current compact fixed artifact.
+        # Semantic counts below remain derived from current authority.
+        self.assertEqual(
+            "24ca91354be78eee67f6a70de0f88a58a3d6247e69c7fdea533622cdad0f450b",
+            fixed_sha256,
+        )
         value = json.loads(fixed_bytes)
+        decoded_value = (
+            PANEL.panel_attestation
+            .parse_attestation_storage_selector_bytes(fixed_bytes)
+        )
+        expected_target_count = len(current_targets)
+        self.assertEqual(
+            PANEL.PROFESSIONAL_PACKAGE_COUNT,
+            expected_target_count,
+        )
         self.assertEqual(
             {
                 "axis",
@@ -1964,7 +1985,10 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             PANEL.PROFESSIONAL_COMPLETENESS_PANEL_KIND,
             value["axis"],
         )
-        self.assertEqual("professional-refresh-20260816-r1", value["review_id"])
+        self.assertEqual(
+            "professional-budget-governance-20260828-r1",
+            value["review_id"],
+        )
         self.assertEqual(
             current_packet["review_contract_fingerprint"],
             value["review_contract_fingerprint"],
@@ -2025,8 +2049,14 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             PANEL.PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION,
             application["panel_artifact_schema_version"],
         )
-        self.assertEqual(189, application["applied_target_count"])
-        self.assertEqual(189, application["accepted_current_count"])
+        self.assertEqual(
+            expected_target_count,
+            application["applied_target_count"],
+        )
+        self.assertEqual(
+            expected_target_count,
+            application["accepted_current_count"],
+        )
         self.assertEqual(0, application["correction_count"])
         self.assertEqual(
             0,
@@ -2045,12 +2075,19 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             application["evidence"],
         )
         dispositions = application["professional_dispositions"]
+        expected_disposition_counts = {
+            disposition: sum(
+                row["result"]["final_disposition"] == disposition
+                for row in decoded_value["findings"]
+            )
+            for disposition in (
+                "accepted-current-professional-completeness",
+                "requires-professional-correction",
+                PANEL.PROFESSIONAL_UNRESOLVED_DISPOSITION,
+            )
+        }
         self.assertEqual(
-            {
-                "accepted-current-professional-completeness": 189,
-                "requires-professional-correction": 0,
-                PANEL.PROFESSIONAL_UNRESOLVED_DISPOSITION: 0,
-            },
+            expected_disposition_counts,
             {
                 disposition: sum(
                     row["disposition"] == disposition
@@ -2064,7 +2101,24 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             },
         )
         self.assertEqual(
-            {"carried": 56, "fresh": 133},
+            {
+                "accepted-current-professional-completeness": (
+                    expected_target_count
+                ),
+                "requires-professional-correction": 0,
+                PANEL.PROFESSIONAL_UNRESOLVED_DISPOSITION: 0,
+            },
+            expected_disposition_counts,
+        )
+        expected_mode_counts = {
+            mode: sum(
+                row["provenance"]["mode"] == mode
+                for row in decoded_value["findings"]
+            )
+            for mode in ("carried", "fresh")
+        }
+        self.assertEqual(
+            expected_mode_counts,
             {
                 mode: sum(
                     row["provenance"]["mode"] == mode
@@ -2074,20 +2128,22 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             },
         )
         self.assertEqual(
-            {
-                "carried": {
-                    (
-                        "professional-fpl001-fresh-20260814-r4",
-                        "a31ea263084894ccc4358696d3860e49857d3af2",
-                    )
-                },
-                "fresh": {
-                    (
-                        "professional-refresh-20260816-r1",
-                        "d6534d06d1537ca29da16832b37e078f903f58ee",
-                    )
-                },
-            },
+            {"carried": 0, "fresh": expected_target_count},
+            expected_mode_counts,
+        )
+        expected_origins = {
+            mode: {
+                (
+                    row["provenance"]["origin"]["origin_review_id"],
+                    row["provenance"]["origin"]["origin_commit"],
+                )
+                for row in decoded_value["findings"]
+                if row["provenance"]["mode"] == mode
+            }
+            for mode in ("carried", "fresh")
+        }
+        self.assertEqual(
+            expected_origins,
             {
                 mode: {
                     (
@@ -2100,15 +2156,39 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                 for mode in ("carried", "fresh")
             },
         )
+        self.assertEqual(set(), expected_origins["carried"])
+        self.assertEqual(
+            {value["review_id"]},
+            {
+                review_id
+                for review_id, _commit in expected_origins["fresh"]
+            },
+        )
 
         cost = application["review_cost"]
         target_count = application["applied_target_count"]
         self.assertEqual(PANEL.PROFESSIONAL_PACKAGE_COUNT, target_count)
-        self.assertEqual(3, application["reviewer_pool_size"])
+        expected_reviewer_count = len(decoded_value["reviewers"])
+        self.assertEqual(
+            expected_reviewer_count,
+            application["reviewer_pool_size"],
+        )
+        panel_size = current_packet["panel_contract"][
+            "per_target_panel_size"
+        ]
+        criterion_count = len(
+            current_packet["panel_contract"][
+                "criteria_required_per_target"
+            ]
+        )
+        expected_vote_count = target_count * panel_size
+        expected_criterion_result_count = (
+            expected_vote_count * criterion_count
+        )
         self.assertEqual(
             {
-                "carried_forward_target_count": 56,
-                "fresh_target_count": 133,
+                "carried_forward_target_count": 0,
+                "fresh_target_count": target_count,
             },
             {
                 field: application[field]
@@ -2120,9 +2200,9 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
         )
         self.assertEqual(
             {
-                "carried_forward_vote_count": 168,
-                "effective_vote_count": 567,
-                "fresh_vote_count": 399,
+                "carried_forward_vote_count": 0,
+                "effective_vote_count": expected_vote_count,
+                "fresh_vote_count": expected_vote_count,
             },
             {
                 field: cost[field]
@@ -2135,9 +2215,13 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
         )
         self.assertEqual(
             {
-                "carried_forward_criterion_result_count": 1680,
-                "effective_criterion_result_count": 5670,
-                "fresh_criterion_result_count": 3990,
+                "carried_forward_criterion_result_count": 0,
+                "effective_criterion_result_count": (
+                    expected_criterion_result_count
+                ),
+                "fresh_criterion_result_count": (
+                    expected_criterion_result_count
+                ),
             },
             {
                 field: cost[field]
@@ -2160,19 +2244,24 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             cost["input_ratio_ppm"],
         )
         self.assertEqual(
-            {
-                "input_ratio_ppm": 729116,
-                "required_only_input_ratio_ppm": 727995,
-                "source_material_coverage_ratio_ppm": 1_000_000,
-            },
-            {
-                field: cost[field]
-                for field in (
-                    "input_ratio_ppm",
-                    "required_only_input_ratio_ppm",
-                    "source_material_coverage_ratio_ppm",
-                )
-            },
+            (
+                cost["required_only_capsule_input_bytes_proxy"]
+                * 1_000_000
+                // cost[
+                    "full_rereview_deduplicated_capsule_input_bytes_proxy"
+                ]
+            ),
+            cost["required_only_input_ratio_ppm"],
+        )
+        self.assertEqual(
+            (
+                cost["source_material_input_bytes_proxy"]
+                * 1_000_000
+                // cost[
+                    "full_rereview_source_material_input_bytes_proxy"
+                ]
+            ),
+            cost["source_material_coverage_ratio_ppm"],
         )
         self.assertEqual(
             (
@@ -2186,27 +2275,14 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                 - cost["required_only_capsule_input_bytes_proxy"]
             ),
         )
-        self.assertEqual("incremental-reduced-input", cost["policy_status"])
+        self.assertEqual("bootstrap-full-review", cost["policy_status"])
+        self.assertEqual(0, cost["maximum_origin_depth"])
+        self.assertEqual(0, cost["plan_lineage_depth"])
         self.assertTrue(
             REGRESSION._professional_review_cost_policy_satisfied(
                 cost,
-                fresh_target_count=133,
-                carried_forward_target_count=56,
-            )
-        )
-        self.assertFalse(
-            REGRESSION._professional_review_cost_policy_satisfied(
-                cost,
-                fresh_target_count=86,
-                carried_forward_target_count=103,
-            )
-        )
-
-        self.assertFalse(
-            REGRESSION._professional_review_cost_policy_satisfied(
-                cost,
-                fresh_target_count=0,
-                carried_forward_target_count=target_count,
+                fresh_target_count=target_count,
+                carried_forward_target_count=0,
             )
         )
 

@@ -367,28 +367,10 @@ def _stale_contract_baseline_artifacts(
 class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
     @staticmethod
     def _historical_promotion_fixture() -> tuple[dict, dict[str, dict]]:
-        packet = _bootstrap_packet()
-        targets = []
-        for embedded_target in packet["professional_targets"]:
-            target = copy.deepcopy(embedded_target)
-            target.pop("review_binding")
-            targets.append(target)
-        bindings, _snapshot = PANEL._professional_v3_binding_state(
-            targets,
-            review_contract_fingerprint=packet[
-                "review_contract_fingerprint"
-            ],
+        return (
+            professional_support
+            ._historical_schema2_promotion_normalization_fixture()
         )
-        raw = (
-            PANEL.ROOT
-            / PANEL.panel_attestation.PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH
-        ).read_bytes()
-        value = (
-            PANEL.panel_attestation.parse_attestation_storage_selector_bytes(
-                raw
-            )
-        )
-        return value, bindings
 
     @staticmethod
     def _promotion_rows(

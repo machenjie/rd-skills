@@ -215,6 +215,140 @@ def _bootstrap_packet() -> dict:
     return copy.deepcopy(_bootstrap_packet_cached())
 
 
+def _historical_schema2_promotion_normalization_fixture() -> tuple[
+    dict, dict[str, dict]
+]:
+    """Build test-only historical relationship drift without fixed evidence.
+
+    This decoded schema-2 fixture intentionally models reviewer-added
+    candidates that a later binding made required.  It is not a current
+    attestation, carry baseline, or authority input.
+    """
+
+    targets = _catalog(
+        required={
+            "a": ["b", "c"],
+            "b": ["c"],
+            "c": [],
+            "d": [],
+        }
+    )
+    bindings = PANEL.professional_carry.professional_review_bindings(targets)
+    historical_added = {
+        "a": ["b", "c", "d"],
+        "b": ["c", "d"],
+        "c": [],
+        "d": [],
+    }
+    reviewers = [
+        "architecture-voter",
+        "domain-a-voter",
+        "domain-b-voter",
+    ]
+    findings = []
+    for skill_id in sorted(bindings):
+        added_ids = historical_added[skill_id]
+        votes = [
+            {
+                "reviewer": reviewer,
+                "review_evidence_fingerprint": _sha(
+                    {
+                        "fixture": "historical-schema2-promotion",
+                        "skill_id": skill_id,
+                        "reviewer": reviewer,
+                    }
+                ),
+                "examined_adjacent_candidates": {
+                    "count": len(added_ids),
+                    "required_count": 0,
+                    "reviewer_added_candidate_ids": copy.deepcopy(
+                        added_ids
+                    ),
+                    "defect_count": 0,
+                },
+            }
+            for reviewer in reviewers
+        ]
+        findings.append(
+            {
+                "skill_id": skill_id,
+                "dependency_ids": copy.deepcopy(added_ids),
+                "provenance": {
+                    "mode": "fresh",
+                    "origin": {
+                        "origin_review_id": (
+                            "historical-schema2-promotion-fixture"
+                        ),
+                        "origin_commit": "1" * 40,
+                        "origin_verdict_digest": _sha(
+                            {
+                                "fixture": "historical-schema2-promotion",
+                                "skill_id": skill_id,
+                            }
+                        ),
+                    },
+                },
+                "votes": votes,
+                "result": {
+                    "qualification_coverage": {
+                        "domain_voters": [
+                            "domain-a-voter",
+                            "domain-b-voter",
+                        ],
+                        "architecture_voter": "architecture-voter",
+                    },
+                    "review_dependencies": {
+                        "skill_id": skill_id,
+                        "evidence_complete": True,
+                        "prior_target_vote_count": len(reviewers),
+                        "final_disposition": (
+                            "accepted-current-professional-completeness"
+                        ),
+                        "required_candidate_ids": [],
+                        "reviewer_added_candidate_ids_union": (
+                            copy.deepcopy(added_ids)
+                        ),
+                        "dependency_candidate_ids": copy.deepcopy(
+                            added_ids
+                        ),
+                    },
+                    "evidence_metrics": {
+                        "target_vote_count": len(reviewers),
+                        "required_adjacency_candidate_count": 0,
+                        "criterion_result_count": 30,
+                        "criterion_anchor_binding_count": 30,
+                        "criterion_assertion_count": 30,
+                        "evidence_anchor_count": 0,
+                        "examined_failure_mode_count": 6,
+                        "examined_omission_candidate_count": 6,
+                        "examined_adjacency_count": (
+                            len(added_ids) * len(reviewers)
+                        ),
+                        "examined_required_adjacency_count": 0,
+                        "reviewer_added_adjacency_count": (
+                            len(added_ids) * len(reviewers)
+                        ),
+                        "proof_limit_count": 6,
+                        "qualification_claim_count": len(reviewers),
+                    },
+                },
+            }
+        )
+    return (
+        {
+            "schema_version": 2,
+            "kind": "test-only.historical-professional-attestation",
+            "review_id": "historical-schema2-promotion-fixture",
+            "findings": findings,
+            "dependency_material_catalog": {
+                skill_id: binding["package_material_binding"]
+                for skill_id, binding in bindings.items()
+            },
+        },
+        bindings,
+    )
+
+
 def _normalize_historical_reviewer_added_promotions(
     value: dict, *, bindings: dict[str, dict]
 ) -> None:
