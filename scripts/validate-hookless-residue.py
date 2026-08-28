@@ -107,6 +107,15 @@ FORBIDDEN_AI_CONTENT_TOKENS = (
     "route_repair",
     *FORBIDDEN_HOOKLESS_AI_CONTENT_TOKENS,
 )
+FORBIDDEN_AI_PROTOCOL_TOKEN_PATTERNS = {
+    token: re.compile(
+        rf"(?<![a-z0-9_]){re.escape(token)}"
+        + (r"(?![a-z0-9_])" if token[-1].isalnum() or token[-1] == "_" else ""),
+        re.IGNORECASE,
+    )
+    for token in FORBIDDEN_AI_CONTENT_TOKENS
+    if token not in FORBIDDEN_HOOKLESS_AI_CONTENT_TOKENS
+}
 FORBIDDEN_LIVE_BENCHMARK_TOKENS = (
     "codex_live_benchmark_lib",
     "run-codex-live-benchmarks.py",
@@ -215,11 +224,8 @@ def _forbidden_ai_content_token_errors(root: Path) -> list[str]:
         if not path.is_file() or path.suffix not in {".md", ".yaml", ".json"}:
             continue
         text = path.read_text(encoding="utf-8")
-        folded = text.casefold()
-        for token in FORBIDDEN_AI_CONTENT_TOKENS:
-            if token in FORBIDDEN_HOOKLESS_AI_CONTENT_TOKENS:
-                continue
-            if token in folded:
+        for token, pattern in FORBIDDEN_AI_PROTOCOL_TOKEN_PATTERNS.items():
+            if pattern.search(text):
                 errors.append(
                     f"{path.relative_to(root)} contains obsolete AI protocol token {token}"
                 )

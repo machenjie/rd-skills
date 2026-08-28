@@ -181,6 +181,50 @@ class RemovedBenchmarkResidueTests(unittest.TestCase):
 
         self.assertEqual([], errors)
 
+    def test_ai_protocol_tokens_require_independent_token_boundaries(self) -> None:
+        protocol_tokens = tuple(
+            token
+            for token in self.module.FORBIDDEN_AI_CONTENT_TOKENS
+            if token not in self.module.FORBIDDEN_HOOKLESS_AI_CONTENT_TOKENS
+        )
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            reference = root / "src/foundation/capabilities/example/SKILL.md"
+            reference.parent.mkdir(parents=True)
+            reference.write_text("\n".join(protocol_tokens), encoding="utf-8")
+
+            errors = self.module._forbidden_ai_content_token_errors(root)
+
+        for token in protocol_tokens:
+            self.assertTrue(
+                any(token in error for error in errors),
+                (token, errors),
+            )
+
+        legal_compounds = []
+        for token in protocol_tokens:
+            if token.endswith(":"):
+                stem = token[:-1]
+                legal_compounds.extend(
+                    (f"canonical_{stem}:", f"{stem}_metadata:")
+                )
+            else:
+                legal_compounds.extend(
+                    (f"canonical_{token}", f"{token}_metadata")
+                )
+        legal_compounds.extend(
+            ("finding_identity", "canonical_finding_id", "source_finding_ids")
+        )
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            reference = root / "src/control-model/core-contracts.json"
+            reference.parent.mkdir(parents=True)
+            reference.write_text("\n".join(legal_compounds), encoding="utf-8")
+
+            errors = self.module._forbidden_ai_content_token_errors(root)
+
+        self.assertEqual([], errors)
+
     def test_history_prohibition_cannot_hide_active_hook_residue(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
