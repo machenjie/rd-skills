@@ -5542,7 +5542,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "task": {
                     "candidate_count": 19_281,
                     "exact_render_signature_count": 19_281,
-                    "over_target_candidate_count": 0,
+                    "over_target_candidate_count": 1,
                 },
                 "analyzed_task": {
                     "candidate_count": 66_150,
@@ -5569,22 +5569,29 @@ class RenderedContextBudgetTests(unittest.TestCase):
         )
         global_union = frontier["global_task_review_union"]
         self.assertEqual(
-            {"professional": 0, "layer3": 0, "active_reference": 0},
+            {"professional": 1, "layer3": 1, "active_reference": 1},
             global_union["frontier_counts"],
         )
         self.assertEqual(
-            {"professional": 17, "layer3": 68, "active_reference": 267},
+            {"professional": 16, "layer3": 67, "active_reference": 266},
             global_union["safe_complement_counts"],
         )
         self.assertEqual(
-            [],
+            ["change-documentation-gate"],
             global_union["frontier"]["professional"],
+        )
+        self.assertEqual(
+            ["documentation-generation"],
+            global_union["frontier"]["layer3"],
+        )
+        self.assertEqual(
+            ["documentation-generation/references/benchmarks-and-patterns.md"],
+            global_union["frontier"]["active_reference"],
         )
         self.assertEqual(
             [
                 "ai-code-review-refactor",
                 "architecture-impact-reviewer",
-                "change-documentation-gate",
                 "data-api-contract-changer",
                 "data-middleware-change-builder",
                 "delivery-release-gate",
@@ -5603,12 +5610,12 @@ class RenderedContextBudgetTests(unittest.TestCase):
             global_union["safe_complement"]["professional"],
         )
         expected_membership_sha256 = {
-            "frontier_professional": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-            "frontier_layer3": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-            "frontier_active_reference": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-            "safe_complement_professional": "16f31327f6a88946b2dbde611d07bd75d914701c641922abe819b58bfe1a1668",
-            "safe_complement_layer3": "7d3f8c6bd0f5f795ebacbe89ed8f22898a3f7a7752f557ae8fd2341f6c4d16e1",
-            "safe_complement_active_reference": "498ca595182a2d9e0305308c0cd7e36e3f1694d7363e530236cf18039f6420cb",
+            "frontier_professional": "670f31c8451a9b4fc944ac94496da89cf2e467153b12b091eea773eeee55347b",
+            "frontier_layer3": "19eb9224c89564506dc53a42dbe142249116da35bebe8ce600993a52d184e400",
+            "frontier_active_reference": "ad6de5ae9c144243d6eb8e1a5c9b6d185009a32af4ce6b87781bfba21b905742",
+            "safe_complement_professional": "8140a635ffa50a39c1ade6ec43be9c9878d04993302933c5bee4934df7a760c8",
+            "safe_complement_layer3": "23ff1d3fa459336a191d22083aa9b37c3923a315acee6c0e8c4de759ccac6d49",
+            "safe_complement_active_reference": "4b636b9360ec625a296952332399dec30110ad26821df2eafb3644d3f8b25d20",
         }
         actual_membership_sha256 = {
             f"{placement}_{member_kind}": EVAL._sha256_text(
@@ -5706,7 +5713,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         direct = frontier["budget_classes"]["task"]
         review = frontier["budget_classes"]["review"]
         self.assertEqual(
-            {"professional": 0, "layer3": 0, "active_reference": 0},
+            {"professional": 1, "layer3": 1, "active_reference": 1},
             direct["frontier_counts"],
         )
         self.assertEqual(
@@ -5715,8 +5722,14 @@ class RenderedContextBudgetTests(unittest.TestCase):
         )
         for budget_class, row in (("task", direct), ("review", review)):
             maximum_tokens = max(
-                item["maximum_tokens"]
-                for item in row["outside"]["active_reference"]
+                [
+                    item["maximum_tokens"]
+                    for item in row["outside"]["active_reference"]
+                ]
+                + [
+                    item["maximum_tokens"]
+                    for item in row["frontier_witnesses"]["active_reference"]
+                ]
             )
             self.assertEqual(row["token_distribution"]["max"], maximum_tokens)
             self.assertLessEqual(
@@ -9156,7 +9169,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
 
         protected = {
             "src/professional-skills/delivery-release-gate/SKILL.md": "aaf5c2ea8078a3c794725303f2ce7c3372dd96569a4a0d5dc88bc82024fa1fda",
-            "src/domain-extensions/iot-embedded-extension/SKILL.md": "b36832cb68c5d2611c1c055e9b9efa9eeac6ecd5dd34f5f6e4062180045c38d4",
+            "src/domain-extensions/iot-embedded-extension/SKILL.md": "6d7eca5af1dac2721ccfa51a33aa21deba46a818593e8186cb6eadd2350a9269",
             "src/foundation/capabilities/release-rollback/SKILL.md": "05bc0fa788fd635c9ce8948f64c7eb25846a083c1b6d33876ba95f4464ac0830",
             "src/foundation/capabilities/version-compatibility/SKILL.md": "8579ded9475e7b7faf3a740d4526e770be0270113be18090cc9496f3d5190f9f",
             "src/domain-extensions/iot-embedded-extension/references/checklist.md": "951aef0ee02152fee0ff4478463b9bd80b96034a0a37c886dd19496ecbe6f64f",

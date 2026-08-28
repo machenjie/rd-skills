@@ -29,6 +29,9 @@ decisions affect multiple downstream tasks. Reject phase-pipeline expansion.
 ## Professional Decision Rules
 
 - Keep the selected high risk design review decision within its declared owner, inputs, stops, and output contract.
+- Test the brief as connected problem/acceptance, owner/invariant, placement/contract/failure, and acceptance-to-validation decisions using current source evidence.
+- Compare a plausible alternative at each critical boundary and require a decision only when it changes downstream work, material risk, recovery, or user-visible behavior.
+- Reject dependency cycles, conflicting writes, unowned shared contracts, and rollback claims without an executable rollback or forward-repair path; keep the First Executable Slice safe, verifiable, and reversible.
 
 ## High-Value Gotchas
 

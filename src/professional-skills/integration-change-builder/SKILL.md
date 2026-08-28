@@ -31,6 +31,9 @@ description: "Use `analysis-agent` for integration decisions or `task-agent` for
 ## Professional Decision Rules
 
 - Keep integration decisions within declared owners, inputs, stops, and outputs.
+- Align producer, consumer, provider, version, credential, and exact signed-representation contracts before changing the adapter or resolving implementation conflicts.
+- Define timeout, retry, idempotency, ordering, verification, replay, unknown-outcome, partial-failure, compensation, and reconciliation behavior at the owning boundary.
+- Validate the integrated diff, credential containment, mapping compatibility, and recovery behavior across affected consumers; isolated component success is insufficient.
 
 ## High-Value Gotchas
 

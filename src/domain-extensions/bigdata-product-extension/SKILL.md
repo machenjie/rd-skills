@@ -28,7 +28,10 @@ affected pipelines and consumers.
 
 ## Professional Decision Rules
 
-- Close triggered compatibility, replay, promotion, failed-data, quality, classification, resource, lineage, and experiment risks through named References and current pipeline evidence.
+- Prove schema and active-consumer compatibility from the source-backed inventory; unknown consumers or semantic contracts block.
+- Define event identity/order, checkpoint, retry, replay/backfill/correction, and live-writer coexistence so recovery cannot duplicate, omit, or overwrite authoritative data.
+- Gate promotion on quality/classification invariants; assign failed-data recovery and preserve lineage/experiment correctness through named References.
+- Bound partition/storage/state/memory/compute/cost from representative skew/workload evidence, including recoverable metadata/checkpoints.
 
 ## High-Value Gotchas
 

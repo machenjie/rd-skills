@@ -32,6 +32,9 @@ Support `task-agent` and `review-agent` for bounded logging decisions.
 ## Professional Decision Rules
 
 - Keep the selected logging design gate decision within its declared owner, inputs, stops, and output contract.
+- Emit a log only for a named diagnostic, audit, security, or operational question, at the single boundary owning the final outcome rather than at duplicate retry or wrapper paths.
+- Derive level, stable schema, purpose-required fields, redaction, and correlation from current logger and data-classification policy; exclude raw secrets, payloads, and unnecessary identity.
+- Bound rate, value space, cardinality, retention, access, sink, cost, and failure visibility with measured or platform evidence and a named owner.
 
 ## High-Value Gotchas
 

@@ -59,7 +59,7 @@
     "authorities": [
       {"id": "roles-authority", "pointer": "/roles", "scope": "Four role capabilities and exclusive tool boundaries."},
       {"id": "context-budget-authority", "pointer": "/context_budget_contract", "scope": "Authoring, resident-runtime, dispatch-composition, and observation-only dynamic-context taxonomy; rendered soft targets and hard ceilings; Calibration and Conformance policy; duplicate-context ratio."},
-      {"id": "final-goal-authority", "pointer": "/final_goal_contract", "scope": "Runtime structural proxies plus deterministic Professional review carry and capsule-input cost limits."},
+      {"id": "final-goal-authority", "pointer": "/final_goal_contract", "scope": "Runtime structural proxies plus deterministic Professional review carry and capsule-input cost limits. The Professional fresh-target migration ceiling is a graph-growth guard, not Runtime Token Budget: it comes from the unfiltered 189-case current valid distribution observation (P95=37, P99=55, max=58) and is not an empirically optimal value."},
       {"id": "reference-contract-authority", "pointer": "/reference_contract", "scope": "Reference Contract v2 fields, role consumers, and required outputs."},
       {"id": "task-contract-authority", "pointer": "/task_contract", "scope": "Task Contract v2 fields, assignment state, scheduling, and templates."},
       {"id": "evidence-contract-authority", "pointer": "/visible_evidence_contract", "scope": "Visible Evidence Ledger fields, states, freshness, and completion proof."},
@@ -1017,7 +1017,7 @@
     },
     "professional_review_cost_fixtures": {
       "thresholds": {
-        "maximum_fresh_target_count": 56,
+        "maximum_fresh_target_count": 58,
         "maximum_mean_fresh_target_count": 25,
         "maximum_input_ratio_ppm": 450000,
         "maximum_mean_input_ratio_ppm": 220000

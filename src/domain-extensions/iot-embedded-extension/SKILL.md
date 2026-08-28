@@ -28,7 +28,12 @@ field operations.
 
 ## Professional Decision Rules
 
-- Close each triggered device, firmware, timing, identity, update, endurance, protocol, or physical-safety risk through the checklist and current hardware, fleet, trust-boundary, and hazard evidence.
+- Make field updates recoverable through validated images, atomic activation, last-known-good boot, power-loss behavior, mixed-fleet compatibility, rollback, and offline recovery.
+- Authenticate firmware and commands against the device trust boundary, including integrity, origin, anti-rollback, credential rotation or revocation, and recovery from lost authority.
+- Derive timing bounds from current hardware, scheduling, and interference evidence.
+- Treat observed maxima as corroboration, not proof of worst-case timing.
+- Derive physical safe states from current fleet and hazard evidence.
+- Close triggered identity, endurance, protocol, connectivity, and resource risks through the checklist, with a named detection and field-recovery owner.
 
 ## High-Value Gotchas
 

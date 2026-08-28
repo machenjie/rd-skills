@@ -308,16 +308,29 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
 
     def test_count_and_threshold_tamper_remain_non_current(self) -> None:
         measured = REGRESSION._calculate_professional_review_cost_fixtures()
+        thresholds = json.loads(
+            REGRESSION.CORE_CONTRACTS.read_text(encoding="utf-8")
+        )["final_goal_contract"]["professional_review_cost_fixtures"][
+            "thresholds"
+        ]
         mutations = {
             "case-count": lambda sensitivity: sensitivity.update(
                 {"case_count": 188}
             ),
             "fresh-max": lambda sensitivity: sensitivity[
                 "fresh_target_count"
-            ].update({"max": 57}),
+            ].update(
+                {
+                    "max": (
+                        thresholds["maximum_fresh_target_count"] + 1
+                    )
+                }
+            ),
             "ratio-max": lambda sensitivity: sensitivity[
                 "input_ratio_ppm"
-            ].update({"max": 450001}),
+            ].update(
+                {"max": thresholds["maximum_input_ratio_ppm"] + 1}
+            ),
         }
         for label, mutate in mutations.items():
             candidate = copy.deepcopy(measured)

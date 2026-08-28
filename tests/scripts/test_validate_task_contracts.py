@@ -4688,7 +4688,29 @@ class CoreContractModelTests(unittest.TestCase):
             "professional_review_cost_fixtures"
         ]
         self.assertEqual({"thresholds", "formal_round_policy"}, set(fixtures))
-        self.assertEqual(56, fixtures["thresholds"]["maximum_fresh_target_count"])
+        maximum_fresh_target_count = fixtures["thresholds"][
+            "maximum_fresh_target_count"
+        ]
+        self.assertIs(type(maximum_fresh_target_count), int)
+        self.assertGreater(
+            maximum_fresh_target_count,
+            fixtures["thresholds"]["maximum_mean_fresh_target_count"],
+        )
+        self.assertLess(maximum_fresh_target_count, 190)
+        final_goal_authority = next(
+            authority
+            for authority in CORE_CONTRACTS["principle_acceptance_contract"][
+                "authorities"
+            ]
+            if authority["id"] == "final-goal-authority"
+        )
+        for term in (
+            "migration ceiling",
+            "graph-growth guard",
+            "not Runtime Token Budget",
+            "not an empirically optimal value",
+        ):
+            self.assertIn(term, final_goal_authority["scope"])
         self.assertEqual([], validate_core_contracts(copy.deepcopy(CORE_CONTRACTS)))
 
         beyond_inventory = copy.deepcopy(CORE_CONTRACTS)

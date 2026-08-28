@@ -268,7 +268,7 @@ class AffectedProfessionalismTests(unittest.TestCase):
                     ),
                 }
             )
-            expected_baseline_only_fresh = {
+            expected_baseline_fresh = {
                 "accessibility-inclusive-design",
                 "ai-code-review-refactor",
                 "authentication-authorization",
@@ -294,21 +294,22 @@ class AffectedProfessionalismTests(unittest.TestCase):
                 "typescript-professional-usage",
                 "web-platform-professional-usage",
             }
-            self.assertEqual(56, len(expected_direct_fresh))
-            self.assertEqual(24, len(expected_baseline_only_fresh))
-            self.assertTrue(
-                set(expected_direct_fresh).isdisjoint(
-                    expected_baseline_only_fresh
-                )
+            contract = json.loads(
+                (repository / "src/control-model/core-contracts.json").read_text()
             )
+            maximum_fresh_target_count = contract["final_goal_contract"][
+                "professional_review_cost_fixtures"
+            ]["thresholds"]["maximum_fresh_target_count"]
+            self.assertEqual(
+                maximum_fresh_target_count,
+                len(expected_direct_fresh),
+            )
+            self.assertEqual(24, len(expected_baseline_fresh))
             expected_fresh = sorted(
-                set(expected_direct_fresh) | expected_baseline_only_fresh
+                set(expected_direct_fresh) | expected_baseline_fresh
             )
             expected_carried = sorted(
                 set(expected_bindings) - set(expected_fresh)
-            )
-            contract = json.loads(
-                (repository / "src/control-model/core-contracts.json").read_text()
             )
             audit_fixture = repository / "scripts/fixture-pass-content-audit.py"
             audit_fixture.write_text(
@@ -556,16 +557,14 @@ class AffectedProfessionalismTests(unittest.TestCase):
                 panel._professional_evidence_review_contract_fingerprint()
             ),
         )
-        expected_fresh = sorted(
-            {
-                direct,
-                *(
-                    skill_id
-                    for skill_id, binding in bindings.items()
-                    if direct in binding["dependency_material_bindings"]
-                ),
-            }
+        reverse_dependencies = sorted(
+            skill_id
+            for skill_id, binding in bindings.items()
+            if direct in binding["dependency_material_bindings"]
         )
+        self.assertIn(direct, bindings)
+        self.assertTrue(reverse_dependencies)
+        expected_fresh = sorted({direct, *reverse_dependencies})
         self.assertTrue(scope["baseline_stale_no_carry"])
         self.assertEqual(expected_fresh, scope["fresh_package_ids"])
         self.assertEqual([], scope["carried_package_ids"])
@@ -577,14 +576,17 @@ class AffectedProfessionalismTests(unittest.TestCase):
             expected_fresh,
             sorted(entry["name"] for _kind, entry in selected),
         )
-        self.assertIn(
-            direct,
-            bindings["data-middleware-change-builder"][
-                "dependency_material_bindings"
-            ],
-        )
+        for skill_id in reverse_dependencies:
+            self.assertIn(
+                direct,
+                bindings[skill_id]["dependency_material_bindings"],
+            )
         self.assertEqual(
-            (27, 0, 162),
+            (
+                len(expected_fresh),
+                0,
+                len(bindings) - len(expected_fresh),
+            ),
             (
                 len(scope["fresh_package_ids"]),
                 len(scope["carried_package_ids"]),

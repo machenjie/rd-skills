@@ -376,7 +376,9 @@ def _content_readiness_payload() -> dict:
                     "sum": 3240,
                     "mean_milli": 17142,
                     "p95": 35,
-                    "max": 56,
+                    "max": cost_authority["thresholds"][
+                        "maximum_fresh_target_count"
+                    ],
                 },
                 "input_ratio_ppm": {
                     "min": 1000,
@@ -1853,7 +1855,10 @@ class StaticProductizationReportTests(unittest.TestCase):
                     "fixture.json", fixture, root=root
                 ),
             )
-            thresholds["maximum_fresh_target_count"] = 55
+            fixture_max = fixture[
+                "routing_neutral_isolated_material_binding_sensitivity"
+            ]["fresh_target_count"]["max"]
+            thresholds["maximum_fresh_target_count"] = fixture_max - 1
             target.write_text(json.dumps(contracts), encoding="utf-8")
             errors = self.module._professional_review_cost_fixture_errors(
                 "fixture.json", fixture, root=root

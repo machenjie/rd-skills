@@ -33,6 +33,9 @@ migration guidance, and operator instructions.
 ## Professional Decision Rules
 
 - Keep the selected change documentation gate decision within its declared owner, inputs, stops, and output contract.
+- Update the affected audience's documentation when behavior, public contract, configuration, operations, migration, deprecation, or workflow changes; otherwise require a source-backed no-docs decision.
+- Place facts in the owning source and regenerate derived documentation instead of duplicating unstable details; keep examples consistent with current names, defaults, errors, and version behavior.
+- Validate rendered links, commands, examples, generated outputs, migration and rollback instructions, and safe-disclosure boundaries against the final implementation.
 
 ## High-Value Gotchas
 

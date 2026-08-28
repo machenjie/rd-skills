@@ -1165,6 +1165,9 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
         authority_values = {
             "final-goal-authority": contract["final_goal_contract"]
         }
+        thresholds = authority_values["final-goal-authority"][
+            "professional_review_cost_fixtures"
+        ]["thresholds"]
         self.assertEqual(
             {"thresholds", "formal_round_policy"},
             set(
@@ -1232,12 +1235,20 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
                 "professional_review_cost_fixtures"
             ]["routing_neutral_isolated_material_binding_sensitivity"][
                 "fresh_target_count"
-            ].update({"max": 57}),
+            ].update(
+                {
+                    "max": (
+                        thresholds["maximum_fresh_target_count"] + 1
+                    )
+                }
+            ),
             "ratio-threshold": lambda report: report[
                 "professional_review_cost_fixtures"
             ]["routing_neutral_isolated_material_binding_sensitivity"][
                 "input_ratio_ppm"
-            ].update({"max": 450001}),
+            ].update(
+                {"max": thresholds["maximum_input_ratio_ppm"] + 1}
+            ),
         }
         for label, mutate in mutations.items():
             candidate = copy.deepcopy(positive_report)
