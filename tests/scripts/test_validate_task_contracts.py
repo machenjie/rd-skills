@@ -224,6 +224,24 @@ def _recompute_fixture_extension(extension: dict[str, object]) -> dict[str, obje
 
 
 class TaskContractTemplateTests(unittest.TestCase):
+    def test_public_finding_identity_is_allowed_but_private_finding_id_is_rejected(self) -> None:
+        self.assertEqual([], VALIDATOR.validate_contracts())
+        with tempfile.TemporaryDirectory() as raw:
+            reference_root = Path(raw) / "references"
+            shutil.copytree(VALIDATOR.REFERENCE_ROOT, reference_root)
+            path = reference_root / "review-handoff-template.md"
+            path.write_text(
+                path.read_text(encoding="utf-8").replace(
+                    "Finding Identity:", "Finding ID:", 1
+                ),
+                encoding="utf-8",
+            )
+            errors = VALIDATOR.validate_contracts(reference_root)
+            self.assertTrue(
+                any("forbidden internal contract term 'finding id'" in error for error in errors),
+                errors,
+            )
+
     def test_execution_level_role_projections_are_minimal_and_source_bound(self) -> None:
         fixture = json.loads(AGENT_LIGHT_CASES.read_text(encoding="utf-8"))
         case = next(
@@ -1602,10 +1620,18 @@ class CoreContractModelTests(unittest.TestCase):
                 "Severity:",
                 "Blocker:",
                 "Description:",
+                "Protected Decision Boundary:",
+                "Defect:",
+                "Violated invariant:",
+                "Failure mechanism:",
+                "Fix path:",
+                "Source reviewer evidence:",
                 "Affected scope:",
                 "Acceptance or risk impact:",
                 "Required validation:",
                 "Required covering re-review:",
+                "Freshness:",
+                "Proof Limit:",
             )
         )
         self.assertIn(finding_shape, review)
@@ -1665,7 +1691,7 @@ class CoreContractModelTests(unittest.TestCase):
         combined = CORE_CONTRACTS["review_discipline_contract"][
             "review_boundary_contract"
         ]
-        self.assertEqual(1, combined["schema_version"])
+        self.assertEqual(2, combined["schema_version"])
         self.assertEqual(
             [
                 "assignment_id",
@@ -1717,6 +1743,60 @@ class CoreContractModelTests(unittest.TestCase):
             ],
             combined["task_completion_projection_fields"],
         )
+
+    def test_primary_review_closing_artifact_owns_conservative_finding_compilation(
+        self,
+    ) -> None:
+        combined = CORE_CONTRACTS["review_discipline_contract"][
+            "review_boundary_contract"
+        ]
+        compiler = combined["finding_compiler"]
+        self.assertEqual("primary-review-agent", compiler["owner"])
+        self.assertEqual(
+            "after-complete-fixed-review-boundary-before-sole-closing-artifact",
+            compiler["execution_point"],
+        )
+        self.assertEqual(
+            [
+                "Task ID",
+                "Review Round ID",
+                "Finding Relation",
+                "Protected Decision Boundary",
+            ],
+            compiler["partition_fields"],
+        )
+        self.assertEqual(
+            ["defect", "violated invariant", "failure mechanism", "fix path"],
+            compiler["semantic_merge_required_equal_fields"],
+        )
+        self.assertTrue(compiler["semantic_merge_requires_non_empty_source_evidence"])
+        self.assertFalse(compiler["confidence_suppression_allowed"])
+        self.assertEqual(
+            "material-current-task-canonical-findings-only",
+            compiler["repair_input"],
+        )
+        self.assertEqual("canonical_findings", compiler["output_field"])
+        self.assertEqual("findings-verdict-only", compiler["output_presence"])
+
+        review = (REFERENCE_ROOT / "review-handoff-template.md").read_text(
+            encoding="utf-8"
+        )
+        for term in (
+            "## Canonical Findings",
+            "same defect",
+            "same violated invariant",
+            "same failure mechanism",
+            "same fix path",
+            "Main copies canonical findings without semantic reconciliation",
+            "Source Findings:",
+            "Source reviewer evidence:",
+            "Failure mechanism:",
+            "Fix path:",
+            "Freshness:",
+            "Proof Limit:",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term, review)
 
     def test_task_nodes_project_review_requirements_not_review_scheduling(self) -> None:
         task = CORE_CONTRACTS["task_contract"]
@@ -1798,7 +1878,7 @@ class CoreContractModelTests(unittest.TestCase):
         repair = task["repair_routing"]
         self.assertEqual(["Review Round ID", "Task ID"], repair["batch_key"])
         self.assertEqual(
-            "all-material-current-task-findings-for-the-same-review-round-and-task-id",
+            "all-material-current-task-canonical-findings-for-the-same-review-round-and-task-id",
             repair["batch_contents"],
         )
         self.assertEqual("unchanged-from-finding-task-id", repair["task_id_rule"])
@@ -1833,16 +1913,76 @@ class CoreContractModelTests(unittest.TestCase):
             convergence["cap_disposition"]["adjacent-or-hardening-only"],
         )
         self.assertFalse(convergence["cap_implies_pass"])
+        semantic = convergence["semantic_trajectory"]
+        self.assertEqual(
+            "review-agent-current-review-handoff",
+            semantic["owner"],
+        )
+        self.assertEqual(
+            "repair-or-rereview-trajectory-only",
+            semantic["activation"],
+        )
+        self.assertEqual(
+            "canonical-findings-and-current-review-handoff-evidence",
+            semantic["input"],
+        )
+        self.assertEqual(
+            ["progressing", "bounded-class", "oscillating", "indeterminate"],
+            semantic["classifications"],
+        )
+        self.assertEqual(
+            {
+                "progressing": "continue-existing-repair-path-only",
+                "bounded-class": "reshape-next-repair-to-source-proven-finite-class",
+                "oscillating": "may-block-non-converged-and-stop-same-path",
+                "indeterminate": "preserve-existing-behavior",
+            },
+            semantic["classification_dispositions"],
+        )
+        self.assertEqual(
+            [
+                "single-repeated-finding",
+                "finding-count-unchanged",
+                "new-finding-present",
+                "severity-unchanged",
+                "finding-category-unchanged",
+                "same-file-modified-again",
+            ],
+            semantic["forbidden_solo_oscillation_heuristics"],
+        )
+        self.assertFalse(semantic["pass_authority"])
+        self.assertFalse(semantic["reroute_authority"])
+        self.assertFalse(semantic["persistent_runtime_storage"])
+        self.assertFalse(semantic["adds_agent_round_stage_or_normal_path_cost"])
         self.assertEqual(
             [
                 "Finding Relation",
+                "source reviewer evidence",
                 "affected scope",
-                "Acceptance or risk impact",
+                "violated Acceptance or invariant or risk",
+                "failure mechanism",
+                "defect and fix path",
                 "required validation",
                 "required covering re-review",
+                "freshness and proof limit",
             ],
             repair["per_finding_preserves"],
         )
+
+        review = (REFERENCE_ROOT / "review-handoff-template.md").read_text(
+            encoding="utf-8"
+        )
+        for term in (
+            "Semantic Repair Convergence",
+            "progressing",
+            "bounded-class",
+            "oscillating",
+            "indeterminate",
+            "canonical findings",
+            "no PASS authority",
+            "does not reroute",
+        ):
+            self.assertIn(term, review)
 
         scan = task["same_pattern_scan"]
         self.assertFalse(scan["discovery_grants_repair_authority"])

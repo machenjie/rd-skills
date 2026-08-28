@@ -48,6 +48,18 @@ def _module_without_tiktoken() -> Iterator[tuple[ModuleType, list[str]]]:
 
 
 class ValidationUtilsDependencyBoundaryTests(unittest.TestCase):
+    def test_quality_cost_gate_is_core_owned_and_quality_first(self) -> None:
+        with _module_without_tiktoken() as (module, _imports):
+            core = copy.deepcopy(module.CORE_CONTRACTS)
+            gate = core["context_budget_contract"]["quality_cost_gate"]
+            self.assertFalse(
+                gate["candidate_total_not_greater_is_correctness_acceptance"]
+            )
+            self.assertTrue(gate["hard_ceiling_independent"])
+            self.assertFalse(gate["runtime_dependency"])
+            gate["candidate_total_not_greater_is_correctness_acceptance"] = True
+            self.assertTrue(module.validate_core_contracts(core))
+
     def test_context_budget_taxonomy_and_rendered_categories_are_bijective(self) -> None:
         with _module_without_tiktoken() as (module, _imports):
             contract = module.CORE_CONTRACTS["context_budget_contract"]

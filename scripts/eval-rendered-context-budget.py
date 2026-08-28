@@ -10,6 +10,8 @@ import importlib.util
 import json
 import os
 import re
+import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -21,11 +23,14 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from validation_utils import (
+    BEHAVIOR_EVAL_MODEL,
     COMPILED_LAYER3_FORMAT,
     CONTEXT_BUDGET_MODEL,
+    CORE_CONTRACTS,
     REVIEW_DISCIPLINE_MODEL,
     ValidationProblem,
     authoritative_build_input_snapshot,
+    behavior_eval_authority,
     count_o200k_base_tokens,
     derived_context_budget_limits,
     layer3_selector_authority,
@@ -1841,7 +1846,6 @@ def _compare_end_to_end_subjects(
         for host in FOCUS_PROFILE_HOSTS
     }
     ordinary_route_regressions: list[dict[str, Any]] = []
-    ordinary_route_errors: list[str] = []
     for case_id in sorted(set(baseline_cases) & set(candidate_cases)):
         before = baseline_cases[case_id]
         after = candidate_cases[case_id]
@@ -2084,10 +2088,6 @@ def _compare_end_to_end_subjects(
                 "total_task_tokens": _comparison_value(before_total, after_total),
             }
             ordinary_route_regressions.append(regression)
-            ordinary_route_errors.append(
-                f"{case_id}: ordinary raw-route-equal candidate exceeds baseline by "
-                f"{after_total - before_total} token(s)"
-            )
         baseline_total += before_total
         candidate_total += after_total
         if host in FOCUS_PROFILE_HOSTS:
@@ -2136,16 +2136,6 @@ def _compare_end_to_end_subjects(
         )
         if baseline_total <= 0:
             errors.append("baseline measured subject total must be positive")
-        elif candidate_total > baseline_total:
-            errors.append(
-                "measured candidate aggregate exceeds baseline"
-            )
-        for host in FOCUS_PROFILE_HOSTS:
-            if candidate_by_host[host] > baseline_by_host[host]:
-                errors.append(
-                    f"measured candidate {host} aggregate exceeds baseline"
-                )
-    errors.extend(ordinary_route_errors)
     component_aggregate = {
         name: _comparison_value(component_baseline[name], component_candidate[name])
         for name in END_TO_END_COMPONENTS
@@ -2165,13 +2155,35 @@ def _compare_end_to_end_subjects(
         }
         for host in FOCUS_PROFILE_HOSTS
     }
+    host_cost_increases = [
+        host
+        for host in FOCUS_PROFILE_HOSTS
+        if candidate_by_host[host] > baseline_by_host[host]
+    ]
+    if comparison_blocked or baseline_total <= 0:
+        cost_status = "not-comparable"
+    elif candidate_total > baseline_total:
+        cost_status = "candidate-higher-cost"
+    elif ordinary_route_regressions or host_cost_increases:
+        cost_status = "mixed-cost-deltas"
+    elif candidate_total < baseline_total:
+        cost_status = "candidate-lower-cost"
+    elif candidate_total == baseline_total:
+        cost_status = "candidate-equal-cost"
+    else:
+        cost_status = "candidate-higher-cost"
     return {
         "status": "pass" if not errors else "fail",
-        "comparison_rule": "candidate-total-not-greater-than-baseline",
+        "comparison_rule": "cost-observation-after-quality-gate",
         "ordinary_route_comparison_rule": (
-            "source-classified-raw-route-equal-candidate-not-greater-than-baseline"
+            "source-classified-raw-route-equal-cost-observation"
         ),
         "ordinary_route_regressions": ordinary_route_regressions,
+        "cost_observation": {
+            "status": cost_status,
+            "candidate_total_not_greater_is_correctness_acceptance": False,
+            "host_cost_increases": host_cost_increases,
+        },
         "subjects": {
             "baseline": baseline_identity,
             "candidate": candidate_identity,
@@ -2202,6 +2214,171 @@ def _compare_end_to_end_subjects(
     }
 
 
+def _quality_first_cost_gate(
+    *,
+    behavior_evidence: dict[str, Any],
+    codegen_evidence: dict[str, Any],
+    cost_comparison: dict[str, Any],
+) -> dict[str, Any]:
+    """Apply Core-owned quality precedence to evaluator-owned cost observations."""
+
+    gate = CONTEXT_BUDGET_MODEL["quality_cost_gate"]
+    current_behavior_authority = behavior_eval_authority(CORE_CONTRACTS)
+    if BEHAVIOR_EVAL_MODEL != current_behavior_authority:
+        raise ValueError("Behavior Eval authority is detached or malformed")
+    behavior_verdicts = set(BEHAVIOR_EVAL_MODEL["verdicts"])
+    behavior_classes = set(BEHAVIOR_EVAL_MODEL["evidence_classes"])
+    behavior_statuses = set(BEHAVIOR_EVAL_MODEL["live_evidence_statuses"])
+    preserving = set(gate["quality_preserving_verdicts"])
+    regression = gate["regression_verdict"]
+    missing = gate["missing_evidence_verdict"]
+    closed_verdicts = behavior_verdicts
+    if (
+        preserving | {regression, missing} != behavior_verdicts
+        or regression != BEHAVIOR_EVAL_MODEL["verdict_policy"]["quality_regression"]
+        or missing != BEHAVIOR_EVAL_MODEL["verdict_policy"]["missing-live-agent-data"]
+    ):
+        raise ValueError("Behavior Eval authority disagrees with the quality-cost gate")
+
+    def quality_projection(label: str, evidence: Any) -> dict[str, Any]:
+        if not isinstance(evidence, dict):
+            raise ValueError(f"{label} quality evidence must be an object")
+        verdict = evidence.get("verdict")
+        evidence_class = evidence.get("evidence_class")
+        live_status = evidence.get("live_evidence_status")
+        if verdict not in closed_verdicts:
+            raise ValueError(f"{label} quality evidence has an unknown verdict")
+        if evidence_class not in behavior_classes:
+            raise ValueError(f"{label} quality evidence has an unknown evidence class")
+        if live_status not in behavior_statuses:
+            raise ValueError(f"{label} quality evidence has an unknown live status")
+        comparable = (
+            evidence_class == "live_agent"
+            and live_status == "collected"
+            and verdict != missing
+        )
+        return {
+            "evaluation_kind": evidence.get("evaluation_kind"),
+            "evidence_class": evidence_class,
+            "live_evidence_status": live_status,
+            "verdict": verdict,
+            "comparable": comparable,
+        }
+
+    behavior = quality_projection("behavior", behavior_evidence)
+    codegen = quality_projection("codegen", codegen_evidence)
+    quality_rows = {"behavior": behavior, "codegen": codegen}
+    verdicts = [row["verdict"] for row in quality_rows.values()]
+    candidate_rejected = regression in verdicts
+    all_comparable = all(row["comparable"] for row in quality_rows.values())
+    if candidate_rejected:
+        verdict = regression
+    elif not all_comparable:
+        verdict = missing
+    elif "improved" in verdicts:
+        verdict = "improved"
+    elif "hardening_only" in verdicts:
+        verdict = "hardening_only"
+    else:
+        verdict = "no_effect"
+    quality_preserved = all_comparable and verdict in preserving
+
+    aggregate = cost_comparison.get("aggregate", {})
+    cost_metrics: dict[str, Any] = {
+        "tokens": {
+            "baseline": aggregate.get("baseline"),
+            "candidate": aggregate.get("candidate"),
+            "delta": aggregate.get("delta"),
+        }
+    }
+    for metric in ("turns", "elapsed_ms"):
+        values: list[Any] = []
+        for side in ("old", "new"):
+            side_payload = behavior_evidence.get(side, {})
+            side_costs = (
+                side_payload.get("cost_metrics", {})
+                if isinstance(side_payload, dict)
+                else {}
+            )
+            values.append(side_costs.get(metric) if isinstance(side_costs, dict) else None)
+        if behavior["comparable"] and all(
+            isinstance(value, (int, float)) and not isinstance(value, bool)
+            for value in values
+        ):
+            cost_metrics[metric] = {
+                "baseline": values[0],
+                "candidate": values[1],
+                "delta": values[1] - values[0],
+            }
+        else:
+            cost_metrics[metric] = gate["not_collected_value"]
+    if cost_comparison.get("status") != "pass" or aggregate.get("comparable") is not True:
+        frontier_status = "not-evaluated-invalid-cost-evidence"
+        frontier_eligible = False
+    elif not quality_preserved:
+        frontier_status = "not-evaluated-quality-evidence"
+        frontier_eligible = False
+    else:
+        delta = aggregate.get("delta")
+        observation = cost_comparison.get("cost_observation", {}).get("status")
+        if not isinstance(delta, int):
+            raise ValueError("cost comparison aggregate delta must be an integer")
+        frontier_eligible = True
+        if observation == "mixed-cost-deltas":
+            frontier_status = "eligible-mixed-cost-not-selected"
+        else:
+            collected_deltas = [
+                value["delta"]
+                for value in cost_metrics.values()
+                if isinstance(value, dict)
+            ]
+            if any(value > 0 for value in collected_deltas):
+                frontier_status = "eligible-mixed-cost-not-selected"
+            elif any(value < 0 for value in collected_deltas):
+                frontier_status = "selected-lower-cost"
+            else:
+                frontier_status = "eligible-equal-cost"
+    elapsed_status = (
+        "collected"
+        if isinstance(cost_metrics["elapsed_ms"], dict)
+        else gate["not_collected_value"]
+    )
+    return {
+        "status": "fail" if candidate_rejected else "pass",
+        "verdict": verdict,
+        "claim_boundary": (
+            "bounded-live-quality-comparison"
+            if all_comparable
+            else gate["structural_claim"]
+        ),
+        "quality_preserved": quality_preserved,
+        "candidate_rejected": candidate_rejected,
+        "quality_evidence": quality_rows,
+        "cost_frontier": {
+            "rule": gate["frontier_rule"],
+            "eligible": frontier_eligible,
+            "status": frontier_status,
+            "metrics": cost_metrics,
+            "token_observation": copy.deepcopy(aggregate),
+        },
+        "live_evidence": {
+            "behavior": behavior["live_evidence_status"],
+            "codegen": codegen["live_evidence_status"],
+            "elapsed_ms": elapsed_status,
+        },
+        "proof_limits": [
+            "Static token counts are cost proxies and do not prove latency.",
+            "A candidate total not greater than baseline is not correctness acceptance.",
+            "Missing comparable behavior or codegen evidence cannot enter the cost frontier.",
+        ],
+        "errors": (
+            ["quality regression rejects the candidate before cost comparison"]
+            if candidate_rejected
+            else []
+        ),
+    }
+
+
 AB_S1_WRITE_PATHS = frozenset(
     {
         "scripts/eval-rendered-context-budget.py",
@@ -2224,6 +2401,7 @@ AB_S2_WRITE_PATHS = frozenset(
         "scripts/validate-control-plane-prompt.py",
         "scripts/validate-control-skills.py",
         "scripts/validate-skill-routing.py",
+        "scripts/validate-task-contracts.py",
         "src/control-prompts/main-control-agent.md",
         "src/agent-profiles/role-agents.json",
         "src/control-skills/engineering-control-plane/references/professional-skill-router.md",
@@ -2273,7 +2451,35 @@ AB_S3_WRITE_PATHS = frozenset(
     }
 )
 
-AB_ALLOWED_WRITE_PATHS = AB_S1_WRITE_PATHS | AB_S2_WRITE_PATHS | AB_S3_WRITE_PATHS
+AB_P4_INTEGRATION_WRITE_PATHS = frozenset(
+    {
+        "docs/VALIDATION.md",
+        "docs/BENCHMARKS.md",
+        "evals/agent-behavior/README.md",
+        "evals/agent-behavior/comparison-fixtures/structural-agent-packet.yaml",
+        "evals/agent-behavior/comparison-fixtures/structural-observations.yaml",
+        "evals/agent-behavior/comparison-fixtures/structural-oracle.yaml",
+        "evals/agent-behavior/comparison-fixtures/structural-reveal.yaml",
+        "evals/agent-behavior/comparison-fixtures/structural-verifier-capture.yaml",
+        "evals/agent-behavior/comparison-fixtures/structural.yaml",
+        "scripts/eval-agent-behavior.py",
+        "src/control-model/core-contracts.json",
+        "src/foundation/capabilities/skill-efficacy-benchmark/SKILL.md",
+        "src/foundation/capabilities/skill-efficacy-benchmark/references/benchmarks-and-patterns.md",
+        "src/foundation/capabilities/skill-efficacy-benchmark/references/checklist.md",
+        "src/foundation/capabilities/skill-efficacy-benchmark/references/evidence-patterns.md",
+        "tests/scripts/test_eval_agent_behavior.py",
+        "tests/scripts/test_impact_graph.py",
+        "tests/scripts/test_validation_utils.py",
+    }
+)
+
+AB_ALLOWED_WRITE_PATHS = (
+    AB_S1_WRITE_PATHS
+    | AB_S2_WRITE_PATHS
+    | AB_S3_WRITE_PATHS
+    | AB_P4_INTEGRATION_WRITE_PATHS
+)
 
 
 def _run_checked(
@@ -2295,6 +2501,113 @@ def _run_checked(
         stderr = result.stderr.decode("utf-8", errors="replace").strip()
         raise RuntimeError(f"{' '.join(command)} failed: {stderr}")
     return result
+
+
+def _stage_allowed_untracked_inputs(
+    repository_root: Path,
+    candidate_root: Path,
+    untracked_paths: set[str],
+) -> None:
+    """Stage the closed P4 fixture/test set into the isolated candidate subject."""
+
+    for relative in sorted(untracked_paths):
+        if relative not in AB_ALLOWED_WRITE_PATHS:
+            raise ValueError(f"A/B candidate contains out-of-scope path: {relative}")
+        source = repository_root / relative
+        try:
+            source_stat = source.lstat()
+        except OSError as exc:
+            raise ValueError(f"A/B untracked input is unreadable: {relative}") from exc
+        if stat.S_ISLNK(source_stat.st_mode) or not stat.S_ISREG(source_stat.st_mode):
+            raise ValueError(f"A/B untracked input must be a regular file: {relative}")
+        destination = candidate_root / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, destination)
+
+
+def _validate_candidate_changed_paths(
+    candidate_root: Path,
+    relative_paths: set[str],
+) -> None:
+    """Reject staged patch paths that could redirect candidate reads or execution."""
+
+    root = candidate_root.resolve()
+    for relative in sorted(relative_paths):
+        pure = PurePosixPath(relative)
+        if pure.is_absolute() or not pure.parts or ".." in pure.parts:
+            raise ValueError(f"A/B candidate path is not contained: {relative}")
+        candidate = candidate_root / pure
+        try:
+            metadata = candidate.lstat()
+        except OSError as exc:
+            raise ValueError(f"A/B candidate path is not a regular file: {relative}") from exc
+        if stat.S_ISLNK(metadata.st_mode) or not stat.S_ISREG(metadata.st_mode):
+            raise ValueError(f"A/B candidate path must be a regular non-symlink file: {relative}")
+        try:
+            candidate.resolve(strict=True).relative_to(root)
+        except (OSError, ValueError) as exc:
+            raise ValueError(f"A/B candidate path escapes containment: {relative}") from exc
+
+
+def _candidate_quality_evidence(
+    candidate_root: Path,
+    workspace: Path,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    behavior_dir = workspace / "candidate-behavior"
+    _run_checked(
+        [
+            "python3",
+            "scripts/eval-agent-behavior.py",
+            "--comparison-spec",
+            "evals/agent-behavior/comparison-fixtures/structural.yaml",
+            "--format",
+            "json",
+            "--output-dir",
+            str(behavior_dir),
+        ],
+        cwd=candidate_root,
+    )
+    behavior_paths = sorted(behavior_dir.glob("*-agent-behavior-comparison.json"))
+    if len(behavior_paths) != 1:
+        raise ValueError("candidate behavior comparison produced an ambiguous report set")
+    behavior = json.loads(behavior_paths[0].read_text(encoding="utf-8"))
+
+    professional_dir = workspace / "candidate-professional"
+    _run_checked(
+        [
+            "python3",
+            "scripts/eval-professional-benchmarks.py",
+            "--mode",
+            "comparison",
+            "--reports-dir",
+            str(professional_dir),
+        ],
+        cwd=candidate_root,
+    )
+    professional = json.loads(
+        (professional_dir / "professional-benchmarks-report.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    if professional.get("errors") != []:
+        raise ValueError("candidate professional benchmark evidence is invalid")
+    codegen = {
+        "evaluation_kind": professional.get("evaluation_kind"),
+        "evidence_class": "structural_only",
+        "live_evidence_status": CONTEXT_BUDGET_MODEL["quality_cost_gate"][
+            "not_collected_value"
+        ],
+        "verdict": CONTEXT_BUDGET_MODEL["quality_cost_gate"][
+            "missing_evidence_verdict"
+        ],
+        "claim_boundary": "captured-fixture-harness-validity-only",
+        "source_report_sha256": hashlib.sha256(
+            json.dumps(professional, sort_keys=True, separators=(",", ":")).encode(
+                "utf-8"
+            )
+        ).hexdigest(),
+    }
+    return behavior, codegen
 
 
 def _load_current_lightweight_module(path: Path) -> Any:
@@ -4233,8 +4546,6 @@ def evaluate_end_to_end_ab(
     unexpected = sorted((changed_paths | untracked) - AB_ALLOWED_WRITE_PATHS)
     if unexpected:
         raise ValueError(f"A/B candidate contains out-of-scope paths: {unexpected}")
-    if untracked:
-        raise ValueError("A/B candidate snapshot does not accept untracked inputs")
     candidate_patch = _run_checked(
         ["git", "diff", "--binary", "HEAD"], cwd=repository_root
     ).stdout
@@ -4261,6 +4572,15 @@ def evaluate_end_to_end_ab(
                     cwd=candidate_root,
                     input_bytes=candidate_patch,
                 )
+            _validate_candidate_changed_paths(candidate_root, changed_paths)
+            _stage_allowed_untracked_inputs(
+                repository_root,
+                candidate_root,
+                untracked,
+            )
+            _validate_candidate_changed_paths(
+                candidate_root, changed_paths | untracked
+            )
             baseline_document = json.loads(
                 (baseline_root / "evals/agent-light-trajectories/cases.yaml").read_text(
                     encoding="utf-8"
@@ -4333,10 +4653,19 @@ def evaluate_end_to_end_ab(
                 reports_root=workspace / "candidate-reports",
             )
             comparison = _compare_end_to_end_subjects(baseline, candidate)
+            behavior_evidence, codegen_evidence = _candidate_quality_evidence(
+                candidate_root,
+                workspace,
+            )
+            comparison["quality_cost_gate"] = _quality_first_cost_gate(
+                behavior_evidence=behavior_evidence,
+                codegen_evidence=codegen_evidence,
+                cost_comparison=comparison,
+            )
             comparison["fixed_baseline_ref"] = baseline_ref
             comparison["fixed_baseline_commit"] = baseline_commit
             comparison["candidate_start_commit"] = candidate_commit
-            comparison["candidate_changed_paths"] = sorted(changed_paths)
+            comparison["candidate_changed_paths"] = sorted(changed_paths | untracked)
             comparison["canonical_corpus"] = {
                 "focus_mapping_digest": focus_mapping["mapping_digest"],
                 "trajectory_mapping_digest": trajectory_mapping[
@@ -4373,6 +4702,10 @@ def evaluate_end_to_end_ab(
                 comparison["errors"].append("baseline lightweight subject is invalid")
             if candidate.get("lightweight_subject_errors"):
                 comparison["errors"].append("candidate lightweight subject is invalid")
+            if comparison["quality_cost_gate"]["status"] != "pass":
+                comparison["errors"].extend(
+                    comparison["quality_cost_gate"]["errors"]
+                )
             comparison["status"] = "pass" if not comparison["errors"] else "fail"
         finally:
             for root in reversed(added):
@@ -8253,6 +8586,21 @@ def _end_to_end_projection_binding(comparison: dict[str, Any]) -> dict[str, Any]
         not isinstance(row, dict) for row in ordinary_regressions
     ):
         raise ValueError("end-to-end ordinary route regressions are malformed")
+    quality_cost_gate = comparison.get("quality_cost_gate")
+    if not isinstance(quality_cost_gate, dict):
+        quality_cost_gate = {
+            "status": "not-collected",
+            "verdict": "not_enough_evidence",
+            "claim_boundary": "structural-only",
+            "quality_preserved": False,
+            "candidate_rejected": False,
+            "cost_frontier": {"eligible": False, "status": "not-evaluated"},
+            "live_evidence": {
+                "behavior": "not_collected",
+                "codegen": "not_collected",
+                "elapsed_ms": "not_collected",
+            },
+        }
     return {
         "contract": "changeforge.end-to-end-cost-projection/v1",
         "comparison_sha256": _sha256_text(payload),
@@ -8276,6 +8624,7 @@ def _end_to_end_projection_binding(comparison: dict[str, Any]) -> dict[str, Any]
             ),
             "regressions": copy.deepcopy(ordinary_regressions),
         },
+        "quality_cost_gate": copy.deepcopy(quality_cost_gate),
     }
 
 
@@ -8285,6 +8634,7 @@ def _render_end_to_end_projection_markdown(comparison: dict[str, Any]) -> str:
     authority = binding["selection_authority_summary"]
     host_matrix = binding["host_matrix"]
     ordinary_gate = binding["ordinary_route_gate"]
+    quality_gate = binding["quality_cost_gate"]
     authority_lines: list[str] = []
     for subject in ("baseline", "candidate"):
         summary = authority[subject]
@@ -8312,6 +8662,13 @@ def _render_end_to_end_projection_markdown(comparison: dict[str, Any]) -> str:
             f"Comparison SHA-256: `{binding['comparison_sha256']}`.",
             f"Subject identity SHA-256: `{binding['subject_identity_sha256']}`.",
             f"Comparable cases: **{binding['case_count']}**; status: **{binding['status']}**.",
+            "Quality-first verdict/boundary/frontier: "
+            f"**{quality_gate.get('verdict')} / {quality_gate.get('claim_boundary')} / "
+            f"{quality_gate.get('cost_frontier', {}).get('status')}**.",
+            "Live behavior/codegen/elapsed evidence: "
+            f"**{quality_gate.get('live_evidence', {}).get('behavior')} / "
+            f"{quality_gate.get('live_evidence', {}).get('codegen')} / "
+            f"{quality_gate.get('live_evidence', {}).get('elapsed_ms')}**.",
             "Host matrix logical/physical rows: "
             f"**{host_matrix.get('logical_case_count')} / "
             f"{host_matrix.get('host_pair_count')}**; digest "

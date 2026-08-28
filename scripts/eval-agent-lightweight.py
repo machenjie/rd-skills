@@ -620,9 +620,13 @@ GENERIC_CAPABILITY_STATES = set(
 )
 TASK_BOUNDARY_MODEL = CORE_CONTRACTS["task_contract"]["task_boundary"]
 FINDING_RELATION_MODEL = CORE_CONTRACTS["task_contract"]["finding_relations"]
+FINDING_COMPILER_MODEL = REVIEW_DISCIPLINE_MODEL["review_boundary_contract"][
+    "finding_compiler"
+]
 REVIEW_CONVERGENCE_MODEL = CORE_CONTRACTS["task_contract"]["repair_routing"][
     "review_convergence"
 ]
+SEMANTIC_TRAJECTORY_MODEL = REVIEW_CONVERGENCE_MODEL["semantic_trajectory"]
 MAX_AUTOMATIC_REPAIR_ROUNDS_PER_TASK = REVIEW_CONVERGENCE_MODEL[
     "maximum_automatic_repair_rounds_per_task_id"
 ]
@@ -660,6 +664,813 @@ UTILITY_CAPABILITY_OPERATIONS = {
     "non-mutating-validation",
 }
 WORKSPACE_CHECK_COMMANDS = ("workspace-state-observation",)
+
+
+def _stable_unique(values: list[Any]) -> list[Any]:
+    result: list[Any] = []
+    fingerprints: set[str] = set()
+    for value in values:
+        fingerprint = json.dumps(
+            value,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        if fingerprint in fingerprints:
+            continue
+        fingerprints.add(fingerprint)
+        result.append(copy.deepcopy(value))
+    return result
+
+
+def _canonical_repair_obligation(finding: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "finding_id": finding["canonical_finding_id"],
+        "source_finding_ids": copy.deepcopy(finding["source_finding_ids"]),
+        "relation": finding["finding_relation"],
+        "source_reviewer_evidence": copy.deepcopy(
+            finding["source_reviewer_evidence"]
+        ),
+        "affected_scope": copy.deepcopy(finding["affected_scope"]),
+        "acceptance_or_risk_impacts": copy.deepcopy(
+            finding["acceptance_or_risk_impacts"]
+        ),
+        "defect": finding["defect"],
+        "violated_invariant": finding["violated_invariant"],
+        "failure_mechanism": finding["failure_mechanism"],
+        "fix_path": finding["fix_path"],
+        "required_validation": copy.deepcopy(finding["required_validation"]),
+        "required_covering_rereview": copy.deepcopy(
+            finding["required_covering_rereview"]
+        ),
+        "freshness": copy.deepcopy(finding["freshness"]),
+        "proof_limits": copy.deepcopy(finding["proof_limits"]),
+    }
+
+
+def _parse_review_handoff_findings(
+    handoff: str,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Parse the public Review Handoff finding shape into compiler input."""
+
+    if not isinstance(handoff, str):
+        return [], ["finding-compiler-shape: Review Handoff must be text"]
+    matches = list(re.finditer(r"(?m)^Finding Identity:\s*(\S[^\n]*)$", handoff))
+    if "## Findings" in handoff and not matches:
+        return [], ["finding-compiler-identity: Findings require a visible identity"]
+    rows: list[dict[str, Any]] = []
+    errors: list[str] = []
+    seen: set[str] = set()
+
+    def field(block: str, label: str) -> str | None:
+        match = re.search(rf"(?m)^{re.escape(label)}:\s*(.*)$", block)
+        return match.group(1).strip() if match else None
+
+    for index, match in enumerate(matches):
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(handoff)
+        block = handoff[match.start():end]
+        identity = match.group(1).strip()
+        if not identity or identity in seen:
+            errors.append(
+                "finding-compiler-identity: visible Finding Identity must be non-empty and not duplicate"
+            )
+            continue
+        seen.add(identity)
+        labels = {
+            "relation": "Finding Relation",
+            "review_round_id": "Review Round ID",
+            "task_id": "Task ID",
+            "category": "Category",
+            "repair_required": "Repair required",
+            "description": "Description",
+            "protected_decision_boundary": "Protected Decision Boundary",
+            "defect": "Defect",
+            "violated_invariant": "Violated invariant",
+            "failure_mechanism": "Failure mechanism",
+            "fix_path": "Fix path",
+            "source_reviewer_evidence": "Source reviewer evidence",
+            "affected_scope": "Affected scope",
+            "acceptance_or_risk_impact": "Acceptance or risk impact",
+            "required_validation": "Required validation",
+            "required_covering_rereview": "Required covering re-review",
+            "freshness": "Freshness",
+            "proof_limit": "Proof Limit",
+        }
+        values = {key: field(block, label) for key, label in labels.items()}
+        missing = [key for key, value in values.items() if value is None or not value]
+        if missing:
+            errors.append(
+                "finding-compiler-shape: visible Finding is missing " + ", ".join(missing)
+            )
+            continue
+        repair_text = str(values["repair_required"]).casefold()
+        if repair_text not in {"true", "false"}:
+            errors.append("finding-compiler-shape: Repair required must be true or false")
+            continue
+        evidence_parts = [part.strip() for part in str(values["source_reviewer_evidence"]).split("|", 1)]
+        rereview_parts = [part.strip() for part in str(values["required_covering_rereview"]).split("|", 1)]
+        if len(evidence_parts) != 2 or len(rereview_parts) != 2 or rereview_parts[1] != "same-or-stronger":
+            errors.append("finding-compiler-shape: visible evidence or re-review binding is malformed")
+            continue
+        task_id = str(values["task_id"])
+        rows.append(
+            {
+                "finding_identity": identity,
+                "task_id": task_id,
+                "review_round_id": str(values["review_round_id"]),
+                "relation": str(values["relation"]),
+                "protected_decision_boundary": str(values["protected_decision_boundary"]),
+                "category": str(values["category"]),
+                "repair_required": repair_text == "true",
+                "description": str(values["description"]),
+                "defect": str(values["defect"]),
+                "violated_invariant": str(values["violated_invariant"]),
+                "failure_mechanism": str(values["failure_mechanism"]),
+                "fix_path": str(values["fix_path"]),
+                "source_reviewer_evidence": [
+                    {"reviewer_result_id": evidence_parts[0], "evidence": evidence_parts[1]}
+                ],
+                "affected_scope": [part.strip() for part in str(values["affected_scope"]).split(",") if part.strip()],
+                "acceptance_or_risk_impact": str(values["acceptance_or_risk_impact"]),
+                "required_validation": [part.strip() for part in str(values["required_validation"]).split(",") if part.strip()],
+                "required_covering_rereview": {
+                    "covered_task_ids": [part.strip() for part in rereview_parts[0].split(",") if part.strip()],
+                    "same_or_stronger": True,
+                },
+                "freshness": str(values["freshness"]),
+                "proof_limit": str(values["proof_limit"]),
+            }
+        )
+    return ([], errors) if errors else (rows, [])
+
+
+def _compile_canonical_findings(
+    raw_findings: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[str]]:
+    errors: list[str] = []
+    normalized: list[dict[str, Any]] = []
+    required_fields = tuple(FINDING_COMPILER_MODEL["raw_required_fields"])
+    relations = set(FINDING_RELATION_MODEL["values"])
+    seen_ids: set[str] = set()
+
+    for index, raw in enumerate(raw_findings):
+        prefix = f"finding-compiler input {index}"
+        if not isinstance(raw, dict):
+            errors.append(f"finding-compiler-shape: {prefix} must be a mapping")
+            continue
+        missing = [field for field in required_fields if field not in raw]
+        if missing:
+            errors.append(
+                f"finding-compiler-shape: {prefix} missing {', '.join(missing)}"
+            )
+            continue
+        finding_id = raw.get("finding_identity")
+        if (
+            not isinstance(finding_id, str)
+            or not finding_id.strip()
+            or finding_id in seen_ids
+        ):
+            errors.append(
+                f"finding-compiler-identity: {prefix} finding_identity must be non-empty and unique"
+            )
+            continue
+        seen_ids.add(finding_id)
+        relation = raw.get("relation")
+        scalar_fields = (
+            "task_id",
+            "review_round_id",
+            "protected_decision_boundary",
+            "category",
+            "description",
+            "defect",
+            "violated_invariant",
+            "failure_mechanism",
+            "fix_path",
+            "acceptance_or_risk_impact",
+            "freshness",
+            "proof_limit",
+        )
+        invalid_scalars = [
+            field
+            for field in scalar_fields
+            if not isinstance(raw.get(field), str) or not raw[field].strip()
+        ]
+        if invalid_scalars:
+            semantic_fields = {
+                "defect",
+                "violated_invariant",
+                "failure_mechanism",
+                "fix_path",
+            }
+            error_id = (
+                "finding-compiler-semantic-basis"
+                if semantic_fields.intersection(invalid_scalars)
+                else "finding-compiler-shape"
+            )
+            errors.append(
+                f"{error_id}: {prefix} requires non-empty {', '.join(invalid_scalars)}"
+            )
+            continue
+        if relation not in relations:
+            errors.append(
+                f"finding-compiler-partition: {prefix} relation must use the Core enum"
+            )
+            continue
+        if not isinstance(raw.get("repair_required"), bool):
+            errors.append(
+                f"finding-compiler-shape: {prefix} repair_required must be boolean"
+            )
+            continue
+        evidence = raw.get("source_reviewer_evidence")
+        if (
+            not isinstance(evidence, list)
+            or not evidence
+            or any(
+                not isinstance(item, dict)
+                or set(item) != {"reviewer_result_id", "evidence"}
+                or not isinstance(item.get("reviewer_result_id"), str)
+                or not item["reviewer_result_id"].strip()
+                or not isinstance(item.get("evidence"), str)
+                or not item["evidence"].strip()
+                for item in evidence
+            )
+        ):
+            errors.append(
+                f"finding-compiler-evidence: {prefix} requires non-empty source reviewer evidence"
+            )
+            continue
+        affected_scope = raw.get("affected_scope")
+        required_validation = raw.get("required_validation")
+        if any(
+            not isinstance(values, list)
+            or not values
+            or any(not isinstance(value, str) or not value.strip() for value in values)
+            for values in (affected_scope, required_validation)
+        ):
+            errors.append(
+                f"finding-compiler-obligation: {prefix} requires affected scope and validation"
+            )
+            continue
+        rereview = raw.get("required_covering_rereview")
+        if (
+            not isinstance(rereview, dict)
+            or set(rereview) != {"covered_task_ids", "same_or_stronger"}
+            or rereview.get("same_or_stronger") is not True
+            or not isinstance(rereview.get("covered_task_ids"), list)
+            or raw["task_id"] not in rereview["covered_task_ids"]
+            or any(
+                not isinstance(task_id, str) or not task_id.strip()
+                for task_id in rereview["covered_task_ids"]
+            )
+        ):
+            errors.append(
+                f"finding-compiler-obligation: {prefix} requires a covering re-review bound to its Task ID"
+            )
+            continue
+        normalized.append(
+            {
+                **raw,
+                "finding_identity": finding_id.strip(),
+                "task_id": raw["task_id"].strip(),
+                "review_round_id": raw["review_round_id"].strip(),
+                "relation": str(relation),
+                "protected_decision_boundary": raw[
+                    "protected_decision_boundary"
+                ].strip(),
+                "category": raw["category"].strip(),
+                "description": raw["description"].strip(),
+                "defect": raw["defect"].strip(),
+                "violated_invariant": raw["violated_invariant"].strip(),
+                "failure_mechanism": raw["failure_mechanism"].strip(),
+                "fix_path": raw["fix_path"].strip(),
+                "source_reviewer_evidence": _stable_unique(evidence),
+                "affected_scope": _stable_unique(
+                    [value.strip() for value in affected_scope]
+                ),
+                "acceptance_or_risk_impact": raw[
+                    "acceptance_or_risk_impact"
+                ].strip(),
+                "required_validation": _stable_unique(
+                    [value.strip() for value in required_validation]
+                ),
+                "required_covering_rereview": {
+                    "covered_task_ids": _stable_unique(
+                        [
+                            value.strip()
+                            for value in rereview["covered_task_ids"]
+                        ]
+                    ),
+                    "same_or_stronger": True,
+                },
+                "freshness": raw["freshness"].strip(),
+                "proof_limit": raw["proof_limit"].strip(),
+            }
+        )
+
+    if errors:
+        return [], errors
+
+    canonical: list[dict[str, Any]] = []
+    exact_keys: list[str] = []
+    semantic_keys: list[str] = []
+    exact_key_fields = [
+        field
+        for field in required_fields
+        if field not in {"finding_identity", "source_reviewer_evidence"}
+    ]
+    for raw in normalized:
+        partition = [
+            raw["task_id"],
+            raw["review_round_id"],
+            raw["relation"],
+            raw["protected_decision_boundary"],
+        ]
+        exact_key = json.dumps(
+            [partition, [raw[field] for field in exact_key_fields]],
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        semantic_key = json.dumps(
+            [
+                partition,
+                raw["defect"],
+                raw["violated_invariant"],
+                raw["failure_mechanism"],
+                raw["fix_path"],
+            ],
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
+        merge_index = next(
+            (index for index, candidate in enumerate(exact_keys) if candidate == exact_key),
+            None,
+        )
+        if merge_index is None:
+            merge_index = next(
+                (
+                    index
+                    for index, candidate in enumerate(semantic_keys)
+                    if candidate == semantic_key
+                ),
+                None,
+            )
+        if merge_index is None:
+            canonical.append(
+                {
+                    "canonical_finding_id": raw["finding_identity"],
+                    "source_finding_ids": [raw["finding_identity"]],
+                    "task_id": raw["task_id"],
+                    "review_round_id": raw["review_round_id"],
+                    "finding_relation": raw["relation"],
+                    "protected_decision_boundary": raw[
+                        "protected_decision_boundary"
+                    ],
+                    "categories": [raw["category"]],
+                    "descriptions": [raw["description"]],
+                    "defect": raw["defect"],
+                    "violated_invariant": raw["violated_invariant"],
+                    "failure_mechanism": raw["failure_mechanism"],
+                    "fix_path": raw["fix_path"],
+                    "source_reviewer_evidence": copy.deepcopy(
+                        raw["source_reviewer_evidence"]
+                    ),
+                    "affected_scope": copy.deepcopy(raw["affected_scope"]),
+                    "acceptance_or_risk_impacts": [
+                        raw["acceptance_or_risk_impact"]
+                    ],
+                    "required_validation": copy.deepcopy(
+                        raw["required_validation"]
+                    ),
+                    "required_covering_rereview": copy.deepcopy(
+                        raw["required_covering_rereview"]
+                    ),
+                    "freshness": [raw["freshness"]],
+                    "proof_limits": [raw["proof_limit"]],
+                    "repair_required": raw["repair_required"],
+                }
+            )
+            exact_keys.append(exact_key)
+            semantic_keys.append(semantic_key)
+            continue
+
+        merged = canonical[merge_index]
+        merged["source_finding_ids"] = _stable_unique(
+            [*merged["source_finding_ids"], raw["finding_identity"]]
+        )
+        for field, values in (
+            ("categories", [raw["category"]]),
+            ("descriptions", [raw["description"]]),
+            ("source_reviewer_evidence", raw["source_reviewer_evidence"]),
+            ("affected_scope", raw["affected_scope"]),
+            ("acceptance_or_risk_impacts", [raw["acceptance_or_risk_impact"]]),
+            ("required_validation", raw["required_validation"]),
+            ("freshness", [raw["freshness"]]),
+            ("proof_limits", [raw["proof_limit"]]),
+        ):
+            merged[field] = _stable_unique([*merged[field], *values])
+        merged["required_covering_rereview"]["covered_task_ids"] = _stable_unique(
+            [
+                *merged["required_covering_rereview"]["covered_task_ids"],
+                *raw["required_covering_rereview"]["covered_task_ids"],
+            ]
+        )
+        merged["repair_required"] = (
+            merged["repair_required"] or raw["repair_required"]
+        )
+
+    return canonical, []
+
+
+def _classify_semantic_repair_trajectory(
+    evidence: object,
+) -> tuple[dict[str, Any], list[str]]:
+    """Classify one handoff-visible repair trajectory without PASS authority."""
+
+    default = {
+        "classification": "indeterminate",
+        "disposition": SEMANTIC_TRAJECTORY_MODEL[
+            "classification_dispositions"
+        ]["indeterminate"],
+        "bounded_scope": [],
+        "basis": [],
+        "pass_authority": False,
+        "reroute_authority": False,
+    }
+    if not isinstance(evidence, dict):
+        return default, [
+            "semantic-convergence-shape: evidence must be a current Review Handoff mapping"
+        ]
+
+    errors: list[str] = []
+    expected_fields = set(SEMANTIC_TRAJECTORY_MODEL["evidence_fields"])
+    if set(evidence) != expected_fields:
+        errors.append(
+            "semantic-convergence-shape: evidence fields must exactly match the Core contract"
+        )
+
+    task_id = evidence.get("task_id")
+    protected_boundary = evidence.get("protected_decision_boundary")
+    original_scope = evidence.get("original_task_scope")
+    if not isinstance(task_id, str) or not task_id.strip():
+        errors.append("semantic-convergence-boundary: Task ID must be non-empty")
+    if not isinstance(protected_boundary, str) or not protected_boundary.strip():
+        errors.append(
+            "semantic-convergence-boundary: protected decision boundary must be non-empty"
+        )
+    if (
+        not isinstance(original_scope, list)
+        or not original_scope
+        or any(
+            not isinstance(scope, str) or not scope.strip()
+            for scope in original_scope
+        )
+    ):
+        errors.append(
+            "semantic-convergence-boundary: original Task scope must be a non-empty text list"
+        )
+        original_scope_set: set[str] = set()
+    else:
+        original_scope_set = {scope.strip() for scope in original_scope}
+
+    history = evidence.get("canonical_finding_history")
+    canonical_rounds: list[list[dict[str, Any]]] = []
+    canonical_ids: set[str] = set()
+    canonical_fields = {
+        "canonical_finding_id",
+        "task_id",
+        "review_round_id",
+        "finding_relation",
+        "protected_decision_boundary",
+        "defect",
+        "violated_invariant",
+        "failure_mechanism",
+        "fix_path",
+        "source_reviewer_evidence",
+        "affected_scope",
+    }
+    if not isinstance(history, list) or len(history) < 2:
+        errors.append(
+            "semantic-convergence-history: repair convergence requires at least two canonical Review Handoffs"
+        )
+    else:
+        for round_index, round_entry in enumerate(history):
+            if not isinstance(round_entry, dict) or set(round_entry) != {
+                "review_round_id",
+                "canonical_findings",
+                "current_source_evidence",
+            }:
+                errors.append(
+                    f"semantic-convergence-history: round {round_index} has an invalid handoff shape"
+                )
+                continue
+            round_id = round_entry.get("review_round_id")
+            round_evidence = round_entry.get("current_source_evidence")
+            findings = round_entry.get("canonical_findings")
+            if not isinstance(round_id, str) or not round_id.strip():
+                errors.append(
+                    f"semantic-convergence-history: round {round_index} requires a Review Round ID"
+                )
+            if (
+                not isinstance(round_evidence, list)
+                or not round_evidence
+                or any(
+                    not isinstance(item, str) or not item.strip()
+                    for item in round_evidence
+                )
+            ):
+                errors.append(
+                    f"semantic-convergence-evidence: round {round_index} requires current source evidence"
+                )
+            if not isinstance(findings, list) or not findings:
+                errors.append(
+                    f"semantic-convergence-history: round {round_index} requires canonical findings"
+                )
+                continue
+            valid_round: list[dict[str, Any]] = []
+            for finding_index, finding in enumerate(findings):
+                prefix = f"round {round_index} finding {finding_index}"
+                if not isinstance(finding, dict) or not canonical_fields <= set(
+                    finding
+                ):
+                    errors.append(
+                        f"semantic-convergence-canonical: {prefix} is not a P2 canonical finding"
+                    )
+                    continue
+                finding_id = finding.get("canonical_finding_id")
+                affected_scope = finding.get("affected_scope")
+                source_evidence = finding.get("source_reviewer_evidence")
+                semantic_values = [
+                    finding.get("defect"),
+                    finding.get("violated_invariant"),
+                    finding.get("failure_mechanism"),
+                    finding.get("fix_path"),
+                ]
+                if (
+                    not isinstance(finding_id, str)
+                    or not finding_id.strip()
+                    or finding_id in canonical_ids
+                ):
+                    errors.append(
+                        f"semantic-convergence-canonical: {prefix} identity must be non-empty and trajectory-unique"
+                    )
+                    continue
+                canonical_ids.add(finding_id)
+                if (
+                    finding.get("task_id") != task_id
+                    or finding.get("review_round_id") != round_id
+                    or finding.get("finding_relation") != "current-task"
+                    or finding.get("protected_decision_boundary")
+                    != protected_boundary
+                ):
+                    errors.append(
+                        f"semantic-convergence-boundary: {prefix} crosses the Task, Review Round, Finding Relation, or protected decision boundary"
+                    )
+                if any(
+                    not isinstance(value, str) or not value.strip()
+                    for value in semantic_values
+                ):
+                    errors.append(
+                        f"semantic-convergence-canonical: {prefix} lacks a complete canonical defect basis"
+                    )
+                if (
+                    not isinstance(source_evidence, list)
+                    or not source_evidence
+                    or not isinstance(affected_scope, list)
+                    or not affected_scope
+                    or any(
+                        not isinstance(scope, str) or not scope.strip()
+                        for scope in affected_scope
+                    )
+                ):
+                    errors.append(
+                        f"semantic-convergence-evidence: {prefix} lacks source evidence or affected scope"
+                    )
+                elif not set(affected_scope) <= original_scope_set:
+                    errors.append(
+                        f"semantic-convergence-boundary: {prefix} exceeds original Task scope"
+                    )
+                valid_round.append(finding)
+            canonical_rounds.append(valid_round)
+
+    def evidence_rows(
+        field: str,
+        required_keys: set[str],
+    ) -> list[dict[str, Any]]:
+        rows = evidence.get(field)
+        if not isinstance(rows, list):
+            errors.append(
+                f"semantic-convergence-shape: {field} must be a list"
+            )
+            return []
+        valid: list[dict[str, Any]] = []
+        for index, row in enumerate(rows):
+            if not isinstance(row, dict) or set(row) != required_keys:
+                errors.append(
+                    f"semantic-convergence-evidence: {field}[{index}] has an invalid shape"
+                )
+                continue
+            source = row.get("current_source_evidence")
+            if not isinstance(source, str) or not source.strip():
+                errors.append(
+                    f"semantic-convergence-evidence: {field}[{index}] requires current source evidence"
+                )
+                continue
+            valid.append(row)
+        return valid
+
+    resolved = evidence_rows(
+        "inherited_resolution_evidence",
+        {"canonical_finding_id", "resolved", "current_source_evidence"},
+    )
+    independent = evidence_rows(
+        "independent_new_defect_evidence",
+        {"canonical_finding_id", "independent", "current_source_evidence"},
+    )
+    rebroken = evidence_rows(
+        "rebroken_verified_invariant_evidence",
+        {"invariant", "current_source_evidence"},
+    )
+    explicit_cycle = evidence.get("explicit_failure_set_cycle_evidence")
+    if (
+        not isinstance(explicit_cycle, list)
+        or any(
+            not isinstance(item, str) or not item.strip()
+            for item in explicit_cycle
+        )
+    ):
+        errors.append(
+            "semantic-convergence-evidence: explicit failure-set cycle evidence must be a text list"
+        )
+        explicit_cycle = []
+
+    prior_findings = canonical_rounds[-2] if len(canonical_rounds) >= 2 else []
+    current_findings = canonical_rounds[-1] if canonical_rounds else []
+    prior_ids = {finding["canonical_finding_id"] for finding in prior_findings}
+    current_ids = {
+        finding["canonical_finding_id"] for finding in current_findings
+    }
+    resolved_ids = {
+        row.get("canonical_finding_id")
+        for row in resolved
+        if row.get("resolved") is True
+    }
+    independent_ids = {
+        row.get("canonical_finding_id")
+        for row in independent
+        if row.get("independent") is True
+    }
+    referenced_ids = {
+        row.get("canonical_finding_id") for row in [*resolved, *independent]
+    }
+    if any(
+        not isinstance(finding_id, str) or finding_id not in canonical_ids
+        for finding_id in referenced_ids
+    ):
+        errors.append(
+            "semantic-convergence-evidence: resolution and independence evidence must reference canonical findings"
+        )
+
+    prior_invariants = {
+        finding["violated_invariant"]
+        for findings in canonical_rounds[:-1]
+        for finding in findings
+    }
+    if any(row.get("invariant") not in prior_invariants for row in rebroken):
+        errors.append(
+            "semantic-convergence-evidence: rebroken evidence must name a previously verified canonical invariant"
+        )
+
+    bounded_scope: list[str] = []
+    bounded_class = False
+    finite = evidence.get("finite_sibling_scope")
+    if finite is not None:
+        if not isinstance(finite, dict) or set(finite) != {
+            "sites",
+            "treatment",
+            "current_source_evidence",
+        }:
+            errors.append(
+                "semantic-convergence-bounded-scope: finite sibling evidence has an invalid shape"
+            )
+        else:
+            sites = finite.get("sites")
+            treatment = finite.get("treatment")
+            source = finite.get("current_source_evidence")
+            if (
+                not isinstance(sites, list)
+                or len(sites) < 2
+                or len(sites) != len(set(sites))
+                or any(
+                    not isinstance(site, str) or not site.strip()
+                    for site in sites
+                )
+                or not isinstance(treatment, str)
+                or not treatment.strip()
+                or not isinstance(source, list)
+                or not source
+                or any(
+                    not isinstance(item, str) or not item.strip()
+                    for item in source
+                )
+            ):
+                errors.append(
+                    "semantic-convergence-bounded-scope: finite siblings require unique sites, one treatment, and current source evidence"
+                )
+            else:
+                all_findings = [
+                    finding for findings in canonical_rounds for finding in findings
+                ]
+                invariants = {
+                    finding["violated_invariant"] for finding in all_findings
+                }
+                mechanisms = {
+                    finding["failure_mechanism"] for finding in all_findings
+                }
+                treatments = {finding["fix_path"] for finding in all_findings}
+                actual_sites = {
+                    scope
+                    for finding in all_findings
+                    for scope in finding["affected_scope"]
+                }
+                site_set = set(sites)
+                if (
+                    len(invariants) != 1
+                    or len(mechanisms) != 1
+                    or treatments != {treatment}
+                    or actual_sites != site_set
+                    or not site_set <= original_scope_set
+                ):
+                    errors.append(
+                        "semantic-convergence-bounded-scope: class evidence must prove the same invariant, mechanism, treatment, and exact finite scope inside the original Task boundary"
+                    )
+                else:
+                    bounded_class = True
+                    bounded_scope = list(sites)
+
+    def failure_set(findings: list[dict[str, Any]]) -> tuple[tuple[str, ...], ...]:
+        return tuple(
+            sorted(
+                {
+                    (
+                        finding["defect"],
+                        finding["violated_invariant"],
+                        finding["failure_mechanism"],
+                        finding["fix_path"],
+                    )
+                    for finding in findings
+                }
+            )
+        )
+
+    failure_sets = [failure_set(findings) for findings in canonical_rounds]
+    aba_cycle = (
+        len(failure_sets) >= 3
+        and failure_sets[-3]
+        and failure_sets[-3] == failure_sets[-1]
+        and failure_sets[-2] != failure_sets[-1]
+    )
+    if errors:
+        return default, list(dict.fromkeys(errors))
+
+    if aba_cycle or rebroken or explicit_cycle:
+        classification = "oscillating"
+        basis = [
+            basis
+            for proven, basis in (
+                (aba_cycle, "canonical-failure-set-A-B-A"),
+                (bool(rebroken), "previously-verified-invariant-rebroken"),
+                (bool(explicit_cycle), "explicit-failure-set-cycle"),
+            )
+            if proven
+        ]
+    elif bounded_class:
+        classification = "bounded-class"
+        basis = ["source-proven-finite-sibling-class"]
+    elif (
+        bool(prior_ids)
+        and bool(current_ids)
+        and resolved_ids == prior_ids
+        and independent_ids == current_ids
+        and prior_ids.isdisjoint(current_ids)
+        and not rebroken
+    ):
+        classification = "progressing"
+        basis = ["resolved-inherited-and-independent-new-defect"]
+    else:
+        classification = "indeterminate"
+        basis = ["insufficient-evidence-for-stronger-classification"]
+
+    return {
+        "classification": classification,
+        "disposition": SEMANTIC_TRAJECTORY_MODEL[
+            "classification_dispositions"
+        ][classification],
+        "bounded_scope": bounded_scope if classification == "bounded-class" else [],
+        "basis": basis,
+        "pass_authority": False,
+        "reroute_authority": False,
+    }, []
 
 
 def _git_diff_header_paths(header: str) -> tuple[str, str] | None:
@@ -6780,6 +7591,8 @@ def _orchestration_case_result(
     covering_rereview_seen = False
     repair_seen = False
     pending_repair_findings: dict[str, dict[str, Any]] = {}
+    raw_findings_by_id: dict[str, dict[str, Any]] = {}
+    compiler_declared_finding_ids: set[str] = set()
     finding_relations_by_id: dict[str, str] = {}
     seen_finding_ids: set[str] = set()
     findings_by_round_task: dict[tuple[str, str], list[str]] = {}
@@ -6995,22 +7808,28 @@ def _orchestration_case_result(
                             "Repair is forbidden until the fixed Review Boundary pass is complete",
                         )
                     expected_obligations = [
-                        {
-                            "finding_id": finding_id,
-                            "relation": finding_relations_by_id.get(finding_id),
-                            "affected_scope": pending_repair_findings[finding_id].get(
-                                "affected_scope"
-                            ),
-                            "acceptance_or_risk_impact": pending_repair_findings[
-                                finding_id
-                            ].get("acceptance_or_risk_impact"),
-                            "required_validation": pending_repair_findings[
-                                finding_id
-                            ].get("required_validation"),
-                            "required_covering_rereview": pending_repair_findings[
-                                finding_id
-                            ].get("required_covering_rereview"),
-                        }
+                        (
+                            _canonical_repair_obligation(
+                                pending_repair_findings[finding_id]["canonical"]
+                            )
+                            if "canonical" in pending_repair_findings[finding_id]
+                            else {
+                                "finding_id": finding_id,
+                                "relation": finding_relations_by_id.get(finding_id),
+                                "affected_scope": pending_repair_findings[
+                                    finding_id
+                                ].get("affected_scope"),
+                                "acceptance_or_risk_impact": pending_repair_findings[
+                                    finding_id
+                                ].get("acceptance_or_risk_impact"),
+                                "required_validation": pending_repair_findings[
+                                    finding_id
+                                ].get("required_validation"),
+                                "required_covering_rereview": pending_repair_findings[
+                                    finding_id
+                                ].get("required_covering_rereview"),
+                            }
+                        )
                         for finding_id in resolved_finding_ids
                         if finding_id in pending_repair_findings
                     ]
@@ -7449,16 +8268,19 @@ def _orchestration_case_result(
                         "review-complete-pass",
                         "every non-fundamental Review outcome requires a Review Round ID",
                     )
-                if action == "review" and not initial_review_completion_is_complete(
-                    event
-                ):
+                review_completion_valid = (
+                    initial_review_completion_is_complete(event)
+                    if action == "review"
+                    else focused_rereview_completion_is_complete(event)
+                )
+                if action == "review" and not review_completion_valid:
                     reject(
                         "review-complete-pass",
                         "Initial Review requires complete fixed scope, base dimensions, and professional-risk dimensions",
                     )
                 if (
                     action == "re-review"
-                    and not focused_rereview_completion_is_complete(event)
+                    and not review_completion_valid
                 ):
                     reject(
                         "review-complete-pass",
@@ -7489,6 +8311,79 @@ def _orchestration_case_result(
                         "review-complete-pass",
                         "the closing Review Handoff must contain every evidence-backed Finding from the fixed round and boundary",
                     )
+                structured_finding_ids = [
+                    finding_id
+                    for finding_id in expected_finding_ids
+                    if finding_id in compiler_declared_finding_ids
+                ]
+                if (
+                    review_completion_valid
+                    and finding_membership_valid
+                    and reported_finding_ids == expected_finding_ids
+                    and structured_finding_ids
+                ):
+                    if structured_finding_ids != expected_finding_ids:
+                        reject(
+                            "finding-compiler-shape",
+                            "one Primary Review closing artifact cannot mix legacy and canonical compiler Finding inputs",
+                        )
+                    else:
+                        raw_compiler_findings = [
+                            raw_findings_by_id[finding_id]
+                            for finding_id in expected_finding_ids
+                            if finding_id in raw_findings_by_id
+                        ]
+                        canonical_findings, compiler_errors = (
+                            _compile_canonical_findings(raw_compiler_findings)
+                        )
+                        for compiler_error in compiler_errors:
+                            reject(
+                                compiler_error.split(":", 1)[0],
+                                compiler_error,
+                            )
+                        for canonical in canonical_findings:
+                            if (
+                                canonical["finding_relation"] != "current-task"
+                                or canonical["repair_required"] is not True
+                            ):
+                                continue
+                            canonical_id = canonical["canonical_finding_id"]
+                            source_records = [
+                                raw_findings_by_id[source_id]
+                                for source_id in canonical["source_finding_ids"]
+                            ]
+                            finding_relations_by_id[canonical_id] = canonical[
+                                "finding_relation"
+                            ]
+                            pending_repair_findings[canonical_id] = {
+                                "task_id": canonical["task_id"],
+                                "review_round_id": canonical[
+                                    "review_round_id"
+                                ],
+                                "specialists": set().union(
+                                    *(
+                                        set(source.get("_derived_specialists", []))
+                                        for source in source_records
+                                    )
+                                ),
+                                "risks": set().union(
+                                    *(
+                                        set(source.get("_derived_risks", []))
+                                        for source in source_records
+                                    )
+                                ),
+                                "affected_scope": canonical["affected_scope"],
+                                "acceptance_or_risk_impact": canonical[
+                                    "acceptance_or_risk_impacts"
+                                ],
+                                "required_validation": canonical[
+                                    "required_validation"
+                                ],
+                                "required_covering_rereview": canonical[
+                                    "required_covering_rereview"
+                                ],
+                                "canonical": canonical,
+                            }
                 blocking_finding_ids = [
                     finding_id
                     for finding_id in expected_finding_ids
@@ -7517,6 +8412,20 @@ def _orchestration_case_result(
             category = event.get("category")
             task_id = event.get("task_id")
             repair_required = event.get("repair_required") is True
+            compiler_declared = any(
+                field in event
+                for field in (
+                    "protected_decision_boundary",
+                    "description",
+                    "defect",
+                    "violated_invariant",
+                    "failure_mechanism",
+                    "fix_path",
+                    "source_reviewer_evidence",
+                    "freshness",
+                    "proof_limit",
+                )
+            )
             if relation not in finding_relations:
                 reject("finding-relation", "Finding relation must use the closed Core enum")
             if category not in finding_categories:
@@ -7555,6 +8464,13 @@ def _orchestration_case_result(
                     findings_by_round_task.setdefault(round_key, []).append(
                         finding_id
                     )
+                    raw_finding = copy.deepcopy(event)
+                    raw_finding["finding_identity"] = raw_finding.pop(
+                        "finding_id", finding_id
+                    )
+                    raw_findings_by_id[finding_id] = raw_finding
+                    if compiler_declared:
+                        compiler_declared_finding_ids.add(finding_id)
                     round_completion_action = round_completion_action_by_key.get(
                         (str(review_round_id), str(task_id))
                     )
@@ -7659,6 +8575,13 @@ def _orchestration_case_result(
                             for impact in impact_dimensions
                         )
                     }
+                    if finding_id in raw_findings_by_id:
+                        raw_findings_by_id[finding_id]["_derived_risks"] = sorted(
+                            derived_risks
+                        )
+                        raw_findings_by_id[finding_id][
+                            "_derived_specialists"
+                        ] = sorted(derived_specialists)
                     review_round_id = event.get("review_round_id")
                     affected_scope = event.get("affected_scope")
                     acceptance_or_risk_impact = event.get(
@@ -7686,16 +8609,17 @@ def _orchestration_case_result(
                             "finding-obligation",
                             "round-bound material Finding must declare affected scope, impact, validation, and covering re-review",
                         )
-                    pending_repair_findings[finding_id] = {
-                        "task_id": task_id,
-                        "review_round_id": review_round_id,
-                        "specialists": derived_specialists,
-                        "risks": derived_risks,
-                        "affected_scope": affected_scope,
-                        "acceptance_or_risk_impact": acceptance_or_risk_impact,
-                        "required_validation": required_validation,
-                        "required_covering_rereview": required_covering_rereview,
-                    }
+                    if not compiler_declared:
+                        pending_repair_findings[finding_id] = {
+                            "task_id": task_id,
+                            "review_round_id": review_round_id,
+                            "specialists": derived_specialists,
+                            "risks": derived_risks,
+                            "affected_scope": affected_scope,
+                            "acceptance_or_risk_impact": acceptance_or_risk_impact,
+                            "required_validation": required_validation,
+                            "required_covering_rereview": required_covering_rereview,
+                        }
             if relation == "scope-blocker" and finding_identity_valid:
                 finding_routes["scope_blocker"].append(finding_id)
                 closing_review_index = next(

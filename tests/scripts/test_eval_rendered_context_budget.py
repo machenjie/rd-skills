@@ -3202,7 +3202,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                         self._focus_row(case), case, root, subject="candidate", host="codex"
                     )
 
-    def test_end_to_end_ab_gate_uses_aggregate_conservation_not_legacy_ratio(self) -> None:
+    def test_end_to_end_ab_cost_observation_does_not_authorize_or_reject_quality(self) -> None:
         equal = EVAL._compare_end_to_end_subjects(
             self._ab_subject(100), self._ab_subject(100)
         )
@@ -3215,11 +3215,139 @@ class RenderedContextBudgetTests(unittest.TestCase):
         one_over = EVAL._compare_end_to_end_subjects(
             self._ab_subject(100), self._ab_subject(101)
         )
-        self.assertEqual("fail", one_over["status"])
-        self.assertTrue(
-            any("exceeds baseline" in error for error in one_over["errors"]),
-            one_over["errors"],
+        self.assertEqual("pass", one_over["status"])
+        self.assertEqual("candidate-higher-cost", one_over["cost_observation"]["status"])
+        self.assertEqual([], one_over["errors"])
+
+    @staticmethod
+    def _quality_evidence(
+        verdict: str,
+        *,
+        evidence_class: str = "live_agent",
+        live_status: str = "collected",
+        kind: str = "blind-old-new-agent-behavior",
+    ) -> dict[str, object]:
+        return {
+            "evaluation_kind": kind,
+            "evidence_class": evidence_class,
+            "live_evidence_status": live_status,
+            "verdict": verdict,
+            "old": {"cost_metrics": {"tokens": 100, "turns": 2, "elapsed_ms": 50}},
+            "new": {"cost_metrics": {"tokens": 75, "turns": 2, "elapsed_ms": 40}},
+        }
+
+    def test_quality_first_gate_rejects_quality_regression_despite_lower_cost(self) -> None:
+        cost = EVAL._compare_end_to_end_subjects(
+            self._ab_subject(100), self._ab_subject(75)
         )
+        gate = EVAL._quality_first_cost_gate(
+            behavior_evidence=self._quality_evidence("regression"),
+            codegen_evidence=self._quality_evidence(
+                "no_effect", kind="blind-old-new-codegen-quality"
+            ),
+            cost_comparison=cost,
+        )
+        self.assertEqual("fail", gate["status"])
+        self.assertEqual("regression", gate["verdict"])
+        self.assertTrue(gate["candidate_rejected"])
+        self.assertFalse(gate["cost_frontier"]["eligible"])
+
+    def test_quality_first_gate_selects_equal_quality_lower_cost_frontier(self) -> None:
+        cost = EVAL._compare_end_to_end_subjects(
+            self._ab_subject(100), self._ab_subject(75)
+        )
+        gate = EVAL._quality_first_cost_gate(
+            behavior_evidence=self._quality_evidence("no_effect"),
+            codegen_evidence=self._quality_evidence(
+                "no_effect", kind="blind-old-new-codegen-quality"
+            ),
+            cost_comparison=cost,
+        )
+        self.assertEqual("pass", gate["status"])
+        self.assertEqual("no_effect", gate["verdict"])
+        self.assertTrue(gate["quality_preserved"])
+        self.assertEqual("selected-lower-cost", gate["cost_frontier"]["status"])
+        self.assertTrue(gate["cost_frontier"]["eligible"])
+        self.assertEqual(0, gate["cost_frontier"]["metrics"]["turns"]["delta"])
+        self.assertEqual(-10, gate["cost_frontier"]["metrics"]["elapsed_ms"]["delta"])
+
+    def test_quality_first_gate_preserves_hardening_only_verdict(self) -> None:
+        gate = EVAL._quality_first_cost_gate(
+            behavior_evidence=self._quality_evidence("hardening_only"),
+            codegen_evidence=self._quality_evidence(
+                "no_effect", kind="blind-old-new-codegen-quality"
+            ),
+            cost_comparison=EVAL._compare_end_to_end_subjects(
+                self._ab_subject(100), self._ab_subject(100)
+            ),
+        )
+        self.assertEqual("hardening_only", gate["verdict"])
+        self.assertTrue(gate["quality_preserved"])
+        self.assertEqual("selected-lower-cost", gate["cost_frontier"]["status"])
+
+    def test_quality_first_gate_reports_insufficient_structural_evidence(self) -> None:
+        structural = self._quality_evidence(
+            "not_enough_evidence",
+            evidence_class="structural_only",
+            live_status="not_collected",
+        )
+        gate = EVAL._quality_first_cost_gate(
+            behavior_evidence=structural,
+            codegen_evidence={
+                **structural,
+                "evaluation_kind": "captured-fixture-comparison",
+            },
+            cost_comparison=EVAL._compare_end_to_end_subjects(
+                self._ab_subject(100), self._ab_subject(75)
+            ),
+        )
+        self.assertEqual("pass", gate["status"])
+        self.assertEqual("not_enough_evidence", gate["verdict"])
+        self.assertEqual("structural-only", gate["claim_boundary"])
+        self.assertFalse(gate["quality_preserved"])
+        self.assertFalse(gate["cost_frontier"]["eligible"])
+        self.assertEqual("not_collected", gate["live_evidence"]["behavior"])
+        self.assertEqual("not_collected", gate["live_evidence"]["codegen"])
+        self.assertEqual("not_collected", gate["live_evidence"]["elapsed_ms"])
+
+    def test_quality_consumer_uses_detached_validated_behavior_authority(self) -> None:
+        self.assertEqual(
+            VALIDATION.behavior_eval_authority(VALIDATION.CORE_CONTRACTS),
+            EVAL.BEHAVIOR_EVAL_MODEL,
+        )
+        malformed = copy.deepcopy(EVAL.BEHAVIOR_EVAL_MODEL)
+        malformed["verdicts"].remove("regression")
+        with mock.patch.object(EVAL, "BEHAVIOR_EVAL_MODEL", malformed):
+            with self.assertRaisesRegex(ValueError, "Behavior Eval authority"):
+                EVAL._quality_first_cost_gate(
+                    behavior_evidence=self._quality_evidence("regression"),
+                    codegen_evidence=self._quality_evidence(
+                        "no_effect", kind="blind-old-new-codegen-quality"
+                    ),
+                    cost_comparison=EVAL._compare_end_to_end_subjects(
+                        self._ab_subject(100), self._ab_subject(75)
+                    ),
+                )
+
+    def test_candidate_changed_paths_reject_tracked_symlinks_before_read_or_execute(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            target = root / "safe.txt"
+            target.write_text("safe", encoding="utf-8")
+            paths = (
+                "scripts/eval-agent-behavior.py",
+                "src/control-model/core-contracts.json",
+                "evals/agent-behavior/comparison-fixtures/structural.yaml",
+                "src/agent-profiles/role-agents.json",
+            )
+            for relative in paths:
+                link = root / relative
+                link.parent.mkdir(parents=True, exist_ok=True)
+                link.symlink_to(target)
+                with self.subTest(relative=relative):
+                    with self.assertRaisesRegex(ValueError, "symlink|regular|contain"):
+                        EVAL._validate_candidate_changed_paths(root, {relative})
+                link.unlink()
 
     @staticmethod
     def _host_complete_ab_subject(total_tokens: int) -> dict[str, object]:
@@ -3280,12 +3408,9 @@ class RenderedContextBudgetTests(unittest.TestCase):
         candidate["cases"][0]["component_tokens"]["cross_agent_transfer"] += 2
         candidate["cases"][0]["total_task_tokens"] += 2
         report = EVAL._compare_end_to_end_subjects(baseline, candidate)
-        self.assertEqual("fail", report["status"])
+        self.assertEqual("pass", report["status"])
         self.assertLess(report["aggregate"]["candidate"], report["aggregate"]["baseline"])
-        self.assertTrue(
-            any("codex aggregate exceeds" in error for error in report["errors"]),
-            report["errors"],
-        )
+        self.assertEqual("mixed-cost-deltas", report["cost_observation"]["status"])
 
         crossed = self._host_complete_ab_subject(100)
         crossed["cases"][0]["native_sources"]["selection_authority_bundles"][0][
@@ -3322,7 +3447,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             row["structural"]["handoff_tokens"] += delta
             row["total_task_tokens"] += delta
         report = EVAL._compare_end_to_end_subjects(baseline, candidate)
-        self.assertEqual("fail", report["status"])
+        self.assertEqual("pass", report["status"])
         self.assertLess(report["aggregate"]["candidate"], report["aggregate"]["baseline"])
         self.assertTrue(
             all(
@@ -3375,11 +3500,8 @@ class RenderedContextBudgetTests(unittest.TestCase):
         one_over = EVAL._compare_end_to_end_subjects(
             self._ab_subject(100), self._ab_subject(101)
         )
-        self.assertEqual("fail", one_over["status"])
-        self.assertTrue(
-            any("exceeds baseline" in error for error in one_over["errors"]),
-            one_over["errors"],
-        )
+        self.assertEqual("pass", one_over["status"])
+        self.assertEqual("candidate-higher-cost", one_over["cost_observation"]["status"])
 
     def test_end_to_end_ab_actor_profiles_require_all_hosts_without_min_selection(self) -> None:
         def add_binding(subject: dict[str, object]) -> None:
@@ -3452,7 +3574,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             report["errors"],
         )
 
-    def test_end_to_end_ab_gate_accepts_only_combined_s1_s2_fixed_scope(self) -> None:
+    def test_end_to_end_ab_gate_accepts_only_closed_integration_scope(self) -> None:
         expected = frozenset(
             {
                 "docs/BUILD_PROFILES.md",
@@ -3496,7 +3618,8 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "tests/scripts/test_context_content_relocation.py",
             }
         )
-        self.assertNotIn(
+        expected |= EVAL.AB_P4_INTEGRATION_WRITE_PATHS
+        self.assertIn(
             "src/control-model/core-contracts.json", EVAL.AB_ALLOWED_WRITE_PATHS
         )
         self.assertNotIn(

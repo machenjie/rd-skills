@@ -22,11 +22,11 @@ Evaluate whether a Skill, Profile, route, Reference, or benchmark improves agent
 
 ## High-Value Rules
 
-- Reject real-world efficacy claims without representative baseline and treatment evidence for the same task.
-- Classify missing-baseline evidence as `structural-only` with final verdict `not_enough_evidence` and no empirical or real-world efficacy claim.
+- Reject real-world efficacy claims without representative same-task baseline and treatment evidence; classify missing live evidence as `structural-only` with final verdict `not_enough_evidence`.
 - Define each benchmark's task, baseline, treatment, metrics, verdict, caveats, and reproducible input boundary.
+- Derive blind bindings, metrics, directions, evidence classes, and verdicts from Core; physically separate packet, oracle, observations, verifier-owned captures, and post-capture reveal while binding both opaque arms identically.
+- Require capture bytes, digest, ordered baseline/candidate source identity, provenance, and controlled-binding agreement before treating metadata as live evidence; a per-case NEW regression dominates averages.
 - Measure token and turn overhead or record them as not collected rather than omitting the limitation.
-- Separate structural fixture validation from empirical agent behavior when stating what the evidence proves.
 - Measure over-routing and under-routing risk as well as selected-task success.
 - When references form the treatment, select an explicit required allow-list and reject an unbounded catalog treatment.
 - Classify changed Skill, Profile, routing, reference, validation, and benchmark surfaces as behavioral unless current evidence proves docs-only impact.
@@ -36,7 +36,8 @@ Evaluate whether a Skill, Profile, route, Reference, or benchmark improves agent
 - A benchmark can be useful even when overhead is `not_collected`; the caveat must be explicit.
 - A structural fixture validates schema and evaluation plumbing, not live agent productivity.
 - The unit of comparison is the same task under baseline and treatment conditions.
-- `structural-only` is an evidence class; missing baseline has final verdict `not_enough_evidence`, while `unknown` requires a valid but nondiscriminating comparison.
+- `structural-only` is an evidence class; missing live behavior has final verdict `not_enough_evidence`, while a valid nondiscriminating live comparison is `no_effect`.
+- A lower-cost treatment with any routing, Review, or code-quality regression is `regression`; cost never overrides correctness.
 - Benchmark reports should name what changed, what improved, what did not, and what remains unmeasured.
 
 ## Stop Conditions

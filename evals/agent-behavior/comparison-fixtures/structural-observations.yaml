@@ -1,0 +1,1709 @@
+{
+  "schema_version": 1,
+  "suite_id": "structural-routing-review-old-new",
+  "cases": [
+    {
+      "id": "opaque-501",
+      "arms": {
+        "arm-alpha": {
+          "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "capture_sequence": 1,
+          "controlled_bindings": {
+            "task_id": "opaque-001",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "main-control-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-301",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "task-agent",
+              "primary_professional_skill": "repository-tooling-change-builder",
+              "layer3_skills": [
+                "implementation-structure-design"
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "not-required"
+            }
+          }
+        },
+        "arm-beta": {
+          "artifact_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "capture_sequence": 2,
+          "controlled_bindings": {
+            "task_id": "opaque-001",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "main-control-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-301",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "task-agent",
+              "primary_professional_skill": "repository-tooling-change-builder",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "not-required"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "opaque-502",
+      "arms": {
+        "arm-alpha": {
+          "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "capture_sequence": 1,
+          "controlled_bindings": {
+            "task_id": "opaque-002",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "main-control-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-302",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "0000000000000000000000000000000000000000000000000000000000000000"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "task-agent",
+              "primary_professional_skill": "repository-tooling-change-builder",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "not-required"
+            }
+          }
+        },
+        "arm-beta": {
+          "artifact_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "capture_sequence": 2,
+          "controlled_bindings": {
+            "task_id": "opaque-002",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "main-control-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-302",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "0000000000000000000000000000000000000000000000000000000000000000"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "task-agent",
+              "primary_professional_skill": "repository-tooling-change-builder",
+              "layer3_skills": [
+                "implementation-structure-design"
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "not-required"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "opaque-503",
+      "arms": {
+        "arm-alpha": {
+          "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "capture_sequence": 1,
+          "controlled_bindings": {
+            "task_id": "opaque-003",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "main-control-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-303",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "task-agent",
+              "primary_professional_skill": "backend-change-builder",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+                "cloud-platform-extension"
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "not-required"
+            }
+          }
+        },
+        "arm-beta": {
+          "artifact_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "capture_sequence": 2,
+          "controlled_bindings": {
+            "task_id": "opaque-003",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "main-control-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-303",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "task-agent",
+              "primary_professional_skill": "backend-change-builder",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "not-required"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "opaque-504",
+      "arms": {
+        "arm-alpha": {
+          "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "capture_sequence": 1,
+          "controlled_bindings": {
+            "task_id": "opaque-004",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "main-control-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-304",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "task-agent",
+              "primary_professional_skill": "backend-change-builder",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "not-required"
+            }
+          }
+        },
+        "arm-beta": {
+          "artifact_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "capture_sequence": 2,
+          "controlled_bindings": {
+            "task_id": "opaque-004",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "main-control-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-304",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "task-agent",
+              "primary_professional_skill": "backend-change-builder",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+                "cloud-platform-extension"
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "not-required"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "opaque-505",
+      "arms": {
+        "arm-alpha": {
+          "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "capture_sequence": 1,
+          "controlled_bindings": {
+            "task_id": "opaque-005",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "main-control-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-305",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "3333333333333333333333333333333333333333333333333333333333333333"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "task-agent",
+              "primary_professional_skill": "security-privacy-gate",
+              "layer3_skills": [
+                "authentication-authorization"
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "not-required"
+            }
+          }
+        },
+        "arm-beta": {
+          "artifact_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "capture_sequence": 2,
+          "controlled_bindings": {
+            "task_id": "opaque-005",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "main-control-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-305",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "3333333333333333333333333333333333333333333333333333333333333333"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "task-agent",
+              "primary_professional_skill": "backend-change-builder",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "not-required"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "opaque-506",
+      "arms": {
+        "arm-alpha": {
+          "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "capture_sequence": 1,
+          "controlled_bindings": {
+            "task_id": "opaque-006",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "main-control-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-306",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "4444444444444444444444444444444444444444444444444444444444444444"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "task-agent",
+              "primary_professional_skill": "backend-change-builder",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "not-required"
+            }
+          }
+        },
+        "arm-beta": {
+          "artifact_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "capture_sequence": 2,
+          "controlled_bindings": {
+            "task_id": "opaque-006",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "main-control-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-306",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "4444444444444444444444444444444444444444444444444444444444444444"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "task-agent",
+              "primary_professional_skill": "security-privacy-gate",
+              "layer3_skills": [
+                "authentication-authorization"
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "not-required"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "opaque-507",
+      "arms": {
+        "arm-alpha": {
+          "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "capture_sequence": 1,
+          "controlled_bindings": {
+            "task_id": "opaque-007",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "main-control-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-307",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "5555555555555555555555555555555555555555555555555555555555555555"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "task-agent",
+              "primary_professional_skill": "backend-change-builder",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "not-required"
+            }
+          }
+        },
+        "arm-beta": {
+          "artifact_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "capture_sequence": 2,
+          "controlled_bindings": {
+            "task_id": "opaque-007",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "main-control-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-307",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "5555555555555555555555555555555555555555555555555555555555555555"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "analyzed",
+              "start_profile": "analysis-agent",
+              "primary_professional_skill": "engineering-change-analysis",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": true
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "not-required"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "opaque-508",
+      "arms": {
+        "arm-alpha": {
+          "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "capture_sequence": 1,
+          "controlled_bindings": {
+            "task_id": "opaque-008",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "main-control-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-308",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "6666666666666666666666666666666666666666666666666666666666666666"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "task-agent",
+              "primary_professional_skill": "repository-tooling-change-builder",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "not-required"
+            }
+          }
+        },
+        "arm-beta": {
+          "artifact_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "capture_sequence": 2,
+          "controlled_bindings": {
+            "task_id": "opaque-008",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "main-control-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-308",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "6666666666666666666666666666666666666666666666666666666666666666"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "task-agent",
+              "primary_professional_skill": "repository-tooling-change-builder",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "not-required"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "opaque-509",
+      "arms": {
+        "arm-alpha": {
+          "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "capture_sequence": 1,
+          "controlled_bindings": {
+            "task_id": "opaque-009",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "main-control-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-308",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "7777777777777777777777777777777777777777777777777777777777777777"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "task-agent",
+              "primary_professional_skill": "backend-change-builder",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "not-required"
+            }
+          }
+        },
+        "arm-beta": {
+          "artifact_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "capture_sequence": 2,
+          "controlled_bindings": {
+            "task_id": "opaque-009",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "main-control-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-308",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "7777777777777777777777777777777777777777777777777777777777777777"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "task-agent",
+              "primary_professional_skill": "repository-tooling-change-builder",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "not-required"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "opaque-510",
+      "arms": {
+        "arm-alpha": {
+          "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "capture_sequence": 1,
+          "controlled_bindings": {
+            "task_id": "opaque-010",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "main-control-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-309",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "8888888888888888888888888888888888888888888888888888888888888888"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "task-agent",
+              "primary_professional_skill": "repository-tooling-change-builder",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "not-required"
+            }
+          }
+        },
+        "arm-beta": {
+          "artifact_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "capture_sequence": 2,
+          "controlled_bindings": {
+            "task_id": "opaque-010",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "main-control-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-309",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "8888888888888888888888888888888888888888888888888888888888888888"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "task-agent",
+              "primary_professional_skill": "repository-tooling-change-builder",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "not-required"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "opaque-511",
+      "arms": {
+        "arm-alpha": {
+          "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "capture_sequence": 1,
+          "controlled_bindings": {
+            "task_id": "opaque-011",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "main-control-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-310",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "9999999999999999999999999999999999999999999999999999999999999999"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "task-agent",
+              "primary_professional_skill": "repository-tooling-change-builder",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "not-required"
+            }
+          }
+        },
+        "arm-beta": {
+          "artifact_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "capture_sequence": 2,
+          "controlled_bindings": {
+            "task_id": "opaque-011",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "main-control-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-310",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "9999999999999999999999999999999999999999999999999999999999999999"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "task-agent",
+              "primary_professional_skill": "repository-tooling-change-builder",
+              "layer3_skills": [
+                "implementation-structure-design"
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "not-required"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "opaque-512",
+      "arms": {
+        "arm-alpha": {
+          "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "capture_sequence": 1,
+          "controlled_bindings": {
+            "task_id": "opaque-012",
+            "host_id": "opaque-102",
+            "model_id": "opaque-201",
+            "agent_profile": "review-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-311",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "review-agent",
+              "primary_professional_skill": "ai-code-review-refactor",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 1,
+              "primary_review_skill": "ai-code-review-refactor",
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "initial-review",
+              "review_input_ready": {
+                "latest_changed_scope": true,
+                "latest_diff_or_reference": false,
+                "post_latest_edit_validation": false,
+                "fixed_review_boundary": false,
+                "required_evidence": false
+              },
+              "reviewer_actions": {
+                "edited": false,
+                "repaired": false,
+                "rerouted": false,
+                "write_scope_expanded": false,
+                "used_implementer_conclusion": false,
+                "requested_diff_export": false
+              },
+              "initial_review": {},
+              "repair_re_review": {},
+              "findings": []
+            }
+          }
+        },
+        "arm-beta": {
+          "artifact_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "capture_sequence": 2,
+          "controlled_bindings": {
+            "task_id": "opaque-012",
+            "host_id": "opaque-102",
+            "model_id": "opaque-201",
+            "agent_profile": "review-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-311",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "review-agent",
+              "primary_professional_skill": "ai-code-review-refactor",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 0,
+              "primary_review_skill": null,
+              "layer3_skills": [
+
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "input-not-ready",
+              "main_dispatch_gate": {
+                "latest_changed_scope": true,
+                "latest_diff_or_reference": false,
+                "post_latest_edit_validation": false,
+                "fixed_review_boundary": false,
+                "required_evidence": false
+              },
+              "main_dispatch_surface": {
+                "decision_actor_profile": "main-control-agent",
+                "review_candidate_profile": "review-agent",
+                "decision": "review-input-ready",
+                "evaluated_before_review_execution": true,
+                "reviewer_executed": false,
+                "dispatch_count": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "opaque-513",
+      "arms": {
+        "arm-alpha": {
+          "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "capture_sequence": 1,
+          "controlled_bindings": {
+            "task_id": "opaque-013",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "review-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-312",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "review-agent",
+              "primary_professional_skill": "ai-code-review-refactor",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 1,
+              "primary_review_skill": "ai-code-review-refactor",
+              "layer3_skills": [
+                "code-review"
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "initial-review",
+              "review_input_ready": {
+                "latest_changed_scope": true,
+                "latest_diff_or_reference": true,
+                "post_latest_edit_validation": true,
+                "fixed_review_boundary": true,
+                "required_evidence": true
+              },
+              "reviewer_actions": {
+                "edited": false,
+                "repaired": false,
+                "rerouted": false,
+                "write_scope_expanded": false,
+                "used_implementer_conclusion": false,
+                "requested_diff_export": false
+              },
+              "initial_review": {
+                "completed_fixed_boundary": false,
+                "stopped_after_ordinary_finding": true,
+                "covered_review_dimensions": [
+                  "required-changed-scope"
+                ],
+                "returned_findings": [
+                  "finding-a-current-task"
+                ]
+              },
+              "repair_re_review": {
+              },
+              "findings": [
+                {
+                  "finding_identity": "finding-a-current-task",
+                  "relation": "current-task",
+                  "material": true,
+                  "repair_eligible": true,
+                  "entered_repair": true,
+                  "disposition": "repair-if-material",
+                  "fresh": true,
+                  "affected_scope": ["src/reviewed.py"]
+                }
+              ]
+            }
+          }
+        },
+        "arm-beta": {
+          "artifact_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "capture_sequence": 2,
+          "controlled_bindings": {
+            "task_id": "opaque-013",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "review-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-312",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "review-agent",
+              "primary_professional_skill": "ai-code-review-refactor",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 1,
+              "primary_review_skill": "ai-code-review-refactor",
+              "layer3_skills": [
+                "code-review"
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "initial-review",
+              "review_input_ready": {
+                "latest_changed_scope": true,
+                "latest_diff_or_reference": true,
+                "post_latest_edit_validation": true,
+                "fixed_review_boundary": true,
+                "required_evidence": true
+              },
+              "reviewer_actions": {
+                "edited": false,
+                "repaired": false,
+                "rerouted": false,
+                "write_scope_expanded": false,
+                "used_implementer_conclusion": false,
+                "requested_diff_export": false
+              },
+              "initial_review": {
+                "completed_fixed_boundary": true,
+                "stopped_after_ordinary_finding": false,
+                "covered_review_dimensions": [
+                  "required-changed-scope",
+                  "base-review-dimensions",
+                  "professional-risk-dimensions"
+                ],
+                "returned_findings": [
+                  "finding-a-current-task",
+                  "finding-b-current-task"
+                ]
+              },
+              "repair_re_review": {
+              },
+              "findings": [
+                {
+                  "finding_identity": "finding-a-current-task",
+                  "relation": "current-task",
+                  "material": true,
+                  "repair_eligible": true,
+                  "entered_repair": true,
+                  "disposition": "repair-if-material",
+                  "fresh": true,
+                  "affected_scope": ["src/reviewed.py"]
+                },
+                {
+                  "finding_identity": "finding-b-current-task",
+                  "relation": "current-task",
+                  "material": true,
+                  "repair_eligible": true,
+                  "entered_repair": true,
+                  "disposition": "repair-if-material",
+                  "fresh": true,
+                  "affected_scope": ["src/reviewed.py"]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "opaque-514",
+      "arms": {
+        "arm-alpha": {
+          "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "capture_sequence": 1,
+          "controlled_bindings": {
+            "task_id": "opaque-014",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "review-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-313",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "review-agent",
+              "primary_professional_skill": "ai-code-review-refactor",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 1,
+              "primary_review_skill": "ai-code-review-refactor",
+              "layer3_skills": [
+                "regression-testing"
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "focused-re-review",
+              "review_input_ready": {
+                "latest_changed_scope": true,
+                "latest_diff_or_reference": true,
+                "post_latest_edit_validation": true,
+                "fixed_review_boundary": true,
+                "required_evidence": true
+              },
+              "reviewer_actions": {
+                "edited": false,
+                "repaired": false,
+                "rerouted": false,
+                "write_scope_expanded": false,
+                "used_implementer_conclusion": false,
+                "requested_diff_export": false
+              },
+              "initial_review": {
+              },
+              "repair_re_review": {
+                "validation_after_latest_edit": false,
+                "uses_latest_repair_diff": false,
+                "uses_initial_review_diff": true,
+                "focused_scope_only": true,
+                "frozen_scope": [
+                  "src/worker.py"
+                ],
+                "covering_focused_re_review": true,
+                "duplicate_final_review_dispatched": true
+              },
+              "findings": [
+                {
+                  "finding_identity": "fixed-current-task",
+                  "relation": "current-task",
+                  "material": true,
+                  "repair_eligible": true,
+                  "entered_repair": true,
+                  "disposition": "repair-if-material",
+                  "fresh": true,
+                  "affected_scope": ["src/worker.py"]
+                },
+                {
+                  "finding_identity": "nearby-cleanup",
+                  "relation": "adjacent",
+                  "material": false,
+                  "repair_eligible": false,
+                  "entered_repair": true,
+                  "disposition": "record-only",
+                  "fresh": true,
+                  "affected_scope": ["src/nearby.py"]
+                },
+                {
+                  "finding_identity": "protected-boundary",
+                  "relation": "scope-blocker",
+                  "material": true,
+                  "repair_eligible": false,
+                  "entered_repair": false,
+                  "disposition": "main-delta-analysis",
+                  "fresh": true,
+                  "affected_scope": ["src/worker.py"]
+                }
+              ]
+            }
+          }
+        },
+        "arm-beta": {
+          "artifact_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "capture_sequence": 2,
+          "controlled_bindings": {
+            "task_id": "opaque-014",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "review-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-313",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "review-agent",
+              "primary_professional_skill": "ai-code-review-refactor",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 1,
+              "primary_review_skill": "ai-code-review-refactor",
+              "layer3_skills": [
+                "regression-testing"
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "focused-re-review",
+              "review_input_ready": {
+                "latest_changed_scope": true,
+                "latest_diff_or_reference": true,
+                "post_latest_edit_validation": true,
+                "fixed_review_boundary": true,
+                "required_evidence": true
+              },
+              "reviewer_actions": {
+                "edited": false,
+                "repaired": false,
+                "rerouted": false,
+                "write_scope_expanded": false,
+                "used_implementer_conclusion": false,
+                "requested_diff_export": false
+              },
+              "initial_review": {
+              },
+              "repair_re_review": {
+                "validation_after_latest_edit": true,
+                "uses_latest_repair_diff": true,
+                "uses_initial_review_diff": false,
+                "focused_scope_only": true,
+                "frozen_scope": [
+                  "src/worker.py"
+                ],
+                "covering_focused_re_review": true,
+                "duplicate_final_review_dispatched": false
+              },
+              "findings": [
+                {
+                  "finding_identity": "fixed-current-task",
+                  "relation": "current-task",
+                  "material": true,
+                  "repair_eligible": true,
+                  "entered_repair": true,
+                  "disposition": "repair-if-material",
+                  "fresh": true,
+                  "affected_scope": ["src/worker.py"]
+                },
+                {
+                  "finding_identity": "nearby-cleanup",
+                  "relation": "adjacent",
+                  "material": false,
+                  "repair_eligible": false,
+                  "entered_repair": false,
+                  "disposition": "record-only",
+                  "fresh": true,
+                  "affected_scope": ["src/nearby.py"]
+                },
+                {
+                  "finding_identity": "protected-boundary",
+                  "relation": "scope-blocker",
+                  "material": true,
+                  "repair_eligible": false,
+                  "entered_repair": false,
+                  "disposition": "main-delta-analysis",
+                  "fresh": true,
+                  "affected_scope": ["src/worker.py"]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "opaque-515",
+      "arms": {
+        "arm-alpha": {
+          "artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "capture_sequence": 1,
+          "controlled_bindings": {
+            "task_id": "opaque-015",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "review-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-314",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "review-agent",
+              "primary_professional_skill": "ai-code-review-refactor",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 1,
+              "primary_review_skill": "ai-code-review-refactor",
+              "layer3_skills": [
+                "code-review"
+              ],
+              "specialist_reviews": [
+                "security-privacy-gate"
+              ],
+              "boundary_decision": "initial-review",
+              "review_input_ready": {
+                "latest_changed_scope": true,
+                "latest_diff_or_reference": true,
+                "post_latest_edit_validation": true,
+                "fixed_review_boundary": true,
+                "required_evidence": true
+              },
+              "reviewer_actions": {
+                "edited": false,
+                "repaired": false,
+                "rerouted": false,
+                "write_scope_expanded": false,
+                "used_implementer_conclusion": false,
+                "requested_diff_export": false
+              },
+              "initial_review": {
+                "completed_fixed_boundary": true,
+                "stopped_after_ordinary_finding": false,
+                "covered_review_dimensions": [
+                  "required-changed-scope",
+                  "base-review-dimensions",
+                  "professional-risk-dimensions"
+                ],
+                "returned_findings": [
+
+                ]
+              },
+              "repair_re_review": {
+              },
+              "findings": [
+
+              ]
+            }
+          }
+        },
+        "arm-beta": {
+          "artifact_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "capture_sequence": 2,
+          "controlled_bindings": {
+            "task_id": "opaque-015",
+            "host_id": "opaque-101",
+            "model_id": "opaque-201",
+            "agent_profile": "review-agent",
+            "repository_state_sha": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_boundary_id": "opaque-314",
+            "evaluator_id": "opaque-401",
+            "expected_behavior_definition_digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          },
+          "cost_metrics": {
+            "tokens": "not_collected",
+            "turns": "not_collected",
+            "elapsed_ms": "not_collected"
+          },
+          "actual_behavior": {
+            "routing": {
+              "path": "direct",
+              "start_profile": "review-agent",
+              "primary_professional_skill": "ai-code-review-refactor",
+              "layer3_skills": [
+
+              ],
+              "domain_extensions": [
+
+              ],
+              "safe_fallback": false
+            },
+            "review": {
+              "dispatch_count": 1,
+              "primary_review_skill": "ai-code-review-refactor",
+              "layer3_skills": [
+                "code-review"
+              ],
+              "specialist_reviews": [
+
+              ],
+              "boundary_decision": "initial-review",
+              "review_input_ready": {
+                "latest_changed_scope": true,
+                "latest_diff_or_reference": true,
+                "post_latest_edit_validation": true,
+                "fixed_review_boundary": true,
+                "required_evidence": true
+              },
+              "reviewer_actions": {
+                "edited": false,
+                "repaired": false,
+                "rerouted": false,
+                "write_scope_expanded": false,
+                "used_implementer_conclusion": false,
+                "requested_diff_export": false
+              },
+              "initial_review": {
+                "completed_fixed_boundary": true,
+                "stopped_after_ordinary_finding": false,
+                "covered_review_dimensions": [
+                  "required-changed-scope",
+                  "base-review-dimensions",
+                  "professional-risk-dimensions"
+                ],
+                "returned_findings": [
+
+                ]
+              },
+              "repair_re_review": {
+              },
+              "findings": [
+
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

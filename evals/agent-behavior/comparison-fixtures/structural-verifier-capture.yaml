@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "suite_id": "structural-routing-review-old-new",
+  "cases": [
+    {"id": "opaque-501", "arms": {}},
+    {"id": "opaque-502", "arms": {}},
+    {"id": "opaque-503", "arms": {}},
+    {"id": "opaque-504", "arms": {}},
+    {"id": "opaque-505", "arms": {}},
+    {"id": "opaque-506", "arms": {}},
+    {"id": "opaque-507", "arms": {}},
+    {"id": "opaque-508", "arms": {}},
+    {"id": "opaque-509", "arms": {}},
+    {"id": "opaque-510", "arms": {}},
+    {"id": "opaque-511", "arms": {}},
+    {"id": "opaque-512", "arms": {}},
+    {"id": "opaque-513", "arms": {}},
+    {"id": "opaque-514", "arms": {}},
+    {"id": "opaque-515", "arms": {}}
+  ]
+}

@@ -634,7 +634,12 @@ def validate_contracts(reference_root: Path = REFERENCE_ROOT) -> list[str]:
         texts[name] = text
         folded = text.casefold()
         for term in FORBIDDEN:
-            if term in folded:
+            present = (
+                re.search(r"\bfinding id\b", folded) is not None
+                if term == "finding id"
+                else term in folded
+            )
+            if present:
                 errors.append(f"{name}: contains forbidden internal contract term {term!r}")
         if name == "direct-task-template.md":
             for term in DIRECT_TASK_FORBIDDEN_DISCOVERY:

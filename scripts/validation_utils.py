@@ -1036,6 +1036,14 @@ def context_budget_docs_projection_block(
             "Conformance. Calibration does not apply either limit to candidate selection or exit.",
             "Required routing, Professional, Domain, Layer 3, Reference, Review, and Evidence "
             "context is never truncated to satisfy a budget.",
+            "Quality-first A/B gate: Routing, Review, and Codegen evidence must preserve "
+            "quality before a candidate enters the token/turn/elapsed cost frontier. Any "
+            "quality regression rejects the candidate even when tokens decrease. Missing "
+            "comparable evidence is structural-only/not-enough-evidence; absent live behavior, "
+            "codegen, or elapsed evidence is not_collected.",
+            "Candidate total not greater than baseline is not correctness acceptance. The "
+            "Core hard ceiling remains an independent Conformance failure, and static token "
+            "proxies do not prove latency.",
             "",
             f"Tokenizer: `{contract['tokenizer']}`. Exact duplicate-rule ratio gate: "
             f"`{contract['duplicate_rule_token_ratio_max']:.2f}`.",
@@ -3690,6 +3698,346 @@ def decision_eval_authority(data: object) -> dict[str, Any]:
     return copy.deepcopy(data["decision_eval_contract"])
 
 
+def behavior_eval_contract_errors(
+    data: object,
+    root: Path = ROOT,
+) -> list[str]:
+    """Validate the Core-owned dev/eval-only behavior comparison contract."""
+
+    errors: list[str] = []
+    if not isinstance(data, dict):
+        return ["behavior_eval_contract source must be an object"]
+    contract = data.get("behavior_eval_contract")
+    fields = {
+        "schema_version",
+        "comparison_manifest_path",
+        "modes",
+        "artifact_roles",
+        "controlled_bindings",
+        "evidence_classes",
+        "live_evidence_statuses",
+        "routing_metrics",
+        "review_metrics",
+        "cost_metrics",
+        "quality_metrics",
+        "metric_directions",
+        "review_input_ready_fields",
+        "reviewer_forbidden_actions",
+        "finding_relations",
+        "finding_dispositions",
+        "finding_oracle_fields",
+        "finding_observation_fields",
+        "review_dispatch_gate_fields",
+        "main_dispatch_surface_contract",
+        "scalar_authority_contract",
+        "observation_contract",
+        "live_capture_contract",
+        "agent_visible_contract",
+        "claim_boundaries",
+        "verdicts",
+        "verdict_policy",
+        "physical_artifact_isolation",
+        "runtime_dependency",
+    }
+    if not isinstance(contract, dict) or set(contract) != fields:
+        return [
+            "behavior_eval_contract fields must be exactly " f"{sorted(fields)}"
+        ]
+    if contract["schema_version"] != 2:
+        errors.append("behavior_eval_contract.schema_version must be 2")
+    manifest_value = contract["comparison_manifest_path"]
+    manifest = PurePosixPath(manifest_value) if isinstance(manifest_value, str) else None
+    if (
+        manifest is None
+        or manifest.is_absolute()
+        or ".." in manifest.parts
+        or manifest.suffix not in {".yaml", ".yml"}
+        or not manifest.parts[:2] == ("evals", "agent-behavior")
+    ):
+        errors.append(
+            "behavior_eval_contract.comparison_manifest_path must be a contained "
+            "agent-behavior YAML path"
+        )
+    elif not (root / manifest).is_file():
+        errors.append(
+            "behavior_eval_contract.comparison_manifest_path does not exist: "
+            f"{manifest.as_posix()}"
+        )
+
+    def closed_ids(field: str) -> list[str]:
+        value = contract[field]
+        if (
+            not isinstance(value, list)
+            or not value
+            or any(
+                not isinstance(item, str)
+                or re.fullmatch(r"[a-z][a-z0-9]*(?:[_-][a-z0-9]+)*", item) is None
+                for item in value
+            )
+            or len(value) != len(set(value))
+        ):
+            errors.append(
+                f"behavior_eval_contract.{field} must be a non-empty unique id list"
+            )
+            return []
+        return value
+
+    modes = closed_ids("modes")
+    artifact_roles = closed_ids("artifact_roles")
+    controlled_bindings = closed_ids("controlled_bindings")
+    evidence_classes = closed_ids("evidence_classes")
+    live_statuses = closed_ids("live_evidence_statuses")
+    routing_metrics = closed_ids("routing_metrics")
+    review_metrics = closed_ids("review_metrics")
+    cost_metrics = closed_ids("cost_metrics")
+    quality_metrics = closed_ids("quality_metrics")
+    ready_fields = closed_ids("review_input_ready_fields")
+    forbidden_actions = closed_ids("reviewer_forbidden_actions")
+    finding_relations = closed_ids("finding_relations")
+    verdicts = closed_ids("verdicts")
+    expected_lists = {
+        "modes": ["captured_handoff", "blind_old_new_comparison"],
+        "artifact_roles": [
+            "agent_packet", "oracle", "observations", "verifier_capture", "reveal"
+        ],
+        "controlled_bindings": [
+            "task_id", "host_id", "model_id", "agent_profile",
+            "repository_state_sha", "evidence_boundary_id", "evaluator_id",
+            "expected_behavior_definition_digest",
+        ],
+        "evidence_classes": ["live_agent", "structural_only"],
+        "live_evidence_statuses": ["collected", "not_collected"],
+        "routing_metrics": [
+            "path_accuracy", "start_profile_accuracy",
+            "primary_professional_skill_accuracy", "layer3_precision",
+            "layer3_recall", "layer3_f1", "domain_extension_fpr",
+            "domain_extension_fnr", "unnecessary_layer3_load_rate",
+            "safe_fallback_accuracy", "paraphrase_stability",
+            "boundary_transition_accuracy",
+        ],
+        "review_metrics": [
+            "primary_review_skill_accuracy", "review_layer3_precision",
+            "review_layer3_recall", "review_layer3_f1",
+            "required_specialist_review_recall", "required_specialist_review_fnr",
+            "specialist_review_set_accuracy", "unnecessary_specialist_review_rate",
+            "review_boundary_correctness",
+        ],
+        "cost_metrics": ["tokens", "turns", "elapsed_ms"],
+        "review_input_ready_fields": [
+            "latest_changed_scope", "latest_diff_or_reference",
+            "post_latest_edit_validation", "fixed_review_boundary", "required_evidence",
+        ],
+        "reviewer_forbidden_actions": [
+            "edited", "repaired", "rerouted", "write_scope_expanded",
+            "used_implementer_conclusion", "requested_diff_export",
+        ],
+        "finding_relations": ["current-task", "scope-blocker", "adjacent"],
+        "finding_oracle_fields": [
+            "finding_identity", "relation", "material", "repair_eligible",
+            "disposition", "fresh", "affected_scope",
+        ],
+        "finding_observation_fields": [
+            "finding_identity", "relation", "material", "repair_eligible",
+            "entered_repair", "disposition", "fresh", "affected_scope",
+        ],
+        "review_dispatch_gate_fields": [
+            "latest_changed_scope", "latest_diff_or_reference",
+            "post_latest_edit_validation", "fixed_review_boundary", "required_evidence",
+        ],
+        "verdicts": [
+            "improved", "hardening_only", "no_effect", "regression",
+            "not_enough_evidence",
+        ],
+    }
+    actual_lists = {
+        "modes": modes,
+        "artifact_roles": artifact_roles,
+        "controlled_bindings": controlled_bindings,
+        "evidence_classes": evidence_classes,
+        "live_evidence_statuses": live_statuses,
+        "routing_metrics": routing_metrics,
+        "review_metrics": review_metrics,
+        "cost_metrics": cost_metrics,
+        "review_input_ready_fields": ready_fields,
+        "reviewer_forbidden_actions": forbidden_actions,
+        "finding_relations": finding_relations,
+        "finding_oracle_fields": closed_ids("finding_oracle_fields"),
+        "finding_observation_fields": closed_ids("finding_observation_fields"),
+        "review_dispatch_gate_fields": closed_ids("review_dispatch_gate_fields"),
+        "verdicts": verdicts,
+    }
+    for field, expected in expected_lists.items():
+        if actual_lists[field] != expected:
+            errors.append(
+                f"behavior_eval_contract.{field} must preserve the exact invariant-required closed set"
+            )
+    if quality_metrics != routing_metrics + review_metrics:
+        errors.append(
+            "behavior_eval_contract.quality_metrics must derive from routing_metrics "
+            "followed by review_metrics"
+        )
+    directions = contract["metric_directions"]
+    all_metrics = routing_metrics + review_metrics + cost_metrics
+    if (
+        not isinstance(directions, dict)
+        or set(directions) != set(all_metrics)
+        or any(
+            value not in {"higher_is_better", "lower_is_better"}
+            for value in directions.values()
+        )
+    ):
+        errors.append(
+            "behavior_eval_contract.metric_directions must cover every Core metric once"
+        )
+    lower_is_better = {
+        "domain_extension_fpr", "domain_extension_fnr",
+        "unnecessary_layer3_load_rate", "required_specialist_review_fnr",
+        "unnecessary_specialist_review_rate", "tokens", "turns", "elapsed_ms",
+    }
+    expected_directions = {
+        metric: (
+            "lower_is_better" if metric in lower_is_better else "higher_is_better"
+        )
+        for metric in all_metrics
+    }
+    if directions != expected_directions:
+        errors.append(
+            "behavior_eval_contract.metric_directions must preserve exact metric semantics"
+        )
+    if contract["finding_dispositions"] != {
+        "current-task": "repair-if-material",
+        "scope-blocker": "main-delta-analysis",
+        "adjacent": "record-only",
+    }:
+        errors.append(
+            "behavior_eval_contract.finding_dispositions must preserve relation routing"
+        )
+    if contract["observation_contract"] != {
+        "routing_fields": [
+            "path", "start_profile", "primary_professional_skill",
+            "layer3_skills", "domain_extensions", "safe_fallback",
+        ],
+        "no_dispatch_review_fields": [
+            "dispatch_count", "primary_review_skill", "layer3_skills",
+            "specialist_reviews", "boundary_decision",
+        ],
+        "gated_no_dispatch_review_fields": [
+            "dispatch_count", "primary_review_skill", "layer3_skills",
+            "specialist_reviews", "boundary_decision", "main_dispatch_gate",
+            "main_dispatch_surface",
+        ],
+        "dispatch_review_fields": [
+            "dispatch_count", "primary_review_skill", "layer3_skills",
+            "specialist_reviews", "boundary_decision", "review_input_ready",
+            "reviewer_actions", "initial_review", "repair_re_review", "findings",
+        ],
+        "initial_review_fields": [
+            "completed_fixed_boundary", "stopped_after_ordinary_finding",
+            "covered_review_dimensions", "returned_findings",
+        ],
+        "repair_rereview_fields": [
+            "validation_after_latest_edit", "uses_latest_repair_diff",
+            "uses_initial_review_diff", "focused_scope_only", "frozen_scope",
+            "covering_focused_re_review", "duplicate_final_review_dispatched",
+        ],
+        "list_semantics": "typed-unique-ordered",
+        "boolean_semantics": "real-boolean-only",
+        "dispatch_count_semantics": "integer-non-bool-zero-or-one",
+        "extra_or_missing_fields": "fail",
+    }:
+        errors.append("behavior_eval_contract.observation_contract is malformed")
+    if contract["main_dispatch_surface_contract"] != {
+        "decision_actor_profile": "main-control-agent",
+        "review_candidate_profile": "review-agent",
+        "decision": "review-input-ready",
+        "evaluated_before_review_execution": True,
+        "reviewer_executed": False,
+        "dispatch_count": 0,
+    }:
+        errors.append(
+            "behavior_eval_contract.main_dispatch_surface_contract is malformed"
+        )
+    if contract["scalar_authority_contract"] != {
+        "path_values_source": "route_decision_contract.path_values",
+        "path_profile_mapping_source": "route_decision_contract.path_start_profiles",
+        "profile_source": "profile_contract.source_path",
+        "professional_registry_path": "src/registry/professional-skills.yaml",
+        "professional_role_field": "role_support",
+        "review_boundary_by_dispatch": {
+            "0": ["not-required", "input-not-ready"],
+            "1": ["initial-review", "focused-re-review"],
+        },
+        "zero_dispatch_review_skill": None,
+    }:
+        errors.append("behavior_eval_contract.scalar_authority_contract is malformed")
+    if contract["live_capture_contract"] != {
+        "artifact_role": "verifier_capture",
+        "capture_fields": [
+            "capture_bytes", "artifact_sha256", "capture_sequence",
+            "treatment_source", "controlled_bindings", "provenance",
+        ],
+        "provenance_fields": [
+            "verifier_id", "source_execution_id", "treatment_source", "host_id",
+            "model_id", "agent_profile", "repository_state_sha",
+            "capture_sequence", "reveal_sequence", "observed_before_reveal",
+        ],
+        "treatment_sources": ["baseline", "candidate"],
+        "digest": "sha256-utf8-capture-bytes",
+        "copied_arm_capture": "not-enough-evidence",
+        "missing_or_invalid": "not-enough-evidence",
+        "caller_supplied_authority": "integrity-only",
+        "host_execution_authority": "unavailable",
+        "effective_live_evidence_status": "not_collected",
+    }:
+        errors.append("behavior_eval_contract.live_capture_contract is malformed")
+    if contract["agent_visible_contract"] != {
+        "payload_fields": ["task_id", "prompt", "evidence_refs"],
+        "packet_fields": [
+            "id", "agent_input", "controlled_bindings", "blind_arm_ids"
+        ],
+        "evaluator_only_fields": ["scenario_id", "relationship"],
+        "opaque_binding_fields": [
+            "task_id", "host_id", "model_id", "evidence_boundary_id",
+            "evaluator_id",
+        ],
+        "opaque_id_pattern": "opaque-[0-9]{3}",
+        "expected_definition_binding": "digest-only",
+        "semantic_answer_leakage": "fail",
+    }:
+        errors.append("behavior_eval_contract.agent_visible_contract is malformed")
+    if contract["claim_boundaries"] != {
+        "structural_only": "harness-validity-only",
+        "caller_supplied_capture": "not-enough-evidence",
+    }:
+        errors.append("behavior_eval_contract.claim_boundaries is malformed")
+    policy = contract["verdict_policy"]
+    if policy != {
+        "quality_regression": "regression",
+        "old-fail-new-complete-succeed": "improved",
+        "old-correct-new-correct": ["no_effect", "hardening_only"],
+        "incomplete-non-regressing": "no_effect",
+        "missing-live-agent-data": "not_enough_evidence",
+        "structural-fixture-claim": "harness-validity-only",
+        "case-regression-dominates": True,
+    }:
+        errors.append("behavior_eval_contract.verdict_policy is malformed")
+    if contract["physical_artifact_isolation"] is not True:
+        errors.append("behavior comparison artifacts must remain physically isolated")
+    if contract["runtime_dependency"] is not False:
+        errors.append("Behavior Eval must remain dev/eval-only")
+    return errors
+
+
+def behavior_eval_authority(data: object) -> dict[str, Any]:
+    """Return a detached validated projection of Behavior Eval authority."""
+
+    errors = behavior_eval_contract_errors(data)
+    if errors:
+        raise ValueError("invalid Behavior Eval authority: " + "; ".join(errors))
+    assert isinstance(data, dict)
+    return copy.deepcopy(data["behavior_eval_contract"])
+
+
 def validate_core_contracts(
     data: object,
     root: Path = ROOT,
@@ -3860,6 +4208,7 @@ def validate_core_contracts(
         "final_goal_contract",
         "reference_contract",
         "decision_eval_contract",
+        "behavior_eval_contract",
         "route_decision_contract",
         "layer3_selector_contract",
         "execution_level_contract",
@@ -3882,6 +4231,7 @@ def validate_core_contracts(
     errors.extend(validate_principle_acceptance_contract(data, root))
     errors.extend(validate_impact_graph_contract(data, root))
     errors.extend(decision_eval_contract_errors(data, root))
+    errors.extend(behavior_eval_contract_errors(data, root))
 
     role_names = {
         "main-control-agent",
@@ -5065,7 +5415,7 @@ def validate_core_contracts(
                 "ordinary findings through the complete fixed Review Boundary"
             )
         expected_review_boundary_contract = {
-            "schema_version": 1,
+            "schema_version": 2,
             "boundary_fields": [
                 "Review Boundary ID",
                 "Review Strategy",
@@ -5116,6 +5466,97 @@ def validate_core_contracts(
                 "primary-consumes-every-current-required-specialist-result-and-"
                 "emits-the-sole-closing-artifact"
             ),
+            "finding_compiler": {
+                "owner": "primary-review-agent",
+                "runtime_scope": "review-findings-present-only",
+                "execution_point": (
+                    "after-complete-fixed-review-boundary-before-sole-closing-artifact"
+                ),
+                "input": (
+                    "all-raw-primary-and-specialist-findings-for-current-fixed-boundary"
+                ),
+                "output_field": "canonical_findings",
+                "output_presence": "findings-verdict-only",
+                "raw_required_fields": [
+                    "finding_identity",
+                    "task_id",
+                    "review_round_id",
+                    "relation",
+                    "protected_decision_boundary",
+                    "category",
+                    "repair_required",
+                    "description",
+                    "defect",
+                    "violated_invariant",
+                    "failure_mechanism",
+                    "fix_path",
+                    "source_reviewer_evidence",
+                    "affected_scope",
+                    "acceptance_or_risk_impact",
+                    "required_validation",
+                    "required_covering_rereview",
+                    "freshness",
+                    "proof_limit",
+                ],
+                "partition_fields": [
+                    "Task ID",
+                    "Review Round ID",
+                    "Finding Relation",
+                    "Protected Decision Boundary",
+                ],
+                "exact_dedup": "stable-first-source-finding-order",
+                "semantic_merge_required_equal_fields": [
+                    "defect",
+                    "violated invariant",
+                    "failure mechanism",
+                    "fix path",
+                ],
+                "semantic_merge_requires_non_empty_source_evidence": True,
+                "semantic_merge_otherwise": "keep-separate",
+                "forbidden_cross_partition_merge": True,
+                "canonical_fields": [
+                    "canonical_finding_id",
+                    "source_finding_ids",
+                    "task_id",
+                    "review_round_id",
+                    "finding_relation",
+                    "protected_decision_boundary",
+                    "categories",
+                    "descriptions",
+                    "defect",
+                    "violated_invariant",
+                    "failure_mechanism",
+                    "fix_path",
+                    "source_reviewer_evidence",
+                    "affected_scope",
+                    "acceptance_or_risk_impacts",
+                    "required_validation",
+                    "required_covering_rereview",
+                    "freshness",
+                    "proof_limits",
+                    "repair_required",
+                ],
+                "evidence_merge": "stable-lossless-union",
+                "obligation_merge": "stable-lossless-union",
+                "confidence_suppression_allowed": False,
+                "repair_input": "material-current-task-canonical-findings-only",
+                "non_repair_routes": {
+                    "adjacent": "record-only",
+                    "scope-blocker": "main-delta-analysis",
+                },
+                "main_role": (
+                    "copy-canonical-findings-without-semantic-merge-or-prose-inference"
+                ),
+                "verification_batching": {
+                    "allowed_only_when": (
+                        "existing-independent-verification-or-reproduction-required-"
+                        "and-same-boundary"
+                    ),
+                    "new_validator_agent": False,
+                    "new_stage": False,
+                },
+                "additional_agent_round_stage_or_state": False,
+            },
             "artifact_fields": [
                 "artifact_id",
                 "artifact_digest",
@@ -5464,6 +5905,7 @@ def validate_core_contracts(
         "context_taxonomy",
         "budget_classes",
         "duplicate_rule_token_ratio_max",
+        "quality_cost_gate",
     }
     if exact_keys(
         context_budget,
@@ -5571,6 +6013,76 @@ def validate_core_contracts(
             errors.append(
                 "context_budget_contract.duplicate_rule_token_ratio_max must be in [0, 1)"
             )
+        quality_cost_gate = context_budget["quality_cost_gate"]
+        gate_fields = {
+            "schema_version",
+            "owner",
+            "scope",
+            "behavior_authority",
+            "quality_dimensions",
+            "cost_metrics",
+            "quality_preserving_verdicts",
+            "regression_verdict",
+            "missing_evidence_verdict",
+            "structural_claim",
+            "not_collected_value",
+            "frontier_rule",
+            "candidate_total_not_greater_is_correctness_acceptance",
+            "hard_ceiling_independent",
+            "required_context_truncation",
+            "static_token_proxy_proves_latency",
+            "runtime_dependency",
+        }
+        if exact_keys(
+            quality_cost_gate,
+            gate_fields,
+            "context_budget_contract.quality_cost_gate",
+        ):
+            assert isinstance(quality_cost_gate, dict)
+            behavior_contract = data.get("behavior_eval_contract", {})
+            behavior_verdicts = (
+                behavior_contract.get("verdicts", [])
+                if isinstance(behavior_contract, dict)
+                else []
+            )
+            expected_gate = {
+                "schema_version": 1,
+                "owner": "context-budget-authority",
+                "scope": "dev-eval-only",
+                "behavior_authority": "behavior_eval_contract",
+                "quality_dimensions": ["routing", "review", "codegen"],
+                "cost_metrics": ["tokens", "turns", "elapsed_ms"],
+                "quality_preserving_verdicts": [
+                    "improved",
+                    "hardening_only",
+                    "no_effect",
+                ],
+                "regression_verdict": "regression",
+                "missing_evidence_verdict": "not_enough_evidence",
+                "structural_claim": "structural-only",
+                "not_collected_value": "not_collected",
+                "frontier_rule": "quality-preserved-before-cost-comparison",
+                "candidate_total_not_greater_is_correctness_acceptance": False,
+                "hard_ceiling_independent": True,
+                "required_context_truncation": "forbidden",
+                "static_token_proxy_proves_latency": False,
+                "runtime_dependency": False,
+            }
+            if quality_cost_gate != expected_gate:
+                errors.append(
+                    "context_budget_contract.quality_cost_gate must preserve the "
+                    "quality-first dev/eval-only cost frontier contract"
+                )
+            if not set(quality_cost_gate["quality_preserving_verdicts"]).issubset(
+                set(behavior_verdicts)
+            ) or any(
+                quality_cost_gate[field] not in behavior_verdicts
+                for field in ("regression_verdict", "missing_evidence_verdict")
+            ):
+                errors.append(
+                    "context_budget_contract.quality_cost_gate verdicts must derive "
+                    "from behavior_eval_contract"
+                )
 
     final_goal = data["final_goal_contract"]
     if exact_keys(
@@ -7486,6 +7998,9 @@ def validate_core_contracts(
             "review_handoff_finding_set": (
                 "all-evidence-backed-findings-from-current-review-round-and-fixed-boundary"
             ),
+            "review_handoff_canonical_finding_set": (
+                "primary-review-compiled-after-complete-fixed-boundary"
+            ),
             "review_finding_scope_authority": False,
             "repair_input_relations": ["current-task"],
         }
@@ -7506,16 +8021,24 @@ def validate_core_contracts(
             ),
             "assignment_contract": "Task Contract v2",
             "task_id_rule": "unchanged-from-finding-task-id",
+            "finding_source": (
+                "review_discipline_contract.review_boundary_contract.finding_compiler"
+            ),
             "batch_contents": (
-                "all-material-current-task-findings-for-the-same-review-round-and-task-id"
+                "all-material-current-task-canonical-findings-for-the-same-"
+                "review-round-and-task-id"
             ),
             "eligible_round_completions": ["review", "re-review"],
             "per_finding_preserves": [
                 "Finding Relation",
+                "source reviewer evidence",
                 "affected scope",
-                "Acceptance or risk impact",
+                "violated Acceptance or invariant or risk",
+                "failure mechanism",
+                "defect and fix path",
                 "required validation",
                 "required covering re-review",
+                "freshness and proof limit",
             ],
             "cross_task_batching": "forbidden",
             "current_task_blocking": "task-agent-repair",
@@ -7572,6 +8095,69 @@ def validate_core_contracts(
                     "changed-transition",
                 ],
                 "third_unchanged_replan": "forbidden-blocked",
+                "semantic_trajectory": {
+                    "owner": "review-agent-current-review-handoff",
+                    "activation": "repair-or-rereview-trajectory-only",
+                    "input": (
+                        "canonical-findings-and-current-review-handoff-evidence"
+                    ),
+                    "evidence_fields": [
+                        "task_id",
+                        "original_task_scope",
+                        "protected_decision_boundary",
+                        "canonical_finding_history",
+                        "inherited_resolution_evidence",
+                        "independent_new_defect_evidence",
+                        "finite_sibling_scope",
+                        "rebroken_verified_invariant_evidence",
+                        "explicit_failure_set_cycle_evidence",
+                    ],
+                    "classifications": [
+                        "progressing",
+                        "bounded-class",
+                        "oscillating",
+                        "indeterminate",
+                    ],
+                    "progressing_requires": [
+                        "all-inherited-findings-resolved-with-current-source-evidence",
+                        "every-current-finding-proven-independent",
+                        "no-rebroken-verified-invariant",
+                    ],
+                    "bounded_class_requires": [
+                        "same-violated-invariant",
+                        "same-failure-mechanism",
+                        "same-treatment",
+                        "current-source-proven-finite-sibling-scope",
+                        "inside-original-task-and-protected-decision-boundary",
+                    ],
+                    "oscillating_requires_any": [
+                        "canonical-failure-set-A-B-A",
+                        "previously-verified-invariant-rebroken-with-current-source-evidence",
+                        "explicit-current-evidence-of-failure-set-cycle",
+                    ],
+                    "classification_dispositions": {
+                        "progressing": "continue-existing-repair-path-only",
+                        "bounded-class": (
+                            "reshape-next-repair-to-source-proven-finite-class"
+                        ),
+                        "oscillating": (
+                            "may-block-non-converged-and-stop-same-path"
+                        ),
+                        "indeterminate": "preserve-existing-behavior",
+                    },
+                    "forbidden_solo_oscillation_heuristics": [
+                        "single-repeated-finding",
+                        "finding-count-unchanged",
+                        "new-finding-present",
+                        "severity-unchanged",
+                        "finding-category-unchanged",
+                        "same-file-modified-again",
+                    ],
+                    "pass_authority": False,
+                    "reroute_authority": False,
+                    "persistent_runtime_storage": False,
+                    "adds_agent_round_stage_or_normal_path_cost": False,
+                },
             },
         }
         if task["repair_routing"] != expected_repair_routing:
@@ -9253,6 +9839,7 @@ def render_decision_capability_facts(capabilities: dict[str, str]) -> str:
         + "."
     )
 CONTEXT_BUDGET_MODEL = CORE_CONTRACTS["context_budget_contract"]
+BEHAVIOR_EVAL_MODEL = behavior_eval_authority(CORE_CONTRACTS)
 PROMPT_CONTRACT_MODEL = CORE_CONTRACTS["prompt_contract"]
 PROFILE_CONTRACT_MODEL = CORE_CONTRACTS["profile_contract"]
 CONTROL_SKILL_CONTRACT_MODEL = CORE_CONTRACTS["control_skill_contract"]

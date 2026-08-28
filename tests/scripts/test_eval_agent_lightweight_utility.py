@@ -125,6 +125,84 @@ class LightweightUtilityContractTests(unittest.TestCase):
         return case
 
     @staticmethod
+    def _semantic_canonical_finding(
+        finding_id: str,
+        *,
+        task_id: str = "C",
+        review_round_id: str = "R-C-1",
+        scope: str = "src/retry/a.py",
+        defect: str = "retry may publish twice",
+        invariant: str = "publish is at-most-once",
+        mechanism: str = "retry repeats publish after uncertain completion",
+        fix_path: str = "guard publish with the existing idempotency key",
+        category: str = "correctness-or-invariant",
+    ) -> dict:
+        return {
+            "canonical_finding_id": finding_id,
+            "source_finding_ids": [finding_id],
+            "task_id": task_id,
+            "review_round_id": review_round_id,
+            "finding_relation": "current-task",
+            "protected_decision_boundary": "accepted-retry-contract",
+            "categories": [category],
+            "descriptions": [defect],
+            "defect": defect,
+            "violated_invariant": invariant,
+            "failure_mechanism": mechanism,
+            "fix_path": fix_path,
+            "source_reviewer_evidence": [
+                {
+                    "reviewer_result_id": f"review-{review_round_id}",
+                    "evidence": f"current source evidence at {scope}",
+                }
+            ],
+            "affected_scope": [scope],
+            "acceptance_or_risk_impacts": [invariant],
+            "required_validation": ["retry-publish-negative-control"],
+            "required_covering_rereview": {
+                "covered_task_ids": [task_id],
+                "same_or_stronger": True,
+            },
+            "freshness": [f"current-{review_round_id}"],
+            "proof_limits": [f"bounded to {scope}"],
+            "repair_required": True,
+        }
+
+    @classmethod
+    def _semantic_convergence_evidence(
+        cls,
+        history: list[list[dict]],
+        **overrides: object,
+    ) -> dict:
+        packet = {
+            "task_id": "C",
+            "original_task_scope": [
+                scope
+                for findings in history
+                for finding in findings
+                for scope in finding["affected_scope"]
+            ],
+            "protected_decision_boundary": "accepted-retry-contract",
+            "canonical_finding_history": [
+                {
+                    "review_round_id": findings[0]["review_round_id"],
+                    "canonical_findings": findings,
+                    "current_source_evidence": [
+                        f"reviewed current source for {findings[0]['review_round_id']}"
+                    ],
+                }
+                for findings in history
+            ],
+            "inherited_resolution_evidence": [],
+            "independent_new_defect_evidence": [],
+            "finite_sibling_scope": None,
+            "rebroken_verified_invariant_evidence": [],
+            "explicit_failure_set_cycle_evidence": [],
+        }
+        packet.update(overrides)
+        return packet
+
+    @staticmethod
     def _complete_initial_analysis_event() -> dict:
         return {
             "actor": "analysis-agent",
@@ -6597,6 +6675,467 @@ class LightweightUtilityContractTests(unittest.TestCase):
         no_claim["expected_error"] = None
         _results, errors = EVAL._external_read_fixture_results([no_claim])
         self.assertTrue(any("external-read-jit" in error for error in errors), errors)
+
+
+class CanonicalFindingCompilerTests(unittest.TestCase):
+    @staticmethod
+    def _finding(
+        finding_id: str,
+        *,
+        description: str = "retry may publish twice",
+        task_id: str = "task-retry",
+        review_round_id: str = "round-1",
+        relation: str = "current-task",
+        protected_boundary: str = "none",
+        defect: str = "retry duplicate publish",
+        violated_invariant: str = "publish is at most once",
+        failure_mechanism: str = "retry re-enters publish after an ambiguous acknowledgement",
+        fix_path: str = "bind one idempotency key before publish",
+        evidence: str | None = None,
+    ) -> dict:
+        return {
+            "finding_identity": finding_id,
+            "task_id": task_id,
+            "review_round_id": review_round_id,
+            "relation": relation,
+            "protected_decision_boundary": protected_boundary,
+            "category": "correctness-or-invariant",
+            "repair_required": relation == "current-task",
+            "description": description,
+            "defect": defect,
+            "violated_invariant": violated_invariant,
+            "failure_mechanism": failure_mechanism,
+            "fix_path": fix_path,
+            "source_reviewer_evidence": [
+                {
+                    "reviewer_result_id": f"reviewer-{finding_id}",
+                    "evidence": evidence or f"src/retry.py:{finding_id}",
+                }
+            ],
+            "affected_scope": ["src/retry.py"],
+            "acceptance_or_risk_impact": "duplicate externally visible publish",
+            "required_validation": ["retry-idempotency-regression"],
+            "required_covering_rereview": {
+                "covered_task_ids": [task_id],
+                "same_or_stronger": True,
+            },
+            "freshness": "current-review-round",
+            "proof_limit": "bounded retry publish path",
+        }
+
+    @staticmethod
+    def _rendered_review_handoff_finding(identity: str = "F-visible-1") -> str:
+        return f"""# Review Handoff
+
+## Findings
+
+Finding Identity: {identity}
+Finding Relation: current-task
+Re-review Classification: not-applicable
+Classification Evidence: not-applicable
+Review Round ID: round-1
+Task ID: task-retry
+Category: correctness-or-invariant
+Repair required: true
+Severity: high
+Blocker: true
+Description: retry may publish twice
+Protected Decision Boundary: none
+Defect: retry duplicate publish
+Violated invariant: publish is at most once
+Failure mechanism: retry re-enters publish after an ambiguous acknowledgement
+Fix path: bind one idempotency key before publish
+Source reviewer evidence: reviewer-1 | src/retry.py:41
+Affected scope: src/retry.py
+Acceptance or risk impact: duplicate externally visible publish
+Required validation: retry-idempotency-regression
+Required covering re-review: task-retry | same-or-stronger
+Freshness: current-review-round
+Proof Limit: bounded retry publish path
+"""
+
+    def test_public_review_handoff_parses_visible_identity_into_compiler(self) -> None:
+        raw, errors = EVAL._parse_review_handoff_findings(
+            self._rendered_review_handoff_finding()
+        )
+        self.assertEqual([], errors)
+        self.assertEqual("F-visible-1", raw[0]["finding_identity"])
+        self.assertEqual("correctness-or-invariant", raw[0]["category"])
+        self.assertTrue(raw[0]["repair_required"])
+        canonical, compiler_errors = EVAL._compile_canonical_findings(raw)
+        self.assertEqual([], compiler_errors)
+        self.assertEqual(["F-visible-1"], canonical[0]["source_finding_ids"])
+
+    def test_public_review_handoff_rejects_missing_or_duplicate_visible_identity(self) -> None:
+        missing = self._rendered_review_handoff_finding().replace(
+            "Finding Identity: F-visible-1\n", ""
+        )
+        _raw, errors = EVAL._parse_review_handoff_findings(missing)
+        self.assertTrue(any("identity" in error.casefold() for error in errors), errors)
+        duplicate = (
+            self._rendered_review_handoff_finding()
+            + "\n"
+            + self._rendered_review_handoff_finding()
+        )
+        _raw, errors = EVAL._parse_review_handoff_findings(duplicate)
+        self.assertTrue(any("duplicate" in error.casefold() for error in errors), errors)
+
+    def test_exact_duplicate_compiles_to_one_stable_canonical_finding(self) -> None:
+        first = self._finding("F-1")
+        second = self._finding("F-2")
+        canonical, errors = EVAL._compile_canonical_findings([first, second])
+        self.assertEqual([], errors)
+        self.assertEqual(1, len(canonical))
+        self.assertEqual("F-1", canonical[0]["canonical_finding_id"])
+        self.assertEqual(["F-1", "F-2"], canonical[0]["source_finding_ids"])
+
+    def test_wording_difference_merges_only_with_same_complete_semantic_basis(self) -> None:
+        first = self._finding("F-1", description="retry may publish twice")
+        second = self._finding(
+            "F-2",
+            description="retry lacks idempotency before publish",
+        )
+        canonical, errors = EVAL._compile_canonical_findings([first, second])
+        self.assertEqual([], errors)
+        self.assertEqual(1, len(canonical))
+        self.assertEqual(
+            ["retry may publish twice", "retry lacks idempotency before publish"],
+            canonical[0]["descriptions"],
+        )
+
+    def test_same_location_retry_and_rollback_failure_modes_stay_separate(self) -> None:
+        retry = self._finding("F-retry")
+        rollback = self._finding(
+            "F-rollback",
+            description="retry loses rollback state",
+            defect="retry rollback state loss",
+            violated_invariant="rollback state survives retry",
+            failure_mechanism="retry clears rollback state before recovery",
+            fix_path="retain rollback state until recovery commits",
+        )
+        canonical, errors = EVAL._compile_canonical_findings([retry, rollback])
+        self.assertEqual([], errors)
+        self.assertEqual(2, len(canonical))
+
+    def test_partition_boundaries_never_merge(self) -> None:
+        findings = [
+            self._finding("F-base"),
+            self._finding("F-task", task_id="task-other"),
+            self._finding("F-round", review_round_id="round-2"),
+            self._finding("F-relation", relation="adjacent"),
+            self._finding(
+                "F-protected",
+                protected_boundary="Acceptance-or-Non-goals",
+            ),
+        ]
+        canonical, errors = EVAL._compile_canonical_findings(findings)
+        self.assertEqual([], errors)
+        self.assertEqual(5, len(canonical))
+
+    def test_merge_preserves_every_source_evidence_and_obligation(self) -> None:
+        first = self._finding("F-1", evidence="retry branch at src/retry.py:41")
+        second = self._finding(
+            "F-2",
+            description="retry lacks idempotency before publish",
+            evidence="publish call at src/retry.py:58",
+        )
+        second["affected_scope"].append("tests/test_retry.py")
+        second["required_validation"].append("publish-count-negative-control")
+        second["acceptance_or_risk_impact"] = "retry violates at-most-once acceptance"
+        second["proof_limit"] = "bounded retry and publish call path"
+        canonical, errors = EVAL._compile_canonical_findings([first, second])
+        self.assertEqual([], errors)
+        self.assertEqual(1, len(canonical))
+        merged = canonical[0]
+        self.assertEqual(2, len(merged["source_reviewer_evidence"]))
+        self.assertEqual(
+            ["src/retry.py", "tests/test_retry.py"], merged["affected_scope"]
+        )
+        self.assertEqual(
+            ["retry-idempotency-regression", "publish-count-negative-control"],
+            merged["required_validation"],
+        )
+        self.assertEqual(
+            [
+                "duplicate externally visible publish",
+                "retry violates at-most-once acceptance",
+            ],
+            merged["acceptance_or_risk_impacts"],
+        )
+        self.assertEqual(
+            ["bounded retry publish path", "bounded retry and publish call path"],
+            merged["proof_limits"],
+        )
+
+    def test_missing_source_backed_semantic_basis_fails_closed(self) -> None:
+        incomplete = self._finding("F-incomplete")
+        incomplete["failure_mechanism"] = ""
+        canonical, errors = EVAL._compile_canonical_findings([incomplete])
+        self.assertEqual([], canonical)
+        self.assertTrue(
+            any("finding-compiler-semantic-basis" in error for error in errors),
+            errors,
+        )
+
+    def test_semantic_repair_convergence_classifies_progressing_from_canonical_evidence(
+        self,
+    ) -> None:
+        prior = LightweightUtilityContractTests._semantic_canonical_finding("F-A")
+        current = LightweightUtilityContractTests._semantic_canonical_finding(
+            "F-B",
+            review_round_id="R-C-2",
+            scope="src/retry/b.py",
+            defect="rollback state is lost after retry",
+            invariant="rollback state survives retry",
+            mechanism="retry clears rollback state before recovery",
+            fix_path="retain rollback state until recovery commits",
+        )
+        evidence = LightweightUtilityContractTests._semantic_convergence_evidence(
+            [[prior], [current]],
+            inherited_resolution_evidence=[
+                {
+                    "canonical_finding_id": "F-A",
+                    "resolved": True,
+                    "current_source_evidence": "negative control now publishes once",
+                }
+            ],
+            independent_new_defect_evidence=[
+                {
+                    "canonical_finding_id": "F-B",
+                    "independent": True,
+                    "current_source_evidence": "rollback branch is distinct from publish",
+                }
+            ],
+        )
+
+        result, errors = EVAL._classify_semantic_repair_trajectory(evidence)
+
+        self.assertEqual([], errors)
+        self.assertEqual("progressing", result["classification"])
+        self.assertEqual(
+            "continue-existing-repair-path-only", result["disposition"]
+        )
+        self.assertFalse(result["pass_authority"])
+
+    def test_semantic_repair_convergence_classifies_source_proven_finite_siblings(
+        self,
+    ) -> None:
+        first = LightweightUtilityContractTests._semantic_canonical_finding("F-A")
+        second = LightweightUtilityContractTests._semantic_canonical_finding(
+            "F-B",
+            review_round_id="R-C-2",
+            scope="src/retry/b.py",
+        )
+        sites = ["src/retry/a.py", "src/retry/b.py"]
+        evidence = LightweightUtilityContractTests._semantic_convergence_evidence(
+            [[first], [second]],
+            original_task_scope=sites,
+            finite_sibling_scope={
+                "sites": sites,
+                "treatment": first["fix_path"],
+                "current_source_evidence": [
+                    "current registry proves a.py and b.py are the finite retry handlers"
+                ],
+            },
+        )
+
+        result, errors = EVAL._classify_semantic_repair_trajectory(evidence)
+
+        self.assertEqual([], errors)
+        self.assertEqual("bounded-class", result["classification"])
+        self.assertEqual(sites, result["bounded_scope"])
+        self.assertEqual(
+            "reshape-next-repair-to-source-proven-finite-class",
+            result["disposition"],
+        )
+
+        outside = copy.deepcopy(evidence)
+        outside["original_task_scope"] = ["src/retry/a.py"]
+        result, errors = EVAL._classify_semantic_repair_trajectory(outside)
+        self.assertEqual("indeterminate", result["classification"])
+        self.assertTrue(
+            any("semantic-convergence-bounded-scope" in error for error in errors),
+            errors,
+        )
+
+    def test_semantic_repair_convergence_requires_proven_oscillation(self) -> None:
+        finding_a1 = LightweightUtilityContractTests._semantic_canonical_finding("F-A1")
+        finding_b = LightweightUtilityContractTests._semantic_canonical_finding(
+            "F-B",
+            review_round_id="R-C-2",
+            defect="rollback state is lost after retry",
+            invariant="rollback state survives retry",
+            mechanism="retry clears rollback state before recovery",
+            fix_path="retain rollback state until recovery commits",
+        )
+        finding_a2 = LightweightUtilityContractTests._semantic_canonical_finding(
+            "F-A2", review_round_id="R-C-3"
+        )
+        cycle = LightweightUtilityContractTests._semantic_convergence_evidence(
+            [[finding_a1], [finding_b], [finding_a2]]
+        )
+        result, errors = EVAL._classify_semantic_repair_trajectory(cycle)
+        self.assertEqual([], errors)
+        self.assertEqual("oscillating", result["classification"])
+        self.assertEqual(
+            "may-block-non-converged-and-stop-same-path",
+            result["disposition"],
+        )
+
+        rebroken = LightweightUtilityContractTests._semantic_convergence_evidence(
+            [[finding_a1], [finding_b]],
+            rebroken_verified_invariant_evidence=[
+                {
+                    "invariant": finding_a1["violated_invariant"],
+                    "current_source_evidence": "latest repair again permits duplicate publish",
+                }
+            ],
+        )
+        result, errors = EVAL._classify_semantic_repair_trajectory(rebroken)
+        self.assertEqual([], errors)
+        self.assertEqual("oscillating", result["classification"])
+
+        explicit = LightweightUtilityContractTests._semantic_convergence_evidence(
+            [[finding_a1], [finding_b]],
+            explicit_failure_set_cycle_evidence=[
+                "current review evidence proves the failure set repeats R1 after R2"
+            ],
+        )
+        result, errors = EVAL._classify_semantic_repair_trajectory(explicit)
+        self.assertEqual([], errors)
+        self.assertEqual("oscillating", result["classification"])
+
+    def test_semantic_repair_convergence_forbidden_solo_heuristics_stay_indeterminate(
+        self,
+    ) -> None:
+        repeated_once = LightweightUtilityContractTests._semantic_canonical_finding("F-A1")
+        repeated_twice = LightweightUtilityContractTests._semantic_canonical_finding(
+            "F-A2", review_round_id="R-C-2"
+        )
+        result, errors = EVAL._classify_semantic_repair_trajectory(
+            LightweightUtilityContractTests._semantic_convergence_evidence([[repeated_once], [repeated_twice]])
+        )
+        self.assertEqual([], errors)
+        self.assertEqual("indeterminate", result["classification"])
+
+        independent_count_same = LightweightUtilityContractTests._semantic_canonical_finding(
+            "F-B",
+            review_round_id="R-C-2",
+            defect="new independent failure",
+            invariant="new invariant",
+            mechanism="new mechanism",
+            fix_path="new repair",
+        )
+        result, errors = EVAL._classify_semantic_repair_trajectory(
+            LightweightUtilityContractTests._semantic_convergence_evidence(
+                [[repeated_once], [independent_count_same]]
+            )
+        )
+        self.assertEqual([], errors)
+        self.assertEqual("indeterminate", result["classification"])
+
+        same_file_new_category = LightweightUtilityContractTests._semantic_canonical_finding(
+            "F-C",
+            review_round_id="R-C-2",
+            category="regression",
+            defect="another defect in the same file",
+            invariant="another invariant",
+            mechanism="another mechanism",
+            fix_path="another repair",
+        )
+        result, errors = EVAL._classify_semantic_repair_trajectory(
+            LightweightUtilityContractTests._semantic_convergence_evidence(
+                [[repeated_once], [same_file_new_category]]
+            )
+        )
+        self.assertEqual([], errors)
+        self.assertEqual("indeterminate", result["classification"])
+
+    def test_semantic_repair_convergence_fails_closed_on_noncanonical_or_cross_boundary_evidence(
+        self,
+    ) -> None:
+        prior = LightweightUtilityContractTests._semantic_canonical_finding("F-A")
+        current = LightweightUtilityContractTests._semantic_canonical_finding(
+            "F-B", review_round_id="R-C-2"
+        )
+        malformed = LightweightUtilityContractTests._semantic_convergence_evidence([[prior], [current]])
+        malformed["canonical_finding_history"][1]["canonical_findings"][0][
+            "task_id"
+        ] = "OTHER"
+
+        result, errors = EVAL._classify_semantic_repair_trajectory(malformed)
+
+        self.assertEqual("indeterminate", result["classification"])
+        self.assertTrue(
+            any("semantic-convergence-boundary" in error for error in errors),
+            errors,
+        )
+
+    def test_compiler_runs_after_complete_initial_review_and_repairs_canonical_only(
+        self,
+    ) -> None:
+        document = EVAL._load_json(EVAL.FIXTURES)
+        case = copy.deepcopy(
+            next(
+                item
+                for item in document["orchestration_cases"]
+                if item["id"] == "dedup-scoped-repair-subsumes-final"
+            )
+        )
+        case["id"] = "canonical-finding-compiler-integration"
+        case.pop("retained_semantics", None)
+        findings = [
+            event for event in case["events"] if event.get("action") == "finding"
+        ]
+        for index, finding in enumerate(findings, 1):
+            structured = self._finding(
+                str(finding["finding_id"]),
+                description=(
+                    "retry may publish twice"
+                    if index == 1
+                    else "retry lacks idempotency before publish"
+                ),
+                task_id=str(finding["task_id"]),
+                review_round_id=str(finding["review_round_id"]),
+                evidence=f"reviewer evidence {index}",
+            )
+            finding["finding_identity"] = structured["finding_identity"]
+            for field in (
+                "protected_decision_boundary",
+                "description",
+                "defect",
+                "violated_invariant",
+                "failure_mechanism",
+                "fix_path",
+                "source_reviewer_evidence",
+                "freshness",
+                "proof_limit",
+            ):
+                finding[field] = structured[field]
+
+        repair = next(
+            event for event in case["events"] if event.get("action") == "repair"
+        )
+        repair["resolved_finding_ids"] = [str(findings[0]["finding_id"])]
+        repair["finding_relations"] = {
+            str(findings[0]["finding_id"]): "current-task"
+        }
+        canonical, errors = EVAL._compile_canonical_findings(findings)
+        self.assertEqual([], errors)
+        repair["finding_obligations"] = [
+            EVAL._canonical_repair_obligation(canonical[0])
+        ]
+        self.assertEqual([], EVAL._orchestration_case_errors(case))
+
+        incomplete = copy.deepcopy(case)
+        closing = next(
+            event
+            for event in incomplete["events"]
+            if event.get("action") == "review"
+        )
+        closing["required_changed_scope_complete"] = False
+        errors = EVAL._orchestration_case_errors(incomplete)
+        self.assertTrue(any("review-complete-pass" in error for error in errors), errors)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,617 @@
+{
+  "schema_version": 1,
+  "suite_id": "structural-routing-review-old-new",
+  "cases": [
+    {
+      "id": "opaque-501",
+      "scenario_id": "private-local-no-structure",
+      "relationship": {"kind": "standalone", "group_id": "private-local-no-structure"},
+      "expected_behavior": {
+        "routing": {
+          "path": "direct",
+          "start_profile": "task-agent",
+          "primary_professional_skill": "repository-tooling-change-builder",
+          "layer3_skills": [
+
+          ],
+          "domain_extensions": [
+
+          ],
+          "safe_fallback": false
+        },
+        "review": {
+          "dispatch_expected": false,
+          "primary_review_skill": null,
+          "layer3_skills": [
+
+          ],
+          "specialist_reviews": [
+
+          ],
+          "boundary_decision": "not-required",
+          "required_findings": [
+
+          ],
+          "initial_review_required": false,
+          "repair_re_review_required": false,
+          "frozen_scope": [
+
+          ],
+          "covering_focused_re_review": false
+        }
+      }
+    },
+    {
+      "id": "opaque-502",
+      "scenario_id": "material-structure-change",
+      "relationship": {"kind": "standalone", "group_id": "material-structure-change"},
+      "expected_behavior": {
+        "routing": {
+          "path": "direct",
+          "start_profile": "task-agent",
+          "primary_professional_skill": "repository-tooling-change-builder",
+          "layer3_skills": [
+            "implementation-structure-design"
+          ],
+          "domain_extensions": [
+
+          ],
+          "safe_fallback": false
+        },
+        "review": {
+          "dispatch_expected": false,
+          "primary_review_skill": null,
+          "layer3_skills": [
+
+          ],
+          "specialist_reviews": [
+
+          ],
+          "boundary_decision": "not-required",
+          "required_findings": [
+
+          ],
+          "initial_review_required": false,
+          "repair_re_review_required": false,
+          "frozen_scope": [
+
+          ],
+          "covering_focused_re_review": false
+        }
+      }
+    },
+    {
+      "id": "opaque-503",
+      "scenario_id": "generic-cloud-no-domain",
+      "relationship": {"kind": "standalone", "group_id": "generic-cloud-no-domain"},
+      "expected_behavior": {
+        "routing": {
+          "path": "direct",
+          "start_profile": "task-agent",
+          "primary_professional_skill": "backend-change-builder",
+          "layer3_skills": [
+
+          ],
+          "domain_extensions": [
+
+          ],
+          "safe_fallback": false
+        },
+        "review": {
+          "dispatch_expected": false,
+          "primary_review_skill": null,
+          "layer3_skills": [
+
+          ],
+          "specialist_reviews": [
+
+          ],
+          "boundary_decision": "not-required",
+          "required_findings": [
+
+          ],
+          "initial_review_required": false,
+          "repair_re_review_required": false,
+          "frozen_scope": [
+
+          ],
+          "covering_focused_re_review": false
+        }
+      }
+    },
+    {
+      "id": "opaque-504",
+      "scenario_id": "confirmed-cloud-boundary",
+      "relationship": {"kind": "standalone", "group_id": "confirmed-cloud-boundary"},
+      "expected_behavior": {
+        "routing": {
+          "path": "direct",
+          "start_profile": "task-agent",
+          "primary_professional_skill": "backend-change-builder",
+          "layer3_skills": [
+
+          ],
+          "domain_extensions": [
+            "cloud-platform-extension"
+          ],
+          "safe_fallback": false
+        },
+        "review": {
+          "dispatch_expected": false,
+          "primary_review_skill": null,
+          "layer3_skills": [
+
+          ],
+          "specialist_reviews": [
+
+          ],
+          "boundary_decision": "not-required",
+          "required_findings": [
+
+          ],
+          "initial_review_required": false,
+          "repair_re_review_required": false,
+          "frozen_scope": [
+
+          ],
+          "covering_focused_re_review": false
+        }
+      }
+    },
+    {
+      "id": "opaque-505",
+      "scenario_id": "security-wording-no-security-route",
+      "relationship": {"kind": "standalone", "group_id": "security-wording-no-security-route"},
+      "expected_behavior": {
+        "routing": {
+          "path": "direct",
+          "start_profile": "task-agent",
+          "primary_professional_skill": "backend-change-builder",
+          "layer3_skills": [
+
+          ],
+          "domain_extensions": [
+
+          ],
+          "safe_fallback": false
+        },
+        "review": {
+          "dispatch_expected": false,
+          "primary_review_skill": null,
+          "layer3_skills": [
+
+          ],
+          "specialist_reviews": [
+
+          ],
+          "boundary_decision": "not-required",
+          "required_findings": [
+
+          ],
+          "initial_review_required": false,
+          "repair_re_review_required": false,
+          "frozen_scope": [
+
+          ],
+          "covering_focused_re_review": false
+        }
+      }
+    },
+    {
+      "id": "opaque-506",
+      "scenario_id": "real-security-boundary",
+      "relationship": {"kind": "standalone", "group_id": "real-security-boundary"},
+      "expected_behavior": {
+        "routing": {
+          "path": "direct",
+          "start_profile": "task-agent",
+          "primary_professional_skill": "security-privacy-gate",
+          "layer3_skills": [
+            "authentication-authorization"
+          ],
+          "domain_extensions": [
+
+          ],
+          "safe_fallback": false
+        },
+        "review": {
+          "dispatch_expected": false,
+          "primary_review_skill": null,
+          "layer3_skills": [
+
+          ],
+          "specialist_reviews": [
+
+          ],
+          "boundary_decision": "not-required",
+          "required_findings": [
+
+          ],
+          "initial_review_required": false,
+          "repair_re_review_required": false,
+          "frozen_scope": [
+
+          ],
+          "covering_focused_re_review": false
+        }
+      }
+    },
+    {
+      "id": "opaque-507",
+      "scenario_id": "unknown-critical-safe-fallback",
+      "relationship": {"kind": "standalone", "group_id": "unknown-critical-safe-fallback"},
+      "expected_behavior": {
+        "routing": {
+          "path": "analyzed",
+          "start_profile": "analysis-agent",
+          "primary_professional_skill": "engineering-change-analysis",
+          "layer3_skills": [
+
+          ],
+          "domain_extensions": [
+
+          ],
+          "safe_fallback": true
+        },
+        "review": {
+          "dispatch_expected": false,
+          "primary_review_skill": null,
+          "layer3_skills": [
+
+          ],
+          "specialist_reviews": [
+
+          ],
+          "boundary_decision": "not-required",
+          "required_findings": [
+
+          ],
+          "initial_review_required": false,
+          "repair_re_review_required": false,
+          "frozen_scope": [
+
+          ],
+          "covering_focused_re_review": false
+        }
+      }
+    },
+    {
+      "id": "opaque-508",
+      "scenario_id": "paraphrase-local-a",
+      "relationship": {"kind": "paraphrase", "group_id": "paraphrase-local"},
+      "expected_behavior": {
+        "routing": {
+          "path": "direct",
+          "start_profile": "task-agent",
+          "primary_professional_skill": "repository-tooling-change-builder",
+          "layer3_skills": [
+
+          ],
+          "domain_extensions": [
+
+          ],
+          "safe_fallback": false
+        },
+        "review": {
+          "dispatch_expected": false,
+          "primary_review_skill": null,
+          "layer3_skills": [
+
+          ],
+          "specialist_reviews": [
+
+          ],
+          "boundary_decision": "not-required",
+          "required_findings": [
+
+          ],
+          "initial_review_required": false,
+          "repair_re_review_required": false,
+          "frozen_scope": [
+
+          ],
+          "covering_focused_re_review": false
+        }
+      }
+    },
+    {
+      "id": "opaque-509",
+      "scenario_id": "paraphrase-local-b",
+      "relationship": {"kind": "paraphrase", "group_id": "paraphrase-local"},
+      "expected_behavior": {
+        "routing": {
+          "path": "direct",
+          "start_profile": "task-agent",
+          "primary_professional_skill": "repository-tooling-change-builder",
+          "layer3_skills": [
+
+          ],
+          "domain_extensions": [
+
+          ],
+          "safe_fallback": false
+        },
+        "review": {
+          "dispatch_expected": false,
+          "primary_review_skill": null,
+          "layer3_skills": [
+
+          ],
+          "specialist_reviews": [
+
+          ],
+          "boundary_decision": "not-required",
+          "required_findings": [
+
+          ],
+          "initial_review_required": false,
+          "repair_re_review_required": false,
+          "frozen_scope": [
+
+          ],
+          "covering_focused_re_review": false
+        }
+      }
+    },
+    {
+      "id": "opaque-510",
+      "scenario_id": "boundary-transition-local",
+      "relationship": {"kind": "boundary_transition", "group_id": "structure-transition"},
+      "expected_behavior": {
+        "routing": {
+          "path": "direct",
+          "start_profile": "task-agent",
+          "primary_professional_skill": "repository-tooling-change-builder",
+          "layer3_skills": [
+
+          ],
+          "domain_extensions": [
+
+          ],
+          "safe_fallback": false
+        },
+        "review": {
+          "dispatch_expected": false,
+          "primary_review_skill": null,
+          "layer3_skills": [
+
+          ],
+          "specialist_reviews": [
+
+          ],
+          "boundary_decision": "not-required",
+          "required_findings": [
+
+          ],
+          "initial_review_required": false,
+          "repair_re_review_required": false,
+          "frozen_scope": [
+
+          ],
+          "covering_focused_re_review": false
+        }
+      }
+    },
+    {
+      "id": "opaque-511",
+      "scenario_id": "boundary-transition-structural",
+      "relationship": {"kind": "boundary_transition", "group_id": "structure-transition"},
+      "expected_behavior": {
+        "routing": {
+          "path": "direct",
+          "start_profile": "task-agent",
+          "primary_professional_skill": "repository-tooling-change-builder",
+          "layer3_skills": [
+            "implementation-structure-design"
+          ],
+          "domain_extensions": [
+
+          ],
+          "safe_fallback": false
+        },
+        "review": {
+          "dispatch_expected": false,
+          "primary_review_skill": null,
+          "layer3_skills": [
+
+          ],
+          "specialist_reviews": [
+
+          ],
+          "boundary_decision": "not-required",
+          "required_findings": [
+
+          ],
+          "initial_review_required": false,
+          "repair_re_review_required": false,
+          "frozen_scope": [
+
+          ],
+          "covering_focused_re_review": false
+        }
+      }
+    },
+    {
+      "id": "opaque-512",
+      "scenario_id": "review-input-not-ready",
+      "relationship": {"kind": "standalone", "group_id": "review-input-not-ready"},
+      "expected_behavior": {
+        "routing": {
+          "path": "direct",
+          "start_profile": "review-agent",
+          "primary_professional_skill": "ai-code-review-refactor",
+          "layer3_skills": [
+
+          ],
+          "domain_extensions": [
+
+          ],
+          "safe_fallback": false
+        },
+        "review": {
+          "dispatch_expected": false,
+          "primary_review_skill": null,
+          "layer3_skills": [
+
+          ],
+          "specialist_reviews": [
+
+          ],
+          "boundary_decision": "input-not-ready",
+          "dispatch_blockers": [
+            "latest_diff_or_reference",
+            "post_latest_edit_validation",
+            "fixed_review_boundary",
+            "required_evidence"
+          ],
+          "required_findings": [
+
+          ],
+          "initial_review_required": false,
+          "repair_re_review_required": false,
+          "frozen_scope": [
+
+          ],
+          "covering_focused_re_review": false
+        }
+      }
+    },
+    {
+      "id": "opaque-513",
+      "scenario_id": "initial-review-complete-boundary",
+      "relationship": {"kind": "standalone", "group_id": "initial-review-complete-boundary"},
+      "expected_behavior": {
+        "routing": {
+          "path": "direct",
+          "start_profile": "review-agent",
+          "primary_professional_skill": "ai-code-review-refactor",
+          "layer3_skills": [
+
+          ],
+          "domain_extensions": [
+
+          ],
+          "safe_fallback": false
+        },
+        "review": {
+          "dispatch_expected": true,
+          "primary_review_skill": "ai-code-review-refactor",
+          "layer3_skills": [
+            "code-review"
+          ],
+          "specialist_reviews": [
+
+          ],
+          "boundary_decision": "initial-review",
+          "required_findings": [
+            "finding-a-current-task",
+            "finding-b-current-task"
+          ],
+          "expected_findings": [
+            {"finding_identity": "finding-a-current-task", "relation": "current-task", "material": true, "repair_eligible": true, "disposition": "repair-if-material", "fresh": true, "affected_scope": ["src/reviewed.py"]},
+            {"finding_identity": "finding-b-current-task", "relation": "current-task", "material": true, "repair_eligible": true, "disposition": "repair-if-material", "fresh": true, "affected_scope": ["src/reviewed.py"]}
+          ],
+          "required_review_dimensions": [
+            "required-changed-scope",
+            "base-review-dimensions",
+            "professional-risk-dimensions"
+          ],
+          "initial_review_required": true,
+          "repair_re_review_required": false,
+          "frozen_scope": [
+
+          ],
+          "covering_focused_re_review": false
+        }
+      }
+    },
+    {
+      "id": "opaque-514",
+      "scenario_id": "repair-focused-rereview-fresh",
+      "relationship": {"kind": "standalone", "group_id": "repair-focused-rereview-fresh"},
+      "expected_behavior": {
+        "routing": {
+          "path": "direct",
+          "start_profile": "review-agent",
+          "primary_professional_skill": "ai-code-review-refactor",
+          "layer3_skills": [
+
+          ],
+          "domain_extensions": [
+
+          ],
+          "safe_fallback": false
+        },
+        "review": {
+          "dispatch_expected": true,
+          "primary_review_skill": "ai-code-review-refactor",
+          "layer3_skills": [
+            "regression-testing"
+          ],
+          "specialist_reviews": [
+
+          ],
+          "boundary_decision": "focused-re-review",
+          "required_findings": [
+
+          ],
+          "expected_findings": [
+            {"finding_identity": "fixed-current-task", "relation": "current-task", "material": true, "repair_eligible": true, "disposition": "repair-if-material", "fresh": true, "affected_scope": ["src/worker.py"]},
+            {"finding_identity": "nearby-cleanup", "relation": "adjacent", "material": false, "repair_eligible": false, "disposition": "record-only", "fresh": true, "affected_scope": ["src/nearby.py"]},
+            {"finding_identity": "protected-boundary", "relation": "scope-blocker", "material": true, "repair_eligible": false, "disposition": "main-delta-analysis", "fresh": true, "affected_scope": ["src/worker.py"]}
+          ],
+          "initial_review_required": false,
+          "repair_re_review_required": true,
+          "frozen_scope": [
+            "src/worker.py"
+          ],
+          "covering_focused_re_review": true
+        }
+      }
+    },
+    {
+      "id": "opaque-515",
+      "scenario_id": "unnecessary-specialist-review-guard",
+      "relationship": {"kind": "standalone", "group_id": "unnecessary-specialist-review-guard"},
+      "expected_behavior": {
+        "routing": {
+          "path": "direct",
+          "start_profile": "review-agent",
+          "primary_professional_skill": "ai-code-review-refactor",
+          "layer3_skills": [
+
+          ],
+          "domain_extensions": [
+
+          ],
+          "safe_fallback": false
+        },
+        "review": {
+          "dispatch_expected": true,
+          "primary_review_skill": "ai-code-review-refactor",
+          "layer3_skills": [
+            "code-review"
+          ],
+          "specialist_reviews": [
+
+          ],
+          "boundary_decision": "initial-review",
+          "required_findings": [
+
+          ],
+          "required_review_dimensions": [
+            "required-changed-scope",
+            "base-review-dimensions",
+            "professional-risk-dimensions"
+          ],
+          "initial_review_required": true,
+          "repair_re_review_required": false,
+          "frozen_scope": [
+
+          ],
+          "covering_focused_re_review": false
+        }
+      }
+    }
+  ]
+}

@@ -71,6 +71,11 @@ Acceptance, Invariant, Contract, or professional-risk boundary. Initial Review
 may omit both fields or use `not-applicable`; Main consumes these structured
 fields without prose inference.
 
+When the Primary Review supplies `Canonical Findings`, those are the material
+findings consumed by the existing grouping rule. Semantic reconciliation is
+complete before handoff; Main copies the structured fields without semantic
+reconciliation or prose inference.
+
 Main groups the material `current-task` findings by the existing Review Round
 ID and Task ID and emits exactly one canonical Task Contract v2 Repair
 assignment per non-empty group. The Task ID stays unchanged. Each finding
@@ -180,18 +185,29 @@ an implementation diff review.
 
 For each implementation or repair finding, state fields in this order:
 
+Finding Identity:
 Finding Relation: current-task / scope-blocker / adjacent
 Re-review Classification: inherited / repair-regression / frozen-boundary-violation / protected-invalidation / adjacent / not-applicable for Initial Review
 Classification Evidence:
 Review Round ID:
 Task ID:
+Category:
+Repair required: true / false
 Severity:
 Blocker:
 Description:
+Protected Decision Boundary:
+Defect:
+Violated invariant:
+Failure mechanism:
+Fix path:
+Source reviewer evidence:
 Affected scope:
 Acceptance or risk impact:
 Required validation:
 Required covering re-review:
+Freshness:
+Proof Limit:
 
 Re-review findings require both classification fields; Initial Review may omit
 them or mark `Re-review Classification: not-applicable`.
@@ -200,6 +216,78 @@ Relation appears before severity or blocker. Do not invent private
 identifiers; use only the handoff-visible Finding, Review Round, and Task
 identities. Pre-implementation artifact review may use its artifact-specific
 finding shape without implementation Finding Relation.
+
+## Canonical Findings
+
+The Primary Review compiles this section only after it completes the fixed
+Review Boundary and consumes every current required primary and specialist
+result. Partition raw findings by Task ID, Review Round ID, Finding Relation,
+and Protected Decision Boundary. Within one partition, perform deterministic
+stable exact dedup first. Merge different wording only when current source
+evidence establishes the same defect, same violated invariant, same failure mechanism, and same fix path. Otherwise keep findings separate. A partition
+boundary, location alone, or model confidence alone is insufficient merge
+evidence. Evidence-backed findings remain present regardless of confidence.
+
+Preserve every source Finding entry, source reviewer evidence item, affected scope,
+Acceptance or risk impact, required validation, required covering re-review,
+freshness statement, and proof limit. `adjacent` remains record-only;
+`scope-blocker` remains on the Main/Delta Analysis route. Repair input is
+limited to material `current-task` canonical findings under the existing one
+Repair batch. Main copies canonical findings without semantic reconciliation
+or prose inference. This compiler adds neither a Validator Agent nor a Review
+stage. Verification batching is permitted when the existing contract already
+requires independent verification or reproduction and all findings share that
+bounded boundary.
+
+For each canonical finding, state fields in this order:
+
+Canonical Finding:
+Source Findings:
+Task ID:
+Review Round ID:
+Finding Relation: current-task / scope-blocker / adjacent
+Protected Decision Boundary:
+Categories:
+Descriptions:
+Defect:
+Violated invariant:
+Failure mechanism:
+Fix path:
+Source reviewer evidence:
+Affected scope:
+Acceptance or risk impacts:
+Required validation:
+Required covering re-review:
+Freshness:
+Proof Limits:
+Repair required: true / false
+
+## Semantic Repair Convergence
+
+Include this section only when the current handoff closes a Repair/Re-review
+trajectory. Classify the trajectory's canonical findings as `progressing`,
+`bounded-class`, `oscillating`, or `indeterminate` from current source evidence.
+`progressing` requires every inherited finding to be resolved, every current
+finding to be an independently evidenced defect, and no verified invariant to
+be rebroken. `bounded-class` requires the same violated invariant, failure
+mechanism, and treatment across a current-source-proven finite sibling set
+inside the original Task scope and protected decision boundary. Use
+`oscillating` only for an evidenced A→B→A canonical failure set, an evidenced
+rebreak of a previously verified invariant, or an explicitly evidenced failure
+set cycle. Otherwise use `indeterminate` and preserve existing behavior.
+
+A single repeated finding, unchanged finding count, a new finding, unchanged
+severity/category, or another edit to the same file does not by itself prove
+oscillation. `progressing` only continues the existing path. `bounded-class`
+may reshape the next existing Repair into one finite class-wide batch.
+`oscillating` may block the same non-converging path. The classification has no PASS authority,
+does not reroute, and adds no Agent, Review/Repair round,
+validation stage, persistent state, or normal no-finding-path work.
+
+State the current Task ID, original Task scope, protected decision boundary,
+canonical finding history, inherited-resolution evidence, independent-new-
+defect evidence, finite sibling scope when proven, rebroken-invariant evidence,
+explicit cycle evidence, classification, disposition, and proof limit.
 
 ## Core Review Discipline
 

@@ -126,6 +126,9 @@ structural step proxy is neither wall-clock evidence nor production proof. A
 scenario pass proves only its fixture contract; it does not prove real-host
 Profile startup, host performance, provider behavior, production accuracy, or
 installed user experience.
+Caller-supplied behavior captures can prove byte and binding integrity, but no
+live Host execution or behavior improvement without a Host/verifier-owned
+receipt channel; this repository provides no such channel.
 
 The rendered-context suite requires fresh builds of all three delivery
 profiles. It excludes host system prompts, tool schemas, conversation history,
@@ -166,6 +169,8 @@ Runtime Dynamic Context classes: Repository Reads, Diff, Command Output, Tool Sy
 
 Soft-target overage is a growth advisory; hard-ceiling overage fails Conformance. Calibration does not apply either limit to candidate selection or exit.
 Required routing, Professional, Domain, Layer 3, Reference, Review, and Evidence context is never truncated to satisfy a budget.
+Quality-first A/B gate: Routing, Review, and Codegen evidence must preserve quality before a candidate enters the token/turn/elapsed cost frontier. Any quality regression rejects the candidate even when tokens decrease. Missing comparable evidence is structural-only/not-enough-evidence; absent live behavior, codegen, or elapsed evidence is not_collected.
+Candidate total not greater than baseline is not correctness acceptance. The Core hard ceiling remains an independent Conformance failure, and static token proxies do not prove latency.
 
 Tokenizer: `o200k_base`. Exact duplicate-rule ratio gate: `0.03`.
 <!-- END CHANGEFORGE CONTEXT BUDGET PROJECTION: benchmarks-rendered-context-budget -->

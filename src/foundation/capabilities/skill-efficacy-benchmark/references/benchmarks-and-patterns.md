@@ -8,12 +8,20 @@ Dev/evaluation-only reference for `skill-efficacy-benchmark`. Load only for an e
 | --- | --- |
 | Claim and case | Name changed surface, bounded task, route risk, expected behavior delta, and defect/overhead consequence. |
 | Baseline/treatment | Same task, profile, build profile, source-vs-dist boundary, fixtures, evidence availability, and metric definitions. |
+| Blind execution | Use opaque arms and neutral agent-visible identifiers. Keep the agent packet, evaluator-only oracle, observations, verifier-owned captures, and post-capture reveal in separate artifacts. Bind task, Host, Model, Profile, repository state, evidence boundary, evaluator, and expected-definition digest identically; verify capture bytes, SHA-256, ordered treatment source, and provenance before a live claim. |
 | Missing baseline | Evidence class is `structural-only` and final verdict is `not_enough_evidence`; empirical improvement, productivity, accuracy, latency, and user-outcome language remains unsupported. |
 | Routing/reference guard | Record selected and skipped Profiles/Skills/references with task-specific reasons plus trivial over-routing and hidden-risk under-routing cases. |
 | Validation freshness | When the benchmark changes a body, reference, registry, Profile, fixture, report, or built output, map that surface to a post-final-edit validator or residual owner. |
 | Context cost | Record measured token/turn/elapsed values or `not_collected`; proxy tokens and turn counts are not live user experience. |
 
-Use behavior-bearing metrics: expected routing/ownership, concrete evidence completeness, named defect catch/miss, stale-evidence rejection, trivial over-routing, hidden-risk under-routing, and context cost. A score without a negative case or behavior difference is not efficacy evidence.
+Use the Core-owned behavior metric set and directions. It covers routing path,
+Profile, primary and Layer 3 selection, Domain false positives/negatives,
+fallback and boundary stability, Review routing, Review Input Ready,
+independence, required-specialist recall/FNR, complete Initial Review, fresh
+focused Re-review, exact finding relation/disposition, over-review, and
+context cost. A score without a negative case or behavior difference is not
+efficacy evidence. Preserve per-case outcomes: no aggregate improvement can
+offset a NEW regression, and partial success is not demonstrated improvement.
 
 Fixtures remain bounded, synthetic or repository-owned, redacted, and reproducible. Exclude raw user prompts outside approved fixtures, secrets, environment values, private URLs or identifiers, and personal archives. Also exclude unbounded source corpora, connector payloads without a boundary, and full command logs when status plus a bounded summary suffices.
 

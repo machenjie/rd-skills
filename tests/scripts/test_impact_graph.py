@@ -303,6 +303,15 @@ IMPACT_004_SCRIPT_CASES.update(
 
 
 class ImpactGraphContractTests(unittest.TestCase):
+    def test_rendered_context_quality_gate_declares_behavior_authority_input(self) -> None:
+        producer = next(
+            row
+            for row in CORE_CONTRACTS["principle_acceptance_contract"]["producers"]
+            if row["id"] == "eval-rendered-context"
+        )
+        self.assertIn("context-budget-authority", producer["authority_inputs"])
+        self.assertIn("behavior-eval-authority", producer["authority_inputs"])
+
     def test_expert_panel_fixture_support_has_one_way_dependencies(self) -> None:
         test_paths = [
             ROOT / "tests/scripts/test_expert_panel_actionability.py",
@@ -535,6 +544,21 @@ class ImpactGraphContractTests(unittest.TestCase):
 
 
 class ImpactGraphResolutionTests(unittest.TestCase):
+    def test_control_router_and_review_handoff_select_behavior_eval_once(self) -> None:
+        for path in (
+            "src/control-skills/engineering-control-plane/references/professional-skill-router.md",
+            "src/control-skills/engineering-control-plane/references/review-handoff-template.md",
+        ):
+            with self.subTest(path=path):
+                result = self._resolve([("M", path)])
+                self.assertIn("eval-agent-behavior", result["selected_producer_ids"])
+                self.assertEqual(
+                    1,
+                    result["selected_test_modules"].count(
+                        "tests/scripts/test_eval_agent_behavior.py"
+                    ),
+                )
+
     @staticmethod
     def _write_registry_catalog(root: Path, *, include_example: bool) -> None:
         registry = root / "src/registry"
@@ -795,6 +819,7 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                 "eval-agent-lightweight",
                 "eval-rendered-context",
                 "eval-context-control",
+                "eval-agent-behavior",
             ],
             result["selected_producer_ids"],
         )
@@ -1012,6 +1037,10 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                 "agent-behavior-evaluator",
                 ["eval-agent-behavior"],
             ),
+            "evals/agent-behavior/comparison-fixtures/structural.yaml": (
+                "agent-behavior-evaluator",
+                ["eval-agent-behavior"],
+            ),
             "evals/capability-coverage/admission-cases.yaml": (
                 "routing-fixtures-and-helpers",
                 ["eval-routing"],
@@ -1032,6 +1061,16 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                 self.assertEqual(
                     modified["selected_producer_ids"], deleted["selected_producer_ids"]
                 )
+
+    def test_behavior_evaluator_changes_select_the_dedicated_tests(self) -> None:
+        result = self._resolve([("M", "scripts/eval-agent-behavior.py")])
+        self.assertEqual(
+            "agent-behavior-evaluator", result["changed_paths"][0]["rule_id"]
+        )
+        self.assertIn(
+            "tests/scripts/test_eval_agent_behavior.py",
+            result["selected_test_modules"],
+        )
 
     def test_selected_tests_are_grouped_by_layer_and_flat_projection_is_compatible(self) -> None:
         result = self._resolve([("M", "scripts/impact_graph.py")])
@@ -1120,6 +1159,7 @@ class ImpactGraphResolutionTests(unittest.TestCase):
             "scripts/validation_utils.py": (
                 "core-schema-and-validation",
                 [
+                    "eval-agent-behavior",
                     "eval-agent-lightweight",
                     "eval-context-control",
                     "eval-pressure-behavior",
@@ -1129,6 +1169,8 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                 ],
                 [
                     "tests/scripts/test_decision_eval.py",
+                    "tests/scripts/test_eval_agent_behavior.py",
+                    "tests/scripts/test_eval_agent_lightweight_utility.py",
                     "tests/scripts/test_evidence_direct_authority.py",
                     "tests/scripts/test_impact_graph.py",
                     REPORT_DIRECTORY_REGRESSION_TEST,
@@ -1139,6 +1181,7 @@ class ImpactGraphResolutionTests(unittest.TestCase):
             "src/control-model/core-contracts.json": (
                 "core-schema-and-validation",
                 [
+                    "eval-agent-behavior",
                     "eval-agent-lightweight",
                     "eval-context-control",
                     "eval-pressure-behavior",
@@ -1148,6 +1191,8 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                 ],
                 [
                     "tests/scripts/test_decision_eval.py",
+                    "tests/scripts/test_eval_agent_behavior.py",
+                    "tests/scripts/test_eval_agent_lightweight_utility.py",
                     "tests/scripts/test_evidence_direct_authority.py",
                     "tests/scripts/test_impact_graph.py",
                     REPORT_DIRECTORY_REGRESSION_TEST,
@@ -1166,7 +1211,7 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                 ["tests/scripts/test_validate_docs_consistency.py"],
             ),
         }
-        legacy_broad_test_count = 8
+        legacy_broad_test_count = 9
         for path, (rule_id, producer_ids, test_modules) in cases.items():
             with self.subTest(path=path):
                 result = self._resolve([("M", path)])
@@ -1190,6 +1235,8 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                 "core-schema-and-validation",
                 [
                     "tests/scripts/test_decision_eval.py",
+                    "tests/scripts/test_eval_agent_behavior.py",
+                    "tests/scripts/test_eval_agent_lightweight_utility.py",
                     "tests/scripts/test_evidence_direct_authority.py",
                     "tests/scripts/test_impact_graph.py",
                     REPORT_DIRECTORY_REGRESSION_TEST,
@@ -1386,6 +1433,7 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                 "eval-agent-lightweight",
                 "eval-context-control",
                 "eval-rendered-context",
+                "eval-agent-behavior",
             },
             "scripts/build.py": set(),
             "scripts/quickstart.py": set(),
