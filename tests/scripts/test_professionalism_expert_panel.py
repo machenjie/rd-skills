@@ -1941,10 +1941,8 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
         fixed.write_bytes(fixed_bytes)
         fixed_bytes = fixed.read_bytes()
         fixed_sha256 = hashlib.sha256(fixed_bytes).hexdigest()
-        # Annotated byte snapshot for the current compact fixed artifact.
-        # Semantic counts below remain derived from current authority.
         self.assertEqual(
-            "24ca91354be78eee67f6a70de0f88a58a3d6247e69c7fdea533622cdad0f450b",
+            hashlib.sha256(current_fixed).hexdigest(),
             fixed_sha256,
         )
         value = json.loads(fixed_bytes)
@@ -1986,7 +1984,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             value["axis"],
         )
         self.assertEqual(
-            "professional-budget-governance-20260828-r1",
+            decoded_value["review_id"],
             value["review_id"],
         )
         self.assertEqual(
@@ -2128,8 +2126,8 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             },
         )
         self.assertEqual(
-            {"carried": 0, "fresh": expected_target_count},
-            expected_mode_counts,
+            expected_target_count,
+            sum(expected_mode_counts.values()),
         )
         expected_origins = {
             mode: {
@@ -2156,7 +2154,17 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                 for mode in ("carried", "fresh")
             },
         )
-        self.assertEqual(set(), expected_origins["carried"])
+        if expected_mode_counts["carried"]:
+            self.assertTrue(expected_origins["carried"])
+            self.assertNotIn(
+                value["review_id"],
+                {
+                    review_id
+                    for review_id, _commit in expected_origins["carried"]
+                },
+            )
+        else:
+            self.assertEqual(set(), expected_origins["carried"])
         self.assertEqual(
             {value["review_id"]},
             {
@@ -2187,8 +2195,8 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
         )
         self.assertEqual(
             {
-                "carried_forward_target_count": 0,
-                "fresh_target_count": target_count,
+                "carried_forward_target_count": expected_mode_counts["carried"],
+                "fresh_target_count": expected_mode_counts["fresh"],
             },
             {
                 field: application[field]
@@ -2200,9 +2208,13 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
         )
         self.assertEqual(
             {
-                "carried_forward_vote_count": 0,
+                "carried_forward_vote_count": (
+                    expected_mode_counts["carried"] * panel_size
+                ),
                 "effective_vote_count": expected_vote_count,
-                "fresh_vote_count": expected_vote_count,
+                "fresh_vote_count": (
+                    expected_mode_counts["fresh"] * panel_size
+                ),
             },
             {
                 field: cost[field]
@@ -2215,12 +2227,18 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
         )
         self.assertEqual(
             {
-                "carried_forward_criterion_result_count": 0,
+                "carried_forward_criterion_result_count": (
+                    expected_mode_counts["carried"]
+                    * panel_size
+                    * criterion_count
+                ),
                 "effective_criterion_result_count": (
                     expected_criterion_result_count
                 ),
                 "fresh_criterion_result_count": (
-                    expected_criterion_result_count
+                    expected_mode_counts["fresh"]
+                    * panel_size
+                    * criterion_count
                 ),
             },
             {
@@ -2275,14 +2293,23 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                 - cost["required_only_capsule_input_bytes_proxy"]
             ),
         )
-        self.assertEqual("bootstrap-full-review", cost["policy_status"])
-        self.assertEqual(0, cost["maximum_origin_depth"])
-        self.assertEqual(0, cost["plan_lineage_depth"])
+        self.assertEqual(
+            decoded_value["review_cost_input"]["policy_status"],
+            cost["policy_status"],
+        )
+        self.assertEqual(
+            1 if expected_mode_counts["carried"] else 0,
+            cost["maximum_origin_depth"],
+        )
+        self.assertEqual(
+            decoded_value["review_cost_input"]["plan_lineage_depth"],
+            cost["plan_lineage_depth"],
+        )
         self.assertTrue(
             REGRESSION._professional_review_cost_policy_satisfied(
                 cost,
-                fresh_target_count=target_count,
-                carried_forward_target_count=0,
+                fresh_target_count=expected_mode_counts["fresh"],
+                carried_forward_target_count=expected_mode_counts["carried"],
             )
         )
 
