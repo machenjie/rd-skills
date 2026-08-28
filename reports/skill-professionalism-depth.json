@@ -837,10 +837,10 @@
       "kind": "professional",
       "path": "src/professional-skills/high-risk-design-review/SKILL.md",
       "total_score": 100,
-      "status": "needs-review",
-      "decision_rule_count": 1,
+      "status": "pass",
+      "decision_rule_count": 4,
       "gotcha_count": 3,
-      "line_count": 63
+      "line_count": 66
     },
     {
       "name": "engineering-artifact-review",
@@ -927,10 +927,10 @@
       "kind": "professional",
       "path": "src/professional-skills/integration-change-builder/SKILL.md",
       "total_score": 100,
-      "status": "needs-review",
-      "decision_rule_count": 1,
+      "status": "pass",
+      "decision_rule_count": 4,
       "gotcha_count": 3,
-      "line_count": 64
+      "line_count": 67
     },
     {
       "name": "quality-test-gate",
@@ -967,10 +967,10 @@
       "kind": "professional",
       "path": "src/professional-skills/logging-design-gate/SKILL.md",
       "total_score": 100,
-      "status": "needs-review",
-      "decision_rule_count": 1,
+      "status": "pass",
+      "decision_rule_count": 4,
       "gotcha_count": 3,
-      "line_count": 67
+      "line_count": 70
     },
     {
       "name": "delivery-release-gate",
@@ -997,10 +997,10 @@
       "kind": "professional",
       "path": "src/professional-skills/change-documentation-gate/SKILL.md",
       "total_score": 100,
-      "status": "needs-review",
-      "decision_rule_count": 1,
+      "status": "pass",
+      "decision_rule_count": 4,
       "gotcha_count": 3,
-      "line_count": 70
+      "line_count": 73
     },
     {
       "name": "installed-client-change-builder",
@@ -1027,10 +1027,10 @@
       "kind": "professional",
       "path": "src/professional-skills/repository-tooling-change-builder/SKILL.md",
       "total_score": 100,
-      "status": "needs-review",
-      "decision_rule_count": 1,
+      "status": "pass",
+      "decision_rule_count": 4,
       "gotcha_count": 3,
-      "line_count": 65
+      "line_count": 68
     },
     {
       "name": "incident-response-coordinator",
@@ -2567,20 +2567,20 @@
       "kind": "domain",
       "path": "src/domain-extensions/bigdata-product-extension/SKILL.md",
       "total_score": 100,
-      "status": "needs-review",
-      "decision_rule_count": 1,
+      "status": "pass",
+      "decision_rule_count": 4,
       "gotcha_count": 1,
-      "line_count": 60
+      "line_count": 63
     },
     {
       "name": "iot-embedded-extension",
       "kind": "domain",
       "path": "src/domain-extensions/iot-embedded-extension/SKILL.md",
       "total_score": 100,
-      "status": "needs-review",
-      "decision_rule_count": 1,
+      "status": "pass",
+      "decision_rule_count": 6,
       "gotcha_count": 1,
-      "line_count": 57
+      "line_count": 62
     },
     {
       "name": "payment-trading-extension",

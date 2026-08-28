@@ -56,7 +56,7 @@
       "soft_target_applied_to_exit": false,
       "hard_ceiling_applied_to_exit": true,
       "selection_count": 236295,
-      "selection_identity_sha256": "f8c1f44888d352d33bf6a2c8b5786a16c803db413009d7f14052dbfa04b8432d",
+      "selection_identity_sha256": "adbc367683bb889fb257421e13d1b70bac67ece89a0d921dd65f6590115b317a",
       "identity_excludes_budget_fields": [
         "soft_target",
         "hard_ceiling"
@@ -73,31 +73,31 @@
       },
       "task": {
         "count": 19281,
-        "p50": 2196,
-        "p90": 2652,
-        "p95": 2718,
-        "p99": 2825,
-        "max": 2943
+        "p50": 2198,
+        "p90": 2654,
+        "p95": 2721,
+        "p99": 2829,
+        "max": 3039
       },
       "analyzed_task": {
         "count": 66150,
-        "p50": 2694,
-        "p90": 3205,
-        "p95": 3360,
-        "p99": 3575,
+        "p50": 2699,
+        "p90": 3206,
+        "p95": 3361,
+        "p99": 3577,
         "max": 4028
       },
       "analysis": {
         "count": 112828,
-        "p50": 1793,
-        "p90": 2129,
-        "p95": 2313,
-        "p99": 2661,
-        "max": 3448
+        "p50": 1809,
+        "p90": 2153,
+        "p95": 2331,
+        "p99": 2697,
+        "max": 3544
       },
       "review": {
         "count": 38009,
-        "p50": 2367,
+        "p50": 2368,
         "p90": 2814,
         "p95": 3006,
         "p99": 3177,
@@ -174,7 +174,14 @@
         "max": null
       }
     },
-    "growth_advisories": [],
+    "growth_advisories": [
+      {
+        "budget_class": "task",
+        "tokens": 3039,
+        "soft_target": 3000,
+        "overage_tokens": 39
+      }
+    ],
     "hard_ceiling_overages": [],
     "conformance_failures": [],
     "duplicate_rule_token_ratio_max": 0.03
@@ -2913,8 +2920,8 @@
       "id": "component-0171",
       "kind": "primary_skill",
       "path": "dist/universal/skills/dev/integration-change-builder/SKILL.md",
-      "sha256": "adc848b9f2e31df7137ff465b3ee95c4224ac45f035512b52f45f4081a39e28e",
-      "tokens": 273
+      "sha256": "b3ae5eb4df59d91c697ff0fc0c9419f96f157abedbb2122be3e9f4da7a908418",
+      "tokens": 359
     },
     {
       "id": "component-0172",
@@ -2983,8 +2990,8 @@
       "id": "component-0181",
       "kind": "primary_skill",
       "path": "dist/universal/skills/full/integration-change-builder/SKILL.md",
-      "sha256": "ddc3e5edc7d00a6df9df0482e2aa83dacf1e01a4f90213afbf4b94c581363533",
-      "tokens": 278
+      "sha256": "4789c869d0637f262f2f1bb1ab5c86a9133af368618d1fe51407d0628410df39",
+      "tokens": 364
     },
     {
       "id": "component-0182",
@@ -3053,8 +3060,8 @@
       "id": "component-0191",
       "kind": "primary_skill",
       "path": "dist/universal/skills/recommended/integration-change-builder/SKILL.md",
-      "sha256": "a7e789e5849b788eafde4510843b63e3e6916a2dc77ebb18fa532ddff323e52b",
-      "tokens": 273
+      "sha256": "0b03f2c52977ad4eddc3a029bd29918e91b0be203f7d55a68277cf67a9b71e1e",
+      "tokens": 359
     },
     {
       "id": "component-0192",
@@ -5166,14 +5173,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1973,
-          "sum_component_tokens": 1974,
+          "total_tokens": 2059,
+          "sum_component_tokens": 2060,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4027,
-          "hard_margin_tokens": 4527,
+          "soft_margin_tokens": 3941,
+          "hard_margin_tokens": 4441,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "codex",
@@ -5207,14 +5214,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1978,
-          "sum_component_tokens": 1979,
+          "total_tokens": 2064,
+          "sum_component_tokens": 2065,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4022,
-          "hard_margin_tokens": 4522,
+          "soft_margin_tokens": 3936,
+          "hard_margin_tokens": 4436,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "codex",
@@ -5248,14 +5255,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1988,
-          "sum_component_tokens": 1989,
+          "total_tokens": 2074,
+          "sum_component_tokens": 2075,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4012,
-          "hard_margin_tokens": 4512,
+          "soft_margin_tokens": 3926,
+          "hard_margin_tokens": 4426,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "codex",
@@ -5289,14 +5296,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1976,
-          "sum_component_tokens": 1977,
+          "total_tokens": 2062,
+          "sum_component_tokens": 2063,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4024,
-          "hard_margin_tokens": 4524,
+          "soft_margin_tokens": 3938,
+          "hard_margin_tokens": 4438,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "claude",
@@ -5330,14 +5337,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1981,
-          "sum_component_tokens": 1982,
+          "total_tokens": 2067,
+          "sum_component_tokens": 2068,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4019,
-          "hard_margin_tokens": 4519,
+          "soft_margin_tokens": 3933,
+          "hard_margin_tokens": 4433,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "claude",
@@ -5371,14 +5378,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1991,
-          "sum_component_tokens": 1992,
+          "total_tokens": 2077,
+          "sum_component_tokens": 2078,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4009,
-          "hard_margin_tokens": 4509,
+          "soft_margin_tokens": 3923,
+          "hard_margin_tokens": 4423,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "claude",
@@ -5412,14 +5419,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1977,
-          "sum_component_tokens": 1978,
+          "total_tokens": 2063,
+          "sum_component_tokens": 2064,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4023,
-          "hard_margin_tokens": 4523,
+          "soft_margin_tokens": 3937,
+          "hard_margin_tokens": 4437,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "copilot",
@@ -5453,14 +5460,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1982,
-          "sum_component_tokens": 1983,
+          "total_tokens": 2068,
+          "sum_component_tokens": 2069,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4018,
-          "hard_margin_tokens": 4518,
+          "soft_margin_tokens": 3932,
+          "hard_margin_tokens": 4432,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "copilot",
@@ -5494,14 +5501,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1992,
-          "sum_component_tokens": 1993,
+          "total_tokens": 2078,
+          "sum_component_tokens": 2079,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4008,
-          "hard_margin_tokens": 4508,
+          "soft_margin_tokens": 3922,
+          "hard_margin_tokens": 4422,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "copilot",
@@ -5535,14 +5542,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1973,
-          "sum_component_tokens": 1974,
+          "total_tokens": 2059,
+          "sum_component_tokens": 2060,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4027,
-          "hard_margin_tokens": 4527,
+          "soft_margin_tokens": 3941,
+          "hard_margin_tokens": 4441,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "codex",
@@ -5576,14 +5583,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1978,
-          "sum_component_tokens": 1979,
+          "total_tokens": 2064,
+          "sum_component_tokens": 2065,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4022,
-          "hard_margin_tokens": 4522,
+          "soft_margin_tokens": 3936,
+          "hard_margin_tokens": 4436,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "codex",
@@ -5617,14 +5624,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1988,
-          "sum_component_tokens": 1989,
+          "total_tokens": 2074,
+          "sum_component_tokens": 2075,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4012,
-          "hard_margin_tokens": 4512,
+          "soft_margin_tokens": 3926,
+          "hard_margin_tokens": 4426,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "codex",
@@ -5658,14 +5665,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1976,
-          "sum_component_tokens": 1977,
+          "total_tokens": 2062,
+          "sum_component_tokens": 2063,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4024,
-          "hard_margin_tokens": 4524,
+          "soft_margin_tokens": 3938,
+          "hard_margin_tokens": 4438,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "claude",
@@ -5699,14 +5706,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1981,
-          "sum_component_tokens": 1982,
+          "total_tokens": 2067,
+          "sum_component_tokens": 2068,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4019,
-          "hard_margin_tokens": 4519,
+          "soft_margin_tokens": 3933,
+          "hard_margin_tokens": 4433,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "claude",
@@ -5740,14 +5747,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1991,
-          "sum_component_tokens": 1992,
+          "total_tokens": 2077,
+          "sum_component_tokens": 2078,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4009,
-          "hard_margin_tokens": 4509,
+          "soft_margin_tokens": 3923,
+          "hard_margin_tokens": 4423,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "claude",
@@ -5781,14 +5788,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1977,
-          "sum_component_tokens": 1978,
+          "total_tokens": 2063,
+          "sum_component_tokens": 2064,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4023,
-          "hard_margin_tokens": 4523,
+          "soft_margin_tokens": 3937,
+          "hard_margin_tokens": 4437,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "copilot",
@@ -5822,14 +5829,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1982,
-          "sum_component_tokens": 1983,
+          "total_tokens": 2068,
+          "sum_component_tokens": 2069,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4018,
-          "hard_margin_tokens": 4518,
+          "soft_margin_tokens": 3932,
+          "hard_margin_tokens": 4432,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "copilot",
@@ -5863,14 +5870,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1992,
-          "sum_component_tokens": 1993,
+          "total_tokens": 2078,
+          "sum_component_tokens": 2079,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4008,
-          "hard_margin_tokens": 4508,
+          "soft_margin_tokens": 3922,
+          "hard_margin_tokens": 4422,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "copilot",
@@ -5904,14 +5911,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1963,
-          "sum_component_tokens": 1964,
+          "total_tokens": 2049,
+          "sum_component_tokens": 2050,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4037,
-          "hard_margin_tokens": 4537,
+          "soft_margin_tokens": 3951,
+          "hard_margin_tokens": 4451,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "codex",
@@ -5945,14 +5952,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1968,
-          "sum_component_tokens": 1969,
+          "total_tokens": 2054,
+          "sum_component_tokens": 2055,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4032,
-          "hard_margin_tokens": 4532,
+          "soft_margin_tokens": 3946,
+          "hard_margin_tokens": 4446,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "codex",
@@ -5986,14 +5993,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1978,
-          "sum_component_tokens": 1979,
+          "total_tokens": 2064,
+          "sum_component_tokens": 2065,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4022,
-          "hard_margin_tokens": 4522,
+          "soft_margin_tokens": 3936,
+          "hard_margin_tokens": 4436,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "codex",
@@ -6027,14 +6034,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1966,
-          "sum_component_tokens": 1967,
+          "total_tokens": 2052,
+          "sum_component_tokens": 2053,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4034,
-          "hard_margin_tokens": 4534,
+          "soft_margin_tokens": 3948,
+          "hard_margin_tokens": 4448,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "claude",
@@ -6068,14 +6075,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1971,
-          "sum_component_tokens": 1972,
+          "total_tokens": 2057,
+          "sum_component_tokens": 2058,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4029,
-          "hard_margin_tokens": 4529,
+          "soft_margin_tokens": 3943,
+          "hard_margin_tokens": 4443,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "claude",
@@ -6109,14 +6116,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1981,
-          "sum_component_tokens": 1982,
+          "total_tokens": 2067,
+          "sum_component_tokens": 2068,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4019,
-          "hard_margin_tokens": 4519,
+          "soft_margin_tokens": 3933,
+          "hard_margin_tokens": 4433,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "claude",
@@ -6150,14 +6157,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1967,
-          "sum_component_tokens": 1968,
+          "total_tokens": 2053,
+          "sum_component_tokens": 2054,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4033,
-          "hard_margin_tokens": 4533,
+          "soft_margin_tokens": 3947,
+          "hard_margin_tokens": 4447,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "copilot",
@@ -6191,14 +6198,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1972,
-          "sum_component_tokens": 1973,
+          "total_tokens": 2058,
+          "sum_component_tokens": 2059,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4028,
-          "hard_margin_tokens": 4528,
+          "soft_margin_tokens": 3942,
+          "hard_margin_tokens": 4442,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "copilot",
@@ -6232,14 +6239,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1982,
-          "sum_component_tokens": 1983,
+          "total_tokens": 2068,
+          "sum_component_tokens": 2069,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4018,
-          "hard_margin_tokens": 4518,
+          "soft_margin_tokens": 3932,
+          "hard_margin_tokens": 4432,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "copilot",
@@ -16151,14 +16158,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1964,
-          "sum_component_tokens": 1965,
+          "total_tokens": 2050,
+          "sum_component_tokens": 2051,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4036,
-          "hard_margin_tokens": 4536,
+          "soft_margin_tokens": 3950,
+          "hard_margin_tokens": 4450,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "codex",
@@ -16192,14 +16199,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1969,
-          "sum_component_tokens": 1970,
+          "total_tokens": 2055,
+          "sum_component_tokens": 2056,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4031,
-          "hard_margin_tokens": 4531,
+          "soft_margin_tokens": 3945,
+          "hard_margin_tokens": 4445,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "codex",
@@ -16233,14 +16240,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1979,
-          "sum_component_tokens": 1980,
+          "total_tokens": 2065,
+          "sum_component_tokens": 2066,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4021,
-          "hard_margin_tokens": 4521,
+          "soft_margin_tokens": 3935,
+          "hard_margin_tokens": 4435,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "codex",
@@ -16274,14 +16281,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1967,
-          "sum_component_tokens": 1968,
+          "total_tokens": 2053,
+          "sum_component_tokens": 2054,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4033,
-          "hard_margin_tokens": 4533,
+          "soft_margin_tokens": 3947,
+          "hard_margin_tokens": 4447,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "claude",
@@ -16315,14 +16322,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1972,
-          "sum_component_tokens": 1973,
+          "total_tokens": 2058,
+          "sum_component_tokens": 2059,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4028,
-          "hard_margin_tokens": 4528,
+          "soft_margin_tokens": 3942,
+          "hard_margin_tokens": 4442,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "claude",
@@ -16356,14 +16363,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1982,
-          "sum_component_tokens": 1983,
+          "total_tokens": 2068,
+          "sum_component_tokens": 2069,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4018,
-          "hard_margin_tokens": 4518,
+          "soft_margin_tokens": 3932,
+          "hard_margin_tokens": 4432,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "claude",
@@ -16397,14 +16404,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1968,
-          "sum_component_tokens": 1969,
+          "total_tokens": 2054,
+          "sum_component_tokens": 2055,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4032,
-          "hard_margin_tokens": 4532,
+          "soft_margin_tokens": 3946,
+          "hard_margin_tokens": 4446,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "copilot",
@@ -16438,14 +16445,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1973,
-          "sum_component_tokens": 1974,
+          "total_tokens": 2059,
+          "sum_component_tokens": 2060,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4027,
-          "hard_margin_tokens": 4527,
+          "soft_margin_tokens": 3941,
+          "hard_margin_tokens": 4441,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "copilot",
@@ -16479,14 +16486,14 @@
           "soft_target": 6000,
           "hard_ceiling": 6500,
           "calibration_status": "provisional-migration-value",
-          "total_tokens": 1983,
-          "sum_component_tokens": 1984,
+          "total_tokens": 2069,
+          "sum_component_tokens": 2070,
           "duplicate_rule_tokens": 0,
           "duplicate_rule_token_ratio": 0.0,
           "within_soft_target": true,
           "within_hard_ceiling": true,
-          "soft_margin_tokens": 4017,
-          "hard_margin_tokens": 4517,
+          "soft_margin_tokens": 3931,
+          "hard_margin_tokens": 4431,
           "budget_signal": null,
           "within_duplicate_budget": true,
           "host": "copilot",
@@ -21521,8 +21528,8 @@
       "candidate_composition_count": 2126412,
       "canonical_representative_count": 236268,
       "coverage_mapping_count": 2126412,
-      "exact_measurement_count": 6,
-      "upper_bound_dominated_count": 708791,
+      "exact_measurement_count": 4,
+      "upper_bound_dominated_count": 708797,
       "host_variant_dominated_count": 1417608
     },
     "required_coverage": {
@@ -21537,20 +21544,20 @@
     },
     "max_by_budget_class": {
       "task": {
-        "tokens": 2943,
-        "sum_component_tokens": 2944,
-        "component_upper_bound_tokens": 2948,
+        "tokens": 3039,
+        "sum_component_tokens": 3040,
+        "component_upper_bound_tokens": 3044,
         "soft_target": 3000,
         "hard_ceiling": 3200,
-        "within_soft_target": true,
+        "within_soft_target": false,
         "within_hard_ceiling": true,
-        "soft_margin_tokens": 57,
-        "hard_margin_tokens": 257,
-        "budget_signal": null,
+        "soft_margin_tokens": -39,
+        "hard_margin_tokens": 161,
+        "budget_signal": "growth-advisory",
         "within_duplicate_budget": true,
         "route_obligations_preserved": true,
         "host": "copilot",
-        "build_profile": "dev",
+        "build_profile": "full",
         "profile": "task-agent",
         "selection_owner": "main-control-agent",
         "professional_skill": "change-documentation-gate",
@@ -21639,9 +21646,9 @@
         "domain": [],
         "loaded_paths": [
           "dist/copilot/project/.github/agents/task-agent.agent.md",
-          "dist/universal/skills/dev/change-documentation-gate/SKILL.md",
-          "dist/universal/skills/dev/documentation-generation/SKILL.md",
-          "dist/universal/skills/dev/documentation-generation/references/benchmarks-and-patterns.md",
+          "dist/universal/skills/full/change-documentation-gate/SKILL.md",
+          "dist/universal/skills/full/change-documentation-gate/references/layer3/documentation-generation.md",
+          "dist/universal/skills/full/change-documentation-gate/references/layer3/documentation-generation/references/benchmarks-and-patterns.md",
           "fixture:repair-and-rereview:step:22:canonical-capsule"
         ],
         "receipt_sha256": "1690fe4c2740ad9bc633358a2b6c616e4f4a55ec3184baf1579526fd1b303461",
@@ -21844,15 +21851,15 @@
         ]
       },
       "analysis": {
-        "tokens": 3448,
-        "sum_component_tokens": 3449,
-        "component_upper_bound_tokens": 3455,
+        "tokens": 3544,
+        "sum_component_tokens": 3545,
+        "component_upper_bound_tokens": 3551,
         "soft_target": 4500,
         "hard_ceiling": 5000,
         "within_soft_target": true,
         "within_hard_ceiling": true,
-        "soft_margin_tokens": 1052,
-        "hard_margin_tokens": 1552,
+        "soft_margin_tokens": 956,
+        "hard_margin_tokens": 1456,
         "budget_signal": null,
         "within_duplicate_budget": true,
         "route_obligations_preserved": true,
@@ -22201,11 +22208,11 @@
           "exact_render_signature_count": 19281,
           "token_distribution": {
             "count": 19281,
-            "p50": 2196,
-            "p90": 2652,
-            "p95": 2718,
-            "p99": 2825,
-            "max": 2943
+            "p50": 2198,
+            "p90": 2654,
+            "p95": 2721,
+            "p99": 2829,
+            "max": 3039
           },
           "growth_distribution": {
             "status": "unavailable",
@@ -22217,33 +22224,56 @@
             "p99": null,
             "max": null
           },
-          "over_target_candidate_count": 0,
+          "over_target_candidate_count": 1,
           "frontier_counts": {
-            "professional": 0,
-            "layer3": 0,
-            "active_reference": 0
+            "professional": 1,
+            "layer3": 1,
+            "active_reference": 1
           },
           "frontier": {
-            "professional": [],
-            "layer3": [],
-            "active_reference": []
+            "professional": [
+              "change-documentation-gate"
+            ],
+            "layer3": [
+              "documentation-generation"
+            ],
+            "active_reference": [
+              "documentation-generation/references/benchmarks-and-patterns.md"
+            ]
           },
           "frontier_witnesses": {
-            "professional": [],
-            "layer3": [],
-            "active_reference": []
-          },
-          "outside_counts": {
-            "professional": 12,
-            "layer3": 55,
-            "active_reference": 204
-          },
-          "outside": {
             "professional": [
               {
                 "member": "change-documentation-gate",
-                "maximum_tokens": 2943
-              },
+                "maximum_tokens": 3039,
+                "canonical_reduction_key_sha256": "2b6f076cb5ecb45741312aa658ddd3d6861834e83eb555b252394df04a540ab6",
+                "render_signature_sha256": "61e50972405a03003f035ae2e88e2ff7e6bc91747f7be2d18c248f1581da9e7d"
+              }
+            ],
+            "layer3": [
+              {
+                "member": "documentation-generation",
+                "maximum_tokens": 3039,
+                "canonical_reduction_key_sha256": "2b6f076cb5ecb45741312aa658ddd3d6861834e83eb555b252394df04a540ab6",
+                "render_signature_sha256": "61e50972405a03003f035ae2e88e2ff7e6bc91747f7be2d18c248f1581da9e7d"
+              }
+            ],
+            "active_reference": [
+              {
+                "member": "documentation-generation/references/benchmarks-and-patterns.md",
+                "maximum_tokens": 3039,
+                "canonical_reduction_key_sha256": "2b6f076cb5ecb45741312aa658ddd3d6861834e83eb555b252394df04a540ab6",
+                "render_signature_sha256": "61e50972405a03003f035ae2e88e2ff7e6bc91747f7be2d18c248f1581da9e7d"
+              }
+            ]
+          },
+          "outside_counts": {
+            "professional": 11,
+            "layer3": 54,
+            "active_reference": 203
+          },
+          "outside": {
+            "professional": [
               {
                 "member": "data-api-contract-changer",
                 "maximum_tokens": 2776
@@ -22254,7 +22284,7 @@
               },
               {
                 "member": "delivery-release-gate",
-                "maximum_tokens": 2720
+                "maximum_tokens": 2816
               },
               {
                 "member": "installed-client-change-builder",
@@ -22262,15 +22292,15 @@
               },
               {
                 "member": "integration-change-builder",
-                "maximum_tokens": 2835
+                "maximum_tokens": 2921
               },
               {
                 "member": "logging-design-gate",
-                "maximum_tokens": 2628
+                "maximum_tokens": 2731
               },
               {
                 "member": "platform-infrastructure-change-builder",
-                "maximum_tokens": 2751
+                "maximum_tokens": 2812
               },
               {
                 "member": "quality-test-gate",
@@ -22282,7 +22312,7 @@
               },
               {
                 "member": "repository-tooling-change-builder",
-                "maximum_tokens": 2909
+                "maximum_tokens": 3000
               },
               {
                 "member": "security-privacy-gate",
@@ -22292,7 +22322,7 @@
             "layer3": [
               {
                 "member": "ai-product-extension",
-                "maximum_tokens": 2897
+                "maximum_tokens": 2921
               },
               {
                 "member": "android-platform-extension",
@@ -22320,7 +22350,7 @@
               },
               {
                 "member": "build-tool-professional-usage",
-                "maximum_tokens": 2909
+                "maximum_tokens": 3000
               },
               {
                 "member": "client-application-testing",
@@ -22340,15 +22370,15 @@
               },
               {
                 "member": "configuration-runtime-policy",
-                "maximum_tokens": 2851
+                "maximum_tokens": 2914
               },
               {
                 "member": "consumer-impact-analysis",
-                "maximum_tokens": 2832
+                "maximum_tokens": 2918
               },
               {
                 "member": "contract-testing",
-                "maximum_tokens": 2812
+                "maximum_tokens": 2898
               },
               {
                 "member": "cross-platform-client-extension",
@@ -22372,31 +22402,27 @@
               },
               {
                 "member": "dependency-vulnerability-scanning",
-                "maximum_tokens": 2909
+                "maximum_tokens": 3000
               },
               {
                 "member": "design-pattern-selection",
-                "maximum_tokens": 2862
+                "maximum_tokens": 2953
               },
               {
                 "member": "distributed-workflow-consistency",
                 "maximum_tokens": 2847
               },
               {
-                "member": "documentation-generation",
-                "maximum_tokens": 2943
-              },
-              {
                 "member": "failure-contract-design",
-                "maximum_tokens": 2832
+                "maximum_tokens": 2918
               },
               {
                 "member": "idempotency-retry-design",
-                "maximum_tokens": 2835
+                "maximum_tokens": 2921
               },
               {
                 "member": "infrastructure-as-code-safety",
-                "maximum_tokens": 2751
+                "maximum_tokens": 2803
               },
               {
                 "member": "ios-ipados-platform-extension",
@@ -22404,7 +22430,7 @@
               },
               {
                 "member": "iot-embedded-extension",
-                "maximum_tokens": 2720
+                "maximum_tokens": 2816
               },
               {
                 "member": "kotlin-professional-usage",
@@ -22416,7 +22442,7 @@
               },
               {
                 "member": "logging-error-handling",
-                "maximum_tokens": 2628
+                "maximum_tokens": 2731
               },
               {
                 "member": "macos-platform-extension",
@@ -22424,7 +22450,7 @@
               },
               {
                 "member": "minimal-correct-implementation",
-                "maximum_tokens": 2909
+                "maximum_tokens": 3000
               },
               {
                 "member": "model-boundary-mapping",
@@ -22444,7 +22470,7 @@
               },
               {
                 "member": "powershell-professional-usage",
-                "maximum_tokens": 2751
+                "maximum_tokens": 2812
               },
               {
                 "member": "privacy-data-lifecycle",
@@ -22476,7 +22502,7 @@
               },
               {
                 "member": "targeted-validation-selection",
-                "maximum_tokens": 2863
+                "maximum_tokens": 2954
               },
               {
                 "member": "tenant-isolation",
@@ -22500,11 +22526,11 @@
               },
               {
                 "member": "version-compatibility",
-                "maximum_tokens": 2776
+                "maximum_tokens": 2816
               },
               {
                 "member": "web-security",
-                "maximum_tokens": 2897
+                "maximum_tokens": 2921
               },
               {
                 "member": "windows-platform-extension",
@@ -22514,7 +22540,7 @@
             "active_reference": [
               {
                 "member": "ai-product-extension/references/checklist.md",
-                "maximum_tokens": 2897
+                "maximum_tokens": 2921
               },
               {
                 "member": "android-platform-extension/references/accessibility-representation-input-and-scaling-implementation-and-review-evidence.md",
@@ -22606,27 +22632,27 @@
               },
               {
                 "member": "build-tool-professional-usage/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2507
+                "maximum_tokens": 2598
               },
               {
                 "member": "build-tool-professional-usage/references/checklist.md",
-                "maximum_tokens": 2507
+                "maximum_tokens": 2598
               },
               {
                 "member": "build-tool-professional-usage/references/evidence-patterns.md",
-                "maximum_tokens": 2526
+                "maximum_tokens": 2617
               },
               {
                 "member": "change-documentation-gate/references/checklist.md",
-                "maximum_tokens": 2145
+                "maximum_tokens": 2241
               },
               {
                 "member": "change-documentation-gate/references/documentation-output-and-gates.md",
-                "maximum_tokens": 2693
+                "maximum_tokens": 2789
               },
               {
                 "member": "change-documentation-gate/references/evidence-patterns.md",
-                "maximum_tokens": 2448
+                "maximum_tokens": 2544
               },
               {
                 "member": "client-application-testing/references/client-test-matrix.md",
@@ -22670,39 +22696,39 @@
               },
               {
                 "member": "configuration-runtime-policy/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2625
+                "maximum_tokens": 2716
               },
               {
                 "member": "configuration-runtime-policy/references/checklist.md",
-                "maximum_tokens": 2548
+                "maximum_tokens": 2639
               },
               {
                 "member": "configuration-runtime-policy/references/evidence-patterns.md",
-                "maximum_tokens": 2606
+                "maximum_tokens": 2697
               },
               {
                 "member": "consumer-impact-analysis/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2437
+                "maximum_tokens": 2523
               },
               {
                 "member": "consumer-impact-analysis/references/checklist.md",
-                "maximum_tokens": 2440
+                "maximum_tokens": 2526
               },
               {
                 "member": "consumer-impact-analysis/references/evidence-patterns.md",
-                "maximum_tokens": 2441
+                "maximum_tokens": 2527
               },
               {
                 "member": "contract-testing/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2334
+                "maximum_tokens": 2420
               },
               {
                 "member": "contract-testing/references/checklist.md",
-                "maximum_tokens": 2264
+                "maximum_tokens": 2350
               },
               {
                 "member": "contract-testing/references/evidence-patterns.md",
-                "maximum_tokens": 2354
+                "maximum_tokens": 2440
               },
               {
                 "member": "cross-platform-client-extension/references/bridge-plugin-and-ffi-contracts.md",
@@ -22790,31 +22816,31 @@
               },
               {
                 "member": "delivery-release-gate/references/checklist.md",
-                "maximum_tokens": 2355
+                "maximum_tokens": 2451
               },
               {
                 "member": "delivery-release-gate/references/delivery-output-and-gates.md",
-                "maximum_tokens": 2623
+                "maximum_tokens": 2719
               },
               {
                 "member": "delivery-release-gate/references/release-evidence-patterns.md",
-                "maximum_tokens": 2629
+                "maximum_tokens": 2725
               },
               {
                 "member": "dependency-vulnerability-scanning/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2621
+                "maximum_tokens": 2712
               },
               {
                 "member": "dependency-vulnerability-scanning/references/checklist.md",
-                "maximum_tokens": 2423
+                "maximum_tokens": 2514
               },
               {
                 "member": "dependency-vulnerability-scanning/references/evidence-patterns.md",
-                "maximum_tokens": 2909
+                "maximum_tokens": 3000
               },
               {
                 "member": "design-pattern-selection/references/pattern-evidence-record.md",
-                "maximum_tokens": 2510
+                "maximum_tokens": 2601
               },
               {
                 "member": "distributed-workflow-consistency/references/compensation-convergence-and-reconciliation.md",
@@ -22829,40 +22855,36 @@
                 "maximum_tokens": 2763
               },
               {
-                "member": "documentation-generation/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2943
-              },
-              {
                 "member": "documentation-generation/references/checklist.md",
-                "maximum_tokens": 1940
+                "maximum_tokens": 2036
               },
               {
                 "member": "documentation-generation/references/evidence-patterns.md",
-                "maximum_tokens": 2596
+                "maximum_tokens": 2692
               },
               {
                 "member": "failure-contract-design/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2418
+                "maximum_tokens": 2504
               },
               {
                 "member": "failure-contract-design/references/checklist.md",
-                "maximum_tokens": 2419
+                "maximum_tokens": 2505
               },
               {
                 "member": "failure-contract-design/references/evidence-patterns.md",
-                "maximum_tokens": 2410
+                "maximum_tokens": 2496
               },
               {
                 "member": "idempotency-retry-design/references/checklist.md",
-                "maximum_tokens": 2409
+                "maximum_tokens": 2480
               },
               {
                 "member": "idempotency-retry-design/references/evidence-patterns.md",
-                "maximum_tokens": 2609
+                "maximum_tokens": 2680
               },
               {
                 "member": "idempotency-retry-design/references/industry-benchmarks.md",
-                "maximum_tokens": 2561
+                "maximum_tokens": 2632
               },
               {
                 "member": "infrastructure-as-code-safety/references/identity-destruction-and-recovery-contracts.md",
@@ -22906,11 +22928,11 @@
               },
               {
                 "member": "integration-change-builder/references/checklist.md",
-                "maximum_tokens": 2385
+                "maximum_tokens": 2471
               },
               {
                 "member": "integration-change-builder/references/solution-optimality.md",
-                "maximum_tokens": 2435
+                "maximum_tokens": 2521
               },
               {
                 "member": "ios-ipados-platform-extension/references/compatibility-signing-and-distribution-contracts-implementation-and-review-evidence.md",
@@ -22938,7 +22960,7 @@
               },
               {
                 "member": "iot-embedded-extension/references/checklist.md",
-                "maximum_tokens": 2720
+                "maximum_tokens": 2816
               },
               {
                 "member": "kotlin-professional-usage/references/coroutine-flow-state-contracts.md",
@@ -22978,27 +23000,27 @@
               },
               {
                 "member": "logging-design-gate/references/checklist.md",
-                "maximum_tokens": 2417
+                "maximum_tokens": 2520
               },
               {
                 "member": "logging-design-gate/references/logging-output-and-gates.md",
-                "maximum_tokens": 2528
+                "maximum_tokens": 2631
               },
               {
                 "member": "logging-design-gate/references/logging-selection-criteria.md",
-                "maximum_tokens": 2528
+                "maximum_tokens": 2631
               },
               {
                 "member": "logging-error-handling/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2528
+                "maximum_tokens": 2631
               },
               {
                 "member": "logging-error-handling/references/checklist.md",
-                "maximum_tokens": 2241
+                "maximum_tokens": 2344
               },
               {
                 "member": "logging-error-handling/references/evidence-patterns.md",
-                "maximum_tokens": 2501
+                "maximum_tokens": 2604
               },
               {
                 "member": "macos-platform-extension/references/accessibility-platform-deltas-implementation-and-review-evidence.md",
@@ -23026,7 +23048,7 @@
               },
               {
                 "member": "minimal-correct-implementation/references/simplicity-ladder.md",
-                "maximum_tokens": 2778
+                "maximum_tokens": 2869
               },
               {
                 "member": "model-boundary-mapping/references/benchmarks-and-patterns.md",
@@ -23042,15 +23064,15 @@
               },
               {
                 "member": "observability/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2673
+                "maximum_tokens": 2731
               },
               {
                 "member": "observability/references/checklist.md",
-                "maximum_tokens": 2335
+                "maximum_tokens": 2393
               },
               {
                 "member": "observability/references/evidence-patterns.md",
-                "maximum_tokens": 2553
+                "maximum_tokens": 2611
               },
               {
                 "member": "offline-sync-conflict-resolution/references/sync-reconciliation-contracts.md",
@@ -23070,7 +23092,7 @@
               },
               {
                 "member": "platform-infrastructure-change-builder/references/iac-source-contracts.md",
-                "maximum_tokens": 2649
+                "maximum_tokens": 2812
               },
               {
                 "member": "platform-infrastructure-change-builder/references/kubernetes-source-contracts.md",
@@ -23118,15 +23140,15 @@
               },
               {
                 "member": "release-rollback/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2698
+                "maximum_tokens": 2794
               },
               {
                 "member": "release-rollback/references/checklist.md",
-                "maximum_tokens": 2525
+                "maximum_tokens": 2621
               },
               {
                 "member": "release-rollback/references/evidence-patterns.md",
-                "maximum_tokens": 2652
+                "maximum_tokens": 2748
               },
               {
                 "member": "reliability-observability-gate/references/checklist.md",
@@ -23146,15 +23168,15 @@
               },
               {
                 "member": "repository-tooling-change-builder/references/generator-and-plugin-contracts.md",
-                "maximum_tokens": 2641
+                "maximum_tokens": 2732
               },
               {
                 "member": "repository-tooling-change-builder/references/harness-validity-contracts.md",
-                "maximum_tokens": 2587
+                "maximum_tokens": 2678
               },
               {
                 "member": "repository-tooling-change-builder/references/repository-automation-contracts.md",
-                "maximum_tokens": 2637
+                "maximum_tokens": 2728
               },
               {
                 "member": "sdk-library-contract-design/references/benchmarks-and-patterns.md",
@@ -23170,15 +23192,15 @@
               },
               {
                 "member": "secret-configuration-security/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2518
+                "maximum_tokens": 2621
               },
               {
                 "member": "secret-configuration-security/references/checklist.md",
-                "maximum_tokens": 2303
+                "maximum_tokens": 2406
               },
               {
                 "member": "secret-configuration-security/references/evidence-patterns.md",
-                "maximum_tokens": 2504
+                "maximum_tokens": 2607
               },
               {
                 "member": "security-privacy-gate/references/checklist.md",
@@ -23214,7 +23236,7 @@
               },
               {
                 "member": "targeted-validation-selection/references/repository-command-entry-evidence.md",
-                "maximum_tokens": 2468
+                "maximum_tokens": 2559
               },
               {
                 "member": "tenant-isolation/references/async-queue-and-execution-context-isolation.md",
@@ -23278,27 +23300,27 @@
               },
               {
                 "member": "version-compatibility/references/checklist.md",
-                "maximum_tokens": 2694
+                "maximum_tokens": 2790
               },
               {
                 "member": "version-compatibility/references/compatibility-benchmarks.md",
-                "maximum_tokens": 2704
+                "maximum_tokens": 2800
               },
               {
                 "member": "version-compatibility/references/evidence-patterns.md",
-                "maximum_tokens": 2698
+                "maximum_tokens": 2794
               },
               {
                 "member": "web-security/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2710
+                "maximum_tokens": 2715
               },
               {
                 "member": "web-security/references/checklist.md",
-                "maximum_tokens": 2569
+                "maximum_tokens": 2574
               },
               {
                 "member": "web-security/references/evidence-patterns.md",
-                "maximum_tokens": 2742
+                "maximum_tokens": 2747
               },
               {
                 "member": "windows-platform-extension/references/architecture-signing-and-distribution-contracts-implementation-and-review-evidence.md",
@@ -23338,10 +23360,10 @@
           "exact_render_signature_count": 66150,
           "token_distribution": {
             "count": 66150,
-            "p50": 2694,
-            "p90": 3205,
-            "p95": 3360,
-            "p99": 3575,
+            "p50": 2699,
+            "p90": 3206,
+            "p95": 3361,
+            "p99": 3577,
             "max": 4028
           },
           "growth_distribution": {
@@ -23383,7 +23405,7 @@
               },
               {
                 "member": "change-documentation-gate",
-                "maximum_tokens": 3215
+                "maximum_tokens": 3311
               },
               {
                 "member": "data-api-contract-changer",
@@ -23391,11 +23413,11 @@
               },
               {
                 "member": "data-middleware-change-builder",
-                "maximum_tokens": 3119
+                "maximum_tokens": 3182
               },
               {
                 "member": "delivery-release-gate",
-                "maximum_tokens": 2992
+                "maximum_tokens": 3088
               },
               {
                 "member": "frontend-change-builder",
@@ -23407,19 +23429,19 @@
               },
               {
                 "member": "integration-change-builder",
-                "maximum_tokens": 3107
+                "maximum_tokens": 3193
               },
               {
                 "member": "logging-design-gate",
-                "maximum_tokens": 2900
+                "maximum_tokens": 3003
               },
               {
                 "member": "platform-infrastructure-change-builder",
-                "maximum_tokens": 3023
+                "maximum_tokens": 3084
               },
               {
                 "member": "quality-test-gate",
-                "maximum_tokens": 2987
+                "maximum_tokens": 3061
               },
               {
                 "member": "reliability-observability-gate",
@@ -23427,7 +23449,7 @@
               },
               {
                 "member": "repository-tooling-change-builder",
-                "maximum_tokens": 3668
+                "maximum_tokens": 3759
               },
               {
                 "member": "security-privacy-gate",
@@ -23469,11 +23491,11 @@
               },
               {
                 "member": "bigdata-product-extension",
-                "maximum_tokens": 3108
+                "maximum_tokens": 3182
               },
               {
                 "member": "build-tool-professional-usage",
-                "maximum_tokens": 3635
+                "maximum_tokens": 3726
               },
               {
                 "member": "client-application-testing",
@@ -23497,11 +23519,11 @@
               },
               {
                 "member": "consumer-impact-analysis",
-                "maximum_tokens": 3104
+                "maximum_tokens": 3190
               },
               {
                 "member": "contract-testing",
-                "maximum_tokens": 3084
+                "maximum_tokens": 3170
               },
               {
                 "member": "cross-platform-client-extension",
@@ -23517,7 +23539,7 @@
               },
               {
                 "member": "data-migration-design",
-                "maximum_tokens": 3099
+                "maximum_tokens": 3133
               },
               {
                 "member": "degradation-circuit-breaking",
@@ -23537,7 +23559,7 @@
               },
               {
                 "member": "documentation-generation",
-                "maximum_tokens": 3215
+                "maximum_tokens": 3311
               },
               {
                 "member": "domain-object-identification",
@@ -23565,7 +23587,7 @@
               },
               {
                 "member": "infrastructure-as-code-safety",
-                "maximum_tokens": 3023
+                "maximum_tokens": 3075
               },
               {
                 "member": "interaction-state-modeling",
@@ -23577,7 +23599,7 @@
               },
               {
                 "member": "iot-embedded-extension",
-                "maximum_tokens": 2992
+                "maximum_tokens": 3088
               },
               {
                 "member": "kotlin-professional-usage",
@@ -23629,7 +23651,7 @@
               },
               {
                 "member": "powershell-professional-usage",
-                "maximum_tokens": 3023
+                "maximum_tokens": 3084
               },
               {
                 "member": "privacy-data-lifecycle",
@@ -23641,7 +23663,7 @@
               },
               {
                 "member": "release-rollback",
-                "maximum_tokens": 3098
+                "maximum_tokens": 3132
               },
               {
                 "member": "sdk-library-contract-design",
@@ -23661,7 +23683,7 @@
               },
               {
                 "member": "targeted-validation-selection",
-                "maximum_tokens": 3589
+                "maximum_tokens": 3680
               },
               {
                 "member": "tenant-isolation",
@@ -23669,11 +23691,11 @@
               },
               {
                 "member": "test-data-management",
-                "maximum_tokens": 2987
+                "maximum_tokens": 3061
               },
               {
                 "member": "test-strategy",
-                "maximum_tokens": 2980
+                "maximum_tokens": 3051
               },
               {
                 "member": "threat-modeling",
@@ -23685,7 +23707,7 @@
               },
               {
                 "member": "version-compatibility",
-                "maximum_tokens": 3048
+                "maximum_tokens": 3088
               },
               {
                 "member": "web-platform-professional-usage",
@@ -23693,11 +23715,11 @@
               },
               {
                 "member": "web-security",
-                "maximum_tokens": 3169
+                "maximum_tokens": 3193
               },
               {
                 "member": "web3-product-extension",
-                "maximum_tokens": 3043
+                "maximum_tokens": 3129
               },
               {
                 "member": "windows-platform-extension",
@@ -23835,51 +23857,51 @@
               },
               {
                 "member": "bigdata-product-extension/references/consumer-and-schema-contracts.md",
-                "maximum_tokens": 2565
+                "maximum_tokens": 2639
               },
               {
                 "member": "bigdata-product-extension/references/observability-and-privacy.md",
-                "maximum_tokens": 2536
+                "maximum_tokens": 2610
               },
               {
                 "member": "bigdata-product-extension/references/pipeline-replay-and-event-identity.md",
-                "maximum_tokens": 2619
+                "maximum_tokens": 2693
               },
               {
                 "member": "bigdata-product-extension/references/quality-lineage-and-point-in-time-correctness.md",
-                "maximum_tokens": 2546
+                "maximum_tokens": 2620
               },
               {
                 "member": "bigdata-product-extension/references/storage-performance-and-recovery.md",
-                "maximum_tokens": 2559
+                "maximum_tokens": 2633
               },
               {
                 "member": "build-tool-professional-usage/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2896
+                "maximum_tokens": 2987
               },
               {
                 "member": "build-tool-professional-usage/references/checklist.md",
-                "maximum_tokens": 2896
+                "maximum_tokens": 2987
               },
               {
                 "member": "build-tool-professional-usage/references/evidence-patterns.md",
-                "maximum_tokens": 2915
+                "maximum_tokens": 3006
               },
               {
                 "member": "change-documentation-gate/references/checklist.md",
-                "maximum_tokens": 2417
+                "maximum_tokens": 2513
               },
               {
                 "member": "change-documentation-gate/references/documentation-output-and-gates.md",
-                "maximum_tokens": 2965
+                "maximum_tokens": 3061
               },
               {
                 "member": "change-documentation-gate/references/evidence-patterns.md",
-                "maximum_tokens": 2720
+                "maximum_tokens": 2816
               },
               {
                 "member": "client-application-testing/references/client-test-matrix.md",
-                "maximum_tokens": 3003
+                "maximum_tokens": 3061
               },
               {
                 "member": "client-lifecycle-state-restoration/references/restoration-boundaries.md",
@@ -23931,27 +23953,27 @@
               },
               {
                 "member": "consumer-impact-analysis/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2709
+                "maximum_tokens": 2795
               },
               {
                 "member": "consumer-impact-analysis/references/checklist.md",
-                "maximum_tokens": 2712
+                "maximum_tokens": 2798
               },
               {
                 "member": "consumer-impact-analysis/references/evidence-patterns.md",
-                "maximum_tokens": 2713
+                "maximum_tokens": 2799
               },
               {
                 "member": "contract-testing/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2606
+                "maximum_tokens": 2692
               },
               {
                 "member": "contract-testing/references/checklist.md",
-                "maximum_tokens": 2536
+                "maximum_tokens": 2622
               },
               {
                 "member": "contract-testing/references/evidence-patterns.md",
-                "maximum_tokens": 2626
+                "maximum_tokens": 2712
               },
               {
                 "member": "cross-platform-client-extension/references/bridge-plugin-and-ffi-contracts.md",
@@ -24003,27 +24025,27 @@
               },
               {
                 "member": "data-middleware-change-builder/references/checklist.md",
-                "maximum_tokens": 2788
+                "maximum_tokens": 2822
               },
               {
                 "member": "data-middleware-change-builder/references/evidence-patterns.md",
-                "maximum_tokens": 2803
+                "maximum_tokens": 2837
               },
               {
                 "member": "data-middleware-change-builder/references/recovery-patterns.md",
-                "maximum_tokens": 2720
+                "maximum_tokens": 2754
               },
               {
                 "member": "data-migration-design/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2726
+                "maximum_tokens": 2789
               },
               {
                 "member": "data-migration-design/references/checklist.md",
-                "maximum_tokens": 2484
+                "maximum_tokens": 2547
               },
               {
                 "member": "data-migration-design/references/evidence-patterns.md",
-                "maximum_tokens": 2991
+                "maximum_tokens": 3054
               },
               {
                 "member": "degradation-circuit-breaking/references/benchmarks-and-patterns.md",
@@ -24039,15 +24061,15 @@
               },
               {
                 "member": "delivery-release-gate/references/checklist.md",
-                "maximum_tokens": 2627
+                "maximum_tokens": 2723
               },
               {
                 "member": "delivery-release-gate/references/delivery-output-and-gates.md",
-                "maximum_tokens": 2895
+                "maximum_tokens": 2991
               },
               {
                 "member": "delivery-release-gate/references/release-evidence-patterns.md",
-                "maximum_tokens": 2901
+                "maximum_tokens": 2997
               },
               {
                 "member": "dependency-vulnerability-scanning/references/benchmarks-and-patterns.md",
@@ -24067,27 +24089,27 @@
               },
               {
                 "member": "distributed-workflow-consistency/references/compensation-convergence-and-reconciliation.md",
-                "maximum_tokens": 3036
+                "maximum_tokens": 3070
               },
               {
                 "member": "distributed-workflow-consistency/references/identity-state-and-unknown-outcomes.md",
-                "maximum_tokens": 3021
+                "maximum_tokens": 3055
               },
               {
                 "member": "distributed-workflow-consistency/references/stuck-manual-repair-and-versioning.md",
-                "maximum_tokens": 3035
+                "maximum_tokens": 3069
               },
               {
                 "member": "documentation-generation/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 3215
+                "maximum_tokens": 3311
               },
               {
                 "member": "documentation-generation/references/checklist.md",
-                "maximum_tokens": 2212
+                "maximum_tokens": 2308
               },
               {
                 "member": "documentation-generation/references/evidence-patterns.md",
-                "maximum_tokens": 2868
+                "maximum_tokens": 2964
               },
               {
                 "member": "domain-object-identification/references/benchmarks-and-patterns.md",
@@ -24239,11 +24261,11 @@
               },
               {
                 "member": "integration-change-builder/references/checklist.md",
-                "maximum_tokens": 2657
+                "maximum_tokens": 2743
               },
               {
                 "member": "integration-change-builder/references/solution-optimality.md",
-                "maximum_tokens": 2707
+                "maximum_tokens": 2793
               },
               {
                 "member": "interaction-state-modeling/references/checklist.md",
@@ -24299,7 +24321,7 @@
               },
               {
                 "member": "iot-embedded-extension/references/checklist.md",
-                "maximum_tokens": 2992
+                "maximum_tokens": 3088
               },
               {
                 "member": "kotlin-professional-usage/references/coroutine-flow-state-contracts.md",
@@ -24339,15 +24361,15 @@
               },
               {
                 "member": "logging-design-gate/references/checklist.md",
-                "maximum_tokens": 2689
+                "maximum_tokens": 2792
               },
               {
                 "member": "logging-design-gate/references/logging-output-and-gates.md",
-                "maximum_tokens": 2800
+                "maximum_tokens": 2903
               },
               {
                 "member": "logging-design-gate/references/logging-selection-criteria.md",
-                "maximum_tokens": 2800
+                "maximum_tokens": 2903
               },
               {
                 "member": "logging-error-handling/references/benchmarks-and-patterns.md",
@@ -24503,7 +24525,7 @@
               },
               {
                 "member": "platform-infrastructure-change-builder/references/iac-source-contracts.md",
-                "maximum_tokens": 2921
+                "maximum_tokens": 3084
               },
               {
                 "member": "platform-infrastructure-change-builder/references/kubernetes-source-contracts.md",
@@ -24527,15 +24549,15 @@
               },
               {
                 "member": "quality-test-gate/references/checklist.md",
-                "maximum_tokens": 2738
+                "maximum_tokens": 2812
               },
               {
                 "member": "quality-test-gate/references/test-output-and-gates.md",
-                "maximum_tokens": 2977
+                "maximum_tokens": 3051
               },
               {
                 "member": "quality-test-gate/references/test-structure-boundaries.md",
-                "maximum_tokens": 2912
+                "maximum_tokens": 2986
               },
               {
                 "member": "regression-testing/references/benchmarks-and-patterns.md",
@@ -24551,15 +24573,15 @@
               },
               {
                 "member": "release-rollback/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2970
+                "maximum_tokens": 3066
               },
               {
                 "member": "release-rollback/references/checklist.md",
-                "maximum_tokens": 2797
+                "maximum_tokens": 2893
               },
               {
                 "member": "release-rollback/references/evidence-patterns.md",
-                "maximum_tokens": 2924
+                "maximum_tokens": 3020
               },
               {
                 "member": "reliability-observability-gate/references/checklist.md",
@@ -24579,15 +24601,15 @@
               },
               {
                 "member": "repository-tooling-change-builder/references/generator-and-plugin-contracts.md",
-                "maximum_tokens": 3063
+                "maximum_tokens": 3154
               },
               {
                 "member": "repository-tooling-change-builder/references/harness-validity-contracts.md",
-                "maximum_tokens": 3009
+                "maximum_tokens": 3100
               },
               {
                 "member": "repository-tooling-change-builder/references/repository-automation-contracts.md",
-                "maximum_tokens": 3059
+                "maximum_tokens": 3150
               },
               {
                 "member": "sdk-library-contract-design/references/benchmarks-and-patterns.md",
@@ -24603,15 +24625,15 @@
               },
               {
                 "member": "secret-configuration-security/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2790
+                "maximum_tokens": 2893
               },
               {
                 "member": "secret-configuration-security/references/checklist.md",
-                "maximum_tokens": 2575
+                "maximum_tokens": 2678
               },
               {
                 "member": "secret-configuration-security/references/evidence-patterns.md",
-                "maximum_tokens": 2776
+                "maximum_tokens": 2879
               },
               {
                 "member": "security-privacy-gate/references/checklist.md",
@@ -24647,7 +24669,7 @@
               },
               {
                 "member": "targeted-validation-selection/references/repository-command-entry-evidence.md",
-                "maximum_tokens": 2811
+                "maximum_tokens": 2902
               },
               {
                 "member": "tenant-isolation/references/async-queue-and-execution-context-isolation.md",
@@ -24663,27 +24685,27 @@
               },
               {
                 "member": "test-data-management/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2951
+                "maximum_tokens": 3025
               },
               {
                 "member": "test-data-management/references/checklist.md",
-                "maximum_tokens": 2573
+                "maximum_tokens": 2647
               },
               {
                 "member": "test-data-management/references/evidence-patterns.md",
-                "maximum_tokens": 2888
+                "maximum_tokens": 2962
               },
               {
                 "member": "test-strategy/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2941
+                "maximum_tokens": 3015
               },
               {
                 "member": "test-strategy/references/checklist.md",
-                "maximum_tokens": 2927
+                "maximum_tokens": 3001
               },
               {
                 "member": "test-strategy/references/evidence-patterns.md",
-                "maximum_tokens": 2949
+                "maximum_tokens": 3023
               },
               {
                 "member": "threat-modeling/references/benchmarks-and-patterns.md",
@@ -24711,15 +24733,15 @@
               },
               {
                 "member": "version-compatibility/references/checklist.md",
-                "maximum_tokens": 2966
+                "maximum_tokens": 3062
               },
               {
                 "member": "version-compatibility/references/compatibility-benchmarks.md",
-                "maximum_tokens": 2976
+                "maximum_tokens": 3072
               },
               {
                 "member": "version-compatibility/references/evidence-patterns.md",
-                "maximum_tokens": 2970
+                "maximum_tokens": 3066
               },
               {
                 "member": "web-platform-professional-usage/references/browser-compatibility-and-verification-evidence.md",
@@ -24767,31 +24789,31 @@
               },
               {
                 "member": "web3-product-extension/references/account-and-cross-domain-execution.md",
-                "maximum_tokens": 2449
+                "maximum_tokens": 2535
               },
               {
                 "member": "web3-product-extension/references/allowances-nonstandard-assets-and-delegated-calls.md",
-                "maximum_tokens": 2452
+                "maximum_tokens": 2538
               },
               {
                 "member": "web3-product-extension/references/custody-and-chain-transactions.md",
-                "maximum_tokens": 2952
+                "maximum_tokens": 3038
               },
               {
                 "member": "web3-product-extension/references/governance-authority.md",
-                "maximum_tokens": 2373
+                "maximum_tokens": 2459
               },
               {
                 "member": "web3-product-extension/references/monitoring-and-independent-assurance.md",
-                "maximum_tokens": 2450
+                "maximum_tokens": 2536
               },
               {
                 "member": "web3-product-extension/references/upgrades-and-deployed-behavior.md",
-                "maximum_tokens": 2420
+                "maximum_tokens": 2506
               },
               {
                 "member": "web3-product-extension/references/verification-evidence.md",
-                "maximum_tokens": 2584
+                "maximum_tokens": 2670
               },
               {
                 "member": "windows-platform-extension/references/architecture-signing-and-distribution-contracts-implementation-and-review-evidence.md",
@@ -24831,11 +24853,11 @@
           "exact_render_signature_count": 46158,
           "token_distribution": {
             "count": 112828,
-            "p50": 1793,
-            "p90": 2129,
-            "p95": 2313,
-            "p99": 2661,
-            "max": 3448
+            "p50": 1809,
+            "p90": 2153,
+            "p95": 2331,
+            "p99": 2697,
+            "max": 3544
           },
           "growth_distribution": {
             "status": "unavailable",
@@ -24888,11 +24910,11 @@
               },
               {
                 "member": "data-middleware-change-builder",
-                "maximum_tokens": 2218
+                "maximum_tokens": 2281
               },
               {
                 "member": "delivery-release-gate",
-                "maximum_tokens": 2091
+                "maximum_tokens": 2187
               },
               {
                 "member": "domain-impact-modeler",
@@ -24900,7 +24922,7 @@
               },
               {
                 "member": "engineering-change-analysis",
-                "maximum_tokens": 3448
+                "maximum_tokens": 3544
               },
               {
                 "member": "experience-impact-modeler",
@@ -24912,11 +24934,11 @@
               },
               {
                 "member": "integration-change-builder",
-                "maximum_tokens": 2206
+                "maximum_tokens": 2292
               },
               {
                 "member": "quality-test-gate",
-                "maximum_tokens": 2086
+                "maximum_tokens": 2160
               },
               {
                 "member": "reliability-observability-gate",
@@ -24966,7 +24988,7 @@
               },
               {
                 "member": "bigdata-product-extension",
-                "maximum_tokens": 3349
+                "maximum_tokens": 3423
               },
               {
                 "member": "business-rule-extraction",
@@ -24974,7 +24996,7 @@
               },
               {
                 "member": "client-application-testing",
-                "maximum_tokens": 2086
+                "maximum_tokens": 2160
               },
               {
                 "member": "cloud-platform-extension",
@@ -24994,7 +25016,7 @@
               },
               {
                 "member": "contract-testing",
-                "maximum_tokens": 2183
+                "maximum_tokens": 2269
               },
               {
                 "member": "cross-platform-client-extension",
@@ -25038,7 +25060,7 @@
               },
               {
                 "member": "failure-diagnosis",
-                "maximum_tokens": 3448
+                "maximum_tokens": 3544
               },
               {
                 "member": "idempotency-retry-design",
@@ -25058,7 +25080,7 @@
               },
               {
                 "member": "iot-embedded-extension",
-                "maximum_tokens": 3448
+                "maximum_tokens": 3544
               },
               {
                 "member": "linux-desktop-platform-extension",
@@ -25090,7 +25112,7 @@
               },
               {
                 "member": "package-dependency-management",
-                "maximum_tokens": 3448
+                "maximum_tokens": 3544
               },
               {
                 "member": "payment-trading-extension",
@@ -25098,7 +25120,7 @@
               },
               {
                 "member": "permission-boundary-modeling",
-                "maximum_tokens": 2202
+                "maximum_tokens": 2236
               },
               {
                 "member": "privacy-data-lifecycle",
@@ -25110,7 +25132,7 @@
               },
               {
                 "member": "regression-testing",
-                "maximum_tokens": 2222
+                "maximum_tokens": 2231
               },
               {
                 "member": "release-rollback",
@@ -25138,7 +25160,7 @@
               },
               {
                 "member": "targeted-validation-selection",
-                "maximum_tokens": 2070
+                "maximum_tokens": 2141
               },
               {
                 "member": "task-dag-decomposition",
@@ -25154,11 +25176,11 @@
               },
               {
                 "member": "test-data-management",
-                "maximum_tokens": 2086
+                "maximum_tokens": 2160
               },
               {
                 "member": "test-strategy",
-                "maximum_tokens": 2079
+                "maximum_tokens": 2150
               },
               {
                 "member": "threat-modeling",
@@ -25208,47 +25230,47 @@
               },
               {
                 "member": "ai-product-extension/references/checklist.md",
-                "maximum_tokens": 2553
+                "maximum_tokens": 2649
               },
               {
                 "member": "android-platform-extension/references/accessibility-representation-input-and-scaling.md",
-                "maximum_tokens": 2405
+                "maximum_tokens": 2501
               },
               {
                 "member": "android-platform-extension/references/compatibility-packaging-and-performance-contracts.md",
-                "maximum_tokens": 2204
+                "maximum_tokens": 2300
               },
               {
                 "member": "android-platform-extension/references/components-permissions-and-background-contracts.md",
-                "maximum_tokens": 2178
+                "maximum_tokens": 2274
               },
               {
                 "member": "android-platform-extension/references/jetpack-compose-contracts.md",
-                "maximum_tokens": 2110
+                "maximum_tokens": 2206
               },
               {
                 "member": "android-platform-extension/references/lifecycle-task-and-state-contracts.md",
-                "maximum_tokens": 2105
+                "maximum_tokens": 2201
               },
               {
                 "member": "android-platform-extension/references/special-form-factor-boundaries.md",
-                "maximum_tokens": 2105
+                "maximum_tokens": 2201
               },
               {
                 "member": "android-platform-extension/references/storage-and-keystore-contracts.md",
-                "maximum_tokens": 2086
+                "maximum_tokens": 2182
               },
               {
                 "member": "api-contract-design/references/api-style-and-semantics.md",
-                "maximum_tokens": 2416
+                "maximum_tokens": 2512
               },
               {
                 "member": "api-contract-design/references/checklist.md",
-                "maximum_tokens": 1905
+                "maximum_tokens": 2001
               },
               {
                 "member": "api-contract-design/references/evidence-patterns.md",
-                "maximum_tokens": 2128
+                "maximum_tokens": 2224
               },
               {
                 "member": "architecture-impact-reviewer/references/checklist.md",
@@ -25324,23 +25346,23 @@
               },
               {
                 "member": "bigdata-product-extension/references/consumer-and-schema-contracts.md",
-                "maximum_tokens": 1976
+                "maximum_tokens": 2146
               },
               {
                 "member": "bigdata-product-extension/references/observability-and-privacy.md",
-                "maximum_tokens": 1947
+                "maximum_tokens": 2117
               },
               {
                 "member": "bigdata-product-extension/references/pipeline-replay-and-event-identity.md",
-                "maximum_tokens": 2030
+                "maximum_tokens": 2200
               },
               {
                 "member": "bigdata-product-extension/references/quality-lineage-and-point-in-time-correctness.md",
-                "maximum_tokens": 1957
+                "maximum_tokens": 2127
               },
               {
                 "member": "bigdata-product-extension/references/storage-performance-and-recovery.md",
-                "maximum_tokens": 1970
+                "maximum_tokens": 2140
               },
               {
                 "member": "business-rule-extraction/references/benchmarks-and-patterns.md",
@@ -25368,51 +25390,51 @@
               },
               {
                 "member": "client-application-testing/references/client-test-matrix.md",
-                "maximum_tokens": 2086
+                "maximum_tokens": 2160
               },
               {
                 "member": "cloud-platform-extension/references/encryption-kms-and-cost-contracts.md",
-                "maximum_tokens": 2310
+                "maximum_tokens": 2406
               },
               {
                 "member": "cloud-platform-extension/references/iam-workload-identity-and-network-contracts.md",
-                "maximum_tokens": 2274
+                "maximum_tokens": 2370
               },
               {
                 "member": "cloud-platform-extension/references/provider-api-and-managed-service-authority.md",
-                "maximum_tokens": 2264
+                "maximum_tokens": 2360
               },
               {
                 "member": "cloud-platform-extension/references/region-failure-domain-consistency-and-quota-contracts.md",
-                "maximum_tokens": 2319
+                "maximum_tokens": 2415
               },
               {
                 "member": "cloud-platform-extension/references/resource-control-and-data-plane-boundaries.md",
-                "maximum_tokens": 2255
+                "maximum_tokens": 2351
               },
               {
                 "member": "concurrency-control/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2318
+                "maximum_tokens": 2414
               },
               {
                 "member": "concurrency-control/references/checklist.md",
-                "maximum_tokens": 2342
+                "maximum_tokens": 2438
               },
               {
                 "member": "concurrency-control/references/evidence-patterns.md",
-                "maximum_tokens": 2115
+                "maximum_tokens": 2211
               },
               {
                 "member": "configuration-runtime-policy/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2222
+                "maximum_tokens": 2318
               },
               {
                 "member": "configuration-runtime-policy/references/checklist.md",
-                "maximum_tokens": 2145
+                "maximum_tokens": 2241
               },
               {
                 "member": "configuration-runtime-policy/references/evidence-patterns.md",
-                "maximum_tokens": 2203
+                "maximum_tokens": 2299
               },
               {
                 "member": "consumer-impact-analysis/references/benchmarks-and-patterns.md",
@@ -25428,31 +25450,31 @@
               },
               {
                 "member": "contract-testing/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 1705
+                "maximum_tokens": 1791
               },
               {
                 "member": "contract-testing/references/checklist.md",
-                "maximum_tokens": 1635
+                "maximum_tokens": 1721
               },
               {
                 "member": "contract-testing/references/evidence-patterns.md",
-                "maximum_tokens": 1725
+                "maximum_tokens": 1811
               },
               {
                 "member": "cross-platform-client-extension/references/bridge-plugin-and-ffi-contracts.md",
-                "maximum_tokens": 2279
+                "maximum_tokens": 2375
               },
               {
                 "member": "cross-platform-client-extension/references/framework-target-evidence-contracts.md",
-                "maximum_tokens": 2365
+                "maximum_tokens": 2461
               },
               {
                 "member": "cross-platform-client-extension/references/parity-and-regression-contracts.md",
-                "maximum_tokens": 2227
+                "maximum_tokens": 2323
               },
               {
                 "member": "cross-platform-client-extension/references/shared-and-target-ownership-contracts.md",
-                "maximum_tokens": 2239
+                "maximum_tokens": 2335
               },
               {
                 "member": "cryptography-key-lifecycle/references/compromise-destruction-and-agility.md",
@@ -25480,27 +25502,27 @@
               },
               {
                 "member": "data-middleware-change-builder/references/checklist.md",
-                "maximum_tokens": 1887
+                "maximum_tokens": 1921
               },
               {
                 "member": "data-middleware-change-builder/references/evidence-patterns.md",
-                "maximum_tokens": 1902
+                "maximum_tokens": 1936
               },
               {
                 "member": "data-middleware-change-builder/references/recovery-patterns.md",
-                "maximum_tokens": 1819
+                "maximum_tokens": 1853
               },
               {
                 "member": "data-migration-design/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2160
+                "maximum_tokens": 2256
               },
               {
                 "member": "data-migration-design/references/checklist.md",
-                "maximum_tokens": 1918
+                "maximum_tokens": 2014
               },
               {
                 "member": "data-migration-design/references/evidence-patterns.md",
-                "maximum_tokens": 2425
+                "maximum_tokens": 2521
               },
               {
                 "member": "degradation-circuit-breaking/references/benchmarks-and-patterns.md",
@@ -25516,27 +25538,27 @@
               },
               {
                 "member": "delivery-release-gate/references/checklist.md",
-                "maximum_tokens": 1726
+                "maximum_tokens": 1822
               },
               {
                 "member": "delivery-release-gate/references/delivery-output-and-gates.md",
-                "maximum_tokens": 1994
+                "maximum_tokens": 2090
               },
               {
                 "member": "delivery-release-gate/references/release-evidence-patterns.md",
-                "maximum_tokens": 2000
+                "maximum_tokens": 2096
               },
               {
                 "member": "dependency-vulnerability-scanning/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2218
+                "maximum_tokens": 2314
               },
               {
                 "member": "dependency-vulnerability-scanning/references/checklist.md",
-                "maximum_tokens": 2020
+                "maximum_tokens": 2116
               },
               {
                 "member": "dependency-vulnerability-scanning/references/evidence-patterns.md",
-                "maximum_tokens": 2506
+                "maximum_tokens": 2602
               },
               {
                 "member": "design-pattern-selection/references/pattern-evidence-record.md",
@@ -25556,15 +25578,15 @@
               },
               {
                 "member": "distributed-workflow-consistency/references/compensation-convergence-and-reconciliation.md",
-                "maximum_tokens": 2135
+                "maximum_tokens": 2169
               },
               {
                 "member": "distributed-workflow-consistency/references/identity-state-and-unknown-outcomes.md",
-                "maximum_tokens": 2120
+                "maximum_tokens": 2154
               },
               {
                 "member": "distributed-workflow-consistency/references/stuck-manual-repair-and-versioning.md",
-                "maximum_tokens": 2134
+                "maximum_tokens": 2168
               },
               {
                 "member": "domain-impact-modeler/references/business-invariant-evidence.md",
@@ -25652,15 +25674,15 @@
               },
               {
                 "member": "idempotency-retry-design/references/checklist.md",
-                "maximum_tokens": 2115
+                "maximum_tokens": 2211
               },
               {
                 "member": "idempotency-retry-design/references/evidence-patterns.md",
-                "maximum_tokens": 2315
+                "maximum_tokens": 2411
               },
               {
                 "member": "idempotency-retry-design/references/industry-benchmarks.md",
-                "maximum_tokens": 2267
+                "maximum_tokens": 2363
               },
               {
                 "member": "implementation-structure-design/references/evidence-patterns.md",
@@ -25684,11 +25706,11 @@
               },
               {
                 "member": "integration-change-builder/references/checklist.md",
-                "maximum_tokens": 1756
+                "maximum_tokens": 1842
               },
               {
                 "member": "integration-change-builder/references/solution-optimality.md",
-                "maximum_tokens": 1806
+                "maximum_tokens": 1892
               },
               {
                 "member": "interaction-state-modeling/references/checklist.md",
@@ -25720,103 +25742,103 @@
               },
               {
                 "member": "ios-ipados-platform-extension/references/compatibility-signing-and-distribution-contracts.md",
-                "maximum_tokens": 2101
+                "maximum_tokens": 2197
               },
               {
                 "member": "ios-ipados-platform-extension/references/data-keychain-and-extension-contracts.md",
-                "maximum_tokens": 2170
+                "maximum_tokens": 2266
               },
               {
                 "member": "ios-ipados-platform-extension/references/entry-capabilities-and-entitlements-contracts.md",
-                "maximum_tokens": 2209
+                "maximum_tokens": 2305
               },
               {
                 "member": "ios-ipados-platform-extension/references/lifecycle-scenes-and-background-contracts.md",
-                "maximum_tokens": 2136
+                "maximum_tokens": 2232
               },
               {
                 "member": "ios-ipados-platform-extension/references/special-platform-boundaries.md",
-                "maximum_tokens": 2077
+                "maximum_tokens": 2173
               },
               {
                 "member": "ios-ipados-platform-extension/references/ui-form-factor-and-accessibility-contracts.md",
-                "maximum_tokens": 2200
+                "maximum_tokens": 2296
               },
               {
                 "member": "iot-embedded-extension/references/checklist.md",
-                "maximum_tokens": 2410
+                "maximum_tokens": 2506
               },
               {
                 "member": "linux-desktop-platform-extension/references/accessibility-platform-deltas.md",
-                "maximum_tokens": 2140
+                "maximum_tokens": 2236
               },
               {
                 "member": "linux-desktop-platform-extension/references/dbus-portal-and-session-integration-contracts.md",
-                "maximum_tokens": 2182
+                "maximum_tokens": 2278
               },
               {
                 "member": "linux-desktop-platform-extension/references/desktop-entry-mime-and-keyring-contracts.md",
-                "maximum_tokens": 2120
+                "maximum_tokens": 2216
               },
               {
                 "member": "linux-desktop-platform-extension/references/desktop-environment-input-and-localization-contracts.md",
-                "maximum_tokens": 2180
+                "maximum_tokens": 2276
               },
               {
                 "member": "linux-desktop-platform-extension/references/display-session-and-toolkit-contracts.md",
-                "maximum_tokens": 2135
+                "maximum_tokens": 2231
               },
               {
                 "member": "linux-desktop-platform-extension/references/packaging-installation-and-update-contracts.md",
-                "maximum_tokens": 2155
+                "maximum_tokens": 2251
               },
               {
                 "member": "linux-desktop-platform-extension/references/server-and-system-boundaries.md",
-                "maximum_tokens": 2137
+                "maximum_tokens": 2233
               },
               {
                 "member": "low-level-systems-extension/references/abi-platform-and-syscall-contracts.md",
-                "maximum_tokens": 2006
+                "maximum_tokens": 2102
               },
               {
                 "member": "low-level-systems-extension/references/ownership-and-concurrency-contracts.md",
-                "maximum_tokens": 2012
+                "maximum_tokens": 2108
               },
               {
                 "member": "low-level-systems-extension/references/performance-and-verification-evidence.md",
-                "maximum_tokens": 2034
+                "maximum_tokens": 2130
               },
               {
                 "member": "low-level-systems-extension/references/resource-lifecycle-and-error-contracts.md",
-                "maximum_tokens": 1956
+                "maximum_tokens": 2052
               },
               {
                 "member": "low-level-systems-extension/references/signals-ffi-atomics-shared-memory-and-fork.md",
-                "maximum_tokens": 2100
+                "maximum_tokens": 2196
               },
               {
                 "member": "macos-platform-extension/references/accessibility-platform-deltas.md",
-                "maximum_tokens": 2114
+                "maximum_tokens": 2210
               },
               {
                 "member": "macos-platform-extension/references/architecture-and-update-contracts.md",
-                "maximum_tokens": 2142
+                "maximum_tokens": 2238
               },
               {
                 "member": "macos-platform-extension/references/file-sandbox-and-entitlement-contracts.md",
-                "maximum_tokens": 2122
+                "maximum_tokens": 2218
               },
               {
                 "member": "macos-platform-extension/references/framework-lifecycle-window-and-document-contracts.md",
-                "maximum_tokens": 2166
+                "maximum_tokens": 2262
               },
               {
                 "member": "macos-platform-extension/references/keychain-xpc-and-helper-contracts.md",
-                "maximum_tokens": 2144
+                "maximum_tokens": 2240
               },
               {
                 "member": "macos-platform-extension/references/signing-notarization-and-distribution-contracts.md",
-                "maximum_tokens": 2118
+                "maximum_tokens": 2214
               },
               {
                 "member": "minimal-correct-implementation/references/simplicity-ladder.md",
@@ -25860,67 +25882,67 @@
               },
               {
                 "member": "package-dependency-management/references/checklist.md",
-                "maximum_tokens": 2034
+                "maximum_tokens": 2130
               },
               {
                 "member": "package-dependency-management/references/ecosystem-command-map.md",
-                "maximum_tokens": 3448
+                "maximum_tokens": 3544
               },
               {
                 "member": "package-dependency-management/references/evidence-patterns.md",
-                "maximum_tokens": 2913
+                "maximum_tokens": 3009
               },
               {
                 "member": "payment-trading-extension/references/duplicate-financial-effect-control.md",
-                "maximum_tokens": 1915
+                "maximum_tokens": 2011
               },
               {
                 "member": "payment-trading-extension/references/financial-reconciliation-and-monitoring.md",
-                "maximum_tokens": 1981
+                "maximum_tokens": 2077
               },
               {
                 "member": "payment-trading-extension/references/financial-role-and-state-authority.md",
-                "maximum_tokens": 1933
+                "maximum_tokens": 2029
               },
               {
                 "member": "payment-trading-extension/references/market-data-and-trading-risk-controls.md",
-                "maximum_tokens": 2039
+                "maximum_tokens": 2135
               },
               {
                 "member": "payment-trading-extension/references/non-custodial-sensitive-data-boundary.md",
-                "maximum_tokens": 1973
+                "maximum_tokens": 2069
               },
               {
                 "member": "payment-trading-extension/references/owned-financial-state-accounting-and-balances.md",
-                "maximum_tokens": 2001
+                "maximum_tokens": 2097
               },
               {
                 "member": "payment-trading-extension/references/provider-venue-event-authentication.md",
-                "maximum_tokens": 1917
+                "maximum_tokens": 2013
               },
               {
                 "member": "payment-trading-extension/references/raw-card-custody-evidence.md",
-                "maximum_tokens": 1989
+                "maximum_tokens": 2085
               },
               {
                 "member": "payment-trading-extension/references/trading-order-execution-and-identity.md",
-                "maximum_tokens": 1976
+                "maximum_tokens": 2072
               },
               {
                 "member": "payment-trading-extension/references/venue-product-monetary-and-calendar-contracts.md",
-                "maximum_tokens": 1977
+                "maximum_tokens": 2073
               },
               {
                 "member": "permission-boundary-modeling/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2010
+                "maximum_tokens": 2073
               },
               {
                 "member": "permission-boundary-modeling/references/checklist.md",
-                "maximum_tokens": 1777
+                "maximum_tokens": 1840
               },
               {
                 "member": "permission-boundary-modeling/references/evidence-patterns.md",
-                "maximum_tokens": 2118
+                "maximum_tokens": 2181
               },
               {
                 "member": "privacy-data-lifecycle/references/data-lifecycle-controls.md",
@@ -25932,39 +25954,39 @@
               },
               {
                 "member": "quality-test-gate/references/checklist.md",
-                "maximum_tokens": 1837
+                "maximum_tokens": 1911
               },
               {
                 "member": "quality-test-gate/references/test-output-and-gates.md",
-                "maximum_tokens": 2076
+                "maximum_tokens": 2150
               },
               {
                 "member": "quality-test-gate/references/test-structure-boundaries.md",
-                "maximum_tokens": 2011
+                "maximum_tokens": 2085
               },
               {
                 "member": "refactoring/references/behavior-preservation-evidence.md",
-                "maximum_tokens": 2725
+                "maximum_tokens": 2821
               },
               {
                 "member": "refactoring/references/checklist.md",
-                "maximum_tokens": 2316
+                "maximum_tokens": 2412
               },
               {
                 "member": "refactoring/references/split-merge-cleanup-patterns.md",
-                "maximum_tokens": 2868
+                "maximum_tokens": 2964
               },
               {
                 "member": "regression-testing/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 1969
+                "maximum_tokens": 2023
               },
               {
                 "member": "regression-testing/references/checklist.md",
-                "maximum_tokens": 1737
+                "maximum_tokens": 1791
               },
               {
                 "member": "regression-testing/references/evidence-patterns.md",
-                "maximum_tokens": 1939
+                "maximum_tokens": 1993
               },
               {
                 "member": "release-rollback/references/benchmarks-and-patterns.md",
@@ -26068,7 +26090,7 @@
               },
               {
                 "member": "targeted-validation-selection/references/repository-command-entry-evidence.md",
-                "maximum_tokens": 1760
+                "maximum_tokens": 1834
               },
               {
                 "member": "task-dag-decomposition/references/candidate-graph-evidence.md",
@@ -26104,27 +26126,27 @@
               },
               {
                 "member": "test-data-management/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2050
+                "maximum_tokens": 2124
               },
               {
                 "member": "test-data-management/references/checklist.md",
-                "maximum_tokens": 1672
+                "maximum_tokens": 1746
               },
               {
                 "member": "test-data-management/references/evidence-patterns.md",
-                "maximum_tokens": 1987
+                "maximum_tokens": 2061
               },
               {
                 "member": "test-strategy/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2040
+                "maximum_tokens": 2114
               },
               {
                 "member": "test-strategy/references/checklist.md",
-                "maximum_tokens": 2026
+                "maximum_tokens": 2100
               },
               {
                 "member": "test-strategy/references/evidence-patterns.md",
-                "maximum_tokens": 2048
+                "maximum_tokens": 2122
               },
               {
                 "member": "threat-modeling/references/benchmarks-and-patterns.md",
@@ -26140,15 +26162,15 @@
               },
               {
                 "member": "transaction-consistency/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2475
+                "maximum_tokens": 2571
               },
               {
                 "member": "transaction-consistency/references/checklist.md",
-                "maximum_tokens": 2318
+                "maximum_tokens": 2414
               },
               {
                 "member": "transaction-consistency/references/evidence-patterns.md",
-                "maximum_tokens": 2415
+                "maximum_tokens": 2511
               },
               {
                 "member": "version-compatibility/references/checklist.md",
@@ -26176,31 +26198,31 @@
               },
               {
                 "member": "web3-product-extension/references/account-and-cross-domain-execution.md",
-                "maximum_tokens": 1895
+                "maximum_tokens": 1991
               },
               {
                 "member": "web3-product-extension/references/allowances-nonstandard-assets-and-delegated-calls.md",
-                "maximum_tokens": 1898
+                "maximum_tokens": 1994
               },
               {
                 "member": "web3-product-extension/references/custody-and-chain-transactions.md",
-                "maximum_tokens": 2398
+                "maximum_tokens": 2494
               },
               {
                 "member": "web3-product-extension/references/governance-authority.md",
-                "maximum_tokens": 1819
+                "maximum_tokens": 1915
               },
               {
                 "member": "web3-product-extension/references/monitoring-and-independent-assurance.md",
-                "maximum_tokens": 1896
+                "maximum_tokens": 1992
               },
               {
                 "member": "web3-product-extension/references/upgrades-and-deployed-behavior.md",
-                "maximum_tokens": 1866
+                "maximum_tokens": 1962
               },
               {
                 "member": "web3-product-extension/references/verification-evidence.md",
-                "maximum_tokens": 2030
+                "maximum_tokens": 2126
               },
               {
                 "member": "windows-platform-extension/references/architecture-signing-and-distribution-contracts.md",
@@ -26240,7 +26262,7 @@
           "exact_render_signature_count": 16641,
           "token_distribution": {
             "count": 38009,
-            "p50": 2367,
+            "p50": 2368,
             "p90": 2814,
             "p95": 3006,
             "p99": 3177,
@@ -26289,11 +26311,11 @@
               },
               {
                 "member": "change-documentation-gate",
-                "maximum_tokens": 2976
+                "maximum_tokens": 3072
               },
               {
                 "member": "delivery-release-gate",
-                "maximum_tokens": 2808
+                "maximum_tokens": 2904
               },
               {
                 "member": "engineering-artifact-review",
@@ -26301,15 +26323,15 @@
               },
               {
                 "member": "high-risk-design-review",
-                "maximum_tokens": 2683
+                "maximum_tokens": 2784
               },
               {
                 "member": "logging-design-gate",
-                "maximum_tokens": 2661
+                "maximum_tokens": 2764
               },
               {
                 "member": "quality-test-gate",
-                "maximum_tokens": 2738
+                "maximum_tokens": 2812
               },
               {
                 "member": "reliability-observability-gate",
@@ -26355,7 +26377,7 @@
               },
               {
                 "member": "bigdata-product-extension",
-                "maximum_tokens": 2738
+                "maximum_tokens": 2812
               },
               {
                 "member": "cloud-platform-extension",
@@ -26387,7 +26409,7 @@
               },
               {
                 "member": "data-migration-design",
-                "maximum_tokens": 2808
+                "maximum_tokens": 2904
               },
               {
                 "member": "degradation-circuit-breaking",
@@ -26403,7 +26425,7 @@
               },
               {
                 "member": "documentation-generation",
-                "maximum_tokens": 2976
+                "maximum_tokens": 3072
               },
               {
                 "member": "domain-object-identification",
@@ -26423,7 +26445,7 @@
               },
               {
                 "member": "iot-embedded-extension",
-                "maximum_tokens": 2808
+                "maximum_tokens": 2904
               },
               {
                 "member": "linux-desktop-platform-extension",
@@ -26431,7 +26453,7 @@
               },
               {
                 "member": "logging-error-handling",
-                "maximum_tokens": 2661
+                "maximum_tokens": 2764
               },
               {
                 "member": "low-level-systems-extension",
@@ -26475,7 +26497,7 @@
               },
               {
                 "member": "release-rollback",
-                "maximum_tokens": 2766
+                "maximum_tokens": 2849
               },
               {
                 "member": "repeat-failure-analysis",
@@ -26495,11 +26517,11 @@
               },
               {
                 "member": "test-data-management",
-                "maximum_tokens": 2738
+                "maximum_tokens": 2812
               },
               {
                 "member": "test-strategy",
-                "maximum_tokens": 2738
+                "maximum_tokens": 2812
               },
               {
                 "member": "threat-modeling",
@@ -26507,7 +26529,7 @@
               },
               {
                 "member": "version-compatibility",
-                "maximum_tokens": 2766
+                "maximum_tokens": 2849
               },
               {
                 "member": "web-security",
@@ -26661,35 +26683,35 @@
               },
               {
                 "member": "bigdata-product-extension/references/consumer-and-schema-contracts.md",
-                "maximum_tokens": 2326
+                "maximum_tokens": 2400
               },
               {
                 "member": "bigdata-product-extension/references/observability-and-privacy.md",
-                "maximum_tokens": 2297
+                "maximum_tokens": 2371
               },
               {
                 "member": "bigdata-product-extension/references/pipeline-replay-and-event-identity.md",
-                "maximum_tokens": 2380
+                "maximum_tokens": 2454
               },
               {
                 "member": "bigdata-product-extension/references/quality-lineage-and-point-in-time-correctness.md",
-                "maximum_tokens": 2307
+                "maximum_tokens": 2381
               },
               {
                 "member": "bigdata-product-extension/references/storage-performance-and-recovery.md",
-                "maximum_tokens": 2320
+                "maximum_tokens": 2394
               },
               {
                 "member": "change-documentation-gate/references/checklist.md",
-                "maximum_tokens": 2178
+                "maximum_tokens": 2274
               },
               {
                 "member": "change-documentation-gate/references/documentation-output-and-gates.md",
-                "maximum_tokens": 2726
+                "maximum_tokens": 2822
               },
               {
                 "member": "change-documentation-gate/references/evidence-patterns.md",
-                "maximum_tokens": 2481
+                "maximum_tokens": 2577
               },
               {
                 "member": "cloud-platform-extension/references/encryption-kms-and-cost-contracts.md",
@@ -26785,15 +26807,15 @@
               },
               {
                 "member": "data-migration-design/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2543
+                "maximum_tokens": 2639
               },
               {
                 "member": "data-migration-design/references/checklist.md",
-                "maximum_tokens": 2301
+                "maximum_tokens": 2397
               },
               {
                 "member": "data-migration-design/references/evidence-patterns.md",
-                "maximum_tokens": 2808
+                "maximum_tokens": 2904
               },
               {
                 "member": "degradation-circuit-breaking/references/benchmarks-and-patterns.md",
@@ -26809,15 +26831,15 @@
               },
               {
                 "member": "delivery-release-gate/references/checklist.md",
-                "maximum_tokens": 2388
+                "maximum_tokens": 2484
               },
               {
                 "member": "delivery-release-gate/references/delivery-output-and-gates.md",
-                "maximum_tokens": 2656
+                "maximum_tokens": 2752
               },
               {
                 "member": "delivery-release-gate/references/release-evidence-patterns.md",
-                "maximum_tokens": 2662
+                "maximum_tokens": 2758
               },
               {
                 "member": "dependency-vulnerability-scanning/references/benchmarks-and-patterns.md",
@@ -26837,15 +26859,15 @@
               },
               {
                 "member": "documentation-generation/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2976
+                "maximum_tokens": 3072
               },
               {
                 "member": "documentation-generation/references/checklist.md",
-                "maximum_tokens": 1973
+                "maximum_tokens": 2069
               },
               {
                 "member": "documentation-generation/references/evidence-patterns.md",
-                "maximum_tokens": 2629
+                "maximum_tokens": 2725
               },
               {
                 "member": "domain-object-identification/references/benchmarks-and-patterns.md",
@@ -26865,7 +26887,7 @@
               },
               {
                 "member": "high-risk-design-review/references/design-review-checklist.md",
-                "maximum_tokens": 2288
+                "maximum_tokens": 2389
               },
               {
                 "member": "idempotency-retry-design/references/checklist.md",
@@ -26917,7 +26939,7 @@
               },
               {
                 "member": "iot-embedded-extension/references/checklist.md",
-                "maximum_tokens": 2753
+                "maximum_tokens": 2849
               },
               {
                 "member": "linux-desktop-platform-extension/references/accessibility-platform-deltas-implementation-and-review-evidence.md",
@@ -26949,27 +26971,27 @@
               },
               {
                 "member": "logging-design-gate/references/checklist.md",
-                "maximum_tokens": 2450
+                "maximum_tokens": 2553
               },
               {
                 "member": "logging-design-gate/references/logging-output-and-gates.md",
-                "maximum_tokens": 2561
+                "maximum_tokens": 2664
               },
               {
                 "member": "logging-design-gate/references/logging-selection-criteria.md",
-                "maximum_tokens": 2561
+                "maximum_tokens": 2664
               },
               {
                 "member": "logging-error-handling/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2561
+                "maximum_tokens": 2664
               },
               {
                 "member": "logging-error-handling/references/checklist.md",
-                "maximum_tokens": 2274
+                "maximum_tokens": 2377
               },
               {
                 "member": "logging-error-handling/references/evidence-patterns.md",
-                "maximum_tokens": 2534
+                "maximum_tokens": 2637
               },
               {
                 "member": "low-level-systems-extension/references/abi-platform-and-syscall-contracts.md",
@@ -27033,15 +27055,15 @@
               },
               {
                 "member": "observability/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2735
+                "maximum_tokens": 2764
               },
               {
                 "member": "observability/references/checklist.md",
-                "maximum_tokens": 2397
+                "maximum_tokens": 2426
               },
               {
                 "member": "observability/references/evidence-patterns.md",
-                "maximum_tokens": 2615
+                "maximum_tokens": 2644
               },
               {
                 "member": "payment-trading-extension/references/duplicate-financial-effect-control.md",
@@ -27105,15 +27127,15 @@
               },
               {
                 "member": "quality-test-gate/references/checklist.md",
-                "maximum_tokens": 2499
+                "maximum_tokens": 2573
               },
               {
                 "member": "quality-test-gate/references/test-output-and-gates.md",
-                "maximum_tokens": 2738
+                "maximum_tokens": 2812
               },
               {
                 "member": "quality-test-gate/references/test-structure-boundaries.md",
-                "maximum_tokens": 2673
+                "maximum_tokens": 2747
               },
               {
                 "member": "refactoring/references/behavior-preservation-evidence.md",
@@ -27141,15 +27163,15 @@
               },
               {
                 "member": "release-rollback/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2731
+                "maximum_tokens": 2827
               },
               {
                 "member": "release-rollback/references/checklist.md",
-                "maximum_tokens": 2558
+                "maximum_tokens": 2654
               },
               {
                 "member": "release-rollback/references/evidence-patterns.md",
-                "maximum_tokens": 2685
+                "maximum_tokens": 2781
               },
               {
                 "member": "reliability-observability-gate/references/checklist.md",
@@ -27177,15 +27199,15 @@
               },
               {
                 "member": "secret-configuration-security/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2551
+                "maximum_tokens": 2654
               },
               {
                 "member": "secret-configuration-security/references/checklist.md",
-                "maximum_tokens": 2336
+                "maximum_tokens": 2439
               },
               {
                 "member": "secret-configuration-security/references/evidence-patterns.md",
-                "maximum_tokens": 2537
+                "maximum_tokens": 2640
               },
               {
                 "member": "security-privacy-gate/references/checklist.md",
@@ -27217,27 +27239,27 @@
               },
               {
                 "member": "test-data-management/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2712
+                "maximum_tokens": 2786
               },
               {
                 "member": "test-data-management/references/checklist.md",
-                "maximum_tokens": 2334
+                "maximum_tokens": 2408
               },
               {
                 "member": "test-data-management/references/evidence-patterns.md",
-                "maximum_tokens": 2649
+                "maximum_tokens": 2723
               },
               {
                 "member": "test-strategy/references/benchmarks-and-patterns.md",
-                "maximum_tokens": 2702
+                "maximum_tokens": 2776
               },
               {
                 "member": "test-strategy/references/checklist.md",
-                "maximum_tokens": 2688
+                "maximum_tokens": 2762
               },
               {
                 "member": "test-strategy/references/evidence-patterns.md",
-                "maximum_tokens": 2710
+                "maximum_tokens": 2784
               },
               {
                 "member": "threat-modeling/references/benchmarks-and-patterns.md",
@@ -27253,15 +27275,15 @@
               },
               {
                 "member": "version-compatibility/references/checklist.md",
-                "maximum_tokens": 2727
+                "maximum_tokens": 2823
               },
               {
                 "member": "version-compatibility/references/compatibility-benchmarks.md",
-                "maximum_tokens": 2737
+                "maximum_tokens": 2833
               },
               {
                 "member": "version-compatibility/references/evidence-patterns.md",
-                "maximum_tokens": 2731
+                "maximum_tokens": 2827
               },
               {
                 "member": "web-security/references/benchmarks-and-patterns.md",
@@ -27337,25 +27359,30 @@
       },
       "global_task_review_union": {
         "frontier_counts": {
-          "professional": 0,
-          "layer3": 0,
-          "active_reference": 0
+          "professional": 1,
+          "layer3": 1,
+          "active_reference": 1
         },
         "frontier": {
-          "professional": [],
-          "layer3": [],
-          "active_reference": []
+          "professional": [
+            "change-documentation-gate"
+          ],
+          "layer3": [
+            "documentation-generation"
+          ],
+          "active_reference": [
+            "documentation-generation/references/benchmarks-and-patterns.md"
+          ]
         },
         "safe_complement_counts": {
-          "professional": 17,
-          "layer3": 68,
-          "active_reference": 267
+          "professional": 16,
+          "layer3": 67,
+          "active_reference": 266
         },
         "safe_complement": {
           "professional": [
             "ai-code-review-refactor",
             "architecture-impact-reviewer",
-            "change-documentation-gate",
             "data-api-contract-changer",
             "data-middleware-change-builder",
             "delivery-release-gate",
@@ -27399,7 +27426,6 @@
             "dependency-vulnerability-scanning",
             "design-pattern-selection",
             "distributed-workflow-consistency",
-            "documentation-generation",
             "domain-object-identification",
             "failure-contract-design",
             "idempotency-retry-design",
@@ -27545,7 +27571,6 @@
             "distributed-workflow-consistency/references/compensation-convergence-and-reconciliation.md",
             "distributed-workflow-consistency/references/identity-state-and-unknown-outcomes.md",
             "distributed-workflow-consistency/references/stuck-manual-repair-and-versioning.md",
-            "documentation-generation/references/benchmarks-and-patterns.md",
             "documentation-generation/references/checklist.md",
             "documentation-generation/references/evidence-patterns.md",
             "domain-object-identification/references/benchmarks-and-patterns.md",
@@ -27725,26 +27750,26 @@
         "build_manifests": {
           "recommended": {
             "path": "dist/universal/skills/recommended/.changeforge-build-manifest.json",
-            "sha256": "4476b8cc14a2d4a2ff98099adca0a9bc3d9f4d62f778664b14225bde7b12c606"
+            "sha256": "3d4aa8a047c8ac882ed749691375f777b8b8ca3963c6d1f2b6cb6f10400a1120"
           },
           "full": {
             "path": "dist/universal/skills/full/.changeforge-build-manifest.json",
-            "sha256": "21be7f3c8093f6473e0a5bf5a81a7ecbac3ffb681332fb2b7e53821330cbbbf8"
+            "sha256": "2f66f6f27eb5f23cde5466bafe9b7811f41e93bebdb18e48b1352acdcc53de85"
           },
           "dev": {
             "path": "dist/universal/skills/dev/.changeforge-build-manifest.json",
-            "sha256": "af12dcab0cce3b3d57b29d85869c6b6046aeadac017d0909ff1bb956d6c4cf7c"
+            "sha256": "a53ec7ea5b54f9049fe905c0b33e103207f80cd71bb8e8c0296f8599cf2f5dce"
           }
         },
         "selector_authority_sha256": "fefc62f354700a08db07095100547c35c473de9dc478f7844aab0168b7b5d2d2",
         "control_projection_sha256": "6f11c7fcb29a3a892c9a80b3a2ebe80ddf2f2184cf532035401f6360d65d8001",
         "render_component_inventory": {
-          "count": 1212,
-          "mapping_sha256": "f7c4c5c91fb8ab0a989408007cc78e3cc1a5592abd5cdc9eb1c36eb0f0a4b5c3"
+          "count": 1206,
+          "mapping_sha256": "b7a3a373f8ed386fe4fc84cdcfbb805a8d794d15a4e284e20867d8b578410865"
         }
       },
       "mapping_row_count": 236268,
-      "mapping_digest": "35e116ca423a2d2ea5792a0cf6ca201c60f92cfab1396eab8addbcf8d89a88a0",
+      "mapping_digest": "47bdf2e0c87af7f027d55f19e229844c6c1b6dc35f8c6f85e0336afcd365969b",
       "consumer_boundary": {
         "projection_only": true,
         "runtime_consumers": [],

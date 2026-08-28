@@ -156,11 +156,11 @@
         "tighten_sentences": 1
       },
       "professional-skill-body": {
-        "advisory_documents": 3,
+        "advisory_documents": 7,
         "compound_bullets": 0,
         "documents": 26,
         "hard_fail_sentences": 0,
-        "review_as_complex_sentences": 6,
+        "review_as_complex_sentences": 10,
         "tighten_sentences": 0
       },
       "professional-skill-description": {
@@ -8713,9 +8713,9 @@
       {
         "check_bullets": true,
         "compound_bullet_count": 0,
-        "content_fingerprint": "2f70e4698532b8206df4194a1d08d14c1d5483093cab314fac547dcf73cca64f",
+        "content_fingerprint": "16efc8fcd472031e4eb7eba4ecff699ffd04d6121fa8adb7878c4abcd8be55e8",
         "document_context": {
-          "line_count": 56,
+          "line_count": 59,
           "line_offset": 4,
           "lines": [
             {
@@ -8824,67 +8824,67 @@
             },
             {
               "line": 27,
-              "text": "- Close triggered compatibility, replay, promotion, failed-data, quality, classification, resource, lineage, and experiment risks through named References and current pipeline evidence."
+              "text": "- Prove schema and active-consumer compatibility from the source-backed inventory; unknown consumers or semantic contracts block."
             },
             {
               "line": 28,
-              "text": ""
+              "text": "- Define event identity/order, checkpoint, retry, replay/backfill/correction, and live-writer coexistence so recovery cannot duplicate, omit, or overwrite authoritative data."
             },
             {
               "line": 29,
-              "text": "## High-Value Gotchas"
+              "text": "- Gate promotion on quality/classification invariants; assign failed-data recovery and preserve lineage/experiment correctness through named References."
             },
             {
               "line": 30,
-              "text": ""
+              "text": "- Bound partition/storage/state/memory/compute/cost from representative skew/workload evidence, including recoverable metadata/checkpoints."
             },
             {
               "line": 31,
-              "text": "- Schema appearance, averages, or file presence can hide semantic incompatibility, skew, duplicate replay, late data, or classified-data leakage."
+              "text": ""
             },
             {
               "line": 32,
-              "text": ""
+              "text": "## High-Value Gotchas"
             },
             {
               "line": 33,
-              "text": "## Execution Checklist"
+              "text": ""
             },
             {
               "line": 34,
-              "text": ""
+              "text": "- Schema appearance, averages, or file presence can hide semantic incompatibility, skew, duplicate replay, late data, or classified-data leakage."
             },
             {
               "line": 35,
-              "text": "1. Identify affected producers, transformations, consumers, invariants, and replay window."
+              "text": ""
             },
             {
               "line": 36,
-              "text": "2. Load each named Reference whose decision problem is active."
+              "text": "## Execution Checklist"
             },
             {
               "line": 37,
-              "text": "3. Record mechanisms, negative paths, cost limits, proof limits, and residual risk."
+              "text": ""
             },
             {
               "line": 38,
-              "text": ""
+              "text": "1. Identify affected producers, transformations, consumers, invariants, and replay window."
             },
             {
               "line": 39,
-              "text": "## Stop / Escalation Conditions"
+              "text": "2. Load each named Reference whose decision problem is active."
             },
             {
               "line": 40,
-              "text": ""
+              "text": "3. Record mechanisms, negative paths, cost limits, proof limits, and residual risk."
             },
             {
               "line": 41,
-              "text": "- Stop when consumer inventory, replay identity, data classification, or a production data invariant is unknown."
+              "text": ""
             },
             {
               "line": 42,
-              "text": "- Escalate irreversible backfills, regulated-data exposure, unbounded cost, and incompatible consumer transitions."
+              "text": "## Stop / Escalation Conditions"
             },
             {
               "line": 43,
@@ -8892,59 +8892,71 @@
             },
             {
               "line": 44,
-              "text": "## Output Contract"
+              "text": "- Stop when consumer inventory, replay identity, data classification, or a production data invariant is unknown."
             },
             {
               "line": 45,
-              "text": ""
+              "text": "- Escalate irreversible backfills, regulated-data exposure, unbounded cost, and incompatible consumer transitions."
             },
             {
               "line": 46,
-              "text": "- State the data invariant, required proof, selected mechanism, replay limits, and residual risk."
+              "text": ""
             },
             {
               "line": 47,
-              "text": ""
+              "text": "## Output Contract"
             },
             {
               "line": 48,
-              "text": "## Targeted References"
-            },
-            {
-              "line": 49,
               "text": ""
             },
             {
+              "line": 49,
+              "text": "- State the data invariant, required proof, selected mechanism, replay limits, and residual risk."
+            },
+            {
               "line": 50,
-              "text": "| Path | Type | Load when | Do not load when | Required by | Required output |"
+              "text": ""
             },
             {
               "line": 51,
-              "text": "|---|---|---|---|---|---|"
+              "text": "## Targeted References"
             },
             {
               "line": 52,
-              "text": "| [consumer and schema contracts](references/consumer-and-schema-contracts.md) | targeted | distributed consumer, schema, grain, metric meaning, correction, or compatibility is open | the task changes one database table without a distributed pipeline or replay boundary | analysis-agent, task-agent, review-agent | boundary-decision, decision-record, residual-risk |"
+              "text": ""
             },
             {
               "line": 53,
-              "text": "| [pipeline replay and event identity](references/pipeline-replay-and-event-identity.md) | targeted | batch, stream, CDC, event-time, checkpoint, replay, backfill, or writer coexistence is open | no pipeline, replay, backfill, checkpoint, or writer-coexistence decision exists | analysis-agent, task-agent, review-agent | boundary-decision, decision-record, failure-decision, residual-risk |"
+              "text": "| Path | Type | Load when | Do not load when | Required by | Required output |"
             },
             {
               "line": 54,
-              "text": "| [quality lineage and point in time correctness](references/quality-lineage-and-point-in-time-correctness.md) | targeted | quality, failed-data, lineage, point-in-time, leakage, or experiment semantics is open | no quality, lineage, point-in-time, leakage, or experiment decision exists | analysis-agent, task-agent, review-agent | decision-record, failure-decision, validation-plan, residual-risk |"
+              "text": "|---|---|---|---|---|---|"
             },
             {
               "line": 55,
-              "text": "| [storage performance and recovery](references/storage-performance-and-recovery.md) | targeted | partition, storage, metadata, recovery, skew, state, memory, compute, or cost is open | no storage, recovery, resource, performance, or cost decision exists | analysis-agent, task-agent, review-agent | selected-approach, failure-decision, validation-plan, residual-risk |"
+              "text": "| [consumer and schema contracts](references/consumer-and-schema-contracts.md) | targeted | distributed consumer, schema, grain, metric meaning, correction, or compatibility is open | the task changes one database table without a distributed pipeline or replay boundary | analysis-agent, task-agent, review-agent | boundary-decision, decision-record, residual-risk |"
             },
             {
               "line": 56,
+              "text": "| [pipeline replay and event identity](references/pipeline-replay-and-event-identity.md) | targeted | batch, stream, CDC, event-time, checkpoint, replay, backfill, or writer coexistence is open | no pipeline, replay, backfill, checkpoint, or writer-coexistence decision exists | analysis-agent, task-agent, review-agent | boundary-decision, decision-record, failure-decision, residual-risk |"
+            },
+            {
+              "line": 57,
+              "text": "| [quality lineage and point in time correctness](references/quality-lineage-and-point-in-time-correctness.md) | targeted | quality, failed-data, lineage, point-in-time, leakage, or experiment semantics is open | no quality, lineage, point-in-time, leakage, or experiment decision exists | analysis-agent, task-agent, review-agent | decision-record, failure-decision, validation-plan, residual-risk |"
+            },
+            {
+              "line": 58,
+              "text": "| [storage performance and recovery](references/storage-performance-and-recovery.md) | targeted | partition, storage, metadata, recovery, skew, state, memory, compute, or cost is open | no storage, recovery, resource, performance, or cost decision exists | analysis-agent, task-agent, review-agent | selected-approach, failure-decision, validation-plan, residual-risk |"
+            },
+            {
+              "line": 59,
               "text": "| [observability and privacy](references/observability-and-privacy.md) | targeted | pipeline signals or classified samples, logs, failed data, exports, retention, or deletion is open | no pipeline-observability or classified-data handling decision exists | analysis-agent, task-agent, review-agent | boundary-decision, validation-plan, residual-risk |"
             }
           ],
-          "sha256": "2f70e4698532b8206df4194a1d08d14c1d5483093cab314fac547dcf73cca64f",
-          "text": "\n# bigdata-product-extension\n\n## Role\n\nApply this focused Layer 3 Domain Skill to distributed pipeline decisions.\nProvide `analysis-agent`, `task-agent`, and `review-agent` with\ndistributed-schema, replay, lineage, quality, privacy, and cost constraints for\naffected pipelines and consumers.\n\n## When To Use\n\n- batch, stream, warehouse, data lake, distributed compute, schema evolution, or high-volume pipeline\n\n## Do Not Use\n\n- ordinary transactional persistence with no distributed data behavior\n- single-database large-table work without a distributed pipeline, replay, or downstream consumer boundary\n\n## Required Inputs\n\n- producers, consumers, schema ownership, volume, latency, replay, and retention boundaries\n- current storage/compute behavior, quality contract, classification policy, and validation evidence\n\n## Professional Decision Rules\n\n- Close triggered compatibility, replay, promotion, failed-data, quality, classification, resource, lineage, and experiment risks through named References and current pipeline evidence.\n\n## High-Value Gotchas\n\n- Schema appearance, averages, or file presence can hide semantic incompatibility, skew, duplicate replay, late data, or classified-data leakage.\n\n## Execution Checklist\n\n1. Identify affected producers, transformations, consumers, invariants, and replay window.\n2. Load each named Reference whose decision problem is active.\n3. Record mechanisms, negative paths, cost limits, proof limits, and residual risk.\n\n## Stop / Escalation Conditions\n\n- Stop when consumer inventory, replay identity, data classification, or a production data invariant is unknown.\n- Escalate irreversible backfills, regulated-data exposure, unbounded cost, and incompatible consumer transitions.\n\n## Output Contract\n\n- State the data invariant, required proof, selected mechanism, replay limits, and residual risk.\n\n## Targeted References\n\n| Path | Type | Load when | Do not load when | Required by | Required output |\n|---|---|---|---|---|---|\n| [consumer and schema contracts](references/consumer-and-schema-contracts.md) | targeted | distributed consumer, schema, grain, metric meaning, correction, or compatibility is open | the task changes one database table without a distributed pipeline or replay boundary | analysis-agent, task-agent, review-agent | boundary-decision, decision-record, residual-risk |\n| [pipeline replay and event identity](references/pipeline-replay-and-event-identity.md) | targeted | batch, stream, CDC, event-time, checkpoint, replay, backfill, or writer coexistence is open | no pipeline, replay, backfill, checkpoint, or writer-coexistence decision exists | analysis-agent, task-agent, review-agent | boundary-decision, decision-record, failure-decision, residual-risk |\n| [quality lineage and point in time correctness](references/quality-lineage-and-point-in-time-correctness.md) | targeted | quality, failed-data, lineage, point-in-time, leakage, or experiment semantics is open | no quality, lineage, point-in-time, leakage, or experiment decision exists | analysis-agent, task-agent, review-agent | decision-record, failure-decision, validation-plan, residual-risk |\n| [storage performance and recovery](references/storage-performance-and-recovery.md) | targeted | partition, storage, metadata, recovery, skew, state, memory, compute, or cost is open | no storage, recovery, resource, performance, or cost decision exists | analysis-agent, task-agent, review-agent | selected-approach, failure-decision, validation-plan, residual-risk |\n| [observability and privacy](references/observability-and-privacy.md) | targeted | pipeline signals or classified samples, logs, failed data, exports, retention, or deletion is open | no pipeline-observability or classified-data handling decision exists | analysis-agent, task-agent, review-agent | boundary-decision, validation-plan, residual-risk |"
+          "sha256": "16efc8fcd472031e4eb7eba4ecff699ffd04d6121fa8adb7878c4abcd8be55e8",
+          "text": "\n# bigdata-product-extension\n\n## Role\n\nApply this focused Layer 3 Domain Skill to distributed pipeline decisions.\nProvide `analysis-agent`, `task-agent`, and `review-agent` with\ndistributed-schema, replay, lineage, quality, privacy, and cost constraints for\naffected pipelines and consumers.\n\n## When To Use\n\n- batch, stream, warehouse, data lake, distributed compute, schema evolution, or high-volume pipeline\n\n## Do Not Use\n\n- ordinary transactional persistence with no distributed data behavior\n- single-database large-table work without a distributed pipeline, replay, or downstream consumer boundary\n\n## Required Inputs\n\n- producers, consumers, schema ownership, volume, latency, replay, and retention boundaries\n- current storage/compute behavior, quality contract, classification policy, and validation evidence\n\n## Professional Decision Rules\n\n- Prove schema and active-consumer compatibility from the source-backed inventory; unknown consumers or semantic contracts block.\n- Define event identity/order, checkpoint, retry, replay/backfill/correction, and live-writer coexistence so recovery cannot duplicate, omit, or overwrite authoritative data.\n- Gate promotion on quality/classification invariants; assign failed-data recovery and preserve lineage/experiment correctness through named References.\n- Bound partition/storage/state/memory/compute/cost from representative skew/workload evidence, including recoverable metadata/checkpoints.\n\n## High-Value Gotchas\n\n- Schema appearance, averages, or file presence can hide semantic incompatibility, skew, duplicate replay, late data, or classified-data leakage.\n\n## Execution Checklist\n\n1. Identify affected producers, transformations, consumers, invariants, and replay window.\n2. Load each named Reference whose decision problem is active.\n3. Record mechanisms, negative paths, cost limits, proof limits, and residual risk.\n\n## Stop / Escalation Conditions\n\n- Stop when consumer inventory, replay identity, data classification, or a production data invariant is unknown.\n- Escalate irreversible backfills, regulated-data exposure, unbounded cost, and incompatible consumer transitions.\n\n## Output Contract\n\n- State the data invariant, required proof, selected mechanism, replay limits, and residual risk.\n\n## Targeted References\n\n| Path | Type | Load when | Do not load when | Required by | Required output |\n|---|---|---|---|---|---|\n| [consumer and schema contracts](references/consumer-and-schema-contracts.md) | targeted | distributed consumer, schema, grain, metric meaning, correction, or compatibility is open | the task changes one database table without a distributed pipeline or replay boundary | analysis-agent, task-agent, review-agent | boundary-decision, decision-record, residual-risk |\n| [pipeline replay and event identity](references/pipeline-replay-and-event-identity.md) | targeted | batch, stream, CDC, event-time, checkpoint, replay, backfill, or writer coexistence is open | no pipeline, replay, backfill, checkpoint, or writer-coexistence decision exists | analysis-agent, task-agent, review-agent | boundary-decision, decision-record, failure-decision, residual-risk |\n| [quality lineage and point in time correctness](references/quality-lineage-and-point-in-time-correctness.md) | targeted | quality, failed-data, lineage, point-in-time, leakage, or experiment semantics is open | no quality, lineage, point-in-time, leakage, or experiment decision exists | analysis-agent, task-agent, review-agent | decision-record, failure-decision, validation-plan, residual-risk |\n| [storage performance and recovery](references/storage-performance-and-recovery.md) | targeted | partition, storage, metadata, recovery, skew, state, memory, compute, or cost is open | no storage, recovery, resource, performance, or cost decision exists | analysis-agent, task-agent, review-agent | selected-approach, failure-decision, validation-plan, residual-risk |\n| [observability and privacy](references/observability-and-privacy.md) | targeted | pipeline signals or classified samples, logs, failed data, exports, retention, or deletion is open | no pipeline-observability or classified-data handling decision exists | analysis-agent, task-agent, review-agent | boundary-decision, validation-plan, residual-risk |"
         },
         "document_id": "src/domain-extensions/bigdata-product-extension/SKILL.md#body",
         "document_part": "body",
@@ -13755,9 +13767,9 @@
       {
         "check_bullets": true,
         "compound_bullet_count": 0,
-        "content_fingerprint": "abe83a68bf4bf2d38c9bfef6b57d230adcfaa98a804eaadec302adda55914b94",
+        "content_fingerprint": "437cc904f8d2a0ebbd579189c262982dec4e1267a1991f7f549bb1ec2519521a",
         "document_context": {
-          "line_count": 53,
+          "line_count": 58,
           "line_offset": 4,
           "lines": [
             {
@@ -13866,43 +13878,43 @@
             },
             {
               "line": 27,
-              "text": "- Close each triggered device, firmware, timing, identity, update, endurance, protocol, or physical-safety risk through the checklist and current hardware, fleet, trust-boundary, and hazard evidence."
+              "text": "- Make field updates recoverable through validated images, atomic activation, last-known-good boot, power-loss behavior, mixed-fleet compatibility, rollback, and offline recovery."
             },
             {
               "line": 28,
-              "text": ""
+              "text": "- Authenticate firmware and commands against the device trust boundary, including integrity, origin, anti-rollback, credential rotation or revocation, and recovery from lost authority."
             },
             {
               "line": 29,
-              "text": "## High-Value Gotchas"
+              "text": "- Derive timing bounds from current hardware, scheduling, and interference evidence."
             },
             {
               "line": 30,
-              "text": ""
+              "text": "- Treat observed maxima as corroboration, not proof of worst-case timing."
             },
             {
               "line": 31,
-              "text": "- Power, connectivity, reset, wear, or reconnect behavior can defeat an otherwise valid update or safety mechanism."
+              "text": "- Derive physical safe states from current fleet and hazard evidence."
             },
             {
               "line": 32,
-              "text": ""
+              "text": "- Close triggered identity, endurance, protocol, connectivity, and resource risks through the checklist, with a named detection and field-recovery owner."
             },
             {
               "line": 33,
-              "text": "## Execution Checklist"
-            },
-            {
-              "line": 34,
               "text": ""
             },
             {
+              "line": 34,
+              "text": "## High-Value Gotchas"
+            },
+            {
               "line": 35,
-              "text": "1. Name the triggered risk, invariant, owner, hardware/fleet scope, and recovery boundary."
+              "text": ""
             },
             {
               "line": 36,
-              "text": "2. Apply the checklist; report mechanism, evidence, proof limit, release consequence, and residual risk."
+              "text": "- Power, connectivity, reset, wear, or reconnect behavior can defeat an otherwise valid update or safety mechanism."
             },
             {
               "line": 37,
@@ -13910,7 +13922,7 @@
             },
             {
               "line": 38,
-              "text": "## Stop / Escalation Conditions"
+              "text": "## Execution Checklist"
             },
             {
               "line": 39,
@@ -13918,11 +13930,11 @@
             },
             {
               "line": 40,
-              "text": "- Stop when a triggered physical, update, timing, resource, identity, or command-authority risk lacks its governing evidence or recovery guarantee."
+              "text": "1. Name the triggered risk, invariant, owner, hardware/fleet scope, and recovery boundary."
             },
             {
               "line": 41,
-              "text": "- Escalate possible injury, fleet bricking, credential lockout, irreversible actuation, or unsupported hardware assumptions."
+              "text": "2. Apply the checklist; report mechanism, evidence, proof limit, release consequence, and residual risk."
             },
             {
               "line": 42,
@@ -13930,7 +13942,7 @@
             },
             {
               "line": 43,
-              "text": "## Output Contract"
+              "text": "## Stop / Escalation Conditions"
             },
             {
               "line": 44,
@@ -13938,43 +13950,63 @@
             },
             {
               "line": 45,
-              "text": "- For every triggered device risk, state owner/scope, mechanism, compatibility/recovery, budget/safe state, validation, proof limit, detection owner, release consequence, and residual risk."
+              "text": "- Stop when a triggered physical, update, timing, resource, identity, or command-authority risk lacks its governing evidence or recovery guarantee."
             },
             {
               "line": 46,
-              "text": "- Hand firmware, identity, attestation, production-debug, or command-authority changes to `threat-modeling`; include changed security graph, reachable abuse paths, control placement, bypass analysis, and detection evidence."
+              "text": "- Escalate possible injury, fleet bricking, credential lockout, irreversible actuation, or unsupported hardware assumptions."
             },
             {
               "line": 47,
-              "text": "- Generic recovery evidence does not close security risk."
+              "text": ""
             },
             {
               "line": 48,
-              "text": ""
+              "text": "## Output Contract"
             },
             {
               "line": 49,
-              "text": "## Targeted References"
-            },
-            {
-              "line": 50,
               "text": ""
             },
             {
+              "line": 50,
+              "text": "- For every triggered device risk, state owner/scope, mechanism, compatibility/recovery, budget/safe state, validation, proof limit, detection owner, release consequence, and residual risk."
+            },
+            {
               "line": 51,
-              "text": "| Path | Type | Load when | Do not load when | Required by | Required output |"
+              "text": "- Hand firmware, identity, attestation, production-debug, or command-authority changes to `threat-modeling`; include changed security graph, reachable abuse paths, control placement, bypass analysis, and detection evidence."
             },
             {
               "line": 52,
-              "text": "|---|---|---|---|---|---|"
+              "text": "- Generic recovery evidence does not close security risk."
             },
             {
               "line": 53,
+              "text": ""
+            },
+            {
+              "line": 54,
+              "text": "## Targeted References"
+            },
+            {
+              "line": 55,
+              "text": ""
+            },
+            {
+              "line": 56,
+              "text": "| Path | Type | Load when | Do not load when | Required by | Required output |"
+            },
+            {
+              "line": 57,
+              "text": "|---|---|---|---|---|---|"
+            },
+            {
+              "line": 58,
               "text": "| [checklist](references/checklist.md) | decision-checklist | device firmware provisioning connectivity update or safety behavior needs domain risk closure | the task is protocol documentation or a cloud API with no device or firmware behavior | analysis-agent, task-agent, review-agent | checklist-result, residual-risk |"
             }
           ],
-          "sha256": "abe83a68bf4bf2d38c9bfef6b57d230adcfaa98a804eaadec302adda55914b94",
-          "text": "\n# iot-embedded-extension\n\n## Role\n\nInvoke this focused Layer 3 Domain Skill for device and field-operation\ndecisions. Give `analysis-agent`, `task-agent`, and `review-agent` device-timing,\nupdate, identity, recovery, and physical-safety constraints for firmware and\nfield operations.\n\n## When To Use\n\n- device, firmware, edge protocol, sensor, actuator, constrained runtime, or field update behavior\n\n## Do Not Use\n\n- cloud or desktop work with no device, firmware, or physical-world impact\n- protocol documentation or cloud-only APIs without device or firmware behavior\n\n## Required Inputs\n\n- hardware capability, boot and update path, timing, power, protocol, and field-service boundary\n- hazard analysis, trust boundary, fleet diversity, recovery options, and representative evidence\n\n## Professional Decision Rules\n\n- Close each triggered device, firmware, timing, identity, update, endurance, protocol, or physical-safety risk through the checklist and current hardware, fleet, trust-boundary, and hazard evidence.\n\n## High-Value Gotchas\n\n- Power, connectivity, reset, wear, or reconnect behavior can defeat an otherwise valid update or safety mechanism.\n\n## Execution Checklist\n\n1. Name the triggered risk, invariant, owner, hardware/fleet scope, and recovery boundary.\n2. Apply the checklist; report mechanism, evidence, proof limit, release consequence, and residual risk.\n\n## Stop / Escalation Conditions\n\n- Stop when a triggered physical, update, timing, resource, identity, or command-authority risk lacks its governing evidence or recovery guarantee.\n- Escalate possible injury, fleet bricking, credential lockout, irreversible actuation, or unsupported hardware assumptions.\n\n## Output Contract\n\n- For every triggered device risk, state owner/scope, mechanism, compatibility/recovery, budget/safe state, validation, proof limit, detection owner, release consequence, and residual risk.\n- Hand firmware, identity, attestation, production-debug, or command-authority changes to `threat-modeling`; include changed security graph, reachable abuse paths, control placement, bypass analysis, and detection evidence.\n- Generic recovery evidence does not close security risk.\n\n## Targeted References\n\n| Path | Type | Load when | Do not load when | Required by | Required output |\n|---|---|---|---|---|---|\n| [checklist](references/checklist.md) | decision-checklist | device firmware provisioning connectivity update or safety behavior needs domain risk closure | the task is protocol documentation or a cloud API with no device or firmware behavior | analysis-agent, task-agent, review-agent | checklist-result, residual-risk |"
+          "sha256": "437cc904f8d2a0ebbd579189c262982dec4e1267a1991f7f549bb1ec2519521a",
+          "text": "\n# iot-embedded-extension\n\n## Role\n\nInvoke this focused Layer 3 Domain Skill for device and field-operation\ndecisions. Give `analysis-agent`, `task-agent`, and `review-agent` device-timing,\nupdate, identity, recovery, and physical-safety constraints for firmware and\nfield operations.\n\n## When To Use\n\n- device, firmware, edge protocol, sensor, actuator, constrained runtime, or field update behavior\n\n## Do Not Use\n\n- cloud or desktop work with no device, firmware, or physical-world impact\n- protocol documentation or cloud-only APIs without device or firmware behavior\n\n## Required Inputs\n\n- hardware capability, boot and update path, timing, power, protocol, and field-service boundary\n- hazard analysis, trust boundary, fleet diversity, recovery options, and representative evidence\n\n## Professional Decision Rules\n\n- Make field updates recoverable through validated images, atomic activation, last-known-good boot, power-loss behavior, mixed-fleet compatibility, rollback, and offline recovery.\n- Authenticate firmware and commands against the device trust boundary, including integrity, origin, anti-rollback, credential rotation or revocation, and recovery from lost authority.\n- Derive timing bounds from current hardware, scheduling, and interference evidence.\n- Treat observed maxima as corroboration, not proof of worst-case timing.\n- Derive physical safe states from current fleet and hazard evidence.\n- Close triggered identity, endurance, protocol, connectivity, and resource risks through the checklist, with a named detection and field-recovery owner.\n\n## High-Value Gotchas\n\n- Power, connectivity, reset, wear, or reconnect behavior can defeat an otherwise valid update or safety mechanism.\n\n## Execution Checklist\n\n1. Name the triggered risk, invariant, owner, hardware/fleet scope, and recovery boundary.\n2. Apply the checklist; report mechanism, evidence, proof limit, release consequence, and residual risk.\n\n## Stop / Escalation Conditions\n\n- Stop when a triggered physical, update, timing, resource, identity, or command-authority risk lacks its governing evidence or recovery guarantee.\n- Escalate possible injury, fleet bricking, credential lockout, irreversible actuation, or unsupported hardware assumptions.\n\n## Output Contract\n\n- For every triggered device risk, state owner/scope, mechanism, compatibility/recovery, budget/safe state, validation, proof limit, detection owner, release consequence, and residual risk.\n- Hand firmware, identity, attestation, production-debug, or command-authority changes to `threat-modeling`; include changed security graph, reachable abuse paths, control placement, bypass analysis, and detection evidence.\n- Generic recovery evidence does not close security risk.\n\n## Targeted References\n\n| Path | Type | Load when | Do not load when | Required by | Required output |\n|---|---|---|---|---|---|\n| [checklist](references/checklist.md) | decision-checklist | device firmware provisioning connectivity update or safety behavior needs domain risk closure | the task is protocol documentation or a cloud API with no device or firmware behavior | analysis-agent, task-agent, review-agent | checklist-result, residual-risk |"
         },
         "document_id": "src/domain-extensions/iot-embedded-extension/SKILL.md#body",
         "document_part": "body",
@@ -117127,9 +117159,9 @@
       {
         "check_bullets": true,
         "compound_bullet_count": 0,
-        "content_fingerprint": "e417c1fab5b7f7c14f1e9b3a1a5844bf9d7b24bd104f38f0a8420d7f8c77596b",
+        "content_fingerprint": "4560e5bbe69995ffbe4c3e0914091d2dbc75317273e155ae61541597bc6fc5be",
         "document_context": {
-          "line_count": 66,
+          "line_count": 69,
           "line_offset": 4,
           "lines": [
             {
@@ -117258,107 +117290,107 @@
             },
             {
               "line": 32,
-              "text": ""
+              "text": "- Update the affected audience's documentation when behavior, public contract, configuration, operations, migration, deprecation, or workflow changes; otherwise require a source-backed no-docs decision."
             },
             {
               "line": 33,
-              "text": "## High-Value Gotchas"
+              "text": "- Place facts in the owning source and regenerate derived documentation instead of duplicating unstable details; keep examples consistent with current names, defaults, errors, and version behavior."
             },
             {
               "line": 34,
-              "text": ""
+              "text": "- Validate rendered links, commands, examples, generated outputs, migration and rollback instructions, and safe-disclosure boundaries against the final implementation."
             },
             {
               "line": 35,
-              "text": "- Generated documentation can pass source checks while rendered links or examples remain stale."
+              "text": ""
             },
             {
               "line": 36,
-              "text": "- A no-docs claim can hide audience impact when its evidence omits changed behavior."
+              "text": "## High-Value Gotchas"
             },
             {
               "line": 37,
-              "text": "- Safe-disclosure limits still apply to examples, runbooks, migration notes, and incident records."
+              "text": ""
             },
             {
               "line": 38,
-              "text": ""
+              "text": "- Generated documentation can pass source checks while rendered links or examples remain stale."
             },
             {
               "line": 39,
-              "text": "## Execution Checklist"
+              "text": "- A no-docs claim can hide audience impact when its evidence omits changed behavior."
             },
             {
               "line": 40,
-              "text": ""
+              "text": "- Safe-disclosure limits still apply to examples, runbooks, migration notes, and incident records."
             },
             {
               "line": 41,
-              "text": "- **Task mode:** Map changed behavior to its owning documentation source and generated origin."
+              "text": ""
             },
             {
               "line": 42,
-              "text": "- **Task mode:** Validate rendered links, examples, commands, and failure guidance against current behavior."
+              "text": "## Execution Checklist"
             },
             {
               "line": 43,
-              "text": "- **Review mode:** Compare published guidance with current behavior and freshness evidence."
+              "text": ""
             },
             {
               "line": 44,
-              "text": "- Record skipped documentation surfaces as owned residual debt."
+              "text": "- **Task mode:** Map changed behavior to its owning documentation source and generated origin."
             },
             {
               "line": 45,
-              "text": "- Minimal validation: render the affected artifact and run its link, example, or command checks."
+              "text": "- **Task mode:** Validate rendered links, examples, commands, and failure guidance against current behavior."
             },
             {
               "line": 46,
-              "text": ""
+              "text": "- **Review mode:** Compare published guidance with current behavior and freshness evidence."
             },
             {
               "line": 47,
-              "text": "## Stop / Escalation Conditions"
+              "text": "- Record skipped documentation surfaces as owned residual debt."
             },
             {
               "line": 48,
-              "text": ""
+              "text": "- Minimal validation: render the affected artifact and run its link, example, or command checks."
             },
             {
               "line": 49,
-              "text": "- Stop release when changed audience behavior lacks documentation or a source-backed no-docs rationale."
+              "text": ""
             },
             {
               "line": 50,
-              "text": "- Stop no-docs decisions when affected audience, docs surface, source evidence, generated artifact, or behavior-delta proof is missing."
+              "text": "## Stop / Escalation Conditions"
             },
             {
               "line": 51,
-              "text": "- Stop publishing when docs expose secrets, internal topology, tenant-sensitive details, unapproved security posture, or customer/audit data without safe-disclosure review."
+              "text": ""
             },
             {
               "line": 52,
-              "text": "- Stop migration, runbook, ADR, incident, compliance, or deprecation closure when owner, expected output, rollback, retention, approval, freshness, or validation evidence is implicit."
+              "text": "- Stop release when changed audience behavior lacks documentation or a source-backed no-docs rationale."
             },
             {
               "line": 53,
-              "text": ""
+              "text": "- Stop no-docs decisions when affected audience, docs surface, source evidence, generated artifact, or behavior-delta proof is missing."
             },
             {
               "line": 54,
-              "text": "## Output Contract"
+              "text": "- Stop publishing when docs expose secrets, internal topology, tenant-sensitive details, unapproved security posture, or customer/audit data without safe-disclosure review."
             },
             {
               "line": 55,
-              "text": ""
+              "text": "- Stop migration, runbook, ADR, incident, compliance, or deprecation closure when owner, expected output, rollback, retention, approval, freshness, or validation evidence is implicit."
             },
             {
               "line": 56,
-              "text": "- **Task mode (`task-agent`):** documentation changes; behavior mapping; residual documentation debt."
+              "text": ""
             },
             {
               "line": 57,
-              "text": "- **Review mode (`review-agent`):** documentation verdict; stale guidance findings; unproven audience behavior."
+              "text": "## Output Contract"
             },
             {
               "line": 58,
@@ -117366,48 +117398,60 @@
             },
             {
               "line": 59,
-              "text": "## Targeted References"
+              "text": "- **Task mode (`task-agent`):** documentation changes; behavior mapping; residual documentation debt."
             },
             {
               "line": 60,
-              "text": ""
+              "text": "- **Review mode (`review-agent`):** documentation verdict; stale guidance findings; unproven audience behavior."
             },
             {
               "line": 61,
-              "text": "| Path | Type | Load when | Do not load when | Required by | Required output |"
+              "text": ""
             },
             {
               "line": 62,
-              "text": "|---|---|---|---|---|---|"
+              "text": "## Targeted References"
             },
             {
               "line": 63,
-              "text": "| [checklist](references/checklist.md) | decision-checklist | A bounded review needs quick artifact coverage across README, API docs, migration notes, ADRs, changelog, runbooks, user docs, config, and skipped rationale | Detailed output fields or evidence closure is required | task-agent, review-agent | checklist-result, residual-risk |"
+              "text": ""
             },
             {
               "line": 64,
-              "text": "| [documentation output and gates](references/documentation-output-and-gates.md) | targeted | Drafting or reviewing documentation matrices, release notes, runbooks, migration notes, ADRs, incident/compliance packets, or no-docs decisions | Body output contract is sufficient for a small decision | task-agent, review-agent | gate-decision, residual-risk |"
+              "text": "| Path | Type | Load when | Do not load when | Required by | Required output |"
             },
             {
               "line": 65,
-              "text": "| [evidence patterns](references/evidence-patterns.md) | evidence-pattern | Closure depends on source-to-doc freshness, consumer-impact proof, rendered/link/spec validation, evidence retention, safe disclosure, or tool-output boundaries | No evidence freshness, retention, or safe-disclosure risk is material | task-agent, review-agent | evidence-record, proof-limit, residual-risk |"
+              "text": "|---|---|---|---|---|---|"
             },
             {
               "line": 66,
+              "text": "| [checklist](references/checklist.md) | decision-checklist | A bounded review needs quick artifact coverage across README, API docs, migration notes, ADRs, changelog, runbooks, user docs, config, and skipped rationale | Detailed output fields or evidence closure is required | task-agent, review-agent | checklist-result, residual-risk |"
+            },
+            {
+              "line": 67,
+              "text": "| [documentation output and gates](references/documentation-output-and-gates.md) | targeted | Drafting or reviewing documentation matrices, release notes, runbooks, migration notes, ADRs, incident/compliance packets, or no-docs decisions | Body output contract is sufficient for a small decision | task-agent, review-agent | gate-decision, residual-risk |"
+            },
+            {
+              "line": 68,
+              "text": "| [evidence patterns](references/evidence-patterns.md) | evidence-pattern | Closure depends on source-to-doc freshness, consumer-impact proof, rendered/link/spec validation, evidence retention, safe disclosure, or tool-output boundaries | No evidence freshness, retention, or safe-disclosure risk is material | task-agent, review-agent | evidence-record, proof-limit, residual-risk |"
+            },
+            {
+              "line": 69,
               "text": "| [index](references/index.md) | index | competing change documentation gate references require dependency, conflict, or output-fragment selection | the change documentation gate root or a task-named reference already resolves selection | task-agent, review-agent | reference-selection |"
             }
           ],
-          "sha256": "e417c1fab5b7f7c14f1e9b3a1a5844bf9d7b24bd104f38f0a8420d7f8c77596b",
-          "text": "\n# change-documentation-gate\n\n## Role\n\nSupport `task-agent` and `review-agent` for source-owned documentation accuracy,\nmigration guidance, and operator instructions.\n\n- **Task mode (`task-agent`):** Apply the behavior delta to its owning documentation source.\n- **Review mode (`review-agent`):** Judge published guidance against current behavior.\n\n## When To Use\n\n- public behavior or operator workflow changed\n- documentation impact\n\n## Do Not Use\n\n- no audience facing change\n- self review request\n\n## Required Inputs\n\n- changed behavior summary\n- documentation scope\n- **Task mode (`task-agent`):** owning documentation source, generated origin, and link, example, or command checks.\n- **Review mode (`review-agent`):** changed guidance with behavior and freshness evidence.\n\n## Professional Decision Rules\n\n- Keep the selected change documentation gate decision within its declared owner, inputs, stops, and output contract.\n\n## High-Value Gotchas\n\n- Generated documentation can pass source checks while rendered links or examples remain stale.\n- A no-docs claim can hide audience impact when its evidence omits changed behavior.\n- Safe-disclosure limits still apply to examples, runbooks, migration notes, and incident records.\n\n## Execution Checklist\n\n- **Task mode:** Map changed behavior to its owning documentation source and generated origin.\n- **Task mode:** Validate rendered links, examples, commands, and failure guidance against current behavior.\n- **Review mode:** Compare published guidance with current behavior and freshness evidence.\n- Record skipped documentation surfaces as owned residual debt.\n- Minimal validation: render the affected artifact and run its link, example, or command checks.\n\n## Stop / Escalation Conditions\n\n- Stop release when changed audience behavior lacks documentation or a source-backed no-docs rationale.\n- Stop no-docs decisions when affected audience, docs surface, source evidence, generated artifact, or behavior-delta proof is missing.\n- Stop publishing when docs expose secrets, internal topology, tenant-sensitive details, unapproved security posture, or customer/audit data without safe-disclosure review.\n- Stop migration, runbook, ADR, incident, compliance, or deprecation closure when owner, expected output, rollback, retention, approval, freshness, or validation evidence is implicit.\n\n## Output Contract\n\n- **Task mode (`task-agent`):** documentation changes; behavior mapping; residual documentation debt.\n- **Review mode (`review-agent`):** documentation verdict; stale guidance findings; unproven audience behavior.\n\n## Targeted References\n\n| Path | Type | Load when | Do not load when | Required by | Required output |\n|---|---|---|---|---|---|\n| [checklist](references/checklist.md) | decision-checklist | A bounded review needs quick artifact coverage across README, API docs, migration notes, ADRs, changelog, runbooks, user docs, config, and skipped rationale | Detailed output fields or evidence closure is required | task-agent, review-agent | checklist-result, residual-risk |\n| [documentation output and gates](references/documentation-output-and-gates.md) | targeted | Drafting or reviewing documentation matrices, release notes, runbooks, migration notes, ADRs, incident/compliance packets, or no-docs decisions | Body output contract is sufficient for a small decision | task-agent, review-agent | gate-decision, residual-risk |\n| [evidence patterns](references/evidence-patterns.md) | evidence-pattern | Closure depends on source-to-doc freshness, consumer-impact proof, rendered/link/spec validation, evidence retention, safe disclosure, or tool-output boundaries | No evidence freshness, retention, or safe-disclosure risk is material | task-agent, review-agent | evidence-record, proof-limit, residual-risk |\n| [index](references/index.md) | index | competing change documentation gate references require dependency, conflict, or output-fragment selection | the change documentation gate root or a task-named reference already resolves selection | task-agent, review-agent | reference-selection |"
+          "sha256": "4560e5bbe69995ffbe4c3e0914091d2dbc75317273e155ae61541597bc6fc5be",
+          "text": "\n# change-documentation-gate\n\n## Role\n\nSupport `task-agent` and `review-agent` for source-owned documentation accuracy,\nmigration guidance, and operator instructions.\n\n- **Task mode (`task-agent`):** Apply the behavior delta to its owning documentation source.\n- **Review mode (`review-agent`):** Judge published guidance against current behavior.\n\n## When To Use\n\n- public behavior or operator workflow changed\n- documentation impact\n\n## Do Not Use\n\n- no audience facing change\n- self review request\n\n## Required Inputs\n\n- changed behavior summary\n- documentation scope\n- **Task mode (`task-agent`):** owning documentation source, generated origin, and link, example, or command checks.\n- **Review mode (`review-agent`):** changed guidance with behavior and freshness evidence.\n\n## Professional Decision Rules\n\n- Keep the selected change documentation gate decision within its declared owner, inputs, stops, and output contract.\n- Update the affected audience's documentation when behavior, public contract, configuration, operations, migration, deprecation, or workflow changes; otherwise require a source-backed no-docs decision.\n- Place facts in the owning source and regenerate derived documentation instead of duplicating unstable details; keep examples consistent with current names, defaults, errors, and version behavior.\n- Validate rendered links, commands, examples, generated outputs, migration and rollback instructions, and safe-disclosure boundaries against the final implementation.\n\n## High-Value Gotchas\n\n- Generated documentation can pass source checks while rendered links or examples remain stale.\n- A no-docs claim can hide audience impact when its evidence omits changed behavior.\n- Safe-disclosure limits still apply to examples, runbooks, migration notes, and incident records.\n\n## Execution Checklist\n\n- **Task mode:** Map changed behavior to its owning documentation source and generated origin.\n- **Task mode:** Validate rendered links, examples, commands, and failure guidance against current behavior.\n- **Review mode:** Compare published guidance with current behavior and freshness evidence.\n- Record skipped documentation surfaces as owned residual debt.\n- Minimal validation: render the affected artifact and run its link, example, or command checks.\n\n## Stop / Escalation Conditions\n\n- Stop release when changed audience behavior lacks documentation or a source-backed no-docs rationale.\n- Stop no-docs decisions when affected audience, docs surface, source evidence, generated artifact, or behavior-delta proof is missing.\n- Stop publishing when docs expose secrets, internal topology, tenant-sensitive details, unapproved security posture, or customer/audit data without safe-disclosure review.\n- Stop migration, runbook, ADR, incident, compliance, or deprecation closure when owner, expected output, rollback, retention, approval, freshness, or validation evidence is implicit.\n\n## Output Contract\n\n- **Task mode (`task-agent`):** documentation changes; behavior mapping; residual documentation debt.\n- **Review mode (`review-agent`):** documentation verdict; stale guidance findings; unproven audience behavior.\n\n## Targeted References\n\n| Path | Type | Load when | Do not load when | Required by | Required output |\n|---|---|---|---|---|---|\n| [checklist](references/checklist.md) | decision-checklist | A bounded review needs quick artifact coverage across README, API docs, migration notes, ADRs, changelog, runbooks, user docs, config, and skipped rationale | Detailed output fields or evidence closure is required | task-agent, review-agent | checklist-result, residual-risk |\n| [documentation output and gates](references/documentation-output-and-gates.md) | targeted | Drafting or reviewing documentation matrices, release notes, runbooks, migration notes, ADRs, incident/compliance packets, or no-docs decisions | Body output contract is sufficient for a small decision | task-agent, review-agent | gate-decision, residual-risk |\n| [evidence patterns](references/evidence-patterns.md) | evidence-pattern | Closure depends on source-to-doc freshness, consumer-impact proof, rendered/link/spec validation, evidence retention, safe disclosure, or tool-output boundaries | No evidence freshness, retention, or safe-disclosure risk is material | task-agent, review-agent | evidence-record, proof-limit, residual-risk |\n| [index](references/index.md) | index | competing change documentation gate references require dependency, conflict, or output-fragment selection | the change documentation gate root or a task-named reference already resolves selection | task-agent, review-agent | reference-selection |"
         },
         "document_id": "src/professional-skills/change-documentation-gate/SKILL.md#body",
         "document_part": "body",
         "hard_fail_count": 0,
-        "highest_advisory_band": null,
+        "highest_advisory_band": "review-as-complex",
         "line_offset": 4,
         "owner": "change-documentation-gate",
         "path": "src/professional-skills/change-documentation-gate/SKILL.md",
-        "review_as_complex_count": 0,
+        "review_as_complex_count": 1,
         "source_selector": {
           "kind": "yaml-body",
           "path": "src/professional-skills/change-documentation-gate/SKILL.md"
@@ -125814,9 +125858,9 @@
       {
         "check_bullets": true,
         "compound_bullet_count": 0,
-        "content_fingerprint": "f992e91e469cddfc4608ee76fb9332107d581e7eee48113ef52ee7cf6b5618ac",
+        "content_fingerprint": "ed7c73b128d12833f376983dd4243c7288eb85559277e8254cdc85dfcced55e9",
         "document_context": {
-          "line_count": 59,
+          "line_count": 62,
           "line_offset": 4,
           "lines": [
             {
@@ -125929,79 +125973,79 @@
             },
             {
               "line": 28,
-              "text": ""
+              "text": "- Test the brief as connected problem/acceptance, owner/invariant, placement/contract/failure, and acceptance-to-validation decisions using current source evidence."
             },
             {
               "line": 29,
-              "text": "## High-Value Gotchas"
+              "text": "- Compare a plausible alternative at each critical boundary and require a decision only when it changes downstream work, material risk, recovery, or user-visible behavior."
             },
             {
               "line": 30,
-              "text": ""
+              "text": "- Reject dependency cycles, conflicting writes, unowned shared contracts, and rollback claims without an executable rollback or forward-repair path; keep the First Executable Slice safe, verifiable, and reversible."
             },
             {
               "line": 31,
-              "text": "- When ownership is ambiguous, an invariant or failure path may be split across decision makers."
+              "text": ""
             },
             {
               "line": 32,
-              "text": "- Reversibility on paper does not prove an executable rollback or forward-repair path."
+              "text": "## High-Value Gotchas"
             },
             {
               "line": 33,
-              "text": "- Multiple downstream tasks can preserve local acceptance while breaking the shared boundary."
+              "text": ""
             },
             {
               "line": 34,
-              "text": ""
+              "text": "- When ownership is ambiguous, an invariant or failure path may be split across decision makers."
             },
             {
               "line": 35,
-              "text": "## Execution Checklist"
+              "text": "- Reversibility on paper does not prove an executable rollback or forward-repair path."
             },
             {
               "line": 36,
-              "text": ""
+              "text": "- Multiple downstream tasks can preserve local acceptance while breaking the shared boundary."
             },
             {
               "line": 37,
-              "text": "- **Review mode:** Map every material decision to one owner, invariant, failure path, and proof."
+              "text": ""
             },
             {
               "line": 38,
-              "text": "- Compare the selected design with at least one plausible alternative at the critical boundary."
+              "text": "## Execution Checklist"
             },
             {
               "line": 39,
-              "text": "- Verify rollback or forward repair for each irreversible or cross-task consequence."
+              "text": ""
             },
             {
               "line": 40,
-              "text": "- Record unreviewed decisions and evidence gaps as blocking findings or residual risk."
+              "text": "- **Review mode:** Map every material decision to one owner, invariant, failure path, and proof."
             },
             {
               "line": 41,
-              "text": "- Minimal validation: inspect the brief's named proofs and its recovery path."
+              "text": "- Compare the selected design with at least one plausible alternative at the critical boundary."
             },
             {
               "line": 42,
-              "text": ""
+              "text": "- Verify rollback or forward repair for each irreversible or cross-task consequence."
             },
             {
               "line": 43,
-              "text": "## Stop / Escalation Conditions"
+              "text": "- Record unreviewed decisions and evidence gaps as blocking findings or residual risk."
             },
             {
               "line": 44,
-              "text": ""
+              "text": "- Minimal validation: inspect the brief's named proofs and its recovery path."
             },
             {
               "line": 45,
-              "text": "- Stop when source evidence, acceptance, owner, rollback, or a user-owned decision is missing."
+              "text": ""
             },
             {
               "line": 46,
-              "text": "- Escalate destructive, production, privileged, irreversible, security, privacy, or financial choices."
+              "text": "## Stop / Escalation Conditions"
             },
             {
               "line": 47,
@@ -126009,64 +126053,76 @@
             },
             {
               "line": 48,
-              "text": "## Output Contract"
+              "text": "- Stop when source evidence, acceptance, owner, rollback, or a user-owned decision is missing."
             },
             {
               "line": 49,
-              "text": ""
+              "text": "- Escalate destructive, production, privileged, irreversible, security, privacy, or financial choices."
             },
             {
               "line": 50,
-              "text": "- verdict and blocking design findings"
+              "text": ""
             },
             {
               "line": 51,
-              "text": "- affected decisions and downstream impact"
+              "text": "## Output Contract"
             },
             {
               "line": 52,
-              "text": "- First Executable Slice assessment"
+              "text": ""
             },
             {
               "line": 53,
-              "text": "- validation, rollback, and residual-risk gaps"
+              "text": "- verdict and blocking design findings"
             },
             {
               "line": 54,
-              "text": ""
+              "text": "- affected decisions and downstream impact"
             },
             {
               "line": 55,
-              "text": "## Targeted References"
+              "text": "- First Executable Slice assessment"
             },
             {
               "line": 56,
-              "text": ""
+              "text": "- validation, rollback, and residual-risk gaps"
             },
             {
               "line": 57,
-              "text": "| Path | Type | Load when | Do not load when | Required by | Required output |"
+              "text": ""
             },
             {
               "line": 58,
-              "text": "|---|---|---|---|---|---|"
+              "text": "## Targeted References"
             },
             {
               "line": 59,
+              "text": ""
+            },
+            {
+              "line": 60,
+              "text": "| Path | Type | Load when | Do not load when | Required by | Required output |"
+            },
+            {
+              "line": 61,
+              "text": "|---|---|---|---|---|---|"
+            },
+            {
+              "line": 62,
               "text": "| [design review](references/design-review-checklist.md) | decision-checklist | critical-path design changes need boundary, alternative, and reversibility review | no material architecture boundary or high-risk design decision changed | review-agent | checklist-result, residual-risk |"
             }
           ],
-          "sha256": "f992e91e469cddfc4608ee76fb9332107d581e7eee48113ef52ee7cf6b5618ac",
-          "text": "\n# High-Risk Design Review\n\n## Role\n\nSupport `review-agent` in assessing a high-risk Engineering Brief whose\ndecisions affect multiple downstream tasks. Reject phase-pipeline expansion.\n\n## When To Use\n\n- critical path requires deeper design evidence\n- major architecture boundary\n\n## Do Not Use\n\n- ordinary fast path\n- ordinary standard path\n- As a planner, implementer, or mandatory ceremony for every change.\n\n## Required Inputs\n\n- Source-backed Engineering Brief and observable acceptance.\n- Ownership, invariants, placement, contract/data/failure impact, validation, rollback, and First Executable Slice.\n\n## Professional Decision Rules\n\n- Keep the selected high risk design review decision within its declared owner, inputs, stops, and output contract.\n\n## High-Value Gotchas\n\n- When ownership is ambiguous, an invariant or failure path may be split across decision makers.\n- Reversibility on paper does not prove an executable rollback or forward-repair path.\n- Multiple downstream tasks can preserve local acceptance while breaking the shared boundary.\n\n## Execution Checklist\n\n- **Review mode:** Map every material decision to one owner, invariant, failure path, and proof.\n- Compare the selected design with at least one plausible alternative at the critical boundary.\n- Verify rollback or forward repair for each irreversible or cross-task consequence.\n- Record unreviewed decisions and evidence gaps as blocking findings or residual risk.\n- Minimal validation: inspect the brief's named proofs and its recovery path.\n\n## Stop / Escalation Conditions\n\n- Stop when source evidence, acceptance, owner, rollback, or a user-owned decision is missing.\n- Escalate destructive, production, privileged, irreversible, security, privacy, or financial choices.\n\n## Output Contract\n\n- verdict and blocking design findings\n- affected decisions and downstream impact\n- First Executable Slice assessment\n- validation, rollback, and residual-risk gaps\n\n## Targeted References\n\n| Path | Type | Load when | Do not load when | Required by | Required output |\n|---|---|---|---|---|---|\n| [design review](references/design-review-checklist.md) | decision-checklist | critical-path design changes need boundary, alternative, and reversibility review | no material architecture boundary or high-risk design decision changed | review-agent | checklist-result, residual-risk |"
+          "sha256": "ed7c73b128d12833f376983dd4243c7288eb85559277e8254cdc85dfcced55e9",
+          "text": "\n# High-Risk Design Review\n\n## Role\n\nSupport `review-agent` in assessing a high-risk Engineering Brief whose\ndecisions affect multiple downstream tasks. Reject phase-pipeline expansion.\n\n## When To Use\n\n- critical path requires deeper design evidence\n- major architecture boundary\n\n## Do Not Use\n\n- ordinary fast path\n- ordinary standard path\n- As a planner, implementer, or mandatory ceremony for every change.\n\n## Required Inputs\n\n- Source-backed Engineering Brief and observable acceptance.\n- Ownership, invariants, placement, contract/data/failure impact, validation, rollback, and First Executable Slice.\n\n## Professional Decision Rules\n\n- Keep the selected high risk design review decision within its declared owner, inputs, stops, and output contract.\n- Test the brief as connected problem/acceptance, owner/invariant, placement/contract/failure, and acceptance-to-validation decisions using current source evidence.\n- Compare a plausible alternative at each critical boundary and require a decision only when it changes downstream work, material risk, recovery, or user-visible behavior.\n- Reject dependency cycles, conflicting writes, unowned shared contracts, and rollback claims without an executable rollback or forward-repair path; keep the First Executable Slice safe, verifiable, and reversible.\n\n## High-Value Gotchas\n\n- When ownership is ambiguous, an invariant or failure path may be split across decision makers.\n- Reversibility on paper does not prove an executable rollback or forward-repair path.\n- Multiple downstream tasks can preserve local acceptance while breaking the shared boundary.\n\n## Execution Checklist\n\n- **Review mode:** Map every material decision to one owner, invariant, failure path, and proof.\n- Compare the selected design with at least one plausible alternative at the critical boundary.\n- Verify rollback or forward repair for each irreversible or cross-task consequence.\n- Record unreviewed decisions and evidence gaps as blocking findings or residual risk.\n- Minimal validation: inspect the brief's named proofs and its recovery path.\n\n## Stop / Escalation Conditions\n\n- Stop when source evidence, acceptance, owner, rollback, or a user-owned decision is missing.\n- Escalate destructive, production, privileged, irreversible, security, privacy, or financial choices.\n\n## Output Contract\n\n- verdict and blocking design findings\n- affected decisions and downstream impact\n- First Executable Slice assessment\n- validation, rollback, and residual-risk gaps\n\n## Targeted References\n\n| Path | Type | Load when | Do not load when | Required by | Required output |\n|---|---|---|---|---|---|\n| [design review](references/design-review-checklist.md) | decision-checklist | critical-path design changes need boundary, alternative, and reversibility review | no material architecture boundary or high-risk design decision changed | review-agent | checklist-result, residual-risk |"
         },
         "document_id": "src/professional-skills/high-risk-design-review/SKILL.md#body",
         "document_part": "body",
         "hard_fail_count": 0,
-        "highest_advisory_band": null,
+        "highest_advisory_band": "review-as-complex",
         "line_offset": 4,
         "owner": "high-risk-design-review",
         "path": "src/professional-skills/high-risk-design-review/SKILL.md",
-        "review_as_complex_count": 0,
+        "review_as_complex_count": 1,
         "source_selector": {
           "kind": "yaml-body",
           "path": "src/professional-skills/high-risk-design-review/SKILL.md"
@@ -128168,9 +128224,9 @@
       {
         "check_bullets": true,
         "compound_bullet_count": 0,
-        "content_fingerprint": "a5a5f68e3be272f6ee71b5df6b0de3a22acd1778c055af873d608e13fdebc4df",
+        "content_fingerprint": "bde6e55cc0cfe2d8bd5b496133efb62bbe27b6846192f5ff69564a32c9183016",
         "document_context": {
-          "line_count": 60,
+          "line_count": 63,
           "line_offset": 4,
           "lines": [
             {
@@ -128291,95 +128347,95 @@
             },
             {
               "line": 30,
-              "text": ""
+              "text": "- Align producer, consumer, provider, version, credential, and exact signed-representation contracts before changing the adapter or resolving implementation conflicts."
             },
             {
               "line": 31,
-              "text": "## High-Value Gotchas"
+              "text": "- Define timeout, retry, idempotency, ordering, verification, replay, unknown-outcome, partial-failure, compensation, and reconciliation behavior at the owning boundary."
             },
             {
               "line": 32,
-              "text": ""
+              "text": "- Validate the integrated diff, credential containment, mapping compatibility, and recovery behavior across affected consumers; isolated component success is insufficient."
             },
             {
               "line": 33,
-              "text": "- A successful request can still leave a duplicate or unknown external effect."
+              "text": ""
             },
             {
               "line": 34,
-              "text": "- Provider sandbox behavior does not prove production credentials, quotas, ordering, or recovery."
+              "text": "## High-Value Gotchas"
             },
             {
               "line": 35,
-              "text": "- Signature, serialization, or adapter drift can invalidate an otherwise correct contract."
+              "text": ""
             },
             {
               "line": 36,
-              "text": ""
+              "text": "- A successful request can still leave a duplicate or unknown external effect."
             },
             {
               "line": 37,
-              "text": "## Execution Checklist"
+              "text": "- Provider sandbox behavior does not prove production credentials, quotas, ordering, or recovery."
             },
             {
               "line": 38,
-              "text": ""
+              "text": "- Signature, serialization, or adapter drift can invalidate an otherwise correct contract."
             },
             {
               "line": 39,
-              "text": "- **Analysis mode:** Map producer, consumer, provider, credential, contract, and reconciliation authority."
+              "text": ""
             },
             {
               "line": 40,
-              "text": "- **Task mode:** Apply the accepted adapter boundary with idempotency and failure handling."
+              "text": "## Execution Checklist"
             },
             {
               "line": 41,
-              "text": "- Verify timeout, retry, duplicate, malformed, denied, and unknown-outcome behavior."
+              "text": ""
             },
             {
               "line": 42,
-              "text": "- Record provider assumptions and untested recovery paths as residual risk."
+              "text": "- **Analysis mode:** Map producer, consumer, provider, credential, contract, and reconciliation authority."
             },
             {
               "line": 43,
-              "text": "- Minimal validation: run contract and failure tests at the real adapter or calibrated sandbox."
+              "text": "- **Task mode:** Apply the accepted adapter boundary with idempotency and failure handling."
             },
             {
               "line": 44,
-              "text": ""
+              "text": "- Verify timeout, retry, duplicate, malformed, denied, and unknown-outcome behavior."
             },
             {
               "line": 45,
-              "text": "## Stop / Escalation Conditions"
+              "text": "- Record provider assumptions and untested recovery paths as residual risk."
             },
             {
               "line": 46,
-              "text": ""
+              "text": "- Minimal validation: run contract and failure tests at the real adapter or calibrated sandbox."
             },
             {
               "line": 47,
-              "text": "Block unknown provider/environment/credential/reconciliation authority or unproved signed bytes/order, duplicates/failures, sensitive data, or adapter mappings; escalate material production/provider/combined-impact/weak-recovery risk."
+              "text": ""
             },
             {
               "line": 48,
-              "text": ""
+              "text": "## Stop / Escalation Conditions"
             },
             {
               "line": 49,
-              "text": "## Output Contract"
-            },
-            {
-              "line": 50,
               "text": ""
             },
             {
+              "line": 50,
+              "text": "Block unknown provider/environment/credential/reconciliation authority or unproved signed bytes/order, duplicates/failures, sensitive data, or adapter mappings; escalate material production/provider/combined-impact/weak-recovery risk."
+            },
+            {
               "line": 51,
-              "text": "- **Analysis mode (`analysis-agent`):** integration design; authority and failure decisions; reconciliation model."
+              "text": ""
             },
             {
               "line": 52,
-              "text": "- **Task mode (`task-agent`):** integrated boundary changes; conflict and credential decisions; unresolved provider risk."
+              "text": "## Output Contract"
             },
             {
               "line": 53,
@@ -128387,35 +128443,47 @@
             },
             {
               "line": 54,
-              "text": "## Targeted References"
+              "text": "- **Analysis mode (`analysis-agent`):** integration design; authority and failure decisions; reconciliation model."
             },
             {
               "line": 55,
-              "text": ""
+              "text": "- **Task mode (`task-agent`):** integrated boundary changes; conflict and credential decisions; unresolved provider risk."
             },
             {
               "line": 56,
-              "text": "| Path | Type | Load when | Do not load when | Required by | Required output |"
+              "text": ""
             },
             {
               "line": 57,
-              "text": "|---|---|---|---|---|---|"
+              "text": "## Targeted References"
             },
             {
               "line": 58,
-              "text": "| [checklist](references/checklist.md) | decision-checklist | Closing or reviewing an external integration change needs provider-contract, timeout, retry/backoff, circuit-breaker, idempotency, webhook/replay, credential, reconciliation, test, and monitoring checks | The inline Skill quality gate is sufficient for an L1 read or a deeper capability reference already covers the same checklist with task-specific detail | analysis-agent, task-agent | checklist-result, validation-plan |"
+              "text": ""
             },
             {
               "line": 59,
-              "text": "| [index](references/index.md) | index | competing integration change builder references require dependency, conflict, or output-fragment selection | the integration change builder root or a task-named reference already resolves selection | analysis-agent, task-agent | reference-selection |"
+              "text": "| Path | Type | Load when | Do not load when | Required by | Required output |"
             },
             {
               "line": 60,
+              "text": "|---|---|---|---|---|---|"
+            },
+            {
+              "line": 61,
+              "text": "| [checklist](references/checklist.md) | decision-checklist | Closing or reviewing an external integration change needs provider-contract, timeout, retry/backoff, circuit-breaker, idempotency, webhook/replay, credential, reconciliation, test, and monitoring checks | The inline Skill quality gate is sufficient for an L1 read or a deeper capability reference already covers the same checklist with task-specific detail | analysis-agent, task-agent | checklist-result, validation-plan |"
+            },
+            {
+              "line": 62,
+              "text": "| [index](references/index.md) | index | competing integration change builder references require dependency, conflict, or output-fragment selection | the integration change builder root or a task-named reference already resolves selection | analysis-agent, task-agent | reference-selection |"
+            },
+            {
+              "line": 63,
               "text": "| [solution optimality](references/solution-optimality.md) | targeted | An outbound call, webhook, provider migration, retry, concurrency, delivery, or reconciliation design has a material failure, latency, cost, or state-consistency tradeoff | The provider contract and accepted task already determine a bounded adapter change with no material delivery or failure-mode choice | analysis-agent, task-agent | failure-decision, residual-risk |"
             }
           ],
-          "sha256": "a5a5f68e3be272f6ee71b5df6b0de3a22acd1778c055af873d608e13fdebc4df",
-          "text": "\n# integration-change-builder\n\n## Role\n\n- **Analysis mode (`analysis-agent`):** Decide contract, authority, and failure behavior.\n- **Task mode (`task-agent`):** Apply the boundary and reconciliation.\n\n## When To Use\n\n- cross worker merge\n- external integration change\n- shared contract alignment\n\n## Do Not Use\n\n- isolated change with no integration edge\n- unrelated source inspection\n\n## Required Inputs\n\n- component handoffs\n- contract summary\n- **Analysis mode (`analysis-agent`):** producer, consumer, credential, failure, and reconciliation evidence.\n- **Task mode (`task-agent`):** accepted boundary decision with provider, duplicate, and recovery checks.\n\n## Professional Decision Rules\n\n- Keep integration decisions within declared owners, inputs, stops, and outputs.\n\n## High-Value Gotchas\n\n- A successful request can still leave a duplicate or unknown external effect.\n- Provider sandbox behavior does not prove production credentials, quotas, ordering, or recovery.\n- Signature, serialization, or adapter drift can invalidate an otherwise correct contract.\n\n## Execution Checklist\n\n- **Analysis mode:** Map producer, consumer, provider, credential, contract, and reconciliation authority.\n- **Task mode:** Apply the accepted adapter boundary with idempotency and failure handling.\n- Verify timeout, retry, duplicate, malformed, denied, and unknown-outcome behavior.\n- Record provider assumptions and untested recovery paths as residual risk.\n- Minimal validation: run contract and failure tests at the real adapter or calibrated sandbox.\n\n## Stop / Escalation Conditions\n\nBlock unknown provider/environment/credential/reconciliation authority or unproved signed bytes/order, duplicates/failures, sensitive data, or adapter mappings; escalate material production/provider/combined-impact/weak-recovery risk.\n\n## Output Contract\n\n- **Analysis mode (`analysis-agent`):** integration design; authority and failure decisions; reconciliation model.\n- **Task mode (`task-agent`):** integrated boundary changes; conflict and credential decisions; unresolved provider risk.\n\n## Targeted References\n\n| Path | Type | Load when | Do not load when | Required by | Required output |\n|---|---|---|---|---|---|\n| [checklist](references/checklist.md) | decision-checklist | Closing or reviewing an external integration change needs provider-contract, timeout, retry/backoff, circuit-breaker, idempotency, webhook/replay, credential, reconciliation, test, and monitoring checks | The inline Skill quality gate is sufficient for an L1 read or a deeper capability reference already covers the same checklist with task-specific detail | analysis-agent, task-agent | checklist-result, validation-plan |\n| [index](references/index.md) | index | competing integration change builder references require dependency, conflict, or output-fragment selection | the integration change builder root or a task-named reference already resolves selection | analysis-agent, task-agent | reference-selection |\n| [solution optimality](references/solution-optimality.md) | targeted | An outbound call, webhook, provider migration, retry, concurrency, delivery, or reconciliation design has a material failure, latency, cost, or state-consistency tradeoff | The provider contract and accepted task already determine a bounded adapter change with no material delivery or failure-mode choice | analysis-agent, task-agent | failure-decision, residual-risk |"
+          "sha256": "bde6e55cc0cfe2d8bd5b496133efb62bbe27b6846192f5ff69564a32c9183016",
+          "text": "\n# integration-change-builder\n\n## Role\n\n- **Analysis mode (`analysis-agent`):** Decide contract, authority, and failure behavior.\n- **Task mode (`task-agent`):** Apply the boundary and reconciliation.\n\n## When To Use\n\n- cross worker merge\n- external integration change\n- shared contract alignment\n\n## Do Not Use\n\n- isolated change with no integration edge\n- unrelated source inspection\n\n## Required Inputs\n\n- component handoffs\n- contract summary\n- **Analysis mode (`analysis-agent`):** producer, consumer, credential, failure, and reconciliation evidence.\n- **Task mode (`task-agent`):** accepted boundary decision with provider, duplicate, and recovery checks.\n\n## Professional Decision Rules\n\n- Keep integration decisions within declared owners, inputs, stops, and outputs.\n- Align producer, consumer, provider, version, credential, and exact signed-representation contracts before changing the adapter or resolving implementation conflicts.\n- Define timeout, retry, idempotency, ordering, verification, replay, unknown-outcome, partial-failure, compensation, and reconciliation behavior at the owning boundary.\n- Validate the integrated diff, credential containment, mapping compatibility, and recovery behavior across affected consumers; isolated component success is insufficient.\n\n## High-Value Gotchas\n\n- A successful request can still leave a duplicate or unknown external effect.\n- Provider sandbox behavior does not prove production credentials, quotas, ordering, or recovery.\n- Signature, serialization, or adapter drift can invalidate an otherwise correct contract.\n\n## Execution Checklist\n\n- **Analysis mode:** Map producer, consumer, provider, credential, contract, and reconciliation authority.\n- **Task mode:** Apply the accepted adapter boundary with idempotency and failure handling.\n- Verify timeout, retry, duplicate, malformed, denied, and unknown-outcome behavior.\n- Record provider assumptions and untested recovery paths as residual risk.\n- Minimal validation: run contract and failure tests at the real adapter or calibrated sandbox.\n\n## Stop / Escalation Conditions\n\nBlock unknown provider/environment/credential/reconciliation authority or unproved signed bytes/order, duplicates/failures, sensitive data, or adapter mappings; escalate material production/provider/combined-impact/weak-recovery risk.\n\n## Output Contract\n\n- **Analysis mode (`analysis-agent`):** integration design; authority and failure decisions; reconciliation model.\n- **Task mode (`task-agent`):** integrated boundary changes; conflict and credential decisions; unresolved provider risk.\n\n## Targeted References\n\n| Path | Type | Load when | Do not load when | Required by | Required output |\n|---|---|---|---|---|---|\n| [checklist](references/checklist.md) | decision-checklist | Closing or reviewing an external integration change needs provider-contract, timeout, retry/backoff, circuit-breaker, idempotency, webhook/replay, credential, reconciliation, test, and monitoring checks | The inline Skill quality gate is sufficient for an L1 read or a deeper capability reference already covers the same checklist with task-specific detail | analysis-agent, task-agent | checklist-result, validation-plan |\n| [index](references/index.md) | index | competing integration change builder references require dependency, conflict, or output-fragment selection | the integration change builder root or a task-named reference already resolves selection | analysis-agent, task-agent | reference-selection |\n| [solution optimality](references/solution-optimality.md) | targeted | An outbound call, webhook, provider migration, retry, concurrency, delivery, or reconciliation design has a material failure, latency, cost, or state-consistency tradeoff | The provider contract and accepted task already determine a bounded adapter change with no material delivery or failure-mode choice | analysis-agent, task-agent | failure-decision, residual-risk |"
         },
         "document_id": "src/professional-skills/integration-change-builder/SKILL.md#body",
         "document_part": "body",
@@ -128692,9 +128760,9 @@
       {
         "check_bullets": true,
         "compound_bullet_count": 0,
-        "content_fingerprint": "e1ecd26841f1445d34c6859fe382f86e6d8e2e2effd216d908f1876331710416",
+        "content_fingerprint": "70cbe74c670bd671637d90edbd8018fdbaac22d3cbacabfc0a68adf2354dc3f2",
         "document_context": {
-          "line_count": 63,
+          "line_count": 66,
           "line_offset": 4,
           "lines": [
             {
@@ -128819,79 +128887,79 @@
             },
             {
               "line": 31,
-              "text": ""
+              "text": "- Emit a log only for a named diagnostic, audit, security, or operational question, at the single boundary owning the final outcome rather than at duplicate retry or wrapper paths."
             },
             {
               "line": 32,
-              "text": "## High-Value Gotchas"
+              "text": "- Derive level, stable schema, purpose-required fields, redaction, and correlation from current logger and data-classification policy; exclude raw secrets, payloads, and unnecessary identity."
             },
             {
               "line": 33,
-              "text": ""
+              "text": "- Bound rate, value space, cardinality, retention, access, sink, cost, and failure visibility with measured or platform evidence and a named owner."
             },
             {
               "line": 34,
-              "text": "- More events can reduce diagnostic value through volume, cardinality, or duplicate noise."
+              "text": ""
             },
             {
               "line": 35,
-              "text": "- Redaction after formatting can expose sensitive values before the sink applies policy."
+              "text": "## High-Value Gotchas"
             },
             {
               "line": 36,
-              "text": "- A schema change can silently break alerts, audit consumers, or correlation."
+              "text": ""
             },
             {
               "line": 37,
-              "text": ""
+              "text": "- More events can reduce diagnostic value through volume, cardinality, or duplicate noise."
             },
             {
               "line": 38,
-              "text": "## Execution Checklist"
+              "text": "- Redaction after formatting can expose sensitive values before the sink applies policy."
             },
             {
               "line": 39,
-              "text": ""
+              "text": "- A schema change can silently break alerts, audit consumers, or correlation."
             },
             {
               "line": 40,
-              "text": "- **Task mode:** Map the diagnostic question to its event owner, placement, schema, and sink."
+              "text": ""
             },
             {
               "line": 41,
-              "text": "- **Task mode:** Apply approved field classification, redaction, level, and correlation decisions."
+              "text": "## Execution Checklist"
             },
             {
               "line": 42,
-              "text": "- **Review mode:** Compare emitted and suppressed paths with purpose and safe-logging evidence."
+              "text": ""
             },
             {
               "line": 43,
-              "text": "- Record unmeasured volume, consumer drift, and inaccessible sink behavior as residual risk."
+              "text": "- **Task mode:** Map the diagnostic question to its event owner, placement, schema, and sink."
             },
             {
               "line": 44,
-              "text": "- Minimal validation: run emission and suppression tests at the selected sink boundary."
+              "text": "- **Task mode:** Apply approved field classification, redaction, level, and correlation decisions."
             },
             {
               "line": 45,
-              "text": ""
+              "text": "- **Review mode:** Compare emitted and suppressed paths with purpose and safe-logging evidence."
             },
             {
               "line": 46,
-              "text": "## Stop / Escalation Conditions"
+              "text": "- Record unmeasured volume, consumer drift, and inaccessible sink behavior as residual risk."
             },
             {
               "line": 47,
-              "text": ""
+              "text": "- Minimal validation: run emission and suppression tests at the selected sink boundary."
             },
             {
               "line": 48,
-              "text": "- Stop without a named question, event owner, placement, consumer meaning, current data/sink policy, and negative proof."
+              "text": ""
             },
             {
               "line": 49,
-              "text": "- Stop unbounded volume/cardinality or sensitive evidence without measured bounds, authority, redaction, scope, and recovery."
+              "text": "## Stop / Escalation Conditions"
             },
             {
               "line": 50,
@@ -128899,19 +128967,19 @@
             },
             {
               "line": 51,
-              "text": "## Output Contract"
+              "text": "- Stop without a named question, event owner, placement, consumer meaning, current data/sink policy, and negative proof."
             },
             {
               "line": 52,
-              "text": ""
+              "text": "- Stop unbounded volume/cardinality or sensitive evidence without measured bounds, authority, redaction, scope, and recovery."
             },
             {
               "line": 53,
-              "text": "- **Task mode (`task-agent`):** logging changes; placement and redaction evidence; signal risk."
+              "text": ""
             },
             {
               "line": 54,
-              "text": "- **Review mode (`review-agent`):** logging verdict; unsafe event findings; unproven signal behavior."
+              "text": "## Output Contract"
             },
             {
               "line": 55,
@@ -128919,48 +128987,60 @@
             },
             {
               "line": 56,
-              "text": "## Targeted References"
+              "text": "- **Task mode (`task-agent`):** logging changes; placement and redaction evidence; signal risk."
             },
             {
               "line": 57,
-              "text": ""
+              "text": "- **Review mode (`review-agent`):** logging verdict; unsafe event findings; unproven signal behavior."
             },
             {
               "line": 58,
-              "text": "| Path | Type | Load when | Do not load when | Required by | Required output |"
+              "text": ""
             },
             {
               "line": 59,
-              "text": "|---|---|---|---|---|---|"
+              "text": "## Targeted References"
             },
             {
               "line": 60,
-              "text": "| [checklist](references/checklist.md) | decision-checklist | A bounded L2 mode needs compact checks for its triggered purpose, placement, fields, redaction, level, signal split, or validation risk | The root contract is enough or targeted proof fields are required | task-agent, review-agent | checklist-result, validation-plan |"
+              "text": ""
             },
             {
               "line": 61,
-              "text": "| [index](references/index.md) | index | competing logging design gate references require dependency, conflict, or output-fragment selection | the logging design gate root or a task-named reference already resolves selection | task-agent, review-agent | reference-selection |"
+              "text": "| Path | Type | Load when | Do not load when | Required by | Required output |"
             },
             {
               "line": 62,
-              "text": "| [logging output and gates](references/logging-output-and-gates.md) | targeted | L3-L5 implementation or review needs mode-specific closure and targeted gates for selected purpose, placement, schema safety, correlation, volume, sink, or failure-visibility risk | The root result is sufficient and no selected risk needs the extended proof contract | task-agent, review-agent | gate-decision, residual-risk |"
+              "text": "|---|---|---|---|---|---|"
             },
             {
               "line": 63,
+              "text": "| [checklist](references/checklist.md) | decision-checklist | A bounded L2 mode needs compact checks for its triggered purpose, placement, fields, redaction, level, signal split, or validation risk | The root contract is enough or targeted proof fields are required | task-agent, review-agent | checklist-result, validation-plan |"
+            },
+            {
+              "line": 64,
+              "text": "| [index](references/index.md) | index | competing logging design gate references require dependency, conflict, or output-fragment selection | the logging design gate root or a task-named reference already resolves selection | task-agent, review-agent | reference-selection |"
+            },
+            {
+              "line": 65,
+              "text": "| [logging output and gates](references/logging-output-and-gates.md) | targeted | L3-L5 implementation or review needs mode-specific closure and targeted gates for selected purpose, placement, schema safety, correlation, volume, sink, or failure-visibility risk | The root result is sufficient and no selected risk needs the extended proof contract | task-agent, review-agent | gate-decision, residual-risk |"
+            },
+            {
+              "line": 66,
               "text": "| [logging selection criteria](references/logging-selection-criteria.md) | targeted | A concrete purpose, level, field, redaction, correlation, placement, or signal choice needs more detail than the root contract | The root contract determines the no-log or bounded logging decision | task-agent, review-agent | selected-approach, residual-risk |"
             }
           ],
-          "sha256": "e1ecd26841f1445d34c6859fe382f86e6d8e2e2effd216d908f1876331710416",
-          "text": "\n# logging-design-gate\n\n## Role\n\nSupport `task-agent` and `review-agent` for bounded logging decisions.\n\n- **Task mode (`task-agent`):** Apply the accepted logging purpose, placement, and schema.\n- **Review mode (`review-agent`):** Judge logging against purpose, safety, and signal criteria.\n\n## When To Use\n\n- logging schema or redaction change\n- diagnostic gap\n\n## Do Not Use\n\n- no logging impact\n- self review request\n\n## Required Inputs\n\n- acceptance\n- logging decision\n- **Task mode (`task-agent`):** event boundary, logger policy, sensitive-field classification, and signal checks.\n- **Review mode (`review-agent`):** changed event paths with safe-logging evidence.\n\n## Professional Decision Rules\n\n- Keep the selected logging design gate decision within its declared owner, inputs, stops, and output contract.\n\n## High-Value Gotchas\n\n- More events can reduce diagnostic value through volume, cardinality, or duplicate noise.\n- Redaction after formatting can expose sensitive values before the sink applies policy.\n- A schema change can silently break alerts, audit consumers, or correlation.\n\n## Execution Checklist\n\n- **Task mode:** Map the diagnostic question to its event owner, placement, schema, and sink.\n- **Task mode:** Apply approved field classification, redaction, level, and correlation decisions.\n- **Review mode:** Compare emitted and suppressed paths with purpose and safe-logging evidence.\n- Record unmeasured volume, consumer drift, and inaccessible sink behavior as residual risk.\n- Minimal validation: run emission and suppression tests at the selected sink boundary.\n\n## Stop / Escalation Conditions\n\n- Stop without a named question, event owner, placement, consumer meaning, current data/sink policy, and negative proof.\n- Stop unbounded volume/cardinality or sensitive evidence without measured bounds, authority, redaction, scope, and recovery.\n\n## Output Contract\n\n- **Task mode (`task-agent`):** logging changes; placement and redaction evidence; signal risk.\n- **Review mode (`review-agent`):** logging verdict; unsafe event findings; unproven signal behavior.\n\n## Targeted References\n\n| Path | Type | Load when | Do not load when | Required by | Required output |\n|---|---|---|---|---|---|\n| [checklist](references/checklist.md) | decision-checklist | A bounded L2 mode needs compact checks for its triggered purpose, placement, fields, redaction, level, signal split, or validation risk | The root contract is enough or targeted proof fields are required | task-agent, review-agent | checklist-result, validation-plan |\n| [index](references/index.md) | index | competing logging design gate references require dependency, conflict, or output-fragment selection | the logging design gate root or a task-named reference already resolves selection | task-agent, review-agent | reference-selection |\n| [logging output and gates](references/logging-output-and-gates.md) | targeted | L3-L5 implementation or review needs mode-specific closure and targeted gates for selected purpose, placement, schema safety, correlation, volume, sink, or failure-visibility risk | The root result is sufficient and no selected risk needs the extended proof contract | task-agent, review-agent | gate-decision, residual-risk |\n| [logging selection criteria](references/logging-selection-criteria.md) | targeted | A concrete purpose, level, field, redaction, correlation, placement, or signal choice needs more detail than the root contract | The root contract determines the no-log or bounded logging decision | task-agent, review-agent | selected-approach, residual-risk |"
+          "sha256": "70cbe74c670bd671637d90edbd8018fdbaac22d3cbacabfc0a68adf2354dc3f2",
+          "text": "\n# logging-design-gate\n\n## Role\n\nSupport `task-agent` and `review-agent` for bounded logging decisions.\n\n- **Task mode (`task-agent`):** Apply the accepted logging purpose, placement, and schema.\n- **Review mode (`review-agent`):** Judge logging against purpose, safety, and signal criteria.\n\n## When To Use\n\n- logging schema or redaction change\n- diagnostic gap\n\n## Do Not Use\n\n- no logging impact\n- self review request\n\n## Required Inputs\n\n- acceptance\n- logging decision\n- **Task mode (`task-agent`):** event boundary, logger policy, sensitive-field classification, and signal checks.\n- **Review mode (`review-agent`):** changed event paths with safe-logging evidence.\n\n## Professional Decision Rules\n\n- Keep the selected logging design gate decision within its declared owner, inputs, stops, and output contract.\n- Emit a log only for a named diagnostic, audit, security, or operational question, at the single boundary owning the final outcome rather than at duplicate retry or wrapper paths.\n- Derive level, stable schema, purpose-required fields, redaction, and correlation from current logger and data-classification policy; exclude raw secrets, payloads, and unnecessary identity.\n- Bound rate, value space, cardinality, retention, access, sink, cost, and failure visibility with measured or platform evidence and a named owner.\n\n## High-Value Gotchas\n\n- More events can reduce diagnostic value through volume, cardinality, or duplicate noise.\n- Redaction after formatting can expose sensitive values before the sink applies policy.\n- A schema change can silently break alerts, audit consumers, or correlation.\n\n## Execution Checklist\n\n- **Task mode:** Map the diagnostic question to its event owner, placement, schema, and sink.\n- **Task mode:** Apply approved field classification, redaction, level, and correlation decisions.\n- **Review mode:** Compare emitted and suppressed paths with purpose and safe-logging evidence.\n- Record unmeasured volume, consumer drift, and inaccessible sink behavior as residual risk.\n- Minimal validation: run emission and suppression tests at the selected sink boundary.\n\n## Stop / Escalation Conditions\n\n- Stop without a named question, event owner, placement, consumer meaning, current data/sink policy, and negative proof.\n- Stop unbounded volume/cardinality or sensitive evidence without measured bounds, authority, redaction, scope, and recovery.\n\n## Output Contract\n\n- **Task mode (`task-agent`):** logging changes; placement and redaction evidence; signal risk.\n- **Review mode (`review-agent`):** logging verdict; unsafe event findings; unproven signal behavior.\n\n## Targeted References\n\n| Path | Type | Load when | Do not load when | Required by | Required output |\n|---|---|---|---|---|---|\n| [checklist](references/checklist.md) | decision-checklist | A bounded L2 mode needs compact checks for its triggered purpose, placement, fields, redaction, level, signal split, or validation risk | The root contract is enough or targeted proof fields are required | task-agent, review-agent | checklist-result, validation-plan |\n| [index](references/index.md) | index | competing logging design gate references require dependency, conflict, or output-fragment selection | the logging design gate root or a task-named reference already resolves selection | task-agent, review-agent | reference-selection |\n| [logging output and gates](references/logging-output-and-gates.md) | targeted | L3-L5 implementation or review needs mode-specific closure and targeted gates for selected purpose, placement, schema safety, correlation, volume, sink, or failure-visibility risk | The root result is sufficient and no selected risk needs the extended proof contract | task-agent, review-agent | gate-decision, residual-risk |\n| [logging selection criteria](references/logging-selection-criteria.md) | targeted | A concrete purpose, level, field, redaction, correlation, placement, or signal choice needs more detail than the root contract | The root contract determines the no-log or bounded logging decision | task-agent, review-agent | selected-approach, residual-risk |"
         },
         "document_id": "src/professional-skills/logging-design-gate/SKILL.md#body",
         "document_part": "body",
         "hard_fail_count": 0,
-        "highest_advisory_band": null,
+        "highest_advisory_band": "review-as-complex",
         "line_offset": 4,
         "owner": "logging-design-gate",
         "path": "src/professional-skills/logging-design-gate/SKILL.md",
-        "review_as_complex_count": 0,
+        "review_as_complex_count": 1,
         "source_selector": {
           "kind": "yaml-body",
           "path": "src/professional-skills/logging-design-gate/SKILL.md"
@@ -132149,9 +132229,9 @@
       {
         "check_bullets": true,
         "compound_bullet_count": 0,
-        "content_fingerprint": "f37761c0c1f1c83b40a182bdbb4b397c1033d9ad40637c34170879f253c10084",
+        "content_fingerprint": "89a6e7425cf968027a1cb2fe1c4e8f24601e87d22541985d2a22efc19a05e97f",
         "document_context": {
-          "line_count": 61,
+          "line_count": 64,
           "line_offset": 4,
           "lines": [
             {
@@ -132268,103 +132348,103 @@
             },
             {
               "line": 29,
-              "text": ""
+              "text": "- Bind generated output and plugins to authoritative inputs, source ownership, destination, tool or host versions, compatibility, deterministic identity, and a non-circular clean-checkout bootstrap."
             },
             {
               "line": 30,
-              "text": "## High-Value Gotchas"
+              "text": "- Bind mutating commands and subprocesses to resolved targets and invocation contracts, with atomic completion or explicit recovery, cancellation and child cleanup, and safe rerun behavior."
             },
             {
               "line": 31,
-              "text": ""
+              "text": "- Prove the harness oracle with valid and invalid controls while keeping harness health distinct from the changed behavior's correctness."
             },
             {
               "line": 32,
-              "text": "- Generated output can look correct while bootstrap order or source authority is wrong."
+              "text": ""
             },
             {
               "line": 33,
-              "text": "- A subprocess can report success before output, cleanup, or child completion is durable."
+              "text": "## High-Value Gotchas"
             },
             {
               "line": 34,
-              "text": "- A maintenance command can cross its intended workspace or mutate files on rerun."
+              "text": ""
             },
             {
               "line": 35,
-              "text": ""
+              "text": "- Generated output can look correct while bootstrap order or source authority is wrong."
             },
             {
               "line": 36,
-              "text": "## Execution Checklist"
+              "text": "- A subprocess can report success before output, cleanup, or child completion is durable."
             },
             {
               "line": 37,
-              "text": ""
+              "text": "- A maintenance command can cross its intended workspace or mutate files on rerun."
             },
             {
               "line": 38,
-              "text": "- **Task mode:** Map source authority, callers, generated outputs, side effects, and cleanup ownership."
+              "text": ""
             },
             {
               "line": 39,
-              "text": "- Reuse the existing command, generator, harness, or process boundary when it owns the behavior."
+              "text": "## Execution Checklist"
             },
             {
               "line": 40,
-              "text": "- Verify compatibility, deterministic output, atomic completion, and bounded rerun behavior."
+              "text": ""
             },
             {
               "line": 41,
-              "text": "- Record skipped hosts, toolchains, consumers, and recovery paths as proof limits."
+              "text": "- **Task mode:** Map source authority, callers, generated outputs, side effects, and cleanup ownership."
             },
             {
               "line": 42,
-              "text": "- Minimal validation: run normal, invalid, boundary, rerun, and forbidden-effect tests."
+              "text": "- Reuse the existing command, generator, harness, or process boundary when it owns the behavior."
             },
             {
               "line": 43,
-              "text": ""
+              "text": "- Verify compatibility, deterministic output, atomic completion, and bounded rerun behavior."
             },
             {
               "line": 44,
-              "text": "## Stop / Escalation Conditions"
+              "text": "- Record skipped hosts, toolchains, consumers, and recovery paths as proof limits."
             },
             {
               "line": 45,
-              "text": ""
+              "text": "- Minimal validation: run normal, invalid, boundary, rerun, and forbidden-effect tests."
             },
             {
               "line": 46,
-              "text": "- Return multiple owners, shared contracts, or ordered tasks to planning."
+              "text": ""
             },
             {
               "line": 47,
-              "text": "- Stop on unresolved authority, bootstrap, compatibility, oracle, recovery, or validation."
+              "text": "## Stop / Escalation Conditions"
             },
             {
               "line": 48,
-              "text": "- Keep other work at its owner; do not claim review."
+              "text": ""
             },
             {
               "line": 49,
-              "text": ""
+              "text": "- Return multiple owners, shared contracts, or ordered tasks to planning."
             },
             {
               "line": 50,
-              "text": "## Output Contract"
+              "text": "- Stop on unresolved authority, bootstrap, compatibility, oracle, recovery, or validation."
             },
             {
               "line": 51,
-              "text": ""
+              "text": "- Keep other work at its owner; do not claim review."
             },
             {
               "line": 52,
-              "text": "- changed files, owner, consumer, reuse, placement, invocation, compatibility, authority, bootstrap, file/process, and failure decisions"
+              "text": ""
             },
             {
               "line": 53,
-              "text": "- validation, negative controls, skips, diff, cleanup/rollback, proof limits, residual risk, and boundary handoffs"
+              "text": "## Output Contract"
             },
             {
               "line": 54,
@@ -132372,44 +132452,56 @@
             },
             {
               "line": 55,
-              "text": "## Targeted References"
+              "text": "- changed files, owner, consumer, reuse, placement, invocation, compatibility, authority, bootstrap, file/process, and failure decisions"
             },
             {
               "line": 56,
-              "text": ""
+              "text": "- validation, negative controls, skips, diff, cleanup/rollback, proof limits, residual risk, and boundary handoffs"
             },
             {
               "line": 57,
-              "text": "| Path | Type | Load when | Do not load when | Required by | Required output |"
+              "text": ""
             },
             {
               "line": 58,
-              "text": "|---|---|---|---|---|---|"
+              "text": "## Targeted References"
             },
             {
               "line": 59,
-              "text": "| [generator and plugin contracts](references/generator-and-plugin-contracts.md) | targeted | Generated authority, bootstrap, compiler protocol, host API, diagnostics, fixes, or version compatibility changes | No generator or compiler/linter/formatter plugin behavior changes | task-agent | boundary-decision, selected-approach, proof-limit |"
+              "text": ""
             },
             {
               "line": 60,
-              "text": "| [harness validity contracts](references/harness-validity-contracts.md) | targeted | Test discovery, orchestration, oracle, fixtures, negative controls, benchmark measurement, or harness exit behavior changes | Existing unchanged harness directly proves the accepted behavior | task-agent | decision-record, validation-plan, proof-limit |"
+              "text": "| Path | Type | Load when | Do not load when | Required by | Required output |"
             },
             {
               "line": 61,
+              "text": "|---|---|---|---|---|---|"
+            },
+            {
+              "line": 62,
+              "text": "| [generator and plugin contracts](references/generator-and-plugin-contracts.md) | targeted | Generated authority, bootstrap, compiler protocol, host API, diagnostics, fixes, or version compatibility changes | No generator or compiler/linter/formatter plugin behavior changes | task-agent | boundary-decision, selected-approach, proof-limit |"
+            },
+            {
+              "line": 63,
+              "text": "| [harness validity contracts](references/harness-validity-contracts.md) | targeted | Test discovery, orchestration, oracle, fixtures, negative controls, benchmark measurement, or harness exit behavior changes | Existing unchanged harness directly proves the accepted behavior | task-agent | decision-record, validation-plan, proof-limit |"
+            },
+            {
+              "line": 64,
               "text": "| [repository automation contracts](references/repository-automation-contracts.md) | targeted | Internal CLI, hook, monorepo automation, maintenance mutation, subprocess, rerun, or cleanup behavior changes | No repository automation interface or mutation changes | task-agent | decision-record, failure-decision, proof-limit |"
             }
           ],
-          "sha256": "f37761c0c1f1c83b40a182bdbb4b397c1033d9ad40637c34170879f253c10084",
-          "text": "\n# repository-tooling-change-builder\n\n## Role\n\nSupport `task-agent` in changing bounded repository tooling with authority, compatibility, determinism, cleanup, and proof.\n\n## When To Use\n\n- one bounded repository code generator, compiler plugin, linter, formatter, harness, internal CLI, build or monorepo automation, or maintenance utility change\n- a direct task whose primary consumers are repository developers, tests, builds, or local automation\n\n## Do Not Use\n\n- backend service, product behavior, or business logic\n- build-graph or build-configuration-only work with no repository-tool source change\n- documentation-only work\n- production mutation, deployment, release, or rollback\n- independent review, task decomposition, planning, routing, or control\n\n## Required Inputs\n\n- behavior, scope, owner, consumer, invocation, tests, and outcomes\n- source/generated authority, toolchain/host, effects, compatibility, cleanup, and rollback\n\n## Professional Decision Rules\n\n- Keep the tooling decision within its owner, inputs, stops, and output contract.\n\n## High-Value Gotchas\n\n- Generated output can look correct while bootstrap order or source authority is wrong.\n- A subprocess can report success before output, cleanup, or child completion is durable.\n- A maintenance command can cross its intended workspace or mutate files on rerun.\n\n## Execution Checklist\n\n- **Task mode:** Map source authority, callers, generated outputs, side effects, and cleanup ownership.\n- Reuse the existing command, generator, harness, or process boundary when it owns the behavior.\n- Verify compatibility, deterministic output, atomic completion, and bounded rerun behavior.\n- Record skipped hosts, toolchains, consumers, and recovery paths as proof limits.\n- Minimal validation: run normal, invalid, boundary, rerun, and forbidden-effect tests.\n\n## Stop / Escalation Conditions\n\n- Return multiple owners, shared contracts, or ordered tasks to planning.\n- Stop on unresolved authority, bootstrap, compatibility, oracle, recovery, or validation.\n- Keep other work at its owner; do not claim review.\n\n## Output Contract\n\n- changed files, owner, consumer, reuse, placement, invocation, compatibility, authority, bootstrap, file/process, and failure decisions\n- validation, negative controls, skips, diff, cleanup/rollback, proof limits, residual risk, and boundary handoffs\n\n## Targeted References\n\n| Path | Type | Load when | Do not load when | Required by | Required output |\n|---|---|---|---|---|---|\n| [generator and plugin contracts](references/generator-and-plugin-contracts.md) | targeted | Generated authority, bootstrap, compiler protocol, host API, diagnostics, fixes, or version compatibility changes | No generator or compiler/linter/formatter plugin behavior changes | task-agent | boundary-decision, selected-approach, proof-limit |\n| [harness validity contracts](references/harness-validity-contracts.md) | targeted | Test discovery, orchestration, oracle, fixtures, negative controls, benchmark measurement, or harness exit behavior changes | Existing unchanged harness directly proves the accepted behavior | task-agent | decision-record, validation-plan, proof-limit |\n| [repository automation contracts](references/repository-automation-contracts.md) | targeted | Internal CLI, hook, monorepo automation, maintenance mutation, subprocess, rerun, or cleanup behavior changes | No repository automation interface or mutation changes | task-agent | decision-record, failure-decision, proof-limit |"
+          "sha256": "89a6e7425cf968027a1cb2fe1c4e8f24601e87d22541985d2a22efc19a05e97f",
+          "text": "\n# repository-tooling-change-builder\n\n## Role\n\nSupport `task-agent` in changing bounded repository tooling with authority, compatibility, determinism, cleanup, and proof.\n\n## When To Use\n\n- one bounded repository code generator, compiler plugin, linter, formatter, harness, internal CLI, build or monorepo automation, or maintenance utility change\n- a direct task whose primary consumers are repository developers, tests, builds, or local automation\n\n## Do Not Use\n\n- backend service, product behavior, or business logic\n- build-graph or build-configuration-only work with no repository-tool source change\n- documentation-only work\n- production mutation, deployment, release, or rollback\n- independent review, task decomposition, planning, routing, or control\n\n## Required Inputs\n\n- behavior, scope, owner, consumer, invocation, tests, and outcomes\n- source/generated authority, toolchain/host, effects, compatibility, cleanup, and rollback\n\n## Professional Decision Rules\n\n- Keep the tooling decision within its owner, inputs, stops, and output contract.\n- Bind generated output and plugins to authoritative inputs, source ownership, destination, tool or host versions, compatibility, deterministic identity, and a non-circular clean-checkout bootstrap.\n- Bind mutating commands and subprocesses to resolved targets and invocation contracts, with atomic completion or explicit recovery, cancellation and child cleanup, and safe rerun behavior.\n- Prove the harness oracle with valid and invalid controls while keeping harness health distinct from the changed behavior's correctness.\n\n## High-Value Gotchas\n\n- Generated output can look correct while bootstrap order or source authority is wrong.\n- A subprocess can report success before output, cleanup, or child completion is durable.\n- A maintenance command can cross its intended workspace or mutate files on rerun.\n\n## Execution Checklist\n\n- **Task mode:** Map source authority, callers, generated outputs, side effects, and cleanup ownership.\n- Reuse the existing command, generator, harness, or process boundary when it owns the behavior.\n- Verify compatibility, deterministic output, atomic completion, and bounded rerun behavior.\n- Record skipped hosts, toolchains, consumers, and recovery paths as proof limits.\n- Minimal validation: run normal, invalid, boundary, rerun, and forbidden-effect tests.\n\n## Stop / Escalation Conditions\n\n- Return multiple owners, shared contracts, or ordered tasks to planning.\n- Stop on unresolved authority, bootstrap, compatibility, oracle, recovery, or validation.\n- Keep other work at its owner; do not claim review.\n\n## Output Contract\n\n- changed files, owner, consumer, reuse, placement, invocation, compatibility, authority, bootstrap, file/process, and failure decisions\n- validation, negative controls, skips, diff, cleanup/rollback, proof limits, residual risk, and boundary handoffs\n\n## Targeted References\n\n| Path | Type | Load when | Do not load when | Required by | Required output |\n|---|---|---|---|---|---|\n| [generator and plugin contracts](references/generator-and-plugin-contracts.md) | targeted | Generated authority, bootstrap, compiler protocol, host API, diagnostics, fixes, or version compatibility changes | No generator or compiler/linter/formatter plugin behavior changes | task-agent | boundary-decision, selected-approach, proof-limit |\n| [harness validity contracts](references/harness-validity-contracts.md) | targeted | Test discovery, orchestration, oracle, fixtures, negative controls, benchmark measurement, or harness exit behavior changes | Existing unchanged harness directly proves the accepted behavior | task-agent | decision-record, validation-plan, proof-limit |\n| [repository automation contracts](references/repository-automation-contracts.md) | targeted | Internal CLI, hook, monorepo automation, maintenance mutation, subprocess, rerun, or cleanup behavior changes | No repository automation interface or mutation changes | task-agent | decision-record, failure-decision, proof-limit |"
         },
         "document_id": "src/professional-skills/repository-tooling-change-builder/SKILL.md#body",
         "document_part": "body",
         "hard_fail_count": 0,
-        "highest_advisory_band": null,
+        "highest_advisory_band": "review-as-complex",
         "line_offset": 4,
         "owner": "repository-tooling-change-builder",
         "path": "src/professional-skills/repository-tooling-change-builder/SKILL.md",
-        "review_as_complex_count": 0,
+        "review_as_complex_count": 1,
         "source_selector": {
           "kind": "yaml-body",
           "path": "src/professional-skills/repository-tooling-change-builder/SKILL.md"
@@ -157131,6 +157223,34 @@
       {
         "band": "review-as-complex",
         "decisions": null,
+        "document_id": "src/professional-skills/change-documentation-gate/SKILL.md#body",
+        "finding_id": "c3871e7578cdadd300af45b0b9feca64aabc0bc3c453e587347a78822ae91982",
+        "kind": "sentence-length",
+        "line": 33,
+        "preview": "Place facts in the owning source and regenerate derived documentation instead of duplicating unstable details; keep examples consistent with current names, defaults, errors, and ve",
+        "sentence": "Place facts in the owning source and regenerate derived documentation instead of duplicating unstable details; keep examples consistent with current names, defaults, errors, and version behavior.",
+        "sentence_fingerprint": "9559a5615cdc045fe0a31ee84c2cc2982a02aac69ffffe8d5f17c03792768809",
+        "severity": "advisory",
+        "source_span": {
+          "end_column": 198,
+          "end_line": 33,
+          "end_offset": 1330,
+          "lines": [
+            {
+              "line": 33,
+              "text": "- Place facts in the owning source and regenerate derived documentation instead of duplicating unstable details; keep examples consistent with current names, defaults, errors, and version behavior."
+            }
+          ],
+          "sha256": "b81c803e255ee5c7fbe0f1756cc25884008e94121bfd9e64183ca2148908bf9a",
+          "start_column": 3,
+          "start_line": 33,
+          "start_offset": 1135
+        },
+        "words": 26
+      },
+      {
+        "band": "review-as-complex",
+        "decisions": null,
         "document_id": "src/professional-skills/change-documentation-gate/references/documentation-output-and-gates.md#reference",
         "finding_id": "6a5c23c6f10d7ee64107fafd48a250d9fee71d5bab6aa07962a9d158183967de",
         "kind": "sentence-length",
@@ -158179,6 +158299,34 @@
       {
         "band": "review-as-complex",
         "decisions": null,
+        "document_id": "src/professional-skills/high-risk-design-review/SKILL.md#body",
+        "finding_id": "4b86a0e6a6a55a51972053a10dad60deac4ddc5b9776ed5703a904a55fec459b",
+        "kind": "sentence-length",
+        "line": 30,
+        "preview": "Reject dependency cycles, conflicting writes, unowned shared contracts, and rollback claims without an executable rollback or forward-repair path; keep the First Executable Slice s",
+        "sentence": "Reject dependency cycles, conflicting writes, unowned shared contracts, and rollback claims without an executable rollback or forward-repair path; keep the First Executable Slice safe, verifiable, and reversible.",
+        "sentence_fingerprint": "b445cc3203a52d75e8ea8be0726238afa51fa547b419e0c4e2a854a8e8cd21d5",
+        "severity": "advisory",
+        "source_span": {
+          "end_column": 215,
+          "end_line": 30,
+          "end_offset": 1310,
+          "lines": [
+            {
+              "line": 30,
+              "text": "- Reject dependency cycles, conflicting writes, unowned shared contracts, and rollback claims without an executable rollback or forward-repair path; keep the First Executable Slice safe, verifiable, and reversible."
+            }
+          ],
+          "sha256": "bc2106f2bd29ee96c3a211b810be0bc4bb69a87905420c73daea897dd601425a",
+          "start_column": 3,
+          "start_line": 30,
+          "start_offset": 1098
+        },
+        "words": 27
+      },
+      {
+        "band": "review-as-complex",
+        "decisions": null,
         "document_id": "src/professional-skills/incident-response-coordinator/references/command-cadence-and-decision-log.md#reference",
         "finding_id": "54b300b70fe3240a03f7c34b2be4927335d365c06eda70bdd6aed6a84885e47e",
         "kind": "sentence-length",
@@ -158315,6 +158463,34 @@
           "start_offset": 1198
         },
         "words": 25
+      },
+      {
+        "band": "review-as-complex",
+        "decisions": null,
+        "document_id": "src/professional-skills/logging-design-gate/SKILL.md#body",
+        "finding_id": "52d8c5a92d22832307350978f2056715b1c264e37eeccc454663a4d9b8041907",
+        "kind": "sentence-length",
+        "line": 31,
+        "preview": "Emit a log only for a named diagnostic, audit, security, or operational question, at the single boundary owning the final outcome rather than at duplicate retry or wrapper paths.",
+        "sentence": "Emit a log only for a named diagnostic, audit, security, or operational question, at the single boundary owning the final outcome rather than at duplicate retry or wrapper paths.",
+        "sentence_fingerprint": "66a10ba199814c57f7b57eaa9678c1880491ca7664437b3187d130d2d9d4627e",
+        "severity": "advisory",
+        "source_span": {
+          "end_column": 181,
+          "end_line": 31,
+          "end_offset": 997,
+          "lines": [
+            {
+              "line": 31,
+              "text": "- Emit a log only for a named diagnostic, audit, security, or operational question, at the single boundary owning the final outcome rather than at duplicate retry or wrapper paths."
+            }
+          ],
+          "sha256": "40e39b433788711e2e5bd18064319cdecf21bf6e0e103fa373c38da4cb8de207",
+          "start_column": 3,
+          "start_line": 31,
+          "start_offset": 819
+        },
+        "words": 29
       },
       {
         "band": "review-as-complex",
@@ -158663,6 +158839,34 @@
       {
         "band": "review-as-complex",
         "decisions": null,
+        "document_id": "src/professional-skills/repository-tooling-change-builder/SKILL.md#body",
+        "finding_id": "2c58e816883caa5c7c63f51c3faf2b47f22996db9681c1c1674c0c0e91004db6",
+        "kind": "sentence-length",
+        "line": 30,
+        "preview": "Bind mutating commands and subprocesses to resolved targets and invocation contracts, with atomic completion or explicit recovery, cancellation and child cleanup, and safe rerun be",
+        "sentence": "Bind mutating commands and subprocesses to resolved targets and invocation contracts, with atomic completion or explicit recovery, cancellation and child cleanup, and safe rerun behavior.",
+        "sentence_fingerprint": "7c87e16d47805332069eac83d2f871ee57ecca940f2ef2f7a627bd9a3838cc51",
+        "severity": "advisory",
+        "source_span": {
+          "end_column": 190,
+          "end_line": 30,
+          "end_offset": 1444,
+          "lines": [
+            {
+              "line": 30,
+              "text": "- Bind mutating commands and subprocesses to resolved targets and invocation contracts, with atomic completion or explicit recovery, cancellation and child cleanup, and safe rerun behavior."
+            }
+          ],
+          "sha256": "4f8c5437e0f3daf46c920c2049383ef4892933dc1985a76f4b1993b963cfba6b",
+          "start_column": 3,
+          "start_line": 30,
+          "start_offset": 1257
+        },
+        "words": 25
+      },
+      {
+        "band": "review-as-complex",
+        "decisions": null,
         "document_id": "src/professional-skills/routing-quality-review/SKILL.md#body",
         "finding_id": "749087acdfbef798944825077b144f5efd2cc216c6fa224854841ba5c9a3cdc0",
         "kind": "sentence-length",
@@ -158921,17 +159125,17 @@
     "source_fingerprint": {
       "algorithm": "sha256",
       "document_count": 1001,
-      "value": "ac1891a625cd11dd626696ddc7e76c014cd47930ead0173ac1bb231d194f198e"
+      "value": "6e42687d264342ad31b01f224e7e87002c638b685d447c8f3d940aced6e85e1d"
     },
     "summary": {
-      "advisory_documents": 329,
-      "advisory_sentences": 834,
+      "advisory_documents": 333,
+      "advisory_sentences": 838,
       "blocker_findings": 0,
       "compound_bullets": 0,
       "documents": 1001,
       "hard_fail_sentences": 0,
       "hard_gate_ready": true,
-      "review_as_complex_sentences": 824,
+      "review_as_complex_sentences": 828,
       "tighten_sentences": 10
     }
   },
@@ -159009,11 +159213,17 @@
       "status": "pass"
     },
     "formal_release": {
-      "blockers": [],
-      "status": "pass"
+      "blockers": [
+        {
+          "id": "semantic-decision-application-invalid",
+          "message": "semantic application fixed attestation is invalid: Semantic candidate binding is stale"
+        }
+      ],
+      "status": "blocked"
     },
     "limitations": [
-      "The authoring gate validates deterministic source content and does not attest semantic disposition application currentness."
+      "The authoring gate validates deterministic source content and does not attest semantic disposition application currentness.",
+      "Formal release remains blocked: semantic-decision-application-invalid: semantic application fixed attestation is invalid: Semantic candidate binding is stale"
     ],
     "schema_version": 1,
     "selected_gate": "authoring"
@@ -159203,7 +159413,7 @@
       "source_fingerprint": {
         "algorithm": "sha256",
         "document_count": 974,
-        "value": "ec94a0fb1c74f7c727a0acf091300c427208279e1669522ef67ab6862c063698"
+        "value": "5e7b44c66cdb0dc4106699bdc217caf7bab4d0c0c1bb4219ea5074e801a6d9de"
       },
       "source_precedence": [
         "local",
@@ -294135,7 +294345,7 @@
         "content_budget_scope": "governed-body-excluding-registry-targeted-references",
         "content_class": null,
         "content_class_rationale": null,
-        "content_fingerprint": "2f70e4698532b8206df4194a1d08d14c1d5483093cab314fac547dcf73cca64f",
+        "content_fingerprint": "16efc8fcd472031e4eb7eba4ecff699ffd04d6121fa8adb7878c4abcd8be55e8",
         "content_hard_tokens": 900,
         "content_hard_words": 600,
         "content_target_tokens": 800,
@@ -294143,7 +294353,7 @@
         "document_id": "src/domain-extensions/bigdata-product-extension/SKILL.md#body",
         "document_part": "body",
         "layer": "domain-extension",
-        "line_count": 56,
+        "line_count": 59,
         "over_content_hard": false,
         "over_content_hard_tokens": false,
         "over_content_hard_words": false,
@@ -294152,8 +294362,8 @@
         "over_content_target_words": false,
         "owner": "bigdata-product-extension",
         "path": "src/domain-extensions/bigdata-product-extension/SKILL.md",
-        "token_count": 354,
-        "word_count": 234
+        "token_count": 428,
+        "word_count": 274
       },
       {
         "content_fingerprint": "6e695307600cb8a08476a0f20fda66559acbd94a1b289bcdd77fa0d0f18b5493",
@@ -294279,7 +294489,7 @@
         "content_budget_scope": "governed-body-excluding-registry-targeted-references",
         "content_class": null,
         "content_class_rationale": null,
-        "content_fingerprint": "abe83a68bf4bf2d38c9bfef6b57d230adcfaa98a804eaadec302adda55914b94",
+        "content_fingerprint": "437cc904f8d2a0ebbd579189c262982dec4e1267a1991f7f549bb1ec2519521a",
         "content_hard_tokens": 900,
         "content_hard_words": 600,
         "content_target_tokens": 800,
@@ -294287,7 +294497,7 @@
         "document_id": "src/domain-extensions/iot-embedded-extension/SKILL.md#body",
         "document_part": "body",
         "layer": "domain-extension",
-        "line_count": 53,
+        "line_count": 58,
         "over_content_hard": false,
         "over_content_hard_tokens": false,
         "over_content_hard_words": false,
@@ -294296,8 +294506,8 @@
         "over_content_target_words": false,
         "owner": "iot-embedded-extension",
         "path": "src/domain-extensions/iot-embedded-extension/SKILL.md",
-        "token_count": 439,
-        "word_count": 281
+        "token_count": 535,
+        "word_count": 352
       },
       {
         "content_fingerprint": "eb7f9c435215122b05162f2d2b63985bddec207a3f296ea1379042e25216e454",
@@ -301275,7 +301485,7 @@
         "content_budget_scope": "governed-body-excluding-registry-targeted-references",
         "content_class": null,
         "content_class_rationale": null,
-        "content_fingerprint": "e417c1fab5b7f7c14f1e9b3a1a5844bf9d7b24bd104f38f0a8420d7f8c77596b",
+        "content_fingerprint": "4560e5bbe69995ffbe4c3e0914091d2dbc75317273e155ae61541597bc6fc5be",
         "content_hard_tokens": 1000,
         "content_hard_words": 650,
         "content_target_tokens": 850,
@@ -301283,7 +301493,7 @@
         "document_id": "src/professional-skills/change-documentation-gate/SKILL.md#body",
         "document_part": "body",
         "layer": "professional-skill",
-        "line_count": 66,
+        "line_count": 69,
         "over_content_hard": false,
         "over_content_hard_tokens": false,
         "over_content_hard_words": false,
@@ -301292,8 +301502,8 @@
         "over_content_target_words": false,
         "owner": "change-documentation-gate",
         "path": "src/professional-skills/change-documentation-gate/SKILL.md",
-        "token_count": 501,
-        "word_count": 341
+        "token_count": 597,
+        "word_count": 410
       },
       {
         "content_fingerprint": "14af9b05d368101e0ad338044804c762e5976194c0d02755e97f38b8e86a2901",
@@ -301635,7 +301845,7 @@
         "content_budget_scope": "governed-body-excluding-registry-targeted-references",
         "content_class": null,
         "content_class_rationale": null,
-        "content_fingerprint": "f992e91e469cddfc4608ee76fb9332107d581e7eee48113ef52ee7cf6b5618ac",
+        "content_fingerprint": "ed7c73b128d12833f376983dd4243c7288eb85559277e8254cdc85dfcced55e9",
         "content_hard_tokens": 1000,
         "content_hard_words": 650,
         "content_target_tokens": 850,
@@ -301643,7 +301853,7 @@
         "document_id": "src/professional-skills/high-risk-design-review/SKILL.md#body",
         "document_part": "body",
         "layer": "professional-skill",
-        "line_count": 59,
+        "line_count": 62,
         "over_content_hard": false,
         "over_content_hard_tokens": false,
         "over_content_hard_words": false,
@@ -301652,8 +301862,8 @@
         "over_content_target_words": false,
         "owner": "high-risk-design-review",
         "path": "src/professional-skills/high-risk-design-review/SKILL.md",
-        "token_count": 376,
-        "word_count": 276
+        "token_count": 477,
+        "word_count": 345
       },
       {
         "content_fingerprint": "eee86e687deebcf9d958e6977bff1ca34469924408b65d26e2c2e439d4951ca6",
@@ -301743,7 +301953,7 @@
         "content_budget_scope": "governed-body-excluding-registry-targeted-references",
         "content_class": null,
         "content_class_rationale": null,
-        "content_fingerprint": "a5a5f68e3be272f6ee71b5df6b0de3a22acd1778c055af873d608e13fdebc4df",
+        "content_fingerprint": "bde6e55cc0cfe2d8bd5b496133efb62bbe27b6846192f5ff69564a32c9183016",
         "content_hard_tokens": 1000,
         "content_hard_words": 650,
         "content_target_tokens": 850,
@@ -301751,7 +301961,7 @@
         "document_id": "src/professional-skills/integration-change-builder/SKILL.md#body",
         "document_part": "body",
         "layer": "professional-skill",
-        "line_count": 60,
+        "line_count": 63,
         "over_content_hard": false,
         "over_content_hard_tokens": false,
         "over_content_hard_words": false,
@@ -301760,8 +301970,8 @@
         "over_content_target_words": false,
         "owner": "integration-change-builder",
         "path": "src/professional-skills/integration-change-builder/SKILL.md",
-        "token_count": 400,
-        "word_count": 259
+        "token_count": 486,
+        "word_count": 316
       },
       {
         "content_fingerprint": "f173da831fb16f8a8c6c48a367b20968124435db88300f0f906ec39ef566392d",
@@ -301779,7 +301989,7 @@
         "content_budget_scope": "governed-body-excluding-registry-targeted-references",
         "content_class": null,
         "content_class_rationale": null,
-        "content_fingerprint": "e1ecd26841f1445d34c6859fe382f86e6d8e2e2effd216d908f1876331710416",
+        "content_fingerprint": "70cbe74c670bd671637d90edbd8018fdbaac22d3cbacabfc0a68adf2354dc3f2",
         "content_hard_tokens": 1000,
         "content_hard_words": 650,
         "content_target_tokens": 850,
@@ -301787,7 +301997,7 @@
         "document_id": "src/professional-skills/logging-design-gate/SKILL.md#body",
         "document_part": "body",
         "layer": "professional-skill",
-        "line_count": 63,
+        "line_count": 66,
         "over_content_hard": false,
         "over_content_hard_tokens": false,
         "over_content_hard_words": false,
@@ -301796,8 +302006,8 @@
         "over_content_target_words": false,
         "owner": "logging-design-gate",
         "path": "src/professional-skills/logging-design-gate/SKILL.md",
-        "token_count": 435,
-        "word_count": 287
+        "token_count": 538,
+        "word_count": 362
       },
       {
         "content_fingerprint": "2b90dd5aa0b7f911111cbb279caaba5d8ee44ad56c83b271b372df4bc8da954f",
@@ -301923,7 +302133,7 @@
         "content_budget_scope": "governed-body-excluding-registry-targeted-references",
         "content_class": null,
         "content_class_rationale": null,
-        "content_fingerprint": "f37761c0c1f1c83b40a182bdbb4b397c1033d9ad40637c34170879f253c10084",
+        "content_fingerprint": "89a6e7425cf968027a1cb2fe1c4e8f24601e87d22541985d2a22efc19a05e97f",
         "content_hard_tokens": 1000,
         "content_hard_words": 650,
         "content_target_tokens": 850,
@@ -301931,7 +302141,7 @@
         "document_id": "src/professional-skills/repository-tooling-change-builder/SKILL.md#body",
         "document_part": "body",
         "layer": "professional-skill",
-        "line_count": 61,
+        "line_count": 64,
         "over_content_hard": false,
         "over_content_hard_tokens": false,
         "over_content_hard_words": false,
@@ -301940,8 +302150,8 @@
         "over_content_target_words": false,
         "owner": "repository-tooling-change-builder",
         "path": "src/professional-skills/repository-tooling-change-builder/SKILL.md",
-        "token_count": 474,
-        "word_count": 318
+        "token_count": 565,
+        "word_count": 388
       },
       {
         "content_fingerprint": "bd7e353914b8efd69c4f000d0b96afcf01a6506574e64702fda8b6a68e0b67ca",
@@ -304262,8 +304472,8 @@
               "document_part": "body",
               "layer": "domain-extension",
               "lines": {
-                "end": 40,
-                "start": 40
+                "end": 43,
+                "start": 43
               },
               "owner": "bigdata-product-extension",
               "path": "src/domain-extensions/bigdata-product-extension/SKILL.md",
@@ -308125,7 +308335,7 @@
     "source_fingerprint": {
       "algorithm": "sha256",
       "document_count": 381,
-      "value": "542d112d9ac662a485ee0b95360c63e9c74d5c3093e16ddcd097f5734d278e66"
+      "value": "f86819fbe871188b7b7ed35f4306bff205c205cb3e950d96920e87f5b870b100"
     },
     "summary": {
       "agent_facing_root_documents": 381,
@@ -308235,19 +308445,22 @@
   },
   "schema_version": 10,
   "semantic_disposition_application": {
-    "applied_count": 218,
+    "applied_count": 0,
     "completed_rewrite_count": 0,
     "decision": {
       "path": "evals/expert-panel/semantic-disposition.json",
-      "sha256": "e06056332598db8b046f015b83c4bf5dbaaf317e69171ff76f4ce3416a00f6a9"
+      "sha256": null
     },
     "decision_kind": "changeforge.semantic-disposition-attestation",
-    "error": null,
+    "error": {
+      "id": "semantic-decision-application-invalid",
+      "message": "semantic application fixed attestation is invalid: Semantic candidate binding is stale"
+    },
     "kind": "changeforge.semantic-disposition-application",
-    "review_id": "semantic-budget-governance-authoring-20260827-r1",
+    "review_id": null,
     "schema_version": 1,
-    "status": "current",
-    "target_count": 218
+    "status": "invalid",
+    "target_count": 0
   },
   "skill_detector": {
     "classification_values": [
@@ -308720,7 +308933,7 @@
       "actionable_repeated_phrase_count": 0,
       "anti_example_section_length": 0,
       "benchmark_section_length": 0,
-      "bullet_count": 25,
+      "bullet_count": 28,
       "classification": "KEEP",
       "code_block_count": 0,
       "content_budget_scope": "governed-body-excluding-registry-targeted-references",
@@ -308769,12 +308982,10 @@
       "decision_density": 0.0,
       "description_findings": [],
       "description_length": 218,
-      "findings": [
-        "Professional Decision Rules is thin (short prose, few rules)"
-      ],
+      "findings": [],
       "front_loaded_action_score": 100,
       "generic_control_phrase_count": 0,
-      "governed_line_count": 58,
+      "governed_line_count": 61,
       "has_shared_optimality": false,
       "heading_count": 11,
       "high_confidence_control_scaffold": false,
@@ -308787,7 +308998,7 @@
       "largest_section_lines": 8,
       "largest_section_title": "Role",
       "largest_table_rows": 5,
-      "line_count": 66,
+      "line_count": 69,
       "max_prose_line_words": 0,
       "name": "change-documentation-gate",
       "optimality_section_length": 0,
@@ -308801,7 +309012,7 @@
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/professional-skills/change-documentation-gate/SKILL.md",
-      "professionalism_score": 90,
+      "professionalism_score": 100,
       "projection_overhead_lines": 8,
       "recommended_phase": "-",
       "reference_link_count": 4,
@@ -308815,10 +309026,10 @@
       "split_candidate_score": 0,
       "suggested_action": "Within governed-body targets; no density action is required.",
       "table_count": 1,
-      "token_count": 501,
+      "token_count": 597,
       "tutorial_explanatory_density": 0.0,
       "used_by_count": 0,
-      "word_count": 341
+      "word_count": 410
     },
     {
       "actionability_applicable": false,
@@ -309608,7 +309819,7 @@
       "actionable_repeated_phrase_count": 0,
       "anti_example_section_length": 0,
       "benchmark_section_length": 0,
-      "bullet_count": 22,
+      "bullet_count": 25,
       "classification": "KEEP",
       "code_block_count": 0,
       "content_budget_scope": "governed-body-excluding-registry-targeted-references",
@@ -309626,12 +309837,10 @@
       "decision_density": 0.0,
       "description_findings": [],
       "description_length": 212,
-      "findings": [
-        "Professional Decision Rules is thin (short prose, few rules)"
-      ],
+      "findings": [],
       "front_loaded_action_score": 100,
       "generic_control_phrase_count": 0,
-      "governed_line_count": 54,
+      "governed_line_count": 57,
       "has_shared_optimality": false,
       "heading_count": 11,
       "high_confidence_control_scaffold": false,
@@ -309644,7 +309853,7 @@
       "largest_section_lines": 8,
       "largest_section_title": "Execution Checklist",
       "largest_table_rows": 2,
-      "line_count": 59,
+      "line_count": 62,
       "max_prose_line_words": 0,
       "name": "high-risk-design-review",
       "optimality_section_length": 0,
@@ -309658,22 +309867,24 @@
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/professional-skills/high-risk-design-review/SKILL.md",
-      "professionalism_score": 90,
+      "professionalism_score": 100,
       "projection_overhead_lines": 5,
       "recommended_phase": "-",
       "reference_link_count": 1,
       "repeated_phrase_count": 0,
-      "review_reasons": [],
-      "review_state": "KEEP",
+      "review_reasons": [
+        "ai_readability_review_as_complex"
+      ],
+      "review_state": "REVIEW_READABILITY",
       "risk_of_change": "low",
       "routing_clarity_score": 100,
       "split_candidate_score": 0,
       "suggested_action": "Within governed-body targets; no density action is required.",
       "table_count": 1,
-      "token_count": 376,
+      "token_count": 477,
       "tutorial_explanatory_density": 0.0,
       "used_by_count": 0,
-      "word_count": 276
+      "word_count": 345
     },
     {
       "actionability_applicable": false,
@@ -309835,7 +310046,7 @@
       "actionable_repeated_phrase_count": 0,
       "anti_example_section_length": 0,
       "benchmark_section_length": 0,
-      "bullet_count": 22,
+      "bullet_count": 25,
       "classification": "KEEP",
       "code_block_count": 0,
       "content_budget_scope": "governed-body-excluding-registry-targeted-references",
@@ -309884,12 +310095,10 @@
       "decision_density": 0.0,
       "description_findings": [],
       "description_length": 219,
-      "findings": [
-        "Professional Decision Rules is thin (short prose, few rules)"
-      ],
+      "findings": [],
       "front_loaded_action_score": 100,
       "generic_control_phrase_count": 0,
-      "governed_line_count": 53,
+      "governed_line_count": 56,
       "has_shared_optimality": false,
       "heading_count": 11,
       "high_confidence_control_scaffold": false,
@@ -309902,7 +310111,7 @@
       "largest_section_lines": 8,
       "largest_section_title": "Execution Checklist",
       "largest_table_rows": 4,
-      "line_count": 60,
+      "line_count": 63,
       "max_prose_line_words": 0,
       "name": "integration-change-builder",
       "optimality_section_length": 0,
@@ -309916,7 +310125,7 @@
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/professional-skills/integration-change-builder/SKILL.md",
-      "professionalism_score": 90,
+      "professionalism_score": 100,
       "projection_overhead_lines": 7,
       "recommended_phase": "-",
       "reference_link_count": 3,
@@ -309930,10 +310139,10 @@
       "split_candidate_score": 0,
       "suggested_action": "Within governed-body targets; no density action is required.",
       "table_count": 1,
-      "token_count": 400,
+      "token_count": 486,
       "tutorial_explanatory_density": 0.0,
       "used_by_count": 0,
-      "word_count": 259
+      "word_count": 316
     },
     {
       "actionability_applicable": false,
@@ -309942,7 +310151,7 @@
       "actionable_repeated_phrase_count": 0,
       "anti_example_section_length": 0,
       "benchmark_section_length": 0,
-      "bullet_count": 23,
+      "bullet_count": 26,
       "classification": "KEEP",
       "code_block_count": 0,
       "content_budget_scope": "governed-body-excluding-registry-targeted-references",
@@ -309991,12 +310200,10 @@
       "decision_density": 0.0,
       "description_findings": [],
       "description_length": 220,
-      "findings": [
-        "Professional Decision Rules is thin (short prose, few rules)"
-      ],
+      "findings": [],
       "front_loaded_action_score": 100,
       "generic_control_phrase_count": 0,
-      "governed_line_count": 55,
+      "governed_line_count": 58,
       "has_shared_optimality": false,
       "heading_count": 11,
       "high_confidence_control_scaffold": false,
@@ -310009,7 +310216,7 @@
       "largest_section_lines": 8,
       "largest_section_title": "Execution Checklist",
       "largest_table_rows": 5,
-      "line_count": 63,
+      "line_count": 66,
       "max_prose_line_words": 0,
       "name": "logging-design-gate",
       "optimality_section_length": 0,
@@ -310023,7 +310230,7 @@
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/professional-skills/logging-design-gate/SKILL.md",
-      "professionalism_score": 90,
+      "professionalism_score": 100,
       "projection_overhead_lines": 8,
       "recommended_phase": "-",
       "reference_link_count": 4,
@@ -310037,10 +310244,10 @@
       "split_candidate_score": 0,
       "suggested_action": "Within governed-body targets; no density action is required.",
       "table_count": 1,
-      "token_count": 435,
+      "token_count": 538,
       "tutorial_explanatory_density": 0.0,
       "used_by_count": 0,
-      "word_count": 287
+      "word_count": 362
     },
     {
       "actionability_applicable": false,
@@ -310359,7 +310566,7 @@
       "actionable_repeated_phrase_count": 0,
       "anti_example_section_length": 0,
       "benchmark_section_length": 0,
-      "bullet_count": 23,
+      "bullet_count": 26,
       "classification": "KEEP",
       "code_block_count": 0,
       "content_budget_scope": "governed-body-excluding-registry-targeted-references",
@@ -310377,12 +310584,10 @@
       "decision_density": 0.0,
       "description_findings": [],
       "description_length": 211,
-      "findings": [
-        "Professional Decision Rules is thin (short prose, few rules)"
-      ],
+      "findings": [],
       "front_loaded_action_score": 100,
       "generic_control_phrase_count": 0,
-      "governed_line_count": 54,
+      "governed_line_count": 57,
       "has_shared_optimality": false,
       "heading_count": 11,
       "high_confidence_control_scaffold": false,
@@ -310395,7 +310600,7 @@
       "largest_section_lines": 8,
       "largest_section_title": "Do Not Use",
       "largest_table_rows": 4,
-      "line_count": 61,
+      "line_count": 64,
       "max_prose_line_words": 0,
       "name": "repository-tooling-change-builder",
       "optimality_section_length": 0,
@@ -310409,22 +310614,24 @@
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/professional-skills/repository-tooling-change-builder/SKILL.md",
-      "professionalism_score": 90,
+      "professionalism_score": 100,
       "projection_overhead_lines": 7,
       "recommended_phase": "-",
       "reference_link_count": 3,
       "repeated_phrase_count": 0,
-      "review_reasons": [],
-      "review_state": "KEEP",
+      "review_reasons": [
+        "ai_readability_review_as_complex"
+      ],
+      "review_state": "REVIEW_READABILITY",
       "risk_of_change": "low",
       "routing_clarity_score": 100,
       "split_candidate_score": 0,
       "suggested_action": "Within governed-body targets; no density action is required.",
       "table_count": 1,
-      "token_count": 474,
+      "token_count": 565,
       "tutorial_explanatory_density": 0.0,
       "used_by_count": 0,
-      "word_count": 318
+      "word_count": 388
     },
     {
       "actionability_applicable": false,
@@ -322014,7 +322221,7 @@
       "actionable_repeated_phrase_count": 1,
       "anti_example_section_length": 0,
       "benchmark_section_length": 0,
-      "bullet_count": 13,
+      "bullet_count": 16,
       "classification": "KEEP",
       "code_block_count": 0,
       "content_budget_scope": "governed-body-excluding-registry-targeted-references",
@@ -322032,12 +322239,10 @@
       "decision_density": 0.0,
       "description_findings": [],
       "description_length": 175,
-      "findings": [
-        "Professional Decision Rules is thin (short prose, few rules)"
-      ],
-      "front_loaded_action_score": 60,
+      "findings": [],
+      "front_loaded_action_score": 68,
       "generic_control_phrase_count": 0,
-      "governed_line_count": 47,
+      "governed_line_count": 50,
       "has_shared_optimality": false,
       "heading_count": 11,
       "high_confidence_control_scaffold": false,
@@ -322050,7 +322255,7 @@
       "largest_section_lines": 9,
       "largest_section_title": "Targeted References",
       "largest_table_rows": 6,
-      "line_count": 56,
+      "line_count": 59,
       "max_prose_line_words": 0,
       "name": "bigdata-product-extension",
       "optimality_section_length": 0,
@@ -322064,7 +322269,7 @@
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/domain-extensions/bigdata-product-extension/SKILL.md",
-      "professionalism_score": 90,
+      "professionalism_score": 100,
       "projection_overhead_lines": 9,
       "recommended_phase": "-",
       "reference_link_count": 5,
@@ -322079,10 +322284,10 @@
       "split_candidate_score": 0,
       "suggested_action": "Within governed-body targets; no density action is required.",
       "table_count": 1,
-      "token_count": 354,
+      "token_count": 428,
       "tutorial_explanatory_density": 0.0,
       "used_by_count": 0,
-      "word_count": 234
+      "word_count": 274
     },
     {
       "actionability_applicable": false,
@@ -322312,7 +322517,7 @@
       "actionable_repeated_phrase_count": 0,
       "anti_example_section_length": 0,
       "benchmark_section_length": 0,
-      "bullet_count": 14,
+      "bullet_count": 19,
       "classification": "KEEP",
       "code_block_count": 0,
       "content_budget_scope": "governed-body-excluding-registry-targeted-references",
@@ -322331,12 +322536,11 @@
       "description_findings": [],
       "description_length": 175,
       "findings": [
-        "Professional Decision Rules is thin (short prose, few rules)",
         "Execution Checklist is thin (few executable checks)"
       ],
       "front_loaded_action_score": 60,
       "generic_control_phrase_count": 0,
-      "governed_line_count": 48,
+      "governed_line_count": 53,
       "has_shared_optimality": false,
       "heading_count": 11,
       "high_confidence_control_scaffold": false,
@@ -322346,10 +322550,10 @@
       "high_value_rules_over_sentence_limit": 0,
       "high_value_rules_without_decision_semantics": 0,
       "kind": "domain-extension",
-      "largest_section_lines": 7,
-      "largest_section_title": "Role",
+      "largest_section_lines": 9,
+      "largest_section_title": "Professional Decision Rules",
       "largest_table_rows": 2,
-      "line_count": 53,
+      "line_count": 58,
       "max_prose_line_words": 0,
       "name": "iot-embedded-extension",
       "optimality_section_length": 0,
@@ -322363,7 +322567,7 @@
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/domain-extensions/iot-embedded-extension/SKILL.md",
-      "professionalism_score": 78,
+      "professionalism_score": 88,
       "projection_overhead_lines": 5,
       "recommended_phase": "-",
       "reference_link_count": 1,
@@ -322375,10 +322579,10 @@
       "split_candidate_score": 0,
       "suggested_action": "Within governed-body targets; no density action is required.",
       "table_count": 1,
-      "token_count": 439,
+      "token_count": 535,
       "tutorial_explanatory_density": 0.0,
       "used_by_count": 0,
-      "word_count": 281
+      "word_count": 352
     },
     {
       "actionability_applicable": false,
@@ -322878,7 +323082,7 @@
       "actionable_duplicate_content": 8,
       "ai_readability_compound_bullet": 0,
       "ai_readability_hard_fail": 0,
-      "ai_readability_review_as_complex": 152,
+      "ai_readability_review_as_complex": 154,
       "ai_readability_tighten": 5,
       "classification_block": 0,
       "classification_review_density": 18,
@@ -322891,10 +323095,10 @@
       "weak_front_loaded_action": 0
     },
     "review_states": {
-      "KEEP": 32,
+      "KEEP": 30,
       "KEEP_WITH_ADVISORY": 3,
       "REVIEW_CONTEXT": 2,
-      "REVIEW_READABILITY": 149,
+      "REVIEW_READABILITY": 151,
       "TIGHTEN_BODY": 3
     },
     "split_candidates": 0,

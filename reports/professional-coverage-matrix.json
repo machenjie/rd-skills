@@ -1221,7 +1221,7 @@
         "technology-stack-selection",
         "module-boundary-design"
       ],
-      "authoring_status": "needs-review",
+      "authoring_status": "pass",
       "evidence_case_ids": {
         "positive_route": [
           "high-risk-multi-task",
@@ -1905,7 +1905,7 @@
         "configuration-runtime-policy",
         "dependency-vulnerability-scanning"
       ],
-      "authoring_status": "needs-review",
+      "authoring_status": "pass",
       "evidence_case_ids": {
         "positive_route": [
           "accepted-integration-analysis",
@@ -2202,7 +2202,7 @@
         "secret-configuration-security",
         "audit-evidence-integrity"
       ],
-      "authoring_status": "needs-review",
+      "authoring_status": "pass",
       "evidence_case_ids": {
         "positive_route": [
           "logging",
@@ -2488,7 +2488,7 @@
         "consumer-impact-analysis",
         "api-contract-design"
       ],
-      "authoring_status": "needs-review",
+      "authoring_status": "pass",
       "evidence_case_ids": {
         "positive_route": [
           "documentation",
@@ -2658,7 +2658,7 @@
         "configuration-runtime-policy",
         "dependency-vulnerability-scanning"
       ],
-      "authoring_status": "needs-review",
+      "authoring_status": "pass",
       "evidence_case_ids": {
         "positive_route": [
           "repository-tooling-direct",
@@ -9366,7 +9366,7 @@
       "trigger_contract": "present",
       "anti_trigger_contract": "present",
       "layer3_candidates": [],
-      "authoring_status": "needs-review",
+      "authoring_status": "pass",
       "evidence_case_ids": {
         "positive_route": [
           "bigdata-cdc-stream-replay",
@@ -9422,7 +9422,7 @@
       "trigger_contract": "present",
       "anti_trigger_contract": "present",
       "layer3_candidates": [],
-      "authoring_status": "needs-review",
+      "authoring_status": "pass",
       "evidence_case_ids": {
         "positive_route": [
           "iot-device-physical-runtime",

@@ -783,7 +783,7 @@
     "domain": 13
   },
   "error_count": 0,
-  "warning_count": 7,
+  "warning_count": 0,
   "professional_review_risk_matrix": {
     "selector": "professional-skills.yaml role_support contains review-agent",
     "covered_skill_count": 11,
@@ -802,15 +802,7 @@
     ]
   },
   "errors": [],
-  "warnings": [
-    "src/professional-skills/high-risk-design-review/SKILL.md: fewer than two explicit Professional Decision Rules",
-    "src/professional-skills/integration-change-builder/SKILL.md: fewer than two explicit Professional Decision Rules",
-    "src/professional-skills/logging-design-gate/SKILL.md: fewer than two explicit Professional Decision Rules",
-    "src/professional-skills/change-documentation-gate/SKILL.md: fewer than two explicit Professional Decision Rules",
-    "src/professional-skills/repository-tooling-change-builder/SKILL.md: fewer than two explicit Professional Decision Rules",
-    "src/domain-extensions/bigdata-product-extension/SKILL.md: fewer than two explicit Professional Decision Rules",
-    "src/domain-extensions/iot-embedded-extension/SKILL.md: fewer than two explicit Professional Decision Rules"
-  ],
+  "warnings": [],
   "results": [
     {
       "name": "engineering-control-plane",
@@ -1126,7 +1118,7 @@
       "name": "high-risk-design-review",
       "kind": "professional",
       "path": "src/professional-skills/high-risk-design-review/SKILL.md",
-      "status": "needs-review",
+      "status": "pass",
       "authoring_score": 100,
       "required_sections": [
         "Role",
@@ -1145,9 +1137,7 @@
       "broken_references": [],
       "unlinked_references": [],
       "errors": [],
-      "warnings": [
-        "fewer than two explicit Professional Decision Rules"
-      ],
+      "warnings": [],
       "role_support": [
         "review-agent"
       ],
@@ -1168,8 +1158,8 @@
         "technology-stack-selection",
         "module-boundary-design"
       ],
-      "line_count": 63,
-      "decision_rule_count": 1,
+      "line_count": 66,
+      "decision_rule_count": 4,
       "gotcha_count": 3,
       "reference_count": 1,
       "routing_coverage_count": 3,
@@ -1647,7 +1637,7 @@
       "name": "integration-change-builder",
       "kind": "professional",
       "path": "src/professional-skills/integration-change-builder/SKILL.md",
-      "status": "needs-review",
+      "status": "pass",
       "authoring_score": 100,
       "required_sections": [
         "Role",
@@ -1666,9 +1656,7 @@
       "broken_references": [],
       "unlinked_references": [],
       "errors": [],
-      "warnings": [
-        "fewer than two explicit Professional Decision Rules"
-      ],
+      "warnings": [],
       "role_support": [
         "analysis-agent",
         "task-agent"
@@ -1694,8 +1682,8 @@
         "configuration-runtime-policy",
         "dependency-vulnerability-scanning"
       ],
-      "line_count": 64,
-      "decision_rule_count": 1,
+      "line_count": 67,
+      "decision_rule_count": 4,
       "gotcha_count": 3,
       "reference_count": 3,
       "routing_coverage_count": 3,
@@ -1894,7 +1882,7 @@
       "name": "logging-design-gate",
       "kind": "professional",
       "path": "src/professional-skills/logging-design-gate/SKILL.md",
-      "status": "needs-review",
+      "status": "pass",
       "authoring_score": 100,
       "required_sections": [
         "Role",
@@ -1913,9 +1901,7 @@
       "broken_references": [],
       "unlinked_references": [],
       "errors": [],
-      "warnings": [
-        "fewer than two explicit Professional Decision Rules"
-      ],
+      "warnings": [],
       "role_support": [
         "task-agent",
         "review-agent"
@@ -1934,8 +1920,8 @@
         "secret-configuration-security",
         "audit-evidence-integrity"
       ],
-      "line_count": 67,
-      "decision_rule_count": 1,
+      "line_count": 70,
+      "decision_rule_count": 4,
       "gotcha_count": 3,
       "reference_count": 4,
       "routing_coverage_count": 7,
@@ -2072,7 +2058,7 @@
       "name": "change-documentation-gate",
       "kind": "professional",
       "path": "src/professional-skills/change-documentation-gate/SKILL.md",
-      "status": "needs-review",
+      "status": "pass",
       "authoring_score": 100,
       "required_sections": [
         "Role",
@@ -2091,9 +2077,7 @@
       "broken_references": [],
       "unlinked_references": [],
       "errors": [],
-      "warnings": [
-        "fewer than two explicit Professional Decision Rules"
-      ],
+      "warnings": [],
       "role_support": [
         "task-agent",
         "review-agent"
@@ -2111,8 +2095,8 @@
         "consumer-impact-analysis",
         "api-contract-design"
       ],
-      "line_count": 70,
-      "decision_rule_count": 1,
+      "line_count": 73,
+      "decision_rule_count": 4,
       "gotcha_count": 3,
       "reference_count": 4,
       "routing_coverage_count": 4,
@@ -2240,7 +2224,7 @@
       "name": "repository-tooling-change-builder",
       "kind": "professional",
       "path": "src/professional-skills/repository-tooling-change-builder/SKILL.md",
-      "status": "needs-review",
+      "status": "pass",
       "authoring_score": 100,
       "required_sections": [
         "Role",
@@ -2259,9 +2243,7 @@
       "broken_references": [],
       "unlinked_references": [],
       "errors": [],
-      "warnings": [
-        "fewer than two explicit Professional Decision Rules"
-      ],
+      "warnings": [],
       "role_support": [
         "task-agent"
       ],
@@ -2286,8 +2268,8 @@
         "configuration-runtime-policy",
         "dependency-vulnerability-scanning"
       ],
-      "line_count": 65,
-      "decision_rule_count": 1,
+      "line_count": 68,
+      "decision_rule_count": 4,
       "gotcha_count": 3,
       "reference_count": 3,
       "routing_coverage_count": 8,
@@ -8225,7 +8207,7 @@
       "name": "bigdata-product-extension",
       "kind": "domain",
       "path": "src/domain-extensions/bigdata-product-extension/SKILL.md",
-      "status": "needs-review",
+      "status": "pass",
       "authoring_score": 100,
       "required_sections": [
         "Role",
@@ -8244,9 +8226,7 @@
       "broken_references": [],
       "unlinked_references": [],
       "errors": [],
-      "warnings": [
-        "fewer than two explicit Professional Decision Rules"
-      ],
+      "warnings": [],
       "role_support": [
         "analysis-agent",
         "task-agent",
@@ -8265,8 +8245,8 @@
         "single-database large-table work without a distributed pipeline, replay, or downstream consumer boundary"
       ],
       "layer3_candidates": [],
-      "line_count": 60,
-      "decision_rule_count": 1,
+      "line_count": 63,
+      "decision_rule_count": 4,
       "gotcha_count": 1,
       "reference_count": 5,
       "routing_coverage_count": 5,
@@ -8276,7 +8256,7 @@
       "name": "iot-embedded-extension",
       "kind": "domain",
       "path": "src/domain-extensions/iot-embedded-extension/SKILL.md",
-      "status": "needs-review",
+      "status": "pass",
       "authoring_score": 100,
       "required_sections": [
         "Role",
@@ -8295,9 +8275,7 @@
       "broken_references": [],
       "unlinked_references": [],
       "errors": [],
-      "warnings": [
-        "fewer than two explicit Professional Decision Rules"
-      ],
+      "warnings": [],
       "role_support": [
         "analysis-agent",
         "task-agent",
@@ -8318,8 +8296,8 @@
         "protocol documentation or cloud-only APIs without device or firmware behavior"
       ],
       "layer3_candidates": [],
-      "line_count": 57,
-      "decision_rule_count": 1,
+      "line_count": 62,
+      "decision_rule_count": 6,
       "gotcha_count": 1,
       "reference_count": 1,
       "routing_coverage_count": 5,
