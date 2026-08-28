@@ -74,26 +74,26 @@ class ValidateRootContentTests(unittest.TestCase):
             "foundation_documents": 150,
             "compact_documents": 128,
             "complex_documents": 22,
-            "sum_tokens": 65496,
+            "sum_tokens": 65636,
             "min_tokens": 138,
             "p25_tokens": 269,
             "p50_tokens": 511,
-            "p75_tokens": 553,
-            "p90_tokens": 598,
+            "p75_tokens": 554,
+            "p90_tokens": 599,
             "p95_tokens": 628,
-            "p99_tokens": 654,
-            "distribution_max_tokens": 663,
-            "mean_tokens": 436.64,
-            "sum_words": 45944,
+            "p99_tokens": 663,
+            "distribution_max_tokens": 688,
+            "mean_tokens": 437.573,
+            "sum_words": 46046,
             "min_words": 94,
             "p25_words": 182,
             "p50_words": 357,
             "p75_words": 393,
-            "p90_words": 419,
-            "p95_words": 436,
-            "p99_words": 454,
-            "max_words": 475,
-            "mean_words": 306.293,
+            "p90_words": 420,
+            "p95_words": 437,
+            "p99_words": 475,
+            "max_words": 497,
+            "mean_words": 306.973,
             "median_token_word_ratio": 1.415,
             "p90_token_word_ratio": 1.552,
             "p95_token_word_ratio": 1.593,
@@ -122,6 +122,18 @@ class ValidateRootContentTests(unittest.TestCase):
             "derivation_snapshot"
         ]
         self.assertEqual(expected, snapshot)
+        foundation_documents = [
+            document
+            for document in self._baseline_root_content()["documents"]
+            if document.get("layer") == "foundation-capability"
+            and document.get("document_part") == "body"
+        ]
+        self.assertEqual(
+            expected,
+            self.auditor.foundation_derivation_snapshot_from_documents(
+                foundation_documents
+            ),
+        )
         self.assertNotIn("reviewed_positive_sample_max_tokens", snapshot)
 
     def test_foundation_derivation_snapshot_stat_drift_fails_closed(self) -> None:

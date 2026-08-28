@@ -302844,13 +302844,13 @@
         "compact_documents": 128,
         "complex_documents": 22,
         "date": "2026-08-28",
-        "distribution_max_tokens": 663,
+        "distribution_max_tokens": 688,
         "foundation_documents": 150,
         "max_token_word_ratio": 1.673,
-        "max_words": 475,
+        "max_words": 497,
         "mean_token_word_ratio": 1.435,
-        "mean_tokens": 436.64,
-        "mean_words": 306.293,
+        "mean_tokens": 437.573,
+        "mean_words": 306.973,
         "median_token_word_ratio": 1.415,
         "min_tokens": 138,
         "min_words": 94,
@@ -302858,18 +302858,18 @@
         "p25_words": 182,
         "p50_tokens": 511,
         "p50_words": 357,
-        "p75_tokens": 553,
+        "p75_tokens": 554,
         "p75_words": 393,
         "p90_token_word_ratio": 1.552,
-        "p90_tokens": 598,
-        "p90_words": 419,
+        "p90_tokens": 599,
+        "p90_words": 420,
         "p95_token_word_ratio": 1.593,
         "p95_tokens": 628,
-        "p95_words": 436,
-        "p99_tokens": 654,
-        "p99_words": 454,
-        "sum_tokens": 65496,
-        "sum_words": 45944
+        "p95_words": 437,
+        "p99_tokens": 663,
+        "p99_words": 475,
+        "sum_tokens": 65636,
+        "sum_words": 46046
       },
       "hard_token_limit": 900,
       "registry_schema_version": 8,
@@ -309017,10 +309017,10 @@
     ],
     "detector_fingerprint": {
       "algorithm": "sha256",
-      "value": "09ab8d062f1bc25f45dd7a3689fa4f6d251cbb3c30abbfd76d1eb0e9a4b40f1f"
+      "value": "5d9fb805af01c4b3165677e56a50b4e73949ff5c777b267de963a7c841a47d7c"
     },
     "detector_source_manifest": {
-      "aggregate_source_digest": "09ab8d062f1bc25f45dd7a3689fa4f6d251cbb3c30abbfd76d1eb0e9a4b40f1f",
+      "aggregate_source_digest": "5d9fb805af01c4b3165677e56a50b4e73949ff5c777b267de963a7c841a47d7c",
       "contract_fields": {
         "finding_fields": [
           "family",
@@ -309080,7 +309080,7 @@
       "source_manifest": [
         {
           "path": "scripts/audit-skill-content.py",
-          "sha256": "09c9125c0071d970f214b56fc6913bfc3f3e76000e5693a6f47cd5bc46f712a6"
+          "sha256": "543f6b0c44cb2e6fc51ebddae6fd92743377a6492c7f40657771bd696b4a26a8"
         },
         {
           "path": "scripts/validation_utils.py",
