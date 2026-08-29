@@ -309017,10 +309017,10 @@
     ],
     "detector_fingerprint": {
       "algorithm": "sha256",
-      "value": "5d9fb805af01c4b3165677e56a50b4e73949ff5c777b267de963a7c841a47d7c"
+      "value": "ba34b921867c59a5d658f1c3e9641375a33774f198db7d811fe7afb7484f7c18"
     },
     "detector_source_manifest": {
-      "aggregate_source_digest": "5d9fb805af01c4b3165677e56a50b4e73949ff5c777b267de963a7c841a47d7c",
+      "aggregate_source_digest": "ba34b921867c59a5d658f1c3e9641375a33774f198db7d811fe7afb7484f7c18",
       "contract_fields": {
         "finding_fields": [
           "family",
@@ -309084,7 +309084,7 @@
         },
         {
           "path": "scripts/validation_utils.py",
-          "sha256": "037a65c7dcf54d0d51f2e81a691cb4aaa541e1119741aecdeb0554f87ee12dd2"
+          "sha256": "e7ae52b347c689887543fdd4c853b0d27f6790627f90e5e6cce2344a81c4851b"
         }
       ]
     },
