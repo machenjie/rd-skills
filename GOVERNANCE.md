@@ -22,7 +22,7 @@ evidence semantics.
 
 Changes require explicit maintainer agreement when they affect:
 
-- Runtime profile semantics.
+- Single Runtime composition, JIT delivery, or compatibility semantics.
 - Installer, upgrade, uninstall, or doctor behavior.
 - Registry schema or routing behavior.
 - Security, privacy, licensing, or release policy.
@@ -450,13 +450,13 @@ refresh current evidence.
   only version and selected-file digests.
 - **Authoritative owner / scope:** manifest production in `scripts/build.py`,
   package checks in `scripts/package.py`, installation validation in
-  `scripts/validate-installation.py`, build-profile documentation, and build
+  `scripts/validate-installation.py`, Runtime-build documentation, and build
   tests.
 - **Acceptance:** A deterministic source-tree digest covers every build input;
   commit and dirty/unavailable state are explicit; changing any authoritative
   input makes a prior manifest stale; package and installation checks reject a
   mismatched binding.
-- **Targeted validation:** build all three profiles, run
+- **Targeted validation:** run `python3 scripts/build.py`,
   `python3 scripts/validate-installation.py`,
   `python3 scripts/validate-productization-assets.py`, and a mutation fixture
   that proves stale-manifest rejection.

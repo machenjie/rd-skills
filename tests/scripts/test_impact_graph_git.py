@@ -210,10 +210,7 @@ class ImpactGraphGitTests(unittest.TestCase):
         self.assertEqual(
             [], deleted_selection["professionalism"]["direct_package_ids"]
         )
-        self.assertEqual(
-            ["recommended", "full", "dev"],
-            deleted_selection["selected_build_profiles"],
-        )
+        self.assertEqual("recommended", deleted_selection["selected_runtime"])
 
     def test_real_git_test_deletion_and_rename_run_only_present_paths(self) -> None:
         temporary = tempfile.TemporaryDirectory()

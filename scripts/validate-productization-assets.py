@@ -2989,6 +2989,12 @@ def validate_productization_assets(root: Path = ROOT) -> list[str]:
         schema = json.loads(schema_path.read_text(encoding="utf-8"))
         if schema.get("properties", {}).get("schema_version", {}).get("const") != 3:
             errors.append("Marketplace schema must require schema_version 3")
+        if schema.get("properties", {}).get("profile") != {
+            "const": "recommended"
+        }:
+            errors.append(
+                "Marketplace schema must expose one fixed recommended Runtime projection"
+            )
 
     installation_report_path = root / "reports/installation-validation.json"
     if installation_report_path.is_file():

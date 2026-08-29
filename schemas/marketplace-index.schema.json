@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.invalid/changeforge/marketplace-index.schema.json",
   "title": "rd-skills Marketplace Index v3",
-  "description": "Source-derived discovery metadata for the four Skill layers and three build profiles.",
+  "description": "Source-derived discovery metadata for the four Skill layers in the fixed recommended Runtime projection.",
   "type": "object",
   "required": [
     "schema_version",
@@ -13,7 +13,7 @@
   ],
   "properties": {
     "schema_version": { "const": 3 },
-    "profile": { "enum": ["recommended", "full", "dev"] },
+    "profile": { "const": "recommended" },
     "generated_by": { "type": "string", "minLength": 1 },
     "source_of_truth": {
       "type": "array",
@@ -126,7 +126,7 @@
           ]
         },
         "delivery_scope": {
-          "enum": ["product", "authoring-only", "dev-only", null]
+          "enum": ["product", "authoring-only", "internal-only", null]
         },
         "task_routable": { "type": ["boolean", "null"] },
         "profile_delivery": { "$ref": "#/$defs/delivery" },
@@ -193,7 +193,7 @@
           "then": {
             "properties": {
               "delivery_scope": {
-                "enum": ["product", "authoring-only", "dev-only"]
+                "enum": ["product", "authoring-only", "internal-only"]
               }
             }
           },
@@ -211,6 +211,74 @@
           },
           "else": {
             "properties": { "task_routable": { "const": null } }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": ["control_skill", "professional_skill"]
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "profile_delivery": {
+                "properties": { "mode": { "const": "top_level_skill" } }
+              },
+              "used_by": { "maxItems": 0 }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "domain_skill" } },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "profile_delivery": {
+                "properties": { "mode": { "const": "targeted_reference" } }
+              },
+              "used_by": { "minItems": 1 }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "foundation_skill" },
+              "delivery_scope": { "const": "product" }
+            },
+            "required": ["type", "delivery_scope"]
+          },
+          "then": {
+            "properties": {
+              "profile_delivery": {
+                "properties": { "mode": { "const": "targeted_reference" } }
+              },
+              "used_by": { "minItems": 1 }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "foundation_skill" },
+              "delivery_scope": {
+                "enum": ["authoring-only", "internal-only"]
+              }
+            },
+            "required": ["type", "delivery_scope"]
+          },
+          "then": {
+            "properties": {
+              "profile_delivery": {
+                "properties": { "mode": { "const": "routing_index_only" } }
+              },
+              "used_by": { "maxItems": 0 }
+            }
           }
         }
       ]

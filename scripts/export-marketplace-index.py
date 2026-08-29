@@ -22,7 +22,12 @@ from validation_utils import (
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PROFILES = ("recommended", "full", "dev")
+RUNTIME_PROFILE = "recommended"
+FOUNDATION_SCOPE_PROJECTION = {
+    "product": "product",
+    "authoring-only": "authoring-only",
+    "dev-only": "internal-only",
+}
 REGISTRIES = (
     ("control_skill", "control-skills.yaml", "control_skills"),
     ("professional_skill", "professional-skills.yaml", "professional_skills"),
@@ -157,10 +162,9 @@ def _load_registry_entries(
 
 
 def _targeted_layer3_names(
-    profile: str,
     entries: dict[str, list[dict[str, Any]]],
 ) -> set[str]:
-    """Mirror build-time Layer 3 selection without creating a delivery engine."""
+    """Mirror the fixed Runtime Layer 3 projection without creating a selector."""
 
     candidates = {
         name
@@ -182,16 +186,11 @@ def _targeted_layer3_names(
 
 
 def _delivery(
-    profile: str,
     item_type: str,
     name: str,
     targeted_layer3: set[str],
 ) -> dict[str, Any]:
-    top_level = (
-        item_type in {"control_skill", "professional_skill"}
-        or (item_type == "domain_skill" and profile in {"full", "dev"})
-        or (item_type == "foundation_skill" and profile == "dev")
-    )
+    top_level = item_type in {"control_skill", "professional_skill"}
     targeted_reference = not top_level and name in targeted_layer3
     if top_level:
         mode = "top_level_skill"
@@ -209,7 +208,6 @@ def _delivery(
 
 def _item(
     root: Path,
-    profile: str,
     item_type: str,
     entry: dict[str, Any],
     targeted_layer3: set[str],
@@ -229,18 +227,21 @@ def _item(
         for field in CONTRACT_FIELDS
     }
     roles = contract["role_support"]
-    delivery_scope = entry.get("delivery_scope")
+    source_delivery_scope = entry.get("delivery_scope")
     task_routable = entry.get("task_routable")
     if item_type == "foundation_skill":
-        if delivery_scope not in FOUNDATION_DELIVERY_SCOPES:
+        if source_delivery_scope not in FOUNDATION_DELIVERY_SCOPES:
             raise MarketplaceExportError(
                 f"{name}.delivery_scope must be one of "
                 f"{sorted(FOUNDATION_DELIVERY_SCOPES)}"
             )
-    elif delivery_scope is not None:
+        delivery_scope = FOUNDATION_SCOPE_PROJECTION[str(source_delivery_scope)]
+    elif source_delivery_scope is not None:
         raise MarketplaceExportError(
             f"{name}.delivery_scope is only valid for a Foundation Skill"
         )
+    else:
+        delivery_scope = None
     if item_type == "professional_skill":
         if not isinstance(task_routable, bool):
             raise MarketplaceExportError(
@@ -254,14 +255,17 @@ def _item(
         entry.get("used_by"),
         label=f"{name}.used_by",
     )
-    used_by = raw_used_by if item_type == "foundation_skill" else []
+    used_by = (
+        raw_used_by
+        if item_type in {"foundation_skill", "domain_skill"}
+        else []
+    )
     return {
         "name": name,
         "type": item_type,
         "delivery_scope": delivery_scope,
         "task_routable": task_routable,
         "profile_delivery": _delivery(
-            profile,
             item_type,
             name,
             targeted_layer3,
@@ -298,21 +302,21 @@ def _item(
     }
 
 
-def export_index(root: Path, profile: str) -> dict[str, Any]:
-    """Build one profile's standard-Skill marketplace payload."""
+def export_index(root: Path) -> dict[str, Any]:
+    """Build the fixed Runtime standard-Skill marketplace payload."""
 
-    if profile not in PROFILES:
-        raise ValueError(f"unsupported profile: {profile}")
     entries = _load_registry_entries(root)
-    targeted_layer3 = _targeted_layer3_names(profile, entries)
+    targeted_layer3 = _targeted_layer3_names(entries)
     items = [
-        _item(root, profile, item_type, entry, targeted_layer3)
+        _item(root, item_type, entry, targeted_layer3)
         for item_type, _filename, _key in REGISTRIES
         for entry in entries[item_type]
     ]
     return {
         "schema_version": MARKETPLACE_SCHEMA_VERSION,
-        "profile": profile,
+        # The retained directory/manifest name is fixed compatibility metadata,
+        # not a user-selectable marketplace or installation profile.
+        "profile": RUNTIME_PROFILE,
         "generated_by": "scripts/export-marketplace-index.py",
         "source_of_truth": [
             "src/registry/control-skills.yaml",
@@ -326,12 +330,11 @@ def export_index(root: Path, profile: str) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--profile", choices=PROFILES, required=True)
     parser.add_argument("--out", required=True, help="JSON output path")
     args = parser.parse_args(argv)
 
     try:
-        payload = export_index(ROOT, args.profile)
+        payload = export_index(ROOT)
     except MarketplaceExportError as exc:
         print(f"export-marketplace-index: ERROR: {exc}", file=sys.stderr)
         return 1

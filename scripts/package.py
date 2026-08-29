@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import sys
 import tempfile
 import zipfile
@@ -14,6 +15,7 @@ from pathlib import Path, PurePosixPath
 from validation_utils import (
     NAME_RE,
     authoritative_build_input_snapshot_errors,
+    load_yaml_file,
     validate_no_personal_references,
 )
 
@@ -21,7 +23,14 @@ from validation_utils import (
 ROOT = Path(__file__).resolve().parents[1]
 BUILT_SKILLS_ROOT = ROOT / "dist" / "universal" / "skills"
 ZIP_DIR = ROOT / "dist" / "openai-api" / "zips"
-PROFILES = ("recommended", "full", "dev")
+RUNTIME_PROFILE = "recommended"
+RETIRED_PROFILES = ("full", "dev")
+EXPECTED_RUNTIME_COUNTS = {
+    "control": 1,
+    "professional": 26,
+    "foundation": 150,
+    "domain": 13,
+}
 ZIP_TIMESTAMP = (2024, 1, 1, 0, 0, 0)
 MAX_ZIP_FILES = 500
 MAX_ZIP_BYTES = 5 * 1024 * 1024
@@ -34,66 +43,25 @@ class PackageError(Exception):
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Package rd-skills skills as zip bundles.")
-    parser.add_argument(
-        "--profile",
-        choices=PROFILES,
-        default="recommended",
-        help="Built profile to package.",
-    )
-    parser.add_argument(
-        "--source",
-        type=Path,
-        help="Optional built profile skills directory. Defaults to dist/universal/skills/<profile>.",
-    )
-    parser.add_argument(
-        "--zip-dir",
-        type=Path,
-        default=ZIP_DIR,
-        help="Output directory for OpenAI API compatible zips.",
-    )
-    args = parser.parse_args()
-
-    source_root = (
-        args.source if args.source is not None else BUILT_SKILLS_ROOT / args.profile
-    ).expanduser().absolute()
-
-    zip_dir = args.zip_dir.expanduser().absolute()
-    default_output = zip_dir == ZIP_DIR.expanduser().absolute()
-    if default_output:
-        zip_dir = ZIP_DIR / args.profile
+    parser.parse_args()
 
     try:
-        zip_count = package_profile(
-            source_root,
-            zip_dir,
-            require_build_manifest=args.source is None,
-        )
-        if default_output and zip_count:
-            _cleanup_legacy_zips(ZIP_DIR)
+        zip_count = package_profile()
     except PackageError as exc:
         print(f"package: ERROR: {exc}", file=sys.stderr)
         return 1
 
-    if zip_count == 0:
-        print(f"package: no built Skills found in {source_root}; nothing to package.")
-        return 0
-
+    source_root = BUILT_SKILLS_ROOT / RUNTIME_PROFILE
+    zip_dir = ZIP_DIR / RUNTIME_PROFILE
     print(f"package: packaged {zip_count} skill zip(s) from {source_root} into {zip_dir}.")
     return 0
 
 
-def package_profile(
-    source_root: Path,
-    zip_dir: Path = ZIP_DIR,
-    *,
-    require_build_manifest: bool = False,
-) -> int:
-    source_root = source_root.expanduser().absolute()
-    zip_dir = zip_dir.expanduser().absolute()
+def package_profile() -> int:
+    source_root = (BUILT_SKILLS_ROOT / RUNTIME_PROFILE).expanduser().absolute()
+    zip_dir = (ZIP_DIR / RUNTIME_PROFILE).expanduser().absolute()
 
-    # Validate lexical path chains before resolve() or mkdir(). Resolving first
-    # would hide an ancestor symlink and could redirect writes outside the
-    # requested output tree.
+    _preflight_managed_profile_roots()
     _reject_symlink_chain(source_root, "built source")
     _reject_symlink_chain(zip_dir, "zip output")
     if _paths_overlap(source_root, zip_dir):
@@ -102,14 +70,11 @@ def package_profile(
         )
 
     if not source_root.exists():
-        return 0
+        raise PackageError(f"{_display(source_root)} is missing; run scripts/build.py first")
     if source_root.is_symlink() or not source_root.is_dir():
         raise PackageError(f"{_display(source_root)} must be a regular built profile directory")
     _reject_tree_symlinks(source_root, "built source tree")
-    _validate_build_manifest_freshness(
-        source_root,
-        require_manifest=require_build_manifest,
-    )
+    manifest = _validate_build_manifest(source_root)
 
     skill_dirs = [
         path
@@ -117,8 +82,14 @@ def package_profile(
         if path.is_dir() and not path.name.startswith(".")
     ]
 
-    if not skill_dirs:
-        return 0
+    actual_names = [path.name for path in skill_dirs]
+    expected_names = manifest["top_level_skills"]
+    expected_children = {*expected_names, ".changeforge-build-manifest.json"}
+    actual_children = {path.name for path in source_root.iterdir()}
+    if actual_names != sorted(expected_names) or actual_children != expected_children:
+        raise PackageError(
+            "built Skill names must exactly match the current Runtime manifest"
+        )
 
     for skill_dir in skill_dirs:
         if skill_dir.is_symlink():
@@ -155,6 +126,7 @@ def package_profile(
             _write_skill_zip(skill_dir, staging / f"{skill_dir.name}.zip")
         _validate_written_zips(staging)
 
+        _cleanup_retired_profile_outputs()
         zip_dir.mkdir(parents=True, exist_ok=True)
         for name in sorted(expected_zip_names):
             os.replace(staging / name, zip_dir / name)
@@ -162,24 +134,96 @@ def package_profile(
     return len(skill_dirs)
 
 
-def _validate_build_manifest_freshness(
-    source_root: Path,
-    *,
-    require_manifest: bool,
-) -> None:
+def _authoritative_runtime_inventory() -> dict[str, object]:
+    registries = {
+        layer: load_yaml_file(ROOT / "src" / "registry" / filename)[key]
+        for layer, filename, key in (
+            ("control", "control-skills.yaml", "control_skills"),
+            ("professional", "professional-skills.yaml", "professional_skills"),
+            ("foundation", "foundation-skills.yaml", "foundation_skills"),
+            ("domain", "domain-skills.yaml", "domain_skills"),
+        )
+    }
+    names = {
+        layer: [entry.get("name") for entry in entries]
+        for layer, entries in registries.items()
+    }
+    for layer, expected_count in EXPECTED_RUNTIME_COUNTS.items():
+        layer_names = names[layer]
+        if (
+            len(layer_names) != expected_count
+            or any(
+                not isinstance(name, str) or not NAME_RE.fullmatch(name)
+                for name in layer_names
+            )
+            or len(set(layer_names)) != len(layer_names)
+        ):
+            raise PackageError(
+                f"authoritative {layer} registry must contain exactly "
+                f"{expected_count} unique safe Skill names"
+            )
+
+    foundation_entries = {
+        entry["name"]: entry for entry in registries["foundation"]
+    }
+    allowed_layer3 = set(names["domain"]) | {
+        name
+        for name, entry in foundation_entries.items()
+        if entry.get("delivery_scope") == "product"
+    }
+    compiled = {
+        entry["name"]: list(
+            dict.fromkeys(
+                name
+                for name in entry.get("layer3_candidates", [])
+                if name in allowed_layer3
+            )
+        )
+        for entry in registries["professional"]
+    }
+    return {
+        **names,
+        "top_level": [*names["control"], *names["professional"]],
+        "compiled": compiled,
+    }
+
+
+def _validate_build_manifest(source_root: Path) -> dict[str, object]:
     manifest_path = source_root / ".changeforge-build-manifest.json"
     if not manifest_path.is_file():
-        if require_manifest:
-            raise PackageError(
-                f"{_display(source_root)} is missing .changeforge-build-manifest.json"
-            )
-        return
+        raise PackageError(
+            f"{_display(source_root)} is missing .changeforge-build-manifest.json"
+        )
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise PackageError(f"{_display(manifest_path)} is invalid: {exc}") from exc
     if not isinstance(manifest, dict):
         raise PackageError(f"{_display(manifest_path)} must contain a JSON object")
+
+    inventory = _authoritative_runtime_inventory()
+    expected_fields = {
+        "profile": RUNTIME_PROFILE,
+        "top_level_skills": inventory["top_level"],
+        "control_skills": inventory["control"],
+        "professional_skills": inventory["professional"],
+        "foundation_skills": inventory["foundation"],
+        "domain_skills": inventory["domain"],
+        "compiled_layer3_references": inventory["compiled"],
+        "foundation_mode": "targeted-product-references",
+        "domain_mode": "targeted-references",
+        "agent_profiles": [
+            "main-control-agent",
+            "analysis-agent",
+            "task-agent",
+            "review-agent",
+        ],
+    }
+    for field, expected in expected_fields.items():
+        if manifest.get(field) != expected:
+            raise PackageError(
+                f"{_display(manifest_path)}: {field} does not match the current Runtime"
+            )
     try:
         errors = authoritative_build_input_snapshot_errors(
             manifest.get("authoritative_build_inputs"),
@@ -191,27 +235,45 @@ def _validate_build_manifest_freshness(
         ) from exc
     if errors:
         raise PackageError(f"{_display(manifest_path)}: {'; '.join(errors)}")
+    return manifest
 
 
-def _cleanup_legacy_zips(zip_root: Path) -> None:
-    zip_root = zip_root.expanduser().absolute()
-    _reject_symlink_chain(zip_root, "legacy zip root")
-    zip_root.mkdir(parents=True, exist_ok=True)
-    managed_names: set[str] = set()
-    for profile in PROFILES:
-        manifest = BUILT_SKILLS_ROOT / profile / ".changeforge-build-manifest.json"
-        try:
-            data = json.loads(manifest.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            continue
-        managed_names.update(
-            f"{name}.zip"
-            for name in data.get("top_level_skills", [])
-            if isinstance(name, str) and NAME_RE.fullmatch(name)
-        )
-    for stale_zip in zip_root.glob("*.zip"):
-        if stale_zip.name in managed_names and not stale_zip.is_symlink():
-            stale_zip.unlink()
+def _managed_profile_roots() -> tuple[Path, Path]:
+    return (
+        BUILT_SKILLS_ROOT.expanduser().absolute(),
+        ZIP_DIR.expanduser().absolute(),
+    )
+
+
+def _retired_profile_output_paths() -> tuple[Path, ...]:
+    return tuple(
+        root / profile
+        for root in _managed_profile_roots()
+        for profile in RETIRED_PROFILES
+    )
+
+
+def _preflight_managed_profile_roots() -> None:
+    for root in _managed_profile_roots():
+        _reject_symlink_chain(root, "managed profile root")
+        if root.exists() and (root.is_symlink() or not root.is_dir()):
+            raise PackageError(
+                f"managed profile root {_display(root)} must be a regular directory"
+            )
+    for retired in _retired_profile_output_paths():
+        _reject_symlink_chain(retired, "retired profile output")
+        if retired.exists() and (retired.is_symlink() or not retired.is_dir()):
+            raise PackageError(
+                f"retired profile output {_display(retired)} must be a regular directory"
+            )
+        if retired.exists():
+            _reject_tree_symlinks(retired, "retired profile output")
+
+
+def _cleanup_retired_profile_outputs() -> None:
+    for path in _retired_profile_output_paths():
+        if path.exists():
+            shutil.rmtree(path)
 
 
 def _validate_zip_source(skill_dir: Path) -> None:

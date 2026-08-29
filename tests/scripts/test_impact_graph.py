@@ -512,11 +512,12 @@ class ImpactGraphContractTests(unittest.TestCase):
                 errors = validate_impact_graph_contract(mutated, ROOT)
                 self.assertTrue(any(expected in item for item in errors), errors)
 
-    def test_build_profile_projection_is_closed_and_package_rules_do_not_duplicate_it(self) -> None:
+    def test_runtime_projection_is_closed_and_package_rules_do_not_duplicate_it(self) -> None:
         graph = CORE_CONTRACTS["impact_graph_contract"]
-        projection = graph["stages"]["affected"]["build_profile_projection"]
-        self.assertEqual(["recommended", "full", "dev"], projection["profiles"])
-        self.assertEqual("all-profiles", projection["unknown_package_policy"])
+        projection = graph["stages"]["affected"]["runtime_projection"]
+        self.assertEqual("recommended", projection["runtime_name"])
+        self.assertEqual("build-recommended", projection["producer_id"])
+        self.assertEqual("runtime", projection["unknown_package_policy"])
         package_rules = {
             rule["id"]: rule
             for rule in graph["rules"]
@@ -537,10 +538,10 @@ class ImpactGraphContractTests(unittest.TestCase):
 
         mutated = copy.deepcopy(CORE_CONTRACTS)
         mutated["impact_graph_contract"]["stages"]["affected"][
-            "build_profile_projection"
+            "runtime_projection"
         ]["unknown_package_policy"] = "none"
         errors = validate_impact_graph_contract(mutated, ROOT)
-        self.assertTrue(any("build_profile_projection" in error for error in errors), errors)
+        self.assertTrue(any("runtime_projection" in error for error in errors), errors)
 
 
 class ImpactGraphResolutionTests(unittest.TestCase):
@@ -644,7 +645,7 @@ class ImpactGraphResolutionTests(unittest.TestCase):
         )
         self.assertEqual("full", result["professionalism"]["scope"])
         self.assertEqual([], result["professionalism"]["direct_package_ids"])
-        self.assertEqual(["dev"], result["selected_build_profiles"])
+        self.assertEqual("recommended", result["selected_runtime"])
         self.assertIn(
             [
                 "package:foundation-dev-only",
@@ -813,10 +814,9 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                 "validate-reference-content",
                 "validate-root-content",
                 "build-recommended",
-                "build-full",
-                "build-dev",
                 "eval-skill-professionalism",
                 "eval-agent-lightweight",
+                "validate-built-links",
                 "eval-rendered-context",
                 "eval-context-control",
                 "eval-agent-behavior",
@@ -877,8 +877,7 @@ class ImpactGraphResolutionTests(unittest.TestCase):
     def test_docs_and_known_no_impact_never_expand_to_full_fallback(self) -> None:
         expected_docs_closure = [
             "build-recommended",
-            "build-full",
-            "build-dev",
+            "validate-built-links",
             "eval-agent-lightweight",
             "eval-rendered-context",
             "validate-docs-consistency",
@@ -1002,8 +1001,7 @@ class ImpactGraphResolutionTests(unittest.TestCase):
         self.assertEqual(
             [
                 "build-recommended",
-                "build-full",
-                "build-dev",
+                "validate-built-links",
                 "eval-agent-lightweight",
                 "eval-rendered-context",
                 "validate-docs-consistency",
@@ -1390,8 +1388,6 @@ class ImpactGraphResolutionTests(unittest.TestCase):
 
         self.assertEqual(
             {
-                "build-dev",
-                "build-full",
                 "build-recommended",
                 "eval-agent-lightweight",
                 "eval-context-control",
@@ -1427,9 +1423,8 @@ class ImpactGraphResolutionTests(unittest.TestCase):
         cases = {
             "src/agent-profiles/role-agents.json": {
                 "build-recommended",
-                "build-full",
-                "build-dev",
                 "validate-agent-profiles",
+                "validate-built-links",
                 "eval-agent-lightweight",
                 "eval-context-control",
                 "eval-rendered-context",
@@ -1446,7 +1441,7 @@ class ImpactGraphResolutionTests(unittest.TestCase):
 
     def test_build_tooling_uses_one_direct_owner_without_build_producer_duplication(self) -> None:
         result = self._resolve([("M", "scripts/build.py")])
-        self.assertEqual([], result["selected_build_profiles"])
+        self.assertIsNone(result["selected_runtime"])
         self.assertFalse(
             any(
                 producer.startswith("build-")
@@ -1457,26 +1452,20 @@ class ImpactGraphResolutionTests(unittest.TestCase):
             ["tests/scripts/test_build_safety.py"], result["selected_test_modules"]
         )
 
-    def test_package_build_profiles_follow_the_real_build_graph(self) -> None:
-        cases = {
-            "src/professional-skills/one/SKILL.md": {
-                "recommended", "full", "dev"
-            },
-            "src/foundation/capabilities/foundation-example/SKILL.md": {
-                "recommended", "full", "dev"
-            },
-            "src/foundation/capabilities/foundation-dev-only/SKILL.md": {"dev"},
-            "src/domain-extensions/domain-example/SKILL.md": {
-                "recommended", "full", "dev"
-            },
-            "src/domain-extensions/domain-unreferenced/SKILL.md": {"full", "dev"},
-        }
-        for path, expected in cases.items():
+    def test_package_changes_select_the_single_runtime_build(self) -> None:
+        paths = (
+            "src/professional-skills/one/SKILL.md",
+            "src/foundation/capabilities/foundation-example/SKILL.md",
+            "src/foundation/capabilities/foundation-dev-only/SKILL.md",
+            "src/domain-extensions/domain-example/SKILL.md",
+            "src/domain-extensions/domain-unreferenced/SKILL.md",
+        )
+        for path in paths:
             with self.subTest(path=path):
                 result = self._resolve([("M", path)])
-                self.assertEqual(expected, set(result["selected_build_profiles"]))
+                self.assertEqual("recommended", result["selected_runtime"])
                 self.assertEqual(
-                    {f"build-{profile}" for profile in expected},
+                    {"build-recommended"},
                     {
                         producer
                         for producer in result["selected_producer_ids"]
@@ -1484,7 +1473,7 @@ class ImpactGraphResolutionTests(unittest.TestCase):
                     },
                 )
 
-    def test_unknown_package_projection_fails_closed_to_all_profiles(self) -> None:
+    def test_unknown_package_projection_fails_closed_to_runtime(self) -> None:
         result = impact_graph.resolve_entries(
             copy.deepcopy(CORE_CONTRACTS),
             [("M", "src/foundation/capabilities/unknown/SKILL.md")],
@@ -1493,9 +1482,7 @@ class ImpactGraphResolutionTests(unittest.TestCase):
             base_package_catalog={},
             head_package_catalog={},
         )
-        self.assertEqual(
-            ["recommended", "full", "dev"], result["selected_build_profiles"]
-        )
+        self.assertEqual("recommended", result["selected_runtime"])
 
     def test_added_and_deleted_packages_use_the_matching_revision_graph(self) -> None:
         head_without_deleted = copy.deepcopy(PACKAGE_CATALOG)
@@ -1508,7 +1495,7 @@ class ImpactGraphResolutionTests(unittest.TestCase):
             base_package_catalog=copy.deepcopy(PACKAGE_CATALOG),
             head_package_catalog=head_without_deleted,
         )
-        self.assertEqual(["dev"], deleted["selected_build_profiles"])
+        self.assertEqual("recommended", deleted["selected_runtime"])
 
         base_without_added = copy.deepcopy(PACKAGE_CATALOG)
         del base_without_added["domain-unreferenced"]
@@ -1520,7 +1507,7 @@ class ImpactGraphResolutionTests(unittest.TestCase):
             base_package_catalog=base_without_added,
             head_package_catalog=copy.deepcopy(PACKAGE_CATALOG),
         )
-        self.assertEqual(["full", "dev"], added["selected_build_profiles"])
+        self.assertEqual("recommended", added["selected_runtime"])
 
     def test_multiple_paths_deduplicate_producers_and_retain_each_reason(self) -> None:
         result = self._resolve(

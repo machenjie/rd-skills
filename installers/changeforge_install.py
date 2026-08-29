@@ -24,8 +24,9 @@ COMPILED_LAYER3_FORMAT = "ai-consumption-v1"
 HOST_ENFORCEMENT_SOURCE = ROOT / "src" / "agent-profiles" / "host-enforcement.json"
 CORE_CONTRACTS_SOURCE = ROOT / "src" / "control-model" / "core-contracts.json"
 BACKUP_DIR_NAME = ".changeforge-backups"
-PROFILES = ("recommended", "full", "dev")
-EXPECTED_PROFILE_COUNTS = {"recommended": 27, "full": 40, "dev": 190}
+RUNTIME_PROFILE = "recommended"
+RUNTIME_SKILL_COUNT = 27
+LEGACY_PROFILE_COUNTS = {"recommended": 27, "full": 40, "dev": 190}
 AGENTS = ("codex", "claude", "copilot", "cline", "openai-api")
 SCOPES = ("project", "user", "admin")
 SKILL_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -192,6 +193,19 @@ class InstallTargets:
     profiles: Path | None
 
 
+@dataclass(frozen=True)
+class InstalledManifestClassification:
+    """Validated ownership facts from one current or legacy hookless manifest."""
+
+    profile: str
+    skill_names: frozenset[str]
+    profile_files: frozenset[str]
+
+    @property
+    def migration_required(self) -> bool:
+        return self.profile != RUNTIME_PROFILE
+
+
 def _path_lexists(path: Path) -> bool:
     """Return true for regular paths and for live or dangling symlinks."""
     return path.exists() or path.is_symlink()
@@ -311,7 +325,7 @@ def source_version() -> str:
 
 
 def utc_stamp() -> str:
-    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
 
 
 def utc_iso() -> str:
@@ -330,34 +344,48 @@ def validate_agent_scope(agent: str, scope: str) -> None:
         raise InstallError(f"{agent} supports scope(s): {supported}")
 
 
-def resolve_source_profile_dir(agent: str, scope: str, profile: str) -> Path:
+def resolve_source_profile_dir(agent: str, scope: str) -> Path:
     validate_agent_scope(agent, scope)
-    if profile not in PROFILES:
-        raise InstallError(f"unsupported profile: {profile}")
     if agent == "openai-api":
-        source = ROOT / "dist" / "openai-api" / "zips" / profile
+        source = ROOT / "dist" / "openai-api" / "zips" / RUNTIME_PROFILE
     else:
-        source = SOURCE_SKILL_ROOTS[(agent, scope)] / profile
+        source = SOURCE_SKILL_ROOTS[(agent, scope)] / RUNTIME_PROFILE
     if not source.is_dir():
         raise InstallError(
-            f"missing built profile {source.relative_to(ROOT)}; "
-            f"run python3 scripts/build.py --profile {profile}"
+            f"missing built runtime {source.relative_to(ROOT)}; "
+            "run python3 scripts/build.py"
         )
     return source
 
 
-def validate_openai_bundles(profile: str, source: Path) -> int:
+def validate_openai_bundles(source: Path) -> int:
     _reject_symlink_chain(source, ROOT / "dist", "OpenAI API bundle root")
     _ensure_path_within(source, ROOT / "dist", "OpenAI API bundle root")
-    expected_count = EXPECTED_PROFILE_COUNTS[profile]
     zips = sorted(source.glob("*.zip"))
-    if len(zips) != expected_count:
-        raise InstallError(f"expected {expected_count} OpenAI API zip files, found {len(zips)}")
-    manifest_root = ROOT / "dist" / "universal" / "skills" / profile
+    if len(zips) != RUNTIME_SKILL_COUNT:
+        raise InstallError(
+            f"expected {RUNTIME_SKILL_COUNT} OpenAI API zip files, found {len(zips)}"
+        )
+    manifest_root = (
+        ROOT / "dist" / "universal" / "skills" / RUNTIME_PROFILE
+    )
     manifest = read_build_manifest(manifest_root)
     validate_authoritative_build_inputs(manifest)
     validate_build_core_model(manifest)
-    declared = set(manifest.get("top_level_skills") or [])
+    if manifest.get("profile") != RUNTIME_PROFILE:
+        raise InstallError("OpenAI API build manifest is not the runtime build")
+    declared_values = manifest.get("top_level_skills")
+    if (
+        not isinstance(declared_values, list)
+        or len(declared_values) != RUNTIME_SKILL_COUNT
+        or any(
+            not isinstance(name, str) or not _valid_skill_name(name)
+            for name in declared_values
+        )
+        or len(set(declared_values)) != RUNTIME_SKILL_COUNT
+    ):
+        raise InstallError("OpenAI API build manifest has invalid runtime Skills")
+    declared = set(declared_values)
     if declared != {path.stem for path in zips}:
         raise InstallError("OpenAI API zip names do not match the built Skill manifest")
     for path in zips:
@@ -423,8 +451,14 @@ def resolve_targets(agent: str, scope: str, target: Path | None) -> InstallTarge
         profile_subpath = PROJECT_PROFILE_SUBPATHS.get(agent)
         profiles = project / profile_subpath if profile_subpath is not None else None
         _ensure_path_within(skills, project, "project Skill target")
+        _reject_symlink_chain(skills, project, "project Skill target")
         if profiles is not None:
             _ensure_path_within(profiles, project, "project Agent Profile target")
+            _reject_symlink_chain(
+                profiles,
+                project,
+                "project Agent Profile target",
+            )
         return InstallTargets(
             skills=skills,
             profiles=profiles,
@@ -481,7 +515,6 @@ def profile_file_sha256(root: Path | None, agent: str) -> dict[str, str]:
 
 def validate_built_source(
     agent: str,
-    profile: str,
     source: Path,
     source_profiles: Path | None,
 ) -> dict[str, Any]:
@@ -507,9 +540,10 @@ def validate_built_source(
         or enforcement_source.get("sha256") != expected_digest
     ):
         raise InstallError("build manifest host enforcement source digest is stale or invalid")
-    if build.get("profile") != profile:
-        raise InstallError(f"built profile is {build.get('profile')!r}, expected {profile!r}")
-    expected_count = EXPECTED_PROFILE_COUNTS[profile]
+    if build.get("profile") != RUNTIME_PROFILE:
+        raise InstallError(
+            f"built runtime is {build.get('profile')!r}, expected {RUNTIME_PROFILE!r}"
+        )
     declared = build.get("top_level_skills")
     if not isinstance(declared, list) or any(not isinstance(name, str) or not _valid_skill_name(name) for name in declared):
         raise InstallError("build manifest has invalid top_level_skills")
@@ -519,8 +553,13 @@ def validate_built_source(
         path.name for path in source.iterdir()
         if path.is_dir() and not path.name.startswith(".")
     }
-    if len(declared) != len(declared_names) or len(declared_names) != expected_count:
-        raise InstallError(f"build manifest must declare exactly {expected_count} unique Skills")
+    if (
+        len(declared) != len(declared_names)
+        or len(declared_names) != RUNTIME_SKILL_COUNT
+    ):
+        raise InstallError(
+            f"build manifest must declare exactly {RUNTIME_SKILL_COUNT} unique Skills"
+        )
     if actual_names != declared_names or visible_directories != declared_names:
         raise InstallError("built Skill directories do not match the build manifest")
     if source_profiles is not None:
@@ -586,14 +625,14 @@ def validate_authoritative_build_inputs(build: dict[str, Any]) -> None:
 
 
 def validated_built_profile_sha256(
-    agent: str, scope: str, profile: str
+    agent: str, scope: str
 ) -> dict[str, str]:
     """Return Profile digests anchored in the current validated build output."""
 
-    source = resolve_source_profile_dir(agent, scope, profile)
+    source = resolve_source_profile_dir(agent, scope)
     source_profiles = resolve_source_profiles(agent, scope)
-    build = validate_built_source(agent, profile, source, source_profiles)
-    module = _load_current_profile_renderer()
+    build = validate_built_source(agent, source, source_profiles)
+    module = _load_current_build_authority()
     try:
         source_digests = module._agent_profile_digests(
             module._load_agent_profiles(), module._load_host_enforcement()
@@ -612,12 +651,12 @@ def validated_built_profile_sha256(
     return {str(role): str(digest) for role, digest in rendered.items()}
 
 
-def _load_current_profile_renderer() -> Any:
-    """Load the canonical build renderer without duplicating its capability rules."""
+def _load_current_build_authority() -> Any:
+    """Load the canonical build owner without duplicating source contracts."""
 
     build_script = ROOT / "scripts" / "build.py"
     spec = importlib.util.spec_from_file_location(
-        "changeforge_doctor_source_renderer", build_script
+        "changeforge_installer_build_authority", build_script
     )
     if spec is None or spec.loader is None:
         raise InstallError("cannot load the current Agent Profile renderer")
@@ -640,7 +679,7 @@ def _load_current_profile_renderer() -> Any:
 def canonical_profile_capability_facts(enforcement: dict[str, Any]) -> str:
     """Return the exact Main projection from the canonical build renderer."""
 
-    module = _load_current_profile_renderer()
+    module = _load_current_build_authority()
     try:
         capabilities = module._normalized_decision_capabilities(enforcement)
         return str(module._render_decision_capability_facts(capabilities))
@@ -650,12 +689,12 @@ def canonical_profile_capability_facts(enforcement: dict[str, Any]) -> str:
         ) from exc
 
 
-def validated_built_core_model(agent: str, scope: str, profile: str) -> dict[str, Any]:
+def validated_built_core_model(agent: str, scope: str) -> dict[str, Any]:
     """Return core-model metadata anchored in the current validated build."""
 
-    source = resolve_source_profile_dir(agent, scope, profile)
+    source = resolve_source_profile_dir(agent, scope)
     source_profiles = resolve_source_profiles(agent, scope)
-    build = validate_built_source(agent, profile, source, source_profiles)
+    build = validate_built_source(agent, source, source_profiles)
     return dict(validate_build_core_model(build))
 
 
@@ -817,6 +856,8 @@ def _manifest_names(
     for value in values:
         if not isinstance(value, str) or not validator(value):
             raise InstallError(f"install manifest field {field} contains unsafe name {value!r}")
+        if value in names:
+            raise InstallError(f"install manifest field {field} contains duplicate name {value!r}")
         names.add(value)
     return names
 
@@ -847,6 +888,195 @@ def managed_profile_files(manifest: dict[str, Any] | None) -> set[str]:
     return _manifest_names(manifest, "installed_agent_profile_files", _valid_profile_file_name)
 
 
+def _authoritative_legacy_skill_inventories() -> dict[str, Any]:
+    """Derive current and legacy ownership sets from the build-owned registries."""
+
+    module = _load_current_build_authority()
+    try:
+        registries = module._load_registries()
+    except Exception as exc:
+        raise InstallError(f"cannot load authoritative Skill registries: {exc}") from exc
+    expected_counts = {
+        "control": 1,
+        "professional": 26,
+        "foundation": 150,
+        "domain": 13,
+    }
+    layers: dict[str, set[str]] = {}
+    all_names: set[str] = set()
+    for layer, expected_count in expected_counts.items():
+        entries = registries.get(layer)
+        if not isinstance(entries, list):
+            raise InstallError(f"authoritative {layer} registry is unavailable")
+        names: list[str] = []
+        for entry in entries:
+            name = entry.get("name") if isinstance(entry, dict) else None
+            if not isinstance(name, str) or not _valid_skill_name(name):
+                raise InstallError(f"authoritative {layer} registry has an unsafe Skill name")
+            names.append(name)
+        layer_names = set(names)
+        if len(names) != expected_count or len(layer_names) != expected_count:
+            raise InstallError(
+                f"authoritative {layer} registry must contain exactly "
+                f"{expected_count} unique Skills"
+            )
+        overlap = all_names & layer_names
+        if overlap:
+            raise InstallError(
+                "authoritative Skill registries contain duplicate ownership: "
+                + ", ".join(sorted(overlap))
+            )
+        all_names |= layer_names
+        layers[layer] = layer_names
+    profiles = {
+        "recommended": layers["control"] | layers["professional"],
+        "full": layers["control"] | layers["professional"] | layers["domain"],
+        "dev": set(all_names),
+    }
+    if {
+        profile: len(names) for profile, names in profiles.items()
+    } != LEGACY_PROFILE_COUNTS:
+        raise InstallError("authoritative legacy Skill inventories have invalid counts")
+    return {"layers": layers, "profiles": profiles}
+
+
+def _manifest_role_names(manifest: dict[str, Any]) -> set[str]:
+    return _manifest_names(
+        manifest,
+        "installed_agent_profiles",
+        lambda value: value in AGENT_PROFILE_NAMES,
+    )
+
+
+def expected_agent_profile_files(agent: str) -> set[str]:
+    extension = {
+        "codex": ".toml",
+        "claude": ".md",
+        "copilot": ".agent.md",
+    }.get(agent)
+    if extension is None:
+        return set()
+    return {f"{role}{extension}" for role in AGENT_PROFILE_NAMES}
+
+
+def classify_installed_manifest(
+    manifest: dict[str, Any],
+    *,
+    agent: str,
+    scope: str,
+    targets: InstallTargets,
+) -> InstalledManifestClassification:
+    """Validate exact current/legacy ownership before any managed deletion."""
+
+    if manifest.get("architecture") != "hookless-control-plane-v1":
+        raise InstallError("installed manifest is not hookless-control-plane-v1")
+    if manifest.get("compiled_layer3_format") != COMPILED_LAYER3_FORMAT:
+        raise InstallError(
+            f"installed manifest compiled_layer3_format must equal {COMPILED_LAYER3_FORMAT!r}"
+        )
+    profile = manifest.get("profile")
+    if not isinstance(profile, str) or profile not in LEGACY_PROFILE_COUNTS:
+        raise InstallError(f"installed manifest has unsupported legacy profile {profile!r}")
+    if manifest.get("agent") != agent:
+        raise InstallError("installed manifest agent does not match the requested agent")
+    if manifest.get("scope") != scope:
+        raise InstallError("installed manifest scope does not match the requested scope")
+    if manifest.get("target_path") != str(targets.skills):
+        raise InstallError("installed manifest target_path does not match the resolved target")
+    expected_profile_target = (
+        str(targets.profiles) if targets.profiles is not None else None
+    )
+    if manifest.get("agent_profile_target") != expected_profile_target:
+        raise InstallError(
+            "installed manifest agent_profile_target does not match the resolved target"
+        )
+
+    authority = _authoritative_legacy_skill_inventories()
+    layers = authority["layers"]
+    profiles = authority["profiles"]
+    if not isinstance(layers, dict) or not isinstance(profiles, dict):
+        raise InstallError("authoritative legacy Skill inventories are malformed")
+    expected_skills = profiles[profile]
+    expected_fields = {
+        "installed_skills": expected_skills,
+        "installed_control_skills": layers["control"],
+        "installed_professional_skills": layers["professional"],
+        "installed_foundation_skills": (
+            layers["foundation"] if profile == "dev" else set()
+        ),
+        "installed_domain_skills": (
+            layers["domain"] if profile in {"full", "dev"} else set()
+        ),
+    }
+    for field, expected in expected_fields.items():
+        observed = _manifest_names(manifest, field, _valid_skill_name)
+        if observed != expected:
+            raise InstallError(
+                f"installed manifest field {field} does not match the exact {profile} inventory"
+            )
+
+    expected_profile_files = expected_agent_profile_files(agent)
+    observed_profile_files = managed_profile_files(manifest)
+    if observed_profile_files != expected_profile_files:
+        raise InstallError(
+            "installed manifest Agent Profile files are not the exact managed host set"
+        )
+    expected_roles = set(AGENT_PROFILE_NAMES) if expected_profile_files else set()
+    if _manifest_role_names(manifest) != expected_roles:
+        raise InstallError(
+            "installed manifest Agent Profiles are not the exact four-role host set"
+        )
+    return InstalledManifestClassification(
+        profile=profile,
+        skill_names=frozenset(expected_skills),
+        profile_files=frozenset(expected_profile_files),
+    )
+
+
+def validate_managed_artifact_paths(
+    targets: InstallTargets,
+    skill_names: set[str],
+    profile_files: set[str],
+) -> None:
+    """Reject link traversal and path-shape failures before backup or deletion."""
+
+    _reject_symlink(targets.skills, "managed Skill root")
+    if targets.skills.exists() and not targets.skills.is_dir():
+        raise InstallError(f"managed Skill root is not a directory: {targets.skills}")
+    if targets.profiles is not None:
+        _reject_symlink(targets.profiles, "managed Agent Profile root")
+        if targets.profiles.exists() and not targets.profiles.is_dir():
+            raise InstallError(
+                f"managed Agent Profile root is not a directory: {targets.profiles}"
+            )
+    for name in sorted(skill_names):
+        path = _safe_child(targets.skills, name)
+        _reject_symlink(path, "managed Skill")
+        if not path.exists():
+            continue
+        if not path.is_dir():
+            raise InstallError(f"managed Skill path is not a directory: {path}")
+        try:
+            nested_link = next(
+                (candidate for candidate in path.rglob("*") if candidate.is_symlink()),
+                None,
+            )
+        except OSError as exc:
+            raise InstallError(f"cannot inspect managed Skill path {path}: {exc}") from exc
+        if nested_link is not None:
+            raise InstallError(
+                f"managed Skill directory cannot contain symlinks: {nested_link}"
+            )
+    if targets.profiles is not None:
+        for name in sorted(profile_files):
+            path = _safe_child(targets.profiles, name, profile=True)
+            _reject_symlink(path, "managed Agent Profile")
+            if path.exists() and not path.is_file():
+                raise InstallError(
+                    f"managed Agent Profile path is not a file: {path}"
+                )
+
+
 def _safe_child(root: Path, name: str, *, profile: bool = False) -> Path:
     valid = _valid_profile_file_name(name) if profile else _valid_skill_name(name)
     if not valid:
@@ -872,6 +1102,7 @@ def backup_existing(
     dry_run: bool,
     extra_paths: list[Path] | None = None,
 ) -> Path | None:
+    validate_managed_artifact_paths(targets, skill_names, profile_names)
     existing_skills = [
         path for name in sorted(skill_names)
         if _path_lexists(path := _safe_child(targets.skills, name))
@@ -904,30 +1135,46 @@ def backup_existing(
         raise InstallError(f"backup destination already exists: {backup}")
     if dry_run:
         return backup
-    (backup / "skills").mkdir(parents=True, exist_ok=False)
-    for path in existing_skills:
-        destination = backup / "skills" / path.name
-        if path.is_dir():
-            shutil.copytree(path, destination)
-        else:
-            shutil.copy2(path, destination)
-    if existing_profiles:
-        (backup / "profiles").mkdir(parents=True)
-        for path in existing_profiles:
-            shutil.copy2(path, backup / "profiles" / path.name)
-    if extras:
-        (backup / "legacy").mkdir(parents=True)
-        seen: set[Path] = set()
-        for index, path in enumerate(extras, start=1):
-            resolved = path.resolve()
-            if resolved in seen:
-                continue
-            seen.add(resolved)
-            destination = backup / "legacy" / f"{index:03d}-{path.name}"
+    try:
+        (backup / "skills").mkdir(parents=True, exist_ok=False)
+        for path in existing_skills:
+            destination = backup / "skills" / path.name
             if path.is_dir():
                 shutil.copytree(path, destination)
             else:
                 shutil.copy2(path, destination)
+        if existing_profiles:
+            (backup / "profiles").mkdir(parents=True)
+            for path in existing_profiles:
+                shutil.copy2(path, backup / "profiles" / path.name)
+        if extras:
+            (backup / "legacy").mkdir(parents=True)
+            seen: set[Path] = set()
+            for index, path in enumerate(extras, start=1):
+                resolved = path.resolve()
+                if resolved in seen:
+                    continue
+                seen.add(resolved)
+                destination = backup / "legacy" / f"{index:03d}-{path.name}"
+                if path.is_dir():
+                    shutil.copytree(path, destination)
+                else:
+                    shutil.copy2(path, destination)
+    except (OSError, shutil.Error) as exc:
+        cleanup_error: OSError | None = None
+        try:
+            if backup.is_dir() and not backup.is_symlink():
+                shutil.rmtree(backup)
+            if (
+                backup_root.is_dir()
+                and not backup_root.is_symlink()
+                and not any(backup_root.iterdir())
+            ):
+                backup_root.rmdir()
+        except OSError as cleanup_exc:
+            cleanup_error = cleanup_exc
+        detail = f"; partial backup cleanup also failed: {cleanup_error}" if cleanup_error else ""
+        raise InstallError(f"cannot create complete backup {backup}: {exc}{detail}") from exc
     return backup
 
 
@@ -984,7 +1231,6 @@ def make_manifest(
     *,
     agent: str,
     scope: str,
-    profile: str,
     targets: InstallTargets,
     source_dir: Path,
     profile_files: list[str],
@@ -1004,7 +1250,7 @@ def make_manifest(
         "source_version": str(build.get("source_version", source_version())),
         "agent": agent,
         "scope": scope,
-        "profile": profile,
+        "profile": RUNTIME_PROFILE,
         "target_path": str(targets.skills),
         "agent_profile_target": str(targets.profiles) if targets.profiles is not None else None,
         "installed_skills": sorted(installed),

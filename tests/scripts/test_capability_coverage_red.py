@@ -4537,45 +4537,26 @@ class CapabilityCoverageRedTests(unittest.TestCase):
                 f"actual={len(layer3_catalog)}"
             )
 
-        expected_top_level = {
-            "recommended": 27,
-            "full": 40,
-            "dev": 190,
-        }
-        if VALIDATION_CONTRACTS.EXPECTED_PROFILE_TOP_LEVEL_COUNTS != (
-            expected_top_level
-        ):
+        expected_top_level = 27
+        if VALIDATION_CONTRACTS.EXPECTED_RUNTIME_TOP_LEVEL_SKILL_COUNT != expected_top_level:
             errors.append(
-                f"[{case_id}] expected profile_top_level_counts="
-                f"{json.dumps(expected_top_level, sort_keys=True)}; "
+                f"[{case_id}] expected runtime_top_level_count={expected_top_level}; "
                 "actual="
-                f"{json.dumps(VALIDATION_CONTRACTS.EXPECTED_PROFILE_TOP_LEVEL_COUNTS, sort_keys=True)}"
+                f"{VALIDATION_CONTRACTS.EXPECTED_RUNTIME_TOP_LEVEL_SKILL_COUNT}"
             )
         expected_delivery = {
-            "recommended": {
-                "top_level_skill": 27,
-                "targeted_reference": 154,
-                "routing_index_only": 9,
-            },
-            "full": {
-                "top_level_skill": 40,
-                "targeted_reference": 141,
-                "routing_index_only": 9,
-            },
-            "dev": {
-                "top_level_skill": 190,
-                "targeted_reference": 0,
-                "routing_index_only": 0,
-            },
+            "top_level_skill": 27,
+            "targeted_reference": 154,
+            "routing_index_only": 9,
         }
-        if VALIDATION_CONTRACTS.EXPECTED_PROFILE_DELIVERY_MODE_COUNTS != (
+        if VALIDATION_CONTRACTS.EXPECTED_RUNTIME_DELIVERY_MODE_COUNTS != (
             expected_delivery
         ):
             errors.append(
-                f"[{case_id}] expected profile_delivery_counts="
+                f"[{case_id}] expected runtime_delivery_counts="
                 f"{json.dumps(expected_delivery, sort_keys=True)}; "
                 "actual="
-                f"{json.dumps(VALIDATION_CONTRACTS.EXPECTED_PROFILE_DELIVERY_MODE_COUNTS, sort_keys=True)}"
+                f"{json.dumps(VALIDATION_CONTRACTS.EXPECTED_RUNTIME_DELIVERY_MODE_COUNTS, sort_keys=True)}"
             )
         if errors:
             self.fail("\n".join(errors))

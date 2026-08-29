@@ -6,8 +6,9 @@
 
 ## Scope
 
-- Affected Skill layers, Profiles, registries, docs, installers, scripts, tests, or evals:
-- Build profiles affected: `recommended` / `full` / `dev` / none
+- Affected Skill layers, Agent Profiles, registries, docs, installers, scripts, tests, or evals:
+- Fixed Runtime affected: yes / no; if yes, describe the top-level or JIT delivery change
+- Four Agent Profiles affected: main control / analysis / task / review / none
 - Agent hosts affected: `codex` / `claude` / `copilot` / `cline` / `openai-api` / none
 - Non-goals:
 

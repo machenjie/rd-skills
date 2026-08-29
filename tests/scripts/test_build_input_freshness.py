@@ -155,26 +155,66 @@ class BuildInputFreshnessTests(unittest.TestCase):
             root = Path(temporary).resolve()
             self._repository(root)
             source = root / "dist/universal/skills/recommended"
-            skill = source / "sample-skill"
-            skill.mkdir(parents=True)
-            (skill / "SKILL.md").write_text("# Sample\n", encoding="utf-8")
-            (source / ".changeforge-build-manifest.json").write_text(
-                json.dumps(
-                    {"authoritative_build_inputs": self._snapshot(root)},
-                    sort_keys=True,
-                ),
-                encoding="utf-8",
-            )
+            names = {
+                layer: [entry["name"] for entry in VALIDATION.load_yaml_file(
+                    ROOT / "src/registry" / filename
+                )[key]]
+                for layer, filename, key in (
+                    ("control", "control-skills.yaml", "control_skills"),
+                    ("professional", "professional-skills.yaml", "professional_skills"),
+                    ("foundation", "foundation-skills.yaml", "foundation_skills"),
+                    ("domain", "domain-skills.yaml", "domain_skills"),
+                )
+            }
+            for name in [*names["control"], *names["professional"]]:
+                skill = source / name
+                skill.mkdir(parents=True)
+                (skill / "SKILL.md").write_text(f"# {name}\n", encoding="utf-8")
+            manifest_path = source / ".changeforge-build-manifest.json"
+            manifest = {
+                "profile": "recommended",
+                "authoritative_build_inputs": self._snapshot(root),
+                "top_level_skills": [*names["control"], *names["professional"]],
+                "control_skills": names["control"],
+                "professional_skills": names["professional"],
+                "foundation_skills": names["foundation"],
+                "domain_skills": names["domain"],
+                "compiled_layer3_references": {
+                    name: [] for name in names["professional"]
+                },
+                "foundation_mode": "targeted-product-references",
+                "domain_mode": "targeted-references",
+                "agent_profiles": [
+                    "main-control-agent",
+                    "analysis-agent",
+                    "task-agent",
+                    "review-agent",
+                ],
+            }
+            manifest_path.write_text(json.dumps(manifest, sort_keys=True), encoding="utf-8")
             (root / "src/registry/sample.yaml").write_text(
                 "schema_version: 2\n",
                 encoding="utf-8",
             )
-            output = root / "zips"
+            zip_root = root / "dist/openai-api/zips"
 
-            with mock.patch.object(PACKAGE, "ROOT", root):
+            with mock.patch.multiple(
+                PACKAGE,
+                ROOT=root,
+                BUILT_SKILLS_ROOT=source.parent,
+                ZIP_DIR=zip_root,
+            ), mock.patch.object(
+                PACKAGE,
+                "_authoritative_runtime_inventory",
+                return_value={
+                    **names,
+                    "top_level": [*names["control"], *names["professional"]],
+                    "compiled": manifest["compiled_layer3_references"],
+                },
+            ):
                 with self.assertRaisesRegex(PACKAGE.PackageError, "stale"):
-                    PACKAGE.package_profile(source, output)
-            self.assertFalse(output.exists())
+                    PACKAGE.package_profile()
+            self.assertFalse(zip_root.exists())
 
     def test_installation_reports_a_stale_manifest(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

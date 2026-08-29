@@ -38,10 +38,8 @@ or non-Core checks and must not replay Core-owned producers:
 python3 scripts/eval-core-principles.py --gate authoring
 python3 scripts/validate-examples.py
 python3 scripts/generate-examples-showcase.py --out docs/SHOWCASE.md --check
-python3 scripts/generate-marketplace-catalog.py --profile recommended --out docs/MARKETPLACE_CATALOG.md --check
-python3 scripts/validate-marketplace-index.py --profile recommended
-python3 scripts/validate-marketplace-index.py --profile full
-python3 scripts/validate-marketplace-index.py --profile dev
+python3 scripts/generate-marketplace-catalog.py --out docs/MARKETPLACE_CATALOG.md --check
+python3 scripts/validate-marketplace-index.py
 python3 scripts/validate-productization-assets.py
 python3 scripts/validate-open-source-readiness.py --require-pass
 python3 scripts/run-ci-tests.py full --jobs 4 --timeout 900
@@ -106,12 +104,32 @@ gates every indexed Reference's effective type, load, and do-not-load contract.
 The source inventory is 1 Control, 26 Professional, 150 Foundation, and 13
 Domain Skills: 190 total and 189 non-Control. Built Skills must be emitted into
 `dist/`, and every installed Skill folder must contain `SKILL.md` at its root.
-The `recommended`, `full`, and `dev` builds contain 27, 40, and 190 top-level
-Skills respectively. Their delivery modes are 154/9, 141/9, and 0/0 targeted
-companions/routing-only entries. All supported Codex, Claude, and Copilot
-builds contain the four static Agent Profiles.
+The single Runtime exposes 27 top-level Skills: 1 Control and 26 Professional.
+Its delivery is 27/154/9 top-level/targeted/routing-only. The internal
+`recommended` directory and manifest identity is retained only for
+compatibility; `full` and `dev` are retired build, install, package, doctor, and
+discovery surfaces. All supported Codex, Claude, and Copilot builds contain the
+four static Agent Profiles; Runtime is not an Agent Profile dimension.
 
-Foundation and Domain guidance is compiled into Professional Skill `references/` only when the Professional registry names it. The development build additionally exposes Layer 3 Skills for authoring. `references/` is loaded selectively; it is not a catalog to read in full.
+Foundation is a capability-modifier layer and Domain is `modifier-only`.
+Neither may become a Runtime top-level Skill. Runtime selection remains Primary
+Professional -> selector -> 0..3 Layer 3 -> required References. Task and Review
+consume Main's Route Once result, do not rerun global routing, and load only
+capsule-named Layer 3 and necessary Targeted References. Never load the complete
+Foundation/Domain catalog.
+
+Retiring the development Runtime does not retire its validation obligations.
+Source/registry/selector/projection/nested-link completeness, routing and
+context-budget regression, and expanded all-163 Layer 3 stress validation run
+through internal validators and tests. Any complete Layer 3 projection must be
+created only in cleaned temporary storage outside the repository, `dist/`,
+installation packages, and Host discovery.
+
+New knowledge is placed in this order: Targeted Reference, existing
+Foundation/Domain, existing Professional, then new Professional. A framework,
+library, protocol, platform sub-capability, scenario, or gotcha does not justify
+a top-level Skill. Add a Professional Skill only for a stable independent
+Primary Route with clear task ownership.
 
 ## Agent Execution Discipline
 

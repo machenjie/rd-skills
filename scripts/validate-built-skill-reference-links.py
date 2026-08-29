@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate local Markdown links in built Skill profiles."""
+"""Validate Runtime links plus a temporary complete Layer 3 projection."""
 
 from __future__ import annotations
 
@@ -8,17 +8,21 @@ import copy
 import json
 import re
 import sys
+import tempfile
 from collections import Counter
 from pathlib import Path
 from urllib.parse import unquote
 
+import build as canonical_build
 from validation_utils import (
     COMPILED_LAYER3_FORMAT,
+    EXPECTED_DOMAIN_EXTENSION_COUNT,
     EXPECTED_FOUNDATION_CAPABILITY_COUNT,
     EXPECTED_FOUNDATION_DELIVERY_SCOPE_COUNTS,
     EXPECTED_PROFESSIONAL_SKILL_COUNT,
     FOUNDATION_DELIVERY_SCOPES,
     ValidationProblem,
+    collect_skill_root_source,
     fail_many,
     layer3_selector_expand_runtime_projection,
     layer3_selector_resolve_control_projection,
@@ -31,7 +35,7 @@ from validation_utils import (
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_BUILT_ROOT = ROOT / "dist" / "universal" / "skills"
-PROFILES = ("recommended", "full", "dev")
+RUNTIME_NAME = "recommended"
 BUILD_MANIFEST_NAME = ".changeforge-build-manifest.json"
 MAX_RENDERED_PROFESSIONAL_BODY_LINES = 120
 
@@ -172,31 +176,358 @@ def _display_path(path: Path) -> str:
         return str(path)
 
 
-def _validate_profile(
-    profile_root: Path,
+def _validate_runtime(
+    runtime_root: Path,
     errors: list[str],
     *,
     enforce_source_mapping: bool = True,
 ) -> None:
-    if not profile_root.is_dir():
-        errors.append(f"{_display_path(profile_root)}: missing built profile")
+    if not runtime_root.is_dir():
+        errors.append(f"{_display_path(runtime_root)}: missing built Runtime")
         return
-    markdown_files = sorted(profile_root.rglob("*.md"))
+    markdown_files = sorted(runtime_root.rglob("*.md"))
     if not markdown_files:
-        errors.append(f"{_display_path(profile_root)}: no Markdown files found")
+        errors.append(f"{_display_path(runtime_root)}: no Markdown files found")
         return
     for markdown_file in markdown_files:
         for line_no, target, root_relative in _iter_local_targets(markdown_file):
-            if not _target_exists(markdown_file, profile_root, target, root_relative):
+            if not _target_exists(markdown_file, runtime_root, target, root_relative):
                 errors.append(
                     f"{_display_path(markdown_file)}:{line_no}: "
                     f"missing local built Skill reference '{target}'"
                 )
     _validate_compiled_layer3_entrypoints(
-        profile_root,
+        runtime_root,
         errors,
         enforce_source_mapping=enforce_source_mapping,
     )
+
+
+def _empty_complete_layer3_result() -> dict[str, object]:
+    return {
+        "projected_count": 0,
+        "foundation_count": 0,
+        "domain_count": 0,
+        "runtime_jit_count": 0,
+        "non_runtime_count": 0,
+        "projected_names": [],
+        "non_runtime_names": [],
+    }
+
+
+def _validate_complete_layer3_temporary_projection(
+    errors: list[str],
+) -> dict[str, object]:
+    """Validate the complete Layer 3 source inventory without a Runtime profile."""
+
+    result = _empty_complete_layer3_result()
+    temporary_root: Path | None = None
+    try:
+        with tempfile.TemporaryDirectory(
+            prefix="changeforge-complete-layer3-validation-"
+        ) as raw:
+            temporary_root = Path(raw)
+            result = _validate_complete_layer3_projection_at(temporary_root, errors)
+    except OSError as exc:
+        errors.append(f"complete Layer 3 temporary projection failed: {exc}")
+    if temporary_root is not None and temporary_root.exists():
+        errors.append(
+            f"{_display_path(temporary_root)}: complete Layer 3 temporary projection "
+            "was not cleaned up"
+        )
+    return result
+
+
+def _validate_complete_layer3_projection_at(
+    staging_root: Path,
+    errors: list[str],
+) -> dict[str, object]:
+    """Render all Layer 3 sources once inside an already-created temp root."""
+
+    result = _empty_complete_layer3_result()
+    try:
+        staging_resolved = staging_root.resolve(strict=False)
+        repository_resolved = ROOT.resolve(strict=True)
+    except OSError as exc:
+        errors.append(
+            f"{_display_path(staging_root)}: cannot resolve temporary validation root: {exc}"
+        )
+        return result
+    if canonical_build._paths_overlap(staging_resolved, repository_resolved):
+        errors.append(
+            f"{_display_path(staging_root)}: temporary validation root must remain "
+            "outside the repository and Runtime outputs"
+        )
+        return result
+    if not staging_root.is_dir() or staging_root.is_symlink():
+        errors.append(
+            f"{_display_path(staging_root)}: temporary validation root must be a "
+            "regular directory"
+        )
+        return result
+
+    try:
+        registries = canonical_build._load_registries()
+        canonical_build._preflight_registry_entries(registries)
+        items = {
+            layer: canonical_build._load_items(layer, entries)
+            for layer, entries in registries.items()
+        }
+        canonical_build._validate_global_skill_names(items)
+    except (canonical_build.BuildError, OSError) as exc:
+        errors.append(f"complete Layer 3 source authority is invalid: {exc}")
+        return result
+
+    foundation_items = items.get("foundation", [])
+    domain_items = items.get("domain", [])
+    layer3_items = [*foundation_items, *domain_items]
+    foundation_names = {item.name for item in foundation_items}
+    domain_names = {item.name for item in domain_items}
+    projected_names = [item.name for item in layer3_items]
+    result.update(
+        {
+            "projected_count": len(layer3_items),
+            "foundation_count": len(foundation_items),
+            "domain_count": len(domain_items),
+            "projected_names": projected_names,
+        }
+    )
+    if len(foundation_items) != EXPECTED_FOUNDATION_CAPABILITY_COUNT:
+        errors.append(
+            "complete Layer 3 projection requires exactly "
+            f"{EXPECTED_FOUNDATION_CAPABILITY_COUNT} Foundation Skills, found "
+            f"{len(foundation_items)}"
+        )
+    if len(domain_items) != EXPECTED_DOMAIN_EXTENSION_COUNT:
+        errors.append(
+            "complete Layer 3 projection requires exactly "
+            f"{EXPECTED_DOMAIN_EXTENSION_COUNT} Domain Skills, found "
+            f"{len(domain_items)}"
+        )
+    if len(projected_names) != len(set(projected_names)):
+        errors.append("complete Layer 3 projection contains duplicate Skill names")
+    _validate_layer3_registry_source_inventory(items, errors)
+
+    foundation_scopes = {
+        item.name: item.registry.get("delivery_scope") for item in foundation_items
+    }
+    scope_counts = Counter(foundation_scopes.values())
+    if scope_counts != Counter(EXPECTED_FOUNDATION_DELIVERY_SCOPE_COUNTS):
+        errors.append(
+            "complete Layer 3 projection Foundation delivery scope counts drift"
+        )
+    runtime_names = {
+        *domain_names,
+        *(
+            name
+            for name, scope in foundation_scopes.items()
+            if scope == "product"
+        ),
+    }
+    non_runtime_names = sorted(foundation_names - runtime_names)
+    result.update(
+        {
+            "runtime_jit_count": len(runtime_names),
+            "non_runtime_count": len(non_runtime_names),
+            "non_runtime_names": non_runtime_names,
+        }
+    )
+
+    projection_root = staging_root / "expanded-layer3-validation"
+    selector_profile_root = staging_root / "selector-authority"
+    selector_control_root = selector_profile_root / "engineering-control-plane"
+    projection_root.mkdir(parents=True, exist_ok=False)
+    try:
+        canonical_build._write_control_layer3_selector_projections(
+            selector_control_root
+        )
+    except (canonical_build.BuildError, OSError) as exc:
+        errors.append(f"complete Layer 3 selector projection failed: {exc}")
+        return result
+
+    for item in layer3_items:
+        destination = projection_root / item.name
+        try:
+            collect_skill_root_source(item.path / "SKILL.md", root=ROOT)
+            canonical_build._copy_skill_tree(item.path, destination)
+            canonical_build._write_compact_layer3_root_projection(
+                destination, item
+            )
+            canonical_build._validate_zip_source(destination)
+        except (canonical_build.BuildError, OSError, ValueError) as exc:
+            errors.append(f"{item.name}: temporary Layer 3 projection failed: {exc}")
+            continue
+        _validate_temporary_layer3_root(item, destination, projection_root, errors)
+
+    try:
+        canonical_build._reject_tree_symlinks(
+            staging_root, "complete Layer 3 temporary projection"
+        )
+    except canonical_build.BuildError as exc:
+        errors.append(str(exc))
+    for path in sorted(staging_root.rglob("*")):
+        try:
+            path.resolve(strict=False).relative_to(staging_resolved)
+        except (OSError, ValueError):
+            errors.append(
+                f"{_display_path(path)}: complete Layer 3 output escapes its "
+                "temporary validation root"
+            )
+            break
+
+    _validate_complete_layer3_selector_reachability(
+        selector_profile_root,
+        projection_root,
+        items,
+        runtime_names,
+        set(non_runtime_names),
+        errors,
+    )
+    return result
+
+
+def _validate_layer3_registry_source_inventory(
+    items: dict[str, list[canonical_build.SkillItem]],
+    errors: list[str],
+) -> None:
+    for layer in ("foundation", "domain"):
+        source_root = canonical_build.LAYER_SOURCE_ROOTS[layer]
+        expected = {item.path.name for item in items.get(layer, [])}
+        actual = {
+            path.name
+            for path in source_root.iterdir()
+            if path.is_dir() and not path.name.startswith((".", "_"))
+        }
+        if actual != expected:
+            errors.append(
+                f"{_display_path(source_root)}: {layer} Registry/source inventory "
+                f"disagrees; missing={sorted(expected - actual)}, "
+                f"unregistered={sorted(actual - expected)}"
+            )
+
+
+def _validate_temporary_layer3_root(
+    item: canonical_build.SkillItem,
+    destination: Path,
+    projection_root: Path,
+    errors: list[str],
+) -> None:
+    skill_file = destination / "SKILL.md"
+    try:
+        _metadata, _frontmatter, body = parse_frontmatter(skill_file)
+    except ValidationProblem as exc:
+        errors.append(f"{_display_path(skill_file)}: invalid compact projection: {exc}")
+        return
+    _h1_titles, sections = canonical_build._markdown_heading_sections(body)
+    expected_headings = (
+        canonical_build.FOUNDATION_BUILT_KERNEL_HEADINGS
+        if item.layer == "foundation"
+        else canonical_build.PROFESSIONAL_BUILT_KERNEL_HEADINGS
+    )
+    if list(sections) != list(expected_headings):
+        errors.append(
+            f"{_display_path(skill_file)}: compact {item.layer} projection headings "
+            f"{list(sections)} must equal {list(expected_headings)}"
+        )
+
+    for directory in ("references", "examples", "assets"):
+        source_root = item.path / directory
+        destination_root = destination / directory
+        source_files = {
+            path.relative_to(source_root).as_posix(): path.read_bytes()
+            for path in sorted(source_root.rglob("*"))
+            if path.is_file() and not path.is_symlink()
+        } if source_root.is_dir() else {}
+        destination_files = {
+            path.relative_to(destination_root).as_posix(): path.read_bytes()
+            for path in sorted(destination_root.rglob("*"))
+            if path.is_file() and not path.is_symlink()
+        } if destination_root.is_dir() else {}
+        if source_files != destination_files:
+            errors.append(
+                f"{_display_path(destination_root)}: copied nested {directory} "
+                "files do not match source authority"
+            )
+
+    for markdown_file in sorted(destination.rglob("*.md")):
+        for line_no, target, root_relative in _iter_local_targets(markdown_file):
+            if not _target_exists(
+                markdown_file, projection_root, target, root_relative
+            ):
+                errors.append(
+                    f"{_display_path(markdown_file)}:{line_no}: missing local "
+                    f"temporary Layer 3 reference '{target}'"
+                )
+
+
+def _validate_complete_layer3_selector_reachability(
+    selector_profile_root: Path,
+    projection_root: Path,
+    items: dict[str, list[canonical_build.SkillItem]],
+    runtime_names: set[str],
+    non_runtime_names: set[str],
+    errors: list[str],
+) -> None:
+    expected_by_professional: dict[str, list[str]] = {}
+    for professional in items.get("professional", []):
+        candidates = professional.registry.get("layer3_candidates")
+        expected_by_professional[professional.name] = [
+            candidate
+            for candidate in candidates
+            if isinstance(candidate, str) and candidate in runtime_names
+        ] if isinstance(candidates, list) else []
+
+    reachable: set[str] = set()
+    authorized_union: set[str] = set()
+    selector_root = (
+        selector_profile_root
+        / "engineering-control-plane"
+        / "references"
+        / "selectors"
+    )
+    for professional, expected in expected_by_professional.items():
+        selector_path = selector_root / f"{professional}.json"
+        selector = _load_complete_selector_projection(selector_path, errors)
+        if selector is None:
+            continue
+        profile_authority = selector.get("profile_authority")
+        authorized = {
+            candidate
+            for row in profile_authority
+            if isinstance(row, dict)
+            for candidate in row.get("authorized_layer3", [])
+            if isinstance(candidate, str)
+        } if isinstance(profile_authority, list) else set()
+        authorized_union.update(authorized)
+        if authorized != set(expected):
+            errors.append(
+                f"{_display_path(selector_path)}: selector ownership does not match "
+                f"the Professional Registry; expected={sorted(expected)}, "
+                f"actual={sorted(authorized)}"
+            )
+        for candidate in expected:
+            if _validate_selector_reference_reachability(
+                selector_profile_root,
+                professional,
+                candidate,
+                projection_root / candidate,
+                errors,
+                selector=selector,
+            ):
+                reachable.add(candidate)
+
+    missing_runtime = runtime_names - reachable
+    if missing_runtime:
+        errors.append(
+            "complete Layer 3 Runtime JIT inventory lacks Professional selector "
+            f"reachability: {sorted(missing_runtime)}"
+        )
+    leaked_non_runtime = non_runtime_names & authorized_union
+    if leaked_non_runtime:
+        errors.append(
+            "non-Runtime Foundation Skills entered selector authorization: "
+            f"{sorted(leaked_non_runtime)}"
+        )
 
 
 def _validate_compiled_layer3_entrypoints(
@@ -212,7 +543,12 @@ def _validate_compiled_layer3_entrypoints(
         errors.append(f"{_display_path(manifest_path)}: invalid or missing manifest: {exc}")
         return
 
-    profile = str(manifest.get("profile") or "")
+    runtime_name = str(manifest.get("profile") or "")
+    if runtime_name != RUNTIME_NAME:
+        errors.append(
+            f"{_display_path(manifest_path)}: Runtime identity must equal "
+            f"{RUNTIME_NAME!r}, found {runtime_name!r}"
+        )
     top_level = manifest.get("top_level_skills")
     professional = manifest.get("professional_skills")
     foundation = manifest.get("foundation_skills")
@@ -266,29 +602,19 @@ def _validate_compiled_layer3_entrypoints(
     product_foundation_names = {
         name for name, scope in foundation_scopes.items() if scope == "product"
     }
-    expected_compiled_foundation = (
-        set() if profile == "dev" else product_foundation_names
-    )
+    expected_compiled_foundation = product_foundation_names
     if set(compiled_foundation) != expected_compiled_foundation:
         errors.append(
             f"{_display_path(manifest_path)}: compiled Foundation list does not match "
-            f"the {profile} product delivery contract"
+            "the Runtime product delivery contract"
         )
-    if profile in {"recommended", "full"} and top_names & foundation_names:
+    if top_names & foundation_names:
         errors.append(
-            f"{_display_path(manifest_path)}: {profile} exposes Foundation Skills at top level"
+            f"{_display_path(manifest_path)}: Runtime exposes Foundation Skills at top level"
         )
-    if profile == "recommended" and top_names & domain_names:
+    if top_names & domain_names:
         errors.append(
-            f"{_display_path(manifest_path)}: recommended exposes Domain Skills at top level"
-        )
-    if profile == "full" and not domain_names <= top_names:
-        errors.append(
-            f"{_display_path(manifest_path)}: full must expose every Domain Skill at top level"
-        )
-    if profile == "dev" and not (foundation_names | domain_names) <= top_names:
-        errors.append(
-            f"{_display_path(manifest_path)}: dev must expose every Foundation and Domain Skill at top level"
+            f"{_display_path(manifest_path)}: Runtime exposes Domain Skills at top level"
         )
 
     professional_names = [str(name) for name in professional]
@@ -299,7 +625,6 @@ def _validate_compiled_layer3_entrypoints(
     if enforce_source_mapping:
         errors.extend(
             _source_compiled_mapping_errors(
-                profile,
                 professional_names,
                 compiled,
                 _display_path(manifest_path),
@@ -332,15 +657,6 @@ def _validate_compiled_layer3_entrypoints(
             errors.append(
                 f"{_display_path(manifest_path)}: {name} compiled candidates contain duplicates"
             )
-        if profile == "full" and set(expected) & domain_names:
-            errors.append(
-                f"{_display_path(manifest_path)}: {name} duplicates top-level Domain Skills in compiled references"
-            )
-        if profile == "dev" and expected:
-            errors.append(
-                f"{_display_path(manifest_path)}: {name} must use top-level Layer 3 Skills without compiled references in dev"
-            )
-
         skill_root = profile_root / name
         skill_file = skill_root / "SKILL.md"
         skill_text = skill_file.read_text(encoding="utf-8") if skill_file.is_file() else ""
@@ -354,28 +670,12 @@ def _validate_compiled_layer3_entrypoints(
             errors.append(
                 f"{_display_path(skill_file)}: contains the obsolete compiled-only Layer 3 heading"
             )
-        if profile == "recommended":
-            expected_delivery = (
-                "Foundation and Domain items are compiled at "
-                "`references/layer3/<name>.md`."
-                if expected
-                else "No Foundation or Domain Layer 3 items are assigned to this Skill."
-            )
-        elif profile == "full":
-            expected_delivery = (
-                "Foundation items are compiled at `references/layer3/<name>.md`; "
-                "Domain items are top-level Skills."
-                if expected
-                else "Domain items are top-level Skills; no Foundation items are "
-                "compiled for this Skill."
-            )
-        elif profile == "dev":
-            expected_delivery = (
-                "Foundation and Domain items are top-level Skills; no Layer 3 "
-                "references are compiled."
-            )
-        else:
-            expected_delivery = ""
+        expected_delivery = (
+            "Foundation and Domain items are compiled at "
+            "`references/layer3/<name>.md`."
+            if expected
+            else "No Foundation or Domain Layer 3 items are assigned to this Skill."
+        )
         actual_delivery = (
             skill_text.split("## Layer 3 Delivery\n\n", 1)[1].strip()
             if "## Layer 3 Delivery\n\n" in skill_text
@@ -540,24 +840,34 @@ def _validate_compiled_layer3_projection(
         )
     professional = path.parents[2].name
     profile_root = path.parents[3]
-    selector_path = (
-        profile_root
-        / "engineering-control-plane"
-        / "references"
-        / "selectors"
-        / f"{professional}.json"
+    _validate_selector_reference_reachability(
+        profile_root,
+        professional,
+        candidate,
+        path.parent / candidate,
+        errors,
     )
+
+
+def _load_complete_selector_projection(
+    selector_path: Path,
+    errors: list[str],
+) -> dict[str, object] | None:
     try:
         selector = json.loads(selector_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         errors.append(
-            f"{_display_path(path)}: missing or invalid current-Professional "
+            f"{_display_path(selector_path)}: missing or invalid current-Professional "
             f"selector projection: {exc}"
         )
-        return
+        return None
+    if not isinstance(selector, dict):
+        errors.append(
+            f"{_display_path(selector_path)}: selector projection must be a mapping"
+        )
+        return None
     if (
-        isinstance(selector, dict)
-        and selector.get("contract")
+        selector.get("contract")
         == "changeforge.layer3-selector-decision-envelope/v1"
     ):
         complete = selector.get("complete")
@@ -567,7 +877,7 @@ def _validate_compiled_layer3_projection(
             errors.append(
                 f"{_display_path(selector_path)}: selector decision fallback is invalid"
             )
-            return
+            return None
         complete_path = selector_path.parent / complete["path"]
         try:
             complete_document = json.loads(
@@ -593,7 +903,7 @@ def _validate_compiled_layer3_projection(
             errors.append(
                 f"{_display_path(selector_path)}: selector complete fallback failed closed: {exc}"
             )
-            return
+            return None
         for decision in selector.get("decisions", []):
             if not isinstance(decision, dict) or not isinstance(
                 decision.get("path"), str
@@ -601,7 +911,7 @@ def _validate_compiled_layer3_projection(
                 errors.append(
                     f"{_display_path(selector_path)}: selector decision binding is invalid"
                 )
-                return
+                return None
             decision_path = selector_path.parent / decision["path"]
             try:
                 decision_document = json.loads(
@@ -616,8 +926,31 @@ def _validate_compiled_layer3_projection(
                 errors.append(
                     f"{_display_path(decision_path)}: selector decision failed closed: {exc}"
                 )
-                return
+                return None
         selector = resolution["projection"]
+    return selector
+
+
+def _validate_selector_reference_reachability(
+    profile_root: Path,
+    professional: str,
+    candidate: str,
+    physical_root: Path,
+    errors: list[str],
+    *,
+    selector: dict[str, object] | None = None,
+) -> bool:
+    selector_path = (
+        profile_root
+        / "engineering-control-plane"
+        / "references"
+        / "selectors"
+        / f"{professional}.json"
+    )
+    if selector is None:
+        selector = _load_complete_selector_projection(selector_path, errors)
+    if selector is None:
+        return False
     partition_link = selector.get("reference_records_partition")
     if (
         selector.get("professional_skill") != professional
@@ -629,7 +962,7 @@ def _validate_compiled_layer3_projection(
         errors.append(
             f"{_display_path(selector_path)}: selector owner or Reference partition template is invalid"
         )
-        return
+        return False
     partitions: dict[str, dict[str, object]] = {}
     for owner in (professional, candidate):
         partition_path = selector_path.parent / partition_link["path_template"].format(
@@ -642,15 +975,16 @@ def _validate_compiled_layer3_projection(
                 f"{_display_path(partition_path)}: missing or invalid current-Professional "
                 f"Reference partition: {exc}"
             )
-            return
+            return False
         partitions[owner] = partition
     surfaces = selector.get("owner_surfaces")
     if not isinstance(surfaces, list) or not surfaces:
         errors.append(
             f"{_display_path(selector_path)}: normalized selector owner surfaces are invalid"
         )
-        return
+        return False
     observed_records: dict[tuple[str, str], dict[str, object]] = {}
+    authorized = False
     for surface in surfaces:
         profile = surface.get("profile") if isinstance(surface, dict) else ""
         profile_authority = selector.get("profile_authority")
@@ -666,6 +1000,7 @@ def _validate_compiled_layer3_projection(
             continue
         if candidate not in matching_profiles[0].get("authorized_layer3", []):
             continue
+        authorized = True
         try:
             expanded = layer3_selector_expand_runtime_projection(
                 selector,
@@ -711,15 +1046,16 @@ def _validate_compiled_layer3_projection(
                     f"{record_path!r} differs across role surfaces"
                 )
             observed_records[identity] = record
-            physical = path.parent / candidate / record_path
+            physical = physical_root / record_path
             if not physical.is_file():
                 errors.append(
                     f"{_display_path(selector_path)}: {candidate} Reference record "
                     f"{record_path!r} has no compiled physical file"
                 )
+    return authorized
 
 
-def _expected_source_compiled_mapping(profile: str) -> dict[str, list[str]]:
+def _expected_source_compiled_mapping() -> dict[str, list[str]]:
     professional_data = load_yaml_file(
         ROOT / "src/registry/professional-skills.yaml"
     )
@@ -751,27 +1087,17 @@ def _expected_source_compiled_mapping(profile: str) -> dict[str, list[str]]:
                 f"{entry['name']}: source layer3_candidates must be a string list"
             )
         selected = [candidate for candidate in candidates if candidate in allowed]
-        if profile == "recommended":
-            result[entry["name"]] = selected
-        elif profile == "full":
-            result[entry["name"]] = [
-                candidate for candidate in selected if candidate not in domain_names
-            ]
-        elif profile == "dev":
-            result[entry["name"]] = []
-        else:
-            raise ValidationProblem(f"unsupported build profile {profile!r}")
+        result[entry["name"]] = selected
     return result
 
 
 def _source_compiled_mapping_errors(
-    profile: str,
     professional_names: list[str],
     compiled: dict[str, object],
     label: str,
 ) -> list[str]:
     try:
-        expected = _expected_source_compiled_mapping(profile)
+        expected = _expected_source_compiled_mapping()
     except ValidationProblem as exc:
         return [f"{label}: cannot derive source Layer 3 mapping: {exc}"]
     errors: list[str] = []
@@ -831,19 +1157,13 @@ def _validate_rendered_professional_body(
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Validate local Markdown links in built Skill profiles."
+        description="Validate Runtime Markdown links and complete Layer 3 proofs."
     )
     parser.add_argument(
         "--root",
         type=Path,
         default=DEFAULT_BUILT_ROOT,
-        help="Built Skills root containing profile directories.",
-    )
-    parser.add_argument(
-        "--profile",
-        action="append",
-        choices=PROFILES,
-        help="Profile to validate. May be passed multiple times. Defaults to all profiles.",
+        help="Built Skills root containing the recommended Runtime directory.",
     )
     return parser.parse_args(argv)
 
@@ -851,16 +1171,15 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(sys.argv[1:] if argv is None else argv)
     root = args.root if args.root.is_absolute() else ROOT / args.root
-    profiles = tuple(args.profile or PROFILES)
     errors: list[str] = []
-    for profile in profiles:
-        _validate_profile(root / profile, errors)
+    _validate_runtime(root / RUNTIME_NAME, errors)
+    complete_layer3 = _validate_complete_layer3_temporary_projection(errors)
     if errors:
         return fail_many("validate-built-skill-reference-links", errors)
     print(
         "validate-built-skill-reference-links: validated local Markdown links in "
-        + ", ".join(profiles)
-        + "."
+        + RUNTIME_NAME
+        + f" and {complete_layer3['projected_count']} temporary Layer 3 projections."
     )
     return 0
 

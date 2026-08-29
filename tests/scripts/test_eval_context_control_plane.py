@@ -88,7 +88,7 @@ def _rendered_report(*, status: str = "pass") -> dict:
         "evidence_scope": "deterministic-rendered-artifacts",
         "tokenizer": "o200k_base",
         "fixture_count": 3,
-        "build_profiles": ["recommended", "full", "dev"],
+        "runtime": "recommended",
         "hosts": ["codex", "claude", "copilot"],
         "limitations": ["Deterministic rendered artifact limitation."],
         "cases": [

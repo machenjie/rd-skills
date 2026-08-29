@@ -17,11 +17,10 @@ python3 --version
 python3 -m pip install .
 ```
 
-Choose a profile:
-
-- `recommended`: normal use.
-- `full`: also exposes Domain Skills at the top level.
-- `dev`: Skill authoring and registry development.
+rd-skills has one Runtime. It exposes exactly 1 Control and 26 Professional
+Skills at the Host top level. Foundation and Domain knowledge remains complete,
+but is loaded only through the selected Professional Skill's Layer 3 selector.
+There is no Runtime selection flag.
 
 Supported hosts are `codex`, `claude`, `copilot`, `cline`, and `openai-api`.
 Project scope requires `--target` with the project root. See
@@ -30,14 +29,14 @@ Project scope requires `--target` with the project root. See
 Preview a Codex user installation:
 
 ```bash
-python3 scripts/quickstart.py --agent codex --scope user --profile recommended --dry-run
+python3 scripts/quickstart.py --agent codex --scope user --dry-run
 ```
 
 Install and run the built-in checks:
 
 ```bash
-python3 scripts/quickstart.py --agent codex --scope user --profile recommended
-python3 installers/doctor.py --agent codex --scope user --profile recommended
+python3 scripts/quickstart.py --agent codex --scope user
+python3 installers/doctor.py --agent codex --scope user
 ```
 
 Use another host or project scope through [Quickstart](docs/QUICKSTART.md).
@@ -83,7 +82,10 @@ Analyzed Work, and review-only examples.
 - `task-agent` implements and validates bounded work.
 - `review-agent` independently reviews without repairing its own findings.
 - Shared-workspace writes are serial.
-- Foundation and Domain guidance loads only for a concrete task signal.
+- Foundation capabilities and modifier-only Domains are never Runtime
+  top-level Skills. A task follows `Control -> Primary Professional -> selector
+  -> 0..3 Layer 3 items -> required References`; only concrete task signals
+  load that guidance.
 
 For Analyzed Work, the current Engineering Brief is the sole operational
 analysis authority and contains the complete First Executable Slice. Main

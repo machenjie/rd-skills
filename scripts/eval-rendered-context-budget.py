@@ -79,7 +79,7 @@ PROFESSIONAL_REGISTRY = ROOT / "src" / "registry" / "professional-skills.yaml"
 FOUNDATION_REGISTRY = ROOT / "src" / "registry" / "foundation-skills.yaml"
 DOMAIN_REGISTRY = ROOT / "src" / "registry" / "domain-skills.yaml"
 
-BUILD_PROFILES = ("recommended", "full", "dev")
+RUNTIME_NAME = "recommended"
 REVIEW_ROUND_COMPLETION_ACTIONS = {"review", "re-review"}
 HOST_PROFILE_ROOTS = {
     "codex": ROOT / "dist" / "codex" / "project" / ".codex" / "agents",
@@ -633,33 +633,27 @@ def _load_lightweight_long_task_ids(expected_case_ids: set[str]) -> set[str]:
 def _manifest_input_identity(
     dist_root: Path, expected_input: dict[str, Any]
 ) -> tuple[dict[str, Any], list[str]]:
-    manifests: dict[str, dict[str, Any]] = {}
     errors: list[str] = []
-    for profile in BUILD_PROFILES:
-        path = dist_root / profile / ".changeforge-build-manifest.json"
-        try:
-            raw = path.read_bytes()
-            manifest = json.loads(raw)
-        except (OSError, json.JSONDecodeError) as exc:
-            errors.append(f"{profile} manifest unavailable or malformed: {exc}")
-            continue
-        if not isinstance(manifest, dict) or manifest.get("profile") != profile:
-            errors.append(f"{profile} manifest profile identity mismatch")
-            continue
-        if manifest.get("compiled_layer3_format") != COMPILED_LAYER3_FORMAT:
-            errors.append(f"{profile} manifest compiled Layer 3 format mismatch")
-            continue
-        actual_input = manifest.get("authoritative_build_inputs")
-        if actual_input != expected_input:
-            errors.append(f"{profile} manifest authoritative input mismatch")
-            continue
-        manifests[profile] = {
-            "sha256": hashlib.sha256(raw).hexdigest(),
-            "authoritative_build_inputs": actual_input,
-        }
+    path = dist_root / RUNTIME_NAME / ".changeforge-build-manifest.json"
+    try:
+        raw = path.read_bytes()
+        manifest = json.loads(raw)
+    except (OSError, json.JSONDecodeError) as exc:
+        errors.append(f"Runtime manifest unavailable or malformed: {exc}")
+        return {}, errors
+    if not isinstance(manifest, dict) or manifest.get("profile") != RUNTIME_NAME:
+        errors.append("Runtime manifest identity mismatch")
+    elif manifest.get("compiled_layer3_format") != COMPILED_LAYER3_FORMAT:
+        errors.append("Runtime manifest compiled Layer 3 format mismatch")
+    elif manifest.get("authoritative_build_inputs") != expected_input:
+        errors.append("Runtime manifest authoritative input mismatch")
     if errors:
         return {}, errors
-    return manifests, []
+    return {
+        "runtime": RUNTIME_NAME,
+        "sha256": hashlib.sha256(raw).hexdigest(),
+        "authoritative_build_inputs": manifest["authoritative_build_inputs"],
+    }, []
 
 
 def _require_native_validator_report(
@@ -713,11 +707,11 @@ def _subject_case_cost(
         item
         for item in case.get("measurements", [])
         if item.get("host") == "codex"
-        and item.get("build_profile") == "recommended"
+        and item.get("runtime") == RUNTIME_NAME
     ]
     if not measurements:
         raise ValueError(
-            f"{case.get('id', '<missing>')}: a codex/recommended measurement is required"
+            f"{case.get('id', '<missing>')}: a codex/Runtime measurement is required"
         )
     components = {name: 0 for name in END_TO_END_COMPONENTS}
     component_kind = {
@@ -1291,43 +1285,33 @@ def _focus_actor_profile_binding(
                 "content_scope": "complete-subject-native-profile",
             }
         )
-    manifest_bindings: dict[str, dict[str, dict[str, str]]] = {}
-    for build_profile in BUILD_PROFILES:
-        manifest_path = subject_root / (
-            "dist/universal/skills/"
-            f"{build_profile}/.changeforge-build-manifest.json"
+    manifest_path = subject_root / (
+        "dist/universal/skills/"
+        f"{RUNTIME_NAME}/.changeforge-build-manifest.json"
+    )
+    try:
+        manifest_raw = manifest_path.read_bytes()
+        manifest = json.loads(manifest_raw)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError("task-focus Runtime manifest is unavailable") from exc
+    if manifest.get("profile") != RUNTIME_NAME:
+        raise ValueError("task-focus Runtime manifest identity is stale")
+    host_bindings: dict[str, dict[str, str]] = {}
+    for generated in generated_profiles:
+        host = generated["host"]
+        expected_sha256 = (
+            manifest.get("agent_profile_sha256", {}).get(host, {}).get(actor)
+            if isinstance(manifest, dict)
+            else None
         )
-        try:
-            manifest_raw = manifest_path.read_bytes()
-            manifest = json.loads(manifest_raw)
-        except (OSError, json.JSONDecodeError) as exc:
+        if expected_sha256 != generated["sha256"]:
             raise ValueError(
-                f"task-focus {build_profile} manifest is unavailable"
-            ) from exc
-        if manifest.get("profile") != build_profile:
-            raise ValueError(
-                f"task-focus {build_profile} manifest identity is stale"
+                f"task-focus Runtime manifest has stale {host}/{actor} Profile binding"
             )
-        host_bindings: dict[str, dict[str, str]] = {}
-        for generated in generated_profiles:
-            host = generated["host"]
-            expected_sha256 = (
-                manifest.get("agent_profile_sha256", {})
-                .get(host, {})
-                .get(actor)
-                if isinstance(manifest, dict)
-                else None
-            )
-            if expected_sha256 != generated["sha256"]:
-                raise ValueError(
-                    f"task-focus {build_profile} manifest has stale "
-                    f"{host}/{actor} Profile binding"
-                )
-            host_bindings[str(host)] = {
-                "manifest_sha256": hashlib.sha256(manifest_raw).hexdigest(),
-                "profile_sha256": str(expected_sha256),
-            }
-        manifest_bindings[build_profile] = host_bindings
+        host_bindings[str(host)] = {
+            "manifest_sha256": hashlib.sha256(manifest_raw).hexdigest(),
+            "profile_sha256": str(expected_sha256),
+        }
     return {
         "actor": actor,
         "profile": actor,
@@ -1347,7 +1331,10 @@ def _focus_actor_profile_binding(
         },
         "host_order": list(FOCUS_PROFILE_HOSTS),
         "generated_profiles": generated_profiles,
-        "manifest_bindings": manifest_bindings,
+        "runtime_binding": {
+            "runtime": RUNTIME_NAME,
+            "hosts": host_bindings,
+        },
     }
 
 
@@ -1500,27 +1487,21 @@ def _actor_profile_differences(
         "profile_authority",
         "host_order",
         "generated_profiles",
-        "manifest_bindings",
+        "runtime_binding",
         "measured_host",
     }
     for label, binding in (("baseline", baseline), ("candidate", candidate)):
         if not required_binding_fields <= set(binding):
             errors.append(f"{case_id}: {label} actor/Profile authority is incomplete")
-        manifest_bindings = binding.get("manifest_bindings")
-        if not isinstance(manifest_bindings, dict) or list(
-            manifest_bindings
-        ) != list(BUILD_PROFILES):
-            errors.append(f"{case_id}: {label} actor/Profile manifests are incomplete")
-        elif any(
-            list(host_bindings) != list(FOCUS_PROFILE_HOSTS)
-            for host_bindings in manifest_bindings.values()
-            if isinstance(host_bindings, dict)
-        ) or any(
-            not isinstance(host_bindings, dict)
-            for host_bindings in manifest_bindings.values()
+        runtime_binding = binding.get("runtime_binding")
+        if (
+            not isinstance(runtime_binding, dict)
+            or runtime_binding.get("runtime") != RUNTIME_NAME
+            or not isinstance(runtime_binding.get("hosts"), dict)
+            or list(runtime_binding["hosts"]) != list(FOCUS_PROFILE_HOSTS)
         ):
             errors.append(
-                f"{case_id}: {label} actor/Profile manifest host coverage is incomplete"
+                f"{case_id}: {label} actor/Profile Runtime binding is incomplete"
             )
     for field in ("actor", "profile", "scenario", "host_order", "measured_host"):
         if baseline.get(field) != candidate.get(field):
@@ -1794,17 +1775,15 @@ def _compare_end_to_end_subjects(
         if not identity.get("native_validator_sha256"):
             errors.append(f"{label} measured subject lacks native validator identity")
         authoritative = identity.get("authoritative_build_inputs")
-        manifests = identity.get("manifests")
-        if not isinstance(authoritative, dict) or not isinstance(manifests, dict):
+        runtime_manifest = identity.get("runtime_manifest")
+        if not isinstance(authoritative, dict) or not isinstance(runtime_manifest, dict):
             errors.append(f"{label} measured subject lacks manifest identity")
             continue
-        if set(manifests) != set(BUILD_PROFILES):
-            errors.append(f"{label} measured subject lacks all build manifests")
-        for profile, manifest in manifests.items():
-            if manifest.get("authoritative_build_inputs") != authoritative:
-                errors.append(
-                    f"{label} {profile} manifest authoritative input mismatch"
-                )
+        if (
+            runtime_manifest.get("runtime") != RUNTIME_NAME
+            or runtime_manifest.get("authoritative_build_inputs") != authoritative
+        ):
+            errors.append(f"{label} Runtime manifest authoritative input mismatch")
     for field in (
         "evaluator_sha256",
         "lightweight_evaluator_sha256",
@@ -2394,7 +2373,6 @@ AB_S1_WRITE_PATHS = frozenset(
 
 AB_S2_WRITE_PATHS = frozenset(
     {
-        "docs/BUILD_PROFILES.md",
         "scripts/build.py",
         "scripts/validation_utils.py",
         "scripts/validate-agent-profiles.py",
@@ -3706,7 +3684,7 @@ def _native_dispatch_selection_assets(
     step_index: int,
     step: dict[str, Any],
     subject_root: Path,
-    manifests: dict[str, dict[str, Any]],
+    runtime_manifest: dict[str, Any],
     *,
     envelope_pointer: str | None = None,
     envelope_sha256: str | None = None,
@@ -3716,40 +3694,31 @@ def _native_dispatch_selection_assets(
 ) -> dict[str, Any]:
     """Measure one dispatch without reloading case or assignment authority."""
 
-    if set(manifests) != set(BUILD_PROFILES):
-        raise ValueError(f"{case_id}: dispatch {step_index} requires all three manifests")
-    manifest_bindings: dict[str, dict[str, Any]] = {}
-    expected_input: dict[str, Any] | None = None
-    for profile in BUILD_PROFILES:
-        path = (
-            subject_root
-            / "dist/universal/skills"
-            / profile
-            / ".changeforge-build-manifest.json"
-        )
-        try:
-            raw = path.read_bytes()
-            current = json.loads(raw)
-        except (OSError, json.JSONDecodeError) as exc:
-            raise ValueError(
-                f"{case_id}: {profile} manifest is unavailable or malformed"
-            ) from exc
-        if current != manifests[profile] or current.get("profile") != profile:
-            raise ValueError(f"{case_id}: {profile} manifest identity mismatch")
-        if current.get("compiled_layer3_format") != COMPILED_LAYER3_FORMAT:
-            raise ValueError(f"{case_id}: {profile} manifest Layer 3 format mismatch")
-        current_input = current.get("authoritative_build_inputs")
-        if not isinstance(current_input, dict) or not current_input.get("sha256"):
-            raise ValueError(f"{case_id}: {profile} manifest lacks build input")
-        if expected_input is None:
-            expected_input = current_input
-        elif current_input != expected_input:
-            raise ValueError(f"{case_id}: manifest authoritative inputs disagree")
-        manifest_bindings[profile] = {
-            "sha256": hashlib.sha256(raw).hexdigest(),
-            "authoritative_build_inputs": current_input,
-        }
-    assert expected_input is not None
+    path = (
+        subject_root
+        / "dist/universal/skills"
+        / RUNTIME_NAME
+        / ".changeforge-build-manifest.json"
+    )
+    try:
+        raw = path.read_bytes()
+        current = json.loads(raw)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(
+            f"{case_id}: Runtime manifest is unavailable or malformed"
+        ) from exc
+    if current != runtime_manifest or current.get("profile") != RUNTIME_NAME:
+        raise ValueError(f"{case_id}: Runtime manifest identity mismatch")
+    if current.get("compiled_layer3_format") != COMPILED_LAYER3_FORMAT:
+        raise ValueError(f"{case_id}: Runtime manifest Layer 3 format mismatch")
+    expected_input = current.get("authoritative_build_inputs")
+    if not isinstance(expected_input, dict) or not expected_input.get("sha256"):
+        raise ValueError(f"{case_id}: Runtime manifest lacks build input")
+    manifest_binding = {
+        "runtime": RUNTIME_NAME,
+        "sha256": hashlib.sha256(raw).hexdigest(),
+        "authoritative_build_inputs": expected_input,
+    }
 
     primary = str(step.get("primary_skill") or "")
     if not primary:
@@ -4014,14 +3983,13 @@ def _native_dispatch_selection_assets(
             raw = path.read_bytes()
             sha256 = hashlib.sha256(raw).hexdigest()
             if kind == "main-profile":
-                for profile in BUILD_PROFILES:
-                    expected_sha = manifests[profile].get(
-                        "agent_profile_sha256", {}
-                    ).get(host, {}).get("main-control-agent")
-                    if expected_sha != sha256:
-                        raise ValueError(
-                            f"{case_id}: {host} main-profile manifest binding mismatch"
-                        )
+                expected_sha = runtime_manifest.get(
+                    "agent_profile_sha256", {}
+                ).get(host, {}).get("main-control-agent")
+                if expected_sha != sha256:
+                    raise ValueError(
+                        f"{case_id}: {host} main-profile Runtime binding mismatch"
+                    )
             tokens = count_o200k_base_tokens(raw.decode("utf-8"))
             component_tokens[bucket] += tokens
             components.append(
@@ -4064,7 +4032,7 @@ def _native_dispatch_selection_assets(
             for row in components
             if row["bucket"] == "reference_partition"
         ),
-        "manifest_bindings": manifest_bindings,
+        "runtime_manifest_binding": manifest_binding,
         "authoritative_build_inputs": expected_input,
         "authority": {
             "router": {
@@ -4110,7 +4078,7 @@ def _native_dispatch_selection_assets(
 def _native_trajectory_case_cost(
     case: dict[str, Any],
     subject_root: Path,
-    manifests: dict[str, dict[str, Any]],
+    runtime_manifest: dict[str, Any],
     lightweight_module: Any,
     *,
     native_schema: dict[str, Any],
@@ -4213,10 +4181,9 @@ def _native_trajectory_case_cost(
         worker_path = _profile_path(host, role)
         add_file("always_loaded", "worker-profile", worker_path)
         worker_sha256 = hashlib.sha256(worker_path.read_bytes()).hexdigest()
-        if any(
-            manifest.get("agent_profile_sha256", {}).get(host, {}).get(role)
+        if (
+            runtime_manifest.get("agent_profile_sha256", {}).get(host, {}).get(role)
             != worker_sha256
-            for manifest in manifests.values()
         ):
             raise ValueError(
                 f"{case_id}: {host}/{role} worker Profile manifest binding mismatch"
@@ -4228,7 +4195,7 @@ def _native_trajectory_case_cost(
                 index,
                 step,
                 subject_root,
-                manifests,
+                runtime_manifest,
                 envelope_pointer=f"fixture:{case_id}:step:{index}:selector",
                 envelope_sha256=_sha256_text(selector_text),
                 selection_owner=(
@@ -4277,7 +4244,7 @@ def _native_trajectory_case_cost(
                             "native_envelope",
                             "handoff_augmentation",
                             "effective_ordered_layer3",
-                            "manifest_bindings",
+                            "runtime_manifest_binding",
                             "authoritative_build_inputs",
                         )
                     },
@@ -4290,10 +4257,10 @@ def _native_trajectory_case_cost(
                 }
             )
             if manifest_bindings is None:
-                manifest_bindings = assets["manifest_bindings"]
+                manifest_bindings = assets["runtime_manifest_binding"]
                 authoritative_build_inputs = assets["authoritative_build_inputs"]
             elif (
-                manifest_bindings != assets["manifest_bindings"]
+                manifest_bindings != assets["runtime_manifest_binding"]
                 or authoritative_build_inputs != assets["authoritative_build_inputs"]
             ):
                 raise ValueError(f"{case_id}: dispatch asset bindings disagree")
@@ -4315,7 +4282,7 @@ def _native_trajectory_case_cost(
                 "layer3",
                 "layer3-skill",
                 _layer3_path(
-                    "recommended", primary, str(name), manifests["recommended"]
+                    RUNTIME_NAME, primary, str(name), runtime_manifest
                 ),
             )
         for logical_id in step.get("layer3_references", []):
@@ -4323,7 +4290,7 @@ def _native_trajectory_case_cost(
                 "targeted_reference",
                 "layer3-reference",
                 _layer3_reference_path(
-                    "recommended", primary, str(logical_id), manifests["recommended"]
+                    RUNTIME_NAME, primary, str(logical_id), runtime_manifest
                 ),
             )
 
@@ -4372,11 +4339,7 @@ def _native_trajectory_case_cost(
 
 
 def _build_isolated_subject(subject_root: Path) -> None:
-    for profile in BUILD_PROFILES:
-        _run_checked(
-            ["python3", "scripts/build.py", "--profile", profile],
-            cwd=subject_root,
-        )
+    _run_checked(["python3", "scripts/build.py"], cwd=subject_root)
 
 
 def _measure_isolated_subject(
@@ -4395,7 +4358,7 @@ def _measure_isolated_subject(
         raise ValueError(f"{subject} native fixture is not a mapping")
     native_schema = _native_contract_identity(fixture_document)
     snapshot = authoritative_build_input_snapshot(subject_root)
-    manifests, manifest_errors = _manifest_input_identity(
+    runtime_manifest_identity, manifest_errors = _manifest_input_identity(
         subject_root / "dist/universal/skills", snapshot
     )
     if manifest_errors:
@@ -4427,17 +4390,14 @@ def _measure_isolated_subject(
     }
     if "" in fixture_cases:
         raise ValueError(f"{subject} native trajectory has a missing case id")
-    subject_manifests = {
-        profile: json.loads(
-            (
-                subject_root
-                / "dist/universal/skills"
-                / profile
-                / ".changeforge-build-manifest.json"
-            ).read_text(encoding="utf-8")
-        )
-        for profile in BUILD_PROFILES
-    }
+    subject_runtime_manifest = json.loads(
+        (
+            subject_root
+            / "dist/universal/skills"
+            / RUNTIME_NAME
+            / ".changeforge-build-manifest.json"
+        ).read_text(encoding="utf-8")
+    )
     cases: list[dict[str, Any]] = []
     trajectory_rows = {
         str(row["canonical_id"]): row
@@ -4454,7 +4414,7 @@ def _measure_isolated_subject(
                 measured = _native_trajectory_case_cost(
                     fixture_cases[case_id],
                     subject_root,
-                    subject_manifests,
+                    subject_runtime_manifest,
                     lightweight_module,
                     native_schema=native_schema,
                     host=host,
@@ -4505,7 +4465,7 @@ def _measure_isolated_subject(
             "tokenizer": "o200k_base",
             "source_commit": _git_text(subject_root, "rev-parse", "HEAD"),
             "authoritative_build_inputs": snapshot,
-            "manifests": manifests,
+            "runtime_manifest": runtime_manifest_identity,
             "logical_case_count": len(cases) // len(FOCUS_PROFILE_HOSTS),
             "host_pair_count": len(cases),
             "host_order": list(FOCUS_PROFILE_HOSTS),
@@ -5827,28 +5787,49 @@ def _profile_path(host: str, role: str) -> Path:
     return HOST_PROFILE_ROOTS[host] / f"{role}{HOST_PROFILE_SUFFIXES[host]}"
 
 
-def _load_manifests(errors: list[str]) -> dict[str, dict[str, Any]]:
-    manifests: dict[str, dict[str, Any]] = {}
-    for profile in BUILD_PROFILES:
-        path = DIST_SKILLS / profile / ".changeforge-build-manifest.json"
-        try:
-            value = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as exc:
-            errors.append(
-                f"{_relative(path)} is unavailable or malformed; run all three builds first: {exc}"
-            )
-            continue
-        if not isinstance(value, dict) or value.get("profile") != profile:
-            errors.append(f"{_relative(path)} does not describe profile {profile!r}")
-            continue
-        if value.get("compiled_layer3_format") != COMPILED_LAYER3_FORMAT:
-            errors.append(
-                f"{_relative(path)} compiled_layer3_format must equal "
-                f"{COMPILED_LAYER3_FORMAT!r}"
-            )
-            continue
-        manifests[profile] = value
-    return manifests
+def _load_runtime_manifest(errors: list[str]) -> dict[str, Any] | None:
+    path = DIST_SKILLS / RUNTIME_NAME / ".changeforge-build-manifest.json"
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        errors.append(
+            f"{_relative(path)} is unavailable or malformed; run the Runtime build first: {exc}"
+        )
+        return None
+    if not isinstance(value, dict) or value.get("profile") != RUNTIME_NAME:
+        errors.append(f"{_relative(path)} does not describe Runtime {RUNTIME_NAME!r}")
+        return None
+    if value.get("compiled_layer3_format") != COMPILED_LAYER3_FORMAT:
+        errors.append(
+            f"{_relative(path)} compiled_layer3_format must equal "
+            f"{COMPILED_LAYER3_FORMAT!r}"
+        )
+        return None
+    top_level = value.get("top_level_skills")
+    control = value.get("control_skills")
+    professional = value.get("professional_skills")
+    foundation = value.get("foundation_skills")
+    domain = value.get("domain_skills")
+    if not all(
+        isinstance(items, list)
+        and all(isinstance(item, str) and item for item in items)
+        for items in (top_level, control, professional, foundation, domain)
+    ):
+        errors.append(f"{_relative(path)} has malformed Runtime inventory lists")
+        return None
+    expected_top_level = [*control, *professional]
+    if (
+        len(top_level) != 27
+        or len(top_level) != len(set(top_level))
+        or set(top_level) != set(expected_top_level)
+        or set(top_level) & (set(foundation) | set(domain))
+    ):
+        errors.append(
+            f"{_relative(path)} Runtime discovery must contain exactly one Control "
+            "and 26 Professional Skills with no Foundation or Domain top-level Skill"
+        )
+        return None
+    return value
 
 
 def _validate_profile_digest(
@@ -5871,7 +5852,7 @@ def _validate_profile_digest(
 
 
 def _layer3_path(
-    build_profile: str,
+    runtime_name: str,
     primary: str,
     name: str,
     manifest: dict[str, Any],
@@ -5881,16 +5862,16 @@ def _layer3_path(
     is_top_level = name in manifest.get("top_level_skills", [])
     if is_compiled == is_top_level:
         raise ValueError(
-            f"{build_profile}:{primary} must resolve routed Layer 3 Skill {name!r} "
+            f"{runtime_name}:{primary} must resolve routed Layer 3 Skill {name!r} "
             "through exactly one compiled or top-level delivery path"
         )
     if is_compiled:
-        return DIST_SKILLS / build_profile / primary / "references" / "layer3" / f"{name}.md"
-    return DIST_SKILLS / build_profile / name / "SKILL.md"
+        return DIST_SKILLS / runtime_name / primary / "references" / "layer3" / f"{name}.md"
+    return DIST_SKILLS / runtime_name / name / "SKILL.md"
 
 
 def _layer3_reference_path(
-    build_profile: str,
+    runtime_name: str,
     primary: str,
     logical_id: str,
     manifest: dict[str, Any],
@@ -5901,20 +5882,20 @@ def _layer3_reference_path(
     is_top_level = owner in manifest.get("top_level_skills", [])
     if is_compiled == is_top_level:
         raise ValueError(
-            f"{build_profile}:{primary} must resolve Layer 3 Reference owner {owner!r} "
+            f"{runtime_name}:{primary} must resolve Layer 3 Reference owner {owner!r} "
             "through exactly one compiled or top-level delivery path"
         )
     if is_compiled:
         return (
             DIST_SKILLS
-            / build_profile
+            / runtime_name
             / primary
             / "references"
             / "layer3"
             / owner
             / relative
         )
-    return DIST_SKILLS / build_profile / owner / relative
+    return DIST_SKILLS / runtime_name / owner / relative
 
 
 def _uses_symlink(path: Path, boundary: Path) -> bool:
@@ -5986,7 +5967,7 @@ def _layer3_reference_registry_errors(
 
 
 def _professional_reference_path(
-    build_profile: str,
+    runtime_name: str,
     primary: str,
     relative: str,
 ) -> Path:
@@ -5997,7 +5978,7 @@ def _professional_reference_path(
         raise ValueError(f"professional reference is not normalized: {relative!r}")
     if not parsed.parts or parsed.parts[0] != "references":
         raise ValueError(f"professional reference must remain under references/: {relative!r}")
-    return DIST_SKILLS.joinpath(build_profile, primary, *parsed.parts)
+    return DIST_SKILLS.joinpath(runtime_name, primary, *parsed.parts)
 
 
 def _has_authoritative_task_dag_provenance(
@@ -6147,10 +6128,10 @@ def _dispatch_metadata_errors(case_id: str, index: int, step: dict[str, Any]) ->
 
 
 def _discovery_metadata(
-    build_profile: str,
+    runtime_name: str,
     errors: list[str],
 ) -> dict[str, Any]:
-    root = DIST_SKILLS / build_profile
+    root = DIST_SKILLS / runtime_name
     entries: list[dict[str, Any]] = []
     payloads: list[str] = []
     for skill_dir in sorted(
@@ -6178,7 +6159,7 @@ def _discovery_metadata(
         )
     combined = "\n\n".join(payloads)
     return {
-        "build_profile": build_profile,
+        "runtime": runtime_name,
         "skill_count": len(entries),
         "canonical_serialization": "name and description from each top-level SKILL.md",
         "tokens": count_o200k_base_tokens(combined),
@@ -6253,7 +6234,7 @@ def _maximum_summary(
         "budget_signal": maximum["budget_signal"],
         "calibration_status": maximum["calibration_status"],
         "host": maximum["host"],
-        "build_profile": maximum["build_profile"],
+        "runtime": maximum["runtime"],
     }
     if include_dispatch:
         result.update(
@@ -6740,7 +6721,7 @@ def _main_utility_selection_rows(
         ]
         candidate_identity = {
             "host": measurement.get("host"),
-            "build_profile": measurement.get("build_profile"),
+            "runtime": measurement.get("runtime"),
         }
         if budget_class == "utility":
             candidate_identity.update(
@@ -7035,10 +7016,9 @@ def _dominance_frontier_projection(
     component_mapping_text = "\n".join(
         _canonical_json_text(row) for row in sorted(component_fingerprints)
     )
-    build_manifest_paths = {
-        profile: DIST_SKILLS / profile / ".changeforge-build-manifest.json"
-        for profile in BUILD_PROFILES
-    }
+    runtime_manifest_path = (
+        DIST_SKILLS / RUNTIME_NAME / ".changeforge-build-manifest.json"
+    )
     source_fingerprints = {
         "registries": {
             _relative(path): hashlib.sha256(path.read_bytes()).hexdigest()
@@ -7052,12 +7032,10 @@ def _dominance_frontier_projection(
             "path": _relative(FIXTURES),
             "sha256": hashlib.sha256(FIXTURES.read_bytes()).hexdigest(),
         },
-        "build_manifests": {
-            profile: {
-                "path": _relative(path),
-                "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-            }
-            for profile, path in build_manifest_paths.items()
+        "runtime_manifest": {
+            "runtime": RUNTIME_NAME,
+            "path": _relative(runtime_manifest_path),
+            "sha256": hashlib.sha256(runtime_manifest_path.read_bytes()).hexdigest(),
         },
         "selector_authority_sha256": _sha256_text(_canonical_json_text(authority)),
         "control_projection_sha256": _sha256_text(
@@ -7106,7 +7084,7 @@ def _dominance_frontier_projection(
 def _evaluate_admissible_context_compositions(
     *,
     cases: list[tuple[str, dict[str, Any]]],
-    manifests: dict[str, dict[str, Any]],
+    runtime_manifests: dict[str, dict[str, Any]],
 ) -> dict[str, Any]:
     """Measure source-derived selector/reference composition equivalence classes."""
 
@@ -7354,9 +7332,9 @@ def _evaluate_admissible_context_compositions(
                     nested_conflicts
                 )
 
-                for build_profile, manifest in manifests.items():
+                for runtime_name, manifest in runtime_manifests.items():
                     primary_path = (
-                        DIST_SKILLS / build_profile / professional / "SKILL.md"
+                        DIST_SKILLS / runtime_name / professional / "SKILL.md"
                     )
                     if not primary_path.is_file():
                         errors.append(
@@ -7368,7 +7346,7 @@ def _evaluate_admissible_context_compositions(
                     for layer3_name in selected:
                         try:
                             layer3_path = _layer3_path(
-                                build_profile,
+                                runtime_name,
                                 professional,
                                 layer3_name,
                                 manifest,
@@ -7389,7 +7367,7 @@ def _evaluate_admissible_context_compositions(
                         logical_id = f"{layer3_name}/{entry['path']}"
                         try:
                             nested_path = _layer3_reference_path(
-                                build_profile,
+                                runtime_name,
                                 professional,
                                 logical_id,
                                 manifest,
@@ -7562,7 +7540,7 @@ def _evaluate_admissible_context_compositions(
                                 for reference_owner, entry in professional_envelope:
                                     try:
                                         reference_path = _professional_reference_path(
-                                            build_profile,
+                                            runtime_name,
                                             reference_owner,
                                             entry["path"],
                                         )
@@ -7657,7 +7635,7 @@ def _evaluate_admissible_context_compositions(
                                         ),
                                         "render_signature": render_signature,
                                         "host": host,
-                                        "build_profile": build_profile,
+                                        "runtime": runtime_name,
                                         "profile": profile,
                                         "selection_owner": owner,
                                         "professional_skill": professional,
@@ -7797,7 +7775,7 @@ def _evaluate_admissible_context_compositions(
                 ],
                 "route_obligations_preserved": True,
                 "host": candidate["host"],
-                "build_profile": candidate["build_profile"],
+                "runtime": candidate["runtime"],
                 "profile": candidate["profile"],
                 "selection_owner": candidate["selection_owner"],
                 "professional_skill": candidate["professional_skill"],
@@ -8101,9 +8079,9 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
         expected_case_ids
     )
     layer3_entries = _layer3_registry_entries()
-    manifests = _load_manifests(errors)
-    if set(manifests) != set(BUILD_PROFILES):
-        raise ValueError("all recommended/full/dev build manifests are required")
+    runtime_manifest = _load_runtime_manifest(errors)
+    if runtime_manifest is None:
+        raise ValueError("the Runtime build manifest is required")
 
     prompt_tokens = count_o200k_base_tokens(CONTROL_PROMPT.read_text(encoding="utf-8"))
     main_contexts: list[dict[str, Any]] = []
@@ -8112,15 +8090,15 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
         if not profile_path.is_file():
             errors.append(f"missing rendered Profile {_relative(profile_path)}")
             continue
-        for build_profile in BUILD_PROFILES:
+        for runtime_name in (RUNTIME_NAME,):
             _validate_profile_digest(
                 host,
                 "main-control-agent",
                 profile_path,
-                manifests[build_profile],
+                runtime_manifest,
                 errors,
             )
-            control_skill = DIST_SKILLS / build_profile / "engineering-control-plane" / "SKILL.md"
+            control_skill = DIST_SKILLS / runtime_name / "engineering-control-plane" / "SKILL.md"
             if not control_skill.is_file():
                 errors.append(f"missing built Control Skill {_relative(control_skill)}")
                 continue
@@ -8134,7 +8112,7 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
             measurement.update(
                 {
                     "host": host,
-                    "build_profile": build_profile,
+                    "runtime": runtime_name,
                     "embedded_control_prompt_tokens": prompt_tokens,
                     "control_prompt_accounting": (
                         "included in rendered_main_profile and not added as a separate component"
@@ -8143,7 +8121,7 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
             )
             if not measurement["within_duplicate_budget"]:
                 errors.append(
-                    f"main:{host}:{build_profile} duplicate ratio "
+                    f"main:{host}:{runtime_name} duplicate ratio "
                     f"{measurement['duplicate_rule_token_ratio']:.3f} exceeds "
                     f"{DUPLICATE_TOKEN_RATIO_MAX:.2f}"
                 )
@@ -8205,18 +8183,18 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
                 if not profile_path.is_file():
                     errors.append(f"missing rendered Profile {_relative(profile_path)}")
                     continue
-                for build_profile in BUILD_PROFILES:
+                for runtime_name in (RUNTIME_NAME,):
                     _validate_profile_digest(
                         host,
                         role,
                         profile_path,
-                        manifests[build_profile],
+                        runtime_manifest,
                         errors,
                     )
                     components = [_file_component("worker_profile", profile_path)]
-                    manifest = manifests[build_profile]
+                    manifest = runtime_manifest
                     if primary:
-                        primary_path = DIST_SKILLS / build_profile / primary / "SKILL.md"
+                        primary_path = DIST_SKILLS / runtime_name / primary / "SKILL.md"
                         if not primary_path.is_file():
                             errors.append(f"missing primary Skill {_relative(primary_path)}")
                             continue
@@ -8225,7 +8203,7 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
                         for reference in references:
                             try:
                                 reference_path = _professional_reference_path(
-                                    build_profile, primary, reference
+                                    runtime_name, primary, reference
                                 )
                             except ValueError as exc:
                                 errors.append(f"{case_id}: dispatch step {index}: {exc}")
@@ -8251,7 +8229,7 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
                         for name in layer3:
                             try:
                                 layer3_path = _layer3_path(
-                                    build_profile, primary, str(name), manifest
+                                    runtime_name, primary, str(name), manifest
                                 )
                             except ValueError as exc:
                                 errors.append(f"{case_id}: dispatch step {index}: {exc}")
@@ -8271,7 +8249,7 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
                         for logical_id in layer3_references:
                             try:
                                 nested_path = _layer3_reference_path(
-                                    build_profile,
+                                    runtime_name,
                                     primary,
                                     str(logical_id),
                                     manifest,
@@ -8281,7 +8259,7 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
                                 layer3_reference_failed = True
                                 break
                             if not nested_path.is_file() or _uses_symlink(
-                                nested_path, DIST_SKILLS / build_profile
+                                nested_path, DIST_SKILLS / runtime_name
                             ):
                                 errors.append(
                                     f"{case_id}: dispatch step {index} missing or symlinked "
@@ -8308,7 +8286,7 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
                     measurement.update(
                         {
                             "host": host,
-                            "build_profile": build_profile,
+                            "runtime": runtime_name,
                             "step": index,
                             "role": role,
                             "mode": raw_step["mode"],
@@ -8333,7 +8311,7 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
                     )
                     if not measurement["within_duplicate_budget"]:
                         errors.append(
-                            f"{case_id}:step:{index}:{host}:{build_profile} duplicate ratio "
+                            f"{case_id}:step:{index}:{host}:{runtime_name} duplicate ratio "
                             f"{measurement['duplicate_rule_token_ratio']:.3f} exceeds "
                             f"{DUPLICATE_TOKEN_RATIO_MAX:.2f}"
                         )
@@ -8351,10 +8329,7 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
             }
         )
 
-    discovery = [
-        _discovery_metadata(build_profile, errors)
-        for build_profile in BUILD_PROFILES
-    ]
+    discovery = _discovery_metadata(RUNTIME_NAME, errors)
     all_dispatch_measurements = [
         item
         for case in case_results
@@ -8443,7 +8418,7 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
         errors.append("superseded evidence must not cross a transfer boundary")
     admissible_context_compositions = _evaluate_admissible_context_compositions(
         cases=cases,
-        manifests=manifests,
+        runtime_manifests={RUNTIME_NAME: runtime_manifest},
     )
     errors.extend(admissible_context_compositions["errors"])
     budget_governance = _budget_governance_report(
@@ -8474,7 +8449,7 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
             ),
         },
         "limitations": list(LIMITATIONS),
-        "build_profiles": list(BUILD_PROFILES),
+        "runtime": RUNTIME_NAME,
         "hosts": list(HOST_PROFILE_ROOTS),
         "budget_governance": budget_governance,
         "fixture_count": len(case_results),
@@ -8505,7 +8480,7 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
                 else None
             ),
             "max_discovery_metadata_tokens": max(
-                (item["tokens"] for item in discovery), default=None
+                (discovery["tokens"],), default=None
             ),
             "loaded_layer3_reference_count": len(fixture_layer3_reference_ids),
             "measured_layer3_reference_component_count": sum(
@@ -8841,7 +8816,7 @@ def _write_reports(
             f"{maximum['professional_skill'] if maximum else 'n/a'} | "
             f"{', '.join(maximum['selected_layer3']) if maximum else 'n/a'} | "
             f"{maximum['selection_owner'] if maximum else 'n/a'} | "
-            f"{maximum['build_profile'] if maximum else 'n/a'} | "
+            f"{maximum['runtime'] if maximum else 'n/a'} | "
             f"{maximum['host'] if maximum else 'n/a'} |"
         )
     dominance = admissible["dominance_frontier"]
@@ -9000,7 +8975,7 @@ def main(argv: list[str] | None = None) -> int:
     print(
         "eval-rendered-context-budget: validated "
         f"{report['dispatch_count']} dispatches across "
-        f"{len(report['hosts'])} hosts and {len(report['build_profiles'])} build profiles."
+        f"{len(report['hosts'])} hosts and the {report['runtime']} Runtime."
     )
     return 0
 

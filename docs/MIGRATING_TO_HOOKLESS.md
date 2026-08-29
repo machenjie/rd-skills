@@ -1,43 +1,66 @@
 # Migrating to the Hookless Architecture
 
-rd-skills now installs only standard Skills, four static Agent Profiles where supported, and manifests. The product no longer relies on executable interception, an internal task context engine, private evidence storage, role-projection packages, internal task identities, digests, lifecycle protocols, or phase state.
+rd-skills installs one Runtime of standard Skills, four static Agent Profiles
+where supported, and manifests. It does not install executable interception,
+an internal task context engine, private evidence storage, role-projection
+packages, or a runtime state machine.
 
 ## Before Upgrade
 
-1. Record the currently installed rd-skills profile and target.
-2. Back up user-owned Skills and agent configuration if local policy requires it.
-3. Build the desired new profile.
-4. Preview the upgrade.
+1. Record the Host, scope, target, and current manifest.
+2. Make an independent backup of user-owned Skills and Host configuration when
+   required by local policy.
+3. Build the current Runtime.
+4. Preview upgrade against the existing installation. Do not uninstall a
+   legacy `full` or `dev` installation first.
 
 ```bash
-python3 scripts/build.py --profile recommended
-python3 installers/upgrade.py \
-  --agent codex --scope user --profile recommended --dry-run
+python3 scripts/build.py
+python3 installers/upgrade.py --agent codex --scope user --dry-run
 ```
 
 ## Upgrade
 
 ```bash
-python3 installers/upgrade.py \
-  --agent codex --scope user --profile recommended
-python3 installers/doctor.py \
-  --agent codex --scope user --profile recommended
+python3 installers/upgrade.py --agent codex --scope user
+python3 installers/doctor.py --agent codex --scope user
 ```
 
-The upgrader removes only known legacy `ChangeForge`-named artifacts and manifest-owned files. Unrelated user Skills, agents, and configuration must remain. If doctor reports unknown residue, inspect it before deletion rather than widening cleanup rules.
+The upgrader validates exact current and legacy manifest inventories. A legacy
+`full` manifest contributes managed top-level Domain Skills; a legacy `dev`
+manifest contributes managed top-level Foundation and Domain Skills. Upgrade
+removes those managed directories and writes the one 27-Skill Runtime manifest
+without an intermediate uninstall.
+
+Upgrade must complete its managed-content backup before any live mutation. It
+preserves unrelated top-level user files and Skill directories in place. A user
+file placed inside a managed Skill directory is part of that managed directory:
+it is copied into the backup, then the directory is replaced. Restore such a
+mixed-in file selectively from the printed backup path after verifying its
+ownership and destination.
+
+The operation is not crash-atomic across cleanup, Skill replacement, Agent
+Profile replacement, and manifest write. If interrupted, stop further writes,
+inspect the newest `upgrade-*` directory under `.changeforge-backups/`, compare
+its `skills/`, `profiles/`, and optional `legacy/` contents with the target, and
+restore only verified paths. rd-skills has no automatic restore command.
 
 ## Behavioral Changes
 
-- The main agent dispatches only; it does not fall back to implementation.
-- Direct Tasks start a task agent after one classification.
-- Complex or risky work starts one analysis pass and prioritizes the First Executable Slice.
-- Each task loads one primary Professional Skill and only triggered Layer 3 Skills.
-- Validation is run by the task agent. Independent implementation review
-  examines the actual diff and all changed files; pre-implementation review
-  examines its bounded artifact, criteria, and supporting evidence.
-- Repair is followed by fresh validation and re-review.
-- Handoffs use Markdown and observable evidence.
+- The Host discovers only 1 Control and 26 Professional Skills.
+- Foundation guidance is a capability modifier; Domain guidance is
+  `modifier-only`. Neither is a top-level Runtime Skill.
+- Main fixes the Primary Professional route once. Task and Review do not rerun
+  global routing.
+- Each task opens zero to three selector-chosen Layer 3 items and only required
+  Targeted References; complete catalogs are never loaded.
+- Validation follows the final material edit, and independent review examines
+  the actual bounded change evidence.
 
 ## Rollback
 
-Use a previously built release artifact and its installer manifest. Do not restore only part of the old control machinery. If rollback would reintroduce executable interception or private state, treat that as an explicit release decision and document its risk rather than presenting it as the current architecture.
+Use the upgrade backup or a previously built release artifact and its matching
+manifest. Restore only verified managed paths; do not overwrite unrelated Host
+content with the backup root. If rollback would reintroduce executable
+interception, private state, or retired top-level Layer 3 discovery, treat it as
+an explicit release decision rather than current supported behavior.

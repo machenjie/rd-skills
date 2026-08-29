@@ -450,36 +450,125 @@ Own one bounded decision.
             ):
                 BUILD._write_compact_professional_projection(professional, professional_item)
 
-    def test_all_profiles_build_with_canonical_manifest_in_isolated_layout(self) -> None:
+    def test_single_runtime_build_has_canonical_manifest_in_isolated_layout(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "repo"
             self._copy_source(root)
-            expected_counts = {"recommended": 27, "full": 40, "dev": 190}
 
             with self._layout(root) as dist:
-                for profile in BUILD.PROFILES:
-                    with self.subTest(profile=profile):
-                        result = BUILD.build_profile(profile)
-                        manifest_path = (
-                            dist
-                            / "universal/skills"
-                            / profile
-                            / BUILD.BUILD_MANIFEST_NAME
-                        )
-                        manifest = BUILD.json.loads(
-                            manifest_path.read_text(encoding="utf-8")
-                        )
-                        self.assertEqual(profile, result["profile"])
-                        self.assertEqual(expected_counts[profile], result["top_level_count"])
-                        self.assertEqual(profile, manifest["profile"])
-                        self.assertEqual(
-                            "changeforge.authoritative_build_inputs",
-                            manifest["authoritative_build_inputs"]["kind"],
-                        )
-                        self.assertEqual(
-                            expected_counts[profile], len(manifest["top_level_skills"])
-                        )
-                        self.assertEqual(4, len(manifest["agent_profiles"]))
+                result = BUILD.build_profile("recommended")
+                manifest_path = (
+                    dist
+                    / "universal/skills/recommended"
+                    / BUILD.BUILD_MANIFEST_NAME
+                )
+                manifest = BUILD.json.loads(
+                    manifest_path.read_text(encoding="utf-8")
+                )
+                self.assertEqual("recommended", result["profile"])
+                self.assertEqual(27, result["top_level_count"])
+                self.assertEqual("recommended", manifest["profile"])
+                self.assertEqual(
+                    "changeforge.authoritative_build_inputs",
+                    manifest["authoritative_build_inputs"]["kind"],
+                )
+                self.assertEqual(27, len(manifest["top_level_skills"]))
+                self.assertEqual(1, len(manifest["control_skills"]))
+                self.assertEqual(26, len(manifest["professional_skills"]))
+                self.assertEqual(150, len(manifest["foundation_skills"]))
+                self.assertEqual(13, len(manifest["domain_skills"]))
+                self.assertEqual("targeted-product-references", manifest["foundation_mode"])
+                self.assertEqual("targeted-references", manifest["domain_mode"])
+                self.assertEqual(4, len(manifest["agent_profiles"]))
+
+    def test_retired_profiles_are_rejected_before_managed_output_mutation(self) -> None:
+        for retired in ("full", "dev"):
+            with self.subTest(profile=retired), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary) / "repo"
+                self._copy_source(root)
+                sentinel = root / "dist/sentinel.bin"
+                sentinel.parent.mkdir(parents=True)
+                sentinel.write_bytes(b"unchanged")
+
+                with self._layout(root), self.assertRaisesRegex(
+                    BUILD.BuildError,
+                    f"unsupported profile: {retired}",
+                ):
+                    BUILD.build_profile(retired)
+
+                self.assertEqual(b"unchanged", sentinel.read_bytes())
+
+    def test_build_cli_rejects_profile_selection_before_mutation(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            self._copy_source(root)
+            sentinel = root / "dist/sentinel.bin"
+            sentinel.parent.mkdir(parents=True)
+            sentinel.write_bytes(b"unchanged")
+
+            with self._layout(root), mock.patch.object(
+                sys,
+                "argv",
+                ["build.py", "--profile", "full"],
+            ), self.assertRaises(SystemExit):
+                BUILD.main()
+
+            self.assertEqual(b"unchanged", sentinel.read_bytes())
+
+    def test_build_removes_only_preflighted_retired_profile_roots(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            self._copy_source(root)
+
+            with self._layout(root) as dist:
+                managed_roots = (
+                    dist / "universal/skills",
+                    *BUILD.AGENT_SKILL_ROOTS,
+                    dist / "openai-api/zips",
+                )
+                sentinels: list[Path] = []
+                for managed_root in managed_roots:
+                    for retired in ("full", "dev"):
+                        residue = managed_root / retired / "managed.bin"
+                        residue.parent.mkdir(parents=True, exist_ok=True)
+                        residue.write_bytes(retired.encode("ascii"))
+                    sentinel = managed_root / "user-sentinel.bin"
+                    sentinel.write_bytes(b"preserve")
+                    sentinels.append(sentinel)
+
+                BUILD.build_profile("recommended")
+
+                for managed_root in managed_roots:
+                    self.assertFalse((managed_root / "full").exists())
+                    self.assertFalse((managed_root / "dev").exists())
+                for sentinel in sentinels:
+                    self.assertEqual(b"preserve", sentinel.read_bytes())
+
+    def test_invalid_retired_profile_root_fails_before_any_cleanup_or_reset(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            self._copy_source(root)
+
+            with self._layout(root) as dist:
+                first_residue = dist / "universal/skills/full/managed.bin"
+                first_residue.parent.mkdir(parents=True)
+                first_residue.write_bytes(b"preserve")
+                invalid = BUILD.AGENT_SKILL_ROOTS[-1] / "dev"
+                invalid.parent.mkdir(parents=True)
+                invalid.write_bytes(b"not-a-directory")
+                current = dist / "universal/skills/recommended/prior.bin"
+                current.parent.mkdir(parents=True)
+                current.write_bytes(b"current")
+
+                with self.assertRaisesRegex(
+                    BUILD.BuildError,
+                    "retired profile output.*regular directory",
+                ):
+                    BUILD.build_profile("recommended")
+
+                self.assertEqual(b"preserve", first_residue.read_bytes())
+                self.assertEqual(b"not-a-directory", invalid.read_bytes())
+                self.assertEqual(b"current", current.read_bytes())
 
     def test_agent_profiles_remain_lf_canonical_with_windows_text_translation(
         self,
@@ -517,41 +606,39 @@ Own one bounded decision.
                     dist / "universal/skills",
                     *BUILD.AGENT_SKILL_ROOTS,
                 )
-                for build_profile in BUILD.PROFILES:
-                    with self.subTest(build_profile=build_profile):
-                        BUILD.build_profile(build_profile)
-                        observed_files = 0
-                        for platform, profile_root in BUILD.AGENT_PROFILE_OUTPUTS:
-                            for role, profile in by_name.items():
-                                raw = (
-                                    profile_root
-                                    / f"{role}{suffixes[platform]}"
-                                ).read_bytes()
-                                expected = renderers[platform](
-                                    profile,
-                                    enforcement,
-                                ).encode("utf-8")
-                                self.assertEqual(expected, raw)
-                                self.assertNotIn(b"\r", raw)
-                                self.assertEqual(
-                                    expected_digests[platform][role],
-                                    hashlib.sha256(raw).hexdigest(),
-                                )
-                                observed_files += 1
-                        self.assertEqual(28, observed_files)
+                BUILD.build_profile("recommended")
+                observed_files = 0
+                for platform, profile_root in BUILD.AGENT_PROFILE_OUTPUTS:
+                    for role, profile in by_name.items():
+                        raw = (
+                            profile_root
+                            / f"{role}{suffixes[platform]}"
+                        ).read_bytes()
+                        expected = renderers[platform](
+                            profile,
+                            enforcement,
+                        ).encode("utf-8")
+                        self.assertEqual(expected, raw)
+                        self.assertNotIn(b"\r", raw)
+                        self.assertEqual(
+                            expected_digests[platform][role],
+                            hashlib.sha256(raw).hexdigest(),
+                        )
+                        observed_files += 1
+                self.assertEqual(28, observed_files)
 
-                        for skills_root in manifest_roots:
-                            manifest = BUILD.json.loads(
-                                (
-                                    skills_root
-                                    / build_profile
-                                    / BUILD.BUILD_MANIFEST_NAME
-                                ).read_bytes()
-                            )
-                            self.assertEqual(
-                                expected_digests,
-                                manifest["agent_profile_sha256"],
-                            )
+                for skills_root in manifest_roots:
+                    manifest = BUILD.json.loads(
+                        (
+                            skills_root
+                            / "recommended"
+                            / BUILD.BUILD_MANIFEST_NAME
+                        ).read_bytes()
+                    )
+                    self.assertEqual(
+                        expected_digests,
+                        manifest["agent_profile_sha256"],
+                    )
 
     def test_agent_profile_cr_fails_preflight_before_managed_output_mutation(
         self,
@@ -721,7 +808,7 @@ Own one bounded decision.
 
             with self._layout(root):
                 with self.assertRaises(BUILD.BuildError):
-                    BUILD.build_profile("dev")
+                    BUILD.build_profile("recommended")
             self.assertEqual("unchanged\n", sentinel.read_text(encoding="utf-8"))
 
     def test_main_profile_embeds_prompt_once_and_preserves_fallback(self) -> None:
@@ -789,13 +876,12 @@ Own one bounded decision.
             ("copilot", BUILD._render_copilot_profile),
         ):
             rendered = renderer(profiles["main-control-agent"], enforcement)
-            for build_profile in BUILD.PROFILES:
-                key = f"{host}:{build_profile}"
-                observed[key] = count_o200k_base_tokens(
-                    rendered.rstrip() + "\n\n" + control_text.rstrip()
-                )
+            key = f"{host}:recommended"
+            observed[key] = count_o200k_base_tokens(
+                rendered.rstrip() + "\n\n" + control_text.rstrip()
+            )
 
-        self.assertEqual(9, len(observed))
+        self.assertEqual(3, len(observed))
         self.assertLessEqual(max(observed.values()), gate, observed)
 
     def test_build_preflight_rejects_stale_prompt_before_dist_mutation(self) -> None:
@@ -1104,36 +1190,19 @@ Own one bounded decision.
     def test_layer3_entrypoint_describes_only_the_current_build(self) -> None:
         expected = (
             (
-                "recommended",
                 False,
                 "No Foundation or Domain Layer 3 items are assigned to this Skill.",
             ),
             (
-                "recommended",
                 True,
                 "Foundation and Domain items are compiled at `references/layer3/<name>.md`.",
-            ),
-            (
-                "full",
-                False,
-                "Domain items are top-level Skills; no Foundation items are compiled for this Skill.",
-            ),
-            (
-                "full",
-                True,
-                "Foundation items are compiled at `references/layer3/<name>.md`; Domain items are top-level Skills.",
-            ),
-            (
-                "dev",
-                False,
-                "Foundation and Domain items are top-level Skills; no Layer 3 references are compiled.",
             ),
         )
         with tempfile.TemporaryDirectory() as temporary:
             skill_root = Path(temporary) / "professional"
             skill_root.mkdir()
-            for profile, compiled, expected_body in expected:
-                with self.subTest(profile=profile, compiled=compiled):
+            for compiled, expected_body in expected:
+                with self.subTest(compiled=compiled):
                     (skill_root / "SKILL.md").write_text("# Professional\n", encoding="utf-8")
                     layer3_root = skill_root / "references/layer3"
                     if layer3_root.exists():
@@ -1144,7 +1213,7 @@ Own one bounded decision.
                             "# Layer 3 Reference Index\n",
                             encoding="utf-8",
                         )
-                    BUILD._append_layer3_entrypoint(skill_root, profile)
+                    BUILD._append_layer3_entrypoint(skill_root)
                     text = (skill_root / "SKILL.md").read_text(encoding="utf-8")
                     self.assertEqual(1, text.count("## Layer 3 Delivery"))
                     self.assertEqual(
@@ -1615,58 +1684,57 @@ Second role.
             BUILD._render_layer3_reference(item)
 
     def test_rendered_professional_body_over_budget_fails_before_reset(self) -> None:
-        for profile in BUILD.PROFILES:
-            with self.subTest(profile=profile), tempfile.TemporaryDirectory() as temporary:
-                root = Path(temporary) / "repo"
-                self._copy_source(root)
-                skill_file = (
-                    root
-                    / "src/professional-skills/engineering-change-analysis/SKILL.md"
-                )
-                registry = BUILD.load_yaml_file(
-                    root / "src/registry/professional-skills.yaml"
-                )
-                entry = next(
-                    item
-                    for item in registry["professional_skills"]
-                    if item["name"] == "engineering-change-analysis"
-                )
-                rendered_source = BUILD._render_targeted_reference_section(
-                    skill_file.read_text(encoding="utf-8"),
-                    BUILD._item_reference_contracts(
-                        entry, "engineering-change-analysis", "engineering-change-analysis"
-                    ),
-                    "engineering-change-analysis",
-                )
-                skill_file.write_text(rendered_source, encoding="utf-8")
-                _metadata, raw_frontmatter, body = BUILD.parse_frontmatter(skill_file)
-                body_lines = body.splitlines()
-                kernel_index = body_lines.index("## Professional Decision Rules") + 1
-                padding = [
-                    f"Rendered-budget fixture line {index}"
-                    for index in range(121)
-                ]
-                body_lines[kernel_index:kernel_index] = padding
-                skill_file.write_text(
-                    "---\n"
-                    + raw_frontmatter
-                    + "\n---\n"
-                    + "\n".join(body_lines)
-                    + "\n",
-                    encoding="utf-8",
-                )
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            self._copy_source(root)
+            skill_file = (
+                root
+                / "src/professional-skills/engineering-change-analysis/SKILL.md"
+            )
+            registry = BUILD.load_yaml_file(
+                root / "src/registry/professional-skills.yaml"
+            )
+            entry = next(
+                item
+                for item in registry["professional_skills"]
+                if item["name"] == "engineering-change-analysis"
+            )
+            rendered_source = BUILD._render_targeted_reference_section(
+                skill_file.read_text(encoding="utf-8"),
+                BUILD._item_reference_contracts(
+                    entry, "engineering-change-analysis", "engineering-change-analysis"
+                ),
+                "engineering-change-analysis",
+            )
+            skill_file.write_text(rendered_source, encoding="utf-8")
+            _metadata, raw_frontmatter, body = BUILD.parse_frontmatter(skill_file)
+            body_lines = body.splitlines()
+            kernel_index = body_lines.index("## Professional Decision Rules") + 1
+            padding = [
+                f"Rendered-budget fixture line {index}"
+                for index in range(121)
+            ]
+            body_lines[kernel_index:kernel_index] = padding
+            skill_file.write_text(
+                "---\n"
+                + raw_frontmatter
+                + "\n---\n"
+                + "\n".join(body_lines)
+                + "\n",
+                encoding="utf-8",
+            )
 
-                dist = root / "dist"
-                dist.mkdir()
-                sentinel = dist / "sentinel.txt"
-                sentinel.write_text("unchanged\n", encoding="utf-8")
+            dist = root / "dist"
+            dist.mkdir()
+            sentinel = dist / "sentinel.txt"
+            sentinel.write_text("unchanged\n", encoding="utf-8")
 
-                with self._layout(root), self.assertRaisesRegex(
-                    BUILD.BuildError,
-                    r"rendered Professional SKILL\.md body has \d+ lines; maximum is 120",
-                ):
-                    BUILD.build_profile(profile)
-                self.assertEqual("unchanged\n", sentinel.read_text(encoding="utf-8"))
+            with self._layout(root), self.assertRaisesRegex(
+                BUILD.BuildError,
+                r"rendered Professional SKILL\.md body has \d+ lines; maximum is 120",
+            ):
+                BUILD.build_profile("recommended")
+            self.assertEqual("unchanged\n", sentinel.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

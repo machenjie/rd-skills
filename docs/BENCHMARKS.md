@@ -11,7 +11,7 @@ definition and harness checks.
 | --- | --- | --- |
 | Routing | Verify one primary Professional Skill, triggered Layer 3 guidance, and one Review Skill. | `python3 scripts/eval-routing.py` |
 | Lightweight | Verify bounded control-plane trajectories and preparation-loop behavior. | `python3 scripts/eval-agent-lightweight.py` |
-| Rendered context | Count exact deterministic instruction tokens across built host/profile artifacts and fixture dispatches. | `python3 scripts/eval-rendered-context-budget.py` |
+| Rendered context | Count exact deterministic instruction tokens across the built Runtime, Host artifacts, selected Layer 3 items, nested References, and fixture dispatches. | `python3 scripts/eval-rendered-context-budget.py` |
 | Behavior | Check human-reviewed handoffs against observable route and evidence contracts. | `python3 scripts/eval-agent-behavior.py` |
 | Pressure | Check captured responses for boundary preservation under pressure. | `python3 scripts/eval-pressure-behavior.py` |
 | Professional | Check Skill structure, decision quality, coverage, and promoted samples. | See commands below. |
@@ -93,9 +93,7 @@ quality only, not fresh model behavior.
 ## Local Commands
 
 ```bash
-python3 scripts/build.py --profile recommended
-python3 scripts/build.py --profile full
-python3 scripts/build.py --profile dev
+python3 scripts/build.py
 python3 scripts/eval-routing.py
 python3 scripts/eval-agent-lightweight.py
 python3 scripts/eval-rendered-context-budget.py

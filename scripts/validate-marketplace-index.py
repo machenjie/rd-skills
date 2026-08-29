@@ -14,10 +14,7 @@ from validation_utils import (
     EXPECTED_CONTROL_SKILL_COUNT,
     EXPECTED_DOMAIN_EXTENSION_COUNT,
     EXPECTED_FOUNDATION_CAPABILITY_COUNT,
-    EXPECTED_PROFILE_DELIVERY_MODE_COUNTS,
-    EXPECTED_PROFILE_TOP_LEVEL_COUNTS,
     EXPECTED_PROFESSIONAL_SKILL_COUNT,
-    FOUNDATION_DELIVERY_SCOPES,
     MARKETPLACE_SCHEMA_VERSION,
     NAME_RE,
     role_contract_map_errors,
@@ -25,7 +22,12 @@ from validation_utils import (
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PROFILES = ("recommended", "full", "dev")
+RUNTIME_PROFILE = "recommended"
+RUNTIME_FOUNDATION_DELIVERY_SCOPES = {
+    "product",
+    "authoring-only",
+    "internal-only",
+}
 ITEM_TYPES = {
     "control_skill",
     "professional_skill",
@@ -94,6 +96,14 @@ EXPECTED_ITEM_COUNTS = {
     "domain_skill": EXPECTED_DOMAIN_EXTENSION_COUNT,
 }
 EXPECTED_TOTAL_ITEM_COUNT = sum(EXPECTED_ITEM_COUNTS.values())
+EXPECTED_RUNTIME_TOP_LEVEL_COUNT = (
+    EXPECTED_CONTROL_SKILL_COUNT + EXPECTED_PROFESSIONAL_SKILL_COUNT
+)
+EXPECTED_RUNTIME_DELIVERY_MODE_COUNTS = {
+    "top_level_skill": 27,
+    "targeted_reference": 154,
+    "routing_index_only": 9,
+}
 ALLOWED_ROLES = {
     "main-control-agent",
     "analysis-agent",
@@ -213,17 +223,12 @@ def _role_map_errors(item: dict[str, Any], field: str, label: str) -> list[str]:
 
 
 def _expected_delivery_mode(
-    profile: str,
     item: dict[str, Any],
     targeted_layer3: set[str],
 ) -> str:
     item_type = item.get("type")
     name = str(item.get("name") or "")
-    top_level = (
-        item_type in {"control_skill", "professional_skill"}
-        or (item_type == "domain_skill" and profile in {"full", "dev"})
-        or (item_type == "foundation_skill" and profile == "dev")
-    )
+    top_level = item_type in {"control_skill", "professional_skill"}
     if top_level:
         return "top_level_skill"
     if name in targeted_layer3:
@@ -262,10 +267,10 @@ def _relationship_errors(items: list[dict[str, Any]]) -> list[str]:
         for item in items
         if item.get("type") in {"foundation_skill", "domain_skill"}
     }
-    actual_foundation_owners: dict[str, set[str]] = {
+    actual_layer3_owners: dict[str, set[str]] = {
         name: set()
         for name, item in items_by_name.items()
-        if item.get("type") == "foundation_skill"
+        if item.get("type") in {"foundation_skill", "domain_skill"}
     }
     for item in items:
         name = str(item.get("name"))
@@ -275,9 +280,9 @@ def _relationship_errors(items: list[dict[str, Any]]) -> list[str]:
                 errors.append(f"{name}: unknown related Layer 3 Skill {candidate!r}")
                 continue
             target = items_by_name[candidate]
+            if item.get("type") == "professional_skill":
+                actual_layer3_owners[candidate].add(name)
             if target.get("type") == "foundation_skill":
-                if item.get("type") == "professional_skill":
-                    actual_foundation_owners[candidate].add(name)
                 if target.get("delivery_scope") != "product":
                     errors.append(
                         f"{name}: non-product Foundation Skill {candidate!r} "
@@ -287,7 +292,7 @@ def _relationship_errors(items: list[dict[str, Any]]) -> list[str]:
         for owner in owners if isinstance(owners, list) else []:
             if owner not in professional_names:
                 errors.append(f"{name}: unknown Professional owner {owner!r}")
-    for name, actual_owners in actual_foundation_owners.items():
+    for name, actual_owners in actual_layer3_owners.items():
         item = items_by_name[name]
         declared = item.get("used_by")
         declared_owners = set(declared) if isinstance(declared, list) else set()
@@ -296,10 +301,14 @@ def _relationship_errors(items: list[dict[str, Any]]) -> list[str]:
                 f"{name}: used_by must exactly match related_layer3_skills; "
                 f"declared={sorted(declared_owners)}, actual={sorted(actual_owners)}"
             )
-        if item.get("delivery_scope") == "product" and not actual_owners:
-            errors.append(f"{name}: product Foundation Skill must have an owner")
-        if item.get("delivery_scope") == "product":
-            foundation_roles = {
+        is_deliverable_layer3 = (
+            item.get("type") == "domain_skill"
+            or item.get("delivery_scope") == "product"
+        )
+        if is_deliverable_layer3 and not actual_owners:
+            errors.append(f"{name}: targeted Layer 3 Skill must have an owner")
+        if is_deliverable_layer3:
+            layer3_roles = {
                 role
                 for role in item.get("role_support", [])
                 if isinstance(role, str)
@@ -315,7 +324,7 @@ def _relationship_errors(items: list[dict[str, Any]]) -> list[str]:
                     for role in professional.get("role_support", [])
                     if isinstance(role, str)
                 }
-                if not foundation_roles & professional_roles:
+                if not layer3_roles & professional_roles:
                     errors.append(
                         f"{name}: product owner {owner!r} has no role_support "
                         "intersection"
@@ -326,7 +335,6 @@ def _relationship_errors(items: list[dict[str, Any]]) -> list[str]:
 def validate_payload(
     root: Path,
     payload: dict[str, Any],
-    profile: str,
     *,
     enforce_counts: bool = True,
 ) -> list[str]:
@@ -339,8 +347,8 @@ def validate_payload(
         errors.append(
             f"schema_version must be {MARKETPLACE_SCHEMA_VERSION}"
         )
-    if payload.get("profile") != profile:
-        errors.append(f"profile must be {profile}")
+    if payload.get("profile") != RUNTIME_PROFILE:
+        errors.append(f"profile must be {RUNTIME_PROFILE}")
     if not isinstance(payload.get("generated_by"), str):
         errors.append("generated_by must be a string")
     if payload.get("source_of_truth") != EXPECTED_SOURCES:
@@ -407,10 +415,10 @@ def validate_payload(
         delivery_scope = item.get("delivery_scope")
         task_routable = item.get("task_routable")
         if item_type == "foundation_skill":
-            if delivery_scope not in FOUNDATION_DELIVERY_SCOPES:
+            if delivery_scope not in RUNTIME_FOUNDATION_DELIVERY_SCOPES:
                 errors.append(
                     f"{label}.delivery_scope must be one of "
-                    f"{sorted(FOUNDATION_DELIVERY_SCOPES)}"
+                    f"{sorted(RUNTIME_FOUNDATION_DELIVERY_SCOPES)}"
                 )
         elif delivery_scope is not None:
             errors.append(
@@ -433,8 +441,10 @@ def validate_payload(
             errors.append(
                 f"{label}.related_layer3_skills is only valid for a Professional Skill"
             )
-        if item_type != "foundation_skill" and item.get("used_by"):
-            errors.append(f"{label}.used_by is only valid for a Foundation Skill")
+        if item_type not in {"foundation_skill", "domain_skill"} and item.get(
+            "used_by"
+        ):
+            errors.append(f"{label}.used_by is only valid for a Layer 3 Skill")
         source_path = item.get("source_path")
         if not isinstance(source_path, str):
             errors.append(f"{label}.source_path must be a string")
@@ -453,10 +463,10 @@ def validate_payload(
         errors.extend(_delivery_errors(item, label))
         delivery = item.get("profile_delivery")
         if isinstance(delivery, dict):
-            expected_mode = _expected_delivery_mode(profile, item, targeted_layer3)
+            expected_mode = _expected_delivery_mode(item, targeted_layer3)
             if delivery.get("mode") != expected_mode:
                 errors.append(
-                    f"{label}: expected {expected_mode} delivery in {profile}, "
+                    f"{label}: expected {expected_mode} delivery in the Runtime, "
                     f"found {delivery.get('mode')!r}"
                 )
 
@@ -467,10 +477,10 @@ def validate_payload(
             for item in dict_items
             if isinstance(item.get("profile_delivery"), dict)
         )
-        expected = EXPECTED_PROFILE_TOP_LEVEL_COUNTS[profile]
+        expected = EXPECTED_RUNTIME_TOP_LEVEL_COUNT
         if top_level_count != expected:
             errors.append(
-                f"{profile} must expose {expected} top-level standard Skill(s), "
+                f"Runtime must expose {expected} top-level standard Skill(s), "
                 f"found {top_level_count}"
             )
         mode_counts = Counter(
@@ -478,35 +488,32 @@ def validate_payload(
             for item in dict_items
             if isinstance(item.get("profile_delivery"), dict)
         )
-        for mode, expected_count in EXPECTED_PROFILE_DELIVERY_MODE_COUNTS[
-            profile
-        ].items():
+        for mode, expected_count in EXPECTED_RUNTIME_DELIVERY_MODE_COUNTS.items():
             actual_count = mode_counts.get(mode, 0)
             if actual_count != expected_count:
                 errors.append(
-                    f"{profile} must expose {expected_count} item(s) with "
+                    f"Runtime must expose {expected_count} item(s) with "
                     f"delivery mode {mode}, found {actual_count}"
                 )
     return errors
 
 
-def validate_profile(root: Path, profile: str) -> list[str]:
+def validate_runtime(root: Path) -> list[str]:
     exporter = _load_exporter()
-    return validate_payload(root, exporter.export_index(root, profile), profile)
+    return validate_payload(root, exporter.export_index(root))
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--profile", choices=PROFILES, required=True)
     parser.add_argument("--root", default=str(ROOT))
     args = parser.parse_args(argv)
 
-    errors = validate_profile(Path(args.root), args.profile)
+    errors = validate_runtime(Path(args.root))
     if errors:
         for error in errors:
             print(f"validate-marketplace-index: ERROR: {error}", file=sys.stderr)
         return 1
-    print(f"validate-marketplace-index: validated {args.profile} marketplace index")
+    print("validate-marketplace-index: validated fixed Runtime marketplace index")
     return 0
 
 

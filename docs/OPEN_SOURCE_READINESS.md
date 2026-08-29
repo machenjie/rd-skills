@@ -8,7 +8,7 @@ The repository is MIT licensed and contains the normal policy and contribution f
 | --- | --- |
 | Purpose and usage | [README](../README.md), [Quickstart](QUICKSTART.md), [Usage](USAGE.md) |
 | Architecture and boundaries | [Hookless architecture](HOOKLESS_ARCHITECTURE.md), [AI control boundaries](AI_CONTROL_BOUNDARIES.md) |
-| Build and installation | [Installation](INSTALLATION.md), [Build profiles](BUILD_PROFILES.md), [Release](RELEASE.md) |
+| Build and installation | [Installation](INSTALLATION.md), [Runtime build](BUILD_PROFILES.md), [Release](RELEASE.md) |
 | Quality and claims | [Validation](VALIDATION.md), [Benchmarks](BENCHMARKS.md), [Scorecard](SCORECARD.md) |
 | Contribution and governance | [CONTRIBUTING](../CONTRIBUTING.md), [GOVERNANCE](../GOVERNANCE.md), [CODE_OF_CONDUCT](../CODE_OF_CONDUCT.md) |
 | Security and support | [SECURITY](../SECURITY.md), [SUPPORT](../SUPPORT.md) |
@@ -30,7 +30,8 @@ Before describing a release as ready:
    verify the root grant, project metadata, release configuration,
    contribution licensing, and security contact together.
 2. Run the current release suite in [Validation](VALIDATION.md).
-3. Confirm all three build counts and supported-host Profile files.
+3. Confirm the 27-Skill Runtime build, 154/9 JIT/routing-only delivery, 163-item
+   temporary Layer 3 completeness proof, and supported-host Agent Profile files.
 4. Confirm install, upgrade, doctor, and uninstall preserve unrelated user content.
 5. Regenerate source-derived catalogs and reports whose inputs changed.
 6. Confirm tracked generated artifacts have no source drift.

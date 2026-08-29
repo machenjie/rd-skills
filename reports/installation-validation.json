@@ -8,20 +8,17 @@
     "Static Profile and local lifecycle checks do not prove real-host accuracy or the installed user experience."
   ],
   "measurement_scope": "built Skill roots, static Agent Profiles, OpenAI Skill zips, and local install lifecycle",
-  "profile_top_level_skill_counts": {
-    "dev": 190,
-    "full": 40,
-    "recommended": 27
-  },
+  "runtime_top_level_skill_count": 27,
   "schema_version": 2,
   "status": "pass",
   "summary": {
     "agent_profile_files": 28,
     "agent_profile_roots": 7,
-    "built_skill_directories": 2570,
+    "built_skill_directories": 270,
     "error_count": 0,
+    "legacy_profile_migrations": 2,
     "obsolete_runtime_artifacts": 0,
     "skill_roots": 10,
-    "zip_count": 257
+    "zip_count": 27
   }
 }

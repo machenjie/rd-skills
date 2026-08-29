@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import hashlib
 import importlib.util
 import json
@@ -8,6 +9,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -85,7 +87,7 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             profile_root = self._write_profile(Path(temporary), 120)
             errors: list[str] = []
-            VALIDATOR._validate_profile(
+            VALIDATOR._validate_runtime(
                 profile_root, errors, enforce_source_mapping=False
             )
             self.assertEqual([], errors)
@@ -94,7 +96,7 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             profile_root = self._write_profile(Path(temporary), 121)
             errors: list[str] = []
-            VALIDATOR._validate_profile(
+            VALIDATOR._validate_runtime(
                 profile_root, errors, enforce_source_mapping=False
             )
             self.assertTrue(
@@ -126,7 +128,7 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
                     encoding="utf-8",
                 )
                 errors: list[str] = []
-                VALIDATOR._validate_profile(
+                VALIDATOR._validate_runtime(
                     profile_root, errors, enforce_source_mapping=False
                 )
                 self.assertTrue(
@@ -150,7 +152,7 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
                     manifest["compiled_layer3_format"] = value
                 manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
                 errors: list[str] = []
-                VALIDATOR._validate_profile(
+                VALIDATOR._validate_runtime(
                     profile_root, errors, enforce_source_mapping=False
                 )
                 self.assertTrue(
@@ -175,7 +177,7 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
                 encoding="utf-8",
             )
             errors: list[str] = []
-            VALIDATOR._validate_profile(profile_root, errors)
+            VALIDATOR._validate_runtime(profile_root, errors)
         self.assertTrue(
             any("compiled projection headings" in error for error in errors),
             errors,
@@ -214,7 +216,7 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
             shutil.move(source_layer3 / candidate, wrong_layer3)
 
             errors: list[str] = []
-            VALIDATOR._validate_profile(profile_root, errors)
+            VALIDATOR._validate_runtime(profile_root, errors)
         candidate_mapping_errors = [
             error
             for error in errors
@@ -402,6 +404,237 @@ class CompiledLayer3ReadabilityTests(unittest.TestCase):
                         any("Layer 3 JIT/control policy is forbidden" in error for error in errors),
                         errors,
                     )
+
+
+class CompleteLayer3TemporaryProjectionTests(unittest.TestCase):
+    @staticmethod
+    def _tree_digest(root: Path) -> str:
+        digest = hashlib.sha256()
+        if not root.exists():
+            return digest.hexdigest()
+        for path in sorted(root.rglob("*")):
+            relative = path.relative_to(root).as_posix().encode("utf-8")
+            digest.update(relative)
+            digest.update(b"\0")
+            if path.is_file():
+                digest.update(path.read_bytes())
+            digest.update(b"\0")
+        return digest.hexdigest()
+
+    def test_projects_all_layer3_sources_once_in_cleaned_temporary_storage(self) -> None:
+        self.assertTrue(
+            hasattr(VALIDATOR, "_validate_complete_layer3_temporary_projection"),
+            "the dev-independent 163-item temporary projection proof is missing",
+        )
+        dist_before = self._tree_digest(ROOT / "dist")
+        created_roots: list[Path] = []
+        real_temporary_directory = tempfile.TemporaryDirectory
+
+        def tracked_temporary_directory(*args, **kwargs):
+            context = real_temporary_directory(*args, **kwargs)
+            created_roots.append(Path(context.name))
+            return context
+
+        errors: list[str] = []
+        with mock.patch.object(
+            VALIDATOR.tempfile,
+            "TemporaryDirectory",
+            side_effect=tracked_temporary_directory,
+        ):
+            result = VALIDATOR._validate_complete_layer3_temporary_projection(errors)
+
+        self.assertEqual([], errors)
+        self.assertEqual(163, result["projected_count"])
+        self.assertEqual(150, result["foundation_count"])
+        self.assertEqual(13, result["domain_count"])
+        self.assertEqual(154, result["runtime_jit_count"])
+        self.assertEqual(9, result["non_runtime_count"])
+        self.assertEqual(163, len(result["projected_names"]))
+        self.assertEqual(163, len(set(result["projected_names"])))
+        self.assertTrue(created_roots)
+        self.assertTrue(all(not path.exists() for path in created_roots))
+        self.assertEqual(dist_before, self._tree_digest(ROOT / "dist"))
+
+    def test_rejects_repository_or_runtime_output_as_projection_root(self) -> None:
+        forbidden = ROOT / "dist/complete-layer3-validation-forbidden"
+        self.assertFalse(forbidden.exists())
+        errors: list[str] = []
+        result = VALIDATOR._validate_complete_layer3_projection_at(
+            forbidden, errors
+        )
+        self.assertEqual(0, result["projected_count"])
+        self.assertTrue(
+            any(
+                "must remain outside the repository and Runtime outputs" in error
+                for error in errors
+            ),
+            errors,
+        )
+        self.assertFalse(forbidden.exists())
+
+    def test_rejects_registry_source_disagreement_and_duplicate(self) -> None:
+        registries = VALIDATOR.canonical_build._load_registries()
+        items = {
+            layer: VALIDATOR.canonical_build._load_items(layer, entries)
+            for layer, entries in registries.items()
+        }
+        incomplete = dict(items)
+        incomplete["foundation"] = items["foundation"][:-1]
+        disagreement_errors: list[str] = []
+        VALIDATOR._validate_layer3_registry_source_inventory(
+            incomplete, disagreement_errors
+        )
+        self.assertTrue(
+            any("Registry/source inventory disagrees" in error for error in disagreement_errors),
+            disagreement_errors,
+        )
+
+        duplicate_registries = copy.deepcopy(registries)
+        duplicate_registries["foundation"].append(
+            copy.deepcopy(duplicate_registries["foundation"][0])
+        )
+        duplicate_errors: list[str] = []
+        with mock.patch.object(
+            VALIDATOR.canonical_build,
+            "_load_registries",
+            return_value=duplicate_registries,
+        ):
+            VALIDATOR._validate_complete_layer3_temporary_projection(
+                duplicate_errors
+            )
+        self.assertTrue(
+            any("duplicate foundation Skill" in error for error in duplicate_errors),
+            duplicate_errors,
+        )
+
+    def test_rejects_missing_or_malformed_compact_projection(self) -> None:
+        original = VALIDATOR.canonical_build._write_compact_layer3_root_projection
+
+        for mutation in ("missing", "malformed-heading"):
+            with self.subTest(mutation=mutation):
+                def mutate(destination, item):
+                    original(destination, item)
+                    if item.name != "transaction-consistency":
+                        return
+                    skill_file = destination / "SKILL.md"
+                    if mutation == "missing":
+                        skill_file.unlink()
+                    else:
+                        text = skill_file.read_text(encoding="utf-8")
+                        skill_file.write_text(
+                            text.replace(
+                                "## Skill Role",
+                                "## Invalid Projection Heading",
+                                1,
+                            ),
+                            encoding="utf-8",
+                        )
+
+                errors: list[str] = []
+                with mock.patch.object(
+                    VALIDATOR.canonical_build,
+                    "_write_compact_layer3_root_projection",
+                    side_effect=mutate,
+                ):
+                    VALIDATOR._validate_complete_layer3_temporary_projection(errors)
+                expected = (
+                    "is missing root SKILL.md"
+                    if mutation == "missing"
+                    else "compact foundation projection headings"
+                )
+                self.assertTrue(
+                    any(expected in error for error in errors),
+                    errors,
+                )
+
+    def test_rejects_missing_nested_reference_and_link(self) -> None:
+        original = VALIDATOR.canonical_build._copy_skill_tree
+
+        def inject_broken_nested_link(source, destination):
+            original(source, destination)
+            if destination.name != "targeted-validation-selection":
+                return
+            reference = (
+                destination
+                / "references/repository-command-entry-evidence.md"
+            )
+            with reference.open("a", encoding="utf-8") as handle:
+                handle.write("\n[missing nested asset](../assets/missing-proof.txt)\n")
+
+        errors: list[str] = []
+        with mock.patch.object(
+            VALIDATOR.canonical_build,
+            "_copy_skill_tree",
+            side_effect=inject_broken_nested_link,
+        ):
+            VALIDATOR._validate_complete_layer3_temporary_projection(errors)
+        self.assertTrue(
+            any("copied nested references files do not match" in error for error in errors),
+            errors,
+        )
+        self.assertTrue(
+            any("missing local temporary Layer 3 reference" in error for error in errors),
+            errors,
+        )
+
+    def test_rejects_selector_ownership_mismatch(self) -> None:
+        original = VALIDATOR._load_complete_selector_projection
+
+        def remove_authorized_candidate(selector_path, errors):
+            selector = original(selector_path, errors)
+            if selector is None or selector_path.name != "backend-change-builder.json":
+                return selector
+            selector = copy.deepcopy(selector)
+            for row in selector["profile_authority"]:
+                row["authorized_layer3"] = [
+                    candidate
+                    for candidate in row["authorized_layer3"]
+                    if candidate != "transaction-consistency"
+                ]
+                row["authorized_layer3"].append("skill-authoring-expert")
+            return selector
+
+        errors: list[str] = []
+        with mock.patch.object(
+            VALIDATOR,
+            "_load_complete_selector_projection",
+            side_effect=remove_authorized_candidate,
+        ):
+            VALIDATOR._validate_complete_layer3_temporary_projection(errors)
+        self.assertTrue(
+            any("selector ownership does not match" in error for error in errors),
+            errors,
+        )
+        self.assertTrue(
+            any(
+                "non-Runtime Foundation Skills entered selector authorization"
+                in error
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_rejects_symlink_escape_in_temporary_projection(self) -> None:
+        original = VALIDATOR.canonical_build._copy_skill_tree
+
+        def inject_symlink(source, destination):
+            original(source, destination)
+            if destination.name == "targeted-validation-selection":
+                (destination / "references/escape.md").symlink_to(
+                    destination.parent / "outside-projection.md"
+                )
+
+        errors: list[str] = []
+        with mock.patch.object(
+            VALIDATOR.canonical_build,
+            "_copy_skill_tree",
+            side_effect=inject_symlink,
+        ):
+            VALIDATOR._validate_complete_layer3_temporary_projection(errors)
+        self.assertTrue(
+            any("must not be a symlink" in error for error in errors),
+            errors,
+        )
 
 
 if __name__ == "__main__":

@@ -87,6 +87,32 @@ def assert_core_producer_outcomes_passed(
 
 
 class CorePrinciplesOutcomeTests(unittest.TestCase):
+    def test_single_runtime_build_and_expanded_layer3_proof_are_core_bound(self) -> None:
+        acceptance = json.loads(
+            (ROOT / EVALUATOR.CANONICAL_CONTRACT_SOURCE).read_text(encoding="utf-8")
+        )["principle_acceptance_contract"]
+        producers = {row["id"]: row for row in acceptance["producers"]}
+        outcomes = {row["id"]: row for row in acceptance["outcomes"]}
+
+        build_producers = sorted(
+            producer_id for producer_id in producers if producer_id.startswith("build-")
+        )
+        self.assertEqual(["build-recommended"], build_producers)
+        self.assertEqual(
+            ["python3", "scripts/build.py"],
+            producers["build-recommended"]["argv"],
+        )
+        self.assertEqual(
+            ["build-recommended"],
+            producers["validate-built-links"]["depends_on"],
+        )
+        self.assertIn(
+            "expanded-layer3-temporary-projection-validation",
+            outcomes["built-links-valid"]["capabilities"],
+        )
+        self.assertNotIn("build-full-valid", outcomes)
+        self.assertNotIn("build-dev-valid", outcomes)
+
     def _root(self) -> tuple[tempfile.TemporaryDirectory[str], Path]:
         temporary = tempfile.TemporaryDirectory()
         root = Path(temporary.name)

@@ -27,6 +27,8 @@ from changeforge_install import (  # noqa: E402
     DEFAULT_SKILL_TARGETS,
     PROJECT_PROFILE_SUBPATHS,
     PROJECT_SKILL_SUBPATHS,
+    RUNTIME_PROFILE,
+    RUNTIME_SKILL_COUNT,
     SOURCE_PROFILE_ROOTS,
     SOURCE_SKILL_ROOTS,
 )
@@ -212,6 +214,22 @@ FORBIDDEN_USER_TOKENS = (
     "PostToolUse",
     ".changeforge-packs",
 )
+RUNTIME_PROFILE_CHOICE_HISTORY_DOCS = frozenset(
+    {"CHANGELOG.md", "GOVERNANCE.md", "docs/MIGRATING_TO_HOOKLESS.md"}
+)
+RUNTIME_PROFILE_CHOICE_PATTERNS = (
+    re.compile(
+        r"\bchoose\s+(?:a\s+)?(?:build\s+|install\s+|runtime\s+)?profile\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\bbuild\s+profiles?\s+affected\b", re.IGNORECASE),
+    re.compile(r"^\|\s*`(?:full|dev)`\s*\|", re.IGNORECASE | re.MULTILINE),
+    re.compile(
+        r"\b(?:select|specify)\s+`?(?:recommended|full|dev)`?\s+"
+        r"(?:profile|runtime)\b",
+        re.IGNORECASE,
+    ),
+)
 DELETED_PATH_MARKERS = (
     "src/hook-runtime",
     "src/runtime_governance",
@@ -301,10 +319,8 @@ FULL_REGRESSION_COMMANDS = (
     "python3 scripts/eval-core-principles.py --gate authoring",
     "python3 scripts/validate-examples.py",
     "python3 scripts/generate-examples-showcase.py --out docs/SHOWCASE.md --check",
-    "python3 scripts/generate-marketplace-catalog.py --profile recommended --out docs/MARKETPLACE_CATALOG.md --check",
-    "python3 scripts/validate-marketplace-index.py --profile recommended",
-    "python3 scripts/validate-marketplace-index.py --profile full",
-    "python3 scripts/validate-marketplace-index.py --profile dev",
+    "python3 scripts/generate-marketplace-catalog.py --out docs/MARKETPLACE_CATALOG.md --check",
+    "python3 scripts/validate-marketplace-index.py",
     "python3 scripts/validate-productization-assets.py",
     "python3 scripts/validate-open-source-readiness.py --require-pass",
     "python3 scripts/run-ci-tests.py full --jobs 4 --timeout 900",
@@ -495,6 +511,28 @@ def _current_term_errors(root: Path, path: Path) -> list[str]:
     ]
 
 
+def _runtime_surface_errors(root: Path) -> list[str]:
+    """Reject public Runtime choice surfaces while permitting legacy migration prose."""
+
+    errors: list[str] = []
+    for path in _markdown_files(root):
+        relative = path.relative_to(root).as_posix()
+        text = path.read_text(encoding="utf-8")
+        if "--profile" in text:
+            errors.append(
+                f"{relative}: user-facing Runtime command must not select --profile"
+            )
+        if relative in RUNTIME_PROFILE_CHOICE_HISTORY_DOCS:
+            continue
+        for pattern in RUNTIME_PROFILE_CHOICE_PATTERNS:
+            if pattern.search(text):
+                errors.append(
+                    f"{relative}: retired user-facing Runtime Profile choice remains"
+                )
+                break
+    return errors
+
+
 def _mapping(value: Any, context: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValidationProblem(f"{context} must be a mapping")
@@ -520,17 +558,17 @@ def _registry_authority(root: Path) -> dict[str, Any]:
     counts = {layer: len(entries) for layer, entries in registries.items()}
     total = sum(counts.values())
     non_control = total - counts["control"]
-    profile_counts = {
-        "recommended": counts["control"] + counts["professional"],
-        "full": counts["control"] + counts["professional"] + counts["domain"],
-        "dev": total,
-    }
+    runtime_top_level_count = counts["control"] + counts["professional"]
+    if runtime_top_level_count != RUNTIME_SKILL_COUNT:
+        raise ValidationProblem(
+            "registry Runtime top-level count does not match installer authority"
+        )
     return {
         "registries": registries,
         "counts": counts,
         "total": total,
         "non_control": non_control,
-        "profile_counts": profile_counts,
+        "runtime_top_level_count": runtime_top_level_count,
     }
 
 
@@ -676,16 +714,9 @@ def _volatile_fact_authority(root: Path) -> dict[str, Any]:
     routing_only = (
         foundation_delivery["dev-only"] + foundation_delivery["authoring-only"]
     )
-    profile_delivery = {
-        "recommended": {
-            "targeted": foundation_delivery["product"] + counts["domain"],
-            "routing_only": routing_only,
-        },
-        "full": {
-            "targeted": foundation_delivery["product"],
-            "routing_only": routing_only,
-        },
-        "dev": {"targeted": 0, "routing_only": 0},
+    runtime_delivery = {
+        "targeted": foundation_delivery["product"] + counts["domain"],
+        "routing_only": routing_only,
     }
 
     foundation_names = {str(entry.get("name")) for entry in registries["foundation"]}
@@ -739,8 +770,8 @@ def _volatile_fact_authority(root: Path) -> dict[str, Any]:
         "counts": counts,
         "total": registry["total"],
         "non_control": registry["non_control"],
-        "profile_counts": registry["profile_counts"],
-        "profile_delivery": profile_delivery,
+        "runtime_top_level_count": registry["runtime_top_level_count"],
+        "runtime_delivery": runtime_delivery,
         "routing_case_count": len(routing_cases),
         "capability_routing_case_count": len(capability_cases),
         "admission_case_count": len(admission_cases),
@@ -755,8 +786,8 @@ def _volatile_fact_authority(root: Path) -> dict[str, Any]:
 
 def _required_volatile_projections(authority: dict[str, Any]) -> dict[str, tuple[str, ...]]:
     counts = authority["counts"]
-    profiles = authority["profile_counts"]
-    delivery = authority["profile_delivery"]
+    runtime_top_level = authority["runtime_top_level_count"]
+    delivery = authority["runtime_delivery"]
     admissions = authority["admission_counts"]
     coverage = authority["coverage_counts"]
     references = authority["reference_inventory"]
@@ -765,17 +796,10 @@ def _required_volatile_projections(authority: dict[str, Any]) -> dict[str, tuple
         f"{counts['foundation']} Foundation, and {counts['domain']} Domain Skills: "
         f"{authority['total']} total and {authority['non_control']} non-Control"
     )
-    profile_counts = (
-        f"{profiles['recommended']}, {profiles['full']}, and {profiles['dev']} "
-        "top-level Skills"
-    )
+    runtime_count = f"{runtime_top_level} top-level Skills"
     delivery_counts = (
-        f"{profiles['recommended']}/{delivery['recommended']['targeted']}/"
-        f"{delivery['recommended']['routing_only']}, "
-        f"{profiles['full']}/{delivery['full']['targeted']}/"
-        f"{delivery['full']['routing_only']}, and "
-        f"{profiles['dev']}/{delivery['dev']['targeted']}/"
-        f"{delivery['dev']['routing_only']} top-level/targeted/routing-only"
+        f"{runtime_top_level}/{delivery['targeted']}/"
+        f"{delivery['routing_only']} top-level/targeted/routing-only"
     )
     routing = (
         f"{authority['routing_case_count']} canonical entries and "
@@ -805,7 +829,7 @@ def _required_volatile_projections(authority: dict[str, Any]) -> dict[str, tuple
         f"{'is' if references['unindexed_templates'] == 1 else 'are'} unindexed"
     )
     return {
-        "AGENTS.md": (inventory, profile_counts),
+        "AGENTS.md": (inventory, runtime_count, delivery_counts),
         ".github/pull_request_template.md": (
             f"all {authority['non_control']} effective packages are accepted",
             f"{authority['non_control']}/{authority['non_control']} effective coverage",
@@ -813,15 +837,13 @@ def _required_volatile_projections(authority: dict[str, Any]) -> dict[str, tuple
         "CHANGELOG.md": (routing, layer3, matrix),
         "docs/BUILD_PROFILES.md": (
             inventory,
+            runtime_count,
+            delivery_counts,
             reference_inventory,
             unindexed_templates,
         ),
-        "docs/QUICKSTART.md": (
-            f"| `recommended` | {profiles['recommended']} |",
-            f"| `full` | {profiles['full']} |",
-            f"| `dev` | {profiles['dev']} |",
-        ),
-        "docs/VALIDATION.md": (routing, admission, layer3, matrix, profile_counts),
+        "docs/QUICKSTART.md": (runtime_count,),
+        "docs/VALIDATION.md": (routing, admission, layer3, matrix, runtime_count),
         "docs/SCORECARD.md": (inventory, routing, admission, layer3, matrix, delivery_counts),
         "docs/BENCHMARKS.md": (f"all {counts['domain']} Domain Skills",),
         "src/foundation/capabilities/README.md": (
@@ -1452,7 +1474,7 @@ def _expected_installation_matrix_rows() -> tuple[str, ...]:
         if agent == "openai-api":
             rows.append(
                 "| OpenAI API | zip output only | "
-                "`dist/openai-api/zips/<profile>/` | none |"
+                f"`dist/openai-api/zips/{RUNTIME_PROFILE}/` | none |"
             )
             continue
         for scope in SCOPE_ORDER:
@@ -1584,6 +1606,12 @@ def _required_content_errors(root: Path) -> list[str]:
             "--backup",
             "--force",
             "no automatic restore CLI",
+            "Do not uninstall an existing `full` or `dev` installation first",
+            "upgrade must create a complete backup",
+            "Unmanaged top-level files and directories remain in place",
+            "A user file mixed inside a managed Skill directory is included "
+            "in the backup",
+            "Upgrade is not crash-atomic",
             "Troubleshooting And Recovery",
             "dist/openai-api/zips/recommended/",
         ),
@@ -1594,14 +1622,29 @@ def _required_content_errors(root: Path) -> list[str]:
             "Decisions That Stay With You",
             "Final Handoff Contents",
         ),
+        "docs/BUILD_PROFILES.md": (
+            "Foundation and Domain Skills never enter Host top-level discovery",
+            "Primary Professional routing happens once",
+            "stable, independent Primary Route",
+        ),
+        "docs/VALIDATION.md": (
+            "163-item projection once in a cleaned temporary directory",
+            "Route Once behavior",
+        ),
+        "docs/SKILL_CONTENT_GOVERNANCE.md": (
+            "strict order",
+            "stable, independent Primary Route",
+            "Foundation is a capability-modifier layer",
+            "Domain is `modifier-only`",
+        ),
     }
     for relative, phrases in requirements.items():
         path = root / relative
         if not path.is_file():
             continue
-        text = path.read_text(encoding="utf-8").casefold()
+        text = _normalized_document_text(path.read_text(encoding="utf-8"))
         for phrase in phrases:
-            if phrase.casefold() not in text:
+            if _normalized_document_text(phrase) not in text:
                 errors.append(f"{relative}: missing required documentation content {phrase}")
 
     for relative in ("README.md", "docs/QUICKSTART.md", "docs/INSTALLATION.md"):
@@ -1870,6 +1913,7 @@ def validate_docs_consistency(
 
     errors.extend(_navigation_errors(root))
     errors.extend(_required_content_errors(root))
+    errors.extend(_runtime_surface_errors(root))
     errors.extend(_validation_path_consistency_errors(root))
     errors.extend(_retired_workflow_contract_errors(root))
     errors.extend(_volatile_fact_errors(root))
@@ -1901,9 +1945,9 @@ def validate_docs_consistency(
         if phrase.casefold() not in subagent_model.casefold():
             errors.append(f"docs/SUBAGENT_MODEL.md: missing {phrase}")
     authority_requirements = {
-        "docs/BUILD_PROFILES.md": ("27", "40", "190", "manifest"),
-        "docs/INSTALLATION.md": ("scripts/build.py --profile", "doctor", "manifest"),
-        "docs/RELEASE.md": ("scripts/package.py --profile", "Build profiles", "manifest"),
+        "docs/BUILD_PROFILES.md": ("27", "163", "Runtime", "manifest"),
+        "docs/INSTALLATION.md": ("scripts/build.py", "doctor", "manifest"),
+        "docs/RELEASE.md": ("scripts/package.py", "Runtime build", "manifest"),
     }
     for relative, phrases in authority_requirements.items():
         text = (root / relative).read_text(encoding="utf-8")

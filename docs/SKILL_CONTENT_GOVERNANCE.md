@@ -756,7 +756,24 @@ for layer-specific form; this document owns cross-layer placement. [Quality
 Model](QUALITY_MODEL.md) and [Benchmarks](BENCHMARKS.md) own evidence
 interpretation and proof limits.
 
-Each task receives one primary Professional Skill and zero to a few specifically triggered Layer 3 Skills.
+Before adding a Skill, place new knowledge in this strict order:
+
+1. an existing Targeted Reference;
+2. an existing Foundation or Domain Skill;
+3. an existing Professional Skill;
+4. a new Professional Skill.
+
+New frameworks, libraries, protocols, platform sub-capabilities, scenarios, and
+gotchas default to one of the first three owners. They do not justify a new
+Host-visible Skill. Add a Professional Skill only when the capability owns a
+stable, independent Primary Route and a distinct task boundary that cannot be
+owned coherently by an existing Professional Skill.
+
+Foundation is a capability-modifier layer and Domain is `modifier-only`.
+Neither becomes a Runtime top-level Skill. Each task receives one Primary
+Professional Skill and normally zero to three specifically triggered Layer 3
+items, then only the necessary Targeted References. Task and Review consume the
+route fixed by Main and do not globally reroute.
 Multi-role Professional Skills declare role-neutral inputs once and
 role-specific inputs through `required_inputs_by_role`; analysis cannot require
 a future diff, and review cannot be dispatched without an actual diff or named

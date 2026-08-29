@@ -1,80 +1,121 @@
-# Build Profiles
+# Runtime Build
 
-Build profiles control which standard Skills are exposed at the top level. They
-do not change the control architecture. The source inventory is 1 Control, 26
-Professional, 150 Foundation, and 13 Domain Skills: 190 total and 189
-non-Control.
+rd-skills has one Runtime build. This filename is retained for link
+compatibility; it does not define a selectable Profile dimension.
 
-| Profile | Top-level Skills | Targeted companions | Routing-only entries | Composition | Use |
-| --- | ---: | ---: | ---: | --- | --- |
-| `recommended` | 27 | 154 | 9 | 1 Control + 26 Professional | normal project or user installation |
-| `full` | 40 | 141 | 9 | recommended + 13 Domain | Domain discovery at the top level |
-| `dev` | 190 | 0 | 0 | 1 Control + 26 Professional + 150 Foundation + 13 Domain | rd-skills authoring and debugging |
+The source inventory is 1 Control, 26 Professional, 150 Foundation, and 13
+Domain Skills: 190 total and 189 non-Control. The Runtime exposes 27 top-level
+Skills: 1 Control and 26 Professional. Foundation and Domain Skills never enter
+Host top-level discovery.
 
-The current second-phase expansion adds 2 Professional and 6 Foundation Skills
-plus 22 References without changing Domain membership. `recommended` compiles the 141
-registry-owned `product` Foundation Skills and the 13 automatically routable
-Domain candidates into the Professional Skills that name them. Its 1
-`authoring-only` and 8 `dev-only` Foundation Skills remain routing-only.
-`full` compiles the same 141 Foundation Skills while exposing all 13 Domain
-roots at the top level; its 9
-non-product Foundation Skills remain routing-only. `dev` exposes all 150
-Foundation and 13 Domain Skills at the top level and does not compile companion
-Layer 3 copies. The build manifest records every Foundation scope, the compiled
-Foundation and Domain sets, each routing-only entry, the authoritative companion
-or top-level path, and `compiled_layer3_format: ai-consumption-v1`.
-The source Layer 3 catalog contains 163 entries.
+| Runtime surface | Count | Delivery |
+| --- | ---: | --- |
+| Control | 1 | top-level Skill |
+| Professional | 26 | top-level Skill and Primary Route owner |
+| Product Foundation | 141 | capability modifiers compiled behind Professional selectors |
+| Domain | 13 | `modifier-only` Layer 3 items compiled behind Professional selectors |
+| Authoring/internal Foundation | 9 | source and routing-validation inventory only |
+
+The resulting Runtime delivery is 27/154/9
+top-level/targeted/routing-only entries. The source Layer 3 catalog contains
+163 entries. Nothing is deleted to reduce Host-visible Skill count: all 150
+Foundation and 13 Domain sources remain governed and validated.
+
+The fixed request path is:
+
+```text
+User -> engineering-control-plane -> Primary Professional
+     -> selector -> 0..3 JIT Layer 3 -> required References
+```
+
+Primary Professional routing happens once. Task and Review assignments consume
+Main's bound route and do not rerun the global router. They open only the
+capsule-named Layer 3 items and necessary Targeted References; no consumer opens
+the complete Foundation/Domain catalog or a Layer 3 index as runtime context.
+
+## Compatibility Name And Manifests
+
+Build output remains under `dist/**/recommended/`, and manifests retain
+`profile: recommended` for compatibility with existing paths and installations.
+That internal name is fixed. It is not an install, package, doctor, marketplace,
+or runtime-discovery choice. New `full` or `dev` output is rejected, and a build
+removes only preflighted retired output directories inside its managed roots.
+
+The build manifest records the complete Foundation and Domain source inventory,
+Foundation scopes, the 154 compiled candidates, 9 routing-only entries,
+Professional ownership, and `compiled_layer3_format: ai-consumption-v1`.
+Manifests also include the authoritative host matrix and an
+`authoritative_build_inputs` snapshot. That snapshot binds the complete `src/`
+tree, `scripts/validation_utils.py`, `pyproject.toml`, and every producer script
+named by Core, using normalized path, type, byte length, and content. Generated
+outputs and caches are excluded. Packaging, installation, upgrade, and OpenAI
+bundle validation recompute the same file-set digest and reject missing,
+malformed, or stale input. Git HEAD and source-scoped clean/dirty/unavailable
+state remain audit metadata rather than source-fingerprint inputs.
+
+## Layer 3 Projection
+
+Compiled companions are AI-consumption projections, not copies of authoring
+roots. A Foundation projection keeps its complete decision boundary,
+high-value rules, anti-patterns, stop conditions, and Targeted References. A
+Domain projection keeps its decision boundary, professional rules, gotchas,
+stop/escalation conditions, and Targeted References. Generic inputs,
+checklists, and output scaffolding remain outside the compact projection.
+
+The built Professional root carries the JIT entrypoint. A selected nested
+Reference is opened only by its explicit logical path. Compiled references do
+not change top-level Skill counts, and generated indexes are validation aids,
+not catalogs to preload.
+
 The Reference inventory contains 611 registry-indexed Markdown files and 612
 physical Markdown files. Exactly 1 physical Reference is unindexed: the
 Foundation authoring template Reference.
 
-Compiled companions are AI-consumption projections, not copies of authoring
-roots. A Foundation projection keeps the title, complete `Skill Role` as
-`Decision Boundary`, High-Value Rules, Anti-Patterns, Stop Conditions, and
-Targeted References. A Domain projection keeps the title, complete `Role` as
-`Decision Boundary`, Professional Decision Rules, High-Value Gotchas, Stop /
-Escalation Conditions, and Targeted References. Routing triggers, generic
-inputs, execution checklists, and output contracts remain outside the compiled
-projection. `full` still exposes complete Domain authoring roots, and `dev`
-still exposes complete Foundation and Domain authoring roots.
+Retiring the development Runtime does not retire its proof obligations.
+`scripts/validate-built-skill-reference-links.py` projects all 163 Foundation
+and Domain sources once into a cleaned temporary directory outside the
+repository and `dist/`. It checks source/registry agreement, compact projection
+shape, selector ownership and reachability, nested files and links, symlink
+containment, the 154 Runtime JIT entries, and the 9 non-Runtime authoring entries.
 
-The built Professional `SKILL.md` links a compact discovery/validation index so
-generated companions remain root-reachable, but task execution opens only the
-capsule-named Layer 3 root. When a deterministic evaluation fixture explicitly
-names a nested Reference as `owner/references/file.md`, the context evaluator
-loads exactly that one file from either the compiled companion directory or the
-top-level owner. It never opens the Layer 3 index, scans a directory, or follows
-links recursively. Compiled references do not change top-level Skill counts and
-their indexes must not be read as catalogs.
+## Preserved Routing Semantics
 
-Ordinary Android and iOS/iPadOS routing uses their successor platform Domains.
-The obsolete mobile Domain and compatibility mode have been removed. Removed
-legacy Skill ids are unsupported and are not redirected.
+Runtime consolidation does not change Primary, Layer 3, Domain positive/anti,
+role-authorization, or Review routing. Ordinary Android and iOS/iPadOS work uses
+the successor platform Domains; obsolete mobile identifiers remain unsupported
+and are not redirected. Cross-platform framework work requires the
+cross-platform Domain plus every concrete target-platform Domain established by
+repository and release evidence.
 
-Installed-client source and lifecycle work belongs to
+Installed-client source and lifecycle work remains owned by
 `installed-client-change-builder`; browser/PWA-only work remains frontend work.
-Infrastructure source belongs to `platform-infrastructure-change-builder`;
-production apply, release, and rollback remain delivery-gate decisions.
-Cross-platform framework work requires the cross-platform Domain plus every
-concrete target-platform Domain established by repository and release evidence.
+Infrastructure source remains owned by
+`platform-infrastructure-change-builder`; production apply, release, and
+rollback remain delivery-gate decisions.
 
-Codex, Claude, and Copilot builds emit four Agent Profile files: main control,
-analysis, task, and review. Cline and OpenAI API packaging receive standard Skills
-but no claim of native Profile enforcement. Manifests include the authoritative
-host matrix and an `authoritative_build_inputs` snapshot. That snapshot binds the
-complete `src/` tree, `scripts/validation_utils.py`, `pyproject.toml`, and the
-exact producer scripts named by Core
-`principle_acceptance_contract.producers[*].argv[1]` (including
-`scripts/build.py`) by normalized path, type, byte length, and content;
-generated outputs and caches are excluded. Packaging, runtime installation,
-upgrade, and OpenAI bundle validation recompute the same file-set digest and
-reject missing, malformed, or stale snapshots. Git HEAD and source-scoped
-clean/dirty/unavailable state are audit metadata only, so a final commit that
-contains both source and its generated artifacts does not invalidate otherwise
-identical inputs. Current supported hosts declare isolated workspaces unsupported
-and Utility no-edit prompt-enforced; Claude/Copilot review omits command execution
-because safe read-only semantics are unsupported.
+## Runtime Versus Agent Profiles
 
-Use the canonical build commands in [Installation](INSTALLATION.md#build).
-Generated manifests are the authoritative record of profile and package
-contents. A profile name is a packaging choice, not a risk mode or task state.
+Runtime is the Skill-discovery and JIT-delivery surface described above. Agent
+Profiles are the four fixed execution roles: main control, analysis, task, and
+review. Codex, Claude, and Copilot builds emit those four host-native files.
+Cline and OpenAI API receive the Runtime Skills without a claim of native Agent
+Profile enforcement. A change to Runtime composition must not add an Agent
+Profile, Execution Level, or runtime state machine.
+
+## Growth Rule
+
+Place new knowledge in this order:
+
+1. an existing Targeted Reference;
+2. an existing Foundation or Domain Skill;
+3. an existing Professional Skill;
+4. a new Professional Skill.
+
+A framework, library, protocol, platform sub-capability, scenario, or gotcha is
+not by itself a new top-level Skill. Add a Professional Skill only when the
+capability has a stable, independent Primary Route and clear task ownership.
+Use [Skill content governance](SKILL_CONTENT_GOVERNANCE.md#layer-rules) for the
+cross-layer placement contract.
+
+Build with `python3 scripts/build.py`. Generated manifests are the inventory
+authority; do not hand-edit generated projections or fingerprints.

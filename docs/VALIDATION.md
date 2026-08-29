@@ -55,10 +55,8 @@ integration handoff or release-candidate decision:
 python3 scripts/eval-core-principles.py --gate authoring
 python3 scripts/validate-examples.py
 python3 scripts/generate-examples-showcase.py --out docs/SHOWCASE.md --check
-python3 scripts/generate-marketplace-catalog.py --profile recommended --out docs/MARKETPLACE_CATALOG.md --check
-python3 scripts/validate-marketplace-index.py --profile recommended
-python3 scripts/validate-marketplace-index.py --profile full
-python3 scripts/validate-marketplace-index.py --profile dev
+python3 scripts/generate-marketplace-catalog.py --out docs/MARKETPLACE_CATALOG.md --check
+python3 scripts/validate-marketplace-index.py
 python3 scripts/validate-productization-assets.py
 python3 scripts/validate-open-source-readiness.py --require-pass
 python3 scripts/run-ci-tests.py full --jobs 4 --timeout 900
@@ -74,11 +72,38 @@ Core authoring is the canonical full deterministic producer owner. The
 remaining commands are artifact consumers or non-Core repository checks; they
 must not replay a Core-owned producer merely to count a second pass.
 
+### Single Runtime Completeness Responsibilities
+
+Retiring the development Runtime changes delivery, not proof scope. The source
+authority remains 1 Control, 26 Professional, 150 Foundation, and 13 Domain
+Skills. The fixed Runtime has 27 top-level Skills and 154 JIT Layer 3 entries;
+9 authoring/internal Foundation entries remain source-valid but non-Runtime.
+
+The deterministic owner checks cover:
+
+- source and four-registry completeness and uniqueness;
+- Professional selector completeness and exact Foundation/Domain ownership;
+- complete compact projection of all 163 Layer 3 sources;
+- nested Reference, asset, example, local-link, and symlink containment;
+- routing regression, including Domain positive, neighboring negative,
+  transition-positive, and unchanged-paraphrase controls;
+- Route Once behavior, role authorization, and Review route stability;
+- rendered-context budgets across the fixed Runtime, selected zero-to-three
+  Layer 3 items, and explicitly named nested References; and
+- code-generation definition, harness, and negative-control evidence.
+
+When all Foundation and Domain sources must be expanded, the owning validator
+creates the 163-item projection once in a cleaned temporary directory outside
+the repository, `dist/`, packages, and Host discovery. It compares registry and
+source inventories, validates every compact projection and nested link, proves
+154 selector-reachable Runtime items and 9 non-Runtime entries, then removes the
+temporary tree. No development build is created.
+
 Development Affected runs only the selected affected producer and owner-test
 closure; it does not run the local Full Regression above. The
 [`impact_graph_contract`](../src/control-model/core-contracts.json) is the sole
 authority for changed-path classification, canonical producer dependency
-closure, owner-test selection, fail-closed outcomes, isolation, and build-profile
+closure, owner-test selection, fail-closed outcomes, isolation, and Runtime
 projection;
 [`scripts/impact_graph.py`](../scripts/impact_graph.py) is its resolver.
 `scripts/run-ci-tests.py` and `eval-core-principles.py --gate affected --base
@@ -96,10 +121,11 @@ and include their proven dependent closure. Readability and Semantic detector
 or contract changes select their focused axis validators. None of these
 affected rules weakens or replaces the independent full strict Formal Release
 or causes an affected run to generate panel packets, ballots, or attestations.
-Package changes project their base and head registry entries through the actual
-`recommended`, `full`, and `dev` build graph; an unresolved package selects all
-three profiles. Build and code-generation integration tests, plus the focused
-quickstart unit test, are selected only for direct changes to their owners. The
+Package changes project their base and head registry entries through the fixed
+Runtime build graph. An unresolved package selects the Runtime producer rather
+than creating a second build surface. Build and code-generation integration
+tests, plus the focused quickstart unit test, are selected only for direct
+changes to their owners. The
 runner preserves that one unsharded selected list, then runs each selected
 module in an isolated subprocess with a distinct temporary directory and
 disabled bytecode writes. `--jobs` bounds concurrent modules (default `2`);
@@ -229,7 +255,7 @@ or consume the tracked ordinary producer reports.
 | Agent behavior comparison | `src/control-model/core-contracts.json#/behavior_eval_contract` and `eval-agent-behavior.py` | Captured handoffs retain their deterministic oracle. The optional blind OLD/NEW mode validates physically separated packet/oracle/observations/caller-supplied-capture/reveal artifacts, opaque agent-visible identifiers, exact same-run bindings, capture byte/provenance integrity, Core-derived routing and Review metrics, and Main-owned pre-dispatch zero-review gates with an explicit decision actor, review candidate, zero dispatch count, and `reviewer_executed=false`. Caller-supplied captures have no Host/verifier-owned receipt trust channel, so effective live evidence remains `not_collected`; behavior improvement, host execution, and elapsed time are never inferred. |
 | Canonical finding compilation | `src/control-model/core-contracts.json#/review_discipline_contract/review_boundary_contract/finding_compiler` and `eval-agent-lightweight.py` | The Primary Review compiles only after its fixed boundary is complete. Its public Handoff exposes a unique `Finding Identity`, `Category`, and boolean `Repair required`; the parser rejects missing or duplicate visible identities. Deterministic fixtures prove stable exact dedup, conservative source-backed semantic reconciliation, partition isolation, lossless evidence/obligation preservation, and canonical-only Repair input; they do not prove live reviewer semantic judgment. |
 | Capability coverage | `evals/capability-coverage/matrix.yaml` and deterministic coverage validators | All 125 entries classify as 81 covered, 39 partial, 0 missing, and 5 intentionally unsupported; covered means catalog/routing evidence, not Professional Completeness. |
-| Build and installation | [Build profiles](BUILD_PROFILES.md) and [Installation](INSTALLATION.md) | Profiles contain 27, 40, and 190 top-level Skills; supported hosts include four Profiles; manifests and doctor checks match. |
+| Build and installation | [Runtime build](BUILD_PROFILES.md) and [Installation](INSTALLATION.md) | The Runtime contains 27 top-level Skills, Foundation/Domain never enter Host discovery, supported hosts receive the declared four Agent Profiles, and manifests, migration, package, and doctor checks match. |
 | Code generation | [Benchmarks](BENCHMARKS.md) | Definitions, harnesses, and starter negative controls pass; candidate claims require an explicit candidate input. |
 | Open-source publication | [Open-source readiness](OPEN_SOURCE_READINESS.md) | Root license, metadata, contribution, security, and publication checks pass together. |
 
@@ -434,9 +460,7 @@ python3 scripts/validate-skill-content-size.py
 python3 scripts/audit-skill-content.py --gate authoring
 python3 scripts/validate-reference-content.py --strict
 python3 scripts/validate-root-content.py --strict
-python3 scripts/build.py --profile recommended
-python3 scripts/build.py --profile full
-python3 scripts/build.py --profile dev
+python3 scripts/build.py
 python3 scripts/validate-agent-profiles.py
 python3 scripts/validate-docs-consistency.py
 python3 scripts/validate-built-skill-reference-links.py

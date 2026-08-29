@@ -67,7 +67,14 @@ MAX_ZIP_FILES = 500
 MAX_ZIP_BYTES = 5 * 1024 * 1024
 MAX_ZIP_FILE_BYTES = 2 * 1024 * 1024
 MAX_RENDERED_PROFESSIONAL_BODY_LINES = 120
-PROFILES = ("recommended", "full", "dev")
+RUNTIME_PROFILE = "recommended"
+RETIRED_PROFILES = ("full", "dev")
+EXPECTED_RUNTIME_COUNTS = {
+    "control": 1,
+    "professional": 26,
+    "foundation": 150,
+    "domain": 13,
+}
 LAYER3_PROJECTION_SECTIONS = {
     "foundation": (
         ("Skill Role", "Decision Boundary"),
@@ -222,18 +229,17 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="Build hookless rd-skills Skills and Agent Profiles."
     )
-    parser.add_argument("--profile", choices=PROFILES, default="recommended")
-    args = parser.parse_args()
+    parser.parse_args()
 
     try:
-        result = build_profile(args.profile)
+        result = build_profile(RUNTIME_PROFILE)
     except BuildError as exc:
         print(f"build: ERROR: {exc}", file=sys.stderr)
         return 1
 
     print(
-        "build: built hookless profile "
-        f"{args.profile} with {result['top_level_count']} standard Skill(s), "
+        "build: built hookless runtime with "
+        f"{result['top_level_count']} standard Skill(s), "
         f"{result['compiled_layer3_reference_count']} compiled Layer 3 reference(s), "
         f"{result['agent_profile_count']} Agent Profile(s), and "
         f"{result['zip_count']} OpenAI API zip(s)."
@@ -242,13 +248,13 @@ def main() -> int:
 
 
 def build_profile(profile: str) -> dict[str, Any]:
-    if profile not in PROFILES:
+    if profile != RUNTIME_PROFILE:
         raise BuildError(f"unsupported profile: {profile}")
 
     # Nothing below this preflight may mutate a managed output. In particular,
     # the build also writes hosted-runtime zips, so their path chain must be
     # checked before the first profile reset rather than at packaging time.
-    _preflight_static_paths(profile)
+    _preflight_static_paths()
     registries = _load_registries()
     _preflight_registry_entries(registries)
     items = {
@@ -258,16 +264,15 @@ def build_profile(profile: str) -> dict[str, Any]:
     _validate_global_skill_names(items)
     profiles = _load_agent_profiles()
     enforcement = _load_host_enforcement()
-    top_level = _top_level_items(profile, items)
-    _preflight_build_plan(profile, top_level, items, profiles, enforcement)
+    top_level = _top_level_items(items)
+    _preflight_build_plan(top_level, items, profiles, enforcement)
     try:
         source_snapshot = authoritative_build_input_snapshot(ROOT)
     except (OSError, ValueError) as exc:
         raise BuildError(f"cannot snapshot authoritative build inputs: {exc}") from exc
 
-    _clean_legacy_dist_artifacts()
+    _cleanup_retired_profile_outputs()
     compiled_names = _build_skill_roots(
-        profile,
         top_level,
         items,
         profiles,
@@ -275,14 +280,13 @@ def build_profile(profile: str) -> dict[str, Any]:
         source_snapshot,
     )
     _build_agent_profiles(profiles, enforcement)
-    _reset_dir(OPENAI_ZIP_DIR / profile)
-    _cleanup_legacy_zip_layout()
+    _reset_dir(OPENAI_ZIP_DIR / RUNTIME_PROFILE)
     zip_count = _package_openai_zips(
-        UNIVERSAL_SKILLS_ROOT / profile,
-        OPENAI_ZIP_DIR / profile,
+        UNIVERSAL_SKILLS_ROOT / RUNTIME_PROFILE,
+        OPENAI_ZIP_DIR / RUNTIME_PROFILE,
     )
     return {
-        "profile": profile,
+        "profile": RUNTIME_PROFILE,
         "top_level_count": len(top_level),
         "compiled_layer3_reference_count": len(compiled_names),
         "agent_profile_count": len(profiles),
@@ -290,7 +294,7 @@ def build_profile(profile: str) -> dict[str, Any]:
     }
 
 
-def _preflight_static_paths(profile: str) -> None:
+def _preflight_static_paths() -> None:
     """Validate every static input and managed output path before mutation."""
     source_directories = [SRC_DIR, REGISTRY_DIR, *LAYER_SOURCE_ROOTS.values()]
     source_files = [
@@ -329,7 +333,7 @@ def _preflight_static_paths(profile: str) -> None:
             + "; ".join(projection_errors)
         )
 
-    managed_outputs = _managed_output_paths(profile)
+    managed_outputs = _managed_output_paths()
     _require_within(DIST_DIR, ROOT, "managed dist root")
     _reject_symlink_chain(DIST_DIR, ROOT, "managed dist root")
     if DIST_DIR.exists():
@@ -339,6 +343,19 @@ def _preflight_static_paths(profile: str) -> None:
     for output in managed_outputs:
         _require_within(output, DIST_DIR, "managed output")
         _reject_symlink_chain(output, ROOT, "managed output")
+
+    for managed_root in _managed_profile_roots():
+        if managed_root.exists() and (
+            managed_root.is_symlink() or not managed_root.is_dir()
+        ):
+            raise BuildError(
+                f"managed profile root {_display_path(managed_root)} must be a regular directory"
+            )
+    for retired in _retired_profile_output_paths():
+        if retired.exists() and (retired.is_symlink() or not retired.is_dir()):
+            raise BuildError(
+                f"retired profile output {_display_path(retired)} must be a regular directory"
+            )
 
     # Build inputs and managed output must never contain one another, even if a
     # test or embedding caller overrides the default roots.
@@ -350,14 +367,27 @@ def _preflight_static_paths(profile: str) -> None:
             )
 
 
-def _managed_output_paths(profile: str) -> list[Path]:
+def _managed_profile_roots() -> tuple[Path, ...]:
+    return (UNIVERSAL_SKILLS_ROOT, *AGENT_SKILL_ROOTS, OPENAI_ZIP_DIR)
+
+
+def _retired_profile_output_paths() -> tuple[Path, ...]:
+    return tuple(
+        root / profile
+        for root in _managed_profile_roots()
+        for profile in RETIRED_PROFILES
+    )
+
+
+def _managed_output_paths() -> list[Path]:
     return [
         DIST_DIR,
-        UNIVERSAL_SKILLS_ROOT / profile,
-        *(root / profile for root in AGENT_SKILL_ROOTS),
+        *_managed_profile_roots(),
+        UNIVERSAL_SKILLS_ROOT / RUNTIME_PROFILE,
+        *(root / RUNTIME_PROFILE for root in AGENT_SKILL_ROOTS),
         *(target for _platform, target in AGENT_PROFILE_OUTPUTS),
-        OPENAI_ZIP_DIR,
-        OPENAI_ZIP_DIR / profile,
+        OPENAI_ZIP_DIR / RUNTIME_PROFILE,
+        *_retired_profile_output_paths(),
     ]
 
 
@@ -431,12 +461,26 @@ def _validate_global_skill_names(items: dict[str, list[SkillItem]]) -> None:
 
 
 def _preflight_build_plan(
-    profile: str,
     top_level: list[SkillItem],
     items: dict[str, list[SkillItem]],
     profiles: list[dict[str, Any]],
     enforcement: dict[str, Any],
 ) -> None:
+    observed_counts = {layer: len(layer_items) for layer, layer_items in items.items()}
+    if observed_counts != EXPECTED_RUNTIME_COUNTS:
+        raise BuildError(
+            "source inventory must contain exactly "
+            + ", ".join(
+                f"{count} {layer}" for layer, count in EXPECTED_RUNTIME_COUNTS.items()
+            )
+            + f" Skill(s); found {observed_counts}"
+        )
+    if len(top_level) != 27 or any(
+        item.layer not in {"control", "professional"} for item in top_level
+    ):
+        raise BuildError(
+            "runtime must contain exactly 27 top-level Control and Professional Skills"
+        )
     _validate_built_control_reference_reachability(top_level)
     layer3 = {item.name: item for item in [*items["foundation"], *items["domain"]]}
     domain_names = {item.name for item in items["domain"]}
@@ -478,14 +522,13 @@ def _preflight_build_plan(
                 _write_compact_layer3_root_projection(destination, item)
             if item.layer == "professional":
                 selected = _compiled_layer3_names(
-                    profile,
                     item,
                     domain_names,
                     product_foundation_names,
                 )
                 if selected:
                     _write_layer3_references(destination, selected, layer3)
-                _append_layer3_entrypoint(destination, profile)
+                _append_layer3_entrypoint(destination)
                 _validate_rendered_professional_body(destination / "SKILL.md")
             _validate_zip_source(destination)
 
@@ -715,25 +758,12 @@ def _required_string(entry: dict[str, Any], field: str, context: str) -> str:
 
 
 def _top_level_items(
-    profile: str,
     items: dict[str, list[SkillItem]],
 ) -> list[SkillItem]:
-    if profile == "recommended":
-        return [*items["control"], *items["professional"]]
-    if profile == "full":
-        return [*items["control"], *items["professional"], *items["domain"]]
-    if profile == "dev":
-        return [
-            *items["control"],
-            *items["professional"],
-            *items["foundation"],
-            *items["domain"],
-        ]
-    raise BuildError(f"unsupported profile: {profile}")
+    return [*items["control"], *items["professional"]]
 
 
 def _build_skill_roots(
-    profile: str,
     top_level: list[SkillItem],
     items: dict[str, list[SkillItem]],
     profiles: list[dict[str, Any]],
@@ -751,7 +781,7 @@ def _build_skill_roots(
     }
     all_compiled: set[str] = set()
     for root in (UNIVERSAL_SKILLS_ROOT, *AGENT_SKILL_ROOTS):
-        profile_root = root / profile
+        profile_root = root / RUNTIME_PROFILE
         _reset_dir(profile_root)
         compiled_by_skill: dict[str, list[str]] = {}
         for item in top_level:
@@ -766,7 +796,6 @@ def _build_skill_roots(
                 _write_compact_layer3_root_projection(destination, item)
             if item.layer == "professional":
                 selected = _compiled_layer3_names(
-                    profile,
                     item,
                     domain_names,
                     product_foundation_names,
@@ -776,12 +805,11 @@ def _build_skill_roots(
                     if selected
                     else []
                 )
-                _append_layer3_entrypoint(destination, profile)
+                _append_layer3_entrypoint(destination)
                 compiled_by_skill[item.name] = compiled
                 all_compiled.update(compiled)
         _write_build_manifest(
             profile_root,
-            profile,
             top_level,
             items,
             compiled_by_skill,
@@ -799,7 +827,6 @@ def _layer3_names_for_professional(
 
 
 def _compiled_layer3_names(
-    profile: str,
     professional: SkillItem,
     domain_names: set[str],
     product_foundation_names: set[str],
@@ -810,13 +837,7 @@ def _compiled_layer3_names(
         for name in _layer3_names_for_professional(professional)
         if name in allowed
     ]
-    if profile == "recommended":
-        return candidates
-    if profile == "full":
-        return [name for name in candidates if name not in domain_names]
-    if profile == "dev":
-        return []
-    raise BuildError(f"unsupported profile: {profile}")
+    return candidates
 
 
 def _copy_control_prompt(destination: Path) -> None:
@@ -880,35 +901,19 @@ def _write_layer3_references(
     return compiled
 
 
-def _append_layer3_entrypoint(destination: Path, profile: str) -> None:
-    """Describe only the current build's Layer 3 delivery at the Skill root."""
+def _append_layer3_entrypoint(destination: Path) -> None:
+    """Describe the runtime's targeted Layer 3 delivery at the Skill root."""
     skill_file = destination / "SKILL.md"
     if not skill_file.is_file():
         raise BuildError(f"{destination.relative_to(ROOT)} is missing root SKILL.md")
     source = skill_file.read_text(encoding="utf-8").rstrip()
     compiled_index = destination / "references" / "layer3" / "index.md"
-    if profile == "recommended":
-        delivery = (
-            "Foundation and Domain items are compiled at "
-            "`references/layer3/<name>.md`."
-            if compiled_index.is_file()
-            else "No Foundation or Domain Layer 3 items are assigned to this Skill."
-        )
-    elif profile == "full":
-        delivery = (
-            "Foundation items are compiled at `references/layer3/<name>.md`; "
-            "Domain items are top-level Skills."
-            if compiled_index.is_file()
-            else "Domain items are top-level Skills; no Foundation items are compiled "
-            "for this Skill."
-        )
-    elif profile == "dev":
-        delivery = (
-            "Foundation and Domain items are top-level Skills; no Layer 3 references "
-            "are compiled."
-        )
-    else:
-        raise BuildError(f"unsupported profile: {profile}")
+    delivery = (
+        "Foundation and Domain items are compiled at "
+        "`references/layer3/<name>.md`."
+        if compiled_index.is_file()
+        else "No Foundation or Domain Layer 3 items are assigned to this Skill."
+    )
     entrypoint = "\n".join(
         [
             "## Layer 3 Delivery",
@@ -1679,7 +1684,6 @@ def _render_copilot_profile(
 
 def _write_build_manifest(
     profile_root: Path,
-    profile: str,
     top_level: list[SkillItem],
     items: dict[str, list[SkillItem]],
     compiled_by_skill: dict[str, list[str]],
@@ -1698,7 +1702,7 @@ def _write_build_manifest(
     )
     manifest = {
         "architecture": "hookless-control-plane-v1",
-        "profile": profile,
+        "profile": RUNTIME_PROFILE,
         "source_version": _source_version(),
         "authoritative_build_inputs": source_snapshot,
         "top_level_skills": [item.name for item in top_level],
@@ -1713,14 +1717,8 @@ def _write_build_manifest(
         "domain_skills": [item.name for item in items["domain"]],
         "compiled_layer3_format": COMPILED_LAYER3_FORMAT,
         "compiled_layer3_references": compiled_by_skill,
-        "foundation_mode": (
-            "top-level"
-            if profile == "dev"
-            else "targeted-product-references"
-        ),
-        "domain_mode": (
-            "targeted-references" if profile == "recommended" else "top-level"
-        ),
+        "foundation_mode": "targeted-product-references",
+        "domain_mode": "targeted-references",
         "agent_profiles": [profile_entry["name"] for profile_entry in profiles],
         "agent_profile_sha256": _agent_profile_digests(profiles, enforcement),
         "agent_profile_enforcement": enforcement["hosts"],
@@ -1773,45 +1771,11 @@ def _reset_dir(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
 
 
-def _clean_legacy_dist_artifacts() -> None:
-    if not DIST_DIR.exists():
-        return
-    directory_names = {
-        ".changeforge-packs",
-        ".changeforge-control",
-        "hooks",
-        "runtime_governance",
-    }
-    file_names = {
-        ".changeforge-hook-manifest.json",
-        "changeforge-hooks.json",
-        "settings.changeforge-hooks.fragment.json",
-        "hooks.json",
-        "changeforge-route-preflight.md",
-        "changeforge-professional-contract.md",
-    }
-    for path in sorted(DIST_DIR.rglob("*"), key=lambda value: len(value.parts), reverse=True):
-        if path.is_dir() and path.name in directory_names:
-            shutil.rmtree(path)
-            continue
-        if not path.is_file():
-            continue
-        if path.name in file_names or path.name.startswith("changeforge_") and path.suffix == ".py":
-            path.unlink()
-    universal_bootstrap = DIST_DIR / "universal" / "bootstrap"
-    if universal_bootstrap.exists():
-        shutil.rmtree(universal_bootstrap)
-    legacy_copilot_profiles = DIST_DIR / "copilot" / "project" / ".github" / "copilot" / "agents"
-    if legacy_copilot_profiles.exists():
-        shutil.rmtree(legacy_copilot_profiles)
+def _cleanup_retired_profile_outputs() -> None:
+    """Remove only fully preflighted retired profile children."""
 
-
-def _cleanup_legacy_zip_layout() -> None:
-    OPENAI_ZIP_DIR.mkdir(parents=True, exist_ok=True)
-    for path in OPENAI_ZIP_DIR.iterdir():
-        if path.is_file() and path.suffix == ".zip":
-            path.unlink()
-        elif path.is_dir() and path.name not in PROFILES:
+    for path in _retired_profile_output_paths():
+        if path.exists():
             shutil.rmtree(path)
 
 

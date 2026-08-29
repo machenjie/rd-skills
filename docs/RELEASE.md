@@ -11,7 +11,7 @@ semantics. This page owns only operator order and stop conditions.
 ## Build And Local Full Regression
 
 Build the final tree through [Installation](INSTALLATION.md#build).
-[Build profiles](BUILD_PROFILES.md) owns profile composition and the generated
+[Runtime build](BUILD_PROFILES.md) owns composition and the generated
 manifest contract.
 
 Run the [local Full Regression](VALIDATION.md#local-full-regression) once after
@@ -172,19 +172,19 @@ Do not weaken a validator, edit a generated readiness decision, or create
 replacement panels without a diagnosed stale surface. Correct the owning source
 or review input. Before publication, discard only verified new uncommitted
 release output; never remove unrelated files or accepted evidence. Installed
-artifact recovery is documented in [Installation](INSTALLATION.md#upgrade).
+artifact recovery is documented in
+[Installation](INSTALLATION.md#upgrade-and-legacy-runtime-migration).
 
 ## Package
 
 After local formal evidence passes for the same clean commit:
 
 ```bash
-python3 scripts/package.py --profile recommended
-python3 scripts/package.py --profile full
-python3 scripts/package.py --profile dev
+python3 scripts/package.py
 ```
 
-Package only generated profile content under `dist/`. Never package `src/`,
+Package only generated Runtime content under `dist/`. The compatibility output
+directory remains `recommended`, but there is no package choice. Never package `src/`,
 source registries, reports, reviewer input manifests, personal mappings, or
 obsolete runtime artifacts. The build manifest is the package inventory
 authority.
@@ -221,6 +221,9 @@ artifact upload, tag/object binding on a remote, or remote branch/check state.
       valid carried votes and no correction or unresolved disagreement.
 - [ ] Readability has no tracked tightening, unresolved detector false positive,
       or rewrite requirement.
-- [ ] All three profiles build and package through their generated manifests.
+- [ ] The one Runtime builds and packages through its generated manifest; it
+      exposes only 1 Control and 26 Professional top-level Skills.
+- [ ] Foundation/Domain completeness and the temporary 163-item Layer 3 stress
+      projection pass without creating a top-level or packaged Layer 3 surface.
 - [ ] The handoff states evidence limits, skipped checks, Unverified scope, and
       Residual risk.

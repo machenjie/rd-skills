@@ -49,6 +49,15 @@ CONTROL_SKILL_VALIDATOR = _load_validator(
 
 
 class HooklessArchitectureTests(unittest.TestCase):
+    def test_runtime_validators_do_not_offer_retired_profile_selection(self) -> None:
+        for path in (
+            ROOT / "scripts/validate-installation.py",
+            ROOT / "scripts/validate-built-skill-reference-links.py",
+        ):
+            source = path.read_text(encoding="utf-8")
+            self.assertNotIn('PROFILES = ("recommended", "full", "dev")', source)
+            self.assertNotIn('add_argument("--profile"', source)
+
     def test_source_boundary_contains_only_authoring_assets(self) -> None:
         expected = {
             "agent-profiles",

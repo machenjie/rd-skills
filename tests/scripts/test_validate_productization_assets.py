@@ -2746,6 +2746,39 @@ case is `9` fresh
             ):
                 self.module._static_report_errors(root)
 
+    def test_productization_rejects_multi_profile_marketplace_schema(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            schema_path = root / "schemas/marketplace-index.schema.json"
+            schema_path.parent.mkdir(parents=True)
+            schema_path.write_text(
+                json.dumps(
+                    {
+                        "properties": {
+                            "schema_version": {"const": 3},
+                            "profile": {"enum": ["recommended", "full", "dev"]},
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with mock.patch.object(self.module, "REQUIRED", ()), mock.patch.object(
+                self.module, "FORBIDDEN", ()
+            ), mock.patch.object(
+                self.module, "_docs_errors", return_value=[]
+            ), mock.patch.object(
+                self.module, "_static_report_errors", return_value=[]
+            ):
+                errors = self.module.validate_productization_assets(root)
+
+        self.assertTrue(
+            any(
+                "fixed recommended Runtime projection" in error
+                for error in errors
+            ),
+            errors,
+        )
+
     def test_authoring_assets_exclude_release_only_markdown_and_duplicate_json(
         self,
     ) -> None:

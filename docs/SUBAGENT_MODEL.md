@@ -18,11 +18,11 @@ nodes add `Dependencies`; a Direct Task omits them when they have no meaning.
 Do not provide the full conversation, full Task DAG, other tasks, implementer
 reasoning, catalogs, or framework internals.
 
-In `recommended` and `full`, the agent opens each capsule-named Layer 3 item
-directly at the primary Professional Skill's compiled
-`references/layer3/<name>.md` path without opening the index first. In `dev`, it
-may load those exact names as top-level Skills. Neither mode permits catalog
-preloading.
+The agent opens each capsule-named Layer 3 item directly at the Primary
+Professional Skill's compiled `references/layer3/<name>.md` path without opening
+the index first. Foundation and Domain items are never top-level Runtime Skills.
+Task and Review receive the route fixed by Main, never rerun global routing, and
+open only necessary Targeted References. Catalog preloading is forbidden.
 
 An accepted Engineering Brief and next executable Task remain authoritative
 through Task completion or switching, ordinary implementation discovery, and an

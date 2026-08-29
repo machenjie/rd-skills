@@ -6,7 +6,7 @@ an installation source.
 
 ## Install And Complete A First Task
 
-- [Quickstart](QUICKSTART.md): prepare the repository, choose a host/scope/profile,
+- [Quickstart](QUICKSTART.md): prepare the repository, choose a host and scope,
   preview, install, run doctor, and submit a first request.
 - [Installation](INSTALLATION.md): supported hosts and scopes, default paths,
   build/install/upgrade/uninstall, backup boundaries, and recovery.
@@ -28,8 +28,8 @@ an installation source.
   contracts.
 - [Subagent model](SUBAGENT_MODEL.md): four roles, handoffs, and write
   serialization.
-- [Build profiles](BUILD_PROFILES.md): `recommended`, `full`, and `dev`
-  composition and manifests.
+- [Runtime build](BUILD_PROFILES.md): the one 27-Skill top-level surface, JIT
+  Layer 3 delivery, compatibility path, and manifests.
 - [Marketplace](MARKETPLACE.md): how to use the source-derived discovery views.
 - [Marketplace Catalog](MARKETPLACE_CATALOG.md): generated Skill inventory and
   navigation.

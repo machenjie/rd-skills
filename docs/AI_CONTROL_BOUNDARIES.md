@@ -51,10 +51,12 @@ the [Operating model](OPERATING_MODEL.md).
 ## Skill and Context Boundary
 
 Each task receives one primary Professional Skill, only concretely triggered
-Layer 3 guidance, and its review route. Normal builds open a named compiled
-Layer 3 item directly; `dev` may expose that item as a top-level Skill. Profiles
-do not preload catalogs, scan Layer 3 directories, or gain target-repository
-authority merely because a host-native Skill loader is available.
+Layer 3 guidance, and its review route. The Runtime never exposes Foundation or
+Domain items as Host top-level Skills. It opens each capsule-named compiled item
+directly behind the Professional selector and only the necessary Targeted
+References. Agent Profiles do not preload catalogs, scan Layer 3 directories,
+rerun global routing, or gain target-repository authority merely because a
+host-native Skill loader is available.
 
 Use the [Operating model](OPERATING_MODEL.md) for runtime artifact, state, and
 evidence flow. Use the [Subagent model](SUBAGENT_MODEL.md) for the four Profiles,

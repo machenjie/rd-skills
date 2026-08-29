@@ -280,6 +280,53 @@ class DocsCoreProjectionTests(unittest.TestCase):
     def test_current_volatile_documentation_facts_match_authorities(self) -> None:
         self.assertEqual([], self.validator._volatile_fact_errors(ROOT))
 
+    def test_current_runtime_surfaces_are_profile_choice_free(self) -> None:
+        self.assertEqual([], self.validator._runtime_surface_errors(ROOT))
+
+    def test_public_profile_selection_is_rejected_but_legacy_migration_input_is_allowed(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            readme = root / "README.md"
+            readme.write_text(
+                "Run `python3 scripts/build.py --profile full`.\n",
+                encoding="utf-8",
+            )
+            migration = root / "docs/MIGRATING_TO_HOOKLESS.md"
+            migration.parent.mkdir(parents=True)
+            migration.write_text(
+                "Legacy `full` and `dev` manifests are accepted migration inputs.\n",
+                encoding="utf-8",
+            )
+
+            errors = self.validator._runtime_surface_errors(root)
+
+            self.assertEqual(
+                ["README.md: user-facing Runtime command must not select --profile"],
+                errors,
+            )
+
+    def test_pull_request_template_cannot_restore_runtime_profile_choices(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            template = root / ".github/pull_request_template.md"
+            template.parent.mkdir(parents=True)
+            template.write_text(
+                "Build profiles affected: `recommended` / `full` / `dev` / none\n",
+                encoding="utf-8",
+            )
+
+            errors = self.validator._runtime_surface_errors(root)
+
+            self.assertEqual(
+                [
+                    ".github/pull_request_template.md: retired user-facing "
+                    "Runtime Profile choice remains"
+                ],
+                errors,
+            )
+
     def test_seeded_stale_domain_and_capability_counts_are_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
@@ -821,6 +868,26 @@ class DocsCoreProjectionTests(unittest.TestCase):
 
             self.assertTrue(any("missing source-backed installation fact" in error for error in errors), errors)
 
+    def test_missing_non_atomic_upgrade_warning_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._installation_docs(root)
+            target = root / "docs/INSTALLATION.md"
+            text = target.read_text(encoding="utf-8")
+            original = "Upgrade is not crash-atomic"
+            self.assertIn(original, text)
+            target.write_text(
+                text.replace(original, "Upgrade completes atomically", 1),
+                encoding="utf-8",
+            )
+
+            errors = self.validator._required_content_errors(root)
+
+            self.assertTrue(
+                any(original in error for error in errors),
+                errors,
+            )
+
     def test_validation_path_surfaces_are_consistent(self) -> None:
         self.assertEqual([], self.validator._validation_path_consistency_errors(ROOT))
 
@@ -829,7 +896,7 @@ class DocsCoreProjectionTests(unittest.TestCase):
             "python3 scripts/run-ci-tests.py full --jobs 4 --timeout 900"
         )
         legacy = "python3 -m unittest discover -s tests"
-        self.assertEqual(official, self.validator.FULL_REGRESSION_COMMANDS[9])
+        self.assertEqual(official, self.validator.FULL_REGRESSION_COMMANDS[7])
         for relative in ("AGENTS.md", "docs/VALIDATION.md"):
             text = (ROOT / relative).read_text(encoding="utf-8")
             self.assertEqual(1, text.count(official), relative)

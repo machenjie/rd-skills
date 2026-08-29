@@ -29,12 +29,17 @@ DEFAULT_TIMEOUT_SECONDS = 900.0
 FULL_DISCOVERY_TIMEOUT_SECONDS = 120.0
 FULL_MAX_LOG_BYTES = 1024 * 1024
 FULL_RESOURCE_DECLARATION = "FULL_TEST_RESOURCE_CLASS"
+TEST_TIMEOUT_DECLARATION = "TEST_TIMEOUT_CLASS"
 FULL_RESOURCE_WEIGHT_CAPACITY = 4
 FULL_RESOURCE_PROFILES = {
     "standard": (1, False, False),
     "heavy": (3, True, False),
     "tokenizer": (1, False, True),
     "heavy-tokenizer": (3, True, True),
+}
+TEST_TIMEOUT_MULTIPLIERS = {
+    "standard": 1.0,
+    "source-validation": 2.0,
 }
 POLL_SECONDS = 0.01
 TERMINATE_GRACE_SECONDS = 1.0
@@ -990,14 +995,18 @@ def _execute_modules(
                                     handle = _start_worker(
                                         root,
                                         module,
-                                        timeout_seconds,
+                                        _test_timeout_seconds(
+                                            root, module, timeout_seconds
+                                        ),
                                         startup_slot=startup_slot,
                                     )
                                 else:
                                     handle = _start_worker(
                                         root,
                                         module,
-                                        timeout_seconds,
+                                        _test_timeout_seconds(
+                                            root, module, timeout_seconds
+                                        ),
                                         max_log_bytes=max_log_bytes,
                                         owns_process_group=owns_process_group,
                                         startup_slot=startup_slot,
@@ -1203,12 +1212,12 @@ def _execute_full_modules(
     return sorted(results, key=lambda result: result.module)
 
 
-def _parse_full_test_module(path: Path) -> ast.Module:
+def _parse_test_module(path: Path) -> ast.Module:
     try:
         source = path.read_text(encoding="utf-8")
         return ast.parse(source, filename=str(path))
     except (OSError, SyntaxError) as exc:
-        raise SelectionError(f"cannot classify full unittest module {path}: {exc}") from exc
+        raise SelectionError(f"cannot classify unittest module {path}: {exc}") from exc
 
 
 def _binding_targets(node: ast.AST) -> tuple[ast.AST, ...]:
@@ -1259,40 +1268,44 @@ def _node_binds_name(node: ast.AST, name: str) -> bool:
     return False
 
 
-def _full_test_resource_class(path: Path, tree: ast.Module | None = None) -> str:
-    """Read one optional source-owned literal resource declaration."""
-
-    parsed = tree if tree is not None else _parse_full_test_module(path)
+def _literal_test_module_class(
+    path: Path,
+    *,
+    declaration_name: str,
+    allowed: set[str],
+    default: str,
+    label: str,
+    tree: ast.Module | None = None,
+) -> str:
+    parsed = tree if tree is not None else _parse_test_module(path)
     declarations: list[ast.AST] = []
     top_level_ids = {id(statement) for statement in parsed.body}
     for node in ast.walk(parsed):
-        if not _node_binds_name(node, FULL_RESOURCE_DECLARATION):
+        if not _node_binds_name(node, declaration_name):
             continue
         declarations.append(node)
         if id(node) not in top_level_ids:
             raise SelectionError(
-                f"full unittest resource class declaration must be top-level: {path}"
+                f"{label} declaration must be top-level: {path}"
             )
 
     if not declarations:
-        return "standard"
+        return default
     if len(declarations) != 1:
-        raise SelectionError(
-            f"duplicate full unittest resource class declarations: {path}"
-        )
+        raise SelectionError(f"duplicate {label} declarations: {path}")
 
     declaration = declarations[0]
     if isinstance(declaration, ast.Assign):
         valid_target = (
             len(declaration.targets) == 1
             and isinstance(declaration.targets[0], ast.Name)
-            and declaration.targets[0].id == FULL_RESOURCE_DECLARATION
+            and declaration.targets[0].id == declaration_name
         )
         value = declaration.value
     elif isinstance(declaration, ast.AnnAssign):
         valid_target = (
             isinstance(declaration.target, ast.Name)
-            and declaration.target.id == FULL_RESOURCE_DECLARATION
+            and declaration.target.id == declaration_name
             and declaration.simple == 1
         )
         value = declaration.value
@@ -1304,15 +1317,45 @@ def _full_test_resource_class(path: Path, tree: ast.Module | None = None) -> str
         or not isinstance(value, ast.Constant)
         or not isinstance(value.value, str)
     ):
-        raise SelectionError(
-            f"dynamic full unittest resource class declaration is forbidden: {path}"
-        )
-    resource_class = value.value
-    if resource_class not in FULL_RESOURCE_PROFILES:
-        raise SelectionError(
-            f"unknown full unittest resource class {resource_class!r}: {path}"
-        )
-    return resource_class
+        raise SelectionError(f"dynamic {label} declaration is forbidden: {path}")
+    class_name = value.value
+    if class_name not in allowed:
+        raise SelectionError(f"unknown {label} {class_name!r}: {path}")
+    return class_name
+
+
+def _full_test_resource_class(path: Path, tree: ast.Module | None = None) -> str:
+    """Read one optional source-owned literal resource declaration."""
+
+    return _literal_test_module_class(
+        path,
+        declaration_name=FULL_RESOURCE_DECLARATION,
+        allowed=set(FULL_RESOURCE_PROFILES),
+        default="standard",
+        label="full unittest resource class",
+        tree=tree,
+    )
+
+
+def _test_timeout_class(path: Path, tree: ast.Module | None = None) -> str:
+    """Read one optional closed timeout class without importing the test module."""
+
+    return _literal_test_module_class(
+        path,
+        declaration_name=TEST_TIMEOUT_DECLARATION,
+        allowed=set(TEST_TIMEOUT_MULTIPLIERS),
+        default="standard",
+        label="unittest timeout class",
+        tree=tree,
+    )
+
+
+def _test_timeout_seconds(root: Path, module: str, base_seconds: float) -> float:
+    path = root / module
+    if not path.is_file():
+        return base_seconds
+    timeout_class = _test_timeout_class(path)
+    return base_seconds * TEST_TIMEOUT_MULTIPLIERS[timeout_class]
 
 
 def _node_mentions_root(node: ast.AST) -> bool:
@@ -1328,7 +1371,7 @@ def _exclusive_lane_reason(
 ) -> str | None:
     """Classify tests that mutate or directly execute against repository state."""
 
-    parsed = tree if tree is not None else _parse_full_test_module(path)
+    parsed = tree if tree is not None else _parse_test_module(path)
 
     temporary_calls = {"TemporaryDirectory", "NamedTemporaryFile", "mkdtemp"}
     root_mutations = {
@@ -1443,7 +1486,7 @@ def _internal_discovery_payload(
     exclusive_modules: list[str] = []
     for path in sorted(discovered_paths):
         module = path.relative_to(root.resolve()).as_posix()
-        tree = _parse_full_test_module(path)
+        tree = _parse_test_module(path)
         resource_classes[module] = _full_test_resource_class(path, tree)
         if _exclusive_lane_reason(path, tree) is not None:
             exclusive_modules.append(module)

@@ -250,18 +250,44 @@ class LightweightLayer3ReferenceTests(unittest.TestCase):
         )
 
     def test_positive_selection_is_valid_and_does_not_inflate_skill_count(self) -> None:
-        metrics, errors = EVAL._metrics(
-            copy.deepcopy(self.case), self.professional, self.layer3
-        )
-        without_nested = copy.deepcopy(self.case)
-        without_nested["steps"][6]["layer3_references"] = []
-        changed = without_nested["steps"][6]
-        changed["fixture_capsule"]["canonical_sha256"] = canonical_capsule_sha256(
-            changed, changed["fixture_capsule"]
-        )
-        without_metrics, without_errors = EVAL._metrics(
-            without_nested, self.professional, self.layer3
-        )
+        primary = str(self.step["primary_skill"])
+        logical_id = self.step["layer3_references"][0]
+        owner, relative = EVAL.parse_layer3_reference_id(logical_id)
+        source = ROOT / str(self.layer3[owner]["path"]) / relative
+        manifest = {
+            "profile": EVAL.RUNTIME_NAME,
+            "compiled_layer3_format": EVAL.COMPILED_LAYER3_FORMAT,
+            "compiled_layer3_references": {primary: [owner]},
+            "top_level_skills": [],
+        }
+        with tempfile.TemporaryDirectory() as raw:
+            dist = Path(raw)
+            runtime_root = dist / EVAL.RUNTIME_NAME
+            built = (
+                runtime_root
+                / primary
+                / "references/layer3"
+                / owner
+                / relative
+            )
+            built.parent.mkdir(parents=True)
+            built.write_bytes(source.read_bytes())
+            (runtime_root / ".changeforge-build-manifest.json").write_text(
+                json.dumps(manifest), encoding="utf-8"
+            )
+            with mock.patch.object(EVAL, "DIST_SKILLS", dist):
+                metrics, errors = EVAL._metrics(
+                    copy.deepcopy(self.case), self.professional, self.layer3
+                )
+                without_nested = copy.deepcopy(self.case)
+                without_nested["steps"][6]["layer3_references"] = []
+                changed = without_nested["steps"][6]
+                changed["fixture_capsule"][
+                    "canonical_sha256"
+                ] = canonical_capsule_sha256(changed, changed["fixture_capsule"])
+                without_metrics, without_errors = EVAL._metrics(
+                    without_nested, self.professional, self.layer3
+                )
         self.assertEqual([], errors)
         self.assertEqual([], without_errors)
         self.assertEqual(1, metrics["loaded_layer3_reference_count"])
@@ -345,11 +371,10 @@ class LightweightLayer3ReferenceTests(unittest.TestCase):
             built.parent.mkdir(parents=True)
             with (
                 mock.patch.object(EVAL, "DIST_SKILLS", dist),
-                mock.patch.object(EVAL, "BUILD_PROFILES", ("recommended",)),
                 mock.patch.object(
                     EVAL,
-                    "_load_build_manifests",
-                    return_value=({"recommended": manifest}, []),
+                    "_load_runtime_manifest",
+                    return_value=(manifest, []),
                 ),
             ):
                 errors = EVAL._layer3_reference_errors(
@@ -380,6 +405,8 @@ class LightweightLayer3ReferenceTests(unittest.TestCase):
                 self.assertEqual(logical_id, step["layer3_references"][0])
 
     def test_build_manifest_loader_requires_ai_consumption_format(self) -> None:
+        self.assertEqual("recommended", EVAL.RUNTIME_NAME)
+        self.assertFalse(hasattr(EVAL, "BUILD_PROFILES"))
         with tempfile.TemporaryDirectory() as raw:
             dist = Path(raw)
             profile_root = dist / "recommended"
@@ -391,12 +418,9 @@ class LightweightLayer3ReferenceTests(unittest.TestCase):
                     if value is not None:
                         manifest["compiled_layer3_format"] = value
                     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
-                    with (
-                        mock.patch.object(EVAL, "DIST_SKILLS", dist),
-                        mock.patch.object(EVAL, "BUILD_PROFILES", ("recommended",)),
-                    ):
-                        manifests, errors = EVAL._load_build_manifests()
-                    self.assertEqual({}, manifests)
+                    with mock.patch.object(EVAL, "DIST_SKILLS", dist):
+                        manifest, errors = EVAL._load_runtime_manifest()
+                    self.assertIsNone(manifest)
                     self.assertTrue(
                         any("compiled_layer3_format must equal" in error for error in errors),
                         errors,

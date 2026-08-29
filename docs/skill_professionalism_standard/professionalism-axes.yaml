@@ -28,7 +28,7 @@ items:
       - route classification and complexity
       - owner reviewer skill selection
       - foundation capability selection
-      - build profile boundary
+      - fixed Runtime build delivery and discovery boundary
       - hidden risk escalation
       - validation and handoff evidence
   change-intake-compiler:

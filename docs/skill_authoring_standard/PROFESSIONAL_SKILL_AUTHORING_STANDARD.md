@@ -35,6 +35,8 @@ change requires a full-fresh 189-Skill review.
 
 ## Required Design
 
+- Demonstrate a stable independent Primary Route and distinct task ownership;
+  otherwise extend an existing owner.
 - Name one primary consuming Profile or a tightly bounded set of roles.
 - Define positive and negative routing conditions.
 - Require source-backed facts rather than guessed ownership or behavior.
@@ -61,7 +63,12 @@ physical `line_count`, governed `governed_line_count`, and canonical Registry
 
 ## Layer 3 Loading
 
-Name only plausible candidates in the registry. Load a candidate only when the current task triggers its decision problem. A Direct Task normally uses zero to three Layer 3 Skills. Higher-risk work may use more only when each addition maps to a concrete risk.
+Name only plausible candidates in the registry. Load a candidate only when the
+current task triggers its decision problem. A Direct Task normally uses zero to
+three Layer 3 Skills. Higher-risk work may use more only when each addition maps
+to a concrete risk. Foundation and modifier-only Domain items remain behind the
+Professional selector and never become Runtime top-level Skills. Task and
+Review consume Main's fixed Primary Route instead of rerunning global routing.
 
 ## Role Separation
 
@@ -69,7 +76,12 @@ Analysis Skills produce source-backed acceptance, owner, impact, placement, vali
 
 ## References
 
-Move deep technology matrices, failure catalogs, and specialized checklists to targeted references. Keep the root compact enough to load on every routed task. Do not repeat the control prompt, full task contract, or complete Layer 3 bodies.
+Move deep technology matrices, failure catalogs, framework/library/protocol
+details, and specialized checklists to targeted references. Keep the root
+compact enough to load on every routed task. Prefer an existing Targeted
+Reference, Foundation/Domain owner, or Professional owner before creating a new
+Professional Skill. Do not repeat the control prompt, full task contract, or
+complete Layer 3 bodies.
 
 ## Review Questions
 

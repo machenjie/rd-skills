@@ -27,14 +27,14 @@ class GenerateMarketplaceCatalogTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.module = _load_module()
-        cls.payload = cls.module.generate_catalog(ROOT, "recommended")
+        cls.payload = cls.module.generate_catalog(ROOT)
         cls.rendered = cls.module.render_catalog(cls.payload)
 
     def test_catalog_is_derived_from_v3_exported_indexes(self) -> None:
-        self.assertEqual(len(self.payload["indexes"]["recommended"]["items"]), 190)
+        self.assertEqual(len(self.payload["index"]["items"]), 190)
         self.assertEqual(len(self.payload["items"]), 190)
         self.assertEqual(
-            self.payload["indexes"]["recommended"]["schema_version"],
+            self.payload["index"]["schema_version"],
             3,
         )
         self.assertIn("engineering-control-plane", self.payload["items"])
@@ -45,24 +45,24 @@ class GenerateMarketplaceCatalogTests(unittest.TestCase):
         for section in (
             "## How To Use This Catalog",
             "## Quick Navigation",
-            "## Profile Summary",
+            "## Runtime Summary",
             "## Control Skills",
             "## Professional Skills",
             "## Foundation Skills By Group",
             "## Domain Skills",
             "## Browse By Agent Profile",
             "## Browse By Trigger Signal",
-            "## Browse By Profile Delivery",
+            "## Browse By Runtime Delivery",
         ):
             self.assertIn(section, self.rendered)
         self.assertIn("| `recommended` | 27 | 154 | 9 |", self.rendered)
-        self.assertIn("| `full` | 40 | 141 | 9 |", self.rendered)
-        self.assertIn("| `dev` | 190 | 0 | 0 |", self.rendered)
+        self.assertNotIn("| `full` |", self.rendered)
+        self.assertNotIn("| `dev` |", self.rendered)
         self.assertIn("### `engineering-control-plane`", self.rendered)
         self.assertIn("### `backend-change-builder`", self.rendered)
         self.assertIn("#### `transaction-consistency`", self.rendered)
         self.assertIn("- Task routable: `true`", self.rendered)
-        self.assertIn("- Profile delivery:", self.rendered)
+        self.assertIn("- Runtime delivery:", self.rendered)
         self.assertIn("Marketplace schema v3 discovery view", self.rendered)
         self.assertIn(
             "Official marketplace publishing is intentionally not implemented",
@@ -74,11 +74,11 @@ class GenerateMarketplaceCatalogTests(unittest.TestCase):
             "## Browse By Agent Profile", 1
         )[1].split("## Browse By Trigger Signal", 1)[0]
         delivery_browse = self.rendered.split(
-            "## Browse By Profile Delivery", 1
+            "## Browse By Runtime Delivery", 1
         )[1]
 
         self.assertIn("### `task-agent`", agent_browse)
-        self.assertIn("### `dev` — `top_level_skill`", delivery_browse)
+        self.assertIn("### `top_level_skill`", delivery_browse)
         for section in (agent_browse, delivery_browse):
             name_lines = [line for line in section.splitlines() if line.startswith("- `")]
             self.assertTrue(name_lines)
@@ -130,6 +130,7 @@ class GenerateMarketplaceCatalogTests(unittest.TestCase):
             "specialist pack",
             "review pack",
             "runtime_path",
+            "dev-only",
         ):
             self.assertNotIn(marker, self.rendered)
 
@@ -139,7 +140,7 @@ class GenerateMarketplaceCatalogTests(unittest.TestCase):
             out.write_text("stale\n", encoding="utf-8")
             self.assertEqual(
                 self.module.main(
-                    ["--profile", "recommended", "--check", "--out", str(out)]
+                    ["--check", "--out", str(out)]
                 ),
                 1,
             )
@@ -148,15 +149,21 @@ class GenerateMarketplaceCatalogTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp) / "MARKETPLACE_CATALOG.md"
             self.assertEqual(
-                self.module.main(["--profile", "recommended", "--out", str(out)]),
+                self.module.main(["--out", str(out)]),
                 0,
             )
             self.assertEqual(
-                self.module.main(
-                    ["--profile", "recommended", "--check", "--out", str(out)]
-                ),
+                self.module.main(["--check", "--out", str(out)]),
                 0,
             )
+
+    def test_obsolete_profile_argument_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(SystemExit) as caught:
+                self.module.main(
+                    ["--profile", "dev", "--out", str(Path(tmp) / "catalog.md")]
+                )
+        self.assertEqual(caught.exception.code, 2)
 
 
 if __name__ == "__main__":

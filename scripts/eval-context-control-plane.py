@@ -158,7 +158,7 @@ def _load_rendered_context_report(
     report = _read_json(
         report_path,
         "rendered-context report",
-        "run all three builds and scripts/eval-rendered-context-budget.py first",
+        "run the Runtime build and scripts/eval-rendered-context-budget.py first",
     )
     if report.get("schema_version") != EXPECTED_REPORT_SCHEMA_VERSION:
         raise ValueError(
@@ -177,8 +177,8 @@ def _load_rendered_context_report(
         raise ValueError("rendered-context report has wrong evidence_scope")
     if report.get("tokenizer") != "o200k_base":
         raise ValueError("rendered-context report must use tokenizer='o200k_base'")
-    if report.get("build_profiles") != ["recommended", "full", "dev"]:
-        raise ValueError("rendered-context report must cover recommended/full/dev")
+    if report.get("runtime") != "recommended":
+        raise ValueError("rendered-context report must cover the recommended Runtime")
     if report.get("hosts") != ["codex", "claude", "copilot"]:
         raise ValueError("rendered-context report must cover codex/claude/copilot")
     if report.get("errors") != [] or not isinstance(report.get("aggregate"), dict):

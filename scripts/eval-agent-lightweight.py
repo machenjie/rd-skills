@@ -53,7 +53,7 @@ FIXTURES = ROOT / "evals" / "agent-light-trajectories" / "cases.yaml"
 REPORT_JSON = ROOT / "reports" / "hookless-control-plane-eval.json"
 REPORT_MD = ROOT / "reports" / "hookless-control-plane-eval.md"
 DIST_SKILLS = ROOT / "dist" / "universal" / "skills"
-BUILD_PROFILES = ("recommended", "full", "dev")
+RUNTIME_NAME = "recommended"
 FIXTURE_SCHEMA_VERSION = 2
 CANONICAL_EVIDENCE_LEDGER_FIELDS = tuple(EVIDENCE_LEDGER_MODEL["fields"])
 EXTERNAL_READ_MODEL = CORE_CONTRACTS["external_read_contract"]
@@ -6737,22 +6737,20 @@ def _orchestration_case_result(
     task_layer3_skills: dict[str, set[str]] = {}
     task_dependencies: dict[str, list[str]] = {}
     professional, layer3_entries = _skill_registries()
-    manifests, manifest_errors = _load_build_manifests()
+    runtime_manifest, manifest_errors = _load_runtime_manifest()
     if manifest_errors:
         reject("skill-built-delivery", "; ".join(manifest_errors))
 
     def built_professional(skill: str) -> bool:
-        return bool(manifests) and all(
-            skill in manifest.get("professional_skills", [])
-            for manifest in manifests.values()
+        return bool(runtime_manifest) and skill in runtime_manifest.get(
+            "professional_skills", []
         )
 
     def built_layer3(primary: str, skill: str) -> bool:
-        return bool(manifests) and all(
-            skill in manifest.get("top_level_skills", [])
+        return bool(runtime_manifest) and (
+            skill in runtime_manifest.get("top_level_skills", [])
             or skill
-            in manifest.get("compiled_layer3_references", {}).get(primary, [])
-            for manifest in manifests.values()
+            in runtime_manifest.get("compiled_layer3_references", {}).get(primary, [])
         )
 
     for index, task in enumerate(tasks):
@@ -6783,7 +6781,7 @@ def _orchestration_case_result(
         elif not built_professional(primary_skill):
             reject(
                 "skill-built-delivery",
-                f"Task Primary Skill {primary_skill!r} is not delivered by every build",
+                f"Task Primary Skill {primary_skill!r} is not delivered by the Runtime",
             )
         split_reason = task.get("split_reason")
         if split_reason in {"file", "function", "code-layer", "test", "edit-step"}:
@@ -6810,7 +6808,7 @@ def _orchestration_case_result(
             elif not built_professional(review_skill):
                 reject(
                     "skill-built-delivery",
-                    f"Review Skill {review_skill!r} is not delivered by every build",
+                    f"Review Skill {review_skill!r} is not delivered by the Runtime",
                 )
         layer3_skills = task.get("layer3_skills", [])
         if (
@@ -6968,7 +6966,7 @@ def _orchestration_case_result(
         elif not built_professional(review_skill):
             reject(
                 "skill-built-delivery",
-                f"Review Skill {review_skill!r} is not delivered by every build",
+                f"Review Skill {review_skill!r} is not delivered by the Runtime",
             )
     parallel_isolation, parallel_errors = _orchestration_parallel_isolation(events)
     for message in parallel_errors:
@@ -8067,7 +8065,7 @@ def _orchestration_case_result(
                 elif not built_professional(review_skill):
                     reject(
                         "skill-built-delivery",
-                        f"Review Skill {review_skill!r} is not delivered by every build",
+                        f"Review Skill {review_skill!r} is not delivered by the Runtime",
                     )
             raw_event_layer3 = event.get("layer3_skills", [])
             if (
@@ -9033,24 +9031,22 @@ def _combined_review_case_errors(case: object) -> list[str]:
     if not isinstance(tasks, list) or not isinstance(boundary, dict):
         return errors
     professional, layer3_entries = _skill_registries()
-    manifests, manifest_errors = _load_build_manifests()
+    runtime_manifest, manifest_errors = _load_runtime_manifest()
     errors.extend(f"[skill-built-delivery] {error}" for error in manifest_errors)
 
     def reject(code: str, message: str) -> None:
         errors.append(f"[{code}] {message}")
 
     def built_professional(skill: str) -> bool:
-        return bool(manifests) and all(
-            skill in manifest.get("professional_skills", [])
-            for manifest in manifests.values()
+        return bool(runtime_manifest) and skill in runtime_manifest.get(
+            "professional_skills", []
         )
 
     def built_layer3(owner: str, skill: str) -> bool:
-        return bool(manifests) and all(
-            skill in manifest.get("top_level_skills", [])
+        return bool(runtime_manifest) and (
+            skill in runtime_manifest.get("top_level_skills", [])
             or skill
-            in manifest.get("compiled_layer3_references", {}).get(owner, [])
-            for manifest in manifests.values()
+            in runtime_manifest.get("compiled_layer3_references", {}).get(owner, [])
         )
 
     for task in tasks:
@@ -9067,7 +9063,7 @@ def _combined_review_case_errors(case: object) -> list[str]:
         if "task-agent" not in entry.get("role_support", []):
             reject("task-skill-role", f"Task Primary Skill {primary!r} does not support task-agent")
         if not built_professional(primary):
-            reject("skill-built-delivery", f"Task Primary Skill {primary!r} is not delivered by every build")
+            reject("skill-built-delivery", f"Task Primary Skill {primary!r} is not delivered by the Runtime")
         allowed = set(entry.get("layer3_candidates", []))
         for layer3 in task.get("implementation_layer3", []):
             layer3_entry = layer3_entries.get(layer3)
@@ -9096,7 +9092,7 @@ def _combined_review_case_errors(case: object) -> list[str]:
             if "review-agent" not in entry.get("role_support", []):
                 reject("review-skill-routing", f"Review Skill {review_skill!r} does not support review-agent")
             if not built_professional(review_skill):
-                reject("skill-built-delivery", f"Review Skill {review_skill!r} is not delivered by every build")
+                reject("skill-built-delivery", f"Review Skill {review_skill!r} is not delivered by the Runtime")
             allowed = set(entry.get("layer3_candidates", []))
             for layer3 in assignment.get("layer3_skills", []):
                 layer3_entry = layer3_entries.get(layer3)
@@ -9344,31 +9340,26 @@ def _skill_registries() -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, 
     return professional, layer3
 
 
-def _load_build_manifests() -> tuple[dict[str, dict[str, Any]], list[str]]:
-    manifests: dict[str, dict[str, Any]] = {}
+def _load_runtime_manifest() -> tuple[dict[str, Any] | None, list[str]]:
     errors: list[str] = []
-    for profile in BUILD_PROFILES:
-        path = DIST_SKILLS / profile / ".changeforge-build-manifest.json"
-        try:
-            manifest = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as exc:
-            errors.append(f"{path}: build manifest unavailable or malformed: {exc}")
-            continue
-        if not isinstance(manifest, dict) or manifest.get("profile") != profile:
-            errors.append(f"{path}: build manifest does not describe {profile!r}")
-            continue
-        if manifest.get("compiled_layer3_format") != COMPILED_LAYER3_FORMAT:
-            errors.append(
-                f"{path}: compiled_layer3_format must equal "
-                f"{COMPILED_LAYER3_FORMAT!r}"
-            )
-            continue
-        manifests[profile] = manifest
-    return manifests, errors
+    path = DIST_SKILLS / RUNTIME_NAME / ".changeforge-build-manifest.json"
+    try:
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return None, [f"{path}: Runtime manifest unavailable or malformed: {exc}"]
+    if not isinstance(manifest, dict) or manifest.get("profile") != RUNTIME_NAME:
+        return None, [f"{path}: build manifest does not describe the Runtime"]
+    if manifest.get("compiled_layer3_format") != COMPILED_LAYER3_FORMAT:
+        errors.append(
+            f"{path}: compiled_layer3_format must equal "
+            f"{COMPILED_LAYER3_FORMAT!r}"
+        )
+        return None, errors
+    return manifest, []
 
 
 def _layer3_reference_build_path(
-    build_profile: str,
+    runtime_name: str,
     primary: str,
     owner: str,
     relative: str,
@@ -9379,20 +9370,20 @@ def _layer3_reference_build_path(
     is_top_level = owner in manifest.get("top_level_skills", [])
     if is_compiled == is_top_level:
         raise ValueError(
-            f"{build_profile}:{primary} must resolve Layer 3 Reference owner {owner!r} "
+            f"{runtime_name}:{primary} must resolve Layer 3 Reference owner {owner!r} "
             "through exactly one compiled or top-level delivery path"
         )
     if is_compiled:
         return (
             DIST_SKILLS
-            / build_profile
+            / runtime_name
             / primary
             / "references"
             / "layer3"
             / owner
             / relative
         )
-    return DIST_SKILLS / build_profile / owner / relative
+    return DIST_SKILLS / runtime_name / owner / relative
 
 
 def _uses_symlink(path: Path, boundary: Path) -> bool:
@@ -9470,27 +9461,25 @@ def _layer3_reference_errors(
             )
 
     if parsed and not errors:
-        manifests, manifest_errors = _load_build_manifests()
+        runtime_manifest, manifest_errors = _load_runtime_manifest()
         errors.extend(f"{case_id}: {message}" for message in manifest_errors)
         for logical_id, owner, relative in parsed:
-            for profile in BUILD_PROFILES:
-                manifest = manifests.get(profile)
-                if manifest is None:
-                    continue
-                try:
-                    built = _layer3_reference_build_path(
-                        profile, primary, owner, relative, manifest
-                    )
-                except ValueError as exc:
-                    errors.append(f"{case_id}: dispatch at step {index}: {exc}")
-                    continue
-                if not built.is_file() or _uses_symlink(
-                    built, DIST_SKILLS / profile
-                ):
-                    errors.append(
-                        f"{case_id}: Layer 3 Reference {logical_id!r} is missing or "
-                        f"symlinked in {profile} build"
-                    )
+            if runtime_manifest is None:
+                continue
+            try:
+                built = _layer3_reference_build_path(
+                    RUNTIME_NAME, primary, owner, relative, runtime_manifest
+                )
+            except ValueError as exc:
+                errors.append(f"{case_id}: dispatch at step {index}: {exc}")
+                continue
+            if not built.is_file() or _uses_symlink(
+                built, DIST_SKILLS / RUNTIME_NAME
+            ):
+                errors.append(
+                    f"{case_id}: Layer 3 Reference {logical_id!r} is missing or "
+                    "symlinked in the Runtime build"
+                )
     return errors
 
 

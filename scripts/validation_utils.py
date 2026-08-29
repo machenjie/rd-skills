@@ -3044,7 +3044,7 @@ def validate_impact_graph_contract(
         return errors
     affected = stages["affected"]
     affected_fields = {
-        "build_profile_projection",
+        "runtime_projection",
         "dependency_closure",
         "expert_panel_evidence_projection",
         "isolated_execution",
@@ -3076,25 +3076,19 @@ def validate_impact_graph_contract(
         errors.append("affected stage must enable canonical producer dependency closure")
     if affected["isolated_execution"] is not True:
         errors.append("affected stage must require isolated execution")
-    build_projection = affected["build_profile_projection"]
-    expected_build_projection = {
-        "profiles": ["recommended", "full", "dev"],
-        "producer_ids": {
-            "recommended": "build-recommended",
-            "full": "build-full",
-            "dev": "build-dev",
-        },
-        "professional_candidate_field": "layer3_candidates",
-        "foundation_scope_field": "delivery_scope",
-        "foundation_shared_scope": "product",
-        "unknown_package_policy": "all-profiles",
+    runtime_projection = affected["runtime_projection"]
+    expected_runtime_projection = {
+        "runtime_name": "recommended",
+        "producer_id": "build-recommended",
+        "package_layers": ["professional", "foundation", "domain"],
+        "unknown_package_policy": "runtime",
     }
-    if build_projection != expected_build_projection:
+    if runtime_projection != expected_runtime_projection:
         errors.append(
-            "affected build_profile_projection must match the canonical build graph"
+            "affected runtime_projection must match the canonical single Runtime graph"
         )
-    elif not set(build_projection["producer_ids"].values()).issubset(set(eligible)):
-        errors.append("affected build profile producers must be stage-eligible")
+    elif runtime_projection["producer_id"] not in eligible:
+        errors.append("affected Runtime producer must be stage-eligible")
     if affected["test_policy"] != {
         "always_layers": ["unit", "contract"],
         "direct_only_layers": ["integration", "governance"],
@@ -13364,38 +13358,13 @@ EXPECTED_FOUNDATION_DELIVERY_SCOPE_COUNTS = {
     "authoring-only": 1,
     "dev-only": 8,
 }
-EXPECTED_PROFILE_TOP_LEVEL_COUNTS = {
-    # The default installs the control plane and standard Professional Skills.
-    # Layer 3 Skills remain targeted references rather than a hidden runtime.
-    "recommended": EXPECTED_CONTROL_SKILL_COUNT + EXPECTED_PROFESSIONAL_SKILL_COUNT,
-    "full": (
-        EXPECTED_CONTROL_SKILL_COUNT
-        + EXPECTED_PROFESSIONAL_SKILL_COUNT
-        + EXPECTED_DOMAIN_EXTENSION_COUNT
-    ),
-    "dev": (
-        EXPECTED_CONTROL_SKILL_COUNT
-        + EXPECTED_PROFESSIONAL_SKILL_COUNT
-        + EXPECTED_FOUNDATION_CAPABILITY_COUNT
-        + EXPECTED_DOMAIN_EXTENSION_COUNT
-    ),
-}
-EXPECTED_PROFILE_DELIVERY_MODE_COUNTS = {
-    "recommended": {
-        "top_level_skill": 27,
-        "targeted_reference": 154,
-        "routing_index_only": 9,
-    },
-    "full": {
-        "top_level_skill": 40,
-        "targeted_reference": 141,
-        "routing_index_only": 9,
-    },
-    "dev": {
-        "top_level_skill": 190,
-        "targeted_reference": 0,
-        "routing_index_only": 0,
-    },
+EXPECTED_RUNTIME_TOP_LEVEL_SKILL_COUNT = (
+    EXPECTED_CONTROL_SKILL_COUNT + EXPECTED_PROFESSIONAL_SKILL_COUNT
+)
+EXPECTED_RUNTIME_DELIVERY_MODE_COUNTS = {
+    "top_level_skill": EXPECTED_RUNTIME_TOP_LEVEL_SKILL_COUNT,
+    "targeted_reference": 154,
+    "routing_index_only": 9,
 }
 
 BANNED_BEGINNER_SECTIONS = (

@@ -31,9 +31,7 @@ The individual owners below are diagnostics for a verified Core failure, not a
 second regression path:
 
 ```bash
-python3 scripts/build.py --profile recommended
-python3 scripts/build.py --profile full
-python3 scripts/build.py --profile dev
+python3 scripts/build.py
 python3 scripts/eval-routing.py
 python3 scripts/eval-agent-lightweight.py
 python3 scripts/eval-rendered-context-budget.py

@@ -16,6 +16,7 @@ from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
+TEST_TIMEOUT_CLASS = "source-validation"
 TRACKED_REPORT_PRODUCERS = (
     "scripts/audit-skill-content.py",
     "scripts/eval-skill-professionalism.py",

@@ -2161,11 +2161,11 @@ class LightweightUtilityContractTests(unittest.TestCase):
                 for error in EVAL._orchestration_case_errors(unsupported_layer3)
             ))
 
-        manifests, _manifest_errors = EVAL._load_build_manifests()
-        undelivered = copy.deepcopy(manifests)
-        undelivered["recommended"] = copy.deepcopy(undelivered["recommended"])
-        undelivered["recommended"]["professional_skills"].remove("backend-change-builder")
-        with patch.object(EVAL, "_load_build_manifests", return_value=(undelivered, [])):
+        runtime_manifest, _manifest_errors = EVAL._load_runtime_manifest()
+        assert runtime_manifest is not None
+        undelivered = copy.deepcopy(runtime_manifest)
+        undelivered["professional_skills"].remove("backend-change-builder")
+        with patch.object(EVAL, "_load_runtime_manifest", return_value=(undelivered, [])):
             self.assertTrue(any(
                 "skill-built-delivery" in error
                 for error in EVAL._orchestration_case_errors(copy.deepcopy(valid))
@@ -6256,19 +6256,14 @@ class LightweightUtilityContractTests(unittest.TestCase):
         errors = EVAL.completion_claim_errors(claim)
         self.assertTrue(any("exact ordered fields" in error for error in errors), errors)
 
-    def test_nested_reference_resolution_is_symmetric_across_build_profiles(self) -> None:
-        manifests, errors = EVAL._load_build_manifests()
+    def test_nested_reference_resolution_uses_runtime_compiled_delivery(self) -> None:
+        runtime_manifest, errors = EVAL._load_runtime_manifest()
         self.assertEqual([], errors)
+        assert runtime_manifest is not None
         rows = (
             ("recommended", "engineering-change-analysis", "test-strategy", "references/checklist.md", "compiled"),
-            ("full", "engineering-change-analysis", "test-strategy", "references/checklist.md", "compiled"),
-            ("dev", "engineering-change-analysis", "test-strategy", "references/checklist.md", "top-level"),
             ("recommended", "engineering-change-analysis", "payment-trading-extension", "references/provider-venue-event-authentication.md", "compiled"),
-            ("full", "engineering-change-analysis", "payment-trading-extension", "references/provider-venue-event-authentication.md", "top-level"),
-            ("dev", "engineering-change-analysis", "payment-trading-extension", "references/provider-venue-event-authentication.md", "top-level"),
             ("recommended", "high-risk-design-review", "module-boundary-design", "references/benchmarks-and-enforcement.md", "compiled"),
-            ("full", "high-risk-design-review", "module-boundary-design", "references/benchmarks-and-enforcement.md", "compiled"),
-            ("dev", "high-risk-design-review", "module-boundary-design", "references/benchmarks-and-enforcement.md", "top-level"),
         )
         for profile, primary, owner, relative, delivery in rows:
             with self.subTest(profile=profile, owner=owner):
@@ -6277,7 +6272,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
                     primary,
                     owner,
                     relative,
-                    manifests[profile],
+                    runtime_manifest,
                 )
                 compiled_path = (
                     EVAL.DIST_SKILLS

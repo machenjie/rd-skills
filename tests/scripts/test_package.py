@@ -1,17 +1,22 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 import tempfile
 import unittest
 import zipfile
+from contextlib import contextmanager
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
+
+import validation_utils as VALIDATION  # noqa: E402
 
 
 def load_package_module():
@@ -30,106 +35,194 @@ PACKAGE = load_package_module()
 
 
 class PackageSafetyTests(unittest.TestCase):
-    def test_external_built_source_packages_without_repository_relative_crash(self) -> None:
+    @contextmanager
+    def _runtime_layout(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
-            skill = root / "source" / "sample-skill"
-            skill.mkdir(parents=True)
-            (skill / "SKILL.md").write_text("---\nname: sample-skill\n---\n\n# Sample\n", encoding="utf-8")
-            output = root / "zips"
+            built_root = root / "universal/skills"
+            source = built_root / "recommended"
+            registries = {
+                layer: VALIDATION.load_yaml_file(ROOT / "src/registry" / filename)[key]
+                for layer, filename, key in (
+                    ("control", "control-skills.yaml", "control_skills"),
+                    ("professional", "professional-skills.yaml", "professional_skills"),
+                    ("foundation", "foundation-skills.yaml", "foundation_skills"),
+                    ("domain", "domain-skills.yaml", "domain_skills"),
+                )
+            }
+            names = {
+                layer: [entry["name"] for entry in entries]
+                for layer, entries in registries.items()
+            }
+            allowed_layer3 = set(names["domain"]) | {
+                entry["name"]
+                for entry in registries["foundation"]
+                if entry.get("delivery_scope") == "product"
+            }
+            compiled = {
+                entry["name"]: list(
+                    dict.fromkeys(
+                        name
+                        for name in entry.get("layer3_candidates", [])
+                        if name in allowed_layer3
+                    )
+                )
+                for entry in registries["professional"]
+            }
+            for name in [*names["control"], *names["professional"]]:
+                skill = source / name
+                skill.mkdir(parents=True)
+                (skill / "SKILL.md").write_text(f"# {name}\n", encoding="utf-8")
+            manifest_path = source / ".changeforge-build-manifest.json"
+            manifest = {
+                "profile": "recommended",
+                "authoritative_build_inputs": VALIDATION.authoritative_build_input_snapshot(ROOT),
+                "top_level_skills": [*names["control"], *names["professional"]],
+                "control_skills": names["control"],
+                "professional_skills": names["professional"],
+                "foundation_skills": names["foundation"],
+                "domain_skills": names["domain"],
+                "compiled_layer3_references": compiled,
+                "foundation_mode": "targeted-product-references",
+                "domain_mode": "targeted-references",
+                "agent_profiles": [
+                    "main-control-agent",
+                    "analysis-agent",
+                    "task-agent",
+                    "review-agent",
+                ],
+            }
+            manifest_path.write_text(
+                json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            zip_root = root / "openai-api/zips"
+            with mock.patch.multiple(
+                PACKAGE,
+                BUILT_SKILLS_ROOT=built_root,
+                ZIP_DIR=zip_root,
+            ):
+                yield root, source, zip_root
 
-            self.assertEqual(PACKAGE.package_profile(root / "source", output), 1)
-            self.assertTrue((output / "sample-skill.zip").is_file())
+    def test_packages_exact_current_runtime(self) -> None:
+        with self._runtime_layout() as (_root, source, zip_root):
+            self.assertEqual(27, PACKAGE.package_profile())
+            output = zip_root / "recommended"
+            self.assertEqual(
+                {f"{path.name}.zip" for path in source.iterdir() if path.is_dir()},
+                {path.name for path in output.glob("*.zip")},
+            )
+
+    def test_cli_rejects_profile_and_arbitrary_source_before_mutation(self) -> None:
+        with self._runtime_layout() as (_root, _source, zip_root):
+            for flag, value in (("--profile", "full"), ("--source", "/tmp/input")):
+                with self.subTest(flag=flag), mock.patch.object(
+                    sys,
+                    "argv",
+                    ["package.py", flag, value],
+                ), self.assertRaises(SystemExit):
+                    PACKAGE.main()
+                self.assertFalse(zip_root.exists())
+
+    def test_manifest_profile_names_and_modes_are_required_before_writing(self) -> None:
+        mutations = (
+            ("profile", "full", "profile"),
+            ("foundation_mode", "top-level", "foundation_mode"),
+            ("domain_mode", "top-level", "domain_mode"),
+            ("top_level_skills", ["engineering-control-plane"], "top_level_skills"),
+        )
+        for field, value, error in mutations:
+            with self.subTest(field=field), self._runtime_layout() as (
+                _root,
+                source,
+                zip_root,
+            ):
+                manifest_path = source / ".changeforge-build-manifest.json"
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                manifest[field] = value
+                manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+                sentinel = zip_root / "sentinel.bin"
+                sentinel.parent.mkdir(parents=True)
+                sentinel.write_bytes(b"unchanged")
+
+                with self.assertRaisesRegex(PACKAGE.PackageError, error):
+                    PACKAGE.package_profile()
+
+                self.assertEqual(b"unchanged", sentinel.read_bytes())
+
+    def test_source_tree_must_match_exact_manifest_names(self) -> None:
+        with self._runtime_layout() as (_root, source, zip_root):
+            extra = source / "unexpected-skill"
+            extra.mkdir()
+            (extra / "SKILL.md").write_text("# Unexpected\n", encoding="utf-8")
+
+            with self.assertRaisesRegex(PACKAGE.PackageError, "built Skill names"):
+                PACKAGE.package_profile()
+            self.assertFalse(zip_root.exists())
 
     def test_symlinked_skill_content_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary).resolve()
-            skill = root / "source" / "sample-skill"
-            skill.mkdir(parents=True)
-            (skill / "SKILL.md").write_text("# Sample\n", encoding="utf-8")
+        with self._runtime_layout() as (root, source, zip_root):
+            skill = next(path for path in source.iterdir() if path.is_dir())
             outside = root / "outside.md"
             outside.write_text("outside\n", encoding="utf-8")
-            (skill / "references").mkdir()
-            (skill / "references" / "escape.md").symlink_to(outside)
+            (skill / "escape.md").symlink_to(outside)
 
             with self.assertRaises(PACKAGE.PackageError):
-                PACKAGE.package_profile(root / "source", root / "zips")
+                PACKAGE.package_profile()
+            self.assertFalse(zip_root.exists())
 
-    def test_symlinked_source_and_output_roots_are_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary).resolve()
-            source = root / "source"
-            skill = source / "sample-skill"
-            skill.mkdir(parents=True)
-            (skill / "SKILL.md").write_text("# Sample\n", encoding="utf-8")
-            source_link = root / "source-link"
-            source_link.symlink_to(source, target_is_directory=True)
-
-            with self.assertRaises(PACKAGE.PackageError):
-                PACKAGE.package_profile(source_link, root / "zips")
-
-            output = root / "real-zips"
-            output.mkdir()
-            output_link = root / "zips-link"
-            output_link.symlink_to(output, target_is_directory=True)
-            with self.assertRaises(PACKAGE.PackageError):
-                PACKAGE.package_profile(source, output_link)
-
-    def test_symlinked_ancestor_is_rejected_before_external_output_changes(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary).resolve()
-            source = root / "source"
-            skill = source / "sample-skill"
-            skill.mkdir(parents=True)
-            (skill / "SKILL.md").write_text("# Sample\n", encoding="utf-8")
-
+    def test_symlinked_managed_root_is_rejected_before_external_changes(self) -> None:
+        with self._runtime_layout() as (root, _source, zip_root):
             outside = root / "outside"
             outside.mkdir()
             sentinel = outside / "sentinel.zip"
             sentinel.write_bytes(b"unchanged")
-            ancestor = root / "redirect"
-            ancestor.symlink_to(outside, target_is_directory=True)
+            zip_root.parent.mkdir(parents=True)
+            zip_root.symlink_to(outside, target_is_directory=True)
 
             with self.assertRaises(PACKAGE.PackageError):
-                PACKAGE.package_profile(source, ancestor / "managed-zips")
+                PACKAGE.package_profile()
             self.assertEqual(b"unchanged", sentinel.read_bytes())
-            self.assertFalse((outside / "managed-zips").exists())
 
-            source_parent = root / "source-redirect"
-            source_parent.symlink_to(root, target_is_directory=True)
-            with self.assertRaises(PACKAGE.PackageError):
-                PACKAGE.package_profile(source_parent / "source", root / "zips")
+    def test_retired_roots_are_preflighted_then_removed_without_touching_sentinels(self) -> None:
+        with self._runtime_layout() as (_root, source, zip_root):
+            for managed_root in (source.parent, zip_root):
+                for retired in ("full", "dev"):
+                    residue = managed_root / retired / "managed.bin"
+                    residue.parent.mkdir(parents=True, exist_ok=True)
+                    residue.write_bytes(b"retired")
+                sentinel = managed_root / "user-sentinel.bin"
+                sentinel.parent.mkdir(parents=True, exist_ok=True)
+                sentinel.write_bytes(b"preserve")
 
-    def test_source_output_overlap_is_rejected_without_mutation(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary).resolve()
-            source = root / "source"
-            skill = source / "sample-skill"
-            skill.mkdir(parents=True)
-            (skill / "SKILL.md").write_text("# Sample\n", encoding="utf-8")
-            sentinel = source / "sentinel.zip"
-            sentinel.write_bytes(b"unchanged")
+            PACKAGE.package_profile()
 
-            for output in (source, skill / "zips"):
-                with self.subTest(output=output):
-                    with self.assertRaises(PACKAGE.PackageError):
-                        PACKAGE.package_profile(source, output)
-                    self.assertEqual(b"unchanged", sentinel.read_bytes())
+            for managed_root in (source.parent, zip_root):
+                self.assertFalse((managed_root / "full").exists())
+                self.assertFalse((managed_root / "dev").exists())
+                self.assertEqual(
+                    b"preserve",
+                    (managed_root / "user-sentinel.bin").read_bytes(),
+                )
 
-    def test_invalid_skill_name_preserves_existing_managed_zip(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary).resolve()
-            skill = root / "source" / "unsafe_name"
-            skill.mkdir(parents=True)
-            (skill / "SKILL.md").write_text("# Sample\n", encoding="utf-8")
-            output = root / "zips"
-            output.mkdir()
-            existing = output / "unsafe_name.zip"
-            existing.write_bytes(b"unchanged")
+    def test_invalid_retired_root_prevents_all_cleanup_and_packaging(self) -> None:
+        with self._runtime_layout() as (_root, source, zip_root):
+            first = source.parent / "full/managed.bin"
+            first.parent.mkdir(parents=True)
+            first.write_bytes(b"preserve")
+            invalid = zip_root / "dev"
+            invalid.parent.mkdir(parents=True)
+            invalid.write_bytes(b"not-a-directory")
 
-            with self.assertRaises(PACKAGE.PackageError):
-                PACKAGE.package_profile(root / "source", output)
-            self.assertEqual(b"unchanged", existing.read_bytes())
+            with self.assertRaisesRegex(
+                PACKAGE.PackageError,
+                "retired profile output.*regular directory",
+            ):
+                PACKAGE.package_profile()
+
+            self.assertEqual(b"preserve", first.read_bytes())
+            self.assertEqual(b"not-a-directory", invalid.read_bytes())
+            self.assertFalse((zip_root / "recommended").exists())
 
     def test_backslash_archive_member_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -141,22 +234,15 @@ class PackageSafetyTests(unittest.TestCase):
             with self.assertRaises(PACKAGE.PackageError):
                 PACKAGE._validate_written_zips(output)
 
-    def test_missing_source_and_unrelated_zip_are_never_deleted(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary).resolve()
-            output = root / "zips"
-            output.mkdir()
+    def test_unrelated_zip_is_never_deleted(self) -> None:
+        with self._runtime_layout() as (_root, _source, zip_root):
+            output = zip_root / "recommended"
+            output.mkdir(parents=True)
             unrelated = output / "user-backup.zip"
             unrelated.write_bytes(b"preserve")
 
-            self.assertEqual(PACKAGE.package_profile(root / "missing", output), 0)
-            self.assertEqual(b"preserve", unrelated.read_bytes())
-
-            skill = root / "source" / "sample-skill"
-            skill.mkdir(parents=True)
-            (skill / "SKILL.md").write_text("# Sample\n", encoding="utf-8")
             with self.assertRaises(PACKAGE.PackageError):
-                PACKAGE.package_profile(root / "source", output)
+                PACKAGE.package_profile()
             self.assertEqual(b"preserve", unrelated.read_bytes())
 
 

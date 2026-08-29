@@ -12,6 +12,11 @@ fresh validation, and independent review. It does not install executable hooks,
 an interception bridge, a second sandbox, private runtime evidence, or an
 internal task-state engine.
 
+There is one Runtime Skill surface: 1 Control plus 26 Professional top-level
+Skills. Foundation and modifier-only Domain knowledge is selected JIT behind a
+Professional owner. Runtime composition is distinct from the four Agent
+Profiles shown in the architecture line above.
+
 This shape keeps control decisions inspectable and makes host-enforcement limits
 explicit. It authors, builds, packages, installs, upgrades, and removes standard
 Skill and Profile artifacts; it is not a runtime content corpus or a personal

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build, install, and inspect a hookless rd-skills profile."""
+"""Build, install, and inspect the hookless rd-skills runtime."""
 
 from __future__ import annotations
 
@@ -10,40 +10,29 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
-from validation_utils import EXPECTED_PROFILE_TOP_LEVEL_COUNTS
-
-
 AGENTS = ("codex", "claude", "copilot", "cline", "openai-api")
 SCOPES = ("project", "user", "admin")
-PROFILE_CHOICES = ("auto", "recommended", "full", "dev")
+EXPECTED_RUNTIME_SKILL_COUNT = 27
 
 
 @dataclass(frozen=True)
 class QuickstartPlan:
-    selected_profile: str
     expected_skill_count: int
     commands: tuple[tuple[str, ...], ...]
     doctor_expected: bool
     agent_profiles: tuple[str, ...]
 
 
-def resolve_profile(agent: str, scope: str | None, requested: str) -> str:
-    if requested != "auto":
-        return requested
-    return "recommended"
-
-
 def build_plan(args: argparse.Namespace) -> QuickstartPlan:
-    selected = resolve_profile(args.agent, args.scope, args.profile)
     scope = args.scope or ("project" if args.agent == "openai-api" else None)
     if scope is None:
         raise ValueError("--scope is required for runtime installs")
     if scope == "project" and args.agent != "openai-api" and args.target is None:
         raise ValueError("--target is required for project installs")
-    build = ("python3", "scripts/build.py", "--profile", selected)
+    build = ("python3", "scripts/build.py")
     install = [
         "python3", "installers/install.py", "--agent", args.agent,
-        "--scope", scope, "--profile", selected,
+        "--scope", scope,
     ]
     if args.target is not None:
         install.extend(("--target", str(args.target)))
@@ -54,14 +43,13 @@ def build_plan(args: argparse.Namespace) -> QuickstartPlan:
     if doctor_expected:
         doctor = [
             "python3", "installers/doctor.py", "--agent", args.agent,
-            "--scope", scope, "--profile", selected,
+            "--scope", scope,
         ]
         if args.target is not None:
             doctor.extend(("--target", str(args.target)))
         commands.append(tuple(doctor))
     return QuickstartPlan(
-        selected_profile=selected,
-        expected_skill_count=EXPECTED_PROFILE_TOP_LEVEL_COUNTS[selected],
+        expected_skill_count=EXPECTED_RUNTIME_SKILL_COUNT,
         commands=tuple(commands),
         doctor_expected=doctor_expected,
         agent_profiles=(
@@ -93,7 +81,6 @@ def main() -> int:
     parser.add_argument("--agent", choices=AGENTS, required=True)
     parser.add_argument("--scope", choices=SCOPES)
     parser.add_argument("--target", type=Path)
-    parser.add_argument("--profile", choices=PROFILE_CHOICES, default="auto")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--no-doctor", action="store_true")
     args = parser.parse_args()
@@ -106,7 +93,6 @@ def main() -> int:
     for command in plan.commands:
         print("- " + " ".join(command))
     print("quickstart: summary")
-    print(f"- selected profile: {plan.selected_profile}")
     print(f"- expected standard Skills: {plan.expected_skill_count}")
     if plan.agent_profiles:
         print("- Agent Profiles: " + ", ".join(plan.agent_profiles))

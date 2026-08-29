@@ -3,11 +3,12 @@ from __future__ import annotations
 import importlib.util
 import io
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
 import zipfile
-from contextlib import contextmanager, redirect_stderr
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest import mock
 
@@ -48,12 +49,460 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
         cls.helper = load_install_helper()
         cls.install_cli = load_cli(cls.helper, "install")
         cls.upgrade_cli = load_cli(cls.helper, "upgrade")
+        cls.doctor_cli = load_cli(cls.helper, "doctor")
+        cls.uninstall_cli = load_cli(cls.helper, "uninstall")
 
-    def test_installer_profile_counts_match_current_delivery_contract(self) -> None:
+    def test_installer_has_one_runtime_and_bounded_legacy_input_counts(self) -> None:
+        self.assertEqual("recommended", self.helper.RUNTIME_PROFILE)
+        self.assertEqual(27, self.helper.RUNTIME_SKILL_COUNT)
         self.assertEqual(
             {"recommended": 27, "full": 40, "dev": 190},
-            self.helper.EXPECTED_PROFILE_COUNTS,
+            self.helper.LEGACY_PROFILE_COUNTS,
         )
+        self.assertFalse(hasattr(self.helper, "PROFILES"))
+
+    def test_public_installer_help_and_obsolete_profile_rejection_are_profile_free(self) -> None:
+        for script in ("install", "upgrade", "doctor"):
+            with self.subTest(script=script):
+                help_result = subprocess.run(
+                    [sys.executable, str(ROOT / "installers" / f"{script}.py"), "--help"],
+                    cwd=ROOT,
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                )
+                self.assertEqual(0, help_result.returncode, help_result.stderr)
+                self.assertNotIn("--profile", help_result.stdout)
+                with tempfile.TemporaryDirectory() as raw:
+                    project = Path(raw) / "project"
+                    before = self._tree_snapshot(Path(raw))
+                    obsolete = subprocess.run(
+                        [
+                            sys.executable,
+                            str(ROOT / "installers" / f"{script}.py"),
+                            "--agent",
+                            "codex",
+                            "--scope",
+                            "project",
+                            "--target",
+                            str(project),
+                            "--profile",
+                            "full",
+                        ],
+                        cwd=ROOT,
+                        text=True,
+                        capture_output=True,
+                        check=False,
+                    )
+                    self.assertEqual(2, obsolete.returncode)
+                    self.assertIn("unrecognized arguments: --profile full", obsolete.stderr)
+                    self.assertEqual(before, self._tree_snapshot(Path(raw)))
+
+    @staticmethod
+    def _authoritative_layer_names() -> dict[str, set[str]]:
+        from tests.scripts.test_build_safety import BUILD
+
+        registries = BUILD._load_registries()
+        return {
+            layer: {str(entry["name"]) for entry in entries}
+            for layer, entries in registries.items()
+        }
+
+    def _install_current_project(self, project: Path) -> tuple[Path, Path]:
+        with (
+            mock.patch.object(
+                sys,
+                "argv",
+                [
+                    "install.py",
+                    "--agent",
+                    "codex",
+                    "--scope",
+                    "project",
+                    "--target",
+                    str(project),
+                ],
+            ),
+            redirect_stdout(io.StringIO()),
+            redirect_stderr(io.StringIO()),
+        ):
+            self.assertEqual(0, self.install_cli.main())
+        return project / ".agents/skills", project / ".codex/agents"
+
+    def _make_legacy_install(self, project: Path, profile: str) -> tuple[Path, Path, dict]:
+        skills, profiles = self._install_current_project(project)
+        layers = self._authoritative_layer_names()
+        expected = {
+            "recommended": layers["control"] | layers["professional"],
+            "full": layers["control"] | layers["professional"] | layers["domain"],
+            "dev": set().union(*layers.values()),
+        }[profile]
+        for name in sorted(expected):
+            skill = skills / name
+            if not skill.exists():
+                skill.mkdir()
+                (skill / "SKILL.md").write_text(f"# legacy {name}\n", encoding="utf-8")
+        manifest_path = skills / self.helper.MANIFEST_NAME
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest.update(
+            {
+                "profile": profile,
+                "installed_skills": sorted(expected),
+                "installed_control_skills": sorted(layers["control"]),
+                "installed_professional_skills": sorted(layers["professional"]),
+                "installed_foundation_skills": (
+                    sorted(layers["foundation"]) if profile == "dev" else []
+                ),
+                "installed_domain_skills": (
+                    sorted(layers["domain"]) if profile in {"full", "dev"} else []
+                ),
+            }
+        )
+        manifest_path.write_text(
+            json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        return skills, profiles, manifest
+
+    def test_full_and_dev_upgrade_migrate_with_backup_preservation_and_idempotence(self) -> None:
+        layers = self._authoritative_layer_names()
+        runtime = layers["control"] | layers["professional"]
+        for profile in ("full", "dev"):
+            with self.subTest(profile=profile), tempfile.TemporaryDirectory() as raw:
+                project = Path(raw) / "project"
+                skills, profiles, legacy_manifest = self._make_legacy_install(project, profile)
+                retired = set(legacy_manifest["installed_skills"]) - runtime
+                self.assertTrue(retired)
+                mixed_name = sorted(retired)[0]
+                mixed_bytes = b"user-owned bytes inside managed legacy Skill\n"
+                (skills / mixed_name / "user-note.bin").write_bytes(mixed_bytes)
+                root_bytes = b"unmanaged root file\n"
+                (skills / "USER-NOTES.txt").write_bytes(root_bytes)
+                sibling_bytes = b"# user Skill\n"
+                user_skill = skills / "user-owned-skill"
+                user_skill.mkdir()
+                (user_skill / "SKILL.md").write_bytes(sibling_bytes)
+                profile_bytes = b'user owned = true\n'
+                (profiles / "user-owned.toml").write_bytes(profile_bytes)
+
+                with (
+                    mock.patch.object(
+                        sys,
+                        "argv",
+                        [
+                            "upgrade.py",
+                            "--agent",
+                            "codex",
+                            "--scope",
+                            "project",
+                            "--target",
+                            str(project),
+                        ],
+                    ),
+                    mock.patch.object(
+                        self.helper,
+                        "utc_stamp",
+                        side_effect=("first", "second"),
+                    ),
+                    redirect_stdout(io.StringIO()),
+                    redirect_stderr(io.StringIO()),
+                ):
+                    self.assertEqual(0, self.upgrade_cli.main())
+                    installed = json.loads(
+                        (skills / self.helper.MANIFEST_NAME).read_text(encoding="utf-8")
+                    )
+                    self.assertEqual("recommended", installed["profile"])
+                    self.assertEqual(runtime, set(installed["installed_skills"]))
+                    self.assertEqual(27, len(installed["installed_skills"]))
+                    self.assertEqual(4, len(installed["installed_agent_profiles"]))
+                    backup = Path(installed["backup_path"])
+                    self.assertEqual(
+                        mixed_bytes,
+                        (backup / "skills" / mixed_name / "user-note.bin").read_bytes(),
+                    )
+                    self.assertTrue(all(not (skills / name).exists() for name in retired))
+                    self.assertEqual(root_bytes, (skills / "USER-NOTES.txt").read_bytes())
+                    self.assertEqual(sibling_bytes, (user_skill / "SKILL.md").read_bytes())
+                    self.assertEqual(profile_bytes, (profiles / "user-owned.toml").read_bytes())
+
+                    self.assertEqual(0, self.upgrade_cli.main())
+                    second = json.loads(
+                        (skills / self.helper.MANIFEST_NAME).read_text(encoding="utf-8")
+                    )
+                    self.assertEqual(runtime, set(second["installed_skills"]))
+                    self.assertEqual(root_bytes, (skills / "USER-NOTES.txt").read_bytes())
+                    self.assertEqual(sibling_bytes, (user_skill / "SKILL.md").read_bytes())
+                    self.assertEqual(profile_bytes, (profiles / "user-owned.toml").read_bytes())
+
+    def test_safe_but_forged_or_duplicate_legacy_inventory_fails_before_mutation_even_with_force(self) -> None:
+        for scenario in ("safe-forged", "duplicate"):
+            with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as raw:
+                project = Path(raw) / "project"
+                skills, _profiles, _manifest = self._make_legacy_install(project, "full")
+                manifest_path = skills / self.helper.MANIFEST_NAME
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                if scenario == "safe-forged":
+                    removed = manifest["installed_skills"].pop()
+                    manifest["installed_skills"].append("safe-forged-skill")
+                    forged = skills / "safe-forged-skill"
+                    forged.mkdir()
+                    (forged / "SKILL.md").write_text("# forged\n", encoding="utf-8")
+                    self.assertTrue((skills / removed).is_dir())
+                else:
+                    manifest["installed_skills"].append(manifest["installed_skills"][0])
+                manifest_path.write_text(
+                    json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+                    encoding="utf-8",
+                )
+                before = self._tree_snapshot(project)
+                with (
+                    mock.patch.object(
+                        sys,
+                        "argv",
+                        [
+                            "upgrade.py",
+                            "--agent",
+                            "codex",
+                            "--scope",
+                            "project",
+                            "--target",
+                            str(project),
+                            "--force",
+                        ],
+                    ),
+                    redirect_stdout(io.StringIO()),
+                    redirect_stderr(io.StringIO()),
+                ):
+                    self.assertEqual(1, self.upgrade_cli.main())
+                self.assertEqual(before, self._tree_snapshot(project))
+
+    def test_doctor_reports_valid_retired_install_as_migration_required_without_build_lookup(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            project = Path(raw) / "project"
+            self._make_legacy_install(project, "dev")
+            output = io.StringIO()
+            with (
+                mock.patch.object(
+                    sys,
+                    "argv",
+                    [
+                        "doctor.py",
+                        "--agent",
+                        "codex",
+                        "--scope",
+                        "project",
+                        "--target",
+                        str(project),
+                    ],
+                ),
+                mock.patch.object(
+                    self.doctor_cli,
+                    "validated_built_core_model",
+                    side_effect=AssertionError("retired build lookup is forbidden"),
+                ) as resolve_source,
+                redirect_stdout(output),
+                redirect_stderr(io.StringIO()),
+            ):
+                self.assertEqual(1, self.doctor_cli.main())
+            resolve_source.assert_not_called()
+            self.assertIn("migration required", output.getvalue().lower())
+
+    def test_legacy_dry_run_is_zero_mutation_and_uninstall_accepts_exact_legacy_set(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            project = Path(raw) / "project"
+            skills, profiles, legacy = self._make_legacy_install(project, "full")
+            root_file = skills / "USER-NOTES.txt"
+            root_file.write_bytes(b"preserve root\n")
+            user_skill = skills / "user-owned-skill"
+            user_skill.mkdir()
+            (user_skill / "SKILL.md").write_bytes(b"# preserve Skill\n")
+            user_profile = profiles / "user-owned.toml"
+            user_profile.write_bytes(b"preserve = true\n")
+            before = self._tree_snapshot(project)
+
+            with (
+                mock.patch.object(
+                    sys,
+                    "argv",
+                    [
+                        "upgrade.py",
+                        "--agent",
+                        "codex",
+                        "--scope",
+                        "project",
+                        "--target",
+                        str(project),
+                        "--dry-run",
+                    ],
+                ),
+                redirect_stdout(io.StringIO()),
+                redirect_stderr(io.StringIO()),
+            ):
+                self.assertEqual(0, self.upgrade_cli.main())
+            self.assertEqual(before, self._tree_snapshot(project))
+
+            with (
+                mock.patch.object(
+                    sys,
+                    "argv",
+                    [
+                        "uninstall.py",
+                        "--agent",
+                        "codex",
+                        "--scope",
+                        "project",
+                        "--target",
+                        str(project),
+                    ],
+                ),
+                redirect_stdout(io.StringIO()),
+                redirect_stderr(io.StringIO()),
+            ):
+                self.assertEqual(0, self.uninstall_cli.main())
+            self.assertFalse((skills / self.helper.MANIFEST_NAME).exists())
+            self.assertTrue(
+                all(not (skills / name).exists() for name in legacy["installed_skills"])
+            )
+            self.assertEqual(b"preserve root\n", root_file.read_bytes())
+            self.assertEqual(b"# preserve Skill\n", (user_skill / "SKILL.md").read_bytes())
+            self.assertEqual(b"preserve = true\n", user_profile.read_bytes())
+
+    def test_legacy_manifest_identity_and_nested_symlink_fail_before_mutation_even_with_force(self) -> None:
+        for scenario in ("architecture", "agent", "scope", "target", "nested-symlink"):
+            with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as raw:
+                project = Path(raw) / "project"
+                skills, _profiles, legacy = self._make_legacy_install(project, "dev")
+                manifest_path = skills / self.helper.MANIFEST_NAME
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                outside = Path(raw) / "outside.bin"
+                outside.write_bytes(b"outside must remain\n")
+                if scenario == "architecture":
+                    manifest["architecture"] = "safe-but-unknown-architecture"
+                elif scenario == "agent":
+                    manifest["agent"] = "claude"
+                elif scenario == "scope":
+                    manifest["scope"] = "user"
+                elif scenario == "target":
+                    manifest["target_path"] = str(Path(raw) / "safe-other-target")
+                else:
+                    runtime = self._authoritative_layer_names()["control"] | self._authoritative_layer_names()["professional"]
+                    retired = sorted(set(legacy["installed_skills"]) - runtime)[0]
+                    (skills / retired / "outside-link").symlink_to(outside)
+                manifest_path.write_text(
+                    json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+                    encoding="utf-8",
+                )
+                before = self._tree_snapshot(project)
+                with (
+                    mock.patch.object(
+                        sys,
+                        "argv",
+                        [
+                            "upgrade.py",
+                            "--agent",
+                            "codex",
+                            "--scope",
+                            "project",
+                            "--target",
+                            str(project),
+                            "--force",
+                        ],
+                    ),
+                    redirect_stdout(io.StringIO()),
+                    redirect_stderr(io.StringIO()),
+                ):
+                    self.assertEqual(1, self.upgrade_cli.main())
+                self.assertEqual(before, self._tree_snapshot(project))
+                self.assertEqual(b"outside must remain\n", outside.read_bytes())
+
+    def test_upgrade_backup_failure_and_unmanaged_conflict_are_non_mutating(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            project = Path(raw) / "project"
+            self._make_legacy_install(project, "full")
+            before = self._tree_snapshot(project)
+            with (
+                mock.patch.object(
+                    sys,
+                    "argv",
+                    [
+                        "upgrade.py",
+                        "--agent",
+                        "codex",
+                        "--scope",
+                        "project",
+                        "--target",
+                        str(project),
+                    ],
+                ),
+                mock.patch.object(
+                    self.helper.shutil,
+                    "copytree",
+                    side_effect=OSError("synthetic backup failure"),
+                ),
+                redirect_stdout(io.StringIO()),
+                redirect_stderr(io.StringIO()),
+            ):
+                self.assertEqual(1, self.upgrade_cli.main())
+            self.assertEqual(before, self._tree_snapshot(project))
+
+        with tempfile.TemporaryDirectory() as raw:
+            project = Path(raw) / "project"
+            conflict = project / ".agents/skills/engineering-control-plane"
+            conflict.mkdir(parents=True)
+            (conflict / "SKILL.md").write_bytes(b"# user conflict\n")
+            before = self._tree_snapshot(project)
+            with (
+                mock.patch.object(
+                    sys,
+                    "argv",
+                    [
+                        "install.py",
+                        "--agent",
+                        "codex",
+                        "--scope",
+                        "project",
+                        "--target",
+                        str(project),
+                    ],
+                ),
+                redirect_stdout(io.StringIO()),
+                redirect_stderr(io.StringIO()),
+            ):
+                self.assertEqual(1, self.install_cli.main())
+            self.assertEqual(before, self._tree_snapshot(project))
+
+    def test_cline_runtime_manifest_has_27_skills_and_no_agent_profiles(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            project = Path(raw) / "project"
+            with (
+                mock.patch.object(
+                    sys,
+                    "argv",
+                    [
+                        "install.py",
+                        "--agent",
+                        "cline",
+                        "--scope",
+                        "project",
+                        "--target",
+                        str(project),
+                    ],
+                ),
+                redirect_stdout(io.StringIO()),
+                redirect_stderr(io.StringIO()),
+            ):
+                self.assertEqual(0, self.install_cli.main())
+            manifest = json.loads(
+                (
+                    project
+                    / ".cline/skills"
+                    / self.helper.MANIFEST_NAME
+                ).read_text(encoding="utf-8")
+            )
+            self.assertEqual("recommended", manifest["profile"])
+            self.assertEqual(27, len(manifest["installed_skills"]))
+            self.assertEqual([], manifest["installed_agent_profiles"])
+            self.assertEqual([], manifest["installed_agent_profile_files"])
 
     def test_capability_fact_projection_reuses_canonical_build_renderer(self) -> None:
         from tests.scripts.test_build_safety import BUILD as build
@@ -257,8 +706,6 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
                     "project",
                     "--target",
                     str(project),
-                    "--profile",
-                    "recommended",
                 ],
             ),
             mock.patch.object(cli, "resolve_source_profile_dir", return_value=source),
@@ -344,7 +791,7 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
                     self.helper.InstallError,
                     "authoritative build input",
                 ):
-                    self.helper.validate_openai_bundles("recommended", bundles)
+                    self.helper.validate_openai_bundles(bundles)
                 self.assertEqual(before, self._tree_snapshot(bundles))
 
     def test_profile_replacement_unlinks_live_and_dangling_symlinks(self) -> None:
@@ -661,7 +1108,6 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
             with self.assertRaises(self.helper.InstallError):
                 self.helper.validate_built_source(
                     "cline",
-                    "recommended",
                     source,
                     None,
                 )

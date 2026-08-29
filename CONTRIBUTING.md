@@ -32,7 +32,9 @@ Search existing issues and docs first:
 - [docs/OPERATING_MODEL.md](docs/OPERATING_MODEL.md)
 - [docs/RELEASE.md](docs/RELEASE.md)
 
-For bugs, include the command you ran, the profile, the agent target, the relevant OS/runtime details, the observed result, and the expected result. Do not include secrets, tokens, private keys, customer data, or private repository content.
+For bugs, include the command you ran, the Host and scope, relevant OS/runtime
+details, the observed result, and the expected result. Do not include secrets,
+tokens, private keys, customer data, or private repository content.
 
 ## Development Requirements
 
@@ -46,10 +48,10 @@ Install the declared validation dependency before running repository checks:
 python3 -m pip install .
 ```
 
-Build a profile before testing install behavior:
+Build the Runtime before testing install behavior:
 
 ```bash
-python3 scripts/build.py --profile full
+python3 scripts/build.py
 ```
 
 ## Validation Required Before Pull Request
@@ -75,9 +77,12 @@ Every pull request should state:
 - Any unresolved assumptions or maintainer decisions.
 
 Documentation updates are required when a change affects CLI flags, install
-targets, build profiles, packaging behavior, release process, or Skill
-selection behavior. Small wording fixes may remain documentation-only in file
-scope, but their committed base/head still runs Development Affected validation.
+targets, Runtime composition, packaging behavior, migration, release process,
+or Skill selection behavior. New knowledge must prefer an existing Targeted
+Reference, Foundation/Domain Skill, or Professional Skill in that order. A new
+Professional Skill requires stable independent Primary routing and clear task
+ownership. Small wording fixes may remain documentation-only in file scope, but
+their committed base/head still runs Development Affected validation.
 
 ## Contribution Licensing
 

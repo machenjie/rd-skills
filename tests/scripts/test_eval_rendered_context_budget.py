@@ -34,6 +34,21 @@ def _load_module():
 
 EVAL = _load_module()
 
+
+def _load_built_link_validator():
+    path = ROOT / "scripts/validate-built-skill-reference-links.py"
+    spec = importlib.util.spec_from_file_location(
+        "eval_rendered_built_link_validator_tests", path
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+BUILT_LINK_VALIDATOR = _load_built_link_validator()
+
 import build as BUILD  # noqa: E402
 import validation_utils as VALIDATION  # noqa: E402
 
@@ -125,23 +140,20 @@ class RenderedContextBudgetTests(unittest.TestCase):
         return measurement
 
     @staticmethod
-    def _native_dispatch_probe() -> tuple[dict[str, object], dict[str, dict[str, object]]]:
+    def _native_dispatch_probe() -> tuple[dict[str, object], dict[str, object]]:
         document = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
         case = copy.deepcopy(
             next(item for item in document["cases"] if item["id"] == "single-module-feature")
         )
-        manifests = {
-            profile: json.loads(
-                (
-                    ROOT
-                    / "dist/universal/skills"
-                    / profile
-                    / ".changeforge-build-manifest.json"
-                ).read_text(encoding="utf-8")
-            )
-            for profile in EVAL.BUILD_PROFILES
-        }
-        return case, manifests
+        runtime_manifest = json.loads(
+            (
+                ROOT
+                / "dist/universal/skills"
+                / EVAL.RUNTIME_NAME
+                / ".changeforge-build-manifest.json"
+            ).read_text(encoding="utf-8")
+        )
+        return case, runtime_manifest
 
     @staticmethod
     def _copy_native_dispatch_subject(
@@ -178,13 +190,13 @@ class RenderedContextBudgetTests(unittest.TestCase):
             target
             / "dist/universal/skills/recommended/engineering-control-plane"
         )
-        for profile in EVAL.BUILD_PROFILES:
-            relative = (
-                f"dist/universal/skills/{profile}/.changeforge-build-manifest.json"
-            )
-            destination = target / relative
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(ROOT / relative, destination)
+        relative = (
+            f"dist/universal/skills/{EVAL.RUNTIME_NAME}/"
+            ".changeforge-build-manifest.json"
+        )
+        destination = target / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ROOT / relative, destination)
         for name in (
             "professional-skills.yaml",
             "foundation-skills.yaml",
@@ -215,7 +227,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             shutil.copy2(source, destination)
 
     def test_native_dispatch_selection_assets_are_complete_and_host_ordered(self) -> None:
-        case, manifests = self._native_dispatch_probe()
+        case, runtime_manifest = self._native_dispatch_probe()
         step_index, step = next(
             (index, item)
             for index, item in enumerate(case["steps"])
@@ -227,7 +239,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 subject, str(step["primary_skill"]), step
             )
             measured = EVAL._native_dispatch_selection_assets(
-                str(case["id"]), step_index, step, subject, manifests
+                str(case["id"]), step_index, step, subject, runtime_manifest
             )
         self.assertEqual(["codex", "claude", "copilot"], measured["host_order"])
         self.assertEqual(
@@ -245,35 +257,34 @@ class RenderedContextBudgetTests(unittest.TestCase):
             [(row["host"], row["kind"]) for row in measured["components"]],
         )
 
-    def test_native_dispatch_selection_assets_bind_all_manifests_and_input(self) -> None:
-        case, manifests = self._native_dispatch_probe()
+    def test_native_dispatch_selection_assets_bind_runtime_and_input(self) -> None:
+        case, runtime_manifest = self._native_dispatch_probe()
         step_index, step = next(
             (index, item)
             for index, item in enumerate(case["steps"])
             if item.get("action") == "dispatch" and item.get("primary_skill")
         )
         measured = EVAL._native_dispatch_selection_assets(
-            str(case["id"]), step_index, step, ROOT, manifests
+            str(case["id"]), step_index, step, ROOT, runtime_manifest
         )
-        self.assertEqual(list(EVAL.BUILD_PROFILES), list(measured["manifest_bindings"]))
+        self.assertEqual(
+            EVAL.RUNTIME_NAME, measured["runtime_manifest_binding"]["runtime"]
+        )
         self.assertTrue(measured["authoritative_build_inputs"]["sha256"])
-        self.assertTrue(
-            all(
-                row["authoritative_build_inputs"]
-                == measured["authoritative_build_inputs"]
-                for row in measured["manifest_bindings"].values()
-            )
+        self.assertEqual(
+            measured["authoritative_build_inputs"],
+            measured["runtime_manifest_binding"]["authoritative_build_inputs"],
         )
 
     def test_native_dispatch_keeps_one_envelope_and_counts_asset_occurrences(self) -> None:
-        case, manifests = self._native_dispatch_probe()
+        case, runtime_manifest = self._native_dispatch_probe()
         lightweight = EVAL._load_current_lightweight_module(
             ROOT / "scripts/eval-agent-lightweight.py"
         )
         measured = EVAL._native_trajectory_case_cost(
             case,
             ROOT,
-            manifests,
+            runtime_manifest,
             lightweight,
             native_schema=EVAL._native_contract_identity(
                 json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
@@ -464,17 +475,14 @@ class RenderedContextBudgetTests(unittest.TestCase):
         case = copy.deepcopy(
             next(item for item in document["cases"] if item["id"] == "diagnosis-only")
         )
-        manifests = {
-            profile: json.loads(
-                (
-                    ROOT
-                    / "dist/universal/skills"
-                    / profile
-                    / ".changeforge-build-manifest.json"
-                ).read_text(encoding="utf-8")
-            )
-            for profile in EVAL.BUILD_PROFILES
-        }
+        runtime_manifest = json.loads(
+            (
+                ROOT
+                / "dist/universal/skills"
+                / EVAL.RUNTIME_NAME
+                / ".changeforge-build-manifest.json"
+            ).read_text(encoding="utf-8")
+        )
         step_index, step = next(
             (index, item)
             for index, item in enumerate(case["steps"])
@@ -486,7 +494,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 subject, str(step["primary_skill"]), step
             )
             measured = EVAL._native_dispatch_selection_assets(
-                str(case["id"]), step_index, step, subject, manifests
+                str(case["id"]), step_index, step, subject, runtime_manifest
             )
             for host in EVAL.FOCUS_PROFILE_HOSTS:
                 selector_rows = [
@@ -551,7 +559,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         trajectory = EVAL._native_trajectory_case_cost(
             case,
             ROOT,
-            manifests,
+            runtime_manifest,
             lightweight,
             native_schema=EVAL._native_contract_identity(document),
             host="codex",
@@ -588,7 +596,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         self.assertTrue(bundle["professional_selector_pointer"])
         self.assertTrue(bundle["native_envelope"]["sha256"])
         self.assertEqual(
-            set(EVAL.BUILD_PROFILES), set(bundle["manifest_bindings"])
+            EVAL.RUNTIME_NAME, bundle["runtime_manifest_binding"]["runtime"]
         )
 
     def test_s3d_all_current_engineering_analysis_dispatches_resolve_once_per_host(self) -> None:
@@ -601,17 +609,14 @@ class RenderedContextBudgetTests(unittest.TestCase):
             and step.get("primary_skill") == "engineering-change-analysis"
         ]
         self.assertEqual(8, len(dispatches))
-        manifests = {
-            profile: json.loads(
-                (
-                    ROOT
-                    / "dist/universal/skills"
-                    / profile
-                    / ".changeforge-build-manifest.json"
-                ).read_text(encoding="utf-8")
-            )
-            for profile in EVAL.BUILD_PROFILES
-        }
+        runtime_manifest = json.loads(
+            (
+                ROOT
+                / "dist/universal/skills"
+                / EVAL.RUNTIME_NAME
+                / ".changeforge-build-manifest.json"
+            ).read_text(encoding="utf-8")
+        )
         observed: list[tuple[str, str, str]] = []
         with tempfile.TemporaryDirectory() as raw:
             subject = Path(raw)
@@ -620,7 +625,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     subject, str(step["primary_skill"]), step
                 )
                 measured = EVAL._native_dispatch_selection_assets(
-                    case_id, step_index, step, subject, manifests
+                    case_id, step_index, step, subject, runtime_manifest
                 )
                 expected_resolution = (
                     "exact" if case_id == "diagnosis-only" else "complete"
@@ -1402,7 +1407,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             [EVAL._component("synthetic", "synthetic.md", "bounded context")],
             budget_class="main",
         )
-        measurement.update({"host": "test", "build_profile": "test"})
+        measurement.update({"host": "test", "runtime": "test"})
         maximum = EVAL._maximum_summary(measurement, include_dispatch=False)
         assert maximum is not None
         self.assertEqual(
@@ -1526,7 +1531,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     {
                         "budget_class": "main",
                         "host": f"host-{index}",
-                        "build_profile": "recommended",
+                        "runtime": "recommended",
                         "components": [
                             component("rendered_main_profile", f"main-{index}", tokens)
                         ],
@@ -1538,7 +1543,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     {
                         "budget_class": "utility",
                         "host": "codex",
-                        "build_profile": "recommended",
+                        "runtime": "recommended",
                         "step": index,
                         "role": "task-agent",
                         "mode": "utility",
@@ -1616,7 +1621,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 {
                     "budget_class": "main",
                     "host": "codex",
-                    "build_profile": "recommended",
+                    "runtime": "recommended",
                     "components": [
                         {
                             "kind": "rendered_main_profile",
@@ -1632,7 +1637,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 {
                     "budget_class": "utility",
                     "host": "codex",
-                    "build_profile": "recommended",
+                    "runtime": "recommended",
                     "step": 1,
                     "role": "task-agent",
                     "mode": "utility",
@@ -2869,12 +2874,10 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "tokenizer": "o200k_base",
                 "source_commit": "3" * 40,
                 "authoritative_build_inputs": {"sha256": "4" * 64},
-                "manifests": {
-                    profile: {
-                        "sha256": str(index) * 64,
-                        "authoritative_build_inputs": {"sha256": "4" * 64},
-                    }
-                    for index, profile in enumerate(EVAL.BUILD_PROFILES, 5)
+                "runtime_manifest": {
+                    "runtime": EVAL.RUNTIME_NAME,
+                    "sha256": "5" * 64,
+                    "authoritative_build_inputs": {"sha256": "4" * 64},
                 },
             },
             "cases": [
@@ -3000,13 +3003,13 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 destination = target / relative
                 destination.parent.mkdir(parents=True, exist_ok=True)
                 destination.write_bytes((ROOT / relative).read_bytes())
-        for profile in EVAL.BUILD_PROFILES:
-            relative = (
-                f"dist/universal/skills/{profile}/.changeforge-build-manifest.json"
-            )
-            destination = target / relative
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            destination.write_bytes((ROOT / relative).read_bytes())
+        relative = (
+            f"dist/universal/skills/{EVAL.RUNTIME_NAME}/"
+            ".changeforge-build-manifest.json"
+        )
+        destination = target / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes((ROOT / relative).read_bytes())
 
     def test_focus_cost_binds_only_the_core_derived_subject_actor_profile(self) -> None:
         expected = {
@@ -3112,19 +3115,18 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 encoding="utf-8",
             )
             profile_sha256 = hashlib.sha256(profile_path.read_bytes()).hexdigest()
-            for build_profile in EVAL.BUILD_PROFILES:
-                manifest_path = root / (
-                    "dist/universal/skills/"
-                    f"{build_profile}/.changeforge-build-manifest.json"
-                )
-                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-                manifest["agent_profile_sha256"]["codex"]["task-agent"] = (
-                    profile_sha256
-                )
-                manifest_path.write_text(
-                    json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
-                    encoding="utf-8",
-                )
+            manifest_path = root / (
+                "dist/universal/skills/"
+                f"{EVAL.RUNTIME_NAME}/.changeforge-build-manifest.json"
+            )
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["agent_profile_sha256"]["codex"]["task-agent"] = (
+                profile_sha256
+            )
+            manifest_path.write_text(
+                json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
             finding_after = EVAL._focus_case_cost(
                 self._focus_row(finding), finding, root, subject="candidate", host="codex"
             )
@@ -3533,15 +3535,15 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     "host_order": list(EVAL.FOCUS_PROFILE_HOSTS),
                     "measured_host": host,
                     "generated_profiles": rows,
-                    "manifest_bindings": {
-                        profile: {
+                    "runtime_binding": {
+                        "runtime": EVAL.RUNTIME_NAME,
+                        "hosts": {
                             row_host: {
                                 "manifest_sha256": "c" * 64,
                                 "profile_sha256": rows[index]["sha256"],
                             }
                             for index, row_host in enumerate(EVAL.FOCUS_PROFILE_HOSTS)
-                        }
-                        for profile in EVAL.BUILD_PROFILES
+                        },
                     }
                 }
 
@@ -3577,7 +3579,6 @@ class RenderedContextBudgetTests(unittest.TestCase):
     def test_end_to_end_ab_gate_accepts_only_closed_integration_scope(self) -> None:
         expected = frozenset(
             {
-                "docs/BUILD_PROFILES.md",
                 "scripts/build.py",
                 "scripts/eval-agent-lightweight.py",
                 "scripts/eval-rendered-context-budget.py",
@@ -3682,7 +3683,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             "measurements": [
                 {
                     "host": "codex",
-                    "build_profile": "recommended",
+                    "runtime": "recommended",
                     "total_tokens": 40,
                     "components": [
                         {"kind": "worker_profile", "tokens": 10},
@@ -3721,25 +3722,24 @@ class RenderedContextBudgetTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raw:
             dist = Path(raw)
             expected = {"sha256": "a" * 64, "file_count": 1}
-            for profile in EVAL.BUILD_PROFILES:
-                root = dist / profile
-                root.mkdir(parents=True)
-                (root / ".changeforge-build-manifest.json").write_text(
-                    json.dumps(
-                        {
-                            "profile": profile,
-                            "compiled_layer3_format": EVAL.COMPILED_LAYER3_FORMAT,
-                            "authoritative_build_inputs": {
-                                "sha256": "b" * 64,
-                                "file_count": 1,
-                            },
-                        }
-                    ),
-                    encoding="utf-8",
-                )
+            root = dist / EVAL.RUNTIME_NAME
+            root.mkdir(parents=True)
+            (root / ".changeforge-build-manifest.json").write_text(
+                json.dumps(
+                    {
+                        "profile": EVAL.RUNTIME_NAME,
+                        "compiled_layer3_format": EVAL.COMPILED_LAYER3_FORMAT,
+                        "authoritative_build_inputs": {
+                            "sha256": "b" * 64,
+                            "file_count": 1,
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
             identity, errors = EVAL._manifest_input_identity(dist, expected)
         self.assertEqual({}, identity)
-        self.assertEqual(3, len(errors))
+        self.assertEqual(1, len(errors))
         self.assertTrue(all("authoritative input mismatch" in error for error in errors))
 
     def test_native_validator_binding_cannot_bypass_candidate_validity(self) -> None:
@@ -4479,7 +4479,10 @@ class RenderedContextBudgetTests(unittest.TestCase):
         report = EVAL.evaluate()
 
         self.assertEqual(16, report["fixture_count"])
-        self.assertEqual(report["dispatch_count"] * 9, report["measurement_count"])
+        self.assertEqual(
+            report["dispatch_count"] * len(EVAL.HOST_PROFILE_ROOTS),
+            report["measurement_count"],
+        )
         catalog = {item["id"]: item for item in report["component_catalog"]}
         for measurement in report["main_contexts"]:
             kinds = [catalog[item]["kind"] for item in measurement["component_ids"]]
@@ -4504,7 +4507,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
 
         self.assertEqual(8, report["aggregate"]["loaded_layer3_reference_count"])
         self.assertEqual(
-            72,
+            8 * len(EVAL.HOST_PROFILE_ROOTS),
             report["aggregate"]["measured_layer3_reference_component_count"],
         )
         self.assertEqual(
@@ -4526,7 +4529,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             for item in migration["measurements"]
             if item["loaded_layer3_reference_count"] == 1
         ]
-        self.assertEqual(9, len(measured))
+        self.assertEqual(len(EVAL.HOST_PROFILE_ROOTS), len(measured))
         for item in measured:
             nested = [
                 catalog[component_id]
@@ -4562,9 +4565,9 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 for measurement in fixture["measurements"]
                 if measurement["loaded_layer3_reference_count"]
             ]
-            self.assertEqual(9, len(selected))
+            self.assertEqual(len(EVAL.HOST_PROFILE_ROOTS), len(selected))
             for measurement in selected:
-                with self.subTest(case=case_id, host=measurement["host"], profile=measurement["build_profile"]):
+                with self.subTest(case=case_id, host=measurement["host"], runtime=measurement["runtime"]):
                     self.assertEqual(
                         expected_ids,
                         set(measurement["loaded_layer3_reference_logical_ids"]),
@@ -4599,7 +4602,9 @@ class RenderedContextBudgetTests(unittest.TestCase):
             if measurement["professional_references"]
             == ["references/evidence-patterns.md"]
         ]
-        self.assertEqual(9, len(evidence_measurements))
+        self.assertEqual(
+            len(EVAL.HOST_PROFILE_ROOTS), len(evidence_measurements)
+        )
         for measurement in evidence_measurements:
             targeted = [
                 catalog[component_id]
@@ -4623,9 +4628,8 @@ class RenderedContextBudgetTests(unittest.TestCase):
             for case in document[key]
         }
         expected_measurement_coordinates = {
-            (host, build_profile)
+            (host, EVAL.RUNTIME_NAME)
             for host in EVAL.HOST_PROFILE_ROOTS
-            for build_profile in EVAL.BUILD_PROFILES
         }
 
         for (case_id, step_index), (
@@ -4672,20 +4676,20 @@ class RenderedContextBudgetTests(unittest.TestCase):
             for measurement in measurements_by_case[case_id]
             if measurement["step"] == step_index
         ]
-        self.assertEqual(5 * 9, len(selected))
+        self.assertEqual(5 * 3, len(selected))
         for case_id, step_index in AUTHORITATIVE_DAG_NODES:
             node_measurements = [
                 measurement
                 for measurement in measurements_by_case[case_id]
                 if measurement["step"] == step_index
             ]
-            self.assertEqual(9, len(node_measurements))
+            self.assertEqual(3, len(node_measurements))
             self.assertEqual(
                 expected_measurement_coordinates,
                 {
                     (
                         measurement["host"],
-                        measurement["build_profile"],
+                        measurement["runtime"],
                     )
                     for measurement in node_measurements
                 },
@@ -4695,7 +4699,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     case=case_id,
                     step=step_index,
                     host=measurement["host"],
-                    build_profile=measurement["build_profile"],
+                    runtime_name=measurement["runtime"],
                 ):
                     self.assertEqual(
                         "analyzed_task",
@@ -5115,9 +5119,8 @@ class RenderedContextBudgetTests(unittest.TestCase):
             for case in report["cases"]
         }
         expected_coordinates = {
-            (host, build_profile)
+            (host, EVAL.RUNTIME_NAME)
             for host in EVAL.HOST_PROFILE_ROOTS
-            for build_profile in EVAL.BUILD_PROFILES
         }
         for label, case, expected in cases:
             case_id = str(case["id"])
@@ -5128,13 +5131,13 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 if measurement["step"] == target_step
             ]
             with self.subTest(case=label, contract="measurement-count"):
-                self.assertEqual(9, len(measurements))
+                self.assertEqual(3, len(measurements))
                 self.assertEqual(
                     expected_coordinates,
                     {
                         (
                             measurement["host"],
-                            measurement["build_profile"],
+                            measurement["runtime"],
                         )
                         for measurement in measurements
                     },
@@ -5143,14 +5146,16 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 with self.subTest(
                     case=label,
                     host=measurement["host"],
-                    build_profile=measurement["build_profile"],
+                    runtime_name=measurement["runtime"],
                 ):
                     self.assertEqual(expected, measurement["budget_class"])
 
-    def test_layer3_resolution_follows_each_build_manifest(self) -> None:
+    def test_layer3_resolution_follows_runtime_manifest(self) -> None:
         errors: list[str] = []
-        manifests = EVAL._load_manifests(errors)
+        runtime_manifest = EVAL._load_runtime_manifest(errors)
         self.assertEqual([], errors)
+        assert runtime_manifest is not None
+        manifests = {EVAL.RUNTIME_NAME: runtime_manifest}
 
         def selector_reference_id(
             profile: str,
@@ -5180,11 +5185,9 @@ class RenderedContextBudgetTests(unittest.TestCase):
             record = json.loads(records.pop())
             return f"{owner}/{record['path']}"
 
-        self.assertTrue(
-            all(
-                manifest["compiled_layer3_format"] == EVAL.COMPILED_LAYER3_FORMAT
-                for manifest in manifests.values()
-            )
+        self.assertEqual(
+            EVAL.COMPILED_LAYER3_FORMAT,
+            runtime_manifest["compiled_layer3_format"],
         )
         recommended = EVAL._layer3_path(
             "recommended",
@@ -5192,15 +5195,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             "failure-diagnosis",
             manifests["recommended"],
         )
-        dev = EVAL._layer3_path(
-            "dev",
-            "engineering-change-analysis",
-            "failure-diagnosis",
-            manifests["dev"],
-        )
         self.assertIn("references/layer3", recommended.as_posix())
-        self.assertEqual("SKILL.md", dev.name)
-        self.assertEqual("failure-diagnosis", dev.parent.name)
 
         payment_references = {
             profile: selector_reference_id(
@@ -5209,49 +5204,23 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "payment-trading-extension",
                 "financial-role-and-state-authority",
             ).split("/", 1)[1]
-            for profile in EVAL.BUILD_PROFILES
+            for profile in (EVAL.RUNTIME_NAME,)
         }
 
         rows = (
             ("recommended", "engineering-change-analysis", "test-strategy", "references/checklist.md", "compiled"),
-            ("full", "engineering-change-analysis", "test-strategy", "references/checklist.md", "compiled"),
-            ("dev", "engineering-change-analysis", "test-strategy", "references/checklist.md", "top-level"),
             ("recommended", "engineering-change-analysis", "payment-trading-extension", payment_references["recommended"], "compiled"),
-            ("full", "engineering-change-analysis", "payment-trading-extension", payment_references["full"], "top-level"),
-            ("dev", "engineering-change-analysis", "payment-trading-extension", payment_references["dev"], "top-level"),
             ("recommended", "high-risk-design-review", "module-boundary-design", "references/benchmarks-and-enforcement.md", "compiled"),
-            ("full", "high-risk-design-review", "module-boundary-design", "references/benchmarks-and-enforcement.md", "compiled"),
-            ("dev", "high-risk-design-review", "module-boundary-design", "references/benchmarks-and-enforcement.md", "top-level"),
             ("recommended", "security-privacy-gate", "web-security", "references/checklist.md", "compiled"),
-            ("full", "security-privacy-gate", "web-security", "references/checklist.md", "compiled"),
-            ("dev", "security-privacy-gate", "web-security", "references/checklist.md", "top-level"),
             ("recommended", "security-privacy-gate", "ai-product-extension", "references/checklist.md", "compiled"),
-            ("full", "security-privacy-gate", "ai-product-extension", "references/checklist.md", "top-level"),
-            ("dev", "security-privacy-gate", "ai-product-extension", "references/checklist.md", "top-level"),
             ("recommended", "backend-change-builder", "ai-product-extension", "references/checklist.md", "compiled"),
-            ("full", "backend-change-builder", "ai-product-extension", "references/checklist.md", "top-level"),
-            ("dev", "backend-change-builder", "ai-product-extension", "references/checklist.md", "top-level"),
             ("recommended", "frontend-change-builder", "ai-product-extension", "references/checklist.md", "compiled"),
-            ("full", "frontend-change-builder", "ai-product-extension", "references/checklist.md", "top-level"),
-            ("dev", "frontend-change-builder", "ai-product-extension", "references/checklist.md", "top-level"),
             ("recommended", "data-middleware-change-builder", "ai-product-extension", "references/checklist.md", "compiled"),
-            ("full", "data-middleware-change-builder", "ai-product-extension", "references/checklist.md", "top-level"),
-            ("dev", "data-middleware-change-builder", "ai-product-extension", "references/checklist.md", "top-level"),
             ("recommended", "integration-change-builder", "ai-product-extension", "references/checklist.md", "compiled"),
-            ("full", "integration-change-builder", "ai-product-extension", "references/checklist.md", "top-level"),
-            ("dev", "integration-change-builder", "ai-product-extension", "references/checklist.md", "top-level"),
             ("recommended", "installed-client-change-builder", "ai-product-extension", "references/checklist.md", "compiled"),
-            ("full", "installed-client-change-builder", "ai-product-extension", "references/checklist.md", "top-level"),
-            ("dev", "installed-client-change-builder", "ai-product-extension", "references/checklist.md", "top-level"),
             ("recommended", "ai-code-review-refactor", "ai-product-extension", "references/checklist.md", "compiled"),
-            ("full", "ai-code-review-refactor", "ai-product-extension", "references/checklist.md", "top-level"),
-            ("dev", "ai-code-review-refactor", "ai-product-extension", "references/checklist.md", "top-level"),
             ("recommended", "delivery-release-gate", "release-rollback", "references/benchmarks-and-patterns.md", "compiled"),
-            ("full", "delivery-release-gate", "release-rollback", "references/benchmarks-and-patterns.md", "compiled"),
-            ("dev", "delivery-release-gate", "release-rollback", "references/benchmarks-and-patterns.md", "top-level"),
             ("recommended", "delivery-release-gate", "release-rollback", "references/evidence-patterns.md", "compiled"),
-            ("full", "delivery-release-gate", "release-rollback", "references/evidence-patterns.md", "compiled"),
-            ("dev", "delivery-release-gate", "release-rollback", "references/evidence-patterns.md", "top-level"),
         )
         for profile, primary, owner, relative, delivery in rows:
             with self.subTest(profile=profile, owner=owner):
@@ -5285,24 +5254,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             foundation_id,
             manifests["recommended"],
         )
-        full_nested = EVAL._layer3_reference_path(
-            "full",
-            "data-middleware-change-builder",
-            foundation_id,
-            manifests["full"],
-        )
-        dev_nested = EVAL._layer3_reference_path(
-            "dev",
-            "data-middleware-change-builder",
-            foundation_id,
-            manifests["dev"],
-        )
         self.assertIn("references/layer3/transaction-consistency", recommended_nested.as_posix())
-        self.assertIn("references/layer3/transaction-consistency", full_nested.as_posix())
-        self.assertEqual(
-            "dev/transaction-consistency/references/evidence-patterns.md",
-            "/".join(dev_nested.parts[-4:]),
-        )
 
         domain_ids = {
             profile: selector_reference_id(
@@ -5311,7 +5263,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "bigdata-product-extension",
                 "consumer-and-schema-contracts",
             )
-            for profile in EVAL.BUILD_PROFILES
+            for profile in (EVAL.RUNTIME_NAME,)
         }
         recommended_domain = EVAL._layer3_reference_path(
             "recommended",
@@ -5319,24 +5271,8 @@ class RenderedContextBudgetTests(unittest.TestCase):
             domain_ids["recommended"],
             manifests["recommended"],
         )
-        full_domain = EVAL._layer3_reference_path(
-            "full",
-            "data-middleware-change-builder",
-            domain_ids["full"],
-            manifests["full"],
-        )
-        dev_domain = EVAL._layer3_reference_path(
-            "dev",
-            "data-middleware-change-builder",
-            domain_ids["dev"],
-            manifests["dev"],
-        )
         self.assertIn("references/layer3/bigdata-product-extension", recommended_domain.as_posix())
-        self.assertNotIn("references/layer3", full_domain.as_posix())
-        self.assertNotIn("references/layer3", dev_domain.as_posix())
         self.assertTrue(recommended_domain.is_file())
-        self.assertTrue(full_domain.is_file())
-        self.assertTrue(dev_domain.is_file())
 
     def test_task_context_loads_two_foundation_references_without_an_index(self) -> None:
         report = EVAL.evaluate()
@@ -5356,11 +5292,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
             if item["role"] == "task-agent"
             and item["loaded_layer3_reference_count"] == 2
         ]
-        self.assertEqual(9, len(measurements))
+        self.assertEqual(3, len(measurements))
         for measurement in measurements:
             with self.subTest(
                 host=measurement["host"],
-                build_profile=measurement["build_profile"],
+                runtime_name=measurement["runtime"],
             ):
                 logical_ids = measurement["loaded_layer3_reference_logical_ids"]
                 self.assertEqual(2, len(logical_ids))
@@ -5385,7 +5321,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     )
                 )
 
-    def test_full_domain_root_and_checklist_match_recommended_compiled_delivery(self) -> None:
+    def test_domain_root_and_checklist_use_runtime_compiled_delivery(self) -> None:
         report = EVAL.evaluate()
         catalog = {item["id"]: item for item in report["component_catalog"]}
         case = next(
@@ -5396,13 +5332,13 @@ class RenderedContextBudgetTests(unittest.TestCase):
         measurements = [
             item
             for item in case["measurements"]
-            if item["build_profile"] in {"recommended", "full"}
+            if item["runtime"] == EVAL.RUNTIME_NAME
         ]
-        self.assertEqual(6, len(measurements))
+        self.assertEqual(len(EVAL.HOST_PROFILE_ROOTS), len(measurements))
         for measurement in measurements:
             with self.subTest(
                 host=measurement["host"],
-                build_profile=measurement["build_profile"],
+                runtime_name=measurement["runtime"],
             ):
                 selected = [
                     catalog[component_id]
@@ -5427,23 +5363,15 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 self.assertFalse(
                     any(item["path"].endswith("/index.md") for item in selected)
                 )
-                if measurement["build_profile"] == "full":
-                    self.assertTrue(
-                        domain_roots[0]["path"].endswith(
-                            "/full/payment-trading-extension/SKILL.md"
-                        )
-                    )
-                    self.assertNotIn(
-                        "/references/layer3/", domain_checklists[0]["path"]
-                    )
-                else:
-                    self.assertIn("/references/layer3/", domain_roots[0]["path"])
-                    self.assertIn(
-                        "/references/layer3/", domain_checklists[0]["path"]
-                    )
+                self.assertIn("/references/layer3/", domain_roots[0]["path"])
+                self.assertIn(
+                    "/references/layer3/", domain_checklists[0]["path"]
+                )
                 self.assertTrue(measurement["within_duplicate_budget"])
 
     def test_context_manifest_loader_requires_ai_consumption_format(self) -> None:
+        self.assertEqual("recommended", EVAL.RUNTIME_NAME)
+        self.assertFalse(hasattr(EVAL, "BUILD_PROFILES"))
         with tempfile.TemporaryDirectory() as raw:
             dist = Path(raw)
             profile_root = dist / "recommended"
@@ -5455,17 +5383,34 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     if value is not None:
                         manifest["compiled_layer3_format"] = value
                     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
-                    with (
-                        mock.patch.object(EVAL, "DIST_SKILLS", dist),
-                        mock.patch.object(EVAL, "BUILD_PROFILES", ("recommended",)),
-                    ):
+                    with mock.patch.object(EVAL, "DIST_SKILLS", dist):
                         errors: list[str] = []
-                        manifests = EVAL._load_manifests(errors)
-                    self.assertEqual({}, manifests)
+                        runtime_manifest = EVAL._load_runtime_manifest(errors)
+                    self.assertIsNone(runtime_manifest)
                     self.assertTrue(
                         any("compiled_layer3_format must equal" in error for error in errors),
                         errors,
                     )
+        manifest = json.loads(
+            (
+                EVAL.DIST_SKILLS
+                / EVAL.RUNTIME_NAME
+                / ".changeforge-build-manifest.json"
+            ).read_text(encoding="utf-8")
+        )
+        manifest["top_level_skills"].append(manifest["foundation_skills"][0])
+        with tempfile.TemporaryDirectory() as raw:
+            dist = Path(raw)
+            runtime_root = dist / EVAL.RUNTIME_NAME
+            runtime_root.mkdir(parents=True)
+            (runtime_root / ".changeforge-build-manifest.json").write_text(
+                json.dumps(manifest), encoding="utf-8"
+            )
+            with mock.patch.object(EVAL, "DIST_SKILLS", dist):
+                errors = []
+                runtime_manifest = EVAL._load_runtime_manifest(errors)
+        self.assertIsNone(runtime_manifest)
+        self.assertTrue(any("no Foundation or Domain" in error for error in errors))
 
     def test_layer3_skill_resolution_requires_exactly_one_delivery_path(self) -> None:
         base = {
@@ -5758,25 +5703,20 @@ class RenderedContextBudgetTests(unittest.TestCase):
             for member_kind in ("professional", "layer3", "active_reference")
         }
         self.assertEqual(expected_membership_sha256, actual_membership_sha256)
-        canonical_manifest_paths = {
-            profile: (
-                f"dist/universal/skills/{profile}/.changeforge-build-manifest.json"
-            )
-            for profile in ("dev", "full", "recommended")
-        }
+        runtime_manifest_path = (
+            "dist/universal/skills/recommended/.changeforge-build-manifest.json"
+        )
         control_projection_authority = EVAL._selector_authority()
         expected_control_projections = EVAL.layer3_selector_control_projections(
             control_projection_authority
         )
         expected_source_fingerprints = {
-            "build_manifests": {
-                profile: {
-                    "path": relative_path,
-                    "sha256": hashlib.sha256(
-                        (ROOT / relative_path).read_bytes()
-                    ).hexdigest(),
-                }
-                for profile, relative_path in canonical_manifest_paths.items()
+            "runtime_manifest": {
+                "runtime": EVAL.RUNTIME_NAME,
+                "path": runtime_manifest_path,
+                "sha256": hashlib.sha256(
+                    (ROOT / runtime_manifest_path).read_bytes()
+                ).hexdigest(),
             },
             "capsule_source": {
                 "path": EVAL.FIXTURES.relative_to(ROOT).as_posix(),
@@ -6007,7 +5947,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "",
                 "## Layer 3 Delivery",
                 "",
-                "Foundation and Domain items are top-level Skills; no Layer 3 references are compiled.",
+                "Expanded Layer 3 roots exist only in this temporary stress projection.",
                 "",
             ])
             return EVAL._component(
@@ -6022,35 +5962,43 @@ class RenderedContextBudgetTests(unittest.TestCase):
             "fixture:repair-and-rereview:step:22:canonical-capsule",
             capsule["path"],
         )
-        components = [
-            EVAL._file_component(
-                "worker_profile",
-                ROOT / "dist/copilot/project/.github/agents/task-agent.agent.md",
-            ),
-            source_professional_component(),
-            *[
+        with tempfile.TemporaryDirectory() as raw:
+            temporary_root = Path(raw)
+            projection_errors: list[str] = []
+            proof = BUILT_LINK_VALIDATOR._validate_complete_layer3_projection_at(
+                temporary_root, projection_errors
+            )
+            self.assertEqual([], projection_errors)
+            self.assertEqual(163, proof["projected_count"])
+            projection_root = temporary_root / "expanded-layer3-validation"
+            components = [
                 EVAL._file_component(
-                    "layer3",
-                    ROOT / f"dist/universal/skills/dev/{layer3}/SKILL.md",
-                )
-                for layer3 in expected_layer3
-            ],
-            EVAL._file_component(
-                "layer3_reference",
-                ROOT
-                / "dist/universal/skills/dev/data-migration-design/references/benchmarks-and-patterns.md",
-            ),
-            capsule,
-        ]
-        measurement = EVAL._measure_context(
-            components,
-            budget_class="task",
-        )
-        self.assertEqual(
-            sum(item["tokens"] for item in components),
-            measurement["sum_component_tokens"],
-        )
-        self.assertTrue(measurement["within_hard_ceiling"])
+                    "worker_profile",
+                    ROOT / "dist/copilot/project/.github/agents/task-agent.agent.md",
+                ),
+                source_professional_component(),
+                *[
+                    EVAL._file_component(
+                        "layer3", projection_root / layer3 / "SKILL.md"
+                    )
+                    for layer3 in expected_layer3
+                ],
+                EVAL._file_component(
+                    "layer3_reference",
+                    projection_root
+                    / "data-migration-design/references/benchmarks-and-patterns.md",
+                ),
+                capsule,
+            ]
+            measurement = EVAL._measure_context(
+                components,
+                budget_class="task",
+            )
+            self.assertEqual(
+                sum(item["tokens"] for item in components),
+                measurement["sum_component_tokens"],
+            )
+            self.assertTrue(measurement["within_hard_ceiling"])
 
     def test_frontend_named_direct_evidence_stays_singleton_and_under_target(self) -> None:
         authority = EVAL._selector_authority()
@@ -8099,7 +8047,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     "",
                     "## Layer 3 Delivery",
                     "",
-                    "Foundation and Domain items are top-level Skills; no Layer 3 references are compiled.",
+                    "Expanded Layer 3 roots exist only in this temporary stress projection.",
                 ])
             output.append("")
             return EVAL._component(
@@ -8338,7 +8286,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     "",
                     "## Layer 3 Delivery",
                     "",
-                    "Foundation and Domain items are top-level Skills; no Layer 3 references are compiled.",
+                    "Expanded Layer 3 roots exist only in this temporary stress projection.",
                 ])
             output.append("")
             return EVAL._component(kind, path.relative_to(ROOT).as_posix(), "\n".join(output))
@@ -8634,7 +8582,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     "",
                     "## Layer 3 Delivery",
                     "",
-                    "Foundation and Domain items are top-level Skills; no Layer 3 references are compiled.",
+                    "Expanded Layer 3 roots exist only in this temporary stress projection.",
                 ])
             output.append("")
             return EVAL._component(
@@ -8939,7 +8887,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     "",
                     "## Layer 3 Delivery",
                     "",
-                    "Foundation and Domain items are top-level Skills; no Layer 3 references are compiled.",
+                    "Expanded Layer 3 roots exist only in this temporary stress projection.",
                 ])
             output.append("")
             return EVAL._component(
@@ -9186,7 +9134,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 output.extend(["", f"## {heading}", "", values[0]])
             output.extend(BUILD._compact_jit_reference_delivery_lines(selector))
             if layer3_delivery:
-                output.extend(["", "## Layer 3 Delivery", "", "Foundation and Domain items are top-level Skills; no Layer 3 references are compiled."])
+                output.extend(["", "## Layer 3 Delivery", "", "Expanded Layer 3 roots exist only in this temporary stress projection."])
             output.append("")
             return EVAL._component(kind, path.relative_to(ROOT).as_posix(), "\n".join(output))
 
@@ -9467,7 +9415,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     "",
                     "## Layer 3 Delivery",
                     "",
-                    "Foundation and Domain items are top-level Skills; no Layer 3 references are compiled.",
+                    "Expanded Layer 3 roots exist only in this temporary stress projection.",
                 ])
             output.append("")
             return EVAL._component(
@@ -9779,7 +9727,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     "",
                     "## Layer 3 Delivery",
                     "",
-                    "Foundation and Domain items are top-level Skills; no Layer 3 references are compiled.",
+                    "Expanded Layer 3 roots exist only in this temporary stress projection.",
                 ])
             output.append("")
             return EVAL._component(

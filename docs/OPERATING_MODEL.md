@@ -10,6 +10,11 @@ Profile, and Control Skill projections. `scripts/build.py` validates those
 sources and emits standard artifacts into `dist/`. Installers consume `dist/`
 only; build manifests bind the control-model schema and digest.
 
+The Runtime is one fixed Skill surface: 1 Control and 26 Professional
+top-level Skills. Foundation capabilities and modifier-only Domains remain JIT
+Layer 3 behind the Primary Professional selector and never enter Host top-level
+discovery. This Runtime is distinct from the four Agent Profiles below.
+
 This orchestration policy stays within the existing control prompt, four Agent
 Profiles, three Skill layers, Execution Levels, and Task Contract v2. It adds no
 Profile, Level, Task Contract version, readiness/stabilization state, Analysis

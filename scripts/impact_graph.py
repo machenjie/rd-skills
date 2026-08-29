@@ -188,103 +188,36 @@ def _expert_panel_evidence_contract(graph: dict[str, Any]) -> dict[str, Any]:
     return value
 
 
-def _build_profile_contract(graph: dict[str, Any]) -> dict[str, Any]:
-    value = graph["stages"]["affected"].get("build_profile_projection")
+def _runtime_contract(graph: dict[str, Any]) -> dict[str, Any]:
+    value = graph["stages"]["affected"].get("runtime_projection")
     if (
         not isinstance(value, dict)
-        or value.get("profiles") != ["recommended", "full", "dev"]
-        or value.get("producer_ids")
-        != {
-            "recommended": "build-recommended",
-            "full": "build-full",
-            "dev": "build-dev",
-        }
-        or value.get("professional_candidate_field") != "layer3_candidates"
-        or value.get("foundation_scope_field") != "delivery_scope"
-        or value.get("foundation_shared_scope") != "product"
-        or value.get("unknown_package_policy") != "all-profiles"
+        or value.get("runtime_name") != "recommended"
+        or value.get("producer_id") != "build-recommended"
+        or value.get("package_layers") != ["professional", "foundation", "domain"]
+        or value.get("unknown_package_policy") != "runtime"
     ):
         raise ImpactGraphError(
-            "invalid-impact-graph", "build profile projection is malformed"
+            "invalid-impact-graph", "single Runtime projection is malformed"
         )
     return value
 
 
-def _professional_candidates(
-    catalog: Mapping[str, dict[str, Any]],
-    field: str,
-) -> set[str] | None:
-    candidates: set[str] = set()
-    for row in catalog.values():
-        if row.get("layer") != "professional":
-            continue
-        entry = row.get("registry_entry")
-        value = entry.get(field) if isinstance(entry, dict) else None
-        if (
-            not isinstance(value, list)
-            or any(not isinstance(item, str) or not item for item in value)
-        ):
-            return None
-        candidates.update(value)
-    return candidates
-
-
-def _package_profiles(
-    package_id: str,
-    catalog: Mapping[str, dict[str, Any]],
-    projection: Mapping[str, Any],
-) -> set[str]:
-    profiles = set(projection["profiles"])
-    row = catalog.get(package_id)
-    if not isinstance(row, dict):
-        return profiles
-    layer = row.get("layer")
-    if layer == "professional":
-        return profiles
-    candidates = _professional_candidates(
-        catalog, projection["professional_candidate_field"]
-    )
-    if candidates is None:
-        return profiles
-    if layer == "foundation":
-        entry = row.get("registry_entry")
-        scope = (
-            entry.get(projection["foundation_scope_field"])
-            if isinstance(entry, dict)
-            else None
-        )
-        if scope not in {"product", "authoring-only", "dev-only"}:
-            return profiles
-        selected = {"dev"}
-        if (
-            scope == projection["foundation_shared_scope"]
-            and package_id in candidates
-        ):
-            selected.update(("recommended", "full"))
-        return selected
-    if layer == "domain":
-        selected = {"full", "dev"}
-        if package_id in candidates:
-            selected.add("recommended")
-        return selected
-    return profiles
-
-
-def _entry_build_profiles(
+def _entry_selects_runtime(
     status: str,
     path: str,
     *,
     base_package_catalog: Mapping[str, dict[str, Any]],
     head_package_catalog: Mapping[str, dict[str, Any]],
     projection: Mapping[str, Any],
-) -> list[str]:
+) -> bool:
     package_roots = (
         "src/professional-skills/",
         "src/foundation/capabilities/",
         "src/domain-extensions/",
     )
     if not path.startswith(package_roots):
-        return []
+        return False
     catalogs = (
         [base_package_catalog]
         if status == "D"
@@ -294,14 +227,17 @@ def _entry_build_profiles(
     )
     package_id = _catalog_package_for_path(path, catalogs)
     if package_id is None:
-        return list(projection["profiles"])
-    selected: set[str] = set()
+        return True
+    allowed_layers = set(projection["package_layers"])
+    observed = False
     for catalog in catalogs:
-        if package_id in catalog:
-            selected.update(_package_profiles(package_id, catalog, projection))
-    if not selected:
-        return list(projection["profiles"])
-    return [profile for profile in projection["profiles"] if profile in selected]
+        row = catalog.get(package_id)
+        if not isinstance(row, dict):
+            continue
+        observed = True
+        if row.get("layer") not in allowed_layers:
+            return True
+    return observed
 
 
 def _catalog_package_for_path(
@@ -586,7 +522,7 @@ def resolve_entries(
     head_catalog = head_package_catalog or {}
     no_impact_patterns = graph["known_no_impact_patterns"]
     test_self_patterns = graph["stages"]["ci-tests"]["test_self_patterns"]
-    build_projection = _build_profile_contract(graph)
+    runtime_projection = _runtime_contract(graph)
     decisions: list[dict[str, object]] = []
     direct_reasons: dict[str, list[list[str]]] = {}
     direct_test_modules: set[str] = set()
@@ -633,17 +569,15 @@ def resolve_entries(
         producer_ids = list(rule["producer_ids"]) if rule is not None else []
         if canonical_script is not None:
             producer_ids.extend(canonical_script["producer_ids"])
-        selected_profiles = _entry_build_profiles(
+        runtime_selected = _entry_selects_runtime(
             status,
             path,
             base_package_catalog=base_catalog,
             head_package_catalog=head_catalog,
-            projection=build_projection,
+            projection=runtime_projection,
         )
-        producer_ids.extend(
-            build_projection["producer_ids"][profile]
-            for profile in selected_profiles
-        )
+        if runtime_selected:
+            producer_ids.append(runtime_projection["producer_id"])
         producer_ids = list(dict.fromkeys(producer_ids))
         test_modules = set(rule["test_modules"]) if rule is not None else set()
         if canonical_script is not None:
@@ -663,7 +597,7 @@ def resolve_entries(
             elif producer_id in canonical_producer_ids:
                 selector = "canonical-producer-argv"
             else:
-                selector = "build-profile-projection"
+                selector = "runtime-projection"
             chain = [
                 f"path:{path}",
                 selector,
@@ -717,11 +651,11 @@ def resolve_entries(
     producer_ids, producer_explanations = _producer_closure(
         producers, direct_reasons
     )
-    selected_build_profiles = [
-        profile
-        for profile in build_projection["profiles"]
-        if build_projection["producer_ids"][profile] in producer_ids
-    ]
+    selected_runtime = (
+        runtime_projection["runtime_name"]
+        if runtime_projection["producer_id"] in producer_ids
+        else None
+    )
     professionalism_producer = _professionalism_contract(graph)["producer_id"]
     if (
         professionalism_producer in producer_ids
@@ -758,7 +692,7 @@ def resolve_entries(
         "reason": reason,
         "changed_paths": decisions,
         "selected_producer_ids": producer_ids,
-        "selected_build_profiles": selected_build_profiles,
+        "selected_runtime": selected_runtime,
         "selected_test_modules_by_layer": grouped_tests,
         "selected_test_modules": selected_tests,
         "producer_explanations": producer_explanations,

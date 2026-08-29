@@ -12,28 +12,11 @@ python3 --version
 python3 -m pip install .
 ```
 
-Do not install `src/` or source registries. The quickstart builds the selected
-profile into `dist/` before using the installer.
-
-## Choose A Profile
-
-| Profile | Top-level Skills | Choose it for |
-| --- | ---: | --- |
-| `recommended` | 27 | Normal use; all Professional Skills with focused compiled guidance. |
-| `full` | 40 | Normal use that also needs Domain Skills at top level. |
-| `dev` | 190 | Skill authoring, registry work, and development visibility. |
-
-Automatic selection currently chooses `recommended`. Specify `--profile` when
-you need another profile. The normal profiles deliver 154/9 and 141/9
-targeted-companion/routing-only entries respectively; `dev` delivers all 190
-Skills at the top level. [Build profiles](BUILD_PROFILES.md) owns the exact
-composition and manifest contract.
-
-For client work, use the concrete target: ordinary Android and iOS/iPadOS
-requests select their successor platform Domains. Cross-platform frameworks
-also require the cross-platform Domain and every proven concrete target Domain.
-The obsolete mobile Domain and compatibility mode have been removed. Removed
-legacy Skill ids are unsupported and are not redirected.
+Do not install `src/` or source registries. Quickstart builds the one Runtime
+into `dist/` before using the installer. There is no Profile choice: every Host
+receives the same 27 top-level Skills, consisting of 1 Control and 26
+Professional Skills. Foundation and Domain knowledge remains behind targeted
+JIT selectors.
 
 ## Choose A Host And Scope
 
@@ -42,6 +25,11 @@ Codex supports `project`, `user`, and `admin`; Claude, Copilot, and Cline suppor
 `project` and `user`. OpenAI API produces zip files and has no installation
 scope. Codex, Claude, and Copilot receive four native Agent Profile files; Cline
 and OpenAI API receive standard Skills only.
+
+Runtime and Agent Profile are different concepts. Runtime is the fixed Skill
+surface and JIT knowledge path. The four Agent Profiles are the static main,
+analysis, task, and review execution roles; users do not select among them as an
+installation profile.
 
 Use `user` for a personal default. Use `project` to keep installation inside a
 specific checkout; replace `/absolute/path/to/project` below with the real
@@ -53,56 +41,57 @@ project root. Use Codex `admin` only with explicit administrative approval; see
 Preview a user installation:
 
 ```bash
-python3 scripts/quickstart.py --agent codex --scope user --profile recommended --dry-run
+python3 scripts/quickstart.py --agent codex --scope user --dry-run
 ```
 
 Preview a project installation:
 
 ```bash
-python3 scripts/quickstart.py --agent claude --scope project --target /absolute/path/to/project --profile recommended --dry-run
+python3 scripts/quickstart.py --agent claude --scope project --target /absolute/path/to/project --dry-run
 ```
 
 The preview prints the build, install, and doctor plan but does not execute it.
 
 ## Install And Run Doctor
 
-Run the selected plan without `--dry-run`:
+Run the same plan without `--dry-run`:
 
 ```bash
-python3 scripts/quickstart.py --agent codex --scope user --profile recommended
+python3 scripts/quickstart.py --agent codex --scope user
 ```
 
 For project scope:
 
 ```bash
-python3 scripts/quickstart.py --agent claude --scope project --target /absolute/path/to/project --profile recommended
+python3 scripts/quickstart.py --agent claude --scope project --target /absolute/path/to/project
 ```
 
 Quickstart builds, installs, and runs doctor for Codex, Claude, Copilot, and
 Cline. Repeat doctor independently when diagnosing a changed installation:
 
 ```bash
-python3 installers/doctor.py --agent codex --scope user --profile recommended
+python3 installers/doctor.py --agent codex --scope user
 ```
 
-A healthy result confirms the selected Skill count, manifest, source/core
-bindings, and the host-specific Profile expectation. It describes declared
-host enforcement and limitations; it does not prove that the real host loaded
-the files.
+A healthy result confirms 27 installed Skills, the manifest, current
+source/core bindings, and the host-specific Agent Profile expectation. Doctor
+reports a legacy `full` or `dev` manifest as migration-required; run upgrade
+without uninstalling first. Repository doctor evidence does not prove that the
+real Host loaded the files.
 
 ## OpenAI API Zip Path
 
-Preview and then generate the `recommended` bundle set:
+Preview and then generate the fixed Runtime bundle set:
 
 ```bash
-python3 scripts/quickstart.py --agent openai-api --profile recommended --dry-run
-python3 scripts/quickstart.py --agent openai-api --profile recommended
+python3 scripts/quickstart.py --agent openai-api --dry-run
+python3 scripts/quickstart.py --agent openai-api
 ```
 
-The second command builds and validates one zip per top-level Skill under
-`dist/openai-api/zips/recommended/`. It does not install files or run runtime
-doctor. See [OpenAI API zip output](INSTALLATION.md#openai-api-zip-output) for
-the direct build/validation commands and package boundary.
+The second command builds and validates one zip per top-level Skill under the
+compatibility path `dist/openai-api/zips/recommended/`. It does not install
+files or run runtime doctor. See [OpenAI API zip output](INSTALLATION.md#openai-api-zip-output)
+for the direct build/validation commands and package boundary.
 
 ## Submit A First Task
 
@@ -124,11 +113,14 @@ Some hosts do not provide native Slash UI or autocomplete. Put the literal
 `/engineering-control-plane` in the request text in that case. It expresses
 routing intent; it does not prove native Slash support.
 
-Expected outcome: the main profile chooses the Direct Task path, a task agent
-implements and validates the latest edit, and a separate review agent inspects
-the actual diff. The final handoff records changed files, commands and results,
-freshness, unverified scope, and residual risk. Unknown ownership or material
-risk switches to Analyzed Work before editing.
+Expected outcome: the main profile chooses the Direct Task path and fixes one
+Primary Professional route. The task agent receives that route plus zero to
+three selector-chosen Layer 3 items and necessary Targeted References; it does
+not globally reroute or preload a catalog. A task agent implements and validates
+the latest edit, and a separate review agent inspects the actual diff. The final
+handoff records changed files, commands and results, freshness, unverified
+scope, and residual risk. Unknown ownership or material risk switches to
+Analyzed Work before editing.
 
 Continue with [Usage](USAGE.md) for three request patterns and expected decision
 points. If setup fails, use [Installation troubleshooting](INSTALLATION.md#troubleshooting-and-recovery)
