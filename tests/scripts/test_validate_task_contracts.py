@@ -242,34 +242,41 @@ class TaskContractTemplateTests(unittest.TestCase):
                 errors,
             )
 
-    def test_review_finding_compiler_required_fields_fail_closed_when_missing(
+    def test_review_finding_projection_fails_closed_on_sequence_mutations(
         self,
     ) -> None:
-        for field in (
-            "Finding Identity:",
-            "Category:",
-            "Repair required: true / false",
-        ):
-            with self.subTest(field=field), tempfile.TemporaryDirectory() as raw:
+        mutations = {
+            "adjacent-swap": lambda text: text.replace(
+                "Category:\nRepair required: true / false",
+                "Repair required: true / false\nCategory:",
+                1,
+            ),
+            "unexpected-labeled-insert": lambda text: text.replace(
+                "Task ID:\nCategory:",
+                "Task ID:\nUnexpected Review Hint:\nCategory:",
+                1,
+            ),
+            "delete": lambda text: text.replace("Finding Identity:\n", "", 1),
+            "duplicate": lambda text: text.replace(
+                "Category:\n",
+                "Category:\nCategory:\n",
+                1,
+            ),
+        }
+        for label, mutate in mutations.items():
+            with self.subTest(mutation=label), tempfile.TemporaryDirectory() as raw:
                 reference_root = Path(raw) / "references"
                 shutil.copytree(VALIDATOR.REFERENCE_ROOT, reference_root)
                 path = reference_root / "review-handoff-template.md"
                 text = path.read_text(encoding="utf-8")
-                raw_finding_block = text.partition(
-                    "For each implementation or repair finding, state fields in this order:\n\n"
-                )[2].partition(
-                    "\n\nRe-review findings require both classification fields"
-                )[0]
-                self.assertEqual(1, raw_finding_block.count(field))
-                path.write_text(text.replace(field, "", 1), encoding="utf-8")
+                mutated = mutate(text)
+                self.assertNotEqual(text, mutated)
+                path.write_text(mutated, encoding="utf-8")
                 errors = VALIDATOR.validate_contracts(reference_root)
-                label = field.split(":", 1)[0]
                 self.assertTrue(
                     any(
-                        "implementation finding projection must contain Core field"
+                        "implementation finding label sequence must exactly match Core"
                         in error
-                        and repr(label) in error
-                        and "found 0" in error
                         for error in errors
                     ),
                     errors,
@@ -1643,45 +1650,26 @@ class CoreContractModelTests(unittest.TestCase):
         review = (REFERENCE_ROOT / "review-handoff-template.md").read_text(
             encoding="utf-8"
         )
-        finding_shape = "\n".join(
-            (
-                "Finding Identity:",
-                "Finding Relation: current-task / scope-blocker / adjacent",
-                "Re-review Classification: inherited / repair-regression / frozen-boundary-violation / protected-invalidation / adjacent / not-applicable for Initial Review",
-                "Classification Evidence:",
-                "Review Round ID:",
-                "Task ID:",
-                "Category:",
-                "Repair required: true / false",
-                "Severity:",
-                "Blocker:",
-                "Description:",
-                "Protected Decision Boundary:",
-                "Defect:",
-                "Violated invariant:",
-                "Failure mechanism:",
-                "Fix path:",
-                "Source reviewer evidence:",
-                "Affected scope:",
-                "Acceptance or risk impact:",
-                "Required validation:",
-                "Required covering re-review:",
-                "Freshness:",
-                "Proof Limit:",
-            )
-        )
-        self.assertIn(finding_shape, review)
         compiler = CORE_CONTRACTS["review_discipline_contract"][
             "review_boundary_contract"
         ]["finding_compiler"]
-        projected_labels = {
-            line.split(":", 1)[0]
-            for line in finding_shape.splitlines()
-            if ":" in line
-        }
-        for field in compiler["raw_required_fields"]:
-            label = VALIDATOR._raw_finding_field_label(field)
-            with self.subTest(core_raw_field=field):
+        finding_block = review.partition(
+            "For each implementation or repair finding, state fields in this order:\n\n"
+        )[2].partition(
+            "\n\nRe-review findings require both classification fields"
+        )[0]
+        finding_lines = [line for line in finding_block.splitlines() if line]
+        projected_labels = [line.split(":", 1)[0] for line in finding_lines]
+        self.assertEqual(
+            compiler["public_handoff_raw_field_order"],
+            projected_labels,
+        )
+        self.assertEqual(
+            "Finding Relation: current-task / scope-blocker / adjacent",
+            finding_lines[1],
+        )
+        for label in ("Finding Identity", "Category", "Repair required"):
+            with self.subTest(required_public_label=label):
                 self.assertIn(label, projected_labels)
         for term in (
             "before severity or blocker",

@@ -56,28 +56,12 @@ _FENCED_MARKDOWN_RE = re.compile(
     re.MULTILINE | re.DOTALL,
 )
 _LABELED_FIELD_RE = re.compile(r"^([A-Za-z][A-Za-z0-9 /-]*):(?:\s.*)?$")
-_RAW_FINDING_FIELD_LABEL_OVERRIDES = {
-    "finding_identity": "Finding Identity",
-    "task_id": "Task ID",
-    "review_round_id": "Review Round ID",
-    "relation": "Finding Relation",
-    "protected_decision_boundary": "Protected Decision Boundary",
-    "required_covering_rereview": "Required covering re-review",
-    "proof_limit": "Proof Limit",
-}
 _PUBLIC_EXECUTION_TEMPLATE_TERMS = (
     "Core public `execution-level/v2`",
     "[execution-level-contract.md](execution-level-contract.md)",
     "completed/read only",
     "active or resumed work, edit, validation, or review requires reissue",
 )
-
-
-def _raw_finding_field_label(field: str) -> str:
-    return _RAW_FINDING_FIELD_LABEL_OVERRIDES.get(
-        field,
-        field.replace("_", " ").capitalize(),
-    )
 
 
 def _validate_review_finding_projection(text: str, errors: list[str]) -> None:
@@ -106,14 +90,12 @@ def _validate_review_finding_projection(text: str, errors: list[str]) -> None:
     compiler = CORE_CONTRACTS["review_discipline_contract"][
         "review_boundary_contract"
     ]["finding_compiler"]
-    for field in compiler["raw_required_fields"]:
-        label = _raw_finding_field_label(field)
-        count = labels.count(label)
-        if count != 1:
-            errors.append(
-                "review-handoff-template.md: implementation finding projection must "
-                f"contain Core field {label!r} exactly once, found {count}"
-            )
+    expected = compiler["public_handoff_raw_field_order"]
+    if labels != expected:
+        errors.append(
+            "review-handoff-template.md: implementation finding label sequence must "
+            f"exactly match Core; expected {expected!r}, found {labels!r}"
+        )
 _PUBLIC_EXECUTION_PREAMBLE_TEMPLATES = (
     "direct-task-template.md",
     "engineering-brief-template.md",

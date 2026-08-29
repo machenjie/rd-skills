@@ -863,6 +863,7 @@
         "output_field": "canonical_findings",
         "output_presence": "findings-verdict-only",
         "raw_required_fields": ["finding_identity", "task_id", "review_round_id", "relation", "protected_decision_boundary", "category", "repair_required", "description", "defect", "violated_invariant", "failure_mechanism", "fix_path", "source_reviewer_evidence", "affected_scope", "acceptance_or_risk_impact", "required_validation", "required_covering_rereview", "freshness", "proof_limit"],
+        "public_handoff_raw_field_order": ["Finding Identity", "Finding Relation", "Re-review Classification", "Classification Evidence", "Review Round ID", "Task ID", "Category", "Repair required", "Severity", "Blocker", "Description", "Protected Decision Boundary", "Defect", "Violated invariant", "Failure mechanism", "Fix path", "Source reviewer evidence", "Affected scope", "Acceptance or risk impact", "Required validation", "Required covering re-review", "Freshness", "Proof Limit"],
         "partition_fields": ["Task ID", "Review Round ID", "Finding Relation", "Protected Decision Boundary"],
         "exact_dedup": "stable-first-source-finding-order",
         "semantic_merge_required_equal_fields": ["defect", "violated invariant", "failure mechanism", "fix path"],

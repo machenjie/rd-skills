@@ -48,6 +48,52 @@ def _module_without_tiktoken() -> Iterator[tuple[ModuleType, list[str]]]:
 
 
 class ValidationUtilsDependencyBoundaryTests(unittest.TestCase):
+    def test_review_finding_order_is_core_owned_and_closed(self) -> None:
+        with _module_without_tiktoken() as (module, _imports):
+            canonical = copy.deepcopy(module.CORE_CONTRACTS)
+            compiler = canonical["review_discipline_contract"][
+                "review_boundary_contract"
+            ]["finding_compiler"]
+            review = (
+                ROOT
+                / "src/control-skills/engineering-control-plane/references/review-handoff-template.md"
+            ).read_text(encoding="utf-8")
+            field_block = review.partition(
+                "For each implementation or repair finding, state fields in this order:\n\n"
+            )[2].partition(
+                "\n\nRe-review findings require both classification fields"
+            )[0]
+            artifact_labels = [
+                line.split(":", 1)[0]
+                for line in field_block.splitlines()
+                if line
+            ]
+            self.assertEqual(
+                compiler["public_handoff_raw_field_order"],
+                artifact_labels,
+            )
+
+            for label, mutate in (
+                (
+                    "swap",
+                    lambda values: [values[1], values[0], *values[2:]],
+                ),
+                ("insert", lambda values: [*values[:2], "Unexpected", *values[2:]]),
+                ("delete", lambda values: values[1:]),
+                ("duplicate", lambda values: [values[0], *values]),
+            ):
+                with self.subTest(mutation=label):
+                    mutated = copy.deepcopy(canonical)
+                    order = mutated["review_discipline_contract"][
+                        "review_boundary_contract"
+                    ]["finding_compiler"]["public_handoff_raw_field_order"]
+                    mutated["review_discipline_contract"][
+                        "review_boundary_contract"
+                    ]["finding_compiler"]["public_handoff_raw_field_order"] = mutate(
+                        order
+                    )
+                    self.assertTrue(module.validate_core_contracts(mutated))
+
     def test_quality_cost_gate_is_core_owned_and_quality_first(self) -> None:
         with _module_without_tiktoken() as (module, _imports):
             core = copy.deepcopy(module.CORE_CONTRACTS)
