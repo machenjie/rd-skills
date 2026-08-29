@@ -3585,6 +3585,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "scripts/validate-control-plane-prompt.py",
                 "scripts/validate-control-skills.py",
                 "scripts/validate-skill-routing.py",
+                "scripts/validate-task-contracts.py",
                 "scripts/validation_utils.py",
                 "src/agent-profiles/role-agents.json",
                 "src/control-prompts/main-control-agent.md",
@@ -3624,6 +3625,15 @@ class RenderedContextBudgetTests(unittest.TestCase):
         )
         self.assertNotIn(
             "src/registry/professional-skills.yaml", EVAL.AB_ALLOWED_WRITE_PATHS
+        )
+        self.assertLessEqual(
+            {
+                "scripts/validate-task-contracts.py",
+                "src/control-skills/engineering-control-plane/references/review-handoff-template.md",
+                "tests/scripts/test_validate_task_contracts.py",
+            },
+            EVAL.AB_ALLOWED_WRITE_PATHS,
+            "Core/Review Handoff A/B patches require their shared contract consumer",
         )
         self.assertEqual(expected, EVAL.AB_ALLOWED_WRITE_PATHS)
 

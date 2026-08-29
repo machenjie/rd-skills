@@ -242,6 +242,39 @@ class TaskContractTemplateTests(unittest.TestCase):
                 errors,
             )
 
+    def test_review_finding_compiler_required_fields_fail_closed_when_missing(
+        self,
+    ) -> None:
+        for field in (
+            "Finding Identity:",
+            "Category:",
+            "Repair required: true / false",
+        ):
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as raw:
+                reference_root = Path(raw) / "references"
+                shutil.copytree(VALIDATOR.REFERENCE_ROOT, reference_root)
+                path = reference_root / "review-handoff-template.md"
+                text = path.read_text(encoding="utf-8")
+                raw_finding_block = text.partition(
+                    "For each implementation or repair finding, state fields in this order:\n\n"
+                )[2].partition(
+                    "\n\nRe-review findings require both classification fields"
+                )[0]
+                self.assertEqual(1, raw_finding_block.count(field))
+                path.write_text(text.replace(field, "", 1), encoding="utf-8")
+                errors = VALIDATOR.validate_contracts(reference_root)
+                label = field.split(":", 1)[0]
+                self.assertTrue(
+                    any(
+                        "implementation finding projection must contain Core field"
+                        in error
+                        and repr(label) in error
+                        and "found 0" in error
+                        for error in errors
+                    ),
+                    errors,
+                )
+
     def test_execution_level_role_projections_are_minimal_and_source_bound(self) -> None:
         fixture = json.loads(AGENT_LIGHT_CASES.read_text(encoding="utf-8"))
         case = next(
@@ -1612,11 +1645,14 @@ class CoreContractModelTests(unittest.TestCase):
         )
         finding_shape = "\n".join(
             (
+                "Finding Identity:",
                 "Finding Relation: current-task / scope-blocker / adjacent",
                 "Re-review Classification: inherited / repair-regression / frozen-boundary-violation / protected-invalidation / adjacent / not-applicable for Initial Review",
                 "Classification Evidence:",
                 "Review Round ID:",
                 "Task ID:",
+                "Category:",
+                "Repair required: true / false",
                 "Severity:",
                 "Blocker:",
                 "Description:",
@@ -1635,6 +1671,18 @@ class CoreContractModelTests(unittest.TestCase):
             )
         )
         self.assertIn(finding_shape, review)
+        compiler = CORE_CONTRACTS["review_discipline_contract"][
+            "review_boundary_contract"
+        ]["finding_compiler"]
+        projected_labels = {
+            line.split(":", 1)[0]
+            for line in finding_shape.splitlines()
+            if ":" in line
+        }
+        for field in compiler["raw_required_fields"]:
+            label = VALIDATOR._raw_finding_field_label(field)
+            with self.subTest(core_raw_field=field):
+                self.assertIn(label, projected_labels)
         for term in (
             "before severity or blocker",
             "Pre-implementation artifact review",
