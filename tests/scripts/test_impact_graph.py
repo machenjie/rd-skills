@@ -512,9 +512,9 @@ class ImpactGraphContractTests(unittest.TestCase):
                 errors = validate_impact_graph_contract(mutated, ROOT)
                 self.assertTrue(any(expected in item for item in errors), errors)
 
-    def test_runtime_projection_is_closed_and_package_rules_do_not_duplicate_it(self) -> None:
+    def test_runtime_build_is_closed_and_package_rules_do_not_duplicate_it(self) -> None:
         graph = CORE_CONTRACTS["impact_graph_contract"]
-        projection = graph["stages"]["affected"]["runtime_projection"]
+        projection = graph["stages"]["affected"]["runtime_build"]
         self.assertEqual("recommended", projection["runtime_name"])
         self.assertEqual("build-recommended", projection["producer_id"])
         self.assertEqual("runtime", projection["unknown_package_policy"])
@@ -538,10 +538,10 @@ class ImpactGraphContractTests(unittest.TestCase):
 
         mutated = copy.deepcopy(CORE_CONTRACTS)
         mutated["impact_graph_contract"]["stages"]["affected"][
-            "runtime_projection"
+            "runtime_build"
         ]["unknown_package_policy"] = "none"
         errors = validate_impact_graph_contract(mutated, ROOT)
-        self.assertTrue(any("runtime_projection" in error for error in errors), errors)
+        self.assertTrue(any("runtime_build" in error for error in errors), errors)
 
 
 class ImpactGraphResolutionTests(unittest.TestCase):

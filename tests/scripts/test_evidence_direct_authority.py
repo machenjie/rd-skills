@@ -53,6 +53,20 @@ DIRECT_TEMPLATE = (
     / "references"
     / "direct-task-template.md"
 )
+REVIEW_TEMPLATE = (
+    ROOT
+    / "src"
+    / "control-skills"
+    / "engineering-control-plane"
+    / "references"
+    / "review-handoff-template.md"
+)
+REPOSITORY_CONTEXT_SKILL = (
+    ROOT / "src" / "foundation" / "capabilities" / "repository-context-map" / "SKILL.md"
+)
+TASK_CONTEXT_EVIDENCE_MAP = (
+    REPOSITORY_CONTEXT_SKILL.parent / "references" / "task-context-evidence-map.md"
+)
 PROFILES = ROOT / "src" / "agent-profiles" / "role-agents.json"
 LOCAL_DISCOVERY = (
     ROOT / "evals" / "pressure" / "hookless" / "direct-bounded-local-discovery.yaml"
@@ -133,6 +147,91 @@ class EvidenceDirectAuthorityTests(unittest.TestCase):
         ):
             self.assertIn(invariant, localization["unchanged_authorities"])
 
+    def test_exact_locator_is_selector_and_current_source_cannot_rewrite_target(self) -> None:
+        localization = CORE_CONTRACTS["evidence_localization_contract"]
+        self.assertIn("exact-locator", localization["selector_only"])
+        self.assertEqual(
+            "direct-read-first-then-confirm-owner-or-bounded-correct",
+            localization["location_sequence"]["known_exact"],
+        )
+        self.assertEqual(
+            "stop-discovery-and-continue",
+            localization["exact_locator_trust"]["confirmed_owner"],
+        )
+        self.assertEqual(
+            "bounded-correction-no-analysis",
+            localization["exact_locator_trust"]["same_owner_route_contract_mismatch"],
+        )
+        self.assertEqual(
+            {
+                "without_accepted_brief": "stop-before-edit-return-main-initial-analysis",
+                "accepted_brief_protected_decision_invalidated": (
+                    "stop-before-edit-return-main-bounded-delta"
+                ),
+            },
+            localization["material_contradiction_outcomes"],
+        )
+        self.assertEqual(
+            "use-material-contradiction-outcomes",
+            localization["exact_locator_trust"]["material_contradiction"],
+        )
+        self.assertEqual(
+            "use-material-contradiction-outcomes",
+            localization["direct_boundary"]["material_outcome"],
+        )
+        self.assertEqual(
+            ["desired-behavior", "acceptance", "non-goals", "target-architecture"],
+            localization["current_source_authority"]["cannot_rewrite"],
+        )
+        self.assertEqual(
+            "allowed-when-current-source-proves-each-necessary-point",
+            localization["ownership_model"]["multiple_enforcement_points"],
+        )
+        self.assertEqual(
+            "trace-authoring-source-or-generator-before-edit",
+            localization["generated_artifact"]["edit_rule"],
+        )
+        self.assertEqual(
+            ["dynamic", "registry", "reflection", "dependency-injection", "plugin", "generated", "ffi"],
+            localization["consumer_proof_limit"]["non_static_boundaries"],
+        )
+        self.assertEqual(
+            "artifact-effective-no-fixed-structural-priority",
+            localization["evidence_method_ordering"],
+        )
+
+        protected_drift = json.loads(json.dumps(CORE_CONTRACTS))
+        protected_drift["evidence_localization_contract"][
+            "current_source_authority"
+        ]["cannot_rewrite"].remove("acceptance")
+        self.assertTrue(
+            any(
+                "Evidence Localization" in error
+                for error in validate_core_contracts(protected_drift)
+            )
+        )
+
+    def test_locator_material_outcome_and_generated_stop_projections_are_bounded(self) -> None:
+        direct = " ".join(DIRECT_TEMPLATE.read_text(encoding="utf-8").split())
+        review = " ".join(REVIEW_TEMPLATE.read_text(encoding="utf-8").split())
+        context = " ".join(TASK_CONTEXT_EVIDENCE_MAP.read_text(encoding="utf-8").split())
+        root_skill = " ".join(REPOSITORY_CONTEXT_SKILL.read_text(encoding="utf-8").split())
+
+        self.assertIn("Direct has no accepted Brief", direct)
+        self.assertIn("initial Analysis, never Delta", direct)
+        for projection in (review, context):
+            folded = projection.casefold()
+            self.assertIn("without an accepted brief", folded)
+            self.assertIn("initial analysis", folded)
+            self.assertIn("accepted brief", folded)
+            self.assertIn("bounded delta", folded)
+        self.assertIn("authoring source, generator, generation authority", root_skill)
+        self.assertIn("module dependency remains unknown", root_skill)
+        self.assertNotIn(
+            "new or changed module boundaries, public exports, generated artifacts, or dependency direction",
+            root_skill,
+        )
+
     def test_localization_contract_rejects_selector_as_proof_and_authority_drift(
         self,
     ) -> None:
@@ -181,7 +280,7 @@ class EvidenceDirectAuthorityTests(unittest.TestCase):
             closure["reopening"]["claim-local"],
         )
         self.assertEqual(
-            "stop-edit-return-main-bounded-delta",
+            "use-material-contradiction-outcomes",
             closure["reopening"]["protected-or-material"],
         )
         self.assertEqual(

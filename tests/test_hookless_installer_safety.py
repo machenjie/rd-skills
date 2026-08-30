@@ -3,6 +3,8 @@ from __future__ import annotations
 import importlib.util
 import io
 import json
+import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -14,6 +16,7 @@ from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SOURCE_ROOT = ROOT
 
 
 def load_install_helper():
@@ -46,11 +49,30 @@ def load_cli(helper, script: str):
 class HooklessInstallerSafetyTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
+        cls._original_dont_write_bytecode = sys.dont_write_bytecode
+        sys.dont_write_bytecode = True
+        cls.addClassCleanup(
+            setattr,
+            sys,
+            "dont_write_bytecode",
+            cls._original_dont_write_bytecode,
+        )
         cls.helper = load_install_helper()
         cls.install_cli = load_cli(cls.helper, "install")
         cls.upgrade_cli = load_cli(cls.helper, "upgrade")
         cls.doctor_cli = load_cli(cls.helper, "doctor")
         cls.uninstall_cli = load_cli(cls.helper, "uninstall")
+        cls._source_skill_relatives = {
+            key: path.relative_to(cls.helper.ROOT)
+            for key, path in cls.helper.SOURCE_SKILL_ROOTS.items()
+        }
+        cls._source_profile_relatives = {
+            key: path.relative_to(cls.helper.ROOT)
+            for key, path in cls.helper.SOURCE_PROFILE_ROOTS.items()
+        }
+        cls._runtime_build = cls._temporary_recommended_build()
+        cls.runtime_root = cls._runtime_build.__enter__()
+        cls.addClassCleanup(cls._runtime_build.__exit__, None, None, None)
 
     def test_installer_has_one_runtime_and_bounded_legacy_input_counts(self) -> None:
         self.assertEqual("recommended", self.helper.RUNTIME_PROFILE)
@@ -67,6 +89,7 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
                 help_result = subprocess.run(
                     [sys.executable, str(ROOT / "installers" / f"{script}.py"), "--help"],
                     cwd=ROOT,
+                    env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
                     text=True,
                     capture_output=True,
                     check=False,
@@ -90,6 +113,7 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
                             "full",
                         ],
                         cwd=ROOT,
+                        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
                         text=True,
                         capture_output=True,
                         check=False,
@@ -654,24 +678,69 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
                 entries.append((relative, "file", path.read_bytes()))
         return tuple(entries)
 
+    @classmethod
     @contextmanager
-    def _temporary_recommended_build(self):
+    def _temporary_recommended_build(cls):
         from tests.scripts.test_build_safety import BUILD, BuildSafetyTests
 
         case = BuildSafetyTests()
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw).resolve() / "repo"
+        with tempfile.TemporaryDirectory(
+            prefix="changeforge-hookless-installer-safety-"
+        ) as raw:
+            root = (Path(raw) / "repo").resolve()
+            if root.is_relative_to(SOURCE_ROOT.resolve()):
+                raise AssertionError(
+                    "temporary Runtime fixture must be outside the source tree"
+                )
             case._copy_source(root)
+            ignored = shutil.ignore_patterns("__pycache__", "*.pyc")
+            shutil.copytree(
+                SOURCE_ROOT / "scripts",
+                root / "scripts",
+                dirs_exist_ok=True,
+                ignore=ignored,
+            )
+            for name in ("tests", "evals"):
+                shutil.copytree(
+                    SOURCE_ROOT / name,
+                    root / name,
+                    ignore=ignored,
+                )
             with case._layout(root):
-                BUILD.build_profile("recommended")
-            with mock.patch.multiple(
-                self.helper,
-                ROOT=root,
-                HOST_ENFORCEMENT_SOURCE=(
-                    root / "src/agent-profiles/host-enforcement.json"
+                result = BUILD.build_profile("recommended")
+            if result != {
+                "profile": "recommended",
+                "top_level_count": 27,
+                "compiled_layer3_reference_count": 154,
+                "agent_profile_count": 4,
+                "zip_count": 27,
+            }:
+                raise AssertionError(
+                    f"unexpected canonical Runtime build result: {result}"
+                )
+            with (
+                mock.patch.multiple(
+                    cls.helper,
+                    ROOT=root,
+                    HOST_ENFORCEMENT_SOURCE=(
+                        root / "src/agent-profiles/host-enforcement.json"
+                    ),
+                    CORE_CONTRACTS_SOURCE=(
+                        root / "src/control-model/core-contracts.json"
+                    ),
+                    SOURCE_SKILL_ROOTS={
+                        key: root / relative
+                        for key, relative in cls._source_skill_relatives.items()
+                    },
+                    SOURCE_PROFILE_ROOTS={
+                        key: root / relative
+                        for key, relative in cls._source_profile_relatives.items()
+                    },
                 ),
-                CORE_CONTRACTS_SOURCE=(
-                    root / "src/control-model/core-contracts.json"
+                mock.patch.object(
+                    cls.doctor_cli,
+                    "HOST_ENFORCEMENT_SOURCE",
+                    root / "src/agent-profiles/host-enforcement.json",
                 ),
             ):
                 yield root
@@ -1096,8 +1165,10 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
             self.assertTrue(user_profile.is_file())
 
     def test_built_skill_source_rejects_nested_symlinks(self) -> None:
-        (ROOT / "dist").mkdir(exist_ok=True)
-        with tempfile.TemporaryDirectory(dir=ROOT / "dist") as raw, tempfile.TemporaryDirectory() as outside_raw:
+        with tempfile.TemporaryDirectory(
+            dir=self.runtime_root / "dist",
+            prefix="nested-symlink-source-",
+        ) as raw, tempfile.TemporaryDirectory() as outside_raw:
             source = Path(raw)
             outside = Path(outside_raw) / "external-skill"
             outside.mkdir()

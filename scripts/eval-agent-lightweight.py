@@ -11057,6 +11057,11 @@ def _evidence_localization_fixture_results(
         "expected_valid",
         "expected_error",
     )
+    case_fields_with_brief = (
+        *case_fields[:5],
+        "accepted_brief",
+        *case_fields[5:],
+    )
     operation_fields = {
         "anchor": ("id", "action", "source", "target", "bytes"),
         "search": (
@@ -11110,6 +11115,16 @@ def _evidence_localization_fixture_results(
             "invalidation",
             "bytes",
         ),
+        "correction": (
+            "id",
+            "action",
+            "from",
+            "to",
+            "boundary",
+            "brief_mutation",
+            "bytes",
+        ),
+        "trace": ("id", "action", "from", "to", "relation", "bytes"),
         "edit": ("id", "action", "target", "bytes"),
     }
     valid_actors = set(EVIDENCE_LOCALIZATION_MODEL["applies_to"])
@@ -11119,6 +11134,9 @@ def _evidence_localization_fixture_results(
     }
     valid_required_evidence = set(
         EVIDENCE_LOCALIZATION_MODEL["minimum_complete_evidence"]
+    )
+    material_boundaries = set(
+        EVIDENCE_LOCALIZATION_MODEL["direct_boundary"]["material_boundaries"]
     )
     selector_modes = {
         "top-k",
@@ -11145,7 +11163,7 @@ def _evidence_localization_fixture_results(
         if not case_id or case_id in seen_case_ids:
             reject("localization-schema", "fixture id must be non-empty and unique")
         seen_case_ids.add(case_id)
-        if tuple(raw_case) != case_fields:
+        if tuple(raw_case) not in {case_fields, case_fields_with_brief}:
             reject("localization-schema", "fixture fields or order are not canonical")
 
         actor = raw_case.get("actor")
@@ -11166,6 +11184,9 @@ def _evidence_localization_fixture_results(
         inherited_anchor = raw_case.get("inherited_anchor")
         if inherited_anchor not in {"none", "analysis-agent", "task-agent"}:
             reject("localization-schema", "inherited anchor is invalid")
+        accepted_brief = raw_case.get("accepted_brief")
+        if accepted_brief is not None and type(accepted_brief) is not bool:
+            reject("localization-schema", "accepted_brief must be boolean when declared")
         boundary = raw_case.get("boundary")
         if boundary not in {
             "not-applicable",
@@ -11236,12 +11257,32 @@ def _evidence_localization_fixture_results(
             operation_by_id[operation_id] = operation
             if type(operation.get("bytes")) is not int or operation["bytes"] < 0:
                 reject("localization-schema", f"operation {operation_id} bytes are invalid")
+            if action == "anchor" and (
+                operation.get("source")
+                not in {
+                    "analysis-agent",
+                    "task-agent",
+                    *EVIDENCE_LOCALIZATION_MODEL["exact_locator_trust"][
+                        "selector_sources"
+                    ],
+                }
+                or not isinstance(operation.get("target"), str)
+                or not operation["target"]
+            ):
+                reject("localization-schema", f"anchor {operation_id} is invalid")
             if action == "search" and (
                 type(operation.get("result_volume")) is not int
                 or operation["result_volume"] < 0
                 or type(operation.get("truncated")) is not bool
                 or operation.get("mode")
-                not in {"exact", "expanded", "structural", "fallback", *selector_modes}
+                    not in {
+                        "exact",
+                        "expanded",
+                        "symbol",
+                        "structural",
+                        "fallback",
+                        *selector_modes,
+                    }
             ):
                 reject("localization-schema", f"search {operation_id} is invalid")
             if action == "read" and (
@@ -11254,6 +11295,12 @@ def _evidence_localization_fixture_results(
                     "same-pattern",
                     "direct-consumer",
                     "indirect-consumer",
+                    "caller",
+                    "delegator",
+                    "generated-artifact",
+                    "locator-mismatch",
+                    "finding-evidence",
+                    "dynamic-consumer",
                 }
             ):
                 reject("localization-schema", f"read {operation_id} is invalid")
@@ -11318,6 +11365,33 @@ def _evidence_localization_fixture_results(
                 }
             ):
                 reject("evidence-reopening", f"reopen {operation_id} is invalid")
+            if action == "correction" and (
+                not isinstance(operation.get("from"), str)
+                or not operation["from"]
+                or not isinstance(operation.get("to"), str)
+                or not operation["to"]
+                or operation["from"] == operation["to"]
+                or operation.get("boundary") != "same-owner-route-contract"
+                or type(operation.get("brief_mutation")) is not bool
+                or operation.get("brief_mutation") is not False
+            ):
+                reject(
+                    "locator-correction",
+                    f"correction {operation_id} must stay local and preserve the Brief",
+                )
+            if action == "trace" and (
+                not isinstance(operation.get("from"), str)
+                or not operation["from"]
+                or not isinstance(operation.get("to"), str)
+                or not operation["to"]
+                or operation["from"] == operation["to"]
+                or operation.get("relation")
+                not in {"generated-from", "generated-by"}
+            ):
+                reject(
+                    "generated-authoring-source",
+                    f"trace {operation_id} is not an authoring-source/generator trace",
+                )
 
         searches = [item for item in operations if item.get("action") == "search"]
         reads = [item for item in operations if item.get("action") == "read"]
@@ -11327,6 +11401,62 @@ def _evidence_localization_fixture_results(
         ]
         edits = [item for item in operations if item.get("action") == "edit"]
         anchors = [item for item in operations if item.get("action") == "anchor"]
+        corrections = [
+            item for item in operations if item.get("action") == "correction"
+        ]
+        traces = [item for item in operations if item.get("action") == "trace"]
+        def bounded_correction_search(item: dict[str, Any]) -> bool:
+            mode = item.get("mode")
+            if item.get("truncated") is not False:
+                return False
+            if mode in {"exact", "fallback"}:
+                return True
+            if mode == "structural":
+                return "structural-search" in capabilities
+            if mode == "symbol":
+                return "symbol-search" in capabilities
+            return False
+
+        def correction_sequence_valid(
+            correction: dict[str, Any],
+            *,
+            structural_only: bool = False,
+        ) -> bool:
+            correction_index = operations.index(correction)
+            prior = operations[:correction_index]
+            following = operations[correction_index + 1 :]
+            return (
+                any(
+                    item.get("action") == "read"
+                    and item.get("source_kind") == "current-source"
+                    and item.get("read_scope") == "exact"
+                    and item.get("coverage") == "locator-mismatch"
+                    and item.get("target") == correction.get("from")
+                    for item in prior
+                )
+                and any(
+                    item.get("action") == "search"
+                    and bounded_correction_search(item)
+                    and (
+                        not structural_only
+                        or item.get("mode") in {"structural", "symbol"}
+                    )
+                    for item in prior
+                )
+                and any(
+                    item.get("action") == "read"
+                    and item.get("source_kind") == "current-source"
+                    and item.get("target") == correction.get("to")
+                    for item in following
+                )
+            )
+
+        for search in searches:
+            if search.get("mode") in {"structural", "symbol"} and not bounded_correction_search(search):
+                reject(
+                    "locator-correction-capability",
+                    "structural/symbol correction requires a declared host capability and non-truncated bounded result",
+                )
         read_targets = [str(item.get("target")) for item in reads]
         covered_evidence = sorted(
             {
@@ -11445,12 +11575,54 @@ def _evidence_localization_fixture_results(
                 "claim-local Evidence Requirement remains open",
             )
 
-        if discovery_state == "known-exact" and searches:
-            reject("known-exact-discovery", "known exact source must not search")
         if discovery_state == "known-exact" and not any(
             item.get("read_scope") == "exact" for item in reads
         ):
             reject("known-exact-discovery", "known exact source needs an exact read")
+        if discovery_state == "known-exact":
+            first_locator_read = next(
+                (
+                    index
+                    for index, item in enumerate(operations)
+                    if item.get("action") == "read"
+                    and item.get("read_scope") == "exact"
+                    and item.get("source_kind") == "current-source"
+                ),
+                None,
+            )
+            first_search = next(
+                (
+                    index
+                    for index, item in enumerate(operations)
+                    if item.get("action") == "search"
+                ),
+                None,
+            )
+            if first_search is not None and (
+                first_locator_read is None
+                or first_search < first_locator_read
+                or operations[first_locator_read].get("coverage")
+                != "locator-mismatch"
+                or any(not bounded_correction_search(item) for item in searches)
+                or not corrections
+            ):
+                reject(
+                    "known-exact-discovery",
+                    "exact locator may search only after a direct-read mismatch for bounded correction",
+                )
+            if corrections and not any(
+                item.get("coverage") == "locator-mismatch" for item in reads
+            ):
+                reject(
+                    "locator-correction",
+                    "bounded correction requires a current-source locator mismatch",
+                )
+            for correction in corrections:
+                if not correction_sequence_valid(correction):
+                    reject(
+                        "locator-correction",
+                        "bounded correction must follow the mismatch and bounded search, then read the corrected current source",
+                    )
         if discovery_state == "unknown" and not searches:
             reject(
                 "unknown-location-search",
@@ -11480,11 +11652,9 @@ def _evidence_localization_fixture_results(
                     "unknown source location requires candidate search before current-source reads",
                 )
 
-        material_boundaries = set(
-            EVIDENCE_LOCALIZATION_MODEL["direct_boundary"]["material_boundaries"]
-        )
         worker_action = raw_case.get("worker_action")
-        if worker_action not in {"continue", "return-main-analysis", "not-applicable"}:
+        return_main_actions = {"return-main-analysis", "return-main-delta"}
+        if worker_action not in {"continue", *return_main_actions, "not-applicable"}:
             reject("localization-schema", "worker_action is invalid")
         if (edits or worker_action == "continue") and not evidence_closed:
             reject(
@@ -11506,21 +11676,74 @@ def _evidence_localization_fixture_results(
             )
         )
         if material_proof_limit and (
-            edits or worker_action != "return-main-analysis"
+            edits or worker_action not in return_main_actions
         ):
             reject(
                 "material-proof-limit-return-main",
                 "a material Proof Limit must stop edit and return Main",
             )
         if boundary in material_boundaries:
-            if edits or worker_action != "return-main-analysis":
+            if discovery_state == "known-exact" and type(accepted_brief) is not bool:
+                reject(
+                    "localization-schema",
+                    "known-exact material contradiction must declare accepted_brief authority",
+                )
+            if type(accepted_brief) is bool and worker_action in return_main_actions:
+                expected_return = (
+                    "return-main-delta"
+                    if accepted_brief
+                    else "return-main-analysis"
+                )
+                if worker_action != expected_return:
+                    reject(
+                        "material-return-outcome",
+                        "material contradiction return must be initial Analysis without an accepted Brief and bounded Delta only after accepted Brief invalidation",
+                    )
+            if edits or worker_action not in return_main_actions:
                 reject("material-before-edit", "material discovery must return Main before edit")
         elif boundary == "stable-owner" and worker_action != "continue":
             reject("stable-owner-direct", "stable Direct discovery must continue")
-        if material_invalidation and (edits or worker_action != "return-main-analysis"):
+        if material_invalidation and (edits or worker_action not in return_main_actions):
             reject(
                 "material-before-edit",
                 "protected/material invalidation must stop edit and return Main for bounded Delta",
+            )
+
+        generated_reads = [
+            item for item in reads if item.get("coverage") == "generated-artifact"
+        ]
+        for generated_read in generated_reads:
+            generated_target = str(generated_read.get("target"))
+            matching_traces = [
+                item for item in traces if item.get("from") == generated_target
+            ]
+            traced_targets = {str(item.get("to")) for item in matching_traces}
+            authoring_reads = {
+                str(item.get("target"))
+                for item in reads
+                if item.get("source_kind") == "current-source"
+                and item.get("coverage") == "owner"
+            }
+            if not matching_traces or not (traced_targets & authoring_reads) or any(
+                item.get("target") == generated_target for item in edits
+            ):
+                reject(
+                    "generated-authoring-source",
+                    "generated exact locator must trace and edit its current authoring source or generator",
+                )
+
+        dynamic_reads = [
+            item for item in reads if item.get("coverage") == "dynamic-consumer"
+        ]
+        if dynamic_reads and not any(
+            item.get("kind") == "proof-limit"
+            and item.get("status") == "proof-limit"
+            and item.get("scope") == "consumer"
+            for item in claims
+        ):
+            reject(
+                "dynamic-consumer-proof-limit",
+                "dynamic/registry/reflection/DI/plugin/generated/FFI consumers require an explicit Proof Limit",
             )
 
         if inherited_anchor != "none" and not anchors:
@@ -11728,7 +11951,21 @@ def _evidence_localization_fixture_results(
                 "id": case_id,
                 "actor": actor,
                 "worker_action": worker_action,
+                "accepted_brief": accepted_brief,
+                "host_capabilities": list(capabilities),
                 "authority_preserved": authority_preserved,
+                "bounded_structural_correction": (
+                    actual_valid
+                    and discovery_state == "known-exact"
+                    and boundary == "stable-owner"
+                    and any(
+                        correction_sequence_valid(
+                            correction,
+                            structural_only=True,
+                        )
+                        for correction in corrections
+                    )
+                ),
                 "fallback_used": any(
                     item.get("mode") == "fallback" for item in searches
                 ),
@@ -12320,9 +12557,9 @@ def main(argv: list[str] | None = None) -> int:
                 "external-read fixture count must remain exactly 14, found "
                 f"{len(external_read_results)}"
             )
-        if len(evidence_localization_results) != 27:
+        if len(evidence_localization_results) != 38:
             errors.append(
-                "evidence localization fixture count must remain exactly 27, found "
+                "evidence localization fixture count must remain exactly 38, found "
                 f"{len(evidence_localization_results)}"
             )
         if len(risk_calibration_results) != 13:

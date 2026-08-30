@@ -13,7 +13,9 @@ from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
+SOURCE_ROOT = ROOT
 SCRIPT = ROOT / "scripts/validate-built-skill-reference-links.py"
+BUILT_RUNTIME_ROOT: Path | None = None
 
 
 def _load_module():
@@ -32,6 +34,91 @@ def _load_module():
 
 
 VALIDATOR = _load_module()
+
+
+def _build_runtime_subject(subject: Path) -> Path:
+    for relative in ("src", "scripts"):
+        shutil.copytree(
+            SOURCE_ROOT / relative,
+            subject / relative,
+            ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.pyo"),
+        )
+    shutil.copy2(SOURCE_ROOT / "pyproject.toml", subject / "pyproject.toml")
+
+    build = VALIDATOR.canonical_build
+    build_source_root = build.ROOT
+
+    def rebased(path: Path) -> Path:
+        return subject / path.relative_to(build_source_root)
+
+    with mock.patch.multiple(
+        build,
+        ROOT=subject,
+        SRC_DIR=rebased(build.SRC_DIR),
+        REGISTRY_DIR=rebased(build.REGISTRY_DIR),
+        DIST_DIR=subject / "dist",
+        UNIVERSAL_SKILLS_ROOT=rebased(build.UNIVERSAL_SKILLS_ROOT),
+        OPENAI_ZIP_DIR=rebased(build.OPENAI_ZIP_DIR),
+        PROFILE_SOURCE=rebased(build.PROFILE_SOURCE),
+        HOST_ENFORCEMENT_SOURCE=rebased(build.HOST_ENFORCEMENT_SOURCE),
+        CONTROL_PROMPT_SOURCE=rebased(build.CONTROL_PROMPT_SOURCE),
+        CORE_CONTRACTS_PATH=rebased(build.CORE_CONTRACTS_PATH),
+        LAYER_SOURCE_ROOTS={
+            layer: rebased(path)
+            for layer, path in build.LAYER_SOURCE_ROOTS.items()
+        },
+        AGENT_SKILL_ROOTS=tuple(rebased(path) for path in build.AGENT_SKILL_ROOTS),
+        AGENT_PROFILE_OUTPUTS=tuple(
+            (platform, rebased(path))
+            for platform, path in build.AGENT_PROFILE_OUTPUTS
+        ),
+    ):
+        result = build.build_profile(build.RUNTIME_PROFILE)
+
+    if (
+        result["top_level_count"] != 27
+        or result["compiled_layer3_reference_count"] != 154
+        or result["agent_profile_count"] != 4
+    ):
+        raise AssertionError(f"temporary Runtime build is incomplete: {result}")
+
+    runtime_root = subject / "dist/universal/skills/recommended"
+    manifest = json.loads(
+        (runtime_root / VALIDATOR.BUILD_MANIFEST_NAME).read_text(encoding="utf-8")
+    )
+    if (
+        len(manifest["top_level_skills"]) != 27
+        or sum(
+            scope != "product"
+            for scope in manifest["foundation_delivery_scopes"].values()
+        )
+        != 9
+    ):
+        raise AssertionError("temporary Runtime manifest delivery counts drifted")
+    return runtime_root
+
+
+def setUpModule() -> None:
+    global BUILT_RUNTIME_ROOT
+    runtime = tempfile.TemporaryDirectory(
+        prefix="changeforge-built-links-runtime-",
+    )
+    subject = Path(runtime.name).resolve()
+    if subject.is_relative_to(SOURCE_ROOT.resolve()):
+        runtime.cleanup()
+        raise AssertionError("temporary Runtime subject must be outside the repository")
+    try:
+        BUILT_RUNTIME_ROOT = _build_runtime_subject(subject)
+    except BaseException:
+        runtime.cleanup()
+        raise
+
+    def cleanup() -> None:
+        global BUILT_RUNTIME_ROOT
+        BUILT_RUNTIME_ROOT = None
+        runtime.cleanup()
+
+    unittest.addModuleCleanup(cleanup)
 
 
 class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
@@ -161,8 +248,10 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
                 )
 
     def test_rejects_compiled_authoring_heading_in_projection(self) -> None:
-        built = ROOT / "dist/universal/skills/recommended"
-        self.assertTrue(built.is_dir(), "run the recommended build before this test")
+        built = BUILT_RUNTIME_ROOT
+        self.assertIsNotNone(built)
+        assert built is not None
+        self.assertTrue(built.is_dir(), "temporary recommended Runtime is missing")
         with tempfile.TemporaryDirectory() as temporary:
             profile_root = Path(temporary) / "recommended"
             shutil.copytree(built, profile_root)
@@ -184,8 +273,10 @@ class RenderedProfessionalBodyBudgetTests(unittest.TestCase):
         )
 
     def test_synchronized_manifest_index_and_files_cannot_reassign_owner(self) -> None:
-        built = ROOT / "dist/universal/skills/recommended"
-        self.assertTrue(built.is_dir(), "run the recommended build before this test")
+        built = BUILT_RUNTIME_ROOT
+        self.assertIsNotNone(built)
+        assert built is not None
+        self.assertTrue(built.is_dir(), "temporary recommended Runtime is missing")
         with tempfile.TemporaryDirectory() as temporary:
             profile_root = Path(temporary) / "recommended"
             shutil.copytree(built, profile_root)

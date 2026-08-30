@@ -4,7 +4,9 @@ import copy
 import io
 import importlib.util
 import json
+import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -261,8 +263,8 @@ class DocsCoreProjectionTests(unittest.TestCase):
 
         self.assertEqual(0, result)
         self.assertIn(
-            "documented Python script/installer targets exist; "
-            "command flags are not validated",
+            "documented Python script/installer targets exist; retired Runtime "
+            "flags are rejected on public and authoring surfaces",
             output.getvalue(),
         )
 
@@ -303,7 +305,7 @@ class DocsCoreProjectionTests(unittest.TestCase):
             errors = self.validator._runtime_surface_errors(root)
 
             self.assertEqual(
-                ["README.md: user-facing Runtime command must not select --profile"],
+                ["README.md: removed Runtime flag remains: --profile"],
                 errors,
             )
 
@@ -326,6 +328,162 @@ class DocsCoreProjectionTests(unittest.TestCase):
                 ],
                 errors,
             )
+
+    def test_all_public_and_authoring_runtime_surfaces_reject_profile_choices(
+        self,
+    ) -> None:
+        stale = {
+            "pyproject.toml": (
+                "[tool.changeforge.profiles]\n"
+                'recommended = "runtime"\nfull = "runtime"\ndev = "runtime"\n'
+            ),
+            "Makefile": (
+                "doctor-codex:\n"
+                "\tpython3 installers/doctor.py --agent codex --scope user "
+                "--profile recommended\n"
+            ),
+            "SUPPORT.md": "Selected profile: recommended, full, or dev.\n",
+            ".github/ISSUE_TEMPLATE/bug_report.md": (
+                "Profile: recommended / full / dev\n"
+            ),
+            ".github/ISSUE_TEMPLATE/feature_request.md": (
+                "Profile impact: recommended / full / dev / none\n"
+            ),
+            ".github/ISSUE_TEMPLATE/skill_change.md": (
+                "## Routing or Build Profile Impact\n"
+            ),
+            "src/foundation/capabilities/README.md": (
+                "Foundation entries are emitted by the recommended, full, and "
+                "dev build profiles.\n"
+            ),
+            (
+                "src/foundation/capabilities/repository-context-map/references/"
+                "source-generated-boundary-map.md"
+            ): "| Build profile | Recommended, full, dev, or installed output. |\n",
+            (
+                "src/foundation/capabilities/skill-authoring-expert/references/"
+                "evidence-patterns.md"
+            ): "Run the dev/recommended build when the build profile matters.\n",
+        }
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            for relative, text in stale.items():
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(text, encoding="utf-8")
+
+            errors = self.validator._runtime_surface_errors(root)
+
+            self.assertEqual(
+                set(stale),
+                {error.split(":", 1)[0] for error in errors},
+                errors,
+            )
+
+    def test_retired_runtime_surface_guard_names_each_profile_authority(self) -> None:
+        required = {
+            "src/foundation/capabilities/skill-authoring-expert/SKILL.md",
+            (
+                "src/foundation/capabilities/skill-efficacy-benchmark/"
+                "references/benchmarks-and-patterns.md"
+            ),
+            (
+                "src/foundation/capabilities/skill-efficacy-benchmark/"
+                "references/evidence-patterns.md"
+            ),
+        }
+
+        self.assertTrue(
+            required.issubset(set(self.validator.RUNTIME_SURFACE_FILES)),
+            set(self.validator.RUNTIME_SURFACE_FILES),
+        )
+
+    def test_each_profile_authority_rejects_restored_ambiguous_runtime_wording(
+        self,
+    ) -> None:
+        stale = {
+            "src/foundation/capabilities/skill-authoring-expert/SKILL.md": (
+                "Change routing, references, registries, profile delivery, or "
+                "Skill validation.\n"
+            ),
+            (
+                "src/foundation/capabilities/skill-efficacy-benchmark/"
+                "references/benchmarks-and-patterns.md"
+            ): "Same task, profile, build profile, and source-vs-dist boundary.\n",
+            (
+                "src/foundation/capabilities/skill-efficacy-benchmark/"
+                "references/evidence-patterns.md"
+            ): "Test the final build-profile output rather than source alone.\n",
+        }
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            for relative, text in stale.items():
+                with self.subTest(relative=relative):
+                    path = root / relative
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_text(text, encoding="utf-8")
+
+                    errors = self.validator._runtime_surface_errors(root)
+
+                    self.assertEqual(
+                        [
+                            f"{relative}: retired user-facing Runtime Profile "
+                            "choice remains"
+                        ],
+                        errors,
+                    )
+                    path.unlink()
+
+    def test_every_removed_runtime_flag_is_rejected_on_public_surfaces(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            makefile = root / "Makefile"
+            for flag in (
+                "--profile",
+                "--with-hooks",
+                "--without-hooks",
+                "--hook-profile",
+                "--professional-injection",
+                "--activation-level",
+            ):
+                with self.subTest(flag=flag):
+                    makefile.write_text(
+                        "doctor-codex:\n"
+                        "\tpython3 installers/doctor.py --agent codex "
+                        f"--scope user {flag}\n",
+                        encoding="utf-8",
+                    )
+                    errors = self.validator._runtime_surface_errors(root)
+                    self.assertTrue(
+                        any(flag in error for error in errors),
+                        errors,
+                    )
+
+    def test_make_doctor_recipe_is_accepted_by_current_doctor_parser(self) -> None:
+        dry_run = subprocess.run(
+            ["make", "-n", "doctor-codex"],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=30,
+        )
+        self.assertEqual(0, dry_run.returncode, dry_run.stderr)
+        argv = shlex.split(dry_run.stdout.strip())
+        self.assertTrue(argv)
+        if argv[0] == "python3":
+            argv[0] = sys.executable
+        parsed = subprocess.run(
+            argv,
+            cwd=ROOT,
+            env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=30,
+        )
+        self.assertNotEqual(2, parsed.returncode, parsed.stderr)
+        self.assertNotIn("unrecognized arguments", parsed.stderr)
 
     def test_seeded_stale_domain_and_capability_counts_are_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -775,6 +933,95 @@ class DocsCoreProjectionTests(unittest.TestCase):
     def test_current_core_navigation_and_required_content_are_complete(self) -> None:
         self.assertEqual([], self.validator._navigation_errors(ROOT))
         self.assertEqual([], self.validator._required_content_errors(ROOT))
+
+    def test_current_timeout_class_guidance_matches_runner_contract(self) -> None:
+        errors = self.validator._required_content_errors(ROOT)
+
+        self.assertFalse(
+            any(
+                fact in error
+                for fact in self.validator.TEST_TIMEOUT_GUIDANCE_FACTS
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_authoritative_layer3_guidance_rejects_softened_cardinality(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            professional = (
+                root
+                / "docs/skill_authoring_standard/PROFESSIONAL_SKILL_AUTHORING_STANDARD.md"
+            )
+            governance = root / "docs/SKILL_CONTENT_GOVERNANCE.md"
+            professional.parent.mkdir(parents=True)
+            governance.parent.mkdir(parents=True, exist_ok=True)
+            professional.write_text(
+                "# Professional\n\n"
+                "A Direct Task normally uses zero to three Layer 3 Skills. "
+                "Higher-risk work may use more only with a concrete risk rationale.\n",
+                encoding="utf-8",
+            )
+            governance.write_text(
+                "# Governance\n\n"
+                "Use this strict order for a stable, independent Primary Route. "
+                "Foundation is a capability-modifier layer and Domain is `modifier-only`.\n\n"
+                "Each task normally selects zero to three Layer 3 items; a "
+                "fixture-specific risk rationale permits more.\n",
+                encoding="utf-8",
+            )
+
+            errors = self.validator._required_content_errors(root)
+
+            self.assertEqual(
+                {
+                    "docs/SKILL_CONTENT_GOVERNANCE.md",
+                    (
+                        "docs/skill_authoring_standard/"
+                        "PROFESSIONAL_SKILL_AUTHORING_STANDARD.md"
+                    ),
+                },
+                {
+                    error.split(":", 1)[0]
+                    for error in errors
+                    if "Layer 3 cardinality guidance" in error
+                },
+                errors,
+            )
+
+    def test_layer3_cardinality_guard_ignores_historical_prose(self) -> None:
+        canonical = (
+            "Layer 3 selection is an ordered unique list of zero to three items.\n"
+            "More than three items or any duplicate fails closed; never truncate "
+            "the selection.\n"
+            "Higher risk changes which Layer 3 items are selected, not the "
+            "maximum count.\n"
+        )
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            professional = (
+                root
+                / "docs/skill_authoring_standard/PROFESSIONAL_SKILL_AUTHORING_STANDARD.md"
+            )
+            governance = root / "docs/SKILL_CONTENT_GOVERNANCE.md"
+            professional.parent.mkdir(parents=True)
+            governance.parent.mkdir(parents=True, exist_ok=True)
+            professional.write_text(canonical, encoding="utf-8")
+            governance.write_text(
+                "Use this strict order for a stable, independent Primary Route. "
+                "Foundation is a capability-modifier layer and Domain is `modifier-only`.\n"
+                + canonical,
+                encoding="utf-8",
+            )
+            (root / "CHANGELOG.md").write_text(
+                "Historical note: higher-risk work may use more Layer 3 Skills "
+                "with a risk rationale.\n",
+                encoding="utf-8",
+            )
+
+            errors = self.validator._required_content_errors(root)
+
+            self.assertEqual([], errors)
 
     def test_installation_matrix_is_derived_from_installer_authority(self) -> None:
         installation = (ROOT / "docs/INSTALLATION.md").read_text(encoding="utf-8")

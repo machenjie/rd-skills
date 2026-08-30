@@ -105,6 +105,11 @@ in_progress / blocked / partial / completed
 
 ## Ownership and Invariants
 
+Exact path/symbol/owner = direct-read-first selector, not owner proof. Stop on
+current-source confirmation; bounded-correct only within the same
+owner/route/contract; protected contradiction = Main/Delta. Repository facts
+never rewrite Desired Behavior, Acceptance, Non-goals, or target architecture.
+
 ## Placement and Reuse
 
 ## Contract / Data / Failure Impact

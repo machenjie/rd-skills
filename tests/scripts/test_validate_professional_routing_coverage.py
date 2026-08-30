@@ -132,6 +132,45 @@ class ProfessionalRoutingNegativeCoverageTests(unittest.TestCase):
         self.assertEqual([], result.errors)
         self.assertEqual(["excluded-skill"], result.excluded_skills)
 
+    def test_layer3_cardinality_diagnostics_are_hard_and_never_allow_rationale(
+        self,
+    ) -> None:
+        layer3 = {
+            f"layer-{index}": {"role_support": ["task-agent"]}
+            for index in range(4)
+        }
+        professional = copy.deepcopy(self.professional)
+        professional["primary-skill"]["layer3_candidates"] = list(layer3)
+        overflow = self._raw([])
+        overflow["actual"]["layer3_skills"] = list(layer3)
+
+        overflow_result = self.module._case(overflow, professional, layer3)
+
+        self.assertIn(
+            (
+                "selected Layer 3 list exceeds the hard maximum of three; "
+                "selection must fail closed and must never be truncated"
+            ),
+            overflow_result.errors,
+        )
+        self.assertFalse(
+            any("rationale" in error.casefold() for error in overflow_result.errors),
+            overflow_result.errors,
+        )
+
+        duplicate = self._raw([])
+        duplicate["actual"]["layer3_skills"] = ["layer-0", "layer-0"]
+
+        duplicate_result = self.module._case(duplicate, professional, layer3)
+
+        self.assertIn(
+            (
+                "selected Layer 3 list contains duplicates; selection must be "
+                "unique and fail closed"
+            ),
+            duplicate_result.errors,
+        )
+
     def test_domain_positive_and_negative_fixture_counts_are_required(self) -> None:
         domains = set(self.module._canonical_domain_specs())
         positive = {name: 1 for name in domains}

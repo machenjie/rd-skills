@@ -69,37 +69,39 @@ class ValidateRootContentTests(unittest.TestCase):
         auditor._collect_semantic_content_with_application.assert_not_called()
 
     def test_foundation_derivation_snapshot_matches_current_inventory(self) -> None:
+        # BEGIN GENERATED FOUNDATION DERIVATION SNAPSHOT
         expected = {
-            "date": "2026-08-28",
+            "date": "2026-08-30",
             "foundation_documents": 150,
             "compact_documents": 128,
             "complex_documents": 22,
-            "sum_tokens": 65636,
+            "sum_tokens": 65730,
             "min_tokens": 138,
             "p25_tokens": 269,
             "p50_tokens": 511,
-            "p75_tokens": 554,
-            "p90_tokens": 599,
+            "p75_tokens": 555,
+            "p90_tokens": 605,
             "p95_tokens": 628,
             "p99_tokens": 663,
             "distribution_max_tokens": 688,
-            "mean_tokens": 437.573,
-            "sum_words": 46046,
+            "mean_tokens": 438.2,
+            "sum_words": 46118,
             "min_words": 94,
             "p25_words": 182,
             "p50_words": 357,
-            "p75_words": 393,
-            "p90_words": 420,
+            "p75_words": 394,
+            "p90_words": 424,
             "p95_words": 437,
             "p99_words": 475,
             "max_words": 497,
-            "mean_words": 306.973,
+            "mean_words": 307.453,
             "median_token_word_ratio": 1.415,
             "p90_token_word_ratio": 1.552,
             "p95_token_word_ratio": 1.593,
             "max_token_word_ratio": 1.673,
             "mean_token_word_ratio": 1.435,
         }
+        # END GENERATED FOUNDATION DERIVATION SNAPSHOT
         test_class = type(self)
         existing_cache = test_class._baseline_root_content_cache
         synthetic = {"nested": {"value": 1}}

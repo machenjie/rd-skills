@@ -1388,7 +1388,7 @@ class DeterministicReportContractTests(unittest.TestCase):
             )
         )
         producers = contract["principle_acceptance_contract"]["producers"]
-        self.assertEqual(33, len(producers))
+        self.assertEqual(31, len(producers))
         before_lines = before_diagnostics.splitlines()
         for producer in producers:
             command = " ".join(producer["argv"])

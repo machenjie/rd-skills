@@ -385,20 +385,25 @@ class CiTestRunnerTests(unittest.TestCase):
             [(result.module, result.status) for result in results],
         )
 
-    def test_deterministic_report_contracts_owns_bounded_source_validation_timeout(
-        self,
-    ) -> None:
-        module = "tests/scripts/test_deterministic_report_contracts.py"
-        self.assertEqual(
-            "source-validation",
-            self.runner._test_timeout_class(ROOT / module),
-        )
-        self.assertEqual(
-            2 * self.runner.DEFAULT_TIMEOUT_SECONDS,
-            self.runner._test_timeout_seconds(
-                ROOT, module, self.runner.DEFAULT_TIMEOUT_SECONDS
-            ),
-        )
+    def test_source_validation_timeout_owners_are_exact(self) -> None:
+        expected = {
+            "tests/scripts/test_deterministic_report_contracts.py",
+            "tests/scripts/test_eval_rendered_context_budget.py",
+        }
+        actual = {
+            path.relative_to(ROOT).as_posix()
+            for path in sorted((ROOT / "tests").rglob("test*.py"))
+            if self.runner._test_timeout_class(path) == "source-validation"
+        }
+        self.assertEqual(expected, actual)
+        for module in sorted(expected):
+            with self.subTest(module=module):
+                self.assertEqual(
+                    2 * self.runner.DEFAULT_TIMEOUT_SECONDS,
+                    self.runner._test_timeout_seconds(
+                        ROOT, module, self.runner.DEFAULT_TIMEOUT_SECONDS
+                    ),
+                )
 
     @unittest.skipUnless(os.name == "posix", "POSIX full regression discovery")
     def test_full_discovery_rejects_duplicate_dynamic_and_unknown_resource_classes(
@@ -2418,6 +2423,12 @@ class CiTestRunnerTests(unittest.TestCase):
         self.assertNotIn(stale_marker, source.casefold())
         self.assertNotIn(stale_marker, help_text.casefold())
         self.assertIn("full regression action", help_text.casefold())
+
+    def test_timeout_help_describes_base_duration_and_class_multiplier(self) -> None:
+        help_text = self.runner._parser().format_help().casefold()
+
+        self.assertIn("base timeout in seconds per test module", help_text)
+        self.assertIn("test_timeout_class multiplier", help_text)
 
 
 if __name__ == "__main__":

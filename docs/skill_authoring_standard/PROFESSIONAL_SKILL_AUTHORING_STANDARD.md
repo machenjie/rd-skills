@@ -64,11 +64,13 @@ physical `line_count`, governed `governed_line_count`, and canonical Registry
 ## Layer 3 Loading
 
 Name only plausible candidates in the registry. Load a candidate only when the
-current task triggers its decision problem. A Direct Task normally uses zero to
-three Layer 3 Skills. Higher-risk work may use more only when each addition maps
-to a concrete risk. Foundation and modifier-only Domain items remain behind the
-Professional selector and never become Runtime top-level Skills. Task and
-Review consume Main's fixed Primary Route instead of rerunning global routing.
+current task triggers its decision problem. Layer 3 selection is an ordered
+unique list of zero to three items. More than three items or any duplicate fails
+closed; never truncate the selection. Higher risk changes which Layer 3 items
+are selected, not the maximum count. Foundation and modifier-only Domain items
+remain behind the Professional selector and never become Runtime top-level
+Skills. Task and Review consume Main's fixed Primary Route instead of rerunning
+global routing.
 
 ## Role Separation
 

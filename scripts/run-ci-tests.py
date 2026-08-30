@@ -1763,7 +1763,13 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--head", default=os.environ.get("CI_HEAD_SHA"))
     parser.add_argument("--jobs", type=_positive_int, default=DEFAULT_JOBS)
     parser.add_argument(
-        "--timeout", type=_positive_float, default=DEFAULT_TIMEOUT_SECONDS
+        "--timeout",
+        type=_positive_float,
+        default=DEFAULT_TIMEOUT_SECONDS,
+        help=(
+            "base timeout in seconds per test module before applying its "
+            "TEST_TIMEOUT_CLASS multiplier (run and full actions)"
+        ),
     )
     parser.add_argument(
         "--list-tests",

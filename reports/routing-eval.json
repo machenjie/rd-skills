@@ -1,6 +1,201 @@
 {
   "architecture": "hookless-control-plane-v1",
   "automatic_routing_policy_fingerprint": "81efd6d39cefc37df743253378fa0783117c5ea3b221987981d1de95f685f293",
+  "boundary_relations": {
+    "candidate_coverage": "full",
+    "errors": [],
+    "passed_count": 8,
+    "relation_count": 8,
+    "results": [
+      {
+        "cases": {
+          "canonical": "t2b-backend-resolved-direct",
+          "distractor": "t2b-repair-unrelated-unknown-direct",
+          "paraphrase": "t2b-backend-negated-unknown-direct",
+          "transition": "t2b-critical-backend-owner"
+        },
+        "errors": [],
+        "id": "direct-task-vs-analyzed-work",
+        "passed": true,
+        "stable_dimensions": [
+          "path",
+          "profile",
+          "primary_skill",
+          "layer3_skills",
+          "review_skill"
+        ],
+        "transition_dimensions": [
+          "path",
+          "profile",
+          "primary_skill",
+          "layer3_skills",
+          "review_skill"
+        ]
+      },
+      {
+        "cases": {
+          "canonical": "repository-tooling-direct",
+          "distractor": "structure-known-generator-pattern",
+          "paraphrase": "structure-known-generator-authority-placement",
+          "transition": "structure-real-pattern-force"
+        },
+        "errors": [],
+        "id": "backend-vs-repository-tooling",
+        "passed": true,
+        "stable_dimensions": [
+          "path",
+          "profile",
+          "primary_skill",
+          "review_skill"
+        ],
+        "transition_dimensions": [
+          "primary_skill",
+          "layer3_skills"
+        ]
+      },
+      {
+        "cases": {
+          "canonical": "t2b-repair-owner-not-unknown-direct",
+          "distractor": "security-anti-credential-session-internal-refactor",
+          "paraphrase": "t2b-repair-rollback-no-longer-unknown-direct",
+          "transition": "security-credential-session-lifecycle-change"
+        },
+        "errors": [],
+        "id": "backend-tooling-vs-security",
+        "passed": true,
+        "stable_dimensions": [
+          "path",
+          "profile",
+          "primary_skill",
+          "layer3_skills",
+          "review_skill"
+        ],
+        "transition_dimensions": [
+          "path",
+          "profile",
+          "primary_skill",
+          "layer3_skills",
+          "review_skill"
+        ]
+      },
+      {
+        "cases": {
+          "canonical": "frontend-direct",
+          "distractor": "mobile-anti-responsive-pwa",
+          "paraphrase": "payment-anti-authorization-copy",
+          "transition": "mobile-native-lifecycle-permission"
+        },
+        "errors": [],
+        "id": "frontend-vs-installed-client",
+        "passed": true,
+        "stable_dimensions": [
+          "path",
+          "profile",
+          "primary_skill",
+          "layer3_skills",
+          "review_skill"
+        ],
+        "transition_dimensions": [
+          "primary_skill",
+          "layer3_skills"
+        ]
+      },
+      {
+        "cases": {
+          "canonical": "structure-owner-private-business-predicate-not-placement",
+          "distractor": "structure-ef-mapping-domain-facts-unchanged",
+          "paraphrase": "structure-relative-business-method-homonym-not-placement",
+          "transition": "accepted-data-analysis"
+        },
+        "errors": [],
+        "id": "backend-vs-data-middleware",
+        "passed": true,
+        "stable_dimensions": [
+          "path",
+          "profile",
+          "primary_skill",
+          "review_skill"
+        ],
+        "transition_dimensions": [
+          "path",
+          "profile",
+          "primary_skill",
+          "layer3_skills",
+          "review_skill"
+        ]
+      },
+      {
+        "cases": {
+          "canonical": "t2b-preparation-backend-repair",
+          "distractor": "t2b-dedicated-platform-owner",
+          "paraphrase": "t2b-preparation-platform",
+          "transition": "architecture-boundary"
+        },
+        "errors": [],
+        "id": "implementation-preparation-vs-architecture-artifact",
+        "passed": true,
+        "stable_dimensions": [
+          "path",
+          "profile",
+          "primary_skill"
+        ],
+        "transition_dimensions": [
+          "primary_skill",
+          "layer3_skills",
+          "review_skill"
+        ]
+      },
+      {
+        "cases": {
+          "canonical": "documentation",
+          "distractor": "structure-pattern-word-comment-only",
+          "paraphrase": "structure-documentation-only-module-wording",
+          "transition": "structure-documentation-with-runtime-architecture-change"
+        },
+        "errors": [],
+        "id": "documentation-vs-runtime-architecture",
+        "passed": true,
+        "stable_dimensions": [
+          "path",
+          "profile",
+          "primary_skill",
+          "layer3_skills",
+          "review_skill"
+        ],
+        "transition_dimensions": [
+          "path",
+          "profile",
+          "primary_skill",
+          "layer3_skills",
+          "review_skill"
+        ]
+      },
+      {
+        "cases": {
+          "canonical": "structure-owner-private-runtime-selection-not-placement",
+          "distractor": "low-level-anti-unchanged-ffi-documentation",
+          "paraphrase": "low-level-anti-rust-business-service",
+          "transition": "low-level-transition-rust-to-os-resource"
+        },
+        "errors": [],
+        "id": "base-professional-vs-domain-modifier",
+        "passed": true,
+        "stable_dimensions": [
+          "path",
+          "profile",
+          "primary_skill",
+          "layer3_skills",
+          "review_skill"
+        ],
+        "transition_dimensions": [
+          "layer3_skills"
+        ]
+      }
+    ],
+    "role_count": 32,
+    "route_once": "proven",
+    "status": "pass"
+  },
   "candidate_coverage": "full",
   "case_count": 233,
   "compatibility_baseline": {

@@ -1,0 +1,89 @@
+version: 1
+relations:
+  - id: direct-task-vs-analyzed-work
+    cases:
+      canonical: t2b-backend-resolved-direct
+      paraphrase: t2b-backend-negated-unknown-direct
+      distractor: t2b-repair-unrelated-unknown-direct
+      transition: t2b-critical-backend-owner
+    stable_dimensions: [path, profile, primary_skill, layer3_skills, review_skill]
+    transition_dimensions: [path, profile, primary_skill, layer3_skills, review_skill]
+    competing_route: analyzed
+    competing_skill: engineering-change-analysis
+
+  - id: backend-vs-repository-tooling
+    cases:
+      canonical: repository-tooling-direct
+      paraphrase: structure-known-generator-authority-placement
+      distractor: structure-known-generator-pattern
+      transition: structure-real-pattern-force
+    stable_dimensions: [path, profile, primary_skill, review_skill]
+    transition_dimensions: [primary_skill, layer3_skills]
+    competing_route: direct
+    competing_skill: backend-change-builder
+
+  - id: backend-tooling-vs-security
+    cases:
+      canonical: t2b-repair-owner-not-unknown-direct
+      paraphrase: t2b-repair-rollback-no-longer-unknown-direct
+      distractor: security-anti-credential-session-internal-refactor
+      transition: security-credential-session-lifecycle-change
+    stable_dimensions: [path, profile, primary_skill, layer3_skills, review_skill]
+    transition_dimensions: [path, profile, primary_skill, layer3_skills, review_skill]
+    competing_route: analyzed
+    competing_skill: security-privacy-gate
+
+  - id: frontend-vs-installed-client
+    cases:
+      canonical: frontend-direct
+      paraphrase: payment-anti-authorization-copy
+      distractor: mobile-anti-responsive-pwa
+      transition: mobile-native-lifecycle-permission
+    stable_dimensions: [path, profile, primary_skill, layer3_skills, review_skill]
+    transition_dimensions: [primary_skill, layer3_skills]
+    competing_route: direct
+    competing_skill: installed-client-change-builder
+
+  - id: backend-vs-data-middleware
+    cases:
+      canonical: structure-owner-private-business-predicate-not-placement
+      paraphrase: structure-relative-business-method-homonym-not-placement
+      distractor: structure-ef-mapping-domain-facts-unchanged
+      transition: accepted-data-analysis
+    stable_dimensions: [path, profile, primary_skill, review_skill]
+    transition_dimensions: [path, profile, primary_skill, layer3_skills, review_skill]
+    competing_route: analyzed
+    competing_skill: data-middleware-change-builder
+
+  - id: implementation-preparation-vs-architecture-artifact
+    cases:
+      canonical: t2b-preparation-backend-repair
+      paraphrase: t2b-preparation-platform
+      distractor: t2b-dedicated-platform-owner
+      transition: architecture-boundary
+    stable_dimensions: [path, profile, primary_skill]
+    transition_dimensions: [primary_skill, layer3_skills, review_skill]
+    competing_route: analyzed
+    competing_skill: architecture-impact-reviewer
+
+  - id: documentation-vs-runtime-architecture
+    cases:
+      canonical: documentation
+      paraphrase: structure-documentation-only-module-wording
+      distractor: structure-pattern-word-comment-only
+      transition: structure-documentation-with-runtime-architecture-change
+    stable_dimensions: [path, profile, primary_skill, layer3_skills, review_skill]
+    transition_dimensions: [path, profile, primary_skill, layer3_skills, review_skill]
+    competing_route: analyzed
+    competing_skill: architecture-impact-reviewer
+
+  - id: base-professional-vs-domain-modifier
+    cases:
+      canonical: structure-owner-private-runtime-selection-not-placement
+      paraphrase: low-level-anti-rust-business-service
+      distractor: low-level-anti-unchanged-ffi-documentation
+      transition: low-level-transition-rust-to-os-resource
+    stable_dimensions: [path, profile, primary_skill, layer3_skills, review_skill]
+    transition_dimensions: [layer3_skills]
+    competing_route: direct
+    competing_skill: low-level-systems-extension

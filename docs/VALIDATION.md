@@ -129,8 +129,14 @@ changes to their owners. The
 runner preserves that one unsharded selected list, then runs each selected
 module in an isolated subprocess with a distinct temporary directory and
 disabled bytecode writes. `--jobs` bounds concurrent modules (default `2`);
-`--jobs 1` keeps a sequential diagnostic path, and `--timeout` bounds each
-module. Worker logs, durations, and status are emitted in module-path order
+`--jobs 1` keeps a sequential diagnostic path. `--timeout` is the base duration
+in seconds for every test module executed by `_execute_modules`, including
+affected `run` and both Full execution lanes. An absent `TEST_TIMEOUT_CLASS`
+declaration or `standard` applies `1x` the base timeout; `source-validation`
+applies `2x`. `TEST_TIMEOUT_CLASS` must be declared at most once as a top-level
+static string literal from the closed set `standard` and `source-validation`.
+Duplicate, nested, dynamic, or unknown declarations fail selection. Worker
+logs, durations, and status are emitted in module-path order
 regardless of completion order. A test failure returns `1`; selection, startup,
 timeout, interruption, abnormal-exit, or cleanup errors return `2`. After the
 first non-pass result, no new module is started, already-running workers are

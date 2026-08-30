@@ -63,6 +63,14 @@ class HooklessEvaluationTests(unittest.TestCase):
         self.assertEqual("full", report["candidate_coverage"])
         self.assertEqual("proven", report["route_once"])
         self.assertEqual(0, report["legacy_route_count"])
+        boundary_relations = report["boundary_relations"]
+        self.assertEqual("pass", boundary_relations["status"])
+        self.assertEqual(8, boundary_relations["relation_count"])
+        self.assertEqual(8, boundary_relations["passed_count"])
+        self.assertEqual(32, boundary_relations["role_count"])
+        self.assertEqual("full", boundary_relations["candidate_coverage"])
+        self.assertEqual("proven", boundary_relations["route_once"])
+        self.assertEqual([], boundary_relations["errors"])
         self.assertTrue(
             all(
                 isinstance(item.get("route_decision"), dict)
@@ -310,7 +318,10 @@ class HooklessEvaluationTests(unittest.TestCase):
         self.assertEqual("ai-consumption-v1", rendered["compiled_layer3_format"])
         self.assertEqual("o200k_base", rendered["tokenizer"])
         self.assertEqual(report["fixture_count"], rendered["fixture_count"])
-        self.assertEqual(rendered["dispatch_count"] * 9, rendered["measurement_count"])
+        self.assertEqual(
+            rendered["dispatch_count"] * len(rendered["hosts"]),
+            rendered["measurement_count"],
+        )
         budget = rendered["budget_governance"]
         core_budget = json.loads(
             (ROOT / "src/control-model/core-contracts.json").read_text(

@@ -189,7 +189,7 @@ def _expert_panel_evidence_contract(graph: dict[str, Any]) -> dict[str, Any]:
 
 
 def _runtime_contract(graph: dict[str, Any]) -> dict[str, Any]:
-    value = graph["stages"]["affected"].get("runtime_projection")
+    value = graph["stages"]["affected"].get("runtime_build")
     if (
         not isinstance(value, dict)
         or value.get("runtime_name") != "recommended"

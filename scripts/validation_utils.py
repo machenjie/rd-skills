@@ -3044,7 +3044,7 @@ def validate_impact_graph_contract(
         return errors
     affected = stages["affected"]
     affected_fields = {
-        "runtime_projection",
+        "runtime_build",
         "dependency_closure",
         "expert_panel_evidence_projection",
         "isolated_execution",
@@ -3076,7 +3076,7 @@ def validate_impact_graph_contract(
         errors.append("affected stage must enable canonical producer dependency closure")
     if affected["isolated_execution"] is not True:
         errors.append("affected stage must require isolated execution")
-    runtime_projection = affected["runtime_projection"]
+    runtime_projection = affected["runtime_build"]
     expected_runtime_projection = {
         "runtime_name": "recommended",
         "producer_id": "build-recommended",
@@ -3085,7 +3085,7 @@ def validate_impact_graph_contract(
     }
     if runtime_projection != expected_runtime_projection:
         errors.append(
-            "affected runtime_projection must match the canonical single Runtime graph"
+            "affected runtime_build must match the canonical single Runtime graph"
         )
     elif runtime_projection["producer_id"] not in eligible:
         errors.append("affected Runtime producer must be stage-eligible")
@@ -4386,7 +4386,7 @@ def validate_core_contracts(
 
     evidence_localization = data["evidence_localization_contract"]
     expected_evidence_localization = {
-        "schema_version": 1,
+        "schema_version": 2,
         "applies_to": ["analysis-agent", "task-agent", "review-agent"],
         "purpose": "locate-current-source-evidence",
         "host_capabilities": {
@@ -4395,12 +4395,13 @@ def validate_core_contracts(
             "structural_fallback": "read-search",
         },
         "location_sequence": {
-            "known_exact": "direct-exact-read-no-search-or-duplicate-discovery",
+            "known_exact": "direct-read-first-then-confirm-owner-or-bounded-correct",
             "unknown": "search-candidates-then-read",
             "widen": "only-when-current-evidence-is-insufficient",
             "proof": "minimum-complete-current-source-evidence",
         },
         "selector_only": [
+            "exact-locator",
             "top-k",
             "ranked-search",
             "semantic-search",
@@ -4415,10 +4416,70 @@ def validate_core_contracts(
             "no-other-consumer",
             "no-other-same-pattern-occurrence",
             "no-other-affected-path",
-            "unique-owner",
             "impact-scope-closed",
         ],
         "incomplete_coverage": "record-proof-limit",
+        "material_contradiction_outcomes": {
+            "without_accepted_brief": (
+                "stop-before-edit-return-main-initial-analysis"
+            ),
+            "accepted_brief_protected_decision_invalidated": (
+                "stop-before-edit-return-main-bounded-delta"
+            ),
+        },
+        "exact_locator_trust": {
+            "selector_sources": [
+                "user",
+                "prior-ai",
+                "brief",
+                "review",
+                "log",
+                "search-result",
+            ],
+            "owner_proof": "forbidden-without-current-source-owning-role",
+            "confirmed_owner": "stop-discovery-and-continue",
+            "same_owner_route_contract_mismatch": "bounded-correction-no-analysis",
+            "material_contradiction": "use-material-contradiction-outcomes",
+            "worker_route_or_brief_change": False,
+        },
+        "current_source_authority": {
+            "proves": "current-repository-facts-only",
+            "cannot_rewrite": [
+                "desired-behavior",
+                "acceptance",
+                "non-goals",
+                "target-architecture",
+            ],
+        },
+        "ownership_model": {
+            "non_owner_roles": [
+                "caller",
+                "delegator",
+                "generated-artifact",
+                "test",
+                "consumer",
+            ],
+            "multiple_enforcement_points": (
+                "allowed-when-current-source-proves-each-necessary-point"
+            ),
+        },
+        "generated_artifact": {
+            "locator_role": "selector-only",
+            "edit_rule": "trace-authoring-source-or-generator-before-edit",
+        },
+        "consumer_proof_limit": {
+            "zero_static_references": "does-not-prove-zero-consumers",
+            "non_static_boundaries": [
+                "dynamic",
+                "registry",
+                "reflection",
+                "dependency-injection",
+                "plugin",
+                "generated",
+                "ffi",
+            ],
+        },
+        "evidence_method_ordering": "artifact-effective-no-fixed-structural-priority",
         "minimum_complete_evidence": [
             "owner",
             "consumer",
@@ -4454,7 +4515,7 @@ def validate_core_contracts(
                 "migration",
                 "other-material-boundary",
             ],
-            "material_outcome": "stop-before-edit-return-main-for-analysis",
+            "material_outcome": "use-material-contradiction-outcomes",
             "worker_route_or_skill_selection": False,
         },
         "authority_exclusions": [
@@ -4488,12 +4549,15 @@ def validate_core_contracts(
                 {
                     "rule_id": "analysis-localization",
                     "required_terms": [
+                        "exact locator",
                         "current source",
                         "direct read/search",
                         "minimum complete",
                         "counts are selectors only",
                         "Proof Limit",
                         "never correctness/coverage conclusions",
+                        "initial Analysis without accepted Brief",
+                        "bounded Delta only after accepted Brief invalidation",
                     ],
                 }
             ],
@@ -4501,6 +4565,7 @@ def validate_core_contracts(
                 {
                     "rule_id": "task-localization",
                     "required_terms": [
+                        "exact locator",
                         "current source",
                         "direct read/search",
                         "minimum complete",
@@ -4508,6 +4573,8 @@ def validate_core_contracts(
                         "selectors only",
                         "Proof Limit",
                         "never inherit correctness/coverage",
+                        "initial Analysis without accepted Brief",
+                        "bounded Delta only after accepted Brief invalidation",
                     ],
                 }
             ],
@@ -4515,6 +4582,7 @@ def validate_core_contracts(
                 {
                     "rule_id": "review-localization",
                     "required_terms": [
+                        "exact locator",
                         "independently",
                         "current source",
                         "direct read/search",
@@ -4522,6 +4590,8 @@ def validate_core_contracts(
                         "selectors only",
                         "never inherit correctness/coverage",
                         "Proof Limit",
+                        "initial Analysis without accepted Brief",
+                        "bounded Delta only after accepted Brief invalidation",
                     ],
                 }
             ],
@@ -4560,9 +4630,7 @@ def validate_core_contracts(
                 "new-requirement": (
                     "bounded-discovery-for-new-evidence-requirement"
                 ),
-                "protected-or-material": (
-                    "stop-edit-return-main-bounded-delta"
-                ),
+                "protected-or-material": "use-material-contradiction-outcomes",
             },
             "contradiction_scope": "reopen-intersecting-claim-only",
             "material_proof_limit": "stop-before-edit-return-main",
@@ -4576,7 +4644,9 @@ def validate_core_contracts(
                             "no material risk",
                             "new/invalidated/contradicted",
                             "reopens affected only",
-                            "protected/material returns Main/Delta",
+                            "Protected/material returns Main",
+                            "initial Analysis without accepted Brief",
+                            "bounded Delta only after accepted Brief invalidation",
                             "counts",
                         ],
                     }

@@ -13,6 +13,10 @@ and writes two grouped reports:
 
 Finding a problem does not make the audit fail; it always exits 0 unless an
 internal error occurs. Thresholds are centralized in THRESHOLDS below.
+
+The internal `foundation-derivation-snapshot` maintenance mode checks or
+refreshes only this module's Foundation derivation constant and its exact
+validator-test oracle from current authored Foundation bodies.
 """
 
 from __future__ import annotations
@@ -160,37 +164,76 @@ THRESHOLDS = {
     "control_boilerplate_repeated_phrase_high": 3,
 }
 
+FOUNDATION_DERIVATION_SNAPSHOT_FIELDS = (
+    "date",
+    "foundation_documents",
+    "compact_documents",
+    "complex_documents",
+    "sum_tokens",
+    "min_tokens",
+    "p25_tokens",
+    "p50_tokens",
+    "p75_tokens",
+    "p90_tokens",
+    "p95_tokens",
+    "p99_tokens",
+    "distribution_max_tokens",
+    "mean_tokens",
+    "sum_words",
+    "min_words",
+    "p25_words",
+    "p50_words",
+    "p75_words",
+    "p90_words",
+    "p95_words",
+    "p99_words",
+    "max_words",
+    "mean_words",
+    "median_token_word_ratio",
+    "p90_token_word_ratio",
+    "p95_token_word_ratio",
+    "max_token_word_ratio",
+    "mean_token_word_ratio",
+)
+FOUNDATION_DERIVATION_SNAPSHOT_MODE = "foundation-derivation-snapshot"
+FOUNDATION_DERIVATION_SNAPSHOT_OUTPUTS = (
+    ("scripts/audit-skill-content.py", "FOUNDATION_DERIVATION_SNAPSHOT"),
+    ("tests/scripts/test_validate_root_content.py", "expected"),
+)
+
+# BEGIN GENERATED FOUNDATION DERIVATION SNAPSHOT
 FOUNDATION_DERIVATION_SNAPSHOT = {
-    "date": "2026-08-28",
+    "date": "2026-08-30",
     "foundation_documents": 150,
     "compact_documents": 128,
     "complex_documents": 22,
-    "sum_tokens": 65636,
+    "sum_tokens": 65730,
     "min_tokens": 138,
     "p25_tokens": 269,
     "p50_tokens": 511,
-    "p75_tokens": 554,
-    "p90_tokens": 599,
+    "p75_tokens": 555,
+    "p90_tokens": 605,
     "p95_tokens": 628,
     "p99_tokens": 663,
     "distribution_max_tokens": 688,
-    "mean_tokens": 437.573,
-    "sum_words": 46046,
+    "mean_tokens": 438.2,
+    "sum_words": 46118,
     "min_words": 94,
     "p25_words": 182,
     "p50_words": 357,
-    "p75_words": 393,
-    "p90_words": 420,
+    "p75_words": 394,
+    "p90_words": 424,
     "p95_words": 437,
     "p99_words": 475,
     "max_words": 497,
-    "mean_words": 306.973,
+    "mean_words": 307.453,
     "median_token_word_ratio": 1.415,
     "p90_token_word_ratio": 1.552,
     "p95_token_word_ratio": 1.593,
     "max_token_word_ratio": 1.673,
     "mean_token_word_ratio": 1.435,
 }
+# END GENERATED FOUNDATION DERIVATION SNAPSHOT
 
 
 def _nearest_rank(values: list[int] | list[float], percentile: float) -> int | float:
@@ -289,6 +332,426 @@ def foundation_derivation_snapshot_from_documents(
             sum(token_word_ratios) / len(token_word_ratios), 3
         ),
     }
+
+
+def _foundation_snapshot_marker(boundary: str) -> str:
+    if boundary not in {"BEGIN", "END"}:
+        raise ValidationProblem("Foundation snapshot marker boundary is invalid")
+    return f"# {boundary} GENERATED " + "FOUNDATION DERIVATION SNAPSHOT"
+
+
+def _foundation_snapshot_date(value: str) -> date:
+    try:
+        parsed = date.fromisoformat(value)
+    except ValueError as exc:
+        raise ValidationProblem(
+            "Foundation derivation snapshot date must use YYYY-MM-DD"
+        ) from exc
+    if parsed.isoformat() != value:
+        raise ValidationProblem(
+            "Foundation derivation snapshot date must use canonical YYYY-MM-DD"
+        )
+    return parsed
+
+
+def _validate_foundation_snapshot_shape(
+    snapshot: object,
+    *,
+    context: str,
+) -> dict[str, object]:
+    if not isinstance(snapshot, dict):
+        raise ValidationProblem(f"{context} must be a mapping")
+    if tuple(snapshot) != FOUNDATION_DERIVATION_SNAPSHOT_FIELDS:
+        raise ValidationProblem(
+            f"{context} fields do not match the owned Foundation snapshot schema"
+        )
+    normalized = dict(snapshot)
+    for field in FOUNDATION_DERIVATION_SNAPSHOT_FIELDS:
+        expected_type = type(FOUNDATION_DERIVATION_SNAPSHOT[field])
+        if type(normalized[field]) is not expected_type:
+            raise ValidationProblem(
+                f"{context}.{field} must be {expected_type.__name__}"
+            )
+    _foundation_snapshot_date(str(normalized["date"]))
+    if normalized["foundation_documents"] != EXPECTED_FOUNDATION_CAPABILITY_COUNT:
+        raise ValidationProblem(
+            f"{context}.foundation_documents must equal "
+            f"{EXPECTED_FOUNDATION_CAPABILITY_COUNT}"
+        )
+    return normalized
+
+
+def _foundation_snapshot_owned_file(root: Path, relative: str) -> Path:
+    try:
+        trusted_root = root.resolve(strict=True)
+    except OSError as exc:
+        raise ValidationProblem(
+            f"Foundation snapshot owner root is unavailable: {root}"
+        ) from exc
+    relative_path = Path(relative)
+    if relative_path.is_absolute() or ".." in relative_path.parts:
+        raise ValidationProblem(
+            f"Foundation snapshot output path is not contained: {relative}"
+        )
+    target = trusted_root
+    for index, part in enumerate(relative_path.parts):
+        target = target / part
+        try:
+            metadata = target.lstat()
+        except OSError as exc:
+            raise ValidationProblem(
+                f"Foundation snapshot output is unavailable: {relative}"
+            ) from exc
+        if stat.S_ISLNK(metadata.st_mode):
+            raise ValidationProblem(
+                f"Foundation snapshot output must not use a symlink: {relative}"
+            )
+        if index < len(relative_path.parts) - 1:
+            if not stat.S_ISDIR(metadata.st_mode):
+                raise ValidationProblem(
+                    f"Foundation snapshot output ancestor is not a directory: {relative}"
+                )
+        elif not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
+            raise ValidationProblem(
+                f"Foundation snapshot output must be one regular file: {relative}"
+            )
+    try:
+        target.resolve(strict=True).relative_to(trusted_root)
+    except (OSError, ValueError) as exc:
+        raise ValidationProblem(
+            f"Foundation snapshot output escapes the owner root: {relative}"
+        ) from exc
+    return target
+
+
+def _foundation_snapshot_projection(
+    root: Path,
+    relative: str,
+    assignment: str,
+) -> tuple[Path, str, dict[str, object], int, int, str, os.stat_result]:
+    path = _foundation_snapshot_owned_file(root, relative)
+    try:
+        source = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise ValidationProblem(
+            f"Foundation snapshot output is not readable UTF-8: {relative}"
+        ) from exc
+    lines = source.splitlines(keepends=True)
+    begin_marker = _foundation_snapshot_marker("BEGIN")
+    end_marker = _foundation_snapshot_marker("END")
+    begin = [index for index, line in enumerate(lines) if line.strip() == begin_marker]
+    end = [index for index, line in enumerate(lines) if line.strip() == end_marker]
+    if len(begin) != 1 or len(end) != 1 or begin[0] >= end[0]:
+        raise ValidationProblem(
+            f"Foundation snapshot owner markers are missing or ambiguous: {relative}"
+        )
+    start_index, end_index = begin[0], end[0]
+    begin_line = lines[start_index].rstrip("\r\n")
+    end_line = lines[end_index].rstrip("\r\n")
+    indent = begin_line[: -len(begin_marker)]
+    if end_line != f"{indent}{end_marker}":
+        raise ValidationProblem(
+            f"Foundation snapshot owner marker indentation differs: {relative}"
+        )
+    body_lines: list[str] = []
+    for line in lines[start_index + 1 : end_index]:
+        if line.strip() and not line.startswith(indent):
+            raise ValidationProblem(
+                f"Foundation snapshot owned block indentation differs: {relative}"
+            )
+        body_lines.append(line[len(indent) :] if line.strip() else line)
+    try:
+        parsed = ast.parse("".join(body_lines), filename=relative)
+    except SyntaxError as exc:
+        raise ValidationProblem(
+            f"Foundation snapshot owned block is not valid Python: {relative}"
+        ) from exc
+    if (
+        len(parsed.body) != 1
+        or not isinstance(parsed.body[0], ast.Assign)
+        or len(parsed.body[0].targets) != 1
+        or not isinstance(parsed.body[0].targets[0], ast.Name)
+        or parsed.body[0].targets[0].id != assignment
+    ):
+        raise ValidationProblem(
+            f"Foundation snapshot owned block assignment is invalid: {relative}"
+        )
+    try:
+        snapshot = ast.literal_eval(parsed.body[0].value)
+    except (ValueError, TypeError) as exc:
+        raise ValidationProblem(
+            f"Foundation snapshot owned block must be a literal mapping: {relative}"
+        ) from exc
+    normalized = _validate_foundation_snapshot_shape(
+        snapshot,
+        context=f"{relative}:{assignment}",
+    )
+    return (
+        path,
+        source,
+        normalized,
+        start_index,
+        end_index,
+        indent,
+        path.stat(follow_symlinks=False),
+    )
+
+
+def _render_foundation_snapshot_block(
+    assignment: str,
+    snapshot: dict[str, object],
+    *,
+    indent: str,
+) -> str:
+    normalized = _validate_foundation_snapshot_shape(
+        snapshot,
+        context="generated Foundation derivation snapshot",
+    )
+    lines = [
+        f"{indent}{_foundation_snapshot_marker('BEGIN')}",
+        f"{indent}{assignment} = {{",
+    ]
+    for field in FOUNDATION_DERIVATION_SNAPSHOT_FIELDS:
+        value = normalized[field]
+        rendered = json.dumps(value) if isinstance(value, str) else repr(value)
+        lines.append(f'{indent}    "{field}": {rendered},')
+    lines.extend(
+        [
+            f"{indent}}}",
+            f"{indent}{_foundation_snapshot_marker('END')}",
+        ]
+    )
+    return "\n".join(lines) + "\n"
+
+
+def _current_foundation_derivation_snapshot(
+    snapshot_date: str,
+) -> dict[str, object]:
+    evaluated_on = _foundation_snapshot_date(snapshot_date)
+    root_content = _collect_root_content(evaluation_date=evaluated_on)
+    documents = [
+        document
+        for document in root_content["documents"]
+        if document.get("layer") == "foundation-capability"
+        and document.get("document_part") == "body"
+    ]
+    snapshot = foundation_derivation_snapshot_from_documents(documents)
+    snapshot["date"] = snapshot_date
+    return _validate_foundation_snapshot_shape(
+        snapshot,
+        context="current Foundation derivation snapshot",
+    )
+
+
+def _atomic_replace_foundation_snapshot_outputs(
+    replacements: list[tuple[Path, str, str, os.stat_result]],
+) -> None:
+    staged: list[tuple[Path, Path, Path, str, str, tuple[int, int]]] = []
+    replaced: list[tuple[Path, Path, str, str, tuple[int, int]]] = []
+
+    def stage_source(
+        path: Path,
+        source: str,
+        metadata: os.stat_result,
+        *,
+        purpose: str,
+    ) -> Path:
+        descriptor, temporary_name = tempfile.mkstemp(
+            dir=path.parent,
+            prefix=f".{path.name}.foundation-snapshot.{purpose}.",
+            suffix=".tmp",
+        )
+        temporary = Path(temporary_name)
+        try:
+            with os.fdopen(descriptor, "wb") as stream:
+                os.fchmod(stream.fileno(), stat.S_IMODE(metadata.st_mode))
+                stream.write(source.encode("utf-8"))
+                stream.flush()
+                os.fsync(stream.fileno())
+        except BaseException:
+            try:
+                temporary.unlink()
+            except FileNotFoundError:
+                pass
+            raise
+        return temporary
+
+    try:
+        for path, old_source, new_source, metadata in replacements:
+            temporary = stage_source(path, new_source, metadata, purpose="new")
+            try:
+                rollback = stage_source(
+                    path,
+                    old_source,
+                    metadata,
+                    purpose="rollback",
+                )
+            except BaseException:
+                temporary.unlink(missing_ok=True)
+                raise
+            temporary_metadata = temporary.stat(follow_symlinks=False)
+            temporary_identity = (
+                temporary_metadata.st_dev,
+                temporary_metadata.st_ino,
+            )
+            staged.append(
+                (
+                    path,
+                    temporary,
+                    rollback,
+                    old_source,
+                    new_source,
+                    temporary_identity,
+                )
+            )
+        for path, old_source, _new_source, metadata in replacements:
+            current = path.stat(follow_symlinks=False)
+            identity = (metadata.st_dev, metadata.st_ino, metadata.st_mode, metadata.st_nlink)
+            current_identity = (
+                current.st_dev,
+                current.st_ino,
+                current.st_mode,
+                current.st_nlink,
+            )
+            if current_identity != identity or path.read_text(encoding="utf-8") != old_source:
+                raise ValidationProblem(
+                    f"Foundation snapshot output changed after preflight: {path}"
+                )
+        for (
+            path,
+            temporary,
+            rollback,
+            old_source,
+            new_source,
+            temporary_identity,
+        ) in staged:
+            current_temporary = temporary.stat(follow_symlinks=False)
+            if (
+                not stat.S_ISREG(current_temporary.st_mode)
+                or current_temporary.st_nlink != 1
+                or (current_temporary.st_dev, current_temporary.st_ino)
+                != temporary_identity
+            ):
+                raise OSError(
+                    "Foundation snapshot staged target identity changed before commit"
+                )
+            os.replace(temporary, path)
+            replaced.append(
+                (
+                    path,
+                    rollback,
+                    old_source,
+                    new_source,
+                    temporary_identity,
+                )
+            )
+            committed = path.stat(follow_symlinks=False)
+            if (committed.st_dev, committed.st_ino) != temporary_identity:
+                raise OSError(
+                    "Foundation snapshot committed target identity changed "
+                    f"after replacement: {path}"
+                )
+        for path, _rollback, _old_source, new_source, _identity in replaced:
+            if path.read_text(encoding="utf-8") != new_source:
+                raise OSError(
+                    f"Foundation snapshot final verification failed: {path}"
+                )
+    except (OSError, UnicodeError) as exc:
+        rollback_errors: list[str] = []
+        for path, rollback, old_source, _new_source, identity in reversed(replaced):
+            try:
+                current = path.stat(follow_symlinks=False)
+                if (
+                    not stat.S_ISREG(current.st_mode)
+                    or current.st_nlink != 1
+                    or (current.st_dev, current.st_ino) != identity
+                ):
+                    raise OSError(
+                        "Foundation snapshot rollback conflict: committed target "
+                        "identity changed (possible concurrent atomic replacement)"
+                    )
+                os.replace(rollback, path)
+                if path.read_text(encoding="utf-8") != old_source:
+                    raise OSError("Foundation snapshot rollback verification failed")
+            except (OSError, UnicodeError) as rollback_exc:
+                rollback_errors.append(f"{path}: {rollback_exc}")
+        detail = f"Foundation snapshot atomic replacement failed: {exc}"
+        if rollback_errors:
+            detail += "; rollback failed: " + "; ".join(rollback_errors)
+        raise ValidationProblem(
+            detail
+        ) from exc
+    finally:
+        for (
+            _path,
+            temporary,
+            rollback,
+            _old_source,
+            _new_source,
+            _temporary_identity,
+        ) in staged:
+            for candidate in (temporary, rollback):
+                try:
+                    candidate.unlink()
+                except FileNotFoundError:
+                    pass
+
+
+def _synchronize_foundation_derivation_snapshot(
+    *,
+    root: Path,
+    snapshot_date: str,
+    write: bool,
+) -> tuple[list[str], list[str]]:
+    projections: list[
+        tuple[Path, str, dict[str, object], int, int, str, os.stat_result]
+    ] = []
+    errors: list[str] = []
+    for relative, assignment in FOUNDATION_DERIVATION_SNAPSHOT_OUTPUTS:
+        try:
+            projections.append(
+                _foundation_snapshot_projection(root, relative, assignment)
+            )
+        except ValidationProblem as exc:
+            errors.append(str(exc))
+    if errors:
+        return [], errors
+    if projections[0][2] != projections[1][2]:
+        return [], ["Foundation derivation snapshot owned projections disagree"]
+    try:
+        expected = _current_foundation_derivation_snapshot(snapshot_date)
+    except ValidationProblem as exc:
+        return [], [str(exc)]
+
+    rendered: list[tuple[str, Path, str, str, os.stat_result]] = []
+    for (relative, assignment), projection in zip(
+        FOUNDATION_DERIVATION_SNAPSHOT_OUTPUTS,
+        projections,
+        strict=True,
+    ):
+        path, source, _snapshot, start, end, indent, metadata = projection
+        lines = source.splitlines(keepends=True)
+        replacement = _render_foundation_snapshot_block(
+            assignment,
+            expected,
+            indent=indent,
+        )
+        new_source = "".join(lines[:start]) + replacement + "".join(lines[end + 1 :])
+        rendered.append((relative, path, source, new_source, metadata))
+    drift = [relative for relative, _path, old, new, _metadata in rendered if old != new]
+    if not write or not drift:
+        return drift, []
+    try:
+        _atomic_replace_foundation_snapshot_outputs(
+            [
+                (path, old, new, metadata)
+                for _relative, path, old, new, metadata in rendered
+                if old != new
+            ]
+        )
+    except ValidationProblem as exc:
+        return [], [str(exc)]
+    return drift, []
 
 # Descriptions are discovery metadata and are therefore closer to always-loaded
 # context than a targeted reference. The hard limit is enforced by
@@ -11728,8 +12191,64 @@ def _args(argv: list[str]) -> argparse.Namespace:
     return args
 
 
+def _foundation_snapshot_args(argv: list[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        prog=f"audit-skill-content.py {FOUNDATION_DERIVATION_SNAPSHOT_MODE}",
+        description=(
+            "Check or refresh the two owned Foundation derivation snapshot "
+            "projections from current authored Foundation bodies."
+        ),
+    )
+    action = parser.add_mutually_exclusive_group(required=True)
+    action.add_argument("--check", action="store_true")
+    action.add_argument("--write", action="store_true")
+    parser.add_argument(
+        "--date",
+        required=True,
+        help="Explicit deterministic snapshot date in YYYY-MM-DD form.",
+    )
+    return parser.parse_args(argv)
+
+
+def _foundation_snapshot_main(argv: list[str]) -> int:
+    args = _foundation_snapshot_args(argv)
+    drift, errors = _synchronize_foundation_derivation_snapshot(
+        root=ROOT,
+        snapshot_date=args.date,
+        write=args.write,
+    )
+    if errors:
+        for error in errors:
+            print(f"audit-skill-content: ERROR: {error}", file=sys.stderr)
+        return 1
+    if drift and args.check:
+        print(
+            "audit-skill-content: ERROR: Foundation derivation snapshot is "
+            f"stale in {', '.join(drift)}; rerun with --write",
+            file=sys.stderr,
+        )
+        return 1
+    if args.write:
+        print(
+            "audit-skill-content: Foundation derivation snapshot updated; "
+            f"changed={len(drift)}"
+        )
+    else:
+        print(
+            "audit-skill-content: Foundation derivation snapshot owned "
+            "projections are current"
+        )
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
-    args = _args([] if argv is None else argv)
+    effective_argv = [] if argv is None else argv
+    if (
+        effective_argv
+        and effective_argv[0] == FOUNDATION_DERIVATION_SNAPSHOT_MODE
+    ):
+        return _foundation_snapshot_main(effective_argv[1:])
+    args = _args(effective_argv)
     effective_evaluation_date = _effective_evaluation_date()
     try:
         result = audit(evaluation_date=effective_evaluation_date)

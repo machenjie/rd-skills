@@ -50,6 +50,7 @@ from fixture_capsule_contract import (
 
 ROOT = Path(__file__).resolve().parents[1]
 CASES = ROOT / "evals" / "routing" / "cases.yaml"
+BOUNDARY_RELATIONS = ROOT / "evals" / "routing" / "boundary-relations.yaml"
 CAPABILITY_CASES = ROOT / "evals" / "routing" / "capability-coverage-cases.yaml"
 DECISION_CASES = ROOT / "evals" / "routing" / "decision-cases.yaml"
 CAPABILITY_MATRIX = ROOT / "evals" / "capability-coverage" / "matrix.yaml"
@@ -59,6 +60,14 @@ DOMAIN = ROOT / "src" / "registry" / "domain-skills.yaml"
 REPORT_JSON = ROOT / "reports" / "routing-eval.json"
 REPORT_MD = ROOT / "reports" / "routing-eval.md"
 DOMAIN_VARIANTS = {"canonical", "paraphrase"}
+BOUNDARY_ROLES = ("canonical", "paraphrase", "distractor", "transition")
+ROUTE_DIMENSIONS = (
+    "path",
+    "profile",
+    "primary_skill",
+    "layer3_skills",
+    "review_skill",
+)
 EVIDENCE_LIMITATIONS = (
     "Deterministic routing fixtures do not measure wall-clock performance.",
     "Fixture agreement does not prove real-host accuracy or the installed user experience.",
@@ -1787,10 +1796,366 @@ def _domain_metadata(
     return family, anti, matched_mapping, transition, anti_variant
 
 
+def _boundary_route_projection(
+    result: object,
+    *,
+    context: str,
+) -> tuple[dict[str, Any] | None, set[str], list[str]]:
+    """Read one fresh route decision and prove its winner-trace binding."""
+
+    errors: list[str] = []
+    if not isinstance(result, dict):
+        return None, set(), [f"{context}: routing result must be a mapping"]
+    decision = result.get("route_decision")
+    trace = result.get("winner_trace")
+    if not isinstance(decision, dict) or not isinstance(trace, dict):
+        return None, set(), [
+            f"{context}: fresh route_decision and winner_trace are required"
+        ]
+    route_result = decision.get("route_result")
+    if not isinstance(route_result, dict):
+        return None, set(), [f"{context}: route_result must be a mapping"]
+    layer3_skills = route_result.get("layer3_skills")
+    projection = {
+        "path": decision.get("path"),
+        "profile": route_result.get("start_profile"),
+        "primary_skill": route_result.get("primary_skill"),
+        "layer3_skills": copy.deepcopy(layer3_skills),
+        "review_skill": route_result.get("review_skill"),
+    }
+    if (
+        any(
+            not isinstance(projection[field], str)
+            or not projection[field]
+            for field in ROUTE_DIMENSIONS
+            if field != "layer3_skills"
+        )
+        or not isinstance(layer3_skills, list)
+        or any(
+            not isinstance(item, str) or not item
+            for item in layer3_skills
+        )
+    ):
+        errors.append(f"{context}: route projection is malformed")
+    if decision.get("route_once") is not True:
+        errors.append(f"{context}: route_decision.route_once must be true")
+    if trace.get("route_once") != "proven":
+        errors.append(f"{context}: winner_trace.route_once must be proven")
+    if trace.get("candidate_coverage") != "full":
+        errors.append(
+            f"{context}: winner_trace candidate coverage must be full"
+        )
+
+    selected = trace.get("selected_candidate")
+    raw_candidates = trace.get("raw_candidates")
+    if not isinstance(selected, dict) or not isinstance(raw_candidates, list):
+        errors.append(f"{context}: winner_trace must contain one winner")
+        return projection, set(), errors
+    selected_id = selected.get("candidate_id")
+    if not isinstance(selected_id, str) or not selected_id:
+        errors.append(f"{context}: winner_trace winner id must be non-empty")
+        return projection, set(), errors
+    selected_projection = {
+        "path": selected.get("path"),
+        "profile": selected.get("profile"),
+        "primary_skill": selected.get("primary_skill"),
+        "layer3_skills": copy.deepcopy(selected.get("layer3_skills")),
+        "review_skill": selected.get("review_skill"),
+    }
+    if selected_projection != projection:
+        errors.append(
+            f"{context}: winner_trace winner differs from route_decision"
+        )
+    matching_winners = [
+        candidate
+        for candidate in raw_candidates
+        if isinstance(candidate, dict)
+        and candidate.get("candidate_id") == selected_id
+        and {
+            "path": candidate.get("path"),
+            "profile": candidate.get("profile"),
+            "primary_skill": candidate.get("primary_skill"),
+            "layer3_skills": candidate.get("layer3_skills"),
+            "review_skill": candidate.get("review_skill"),
+        }
+        == projection
+    ]
+    if len(matching_winners) != 1:
+        errors.append(
+            f"{context}: winner_trace must bind exactly one winner to raw candidates"
+        )
+    selected_skills = {
+        str(projection.get("primary_skill", "")),
+        *(
+            str(item)
+            for item in (
+                layer3_skills if isinstance(layer3_skills, list) else []
+            )
+        ),
+    }
+    selected_skills.discard("")
+    return projection, selected_skills, errors
+
+
+def evaluate_boundary_relations(
+    document: object,
+    route_results: object,
+) -> dict[str, Any]:
+    """Validate targeted routing boundaries against fresh route observations."""
+
+    errors: list[str] = []
+    relation_results: list[dict[str, Any]] = []
+    if (
+        not isinstance(document, dict)
+        or set(document) != {"version", "relations"}
+        or document.get("version") != 1
+        or not isinstance(document.get("relations"), list)
+    ):
+        return {
+            "status": "fail",
+            "relation_count": 0,
+            "passed_count": 0,
+            "role_count": 0,
+            "candidate_coverage": "unavailable",
+            "route_once": "unavailable",
+            "results": [],
+            "errors": [
+                "boundary relation fixture must contain version 1 and relations"
+            ],
+        }
+    relations = document["relations"]
+    if len(relations) != 8:
+        errors.append("boundary relation fixture must declare exactly 8 relations")
+
+    if not isinstance(route_results, list):
+        route_results = []
+        errors.append("boundary relation route results must be a list")
+    result_ids = [
+        result.get("id")
+        for result in route_results
+        if isinstance(result, dict) and isinstance(result.get("id"), str)
+    ]
+    duplicate_result_ids = {
+        case_id for case_id in result_ids if result_ids.count(case_id) > 1
+    }
+    if duplicate_result_ids:
+        errors.append(
+            "boundary relation route results contain duplicate case ids: "
+            + ", ".join(sorted(duplicate_result_ids))
+        )
+    results_by_id = {
+        result["id"]: result
+        for result in route_results
+        if isinstance(result, dict)
+        and isinstance(result.get("id"), str)
+        and result["id"] not in duplicate_result_ids
+    }
+    professional = {
+        row.get("name")
+        for row in load_yaml_file(PROFESSIONAL).get("professional_skills", [])
+        if isinstance(row, dict) and isinstance(row.get("name"), str)
+    }
+    layer3 = {
+        row.get("name")
+        for row in [
+            *load_yaml_file(FOUNDATION).get("foundation_skills", []),
+            *load_yaml_file(DOMAIN).get("domain_skills", []),
+        ]
+        if isinstance(row, dict) and isinstance(row.get("name"), str)
+    }
+    known_skills = professional | layer3
+
+    relation_ids = [
+        relation.get("id")
+        for relation in relations
+        if isinstance(relation, dict) and isinstance(relation.get("id"), str)
+    ]
+    duplicate_relation_ids = {
+        relation_id
+        for relation_id in relation_ids
+        if relation_ids.count(relation_id) > 1
+    }
+    if duplicate_relation_ids:
+        errors.append(
+            "boundary relation ids must be unique: "
+            + ", ".join(sorted(duplicate_relation_ids))
+        )
+
+    declared_case_ids: list[str] = []
+    for relation in relations:
+        if not isinstance(relation, dict):
+            continue
+        cases = relation.get("cases")
+        if isinstance(cases, dict):
+            declared_case_ids.extend(
+                case_id
+                for case_id in cases.values()
+                if isinstance(case_id, str)
+            )
+    duplicate_case_ids = {
+        case_id
+        for case_id in declared_case_ids
+        if declared_case_ids.count(case_id) > 1
+    }
+    if duplicate_case_ids:
+        errors.append(
+            "boundary relation case ids must be globally unique: "
+            + ", ".join(sorted(duplicate_case_ids))
+        )
+
+    exact_relation_fields = {
+        "id",
+        "cases",
+        "stable_dimensions",
+        "transition_dimensions",
+        "competing_route",
+        "competing_skill",
+    }
+    for index, relation in enumerate(relations):
+        relation_error_start = len(errors)
+        context = f"boundary relation[{index}]"
+        if not isinstance(relation, dict) or set(relation) != exact_relation_fields:
+            errors.append(f"{context}: relation fields are malformed")
+            continue
+        relation_id = relation.get("id")
+        if not isinstance(relation_id, str) or not relation_id.strip():
+            errors.append(f"{context}: id must be non-empty")
+            relation_id = f"invalid-{index}"
+        context = str(relation_id)
+        cases = relation.get("cases")
+        if not isinstance(cases, dict) or set(cases) != set(BOUNDARY_ROLES):
+            errors.append(
+                f"{context}: cases must contain exactly canonical, paraphrase, "
+                "distractor, transition"
+            )
+            cases = {}
+        elif any(
+            not isinstance(cases[role], str) or not cases[role].strip()
+            for role in BOUNDARY_ROLES
+        ):
+            errors.append(f"{context}: every role must name one routing case")
+            cases = {}
+
+        stable = relation.get("stable_dimensions")
+        transition = relation.get("transition_dimensions")
+        for label, dimensions in (
+            ("stable", stable),
+            ("transition", transition),
+        ):
+            if (
+                not isinstance(dimensions, list)
+                or not dimensions
+                or len(dimensions) != len(set(dimensions))
+                or any(item not in ROUTE_DIMENSIONS for item in dimensions)
+                or dimensions
+                != [item for item in ROUTE_DIMENSIONS if item in dimensions]
+            ):
+                errors.append(
+                    f"{context}: {label} dimensions must be an ordered unique "
+                    "non-empty subset of route dimensions"
+                )
+        competing_route = relation.get("competing_route")
+        competing_skill = relation.get("competing_skill")
+        if competing_route not in {"direct", "analyzed"}:
+            errors.append(f"{context}: competing_route must be direct or analyzed")
+        if competing_skill not in known_skills:
+            errors.append(f"{context}: competing_skill must name a known Skill")
+
+        projections: dict[str, dict[str, Any]] = {}
+        selected_skills: dict[str, set[str]] = {}
+        if cases:
+            for role in BOUNDARY_ROLES:
+                case_id = cases[role]
+                result = results_by_id.get(case_id)
+                if result is None:
+                    errors.append(
+                        f"{context}/{role}: unknown routing case {case_id!r}"
+                    )
+                    continue
+                if result.get("passed") is not True:
+                    errors.append(
+                        f"{context}/{role}: routing case is not passing"
+                    )
+                projection, skills, projection_errors = (
+                    _boundary_route_projection(
+                        result,
+                        context=f"{context}/{role}",
+                    )
+                )
+                errors.extend(projection_errors)
+                if projection is not None:
+                    projections[role] = projection
+                    selected_skills[role] = skills
+
+        if len(projections) == len(BOUNDARY_ROLES):
+            canonical = projections["canonical"]
+            observed_stable = [
+                dimension
+                for dimension in ROUTE_DIMENSIONS
+                if canonical[dimension]
+                == projections["paraphrase"][dimension]
+                == projections["distractor"][dimension]
+            ]
+            if stable != observed_stable:
+                errors.append(
+                    f"{context}: stable dimensions drifted; declared {stable!r}, "
+                    f"observed {observed_stable!r}"
+                )
+            observed_transition = [
+                dimension
+                for dimension in ROUTE_DIMENSIONS
+                if canonical[dimension]
+                != projections["transition"][dimension]
+            ]
+            if transition != observed_transition:
+                errors.append(
+                    f"{context}: transition dimensions differ; declared "
+                    f"{transition!r}, observed {observed_transition!r}"
+                )
+            if competing_skill in selected_skills["distractor"]:
+                errors.append(
+                    f"{context}: distractor selected competing Skill "
+                    f"{competing_skill!r}"
+                )
+            if (
+                projections["transition"]["path"] != competing_route
+                or competing_skill not in selected_skills["transition"]
+            ):
+                errors.append(
+                    f"{context}: transition did not select the declared "
+                    "competing route and Skill"
+                )
+
+        relation_errors = errors[relation_error_start:]
+        relation_results.append(
+            {
+                "id": relation_id,
+                "cases": copy.deepcopy(cases),
+                "stable_dimensions": copy.deepcopy(stable),
+                "transition_dimensions": copy.deepcopy(transition),
+                "passed": not relation_errors,
+                "errors": list(relation_errors),
+            }
+        )
+
+    role_count = len(declared_case_ids)
+    return {
+        "status": "pass" if not errors else "fail",
+        "relation_count": len(relations),
+        "passed_count": sum(item["passed"] for item in relation_results),
+        "role_count": role_count,
+        "candidate_coverage": "full" if not errors and role_count == 32 else "unavailable",
+        "route_once": "proven" if not errors and role_count == 32 else "unavailable",
+        "results": relation_results,
+        "errors": errors,
+    }
+
+
 def evaluate_routes(
     cases_path: Path = CASES,
     *,
     _validate_capability_matrix: bool = True,
+    _validate_boundary_relations: bool = True,
     professional_registry: object | None = None,
 ) -> dict[str, Any]:
     """Evaluate current deterministic routes without writing tracked reports."""
@@ -1852,6 +2217,16 @@ def evaluate_routes(
             "max_layer3_per_case": 0,
             "compatibility_baseline": compatibility_baseline,
             "decision_eval": decision_eval,
+            "boundary_relations": {
+                "status": "unavailable",
+                "relation_count": 0,
+                "passed_count": 0,
+                "role_count": 0,
+                "candidate_coverage": "unavailable",
+                "route_once": "unavailable",
+                "results": [],
+                "errors": [],
+            },
             "results": [],
             "errors": errors,
         }
@@ -2070,6 +2445,7 @@ def evaluate_routes(
             else evaluate_routes(
                 CAPABILITY_CASES,
                 _validate_capability_matrix=False,
+                _validate_boundary_relations=False,
             )["results"]
         )
         errors.extend(
@@ -2085,6 +2461,26 @@ def evaluate_routes(
                 },
             )
         )
+
+    boundary_relations = {
+        "status": "not-applicable",
+        "relation_count": 0,
+        "passed_count": 0,
+        "role_count": 0,
+        "candidate_coverage": "not-applicable",
+        "route_once": "not-applicable",
+        "results": [],
+        "errors": [],
+    }
+    if (
+        _validate_boundary_relations
+        and cases_path.resolve() == CASES.resolve()
+    ):
+        boundary_relations = evaluate_boundary_relations(
+            load_yaml_file(BOUNDARY_RELATIONS),
+            results,
+        )
+        errors.extend(boundary_relations["errors"])
 
     coverage_states = {
         item["winner_trace"]["candidate_coverage"]
@@ -2142,6 +2538,7 @@ def evaluate_routes(
         ),
         "compatibility_baseline": compatibility_baseline,
         "decision_eval": decision_eval,
+        "boundary_relations": boundary_relations,
         "results": results,
         "errors": errors,
     }
@@ -2213,6 +2610,7 @@ def _render_markdown(report: dict[str, Any]) -> str:
         f"- Decision axes: {report['decision_eval']['axis_count']}",
         f"- Controlled Decision mutants: {report['decision_eval']['case_count']}",
         f"- Compatibility baseline: {report['compatibility_baseline']['routing_cases']}+{report['compatibility_baseline']['capability_cases']}",
+        f"- Targeted boundary relations: {report['boundary_relations']['passed_count']}/{report['boundary_relations']['relation_count']}",
         "",
         "| Case | Domain family | Path | Profile | Primary | Layer 3 | Review | Excluded | Pass |",
         "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",

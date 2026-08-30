@@ -41,8 +41,3 @@ repository_kind = "skill-authoring"
 runtime_source = "dist"
 install_src_directly = false
 personal_asset_mapping = false
-
-[tool.changeforge.profiles]
-recommended = "Professional skills with compiled foundation references."
-full = "Professional skills plus eligible domain extensions."
-dev = "Authoring profile with development visibility into foundation capabilities."

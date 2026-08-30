@@ -770,10 +770,13 @@ stable, independent Primary Route and a distinct task boundary that cannot be
 owned coherently by an existing Professional Skill.
 
 Foundation is a capability-modifier layer and Domain is `modifier-only`.
-Neither becomes a Runtime top-level Skill. Each task receives one Primary
-Professional Skill and normally zero to three specifically triggered Layer 3
-items, then only the necessary Targeted References. Task and Review consume the
-route fixed by Main and do not globally reroute.
+Neither becomes a Runtime top-level Skill. Layer 3 selection is an ordered
+unique list of zero to three items. More than three items or any duplicate fails
+closed; never truncate the selection. Higher risk changes which Layer 3 items
+are selected, not the maximum count. Each task receives one Primary
+Professional Skill, the selected Layer 3 items, then only the necessary Targeted
+References. Task and Review consume the route fixed by Main and do not globally
+reroute.
 Multi-role Professional Skills declare role-neutral inputs once and
 role-specific inputs through `required_inputs_by_role`; analysis cannot require
 a future diff, and review cannot be dispatched without an actual diff or named

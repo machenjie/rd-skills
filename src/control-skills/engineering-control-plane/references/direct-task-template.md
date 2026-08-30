@@ -52,9 +52,14 @@ L5 Evidence: when=effective L5 only; requires=independent pre-implementation rev
 Name the already known owner, test, and consumer boundaries. Direct bounded
 discovery requires a stable Primary Professional, Domain / Layer3 route,
 semantic scope, no unresolved user choice or material risk, and a bounded read
-boundary. Known exact file, symbol, or section locations use direct reads with
-no repeated discovery. Otherwise search candidate locations, then read the
-minimum complete evidence needed for the decision; widen only when current
+boundary. Known exact file, symbol, or section locations—and any exact owner
+claim—are selectors, not owner proof: read them first. When current source confirms its owning/change
+role, stop discovery. A same-owner/route/contract rename or move permits only
+bounded correction and never changes the Brief; an owner/module/public
+contract/security/migration/external-consumer contradiction stops before edit
+and returns through Main. Direct has no accepted Brief, so this requests
+initial Analysis, never Delta. Otherwise search candidate locations, then read
+the minimum complete evidence needed for the decision; widen only when current
 source remains insufficient. Search, Top-K, ranked results, repository maps,
 truncated results, prior summaries, and nearby files are selectors, not proof.
 Top-K is not a complete corpus. Completeness claims require declared coverage
@@ -79,6 +84,8 @@ before editing and return to Main for Analysis; user-owned choice discovered ->
 stop before editing and return to Main, which asks one minimum concrete
 question. A simpler discovery never lowers the current Level; higher risk
 requires Main to recompute it. Task and Review workers never reroute.
+Current source proves repository facts only; it cannot rewrite Desired
+Behavior, Acceptance, Non-goals, or target architecture.
 
 ## Non-goals
 

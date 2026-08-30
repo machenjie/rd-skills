@@ -104,7 +104,8 @@ HOST_LABELS = {
 }
 SCOPE_ORDER = ("project", "user", "admin")
 COMMAND_VALIDATION_SCOPE = (
-    "documented Python script/installer targets exist; command flags are not validated"
+    "documented Python script/installer targets exist; retired Runtime flags are "
+    "rejected on public and authoring surfaces"
 )
 GOVERNANCE_BUDGET_REPORT = "reports/rendered-context-budget.json"
 GOVERNANCE_BUDGET_BEGIN = (
@@ -214,6 +215,40 @@ FORBIDDEN_USER_TOKENS = (
     "PostToolUse",
     ".changeforge-packs",
 )
+RETIRED_RUNTIME_FLAGS = (
+    "--profile",
+    "--with-hooks",
+    "--without-hooks",
+    "--hook-profile",
+    "--professional-injection",
+    "--activation-level",
+)
+RUNTIME_SURFACE_FILES = (
+    "pyproject.toml",
+    "Makefile",
+    "SUPPORT.md",
+    ".github/ISSUE_TEMPLATE/bug_report.md",
+    ".github/ISSUE_TEMPLATE/feature_request.md",
+    ".github/ISSUE_TEMPLATE/skill_change.md",
+    "src/foundation/capabilities/README.md",
+    (
+        "src/foundation/capabilities/repository-context-map/references/"
+        "source-generated-boundary-map.md"
+    ),
+    (
+        "src/foundation/capabilities/skill-authoring-expert/references/"
+        "evidence-patterns.md"
+    ),
+    "src/foundation/capabilities/skill-authoring-expert/SKILL.md",
+    (
+        "src/foundation/capabilities/skill-efficacy-benchmark/references/"
+        "benchmarks-and-patterns.md"
+    ),
+    (
+        "src/foundation/capabilities/skill-efficacy-benchmark/references/"
+        "evidence-patterns.md"
+    ),
+)
 RUNTIME_PROFILE_CHOICE_HISTORY_DOCS = frozenset(
     {"CHANGELOG.md", "GOVERNANCE.md", "docs/MIGRATING_TO_HOOKLESS.md"}
 )
@@ -229,6 +264,37 @@ RUNTIME_PROFILE_CHOICE_PATTERNS = (
         r"(?:profile|runtime)\b",
         re.IGNORECASE,
     ),
+    re.compile(r"\bbuild\s+profiles?\b", re.IGNORECASE),
+    re.compile(
+        r"\b(?:profile\s+delivery|generated\s+profiles|public\s+profile|"
+        r"build-profile(?:\s+(?:output|map))?)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\bselected\s+profile\b", re.IGNORECASE),
+    re.compile(
+        r"\bprofile(?:\s+impact)?\s*:[^\n]*\b(?:full|dev)\b",
+        re.IGNORECASE,
+    ),
+)
+LAYER3_CARDINALITY_GUIDANCE_FILES = (
+    "docs/SKILL_CONTENT_GOVERNANCE.md",
+    "docs/skill_authoring_standard/PROFESSIONAL_SKILL_AUTHORING_STANDARD.md",
+)
+LAYER3_CARDINALITY_GUIDANCE_FACTS = (
+    "Layer 3 selection is an ordered unique list of zero to three items.",
+    "More than three items or any duplicate fails closed; never truncate the selection.",
+    "Higher risk changes which Layer 3 items are selected, not the maximum count.",
+)
+SOFTENED_LAYER3_CARDINALITY_PATTERNS = (
+    re.compile(
+        r"\bnormally\b[^\n]{0,100}\b(?:zero\s+to\s+three|0\s*(?:\.\.|to)\s*3)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:may|can)\s+(?:use|select|load)\s+more\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\brisk[- ]rationale\b", re.IGNORECASE),
 )
 DELETED_PATH_MARKERS = (
     "src/hook-runtime",
@@ -330,6 +396,22 @@ FULL_REGRESSION_COMMANDS = (
     "python3 scripts/quickstart.py --agent claude --scope project --target /tmp/changeforge-quickstart-claude --dry-run",
     "python3 scripts/quickstart.py --agent copilot --scope project --target /tmp/changeforge-quickstart-copilot --dry-run",
     "python3 scripts/quickstart.py --agent openai-api --dry-run",
+)
+TEST_TIMEOUT_GUIDANCE_FACTS = (
+    (
+        "`--timeout` is the base duration in seconds for every test module "
+        "executed by `_execute_modules`, including affected `run` and both Full "
+        "execution lanes."
+    ),
+    (
+        "An absent `TEST_TIMEOUT_CLASS` declaration or `standard` applies `1x` "
+        "the base timeout; `source-validation` applies `2x`."
+    ),
+    (
+        "`TEST_TIMEOUT_CLASS` must be declared at most once as a top-level static "
+        "string literal from the closed set `standard` and `source-validation`."
+    ),
+    "Duplicate, nested, dynamic, or unknown declarations fail selection.",
 )
 RETIRED_WORKFLOW_PATHS = (
     ".github/workflows/ci.yml",
@@ -515,12 +597,19 @@ def _runtime_surface_errors(root: Path) -> list[str]:
     """Reject public Runtime choice surfaces while permitting legacy migration prose."""
 
     errors: list[str] = []
-    for path in _markdown_files(root):
+    paths = {
+        *_markdown_files(root),
+        *(root / relative for relative in RUNTIME_SURFACE_FILES),
+    }
+    for path in sorted(path for path in paths if path.is_file()):
         relative = path.relative_to(root).as_posix()
         text = path.read_text(encoding="utf-8")
-        if "--profile" in text:
+        for flag in RETIRED_RUNTIME_FLAGS:
+            if flag in text:
+                errors.append(f"{relative}: removed Runtime flag remains: {flag}")
+        if relative == "pyproject.toml" and "[tool.changeforge.profiles]" in text:
             errors.append(
-                f"{relative}: user-facing Runtime command must not select --profile"
+                "pyproject.toml: retired Runtime Profile metadata table remains"
             )
         if relative in RUNTIME_PROFILE_CHOICE_HISTORY_DOCS:
             continue
@@ -1458,6 +1547,30 @@ def _normalized_document_text(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip().casefold()
 
 
+def _layer3_cardinality_guidance_errors(root: Path) -> list[str]:
+    errors: list[str] = []
+    for relative in LAYER3_CARDINALITY_GUIDANCE_FILES:
+        path = root / relative
+        if not path.is_file():
+            continue
+        raw = path.read_text(encoding="utf-8")
+        normalized = _normalized_document_text(raw)
+        if any(
+            _normalized_document_text(fact) not in normalized
+            for fact in LAYER3_CARDINALITY_GUIDANCE_FACTS
+        ):
+            errors.append(
+                f"{relative}: Layer 3 cardinality guidance must state the exact "
+                "ordered-unique zero-to-three, fail-closed, never-truncate contract"
+            )
+        if any(pattern.search(raw) for pattern in SOFTENED_LAYER3_CARDINALITY_PATTERNS):
+            errors.append(
+                f"{relative}: Layer 3 cardinality guidance must not permit "
+                "risk-based exceptions to the hard maximum"
+            )
+    return errors
+
+
 def _document_path(path: Path) -> str:
     try:
         relative = path.relative_to(Path.home())
@@ -1630,6 +1743,7 @@ def _required_content_errors(root: Path) -> list[str]:
         "docs/VALIDATION.md": (
             "163-item projection once in a cleaned temporary directory",
             "Route Once behavior",
+            *TEST_TIMEOUT_GUIDANCE_FACTS,
         ),
         "docs/SKILL_CONTENT_GOVERNANCE.md": (
             "strict order",
@@ -1663,6 +1777,7 @@ def _required_content_errors(root: Path) -> list[str]:
                 errors.append(f"SUPPORT.md: missing supported host {host}")
 
     errors.extend(_installation_contract_errors(root))
+    errors.extend(_layer3_cardinality_guidance_errors(root))
     return errors
 
 

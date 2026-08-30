@@ -4,7 +4,7 @@ Status: **pass**
 
 Evidence scope: **deterministic-fixtures**
 
-Release fixtures: **13**; scheduling fixtures: **1**; utility fixtures: **2**; evidence-localization controls: **19**; completion-state controls: **30**.
+Release fixtures: **13**; scheduling fixtures: **1**; utility fixtures: **2**; evidence-localization controls: **38**; completion-state controls: **30**.
 
 Deterministic step counts are structural proxies.
 
@@ -17,7 +17,7 @@ Deterministic step counts are structural proxies.
 | `source-backed-payment-retry-proof` | 2 | None | 3 | 0 | 5 | 1 | 3 | 2 | pass |
 | `review-only` | 2 | None | 3 | 0 | 6 | 1 | 1 | 0 | pass |
 | `module-boundary-benchmark-review` | 2 | None | 3 | 0 | 7 | 1 | 2 | 1 | pass |
-| `repair-and-rereview` | 3 | 3 | 10 | 4 | 4 | 4 | 4 | 0 | pass |
+| `repair-and-rereview` | 3 | 3 | 14 | 6 | 5 | 6 | 6 | 0 | pass |
 | `api-contract-change` | 3 | 7 | 8 | 3 | 4 | 3 | 8 | 0 | pass |
 | `data-migration` | 3 | 7 | 8 | 3 | 4 | 3 | 9 | 1 | pass |
 | `security-ssrf-boundary` | 3 | 7 | 8 | 3 | 4 | 3 | 7 | 1 | pass |

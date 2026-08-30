@@ -242,7 +242,7 @@
           "forbidden_layers": ["release"]
         },
         "eligible_producer_ids": ["validate-skills", "validate-capabilities", "validate-domain-extensions", "validate-registry", "validate-control-skills", "validate-control-plane-prompt", "validate-task-contracts", "validate-skill-routing", "validate-hookless-residue", "validate-src-invariants", "validate-skill-body-links", "validate-skill-content-size", "audit-skill-content", "validate-reference-content", "validate-root-content", "build-recommended", "validate-agent-profiles", "validate-docs-consistency", "validate-built-links", "validate-installation", "eval-routing", "eval-skill-professionalism", "eval-professional-benchmarks", "validate-professional-routing", "eval-agent-lightweight", "eval-rendered-context", "eval-context-control", "eval-agent-behavior", "eval-professional-samples", "eval-pressure-behavior", "validate-professionalism-regression"],
-        "runtime_projection": {
+        "runtime_build": {
           "runtime_name": "recommended",
           "producer_id": "build-recommended",
           "package_layers": ["professional", "foundation", "domain"],
@@ -408,7 +408,7 @@
     "downstream_research_roles": {"task-agent": "forbidden", "review-agent": "forbidden"}
   },
   "evidence_localization_contract": {
-    "schema_version": 1,
+    "schema_version": 2,
     "applies_to": ["analysis-agent", "task-agent", "review-agent"],
     "purpose": "locate-current-source-evidence",
     "host_capabilities": {
@@ -417,12 +417,13 @@
       "structural_fallback": "read-search"
     },
     "location_sequence": {
-      "known_exact": "direct-exact-read-no-search-or-duplicate-discovery",
+      "known_exact": "direct-read-first-then-confirm-owner-or-bounded-correct",
       "unknown": "search-candidates-then-read",
       "widen": "only-when-current-evidence-is-insufficient",
       "proof": "minimum-complete-current-source-evidence"
     },
     "selector_only": [
+      "exact-locator",
       "top-k",
       "ranked-search",
       "semantic-search",
@@ -437,10 +438,38 @@
       "no-other-consumer",
       "no-other-same-pattern-occurrence",
       "no-other-affected-path",
-      "unique-owner",
       "impact-scope-closed"
     ],
     "incomplete_coverage": "record-proof-limit",
+    "material_contradiction_outcomes": {
+      "without_accepted_brief": "stop-before-edit-return-main-initial-analysis",
+      "accepted_brief_protected_decision_invalidated": "stop-before-edit-return-main-bounded-delta"
+    },
+    "exact_locator_trust": {
+      "selector_sources": ["user", "prior-ai", "brief", "review", "log", "search-result"],
+      "owner_proof": "forbidden-without-current-source-owning-role",
+      "confirmed_owner": "stop-discovery-and-continue",
+      "same_owner_route_contract_mismatch": "bounded-correction-no-analysis",
+      "material_contradiction": "use-material-contradiction-outcomes",
+      "worker_route_or_brief_change": false
+    },
+    "current_source_authority": {
+      "proves": "current-repository-facts-only",
+      "cannot_rewrite": ["desired-behavior", "acceptance", "non-goals", "target-architecture"]
+    },
+    "ownership_model": {
+      "non_owner_roles": ["caller", "delegator", "generated-artifact", "test", "consumer"],
+      "multiple_enforcement_points": "allowed-when-current-source-proves-each-necessary-point"
+    },
+    "generated_artifact": {
+      "locator_role": "selector-only",
+      "edit_rule": "trace-authoring-source-or-generator-before-edit"
+    },
+    "consumer_proof_limit": {
+      "zero_static_references": "does-not-prove-zero-consumers",
+      "non_static_boundaries": ["dynamic", "registry", "reflection", "dependency-injection", "plugin", "generated", "ffi"]
+    },
+    "evidence_method_ordering": "artifact-effective-no-fixed-structural-priority",
     "minimum_complete_evidence": [
       "owner",
       "consumer",
@@ -464,7 +493,7 @@
         "migration",
         "other-material-boundary"
       ],
-      "material_outcome": "stop-before-edit-return-main-for-analysis",
+      "material_outcome": "use-material-contradiction-outcomes",
       "worker_route_or_skill_selection": false
     },
     "authority_exclusions": [
@@ -495,13 +524,13 @@
     ],
     "profile_projection": {
       "analysis-agent": [
-        {"rule_id": "analysis-localization", "required_terms": ["current source", "direct read/search", "minimum complete", "counts are selectors only", "Proof Limit", "never correctness/coverage conclusions"]}
+        {"rule_id": "analysis-localization", "required_terms": ["exact locator", "current source", "direct read/search", "minimum complete", "counts are selectors only", "Proof Limit", "never correctness/coverage conclusions", "initial Analysis without accepted Brief", "bounded Delta only after accepted Brief invalidation"]}
       ],
       "task-agent": [
-        {"rule_id": "task-localization", "required_terms": ["current source", "direct read/search", "minimum complete", "bounded discovery", "selectors only", "Proof Limit", "never inherit correctness/coverage"]}
+        {"rule_id": "task-localization", "required_terms": ["exact locator", "current source", "direct read/search", "minimum complete", "bounded discovery", "selectors only", "Proof Limit", "never inherit correctness/coverage", "initial Analysis without accepted Brief", "bounded Delta only after accepted Brief invalidation"]}
       ],
       "review-agent": [
-        {"rule_id": "review-localization", "required_terms": ["independently", "current source", "direct read/search", "minimum complete", "selectors only", "never inherit correctness/coverage", "Proof Limit"]}
+        {"rule_id": "review-localization", "required_terms": ["exact locator", "independently", "current source", "direct read/search", "minimum complete", "selectors only", "never inherit correctness/coverage", "Proof Limit", "initial Analysis without accepted Brief", "bounded Delta only after accepted Brief invalidation"]}
       ]
     },
     "cost_observation_fields": [
@@ -528,19 +557,19 @@
       "reopening": {
         "claim-local": "claim-local-bounded-reproof-no-analysis",
         "new-requirement": "bounded-discovery-for-new-evidence-requirement",
-        "protected-or-material": "stop-edit-return-main-bounded-delta"
+        "protected-or-material": "use-material-contradiction-outcomes"
       },
       "contradiction_scope": "reopen-intersecting-claim-only",
       "material_proof_limit": "stop-before-edit-return-main",
       "profile_projection": {
         "analysis-agent": [
-          {"rule_id": "analysis-evidence-closure", "required_terms": ["Evidence Closure:", "proved/not-applicable/Proof Limit", "no material risk", "new/invalidated/contradicted", "reopens affected only", "protected/material returns Main/Delta", "counts"]}
+          {"rule_id": "analysis-evidence-closure", "required_terms": ["Evidence Closure:", "proved/not-applicable/Proof Limit", "no material risk", "new/invalidated/contradicted", "reopens affected only", "Protected/material returns Main", "initial Analysis without accepted Brief", "bounded Delta only after accepted Brief invalidation", "counts"]}
         ],
         "task-agent": [
-          {"rule_id": "task-evidence-closure", "required_terms": ["Evidence Closure:", "proved/not-applicable/Proof Limit", "no material risk", "new/invalidated/contradicted", "reopens affected only", "protected/material returns Main/Delta", "counts"]}
+          {"rule_id": "task-evidence-closure", "required_terms": ["Evidence Closure:", "proved/not-applicable/Proof Limit", "no material risk", "new/invalidated/contradicted", "reopens affected only", "Protected/material returns Main", "initial Analysis without accepted Brief", "bounded Delta only after accepted Brief invalidation", "counts"]}
         ],
         "review-agent": [
-          {"rule_id": "review-evidence-closure", "required_terms": ["Evidence Closure:", "proved/not-applicable/Proof Limit", "no material risk", "new/invalidated/contradicted", "reopens affected only", "protected/material returns Main/Delta", "counts"]}
+          {"rule_id": "review-evidence-closure", "required_terms": ["Evidence Closure:", "proved/not-applicable/Proof Limit", "no material risk", "new/invalidated/contradicted", "reopens affected only", "Protected/material returns Main", "initial Analysis without accepted Brief", "bounded Delta only after accepted Brief invalidation", "counts"]}
         ]
       }
     }

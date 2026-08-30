@@ -29,6 +29,15 @@ JIT-readable unless the reviewer explicitly requires one. The remaining
 sections are the closing review artifact; they record the review Owner, result,
 findings, evidence, reviewed and unreviewed scope, and residual risk.
 
+A supplied path, symbol, or owner is an exact selector, not owner proof.
+Review reads it first and stops discovery when current source confirms the
+role. A same-owner/route/contract locator correction may preserve a valid
+finding but cannot change the Brief or route; a protected owner, placement, or
+contract contradiction returns through Main. Without an accepted Brief this
+requests initial Analysis; only invalidation of an accepted Brief's protected
+decision requests bounded Delta. Review never reroutes, changes the Brief, or
+repairs from a locator alone.
+
 For implementation or repair review, classify and output Core `Finding Relation`
 before severity or blocker. Use only `current-task`, `scope-blocker`, or
 `adjacent`; relation grants neither write scope nor Repair authority.

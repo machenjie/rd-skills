@@ -717,15 +717,15 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         profiles = {profile["name"]: profile for profile in source["profiles"]}
         selector_limits = {
             "analysis-agent": (
-                "Selector limit: counts are selectors only, never "
+                "Exact locator/counts are selectors only, never "
                 "correctness/coverage conclusions."
             ),
             "task-agent": (
-                "Selector limit: counts are selectors only; never inherit "
+                "Exact locator/counts are selectors only; never inherit "
                 "correctness/coverage."
             ),
             "review-agent": (
-                "Selector limit: counts/Top-K/files/summaries/digests/paths/output/"
+                "Exact locator/counts/Top-K/files/summaries/digests/paths/output/"
                 "opaque refs are selectors only; never inherit correctness/coverage."
             ),
         }
@@ -741,7 +741,10 @@ class AgentProfileReadabilityTests(unittest.TestCase):
                 closure_rule = rules[closure_line - 1]
                 for sentence in (
                     ". New/invalidated/contradicted reopens affected only.",
-                    "Protected/material returns Main/Delta.",
+                    (
+                        "Protected/material returns Main: initial Analysis without "
+                        "accepted Brief; bounded Delta only after accepted Brief invalidation."
+                    ),
                     selector_limit,
                 ):
                     self.assertIn(sentence, closure_rule)

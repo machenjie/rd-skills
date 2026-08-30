@@ -23,12 +23,12 @@ Discover the minimum pre-plan repository context that identifies source of truth
 
 ## High-Value Rules
 
-- Before planning, inspect only enough source, registry, generated-boundary, and convention evidence to identify the source of truth, candidate owner, and change surface.
+- Before planning, use bounded repository searches and direct reads to inspect only enough source, registry, generated-boundary, and convention evidence to identify the source of truth, candidate owner, and change surface.
+- Use a supplied exact path, symbol, or owner to prioritize the first direct read rather than establish ownership.
+- End discovery when current source confirms the relevant owning or change role.
 - Once a candidate owner and change surface are known, hand consumer, test, contract, configuration, documentation, and generated-impact proof to `repository-impact-inspection`.
-- Mark unknown ownership or uninspected boundaries as unknown with a next investigation owner; unknown is not safe.
+- Mark unknown ownership or uninspected boundaries as `FACT`, `INFERENCE`, `ASSUMPTION`, or `OPEN QUESTION` with a next investigation owner; unknown is not safe.
 - Separate source authoring content from generated built content and installed artifacts.
-- Use bounded repository searches and direct reads as evidence.
-- Classify claims as `FACT`, `INFERENCE`, `ASSUMPTION`, or `OPEN QUESTION`.
 - Do not treat the context map as completion evidence.
 
 ## Anti-Patterns
@@ -40,7 +40,7 @@ Discover the minimum pre-plan repository context that identifies source of truth
 
 ## Stop Conditions
 
-- Escalate to `architecture-impact-reviewer` when the map reveals new or changed module boundaries, public exports, generated artifacts, or dependency direction.
+- Return through Main to `architecture-impact-reviewer` only when the authoring source, generator, generation authority, or module dependency remains unknown after a bounded generated-artifact trace, or current source reveals a material contradiction.
 - Escalate to `quality-test-gate` when changed-code-to-test mapping is unclear or affected-test selection may miss dependents.
 - Escalate to `security-privacy-gate` when the mapped area touches auth, secrets, permissions, user data, external input, or tool execution.
 - Escalate deployment, install, build, migration, or packaging surfaces to `delivery-release-gate`.

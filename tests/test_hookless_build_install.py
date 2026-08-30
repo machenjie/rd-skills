@@ -12,8 +12,10 @@ import unittest
 import zipfile
 from collections import Counter
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
+SOURCE_ROOT = ROOT
 SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
@@ -34,6 +36,119 @@ def load_script(name: str, relative: str):
 
 
 BUILD = load_script("hookless_build_install_build", "scripts/build.py")
+
+_RUNTIME_TEMPORARY: tempfile.TemporaryDirectory[str] | None = None
+_BUILD_LAYOUT_PATCHER: mock._patch | None = None
+
+
+def _copy_runtime_inputs(destination: Path) -> None:
+    ignored = shutil.ignore_patterns("__pycache__", "*.pyc")
+    # Installer freshness reloads the Core graph and verifies its declared test
+    # and evaluation paths, so those tracked authorities belong to this fixture
+    # even though the canonical build itself only consumes src/ and scripts/.
+    for name in ("src", "scripts", "installers", "tests", "evals"):
+        shutil.copytree(SOURCE_ROOT / name, destination / name, ignore=ignored)
+    shutil.copy2(SOURCE_ROOT / "pyproject.toml", destination / "pyproject.toml")
+
+
+def _build_layout(root: Path) -> dict[str, object]:
+    source = root / "src"
+    dist = root / "dist"
+    return {
+        "ROOT": root,
+        "SRC_DIR": source,
+        "REGISTRY_DIR": source / "registry",
+        "DIST_DIR": dist,
+        "UNIVERSAL_SKILLS_ROOT": dist / "universal/skills",
+        "OPENAI_ZIP_DIR": dist / "openai-api/zips",
+        "PROFILE_SOURCE": source / "agent-profiles/role-agents.json",
+        "HOST_ENFORCEMENT_SOURCE": (
+            source / "agent-profiles/host-enforcement.json"
+        ),
+        "CONTROL_PROMPT_SOURCE": source / "control-prompts/main-control-agent.md",
+        "CORE_CONTRACTS_PATH": source / "control-model/core-contracts.json",
+        "LAYER_SOURCE_ROOTS": {
+            "control": source / "control-skills",
+            "professional": source / "professional-skills",
+            "foundation": source / "foundation/capabilities",
+            "domain": source / "domain-extensions",
+        },
+        "AGENT_SKILL_ROOTS": (
+            dist / "codex/project/.agents/skills",
+            dist / "codex/user/.agents/skills",
+            dist / "codex/admin/skills",
+            dist / "claude/project/.claude/skills",
+            dist / "claude/user/.claude/skills",
+            dist / "copilot/project/.github/skills",
+            dist / "copilot/user/.copilot/skills",
+            dist / "cline/project/.cline/skills",
+            dist / "cline/user/.cline/skills",
+        ),
+        "AGENT_PROFILE_OUTPUTS": (
+            ("codex", dist / "codex/project/.codex/agents"),
+            ("codex", dist / "codex/user/.codex/agents"),
+            ("codex", dist / "codex/admin/agents"),
+            ("claude", dist / "claude/project/.claude/agents"),
+            ("claude", dist / "claude/user/.claude/agents"),
+            ("copilot", dist / "copilot/project/.github/agents"),
+            ("copilot", dist / "copilot/user/.copilot/agents"),
+        ),
+    }
+
+
+def _cleanup_runtime_fixture() -> None:
+    global ROOT, SCRIPTS, _BUILD_LAYOUT_PATCHER, _RUNTIME_TEMPORARY
+
+    ROOT = SOURCE_ROOT
+    SCRIPTS = SOURCE_ROOT / "scripts"
+    if _BUILD_LAYOUT_PATCHER is not None:
+        _BUILD_LAYOUT_PATCHER.stop()
+        _BUILD_LAYOUT_PATCHER = None
+    if _RUNTIME_TEMPORARY is not None:
+        _RUNTIME_TEMPORARY.cleanup()
+        _RUNTIME_TEMPORARY = None
+
+
+def setUpModule() -> None:
+    global ROOT, SCRIPTS, _BUILD_LAYOUT_PATCHER, _RUNTIME_TEMPORARY
+
+    runtime = tempfile.TemporaryDirectory(prefix="changeforge-hookless-build-install-")
+    root = (Path(runtime.name) / "repo").resolve()
+    root.mkdir()
+    try:
+        root.relative_to(SOURCE_ROOT.resolve())
+    except ValueError:
+        pass
+    else:
+        runtime.cleanup()
+        raise AssertionError("temporary Runtime fixture must be outside the source tree")
+
+    try:
+        _copy_runtime_inputs(root)
+        patcher = mock.patch.multiple(BUILD, **_build_layout(root))
+        patcher.start()
+        ROOT = root
+        SCRIPTS = root / "scripts"
+        result = BUILD.build_profile(BUILD.RUNTIME_PROFILE)
+        if result != {
+            "profile": "recommended",
+            "top_level_count": 27,
+            "compiled_layer3_reference_count": 154,
+            "agent_profile_count": 4,
+            "zip_count": 27,
+        }:
+            raise AssertionError(f"unexpected canonical Runtime build result: {result}")
+    except BaseException:
+        ROOT = SOURCE_ROOT
+        SCRIPTS = SOURCE_ROOT / "scripts"
+        if "patcher" in locals():
+            patcher.stop()
+        runtime.cleanup()
+        raise
+
+    _RUNTIME_TEMPORARY = runtime
+    _BUILD_LAYOUT_PATCHER = patcher
+    unittest.addModuleCleanup(_cleanup_runtime_fixture)
 
 
 def assert_build_profile_artifact_semantics(

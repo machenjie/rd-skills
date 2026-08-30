@@ -11,7 +11,8 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when authoring S
 
 - add, rename, split, slim, audit, or remove a Control, Professional, Foundation,
   or Domain Skill
-- change routing, references, registries, profile delivery, or Skill validation
+- change routing, references, registries, Agent Profile artifacts, Runtime
+  delivery, or Skill validation
 
 **Do not use when**
 
@@ -20,12 +21,17 @@ description: "`analysis-agent`/`task-agent`/`review-agent`: use when authoring S
 
 ## Skill Role
 
-Keep rd-skills source Skills, registries, generated profiles, Marketplace output, routing, and validators aligned without adding runtime control machinery.
+Keep rd-skills source Skills and registries aligned with Agent Profile
+projections, the unique Runtime build identity, Marketplace output, routing,
+and validators. When an authoring contract changes, evaluate the affected
+prompts and fixtures for synchronized updates. Do not add runtime control
+machinery.
 
 ## Inputs
 
 - requested behavior and affected Skill layer
-- adjacent Skills, four registry entries, routing fixtures, and build profiles
+- adjacent Skills, four registry entries, routing fixtures, four Agent Profile
+  artifacts, and the unique Runtime build identity
 - current validation and generated-output boundaries
 
 ## High-Value Rules
@@ -58,7 +64,8 @@ Keep rd-skills source Skills, registries, generated profiles, Marketplace output
 ## Stop Conditions
 
 - Stop new structure when an existing Skill or reference owns the decision.
-- Escalate public profile, installation, security, or Marketplace compatibility changes.
+- Escalate public Agent Profile, Runtime delivery, installation, security, or
+  Marketplace compatibility changes.
 - Reject any user-specific corpus behavior, source installation, hidden delivery,
   interception, persistent task state, or unsupported efficacy claim.
 

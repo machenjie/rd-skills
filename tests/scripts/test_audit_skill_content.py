@@ -85,6 +85,678 @@ class AuditSkillContentDeterminismTests(unittest.TestCase):
             side_effect=changed,
         )
 
+    def test_foundation_derivation_snapshot_check_mode_is_current(self) -> None:
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            status = self.module.main(
+                [
+                    "foundation-derivation-snapshot",
+                    "--check",
+                    "--date",
+                    "2026-08-30",
+                ]
+            )
+
+        self.assertEqual(0, status, stderr.getvalue())
+        self.assertIn("owned projections are current", stdout.getvalue())
+
+    def _snapshot_projection(
+        self,
+        assignment: str,
+        snapshot: dict[str, object],
+        *,
+        indent: str,
+    ) -> str:
+        lines = [
+            f"{indent}# BEGIN GENERATED FOUNDATION DERIVATION SNAPSHOT",
+            f"{indent}{assignment} = {{",
+        ]
+        for key, value in snapshot.items():
+            rendered = json.dumps(value) if isinstance(value, str) else repr(value)
+            lines.append(f'{indent}    "{key}": {rendered},')
+        lines.extend(
+            [
+                f"{indent}}}",
+                f"{indent}# END GENERATED FOUNDATION DERIVATION SNAPSHOT",
+                "",
+            ]
+        )
+        return "\n".join(lines)
+
+    def _snapshot_owner_root(
+        self,
+        root: Path,
+        *,
+        audit_snapshot: dict[str, object] | None = None,
+        test_snapshot: dict[str, object] | None = None,
+    ) -> tuple[Path, Path]:
+        audit_snapshot = dict(
+            audit_snapshot or self.module.FOUNDATION_DERIVATION_SNAPSHOT
+        )
+        test_snapshot = dict(test_snapshot or audit_snapshot)
+        audit_path = root / "scripts/audit-skill-content.py"
+        test_path = root / "tests/scripts/test_validate_root_content.py"
+        audit_path.parent.mkdir(parents=True)
+        test_path.parent.mkdir(parents=True)
+        audit_path.write_text(
+            self._snapshot_projection(
+                "FOUNDATION_DERIVATION_SNAPSHOT",
+                audit_snapshot,
+                indent="",
+            ),
+            encoding="utf-8",
+        )
+        test_path.write_text(
+            self._snapshot_projection("expected", test_snapshot, indent="        "),
+            encoding="utf-8",
+        )
+        return audit_path, test_path
+
+    def test_foundation_derivation_snapshot_write_is_byte_stable(self) -> None:
+        current = dict(self.module.FOUNDATION_DERIVATION_SNAPSHOT)
+        expected = dict(current)
+        expected["date"] = "2026-08-30"
+        expected["sum_tokens"] = int(expected["sum_tokens"]) + 1
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            audit_path, test_path = self._snapshot_owner_root(root)
+            with mock.patch.object(
+                self.module,
+                "_current_foundation_derivation_snapshot",
+                return_value=expected,
+            ):
+                drift, errors = self.module._synchronize_foundation_derivation_snapshot(
+                    root=root,
+                    snapshot_date="2026-08-30",
+                    write=True,
+                )
+                self.assertEqual([], errors)
+                self.assertEqual(
+                    {
+                        "scripts/audit-skill-content.py",
+                        "tests/scripts/test_validate_root_content.py",
+                    },
+                    set(drift),
+                )
+                first = (audit_path.read_bytes(), test_path.read_bytes())
+
+                second_drift, second_errors = (
+                    self.module._synchronize_foundation_derivation_snapshot(
+                        root=root,
+                        snapshot_date="2026-08-30",
+                        write=True,
+                    )
+                )
+
+            self.assertEqual([], second_errors)
+            self.assertEqual([], second_drift)
+            self.assertEqual(
+                first,
+                (audit_path.read_bytes(), test_path.read_bytes()),
+            )
+
+    def test_foundation_derivation_snapshot_second_replace_rolls_back_atomically(
+        self,
+    ) -> None:
+        expected = dict(self.module.FOUNDATION_DERIVATION_SNAPSHOT)
+        expected["sum_tokens"] = int(expected["sum_tokens"]) + 1
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            audit_path, test_path = self._snapshot_owner_root(root)
+            before = (audit_path.read_bytes(), test_path.read_bytes())
+            real_replace = self.module.os.replace
+            replace_count = 0
+
+            def fail_second_replace(source: object, target: object) -> None:
+                nonlocal replace_count
+                replace_count += 1
+                if replace_count == 2:
+                    raise OSError("injected second replacement failure")
+                real_replace(source, target)
+
+            with mock.patch.object(
+                self.module,
+                "_current_foundation_derivation_snapshot",
+                return_value=expected,
+            ), mock.patch.object(
+                self.module.os,
+                "replace",
+                side_effect=fail_second_replace,
+            ):
+                drift, errors = self.module._synchronize_foundation_derivation_snapshot(
+                    root=root,
+                    snapshot_date=str(expected["date"]),
+                    write=True,
+                )
+
+            self.assertEqual([], drift)
+            self.assertTrue(
+                any("injected second replacement failure" in error for error in errors),
+                errors,
+            )
+            self.assertEqual(before, (audit_path.read_bytes(), test_path.read_bytes()))
+            self.assertEqual(
+                [],
+                list(root.rglob("*.foundation-snapshot.*.tmp")),
+            )
+
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with mock.patch.object(self.module, "ROOT", root), mock.patch.object(
+                self.module,
+                "_current_foundation_derivation_snapshot",
+                return_value=expected,
+            ), contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                write_status = self.module.main(
+                    [
+                        "foundation-derivation-snapshot",
+                        "--write",
+                        "--date",
+                        str(expected["date"]),
+                    ]
+                )
+                written = (audit_path.read_bytes(), test_path.read_bytes())
+                check_status = self.module.main(
+                    [
+                        "foundation-derivation-snapshot",
+                        "--check",
+                        "--date",
+                        str(expected["date"]),
+                    ]
+                )
+
+            self.assertEqual(0, write_status, stderr.getvalue())
+            self.assertEqual(0, check_status, stderr.getvalue())
+            self.assertIn("changed=2", stdout.getvalue())
+            self.assertEqual(written, (audit_path.read_bytes(), test_path.read_bytes()))
+
+    def test_foundation_derivation_snapshot_reports_rollback_failure_with_original(
+        self,
+    ) -> None:
+        expected = dict(self.module.FOUNDATION_DERIVATION_SNAPSHOT)
+        expected["sum_tokens"] = int(expected["sum_tokens"]) + 1
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._snapshot_owner_root(root)
+            real_replace = self.module.os.replace
+            replace_count = 0
+
+            def fail_commit_and_rollback(source: object, target: object) -> None:
+                nonlocal replace_count
+                replace_count += 1
+                if replace_count == 2:
+                    raise OSError("injected commit failure")
+                if replace_count == 3:
+                    raise OSError("injected rollback failure")
+                real_replace(source, target)
+
+            with mock.patch.object(
+                self.module,
+                "_current_foundation_derivation_snapshot",
+                return_value=expected,
+            ), mock.patch.object(
+                self.module.os,
+                "replace",
+                side_effect=fail_commit_and_rollback,
+            ):
+                drift, errors = self.module._synchronize_foundation_derivation_snapshot(
+                    root=root,
+                    snapshot_date=str(expected["date"]),
+                    write=True,
+                )
+
+            self.assertEqual([], drift)
+            self.assertTrue(
+                any(
+                    "injected commit failure" in error
+                    and "rollback failed" in error
+                    and "injected rollback failure" in error
+                    for error in errors
+                ),
+                errors,
+            )
+            self.assertEqual(
+                [],
+                list(root.rglob("*.foundation-snapshot.*.tmp")),
+            )
+
+    def test_foundation_derivation_snapshot_final_verification_failure_rolls_back(
+        self,
+    ) -> None:
+        expected = dict(self.module.FOUNDATION_DERIVATION_SNAPSHOT)
+        expected["sum_tokens"] = int(expected["sum_tokens"]) + 1
+        for fault in ("mismatch", "read-error"):
+            with self.subTest(fault=fault), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                audit_path, test_path = self._snapshot_owner_root(root)
+                before = (audit_path.read_bytes(), test_path.read_bytes())
+                original_sources = {item.decode("utf-8") for item in before}
+                real_read_text = self.module.Path.read_text
+                injected = False
+
+                def fail_final_verification(path: Path, *args, **kwargs) -> str:
+                    nonlocal injected
+                    source = real_read_text(path, *args, **kwargs)
+                    if source not in original_sources and not injected:
+                        injected = True
+                        if fault == "read-error":
+                            raise OSError("injected final verification read failure")
+                        return source + "# injected final verification mismatch\n"
+                    return source
+
+                with mock.patch.object(
+                    self.module,
+                    "_current_foundation_derivation_snapshot",
+                    return_value=expected,
+                ), mock.patch.object(
+                    self.module.Path,
+                    "read_text",
+                    new=fail_final_verification,
+                ):
+                    drift, errors = (
+                        self.module._synchronize_foundation_derivation_snapshot(
+                            root=root,
+                            snapshot_date=str(expected["date"]),
+                            write=True,
+                        )
+                    )
+
+                self.assertTrue(injected, fault)
+                self.assertEqual([], drift)
+                expected_cause = (
+                    "injected final verification read failure"
+                    if fault == "read-error"
+                    else "Foundation snapshot final verification failed"
+                )
+                self.assertTrue(
+                    any(expected_cause in error for error in errors),
+                    errors,
+                )
+                self.assertEqual(
+                    before,
+                    (audit_path.read_bytes(), test_path.read_bytes()),
+                )
+                self.assertEqual(
+                    [],
+                    list(root.rglob("*.foundation-snapshot.*.tmp")),
+                )
+
+    def test_foundation_derivation_snapshot_final_verification_reports_rollback_failure(
+        self,
+    ) -> None:
+        expected = dict(self.module.FOUNDATION_DERIVATION_SNAPSHOT)
+        expected["sum_tokens"] = int(expected["sum_tokens"]) + 1
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            audit_path, test_path = self._snapshot_owner_root(root)
+            original_sources = {
+                audit_path.read_text(encoding="utf-8"),
+                test_path.read_text(encoding="utf-8"),
+            }
+            real_read_text = self.module.Path.read_text
+            real_replace = self.module.os.replace
+            injected_verification = False
+            replace_count = 0
+
+            def mismatch_final_verification(path: Path, *args, **kwargs) -> str:
+                nonlocal injected_verification
+                source = real_read_text(path, *args, **kwargs)
+                if source not in original_sources and not injected_verification:
+                    injected_verification = True
+                    return source + "# injected final verification mismatch\n"
+                return source
+
+            def fail_first_rollback(source: object, target: object) -> None:
+                nonlocal replace_count
+                replace_count += 1
+                if replace_count == 3:
+                    raise OSError("injected verification rollback failure")
+                real_replace(source, target)
+
+            with mock.patch.object(
+                self.module,
+                "_current_foundation_derivation_snapshot",
+                return_value=expected,
+            ), mock.patch.object(
+                self.module.Path,
+                "read_text",
+                new=mismatch_final_verification,
+            ), mock.patch.object(
+                self.module.os,
+                "replace",
+                side_effect=fail_first_rollback,
+            ):
+                drift, errors = self.module._synchronize_foundation_derivation_snapshot(
+                    root=root,
+                    snapshot_date=str(expected["date"]),
+                    write=True,
+                )
+
+            self.assertTrue(injected_verification)
+            self.assertEqual([], drift)
+            self.assertTrue(
+                any(
+                    "Foundation snapshot final verification failed" in error
+                    and "rollback failed" in error
+                    and "injected verification rollback failure" in error
+                    for error in errors
+                ),
+                errors,
+            )
+            self.assertEqual(
+                [],
+                list(root.rglob("*.foundation-snapshot.*.tmp")),
+            )
+
+    def test_foundation_derivation_snapshot_persistent_committed_bytes_fault_rolls_back(
+        self,
+    ) -> None:
+        expected = dict(self.module.FOUNDATION_DERIVATION_SNAPSHOT)
+        expected["sum_tokens"] = int(expected["sum_tokens"]) + 1
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            audit_path, test_path = self._snapshot_owner_root(root)
+            before = (audit_path.read_bytes(), test_path.read_bytes())
+            real_replace = self.module.os.replace
+            fault_injected = False
+
+            def persistently_modify_committed_target(
+                source: object,
+                target: object,
+            ) -> None:
+                nonlocal fault_injected
+                real_replace(source, target)
+                target_path = Path(target)
+                if not fault_injected and target_path.name == audit_path.name:
+                    target_path.write_bytes(
+                        target_path.read_bytes()
+                        + b"# persistent committed-byte fault\n"
+                    )
+                    fault_injected = True
+
+            with mock.patch.object(
+                self.module,
+                "_current_foundation_derivation_snapshot",
+                return_value=expected,
+            ), mock.patch.object(
+                self.module.os,
+                "replace",
+                side_effect=persistently_modify_committed_target,
+            ):
+                drift, errors = self.module._synchronize_foundation_derivation_snapshot(
+                    root=root,
+                    snapshot_date=str(expected["date"]),
+                    write=True,
+                )
+
+            self.assertTrue(fault_injected, errors)
+            self.assertEqual([], drift)
+            self.assertTrue(
+                any(
+                    "Foundation snapshot final verification failed" in error
+                    for error in errors
+                ),
+                errors,
+            )
+            self.assertEqual(before, (audit_path.read_bytes(), test_path.read_bytes()))
+            self.assertEqual(
+                [],
+                list(root.rglob("*.foundation-snapshot.*.tmp")),
+            )
+
+    def test_foundation_derivation_snapshot_persistent_committed_read_failure_rolls_back(
+        self,
+    ) -> None:
+        expected = dict(self.module.FOUNDATION_DERIVATION_SNAPSHOT)
+        expected["sum_tokens"] = int(expected["sum_tokens"]) + 1
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            audit_path, test_path = self._snapshot_owner_root(root)
+            before = (audit_path.read_bytes(), test_path.read_bytes())
+            real_replace = self.module.os.replace
+            real_read_text = self.module.Path.read_text
+            unreadable_identity: tuple[int, int] | None = None
+
+            def capture_committed_identity(source: object, target: object) -> None:
+                nonlocal unreadable_identity
+                real_replace(source, target)
+                target_path = Path(target)
+                if (
+                    target_path.name == audit_path.name
+                    and unreadable_identity is None
+                ):
+                    current = target_path.stat(follow_symlinks=False)
+                    unreadable_identity = (current.st_dev, current.st_ino)
+
+            def persistently_fail_owned_read(path: Path, *args, **kwargs) -> str:
+                current = path.stat(follow_symlinks=False)
+                if unreadable_identity == (current.st_dev, current.st_ino):
+                    raise OSError("persistent transaction-owned read failure")
+                return real_read_text(path, *args, **kwargs)
+
+            with mock.patch.object(
+                self.module,
+                "_current_foundation_derivation_snapshot",
+                return_value=expected,
+            ), mock.patch.object(
+                self.module.os,
+                "replace",
+                side_effect=capture_committed_identity,
+            ), mock.patch.object(
+                self.module.Path,
+                "read_text",
+                new=persistently_fail_owned_read,
+            ):
+                drift, errors = self.module._synchronize_foundation_derivation_snapshot(
+                    root=root,
+                    snapshot_date=str(expected["date"]),
+                    write=True,
+                )
+
+            self.assertIsNotNone(unreadable_identity, errors)
+            self.assertEqual([], drift)
+            self.assertTrue(
+                any(
+                    "persistent transaction-owned read failure" in error
+                    for error in errors
+                ),
+                errors,
+            )
+            self.assertEqual(before, (audit_path.read_bytes(), test_path.read_bytes()))
+            self.assertEqual(
+                [],
+                list(root.rglob("*.foundation-snapshot.*.tmp")),
+            )
+
+    def test_foundation_derivation_snapshot_external_atomic_replace_reports_conflict(
+        self,
+    ) -> None:
+        expected = dict(self.module.FOUNDATION_DERIVATION_SNAPSHOT)
+        expected["sum_tokens"] = int(expected["sum_tokens"]) + 1
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            audit_path, test_path = self._snapshot_owner_root(root)
+            before_test = test_path.read_bytes()
+            external_source = b"external atomic replacement\n"
+            real_replace = self.module.os.replace
+            external_replaced = False
+
+            def replace_with_external_identity(
+                source: object,
+                target: object,
+            ) -> None:
+                nonlocal external_replaced
+                real_replace(source, target)
+                target_path = Path(target)
+                if not external_replaced and target_path.name == audit_path.name:
+                    external = audit_path.with_name(
+                        f".{audit_path.name}.external-replacement.tmp"
+                    )
+                    external.write_bytes(external_source)
+                    real_replace(external, audit_path)
+                    external_replaced = True
+
+            with mock.patch.object(
+                self.module,
+                "_current_foundation_derivation_snapshot",
+                return_value=expected,
+            ), mock.patch.object(
+                self.module.os,
+                "replace",
+                side_effect=replace_with_external_identity,
+            ):
+                drift, errors = self.module._synchronize_foundation_derivation_snapshot(
+                    root=root,
+                    snapshot_date=str(expected["date"]),
+                    write=True,
+                )
+
+            self.assertTrue(external_replaced, errors)
+            self.assertEqual([], drift)
+            self.assertTrue(
+                any(
+                    "rollback conflict" in error
+                    and "identity changed" in error
+                    for error in errors
+                ),
+                errors,
+            )
+            self.assertEqual(external_source, audit_path.read_bytes())
+            self.assertEqual(before_test, test_path.read_bytes())
+            self.assertEqual(
+                [],
+                list(root.rglob("*.foundation-snapshot.*.tmp")),
+            )
+
+    def test_foundation_derivation_snapshot_preflights_all_outputs(self) -> None:
+        expected = dict(self.module.FOUNDATION_DERIVATION_SNAPSHOT)
+        expected["date"] = "2026-08-30"
+        corruptions = {
+            "missing-marker": lambda source: source.replace(
+                "# END GENERATED FOUNDATION DERIVATION SNAPSHOT",
+                "# END WRONG OWNER",
+            ),
+            "duplicate-marker": lambda source: source.replace(
+                "# END GENERATED FOUNDATION DERIVATION SNAPSHOT",
+                "# BEGIN GENERATED FOUNDATION DERIVATION SNAPSHOT\n"
+                "        # END GENERATED FOUNDATION DERIVATION SNAPSHOT",
+            ),
+            "wrong-assignment": lambda source: source.replace(
+                "        expected = {",
+                "        wrong_owner = {",
+            ),
+        }
+        for label, corrupt in corruptions.items():
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                audit_path, test_path = self._snapshot_owner_root(root)
+                original_audit = audit_path.read_bytes()
+                test_path.write_text(
+                    corrupt(test_path.read_text(encoding="utf-8")),
+                    encoding="utf-8",
+                )
+                original_test = test_path.read_bytes()
+                with mock.patch.object(
+                    self.module,
+                    "_current_foundation_derivation_snapshot",
+                    return_value=expected,
+                ):
+                    drift, errors = (
+                        self.module._synchronize_foundation_derivation_snapshot(
+                            root=root,
+                            snapshot_date="2026-08-30",
+                            write=True,
+                        )
+                    )
+
+                self.assertEqual([], drift)
+                self.assertTrue(errors, label)
+                self.assertEqual(original_audit, audit_path.read_bytes())
+                self.assertEqual(original_test, test_path.read_bytes())
+
+    def test_foundation_derivation_snapshot_rejects_partial_projection(self) -> None:
+        audit_snapshot = dict(self.module.FOUNDATION_DERIVATION_SNAPSHOT)
+        test_snapshot = dict(audit_snapshot)
+        test_snapshot["sum_tokens"] = int(test_snapshot["sum_tokens"]) + 1
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            audit_path, test_path = self._snapshot_owner_root(
+                root,
+                audit_snapshot=audit_snapshot,
+                test_snapshot=test_snapshot,
+            )
+            before = (audit_path.read_bytes(), test_path.read_bytes())
+            with mock.patch.object(
+                self.module,
+                "_current_foundation_derivation_snapshot",
+                return_value=audit_snapshot,
+            ):
+                drift, errors = self.module._synchronize_foundation_derivation_snapshot(
+                    root=root,
+                    snapshot_date=str(audit_snapshot["date"]),
+                    write=True,
+                )
+
+            self.assertEqual([], drift)
+            self.assertTrue(
+                any("owned projections disagree" in error for error in errors),
+                errors,
+            )
+            self.assertEqual(before, (audit_path.read_bytes(), test_path.read_bytes()))
+
+    def test_foundation_derivation_snapshot_rejects_symlink_target(self) -> None:
+        expected = dict(self.module.FOUNDATION_DERIVATION_SNAPSHOT)
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            _audit_path, test_path = self._snapshot_owner_root(root)
+            outside = root / "outside.py"
+            outside.write_bytes(test_path.read_bytes())
+            test_path.unlink()
+            test_path.symlink_to(outside)
+            outside_before = outside.read_bytes()
+            with mock.patch.object(
+                self.module,
+                "_current_foundation_derivation_snapshot",
+                return_value=expected,
+            ):
+                drift, errors = self.module._synchronize_foundation_derivation_snapshot(
+                    root=root,
+                    snapshot_date=str(expected["date"]),
+                    write=True,
+                )
+
+            self.assertEqual([], drift)
+            self.assertTrue(any("symlink" in error for error in errors), errors)
+            self.assertEqual(outside_before, outside.read_bytes())
+
+    def test_foundation_derivation_snapshot_fails_closed_on_collection_error(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            audit_path, test_path = self._snapshot_owner_root(root)
+            before = (audit_path.read_bytes(), test_path.read_bytes())
+            with mock.patch.object(
+                self.module,
+                "_current_foundation_derivation_snapshot",
+                side_effect=self.module.ValidationProblem(
+                    "expected 150 Foundation body documents; found 149"
+                ),
+            ):
+                drift, errors = self.module._synchronize_foundation_derivation_snapshot(
+                    root=root,
+                    snapshot_date="2026-08-30",
+                    write=True,
+                )
+
+            self.assertEqual([], drift)
+            self.assertEqual(
+                ["expected 150 Foundation body documents; found 149"],
+                errors,
+            )
+            self.assertEqual(before, (audit_path.read_bytes(), test_path.read_bytes()))
+
     def test_root_detector_contract_binds_only_reachable_behavior(self) -> None:
         payload = self.module._root_semantic_detector_payload()
         self.assertEqual(

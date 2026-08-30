@@ -25,6 +25,7 @@ import validation_utils as VALIDATION_UTILS
 
 
 DECISION_CASES = ROOT / "evals" / "routing" / "decision-cases.yaml"
+BOUNDARY_RELATIONS = ROOT / "evals" / "routing" / "boundary-relations.yaml"
 
 
 def _load_eval_routing():
@@ -37,6 +38,213 @@ def _load_eval_routing():
 
 
 EVAL_ROUTING = _load_eval_routing()
+
+
+class RoutingBoundaryRelationTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.validator = getattr(
+            EVAL_ROUTING, "evaluate_boundary_relations", None
+        )
+        cls.route_report = (
+            EVAL_ROUTING.evaluate_routes()
+            if callable(cls.validator)
+            else None
+        )
+
+    def _validate(self, document, results=None):
+        self.assertTrue(
+            callable(self.validator),
+            "eval-routing.py must own the boundary relation validator",
+        )
+        assert self.route_report is not None
+        selected_results = (
+            self.route_report["results"] if results is None else results
+        )
+        return type(self).validator(document, selected_results)
+
+    def test_eight_relations_use_fresh_route_decisions_and_winner_traces(
+        self,
+    ) -> None:
+        document = load_yaml_file(BOUNDARY_RELATIONS)
+        report = self._validate(document)
+        self.assertEqual("pass", report["status"], report["errors"])
+        self.assertEqual(8, report["relation_count"])
+        self.assertEqual(8, report["passed_count"])
+        self.assertEqual(32, report["role_count"])
+        self.assertEqual("proven", report["route_once"])
+        self.assertEqual("full", report["candidate_coverage"])
+        self.assertTrue(
+            all(item["passed"] for item in report["results"])
+        )
+
+    def test_relation_schema_rejects_missing_role_duplicate_and_unknown_ids(
+        self,
+    ) -> None:
+        document = load_yaml_file(BOUNDARY_RELATIONS)
+
+        missing_role = copy.deepcopy(document)
+        del missing_role["relations"][0]["cases"]["distractor"]
+        report = self._validate(missing_role)
+        self.assertTrue(
+            any("exactly canonical, paraphrase, distractor, transition" in error
+                for error in report["errors"]),
+            report["errors"],
+        )
+
+        duplicate_case = copy.deepcopy(document)
+        duplicate_case["relations"][0]["cases"]["distractor"] = (
+            duplicate_case["relations"][0]["cases"]["canonical"]
+        )
+        report = self._validate(duplicate_case)
+        self.assertTrue(
+            any("case ids must be globally unique" in error
+                for error in report["errors"]),
+            report["errors"],
+        )
+
+        unknown_case = copy.deepcopy(document)
+        unknown_case["relations"][0]["cases"]["canonical"] = "unknown-case"
+        report = self._validate(unknown_case)
+        self.assertTrue(
+            any("unknown routing case" in error for error in report["errors"]),
+            report["errors"],
+        )
+
+        duplicate_relation = copy.deepcopy(document)
+        duplicate_relation["relations"][1]["id"] = (
+            duplicate_relation["relations"][0]["id"]
+        )
+        report = self._validate(duplicate_relation)
+        self.assertTrue(
+            any("relation ids must be unique" in error
+                for error in report["errors"]),
+            report["errors"],
+        )
+
+    def test_relation_controls_reject_competitor_winner_and_stable_drift(
+        self,
+    ) -> None:
+        document = load_yaml_file(BOUNDARY_RELATIONS)
+        assert self.route_report is not None
+        by_id = {
+            item["id"]: copy.deepcopy(item)
+            for item in self.route_report["results"]
+        }
+        relation = document["relations"][0]
+        distractor_id = relation["cases"]["distractor"]
+        transition_id = relation["cases"]["transition"]
+        competitor = copy.deepcopy(by_id[transition_id])
+        competitor["id"] = distractor_id
+        by_id[distractor_id] = competitor
+        report = self._validate(document, list(by_id.values()))
+        self.assertTrue(
+            any("distractor selected competing Skill" in error
+                for error in report["errors"]),
+            report["errors"],
+        )
+
+        by_id = {
+            item["id"]: copy.deepcopy(item)
+            for item in self.route_report["results"]
+        }
+        paraphrase_id = relation["cases"]["paraphrase"]
+        by_id[paraphrase_id]["route_decision"]["route_result"][
+            "primary_skill"
+        ] = "quality-test-gate"
+        by_id[paraphrase_id]["winner_trace"]["selected_candidate"][
+            "primary_skill"
+        ] = "quality-test-gate"
+        matching = by_id[paraphrase_id]["winner_trace"]["selected_candidate"][
+            "candidate_id"
+        ]
+        for candidate in by_id[paraphrase_id]["winner_trace"][
+            "raw_candidates"
+        ]:
+            if candidate["candidate_id"] == matching:
+                candidate["primary_skill"] = "quality-test-gate"
+        report = self._validate(document, list(by_id.values()))
+        self.assertTrue(
+            any("stable dimensions drifted" in error
+                for error in report["errors"]),
+            report["errors"],
+        )
+
+    def test_relation_controls_reject_ineffective_and_extra_transition(
+        self,
+    ) -> None:
+        document = load_yaml_file(BOUNDARY_RELATIONS)
+        assert self.route_report is not None
+        relation = document["relations"][7]
+        canonical_id = relation["cases"]["canonical"]
+        transition_id = relation["cases"]["transition"]
+
+        by_id = {
+            item["id"]: copy.deepcopy(item)
+            for item in self.route_report["results"]
+        }
+        ineffective = copy.deepcopy(by_id[canonical_id])
+        ineffective["id"] = transition_id
+        by_id[transition_id] = ineffective
+        report = self._validate(document, list(by_id.values()))
+        self.assertTrue(
+            any("transition dimensions differ" in error
+                for error in report["errors"]),
+            report["errors"],
+        )
+
+        by_id = {
+            item["id"]: copy.deepcopy(item)
+            for item in self.route_report["results"]
+        }
+        by_id[transition_id]["route_decision"]["route_result"][
+            "review_skill"
+        ] = "quality-test-gate"
+        by_id[transition_id]["winner_trace"]["selected_candidate"][
+            "review_skill"
+        ] = "quality-test-gate"
+        matching = by_id[transition_id]["winner_trace"]["selected_candidate"][
+            "candidate_id"
+        ]
+        for candidate in by_id[transition_id]["winner_trace"][
+            "raw_candidates"
+        ]:
+            if candidate["candidate_id"] == matching:
+                candidate["review_skill"] = "quality-test-gate"
+        report = self._validate(document, list(by_id.values()))
+        self.assertTrue(
+            any("transition dimensions differ" in error
+                for error in report["errors"]),
+            report["errors"],
+        )
+
+    def test_relation_controls_require_route_once_full_coverage_and_one_winner(
+        self,
+    ) -> None:
+        document = load_yaml_file(BOUNDARY_RELATIONS)
+        assert self.route_report is not None
+        first_case = document["relations"][0]["cases"]["canonical"]
+        mutations = {
+            "route_once": lambda row: row["route_decision"].__setitem__(
+                "route_once", False
+            ),
+            "coverage": lambda row: row["winner_trace"].__setitem__(
+                "candidate_coverage", "partial"
+            ),
+            "winner": lambda row: row["winner_trace"].__setitem__(
+                "selected_candidate", None
+            ),
+        }
+        for label, mutate in mutations.items():
+            with self.subTest(label=label):
+                by_id = {
+                    item["id"]: copy.deepcopy(item)
+                    for item in self.route_report["results"]
+                }
+                mutate(by_id[first_case])
+                report = self._validate(document, list(by_id.values()))
+                self.assertEqual("fail", report["status"])
+                self.assertTrue(report["errors"])
 
 
 class DecisionEvalTests(unittest.TestCase):

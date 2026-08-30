@@ -69,6 +69,21 @@ MAX_ZIP_FILE_BYTES = 2 * 1024 * 1024
 MAX_RENDERED_PROFESSIONAL_BODY_LINES = 120
 RUNTIME_PROFILE = "recommended"
 RETIRED_PROFILES = ("full", "dev")
+LEGACY_HOOK_ROOTS = (
+    "codex/project/.codex",
+    "codex/user/.codex",
+    "claude/project/.claude",
+    "claude/user/.claude",
+    "copilot/project/.github",
+    "copilot/user/.copilot",
+)
+LEGACY_HOOK_FILE_NAMES = (
+    ".changeforge-hook-manifest.json",
+    "hooks.json",
+    "settings.changeforge-hooks.fragment.json",
+    "changeforge-route-preflight.md",
+    "changeforge-professional-contract.md",
+)
 EXPECTED_RUNTIME_COUNTS = {
     "control": 1,
     "professional": 26,
@@ -271,7 +286,7 @@ def build_profile(profile: str) -> dict[str, Any]:
     except (OSError, ValueError) as exc:
         raise BuildError(f"cannot snapshot authoritative build inputs: {exc}") from exc
 
-    _cleanup_retired_profile_outputs()
+    _cleanup_legacy_managed_outputs()
     compiled_names = _build_skill_roots(
         top_level,
         items,
@@ -356,6 +371,22 @@ def _preflight_static_paths() -> None:
             raise BuildError(
                 f"retired profile output {_display_path(retired)} must be a regular directory"
             )
+    for legacy in _legacy_managed_directory_paths():
+        if legacy.exists() and (legacy.is_symlink() or not legacy.is_dir()):
+            raise BuildError(
+                f"legacy managed directory {_display_path(legacy)} must be a regular directory"
+            )
+    for legacy in _legacy_managed_file_paths():
+        if legacy.exists() and (legacy.is_symlink() or not legacy.is_file()):
+            raise BuildError(
+                f"legacy managed file {_display_path(legacy)} must be a regular file"
+            )
+    for legacy_zip in _legacy_root_zip_paths():
+        _require_within(legacy_zip, OPENAI_ZIP_DIR, "legacy root zip")
+        if legacy_zip.is_symlink() or not legacy_zip.is_file():
+            raise BuildError(
+                f"legacy root zip {_display_path(legacy_zip)} must be a regular file"
+            )
 
     # Build inputs and managed output must never contain one another, even if a
     # test or embedding caller overrides the default roots.
@@ -379,6 +410,36 @@ def _retired_profile_output_paths() -> tuple[Path, ...]:
     )
 
 
+def _legacy_managed_directory_paths() -> tuple[Path, ...]:
+    hook_roots = tuple(
+        DIST_DIR.joinpath(*PurePosixPath(relative).parts)
+        for relative in LEGACY_HOOK_ROOTS
+    )
+    return (
+        *(root / "hooks" for root in hook_roots),
+        DIST_DIR / "universal" / "bootstrap",
+        DIST_DIR / "copilot" / "project" / ".github" / "copilot" / "agents",
+    )
+
+
+def _legacy_managed_file_paths() -> tuple[Path, ...]:
+    return tuple(
+        DIST_DIR.joinpath(*PurePosixPath(relative).parts) / name
+        for relative in LEGACY_HOOK_ROOTS
+        for name in LEGACY_HOOK_FILE_NAMES
+    )
+
+
+def _legacy_root_zip_paths() -> tuple[Path, ...]:
+    if not OPENAI_ZIP_DIR.is_dir():
+        return ()
+    return tuple(
+        path
+        for path in sorted(OPENAI_ZIP_DIR.iterdir())
+        if path.suffix == ".zip"
+    )
+
+
 def _managed_output_paths() -> list[Path]:
     return [
         DIST_DIR,
@@ -388,6 +449,8 @@ def _managed_output_paths() -> list[Path]:
         *(target for _platform, target in AGENT_PROFILE_OUTPUTS),
         OPENAI_ZIP_DIR / RUNTIME_PROFILE,
         *_retired_profile_output_paths(),
+        *_legacy_managed_directory_paths(),
+        *_legacy_managed_file_paths(),
     ]
 
 
@@ -1771,12 +1834,25 @@ def _reset_dir(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
 
 
-def _cleanup_retired_profile_outputs() -> None:
-    """Remove only fully preflighted retired profile children."""
+def _cleanup_legacy_managed_outputs() -> None:
+    """Converge only the fully preflighted, previously managed output allowlist."""
 
-    for path in _retired_profile_output_paths():
-        if path.exists():
-            shutil.rmtree(path)
+    directories = (
+        *_retired_profile_output_paths(),
+        *_legacy_managed_directory_paths(),
+    )
+    files = (*_legacy_managed_file_paths(), *_legacy_root_zip_paths())
+    try:
+        for path in sorted(directories, key=lambda value: len(value.parts), reverse=True):
+            if path.exists():
+                shutil.rmtree(path)
+        for path in files:
+            if path.exists():
+                path.unlink()
+    except OSError as exc:
+        raise BuildError(
+            f"cannot remove legacy managed output {_display_path(path)}: {exc}"
+        ) from exc
 
 
 def _package_openai_zips(source_root: Path, zip_root: Path) -> int:

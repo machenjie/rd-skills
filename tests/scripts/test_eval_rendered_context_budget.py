@@ -15,6 +15,7 @@ from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "eval-rendered-context-budget.py"
+TEST_TIMEOUT_CLASS = "source-validation"
 
 
 def _load_module():
@@ -33,6 +34,10 @@ def _load_module():
 
 
 EVAL = _load_module()
+SOURCE_ROOT = ROOT
+FOCUS_BASELINE_SHA256 = (
+    "5ac20a053f33b67e8f0d00749d44d886d9e1c490c76f64e19aed6d80dc7cad73"
+)
 
 
 def _load_built_link_validator():
@@ -58,6 +63,128 @@ from fixture_capsule_contract import (
     parse_layer3_reference_id,
     validate_and_render_fixture_capsule,
 )
+
+
+def _build_runtime_subject(subject: Path) -> None:
+    for relative in ("src", "scripts", "evals", "reports"):
+        shutil.copytree(
+            SOURCE_ROOT / relative,
+            subject / relative,
+            ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.pyo"),
+        )
+    shutil.copy2(SOURCE_ROOT / "pyproject.toml", subject / "pyproject.toml")
+
+    build_source_root = BUILD.ROOT
+
+    def rebased(path: Path) -> Path:
+        return subject / path.relative_to(build_source_root)
+
+    with mock.patch.multiple(
+        BUILD,
+        ROOT=subject,
+        SRC_DIR=rebased(BUILD.SRC_DIR),
+        REGISTRY_DIR=rebased(BUILD.REGISTRY_DIR),
+        DIST_DIR=subject / "dist",
+        UNIVERSAL_SKILLS_ROOT=rebased(BUILD.UNIVERSAL_SKILLS_ROOT),
+        OPENAI_ZIP_DIR=rebased(BUILD.OPENAI_ZIP_DIR),
+        PROFILE_SOURCE=rebased(BUILD.PROFILE_SOURCE),
+        HOST_ENFORCEMENT_SOURCE=rebased(BUILD.HOST_ENFORCEMENT_SOURCE),
+        CONTROL_PROMPT_SOURCE=rebased(BUILD.CONTROL_PROMPT_SOURCE),
+        CORE_CONTRACTS_PATH=rebased(BUILD.CORE_CONTRACTS_PATH),
+        LAYER_SOURCE_ROOTS={
+            layer: rebased(path)
+            for layer, path in BUILD.LAYER_SOURCE_ROOTS.items()
+        },
+        AGENT_SKILL_ROOTS=tuple(rebased(path) for path in BUILD.AGENT_SKILL_ROOTS),
+        AGENT_PROFILE_OUTPUTS=tuple(
+            (platform, rebased(path))
+            for platform, path in BUILD.AGENT_PROFILE_OUTPUTS
+        ),
+    ):
+        result = BUILD.build_profile(BUILD.RUNTIME_PROFILE)
+    if result["top_level_count"] != 27 or result["agent_profile_count"] != 4:
+        raise AssertionError(f"temporary Runtime build is incomplete: {result}")
+
+
+def _focus_baseline_document() -> dict[str, object]:
+    current = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
+    cases = [
+        copy.deepcopy(case)
+        for case in current["task_focus_cases"]
+        if case["id"] not in EVAL.FOCUS_CURRENT_ONLY_MAP
+    ]
+    for case in cases:
+        if case["id"] == "focus-capability-equivalent-adapter-metadata":
+            for adapter in case["inputs"]["adapters"]:
+                capabilities = adapter["capabilities"]
+                capabilities["exact-change-evidence-export"] = capabilities.pop(
+                    "change-evidence-export"
+                )
+                capabilities.pop("native-change-read")
+                capabilities.pop("supplied-change-delivery")
+                capabilities["exact-change-evidence-read"] = "supported"
+                capabilities[
+                    "reviewer-accessible-change-reference"
+                ] = capabilities.pop("reviewer-change-consume")
+        elif case.get("scenario") == "review-readiness":
+            inputs = case["inputs"]
+            inputs.pop("change_evidence_artifact", None)
+            inputs["exact-change-evidence-export"] = inputs.pop(
+                "change-evidence-export"
+            )
+            inputs.pop("native-change-read")
+            inputs.pop("supplied-change-delivery")
+            inputs["exact-change-evidence-read"] = (
+                "unsupported"
+                if inputs["handoff_kind"] == "legacy-incomplete"
+                else "supported"
+            )
+            inputs["reviewer-accessible-change-reference"] = inputs.pop(
+                "reviewer-change-consume"
+            )
+    canonical = json.dumps(
+        cases,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    if hashlib.sha256(canonical.encode("utf-8")).hexdigest() != FOCUS_BASELINE_SHA256:
+        raise AssertionError("branch-independent task-focus baseline is stale")
+    return {"task_focus_cases": cases}
+
+
+def setUpModule() -> None:
+    global ROOT
+    runtime = tempfile.TemporaryDirectory(
+        prefix=".rendered-context-subject-",
+    )
+    subject = Path(runtime.name).resolve()
+    if subject.resolve().is_relative_to(SOURCE_ROOT.resolve()):
+        runtime.cleanup()
+        raise AssertionError("temporary Runtime subject must be outside the repository")
+    evaluation_context = None
+    try:
+        _build_runtime_subject(subject)
+        evaluation_context = EVAL._subject_configuration(
+            subject,
+            subject / "evals/agent-light-trajectories/cases.yaml",
+            subject / "reports/hookless-control-plane-eval.json",
+        )
+        evaluation_context.__enter__()
+        ROOT = subject
+    except BaseException:
+        if evaluation_context is not None:
+            evaluation_context.__exit__(*sys.exc_info())
+        runtime.cleanup()
+        raise
+
+    def cleanup() -> None:
+        global ROOT
+        ROOT = SOURCE_ROOT
+        evaluation_context.__exit__(None, None, None)
+        runtime.cleanup()
+
+    unittest.addModuleCleanup(cleanup)
 
 
 AUTHORITATIVE_DAG_INPUTS = [
@@ -3885,14 +4012,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
 
     def test_canonical_focus_mapping_closes_all_current_cases(self) -> None:
         current = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
-        baseline = json.loads(
-            __import__("subprocess").run(
-                ["git", "show", "master:evals/agent-light-trajectories/cases.yaml"],
-                cwd=ROOT,
-                check=True,
-                stdout=__import__("subprocess").PIPE,
-            ).stdout
-        )
+        baseline = _focus_baseline_document()
         mapping = EVAL._canonical_focus_mapping(current, baseline)
         self.assertEqual([], mapping["errors"])
         self.assertEqual("pass", mapping["status"])
@@ -3970,14 +4090,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
 
     def test_protected_focus_extensions_fail_closed_on_binding_drift(self) -> None:
         current = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
-        baseline = json.loads(
-            __import__("subprocess").run(
-                ["git", "show", "master:evals/agent-light-trajectories/cases.yaml"],
-                cwd=ROOT,
-                check=True,
-                stdout=__import__("subprocess").PIPE,
-            ).stdout
-        )
+        baseline = _focus_baseline_document()
         target = "l4-risk-depth-not-frequency"
         mutations = []
 
@@ -5151,6 +5264,14 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     self.assertEqual(expected, measurement["budget_class"])
 
     def test_layer3_resolution_follows_runtime_manifest(self) -> None:
+        self.assertNotEqual(
+            (SOURCE_ROOT / "dist").resolve(),
+            (ROOT / "dist").resolve(),
+        )
+        self.assertEqual(
+            (ROOT / "dist/universal/skills").resolve(),
+            EVAL.DIST_SKILLS.resolve(),
+        )
         errors: list[str] = []
         runtime_manifest = EVAL._load_runtime_manifest(errors)
         self.assertEqual([], errors)

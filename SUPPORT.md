@@ -13,7 +13,6 @@ This project supports rd-skills skill authoring, validation, build, packaging, i
 For support requests, include:
 
 - The command you ran.
-- The selected profile: `recommended`, `full`, or `dev`.
 - The selected agent: `codex`, `claude`, `copilot`, `cline`, or `openai-api`.
 - The selected scope: `project`, `user`, or `admin` when applicable.
 - The operating system and Python version.

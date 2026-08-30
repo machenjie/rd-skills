@@ -5713,13 +5713,19 @@
       "errors": []
     }
   ],
-  "evidence_localization_fixture_count": 27,
+  "evidence_localization_fixture_count": 38,
   "evidence_localization_fixtures": [
     {
       "id": "localization-known-exact-zero-search",
       "actor": "task-agent",
       "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [
         "owner"
@@ -5750,7 +5756,13 @@
       "id": "localization-missing-close-before-edit",
       "actor": "task-agent",
       "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [
         "owner"
@@ -5785,7 +5797,14 @@
       "id": "localization-stable-owner-direct",
       "actor": "task-agent",
       "worker_action": "continue",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search",
+        "structural-search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [
         "consumer",
@@ -5819,7 +5838,13 @@
       "id": "localization-material-risk-return",
       "actor": "task-agent",
       "worker_action": "return-main-analysis",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [],
       "proof_limit_recorded": true,
@@ -5848,7 +5873,14 @@
       "id": "localization-nearby-is-not-owner",
       "actor": "analysis-agent",
       "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search",
+        "structural-search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [],
       "proof_limit_recorded": false,
@@ -5883,7 +5915,14 @@
       "id": "localization-same-pattern-expanded-coverage",
       "actor": "analysis-agent",
       "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search",
+        "structural-search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [],
       "proof_limit_recorded": false,
@@ -5912,7 +5951,14 @@
       "id": "localization-same-pattern-exact-misses-variant",
       "actor": "analysis-agent",
       "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search",
+        "structural-search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [],
       "proof_limit_recorded": false,
@@ -5945,7 +5991,14 @@
       "id": "localization-indirect-consumer-proof-limit",
       "actor": "analysis-agent",
       "worker_action": "return-main-analysis",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search",
+        "structural-search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [
         "consumer",
@@ -5977,7 +6030,14 @@
       "id": "localization-top-k-proof-limit",
       "actor": "analysis-agent",
       "worker_action": "return-main-analysis",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search",
+        "structural-search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [],
       "proof_limit_recorded": true,
@@ -6006,7 +6066,13 @@
       "id": "localization-known-exact-review-anchor",
       "actor": "review-agent",
       "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [
         "owner"
@@ -6037,7 +6103,14 @@
       "id": "localization-top-k-cannot-prove-absence",
       "actor": "analysis-agent",
       "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search",
+        "structural-search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [
         "consumer"
@@ -6072,7 +6145,14 @@
       "id": "localization-truncation-cannot-prove-complete",
       "actor": "analysis-agent",
       "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search",
+        "structural-search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [],
       "proof_limit_recorded": false,
@@ -6105,7 +6185,14 @@
       "id": "localization-indirect-consumer-not-closed",
       "actor": "analysis-agent",
       "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search",
+        "structural-search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [
         "consumer",
@@ -6141,7 +6228,13 @@
       "id": "localization-analysis-anchor-task-current-proof",
       "actor": "task-agent",
       "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [
         "owner"
@@ -6172,7 +6265,13 @@
       "id": "localization-task-cannot-inherit-correctness",
       "actor": "task-agent",
       "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [],
       "proof_limit_recorded": false,
@@ -6205,7 +6304,13 @@
       "id": "localization-review-independent-current-proof",
       "actor": "review-agent",
       "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": true,
       "covered_evidence": [
         "owner"
@@ -6236,7 +6341,13 @@
       "id": "localization-review-independent-required",
       "actor": "review-agent",
       "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": true,
       "covered_evidence": [
         "owner"
@@ -6271,7 +6382,13 @@
       "id": "localization-read-search-fallback",
       "actor": "analysis-agent",
       "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": true,
       "covered_evidence": [
         "owner"
@@ -6302,7 +6419,14 @@
       "id": "localization-minimum-complete-evidence",
       "actor": "analysis-agent",
       "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search",
+        "structural-search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [
         "consumer",
@@ -6338,7 +6462,14 @@
       "id": "localization-cost-cannot-hide-quality",
       "actor": "analysis-agent",
       "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search",
+        "structural-search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [],
       "proof_limit_recorded": false,
@@ -6373,7 +6504,13 @@
       "id": "closure-known-exact-extra-discovery",
       "actor": "task-agent",
       "worker_action": "continue",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [
         "owner"
@@ -6390,7 +6527,7 @@
         ],
         "errors": [
           "closure-known-exact-extra-discovery: [discovery-after-evidence-closure] search/read after closure requires a new or invalidated Evidence Requirement",
-          "closure-known-exact-extra-discovery: [known-exact-discovery] known exact source must not search"
+          "closure-known-exact-extra-discovery: [known-exact-discovery] exact locator may search only after a direct-read mismatch for bounded correction"
         ]
       },
       "cost_observation": {
@@ -6410,7 +6547,14 @@
       "id": "closure-unrelated-nearby-search",
       "actor": "analysis-agent",
       "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search",
+        "structural-search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [
         "owner"
@@ -6445,7 +6589,14 @@
       "id": "closure-unclosed-contract-bounded-discovery",
       "actor": "task-agent",
       "worker_action": "continue",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search",
+        "structural-search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [
         "consumer",
@@ -6477,7 +6628,14 @@
       "id": "closure-top-k-only-completeness",
       "actor": "analysis-agent",
       "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search",
+        "structural-search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [],
       "proof_limit_recorded": false,
@@ -6510,7 +6668,13 @@
       "id": "closure-claim-local-reopening",
       "actor": "task-agent",
       "worker_action": "continue",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [
         "contract"
@@ -6541,7 +6705,13 @@
       "id": "closure-material-invalidation-continued-edit",
       "actor": "task-agent",
       "worker_action": "continue",
+      "accepted_brief": false,
+      "host_capabilities": [
+        "read",
+        "search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [
         "contract"
@@ -6579,7 +6749,13 @@
       "id": "closure-material-invalidation-main-delta",
       "actor": "task-agent",
       "worker_action": "return-main-analysis",
+      "accepted_brief": false,
+      "host_capabilities": [
+        "read",
+        "search"
+      ],
       "authority_preserved": true,
+      "bounded_structural_correction": false,
       "fallback_used": false,
       "covered_evidence": [
         "contract"
@@ -6603,6 +6779,423 @@
         "evidence_byte_proxy": 112,
         "time_to_owner_proof_step": 0,
         "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "locator-exact-caller-not-owner",
+      "actor": "task-agent",
+      "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search"
+      ],
+      "authority_preserved": true,
+      "bounded_structural_correction": false,
+      "fallback_used": false,
+      "covered_evidence": [],
+      "proof_limit_recorded": false,
+      "evidence_closed": false,
+      "reopening_count": 0,
+      "expected_valid": false,
+      "quality_gate": {
+        "passed": false,
+        "error_codes": [
+          "evidence-closure-before-action",
+          "minimum-complete-evidence",
+          "owner-current-source-proof"
+        ],
+        "errors": [
+          "locator-exact-caller-not-owner: [evidence-closure-before-action] edit or worker continuation requires complete current Evidence Closure",
+          "locator-exact-caller-not-owner: [owner-current-source-proof] owner is not proved by current owning source",
+          "locator-exact-caller-not-owner: [minimum-complete-evidence] required current evidence is missing: ['owner']"
+        ]
+      },
+      "cost_observation": {
+        "search_count": 0,
+        "exact_read_count": 1,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 0,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 268,
+        "time_to_owner_proof_step": 3,
+        "time_to_first_edit_step": 4
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "locator-exact-delegator-not-owner",
+      "actor": "task-agent",
+      "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search"
+      ],
+      "authority_preserved": true,
+      "bounded_structural_correction": false,
+      "fallback_used": false,
+      "covered_evidence": [],
+      "proof_limit_recorded": false,
+      "evidence_closed": false,
+      "reopening_count": 0,
+      "expected_valid": false,
+      "quality_gate": {
+        "passed": false,
+        "error_codes": [
+          "evidence-closure-before-action",
+          "minimum-complete-evidence",
+          "owner-current-source-proof"
+        ],
+        "errors": [
+          "locator-exact-delegator-not-owner: [evidence-closure-before-action] edit or worker continuation requires complete current Evidence Closure",
+          "locator-exact-delegator-not-owner: [owner-current-source-proof] owner is not proved by current owning source",
+          "locator-exact-delegator-not-owner: [minimum-complete-evidence] required current evidence is missing: ['owner']"
+        ]
+      },
+      "cost_observation": {
+        "search_count": 0,
+        "exact_read_count": 1,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 0,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 268,
+        "time_to_owner_proof_step": 3,
+        "time_to_first_edit_step": 4
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "locator-confirmed-owner-stops-discovery",
+      "actor": "task-agent",
+      "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search",
+        "structural-search"
+      ],
+      "authority_preserved": true,
+      "bounded_structural_correction": false,
+      "fallback_used": false,
+      "covered_evidence": [
+        "owner"
+      ],
+      "proof_limit_recorded": false,
+      "evidence_closed": true,
+      "reopening_count": 0,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 0,
+        "exact_read_count": 1,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 0,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 332,
+        "time_to_owner_proof_step": 3,
+        "time_to_first_edit_step": 5
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "locator-same-owner-symbol-move-bounded-correction",
+      "actor": "task-agent",
+      "worker_action": "continue",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search",
+        "structural-search"
+      ],
+      "authority_preserved": true,
+      "bounded_structural_correction": true,
+      "fallback_used": false,
+      "covered_evidence": [
+        "owner"
+      ],
+      "proof_limit_recorded": false,
+      "evidence_closed": true,
+      "reopening_count": 0,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 1,
+        "exact_read_count": 2,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 1,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 556,
+        "time_to_owner_proof_step": 6,
+        "time_to_first_edit_step": 8
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "locator-direct-material-contradiction-main-initial-analysis",
+      "actor": "task-agent",
+      "worker_action": "return-main-analysis",
+      "accepted_brief": false,
+      "host_capabilities": [
+        "read",
+        "search"
+      ],
+      "authority_preserved": true,
+      "bounded_structural_correction": false,
+      "fallback_used": false,
+      "covered_evidence": [],
+      "proof_limit_recorded": false,
+      "evidence_closed": false,
+      "reopening_count": 0,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 0,
+        "exact_read_count": 1,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 0,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 228,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "locator-stale-brief-owner-main-delta",
+      "actor": "task-agent",
+      "worker_action": "return-main-delta",
+      "accepted_brief": true,
+      "host_capabilities": [
+        "read",
+        "search"
+      ],
+      "authority_preserved": true,
+      "bounded_structural_correction": false,
+      "fallback_used": false,
+      "covered_evidence": [],
+      "proof_limit_recorded": false,
+      "evidence_closed": false,
+      "reopening_count": 0,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 0,
+        "exact_read_count": 1,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 0,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 228,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "locator-review-fix-moved-finding-still-valid",
+      "actor": "review-agent",
+      "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search"
+      ],
+      "authority_preserved": true,
+      "bounded_structural_correction": false,
+      "fallback_used": false,
+      "covered_evidence": [],
+      "proof_limit_recorded": false,
+      "evidence_closed": false,
+      "reopening_count": 0,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 1,
+        "exact_read_count": 2,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 1,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 532,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "locator-generated-target-traces-authoring-source",
+      "actor": "task-agent",
+      "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search"
+      ],
+      "authority_preserved": true,
+      "bounded_structural_correction": false,
+      "fallback_used": false,
+      "covered_evidence": [
+        "owner"
+      ],
+      "proof_limit_recorded": false,
+      "evidence_closed": true,
+      "reopening_count": 0,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 0,
+        "exact_read_count": 2,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 0,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 552,
+        "time_to_owner_proof_step": 5,
+        "time_to_first_edit_step": 7
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "locator-multiple-enforcement-points",
+      "actor": "analysis-agent",
+      "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search",
+        "structural-search"
+      ],
+      "authority_preserved": true,
+      "bounded_structural_correction": false,
+      "fallback_used": false,
+      "covered_evidence": [
+        "owner"
+      ],
+      "proof_limit_recorded": false,
+      "evidence_closed": true,
+      "reopening_count": 0,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 1,
+        "exact_read_count": 2,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 2,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 528,
+        "time_to_owner_proof_step": 4,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "locator-zero-static-refs-dynamic-consumer-proof-limit",
+      "actor": "task-agent",
+      "worker_action": "continue",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search",
+        "structural-search"
+      ],
+      "authority_preserved": true,
+      "bounded_structural_correction": false,
+      "fallback_used": false,
+      "covered_evidence": [
+        "owner"
+      ],
+      "proof_limit_recorded": true,
+      "evidence_closed": true,
+      "reopening_count": 0,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 1,
+        "exact_read_count": 2,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 0,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 496,
+        "time_to_owner_proof_step": 0,
+        "time_to_first_edit_step": 0
+      },
+      "matches_expected": true
+    },
+    {
+      "id": "locator-structural-unavailable-read-search-fallback",
+      "actor": "task-agent",
+      "worker_action": "not-applicable",
+      "accepted_brief": null,
+      "host_capabilities": [
+        "read",
+        "search"
+      ],
+      "authority_preserved": true,
+      "bounded_structural_correction": false,
+      "fallback_used": true,
+      "covered_evidence": [
+        "owner"
+      ],
+      "proof_limit_recorded": false,
+      "evidence_closed": true,
+      "reopening_count": 0,
+      "expected_valid": true,
+      "quality_gate": {
+        "passed": true,
+        "error_codes": [],
+        "errors": []
+      },
+      "cost_observation": {
+        "search_count": 1,
+        "exact_read_count": 1,
+        "broad_or_full_file_read_count": 0,
+        "repeated_read_count": 0,
+        "search_result_volume": 2,
+        "truncated_search_count": 0,
+        "evidence_byte_proxy": 340,
+        "time_to_owner_proof_step": 3,
+        "time_to_first_edit_step": 5
       },
       "matches_expected": true
     }

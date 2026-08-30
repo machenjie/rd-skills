@@ -14,11 +14,13 @@ from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
+SOURCE_ROOT = ROOT
 SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 import validation_utils as VALIDATION_UTILS  # noqa: E402
+import build as BUILD  # noqa: E402
 from fixture_capsule_contract import (  # noqa: E402
     FixtureCapsuleError,
     canonical_capsule_sha256,
@@ -94,6 +96,53 @@ CONDITIONAL_TEST_EVIDENCE_PROJECTION = (
     "after the final material edit; they are evidence, not a separate stage. Never "
     "fabricate unavailable proof."
 )
+
+
+def _build_runtime_subject(subject: Path) -> Path:
+    for relative in ("src", "scripts"):
+        shutil.copytree(
+            SOURCE_ROOT / relative,
+            subject / relative,
+            ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.pyo"),
+        )
+    shutil.copy2(SOURCE_ROOT / "pyproject.toml", subject / "pyproject.toml")
+
+    build_source_root = BUILD.ROOT
+
+    def rebased(path: Path) -> Path:
+        return subject / path.relative_to(build_source_root)
+
+    with mock.patch.multiple(
+        BUILD,
+        ROOT=subject,
+        SRC_DIR=rebased(BUILD.SRC_DIR),
+        REGISTRY_DIR=rebased(BUILD.REGISTRY_DIR),
+        DIST_DIR=subject / "dist",
+        UNIVERSAL_SKILLS_ROOT=rebased(BUILD.UNIVERSAL_SKILLS_ROOT),
+        OPENAI_ZIP_DIR=rebased(BUILD.OPENAI_ZIP_DIR),
+        PROFILE_SOURCE=rebased(BUILD.PROFILE_SOURCE),
+        HOST_ENFORCEMENT_SOURCE=rebased(BUILD.HOST_ENFORCEMENT_SOURCE),
+        CONTROL_PROMPT_SOURCE=rebased(BUILD.CONTROL_PROMPT_SOURCE),
+        CORE_CONTRACTS_PATH=rebased(BUILD.CORE_CONTRACTS_PATH),
+        LAYER_SOURCE_ROOTS={
+            layer: rebased(path)
+            for layer, path in BUILD.LAYER_SOURCE_ROOTS.items()
+        },
+        AGENT_SKILL_ROOTS=tuple(rebased(path) for path in BUILD.AGENT_SKILL_ROOTS),
+        AGENT_PROFILE_OUTPUTS=tuple(
+            (platform, rebased(path))
+            for platform, path in BUILD.AGENT_PROFILE_OUTPUTS
+        ),
+    ):
+        result = BUILD.build_profile(BUILD.RUNTIME_PROFILE)
+
+    if (
+        result["top_level_count"] != 27
+        or result["compiled_layer3_reference_count"] != 154
+        or result["agent_profile_count"] != 4
+    ):
+        raise AssertionError(f"temporary Runtime build is incomplete: {result}")
+    return subject / "dist/universal/skills"
 
 
 def _execution_evidence(
@@ -5796,10 +5845,35 @@ class CompletionReviewRequirementTests(unittest.TestCase):
 class CombinedReviewBoundaryFixtureTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
+        runtime = tempfile.TemporaryDirectory(
+            prefix="changeforge-combined-review-runtime-",
+        )
+        cls.addClassCleanup(runtime.cleanup)
+        subject = Path(runtime.name).resolve()
+        if subject.is_relative_to(SOURCE_ROOT.resolve()):
+            raise AssertionError(
+                "combined-review Runtime subject must be outside the repository"
+            )
+        dist_skills = _build_runtime_subject(subject)
+        dist_patcher = mock.patch.object(
+            AGENT_LIGHTWEIGHT,
+            "DIST_SKILLS",
+            dist_skills,
+        )
+        dist_patcher.start()
+        cls.addClassCleanup(dist_patcher.stop)
+        cls.runtime_subject = subject
+        cls.dist_skills = dist_skills
         document = json.loads(AGENT_LIGHT_CASES.read_text(encoding="utf-8"))
         cls.cases = document["combined_review_cases"]
 
     def test_assignment_artifact_projection_and_invalidation_controls(self) -> None:
+        self.assertFalse(self.runtime_subject.is_relative_to(SOURCE_ROOT.resolve()))
+        self.assertEqual(self.dist_skills, AGENT_LIGHTWEIGHT.DIST_SKILLS)
+        self.assertNotEqual(
+            (SOURCE_ROOT / "dist/universal/skills").resolve(),
+            AGENT_LIGHTWEIGHT.DIST_SKILLS.resolve(),
+        )
         results, errors = AGENT_LIGHTWEIGHT._combined_review_fixture_results(
             self.cases
         )

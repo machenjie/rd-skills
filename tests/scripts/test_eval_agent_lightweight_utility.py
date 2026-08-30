@@ -4,6 +4,7 @@ import copy
 import importlib.util
 import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -29,6 +30,63 @@ def _load_module():
 
 
 EVAL = _load_module()
+
+
+def _materialize_runtime_dist(dist: Path) -> None:
+    professional, layer3 = EVAL._skill_registries()
+    runtime_root = dist / EVAL.RUNTIME_NAME
+    compiled = {
+        primary: list(entry.get("layer3_candidates", []))
+        for primary, entry in sorted(professional.items())
+    }
+    manifest = {
+        "profile": EVAL.RUNTIME_NAME,
+        "compiled_layer3_format": EVAL.COMPILED_LAYER3_FORMAT,
+        "professional_skills": sorted(professional),
+        "top_level_skills": [
+            "engineering-control-plane",
+            *sorted(professional),
+        ],
+        "compiled_layer3_references": compiled,
+    }
+    for primary, owners in compiled.items():
+        for owner in owners:
+            entry = layer3[owner]
+            for relative in EVAL.reference_paths(
+                entry.get("reference_index"),
+                f"{owner}.reference_index",
+                owner=owner,
+            ):
+                source = ROOT / str(entry["path"]) / relative
+                destination = (
+                    runtime_root
+                    / primary
+                    / "references/layer3"
+                    / owner
+                    / relative
+                )
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.write_bytes(source.read_bytes())
+    runtime_root.mkdir(parents=True, exist_ok=True)
+    (runtime_root / ".changeforge-build-manifest.json").write_text(
+        json.dumps(manifest, sort_keys=True), encoding="utf-8"
+    )
+
+
+def setUpModule() -> None:
+    runtime = tempfile.TemporaryDirectory(prefix="rd-skills-lightweight-runtime-")
+    try:
+        dist = Path(runtime.name)
+        _materialize_runtime_dist(dist)
+        dist_patcher = patch.object(EVAL, "DIST_SKILLS", dist)
+        dist_patcher.start()
+    except BaseException:
+        runtime.cleanup()
+        raise
+    unittest.addModuleCleanup(runtime.cleanup)
+    unittest.addModuleCleanup(dist_patcher.stop)
+
+
 CANONICAL_LEDGER_FIELDS = (
     "Claim",
     "Owner",
@@ -304,7 +362,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
             copy.deepcopy(self.document["evidence_localization_cases"])
         )
         self.assertEqual([], errors)
-        self.assertGreaterEqual(len(results), 15)
+        self.assertEqual(38, len(results))
         required_cost_fields = {
             "search_count",
             "exact_read_count",
@@ -867,6 +925,293 @@ class LightweightUtilityContractTests(unittest.TestCase):
         )
         for item in results:
             self.assertTrue(item["authority_preserved"], item)
+
+    def test_exact_locator_trust_fixtures_cover_declared_boundaries(self) -> None:
+        results, errors = EVAL._evidence_localization_fixture_results(
+            copy.deepcopy(self.evidence_localization_cases)
+        )
+        self.assertEqual([], errors)
+        by_id = {item["id"]: item for item in results}
+        expected_ids = {
+            "locator-exact-caller-not-owner",
+            "locator-exact-delegator-not-owner",
+            "locator-confirmed-owner-stops-discovery",
+            "locator-same-owner-symbol-move-bounded-correction",
+            "locator-direct-material-contradiction-main-initial-analysis",
+            "locator-stale-brief-owner-main-delta",
+            "locator-review-fix-moved-finding-still-valid",
+            "locator-generated-target-traces-authoring-source",
+            "locator-multiple-enforcement-points",
+            "locator-zero-static-refs-dynamic-consumer-proof-limit",
+            "locator-structural-unavailable-read-search-fallback",
+        }
+        self.assertEqual(expected_ids, {case_id for case_id in by_id if case_id.startswith("locator-")})
+        self.assertEqual(38, len(results))
+        for case_id in expected_ids:
+            with self.subTest(case=case_id):
+                self.assertTrue(by_id[case_id]["matches_expected"], by_id[case_id])
+
+        for case_id in (
+            "locator-exact-caller-not-owner",
+            "locator-exact-delegator-not-owner",
+        ):
+            self.assertIn(
+                "owner-current-source-proof",
+                by_id[case_id]["quality_gate"]["error_codes"],
+            )
+        self.assertEqual(
+            0,
+            by_id["locator-confirmed-owner-stops-discovery"]["cost_observation"][
+                "search_count"
+            ],
+        )
+        self.assertEqual(
+            "return-main-analysis",
+            by_id["locator-direct-material-contradiction-main-initial-analysis"][
+                "worker_action"
+            ],
+        )
+        self.assertEqual(
+            "return-main-delta",
+            by_id["locator-stale-brief-owner-main-delta"]["worker_action"],
+        )
+        structural = by_id["locator-same-owner-symbol-move-bounded-correction"]
+        self.assertIn("structural-search", structural["host_capabilities"])
+        self.assertTrue(structural["bounded_structural_correction"])
+        self.assertFalse(
+            by_id["locator-multiple-enforcement-points"][
+                "bounded_structural_correction"
+            ]
+        )
+        self.assertTrue(
+            by_id["locator-zero-static-refs-dynamic-consumer-proof-limit"][
+                "proof_limit_recorded"
+            ]
+        )
+        self.assertTrue(
+            by_id["locator-structural-unavailable-read-search-fallback"][
+                "fallback_used"
+            ]
+        )
+
+    def test_bounded_structural_correction_report_requires_validated_sequence(
+        self,
+    ) -> None:
+        by_id = {case["id"]: case for case in self.evidence_localization_cases}
+        structural = copy.deepcopy(
+            by_id["locator-same-owner-symbol-move-bounded-correction"]
+        )
+        symbol = copy.deepcopy(structural)
+        symbol["id"] = "mutation-symbol-correction-positive"
+        symbol["host_capabilities"].remove("structural-search")
+        symbol["host_capabilities"].append("symbol-search")
+        next(
+            operation
+            for operation in symbol["operations"]
+            if operation["action"] == "search"
+        )["mode"] = "symbol"
+
+        unknown = copy.deepcopy(by_id["locator-multiple-enforcement-points"])
+
+        invalid_cases = []
+        undeclared = copy.deepcopy(structural)
+        undeclared["id"] = "mutation-report-undeclared-structural"
+        undeclared["host_capabilities"].remove("structural-search")
+        undeclared["expected_valid"] = False
+        undeclared["expected_error"] = "locator-correction-capability"
+        invalid_cases.append(undeclared)
+
+        truncated = copy.deepcopy(structural)
+        truncated["id"] = "mutation-report-truncated-structural"
+        next(
+            operation
+            for operation in truncated["operations"]
+            if operation["action"] == "search"
+        )["truncated"] = True
+        truncated["expected_valid"] = False
+        truncated["expected_error"] = "locator-correction-capability"
+        invalid_cases.append(truncated)
+
+        broad = copy.deepcopy(structural)
+        broad["id"] = "mutation-report-broad-correction"
+        next(
+            operation
+            for operation in broad["operations"]
+            if operation["action"] == "search"
+        )["mode"] = "expanded"
+        broad["expected_valid"] = False
+        broad["expected_error"] = "known-exact-discovery"
+        invalid_cases.append(broad)
+
+        repeated = copy.deepcopy(structural)
+        repeated["id"] = "mutation-report-repeated-correction-read"
+        repeated_read = copy.deepcopy(
+            next(
+                operation
+                for operation in repeated["operations"]
+                if operation.get("coverage") == "owner"
+            )
+        )
+        repeated_read["id"] = "repeated-owner-read"
+        claim_index = next(
+            index
+            for index, operation in enumerate(repeated["operations"])
+            if operation["action"] == "claim"
+        )
+        repeated["operations"].insert(claim_index, repeated_read)
+        repeated["expected_valid"] = False
+        repeated["expected_error"] = "known-exact-discovery"
+        invalid_cases.append(repeated)
+
+        results, errors = EVAL._evidence_localization_fixture_results(
+            [structural, symbol, unknown, *invalid_cases]
+        )
+        self.assertEqual([], errors)
+        results_by_id = {item["id"]: item for item in results}
+        self.assertTrue(
+            results_by_id[structural["id"]]["bounded_structural_correction"]
+        )
+        self.assertTrue(results_by_id[symbol["id"]]["bounded_structural_correction"])
+        self.assertFalse(results_by_id[unknown["id"]]["bounded_structural_correction"])
+        for case in invalid_cases:
+            with self.subTest(case=case["id"]):
+                result = results_by_id[case["id"]]
+                self.assertFalse(result["quality_gate"]["passed"])
+                self.assertFalse(result["bounded_structural_correction"])
+
+    def test_exact_locator_trust_mutation_controls_fail_closed_generically(self) -> None:
+        by_id = {case["id"]: case for case in self.evidence_localization_cases}
+
+        broad_after_confirmation = copy.deepcopy(
+            by_id["locator-confirmed-owner-stops-discovery"]
+        )
+        broad_after_confirmation["id"] = "mutation-confirmed-owner-broad-search"
+        broad_after_confirmation["operations"].insert(
+            -1,
+            {
+                "id": "broad-search",
+                "action": "search",
+                "mode": "expanded",
+                "target": "repository owners",
+                "result_volume": 9,
+                "truncated": False,
+                "bytes": 96,
+            },
+        )
+
+        brief_mutation = copy.deepcopy(
+            by_id["locator-same-owner-symbol-move-bounded-correction"]
+        )
+        brief_mutation["id"] = "mutation-local-correction-rewrites-brief"
+        next(
+            operation
+            for operation in brief_mutation["operations"]
+            if operation["action"] == "correction"
+        )["brief_mutation"] = True
+
+        correction_before_search = copy.deepcopy(
+            by_id["locator-same-owner-symbol-move-bounded-correction"]
+        )
+        correction_before_search["id"] = "mutation-correction-before-bounded-search"
+        correction_index = next(
+            index
+            for index, operation in enumerate(correction_before_search["operations"])
+            if operation["action"] == "correction"
+        )
+        correction = correction_before_search["operations"].pop(correction_index)
+        correction_before_search["operations"].insert(correction_index - 1, correction)
+
+        stale_owner_edit = copy.deepcopy(by_id["locator-stale-brief-owner-main-delta"])
+        stale_owner_edit["id"] = "mutation-material-owner-contradiction-edits"
+        stale_owner_edit["operations"].append(
+            {"id": "unsafe-edit", "action": "edit", "target": "caller.py", "bytes": 0}
+        )
+        stale_owner_edit["worker_action"] = "continue"
+
+        generated_without_trace = copy.deepcopy(
+            by_id["locator-generated-target-traces-authoring-source"]
+        )
+        generated_without_trace["id"] = "mutation-generated-without-authoring-trace"
+        generated_without_trace["operations"] = [
+            operation
+            for operation in generated_without_trace["operations"]
+            if operation["action"] != "trace"
+        ]
+
+        dynamic_without_limit = copy.deepcopy(
+            by_id["locator-zero-static-refs-dynamic-consumer-proof-limit"]
+        )
+        dynamic_without_limit["id"] = "mutation-dynamic-consumer-without-proof-limit"
+        dynamic_without_limit["operations"] = [
+            operation
+            for operation in dynamic_without_limit["operations"]
+            if operation.get("kind") != "proof-limit"
+        ]
+        next(
+            operation
+            for operation in dynamic_without_limit["operations"]
+            if operation["action"] == "close"
+        )["requirement_statuses"]["consumer"] = "proved"
+
+        no_fallback = copy.deepcopy(
+            by_id["locator-structural-unavailable-read-search-fallback"]
+        )
+        no_fallback["id"] = "mutation-structural-unavailable-no-fallback"
+        next(
+            operation
+            for operation in no_fallback["operations"]
+            if operation["action"] == "search"
+        )["mode"] = "exact"
+
+        direct_wrong_delta = copy.deepcopy(
+            by_id["locator-direct-material-contradiction-main-initial-analysis"]
+        )
+        direct_wrong_delta["id"] = "mutation-direct-without-brief-wrong-delta"
+        direct_wrong_delta["worker_action"] = "return-main-delta"
+
+        brief_wrong_analysis = copy.deepcopy(
+            by_id["locator-stale-brief-owner-main-delta"]
+        )
+        brief_wrong_analysis["id"] = "mutation-accepted-brief-wrong-initial-analysis"
+        brief_wrong_analysis["worker_action"] = "return-main-analysis"
+
+        undeclared_structural = copy.deepcopy(
+            by_id["locator-same-owner-symbol-move-bounded-correction"]
+        )
+        undeclared_structural["id"] = "mutation-undeclared-structural-correction"
+        undeclared_structural["host_capabilities"].remove("structural-search")
+
+        truncated_structural = copy.deepcopy(
+            by_id["locator-same-owner-symbol-move-bounded-correction"]
+        )
+        truncated_structural["id"] = "mutation-truncated-structural-correction"
+        next(
+            operation
+            for operation in truncated_structural["operations"]
+            if operation["action"] == "search"
+        )["truncated"] = True
+
+        controls = (
+            (broad_after_confirmation, "known-exact-discovery"),
+            (brief_mutation, "locator-correction"),
+            (correction_before_search, "locator-correction"),
+            (stale_owner_edit, "material-before-edit"),
+            (generated_without_trace, "generated-authoring-source"),
+            (dynamic_without_limit, "dynamic-consumer-proof-limit"),
+            (no_fallback, "structural-fallback"),
+            (direct_wrong_delta, "material-return-outcome"),
+            (brief_wrong_analysis, "material-return-outcome"),
+            (undeclared_structural, "locator-correction-capability"),
+            (truncated_structural, "locator-correction-capability"),
+        )
+        for case, expected_code in controls:
+            case["expected_valid"] = False
+            case["expected_error"] = expected_code
+            with self.subTest(case=case["id"]):
+                results, errors = EVAL._evidence_localization_fixture_results([case])
+                self.assertEqual([], errors)
+                self.assertIn(expected_code, results[0]["quality_gate"]["error_codes"])
+                self.assertTrue(results[0]["matches_expected"])
 
     def test_remaining_twelve_behaviors_use_full_path_machine_mutations(self) -> None:
         results, errors = EVAL._required_behavior_coverage_results(
@@ -6257,6 +6602,10 @@ class LightweightUtilityContractTests(unittest.TestCase):
         self.assertTrue(any("exact ordered fields" in error for error in errors), errors)
 
     def test_nested_reference_resolution_uses_runtime_compiled_delivery(self) -> None:
+        self.assertNotEqual(
+            (ROOT / "dist/universal/skills").resolve(),
+            EVAL.DIST_SKILLS.resolve(),
+        )
         runtime_manifest, errors = EVAL._load_runtime_manifest()
         self.assertEqual([], errors)
         assert runtime_manifest is not None

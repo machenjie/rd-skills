@@ -507,9 +507,15 @@ def _case(
             f"profile '{result.profile}' is not supported by primary Skill '{result.primary_skill}'"
         )
     if len(result.layer3_skills) > 3:
-        result.errors.append("route selects more than three Layer 3 Skills without a fixture-specific risk rationale")
+        result.errors.append(
+            "selected Layer 3 list exceeds the hard maximum of three; "
+            "selection must fail closed and must never be truncated"
+        )
     if len(result.layer3_skills) != len(set(result.layer3_skills)):
-        result.errors.append("Layer 3 Skills must be unique")
+        result.errors.append(
+            "selected Layer 3 list contains duplicates; selection must be "
+            "unique and fail closed"
+        )
     for name in result.layer3_skills:
         if name not in layer3:
             result.errors.append(f"unknown Layer 3 Skill '{name}'")

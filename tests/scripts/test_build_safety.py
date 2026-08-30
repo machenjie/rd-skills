@@ -570,6 +570,132 @@ Own one bounded decision.
                 self.assertEqual(b"not-a-directory", invalid.read_bytes())
                 self.assertEqual(b"current", current.read_bytes())
 
+    def test_build_removes_exact_pre_hookless_dist_and_zip_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            self._copy_source(root)
+
+            with self._layout(root) as dist:
+                hook_roots = (
+                    dist / "codex/project/.codex",
+                    dist / "codex/user/.codex",
+                    dist / "claude/project/.claude",
+                    dist / "claude/user/.claude",
+                    dist / "copilot/project/.github",
+                    dist / "copilot/user/.copilot",
+                )
+                legacy_directories = [
+                    *(hook_root / "hooks" for hook_root in hook_roots),
+                    dist / "universal/bootstrap",
+                    dist / "copilot/project/.github/copilot/agents",
+                    dist
+                    / "universal/skills/recommended/.changeforge-packs",
+                    dist
+                    / "universal/skills/recommended/.changeforge-control",
+                ]
+                for directory in legacy_directories:
+                    directory.mkdir(parents=True, exist_ok=True)
+                    (directory / "legacy.bin").write_bytes(b"legacy")
+
+                legacy_file_names = (
+                    ".changeforge-hook-manifest.json",
+                    "hooks.json",
+                    "settings.changeforge-hooks.fragment.json",
+                    "changeforge-route-preflight.md",
+                    "changeforge-professional-contract.md",
+                )
+                legacy_files = []
+                for hook_root in hook_roots:
+                    hook_root.mkdir(parents=True, exist_ok=True)
+                    for name in legacy_file_names:
+                        path = hook_root / name
+                        path.write_bytes(b"legacy")
+                        legacy_files.append(path)
+
+                legacy_root_zip = dist / "openai-api/zips/legacy-skill.zip"
+                legacy_root_zip.parent.mkdir(parents=True, exist_ok=True)
+                legacy_root_zip.write_bytes(b"legacy zip")
+
+                sentinels = (
+                    dist / "codex/project/.codex/user-owned.txt",
+                    dist / "unrelated/hooks/user-owned.txt",
+                    dist / "openai-api/zips/vendor/user-owned.zip",
+                )
+                for sentinel in sentinels:
+                    sentinel.parent.mkdir(parents=True, exist_ok=True)
+                    sentinel.write_bytes(b"preserve")
+
+                BUILD.build_profile("recommended")
+
+                self.assertTrue(all(not path.exists() for path in legacy_directories))
+                self.assertTrue(all(not path.exists() for path in legacy_files))
+                self.assertFalse(legacy_root_zip.exists())
+                for sentinel in sentinels:
+                    self.assertEqual(b"preserve", sentinel.read_bytes())
+                runtime = dist / "universal/skills/recommended"
+                self.assertEqual(
+                    27,
+                    len(
+                        [
+                            path
+                            for path in runtime.iterdir()
+                            if path.is_dir() and (path / "SKILL.md").is_file()
+                        ]
+                    ),
+                )
+
+    def test_legacy_cleanup_ambiguity_fails_before_any_mutation(self) -> None:
+        scenarios = {
+            "directory-is-file": Path("universal/bootstrap"),
+            "file-is-directory": Path("codex/project/.codex/hooks.json"),
+            "root-zip-is-directory": Path("openai-api/zips/legacy.zip"),
+        }
+        for scenario, relative in scenarios.items():
+            with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary) / "repo"
+                self._copy_source(root)
+
+                with self._layout(root) as dist:
+                    invalid = dist / relative
+                    invalid.parent.mkdir(parents=True, exist_ok=True)
+                    if scenario == "directory-is-file":
+                        invalid.write_bytes(b"ambiguous")
+                    else:
+                        invalid.mkdir()
+                    earlier = dist / "codex/project/.codex/hooks/legacy.bin"
+                    earlier.parent.mkdir(parents=True, exist_ok=True)
+                    earlier.write_bytes(b"preserve")
+                    current = dist / "universal/skills/recommended/prior.bin"
+                    current.parent.mkdir(parents=True, exist_ok=True)
+                    current.write_bytes(b"current")
+
+                    with self.assertRaises(BUILD.BuildError):
+                        BUILD.build_profile("recommended")
+
+                    self.assertEqual(b"preserve", earlier.read_bytes())
+                    self.assertEqual(b"current", current.read_bytes())
+
+    def test_legacy_cleanup_symlink_fails_before_any_mutation(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            self._copy_source(root)
+
+            with self._layout(root) as dist:
+                outside = root / "outside"
+                outside.mkdir()
+                legacy = dist / "codex/project/.codex/hooks"
+                legacy.parent.mkdir(parents=True)
+                legacy.symlink_to(outside, target_is_directory=True)
+                current = dist / "universal/skills/recommended/prior.bin"
+                current.parent.mkdir(parents=True)
+                current.write_bytes(b"current")
+
+                with self.assertRaises(BUILD.BuildError):
+                    BUILD.build_profile("recommended")
+
+                self.assertTrue(legacy.is_symlink())
+                self.assertEqual(b"current", current.read_bytes())
+
     def test_agent_profiles_remain_lf_canonical_with_windows_text_translation(
         self,
     ) -> None:
