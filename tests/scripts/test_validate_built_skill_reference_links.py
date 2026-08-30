@@ -76,7 +76,7 @@ def _build_runtime_subject(subject: Path) -> Path:
         result = build.build_profile(build.RUNTIME_PROFILE)
 
     if (
-        result["top_level_count"] != 27
+        result["top_level_count"] != 26
         or result["compiled_layer3_reference_count"] != 154
         or result["agent_profile_count"] != 4
     ):
@@ -87,7 +87,7 @@ def _build_runtime_subject(subject: Path) -> Path:
         (runtime_root / VALIDATOR.BUILD_MANIFEST_NAME).read_text(encoding="utf-8")
     )
     if (
-        len(manifest["top_level_skills"]) != 27
+        len(manifest["top_level_skills"]) != 26
         or sum(
             scope != "product"
             for scope in manifest["foundation_delivery_scopes"].values()

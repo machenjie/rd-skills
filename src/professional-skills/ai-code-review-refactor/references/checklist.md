@@ -16,7 +16,7 @@
 ## Professional Decision Rules
 
 - Judge every changed path in the actual latest diff within the fixed boundary.
-- Apply fixed review-risk selection and Core relation, severity, evidence, repair, and re-review rules without mutation, rerouting, or inferred approval.
+- Apply the assigned review-risk boundary, severity, evidence, repair, and re-review rules without mutation, scope expansion, or inferred approval.
 
 ## High-Value Gotchas
 

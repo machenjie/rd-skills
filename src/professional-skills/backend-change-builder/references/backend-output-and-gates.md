@@ -4,14 +4,13 @@ Load only for a `task-agent` implementing or repairing a bounded backend service
 
 ## Do Not Load
 
-Do not load for diagnosis, independent review, or work without a backend behavior change. Named Layer 3 Skills own specialized architecture, security, schema, lifecycle, algorithm, and release decisions.
+Do not load for diagnosis, independent review, or work without a backend behavior change. Specialized architecture, security, schema, lifecycle, algorithm, and release decisions remain with their authoritative capability boundaries.
 
 ## Output Contract
 
-Core implementation discipline and the assigned Implementation Handoff own the result,
-diff, changed files, final-edit ordering, validation commands/freshness, review handoff,
-unverified scope, and residual risk. Do not duplicate them here. Add the backend
-fields selected by triggered risk:
+The implementation contract owns the result, diff, changed files, final-edit ordering,
+validation commands/freshness, independent-review input, unverified scope, and residual
+risk. Do not duplicate them here. Add the backend fields selected by triggered risk:
 
 1. **Trust and resource scope:** identity source, validation boundary, permission/tenant rule, denied behavior, and—when attacker-controlled—server-side ownership/policy plus cross-user/tenant proof.
 2. **Consistency and side effects:** when partial success threatens an invariant, order, commit boundary, recovery, effect visibility, and transaction/compensation evidence for risky multi-step writes.
@@ -27,5 +26,5 @@ fields selected by triggered risk:
 4. Repeatable execution needs a duplicate outcome and bounded recovery; message/job delivery additionally proves acknowledgement, replay, and poison handling.
 5. Persistence plus event/cache/queue/external effects needs supported ordering that preserves the invariant and exposes partial success.
 6. Public API/schema/event/error/message changes need reach-proportional consumer and compatibility proof; current contracts choose versioning, tolerant/additive change, migration, dual operation, or cutover.
-7. Core adaptive testing selects fresh post-edit checks; map each triggered risk to reachable unit, integration, contract, replay, fault, concurrency, or manual evidence.
+7. Map each triggered risk to fresh post-edit unit, integration, contract, replay, fault, concurrency, or manual evidence that exercises the changed behavior.
 8. Irreversible data, broad consumers, unsafe replay, or hidden partial failure needs evidence-backed detection and containment, rollback/repair, staged exposure, feature control, or watch.

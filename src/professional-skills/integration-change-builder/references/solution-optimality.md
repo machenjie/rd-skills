@@ -12,4 +12,4 @@ Derive thresholds from the current repository/provider baseline, representative 
 2. Is synchronous, deferred, queued, polled, or callback delivery justified by current latency, availability, ordering, and recovery needs, and what is the simplest supported path?
 3. How do timeout, retry, concurrency, backpressure, and idempotency choices affect amplification, local resource saturation, provider limits, and duplicate outcomes?
 4. When external state can diverge materially, what detection, comparison, reconciliation, or migration evidence is proportional to the business consequence rather than assumed for every integration?
-5. If provider, reliability, cost, and consistency tradeoffs remain coupled, identify `solution-optimality-evaluation` as the broader owner; this reference does not load it automatically.
+5. If provider, reliability, cost, and consistency tradeoffs remain coupled, record broader tradeoff analysis as unresolved scope with its evidence need and decision owner.

@@ -1,10 +1,10 @@
 # Security Output And Gates
 
-Load for L3-L5 closure and proof of one selected security or privacy risk.
+Load for extended closure and proof of one selected security or privacy risk.
 
 ## Do Not Load
 
-Skip when the root/checklist closes the risk or no trust, data, dependency, cloud, secret, AI, or tool-authority boundary changes. Named Layer 3 owns its mechanism.
+Skip when the root/checklist closes the risk or no trust, data, dependency, cloud, secret, AI, or tool-authority boundary changes. Specialized mechanism decisions remain with their authoritative capability boundaries.
 
 ## Output Contract
 

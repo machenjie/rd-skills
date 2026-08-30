@@ -1,10 +1,10 @@
 # AI Review Output And Gates
 
-Load only for an L5 implementation or repair-diff review needing the full finding, decision, blocked, or re-review contract.
+Load only for an exhaustive implementation or repair-diff review needing the full finding, decision, blocked, or re-review contract.
 
 ## Do Not Load
 
-Skip when the compact root is sufficient. An unavailable actual diff blocks implementation review. This Reference owns review judgment; selected Layer 3 Skills own specialized decisions.
+Skip when the compact root is sufficient. An unavailable actual diff blocks implementation review. This Reference owns implementation-diff review judgment; specialized domain decisions remain outside its authority.
 
 ## Output Contract
 

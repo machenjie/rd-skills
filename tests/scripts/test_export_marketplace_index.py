@@ -69,12 +69,12 @@ class ExportMarketplaceIndexTests(unittest.TestCase):
 
     def test_index_shape_and_layer_counts(self) -> None:
         payload = self.payload
-        self.assertEqual(len(payload["items"]), 190)
+        self.assertEqual(len(payload["items"]), 189)
         self.assertEqual(
             Counter(item["type"] for item in payload["items"]),
             {
                 "control_skill": 1,
-                "professional_skill": 26,
+                "professional_skill": 25,
                 "foundation_skill": 150,
                 "domain_skill": 13,
             },
@@ -91,11 +91,11 @@ class ExportMarketplaceIndexTests(unittest.TestCase):
             item["profile_delivery"]["mode"]
             for item in self.payload["items"]
         )
-        self.assertEqual(top_level, 27)
+        self.assertEqual(top_level, 26)
         self.assertEqual(
             modes,
             {
-                "top_level_skill": 27,
+                "top_level_skill": 26,
                 "targeted_reference": 154,
                 "routing_index_only": 9,
             },
@@ -109,7 +109,7 @@ class ExportMarketplaceIndexTests(unittest.TestCase):
         ]
         self.assertEqual(
             Counter(item["type"] for item in top_level),
-            {"control_skill": 1, "professional_skill": 26},
+            {"control_skill": 1, "professional_skill": 25},
         )
         self.assertTrue(
             all(

@@ -2117,25 +2117,25 @@
       "tasks": [
         {"id":"A","primary_skill":"backend-change-builder","dependencies":[],"implementation_layer3":["regression-testing"],"review_requirements":{"required_review_skills":["ai-code-review-refactor"],"specialist_obligations":[],"professional_risk_dimensions":["correctness"]}},
         {"id":"B","primary_skill":"data-middleware-change-builder","dependencies":[],"implementation_layer3":[],"review_requirements":{"required_review_skills":["quality-test-gate"],"specialist_obligations":["validation"],"professional_risk_dimensions":["tests"]}},
-        {"id":"C","primary_skill":"security-privacy-gate","dependencies":["B"],"implementation_layer3":[],"review_requirements":{"required_review_skills":["routing-quality-review"],"specialist_obligations":["routing"],"professional_risk_dimensions":["routing"]}}
+        {"id":"C","primary_skill":"security-privacy-gate","dependencies":["B"],"implementation_layer3":[],"review_requirements":{"required_review_skills":["architecture-impact-reviewer"],"specialist_obligations":["architecture"],"professional_risk_dimensions":["architecture"]}}
       ],
       "review_boundary": {
         "review_boundary_id": "RB-A-B-C",
         "review_strategy": "combined-final",
         "review_round_id": "RR-A-B-C-1",
         "effective_level": "L4",
-        "required_review_skills": ["ai-code-review-refactor","quality-test-gate","routing-quality-review"],
-        "specialist_obligations": ["validation","routing"],
+        "required_review_skills": ["ai-code-review-refactor","architecture-impact-reviewer","quality-test-gate"],
+        "specialist_obligations": ["architecture","validation"],
         "covered_task_ids": ["A","B","C"],
         "required_changed_scope": ["src/a.py","src/b.py","src/c.py"],
-        "professional_risk_dimensions": ["correctness","tests","routing"],
+        "professional_risk_dimensions": ["architecture","correctness","tests"],
         "required_validation_evidence_binding": {"generation":"current","coverage":"covered-task-ids"},
         "review_assignments": [
-          {"assignment_id":"RA-routing","role":"specialist","profile":"review-agent","review_skill":"routing-quality-review","layer3_skills":[],"layer3_selection_basis":"review-risk","scope":["src/c.py"]},
+          {"assignment_id":"RA-architecture","role":"specialist","profile":"review-agent","review_skill":"architecture-impact-reviewer","layer3_skills":[],"layer3_selection_basis":"review-risk","scope":["src/c.py"]},
           {"assignment_id":"RA-quality","role":"specialist","profile":"review-agent","review_skill":"quality-test-gate","layer3_skills":[],"layer3_selection_basis":"review-risk","scope":["src/a.py","src/b.py","src/c.py"]},
           {"assignment_id":"RA-primary","role":"primary","profile":"review-agent","review_skill":"ai-code-review-refactor","layer3_skills":["code-review"],"layer3_selection_basis":"review-risk","scope":["src/a.py","src/b.py","src/c.py"]}
         ],
-        "primary_close_ordering": {"required_specialist_assignment_ids":["RA-routing","RA-quality"],"primary_assignment_id":"RA-primary","specialists_before_primary":true,"primary_close_count":1}
+        "primary_close_ordering": {"required_specialist_assignment_ids":["RA-architecture","RA-quality"],"primary_assignment_id":"RA-primary","specialists_before_primary":true,"primary_close_count":1}
       },
       "events": [
         {"action":"edit","task_id":"A","generation":1,"invalidated_evidence_task_ids":["A"],"retained_evidence_task_ids":["B","C"]},
@@ -2147,13 +2147,13 @@
         {"action":"edit","task_id":"B","generation":2,"invalidated_evidence_task_ids":["B","C"],"retained_evidence_task_ids":["A"]},
         {"action":"validate","task_id":"B","generation":2},
         {"action":"validate","task_id":"C","generation":1},
-        {"action":"assignment-result","assignment_id":"RA-routing","result_id":"RAR-routing-1","review_round_id":"RR-A-B-C-1","task_generations":{"A":1,"B":2,"C":1},"evidence_scope":["src/c.py"],"verdict":"pass"},
+        {"action":"assignment-result","assignment_id":"RA-architecture","result_id":"RAR-architecture-1","review_round_id":"RR-A-B-C-1","task_generations":{"A":1,"B":2,"C":1},"evidence_scope":["src/c.py"],"verdict":"pass"},
         {"action":"assignment-result","assignment_id":"RA-quality","result_id":"RAR-quality-1","review_round_id":"RR-A-B-C-1","task_generations":{"A":1,"B":2,"C":1},"evidence_scope":["src/a.py","src/b.py","src/c.py"],"verdict":"pass"},
         {"action":"assignment-result","assignment_id":"RA-primary","result_id":"RAR-primary-1","review_round_id":"RR-A-B-C-1","task_generations":{"A":1,"B":2,"C":1},"evidence_scope":["src/a.py","src/b.py","src/c.py"],"verdict":"pass"},
-        {"action":"combined-artifact","artifact":{"artifact_id":"CRA-A-B-C-v2","artifact_digest":"7bfa0be6908a66b6def8b60652f8df8d815520b6150d7797a04906801829037f","review_boundary_id":"RB-A-B-C","review_round_id":"RR-A-B-C-1","covered_task_ids":["A","B","C"],"required_changed_scope":["src/a.py","src/b.py","src/c.py"],"evidence_scope":["src/a.py","src/b.py","src/c.py"],"task_generations":{"A":1,"B":2,"C":1},"assignment_result_ids":["RAR-routing-1","RAR-quality-1","RAR-primary-1"],"primary_assignment_id":"RA-primary","verdict":"pass"}},
-        {"action":"task-projection","projection":{"task_id":"A","artifact_id":"CRA-A-B-C-v2","artifact_digest":"7bfa0be6908a66b6def8b60652f8df8d815520b6150d7797a04906801829037f","review_boundary_id":"RB-A-B-C","review_round_id":"RR-A-B-C-1","generation":1}},
-        {"action":"task-projection","projection":{"task_id":"B","artifact_id":"CRA-A-B-C-v2","artifact_digest":"7bfa0be6908a66b6def8b60652f8df8d815520b6150d7797a04906801829037f","review_boundary_id":"RB-A-B-C","review_round_id":"RR-A-B-C-1","generation":2}},
-        {"action":"task-projection","projection":{"task_id":"C","artifact_id":"CRA-A-B-C-v2","artifact_digest":"7bfa0be6908a66b6def8b60652f8df8d815520b6150d7797a04906801829037f","review_boundary_id":"RB-A-B-C","review_round_id":"RR-A-B-C-1","generation":1}},
+        {"action":"combined-artifact","artifact":{"artifact_id":"CRA-A-B-C-v2","artifact_digest":"26cefbde94c3254338d4f5fd60fbd26fe2e84b9050ef22e497f112f20c51d613","review_boundary_id":"RB-A-B-C","review_round_id":"RR-A-B-C-1","covered_task_ids":["A","B","C"],"required_changed_scope":["src/a.py","src/b.py","src/c.py"],"evidence_scope":["src/a.py","src/b.py","src/c.py"],"task_generations":{"A":1,"B":2,"C":1},"assignment_result_ids":["RAR-architecture-1","RAR-quality-1","RAR-primary-1"],"primary_assignment_id":"RA-primary","verdict":"pass"}},
+        {"action":"task-projection","projection":{"task_id":"A","artifact_id":"CRA-A-B-C-v2","artifact_digest":"26cefbde94c3254338d4f5fd60fbd26fe2e84b9050ef22e497f112f20c51d613","review_boundary_id":"RB-A-B-C","review_round_id":"RR-A-B-C-1","generation":1}},
+        {"action":"task-projection","projection":{"task_id":"B","artifact_id":"CRA-A-B-C-v2","artifact_digest":"26cefbde94c3254338d4f5fd60fbd26fe2e84b9050ef22e497f112f20c51d613","review_boundary_id":"RB-A-B-C","review_round_id":"RR-A-B-C-1","generation":2}},
+        {"action":"task-projection","projection":{"task_id":"C","artifact_id":"CRA-A-B-C-v2","artifact_digest":"26cefbde94c3254338d4f5fd60fbd26fe2e84b9050ef22e497f112f20c51d613","review_boundary_id":"RB-A-B-C","review_round_id":"RR-A-B-C-1","generation":1}},
         {"action":"complete","review_round_count":1,"primary_close_count":1}
       ]
     },

@@ -106,7 +106,7 @@ class PackageSafetyTests(unittest.TestCase):
 
     def test_packages_exact_current_runtime(self) -> None:
         with self._runtime_layout() as (_root, source, zip_root):
-            self.assertEqual(27, PACKAGE.package_profile())
+            self.assertEqual(26, PACKAGE.package_profile())
             output = zip_root / "recommended"
             self.assertEqual(
                 {f"{path.name}.zip" for path in source.iterdir() if path.is_dir()},

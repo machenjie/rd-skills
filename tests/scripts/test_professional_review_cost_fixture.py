@@ -41,7 +41,7 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
 
         fixture = REGRESSION._calculate_professional_review_cost_fixtures()
         self.assertEqual(
-            189,
+            188,
             fixture["review_contract_change"]["fresh_target_count"],
         )
 
@@ -200,7 +200,7 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
         self.assertEqual(
             {
                 "fresh_target_count": 0,
-                "carried_forward_target_count": 189,
+                "carried_forward_target_count": 188,
                 "input_ratio_ppm": 0,
             },
             fixture["unchanged"],
@@ -234,8 +234,8 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
             },
             set(sensitivity),
         )
-        self.assertEqual(189, sensitivity["case_count"])
-        self.assertEqual(189, REGRESSION.expert_panel.PROFESSIONAL_PACKAGE_COUNT)
+        self.assertEqual(188, sensitivity["case_count"])
+        self.assertEqual(188, REGRESSION.expert_panel.PROFESSIONAL_PACKAGE_COUNT)
         self.assertLessEqual(
             sensitivity["fresh_target_count"]["max"],
             thresholds["maximum_fresh_target_count"],
@@ -315,7 +315,7 @@ class ProfessionalReviewCostFixtureTests(unittest.TestCase):
         ]
         mutations = {
             "case-count": lambda sensitivity: sensitivity.update(
-                {"case_count": 188}
+                {"case_count": 189}
             ),
             "fresh-max": lambda sensitivity: sensitivity[
                 "fresh_target_count"

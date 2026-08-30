@@ -1,14 +1,15 @@
 ---
 name: engineering-change-analysis
-description: "Use `analysis-agent`: `implementation-preparation` for changes, `diagnosis-only` for verified cause, or `source-backed-answer` for repository questions. Skip source-free, Direct Task, and accepted-Brief narrow artifacts."
+description: "`analysis-agent`: `implementation-preparation` for source-backed changes, `diagnosis-only` for causes, or `source-backed-answer` for repo questions; skip source-free, implementation-ready, and accepted-artifact work."
 ---
 
 # engineering-change-analysis
 
 ## Role
 
-For `analysis-agent`, this root owns mode choice, evidence trust, read-only scope,
-and the no-reroute boundary; the mode contract owns output.
+For `analysis-agent`, choose the analysis mode, bound evidence trust and
+read-only scope, and return the selected mode's result without silently
+switching problem definitions.
 
 ## When To Use
 
@@ -18,7 +19,7 @@ and the no-reroute boundary; the mode contract owns output.
 
 ## Do Not Use
 
-- eligible bounded Direct Task
+- bounded implementation-ready change whose owner, behavior, and verification are established
 - source-free question
 - accepted Engineering Brief already exists and the user explicitly requests one narrow artifact analysis
 - module-boundary placement decision
@@ -35,9 +36,13 @@ and the no-reroute boundary; the mode contract owns output.
 - Load exactly the selected mode contract and only active named References.
 - Never preload the index.
 - Separate source fact, supported inference, and unknown.
-- Prove ownership or placement from current source rather than proximity.
-- Keep Professional, Layer3, and mode fixed; never reroute.
-- Keep Core analyzed authority fixed; never create parallel authority.
+- Prove ownership from current source rather than proximity.
+- Establish placement from the current dependency graph.
+- Keep the selected question and mode fixed during a bounded analysis.
+- Treat earlier reports and generated graphs as selectors until current source
+  confirms their claims.
+- Do not turn an evidence gap into an implementation decision.
+- Identify the unresolved owner and consequence for every material gap.
 
 ## High-Value Gotchas
 
@@ -50,8 +55,8 @@ and the no-reroute boundary; the mode contract owns output.
 
 ## Stop / Escalation Conditions
 
-- A mode conflict, user choice, or result-invalidating gap returns `blocked`
-  without changing mode or route.
+- A mode conflict, user-owned choice, or result-invalidating gap returns a
+  blocked result with the missing evidence and affected decision named.
 
 ## Output Contract
 

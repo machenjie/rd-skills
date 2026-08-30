@@ -28,7 +28,7 @@ an installation source.
   contracts.
 - [Subagent model](SUBAGENT_MODEL.md): four roles, handoffs, and write
   serialization.
-- [Runtime build](BUILD_PROFILES.md): the one 27-Skill top-level surface, JIT
+- [Runtime build](BUILD_PROFILES.md): the one 26-Skill top-level surface, JIT
   Layer 3 delivery, compatibility path, and manifests.
 - [Marketplace](MARKETPLACE.md): how to use the source-derived discovery views.
 - [Marketplace Catalog](MARKETPLACE_CATALOG.md): generated Skill inventory and

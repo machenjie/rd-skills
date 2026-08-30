@@ -836,7 +836,7 @@ def _synthetic_schema1_professional_decision():
 def _synthetic_schema3_professional_decision(
     *, mutate_registered_selection: bool = False
 ):
-    """Materialize one minimal 189-package decision without checked-in history."""
+    """Materialize one minimal 188-package decision without checked-in history."""
 
     content = "\n".join(
         [
@@ -871,7 +871,7 @@ def _synthetic_schema3_professional_decision(
     }
     target_specs = sorted(
         (f"synthetic-professional-{index:03d}", "professional")
-        for index in range(26)
+        for index in range(25)
     ) + sorted(
         (f"synthetic-foundation-{index:03d}", "foundation")
         for index in range(150)

@@ -31,7 +31,7 @@ The current contract stores one package-material binding and one review-unit
 binding per target, deduplicates dependency materials in one compact catalog,
 and stores only dependency IDs per finding. Legacy source/package/review-binding
 aliases and earlier schema-3 contract fingerprints are audit-only; a contract
-change requires a full-fresh 189-Skill review.
+change requires a full-fresh 188-Skill review.
 
 ## Required Design
 

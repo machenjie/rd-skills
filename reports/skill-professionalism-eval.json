@@ -156,7 +156,6 @@
       "requirement-clarification",
       "requirement-structuring",
       "routing-navigation-design",
-      "routing-quality-review",
       "rust-professional-usage",
       "scenario-decomposition",
       "sdk-library-contract-design",
@@ -649,9 +648,6 @@
       "routing-navigation-design": [
         "full-evaluation"
       ],
-      "routing-quality-review": [
-        "full-evaluation"
-      ],
       "rust-professional-usage": [
         "full-evaluation"
       ],
@@ -775,10 +771,10 @@
     "Scores measure source and registry completeness, not engineering accuracy.",
     "Efficiency and adoption thresholds are not evaluated by this command."
   ],
-  "skills_checked": 190,
+  "skills_checked": 189,
   "counts_by_kind": {
     "control": 1,
-    "professional": 26,
+    "professional": 25,
     "foundation": 150,
     "domain": 13
   },
@@ -786,9 +782,8 @@
   "warning_count": 0,
   "professional_review_risk_matrix": {
     "selector": "professional-skills.yaml role_support contains review-agent",
-    "covered_skill_count": 11,
+    "covered_skill_count": 10,
     "covered_skill_ids": [
-      "routing-quality-review",
       "high-risk-design-review",
       "engineering-artifact-review",
       "architecture-impact-reviewer",
@@ -843,51 +838,6 @@
       "benchmark_coverage_count": 0
     },
     {
-      "name": "routing-quality-review",
-      "kind": "professional",
-      "path": "src/professional-skills/routing-quality-review/SKILL.md",
-      "status": "pass",
-      "authoring_score": 100,
-      "required_sections": [
-        "Role",
-        "When To Use",
-        "Do Not Use",
-        "Required Inputs",
-        "Professional Decision Rules",
-        "High-Value Gotchas",
-        "Execution Checklist",
-        "Stop / Escalation Conditions",
-        "Output Contract",
-        "Targeted References"
-      ],
-      "missing_sections": [],
-      "missing_registry_fields": [],
-      "broken_references": [],
-      "unlinked_references": [],
-      "errors": [],
-      "warnings": [],
-      "role_support": [
-        "review-agent"
-      ],
-      "trigger_signals": [
-        "rd-skills routing registry or router change",
-        "route fixture owner conflict",
-        "independently assigned post-authoring review of a changed rd-skills routing asset"
-      ],
-      "anti_trigger_signals": [
-        "ordinary product engineering task",
-        "global re-routing from inside a dispatched task agent",
-        "no changed rd-skills routing asset or route-owner conflict to review"
-      ],
-      "layer3_candidates": [],
-      "line_count": 75,
-      "decision_rule_count": 5,
-      "gotcha_count": 3,
-      "reference_count": 1,
-      "routing_coverage_count": 0,
-      "benchmark_coverage_count": 0
-    },
-    {
       "name": "change-intake-compiler",
       "kind": "professional",
       "path": "src/professional-skills/change-intake-compiler/SKILL.md",
@@ -928,7 +878,7 @@
         "non-goal-boundary-definition",
         "user-role-identification"
       ],
-      "line_count": 83,
+      "line_count": 78,
       "decision_rule_count": 4,
       "gotcha_count": 3,
       "reference_count": 4,
@@ -968,7 +918,7 @@
         "source-backed-answer for a repository-dependent engineering question"
       ],
       "anti_trigger_signals": [
-        "eligible bounded Direct Task",
+        "eligible bounded Direct Task whose ownership, behavior, and verification are already established",
         "source-free question",
         "accepted Engineering Brief already exists and the user explicitly requests one narrow artifact analysis",
         "module-boundary placement decision",
@@ -1013,8 +963,8 @@
         "configuration-runtime-policy",
         "dependency-vulnerability-scanning"
       ],
-      "line_count": 70,
-      "decision_rule_count": 6,
+      "line_count": 75,
+      "decision_rule_count": 9,
       "gotcha_count": 1,
       "reference_count": 7,
       "routing_coverage_count": 103,
@@ -1107,8 +1057,8 @@
         "task-dag-decomposition",
         "release-rollback"
       ],
-      "line_count": 97,
-      "decision_rule_count": 24,
+      "line_count": 103,
+      "decision_rule_count": 22,
       "gotcha_count": 2,
       "reference_count": 4,
       "routing_coverage_count": 1,
@@ -1199,8 +1149,8 @@
       "anti_trigger_signals": [
         "actual implementation diff review",
         "ordinary Direct Task",
-        "high-risk Engineering Brief; use `high-risk-design-review`",
-        "release deployment or migration readiness; use `delivery-release-gate`"
+        "high-risk Engineering Brief specialist review",
+        "release deployment or migration readiness approval"
       ],
       "layer3_candidates": [
         "code-review"
@@ -2308,10 +2258,10 @@
         "Diagnosis, mitigation, communications, and handoff need synchronization."
       ],
       "anti_trigger_signals": [
-        "Route ordinary diagnosis to `engineering-change-analysis` and its failure-diagnosis path.",
-        "Route reliability design or review to `reliability-observability-gate`.",
-        "Route a release or rollback decision to `delivery-release-gate`.",
-        "Route post-incident documentation to `change-documentation-gate`.",
+        "ordinary single-owner diagnosis without active coordination",
+        "reliability design or review without incident-command work",
+        "release or rollback approval",
+        "post-incident documentation after coordination is closed",
         "Do not use this Skill to mutate production, deploy, execute a destructive action, or bypass operator authority."
       ],
       "layer3_candidates": [
@@ -6246,10 +6196,10 @@
         "no task-local skill authoring expert decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 78,
+      "line_count": 86,
       "decision_rule_count": 6,
       "gotcha_count": 5,
-      "reference_count": 3,
+      "reference_count": 4,
       "routing_coverage_count": 0,
       "benchmark_coverage_count": 0
     },
@@ -6873,9 +6823,9 @@
         "no task-local skill efficacy benchmark decision is required"
       ],
       "layer3_candidates": [],
-      "line_count": 60,
+      "line_count": 66,
       "decision_rule_count": 8,
-      "gotcha_count": 5,
+      "gotcha_count": 11,
       "reference_count": 3,
       "routing_coverage_count": 0,
       "benchmark_coverage_count": 0

@@ -22,32 +22,13 @@ automatic_routing_policy:
       review_skill: architecture-impact-reviewer
       reason: implementation-owner-conflict
 professional_skills:
-  - name: routing-quality-review
-    routing_mode: not-automatic
-    required_expertise_tags: ["foundation-engineering-workflow", "foundation-repository-intelligence"]
-    path: "src/professional-skills/routing-quality-review"
-    role_support: ["review-agent"]
-    trigger_signals: ["rd-skills routing registry or router change", "route fixture owner conflict", "independently assigned post-authoring review of a changed rd-skills routing asset"]
-    anti_trigger_signals: ["ordinary product engineering task", "global re-routing from inside a dispatched task agent", "no changed rd-skills routing asset or route-owner conflict to review"]
-    required_inputs: ["four Skill registries", "compact routing index", "changed routing fixtures"]
-    output_contract: ["routing findings", "trigger and anti-trigger conflicts", "coverage gaps", "validation results"]
-    escalation_signals: ["scope, authority, or material risk exceeds the selected task contract"]
-    reference_index:
-      - path: "references/routing-maintenance-checklist.md"
-        type: decision-checklist
-        load_when: "routing review detects owner, trigger, or fixture conflicts"
-        do_not_load_when: "routing registry and fixtures are unchanged or already agree"
-        required_by: ["review-agent"]
-        required_output: ["checklist-result", "residual-risk"]
-    layer3_candidates: []
-    task_routable: false
   - name: change-intake-compiler
     routing_mode: evidence-only
     required_expertise_tags: ["foundation-intake-requirements"]
     path: "src/professional-skills/change-intake-compiler"
     role_support: ["analysis-agent"]
     trigger_signals: ["ambiguous request", "missing desired behavior"]
-    anti_trigger_signals: ["accepted Engineering Brief already exists", "no-repo direct-answer mode"]
+    anti_trigger_signals: ["accepted Engineering Brief already exists", "questions fully determined by user-supplied facts that require no repository evidence or engineering intent compilation"]
     required_inputs: ["request summary", "observed current behavior"]
     output_contract: ["minimal intent slice with current behavior, desired behavior, observable acceptance or completion signal, constraints, non-goals, and affected surfaces", "assumptions", "open questions"]
     escalation_signals: ["scope, authority, or material risk exceeds the selected task contract"]
@@ -84,7 +65,7 @@ professional_skills:
     path: "src/professional-skills/engineering-change-analysis"
     role_support: ["analysis-agent"]
     trigger_signals: ["implementation-preparation for source-backed desired-behavior, affected-consumer, and verification analysis before implementation or repair", "diagnosis-only for verified cause analysis", "source-backed-answer for a repository-dependent engineering question"]
-    anti_trigger_signals: ["eligible bounded Direct Task", "source-free question", "accepted Engineering Brief already exists and the user explicitly requests one narrow artifact analysis", "module-boundary placement decision", "dependency-direction placement decision"]
+    anti_trigger_signals: ["bounded implementation-ready change whose owner, behavior, and verification are established", "source-free question", "accepted Engineering Brief already exists and the user explicitly requests one narrow artifact analysis", "module-boundary placement decision", "dependency-direction placement decision"]
     required_inputs: ["explicit mode: implementation-preparation, diagnosis-only, or source-backed-answer", "user request or question", "bounded repository read scope and known constraints", "current source and test evidence discovered within the assigned scope"]
     output_contract: ["implementation-preparation result defined by references/implementation-preparation.md with one initial Analysis or protected-decision Delta Analysis", "diagnosis-only result defined by references/diagnosis-only.md", "source-backed-answer result defined by references/source-backed-answer.md", "source-backed affected-consumer evidence and unresolved structural-risk handoff to `architecture-impact-reviewer`"]
     escalation_signals: ["scope, authority, or material risk exceeds the selected task contract"]
@@ -240,8 +221,8 @@ professional_skills:
         required_output: ["evidence-record", "proof-limit", "residual-risk"]
       - path: "references/task-contract-patterns.md"
         type: benchmark-pattern
-        load_when: "Nodes must be executable by a fresh agent or placeholder tasks need replacement"
-        do_not_load_when: "L1/L2 handoff already has exact files, command, and residual risk"
+        load_when: "Nodes must be executable by a fresh implementer or placeholder tasks need replacement"
+        do_not_load_when: "Existing task contracts already name exact scope, behavior, validation, and residual risk"
         required_by: ["analysis-agent"]
         required_output: ["option-comparison", "selected-approach"]
     layer3_candidates: ["task-dag-decomposition", "release-rollback"]
@@ -271,7 +252,7 @@ professional_skills:
     path: "src/professional-skills/engineering-artifact-review"
     role_support: ["review-agent"]
     trigger_signals: ["ordinary Engineering Brief Task Plan acceptance or contract artifact needs independent review", "pre-implementation decision affects downstream tasks"]
-    anti_trigger_signals: ["actual implementation diff review", "ordinary Direct Task", "high-risk Engineering Brief; use `high-risk-design-review`", "release deployment or migration readiness; use `delivery-release-gate`"]
+    anti_trigger_signals: ["actual implementation diff review", "bounded implementation task with no separate decision artifact", "high-risk Engineering Brief specialist review", "release deployment or migration readiness approval"]
     required_inputs: ["acceptance", "decision boundary", "actual engineering artifact", "source evidence"]
     output_contract: ["verdict and severity-ranked findings", "reviewed, unreviewed, and unverified scope", "owner, dependency, first-slice, validation, and rollback assessment", "downstream impact and residual risk"]
     escalation_signals: ["scope, authority, or material risk exceeds the selected task contract"]
@@ -279,7 +260,7 @@ professional_skills:
       - path: "references/review-checklist.md"
         type: decision-checklist
         load_when: "ordinary pre-implementation artifact decisions have downstream impact"
-        do_not_load_when: "the task is implementation diff review, a Direct Task, high-risk design, or release/deployment/migration readiness"
+        do_not_load_when: "the task is implementation diff review, a bounded implementation task with no separate decision artifact, high-risk design, or release/deployment/migration readiness"
         required_by: ["review-agent"]
         required_output: ["checklist-result", "residual-risk"]
     layer3_candidates: ["code-review"]
@@ -1342,7 +1323,7 @@ professional_skills:
     path: "src/professional-skills/incident-response-coordinator"
     role_support: ["analysis-agent"]
     trigger_signals: ["Multiple responders or workstreams need one command structure.", "Impact needs a shared severity and update cadence.", "Diagnosis, mitigation, communications, and handoff need synchronization."]
-    anti_trigger_signals: ["Route ordinary diagnosis to `engineering-change-analysis` and its failure-diagnosis path.", "Route reliability design or review to `reliability-observability-gate`.", "Route a release or rollback decision to `delivery-release-gate`.", "Route post-incident documentation to `change-documentation-gate`.", "Do not use this Skill to mutate production, deploy, execute a destructive action, or bypass operator authority."]
+    anti_trigger_signals: ["ordinary single-owner diagnosis without active coordination", "reliability design or review without incident-command work", "release or rollback approval", "post-incident documentation after coordination is closed", "Do not use this Skill to mutate production, deploy, execute a destructive action, or bypass operator authority."]
     required_inputs: ["current impact scope severity indicators and time basis", "responder authority roles communication channels and decision cadence", "known evidence hypotheses mitigations recovery signals and handoff constraints"]
     output_contract: ["incident command record with severity roles cadence workstreams evidence and decision log", "mitigation coordination authorization recovery verification communications and handoff record", "proof limits unresolved risk owners and closure criteria"]
     escalation_signals: ["command authority safety boundary destructive mitigation communication owner or recovery evidence remains unresolved"]

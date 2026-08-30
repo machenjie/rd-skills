@@ -102,7 +102,7 @@ def _build_runtime_subject(subject: Path) -> None:
         ),
     ):
         result = BUILD.build_profile(BUILD.RUNTIME_PROFILE)
-    if result["top_level_count"] != 27 or result["agent_profile_count"] != 4:
+    if result["top_level_count"] != 26 or result["agent_profile_count"] != 4:
         raise AssertionError(f"temporary Runtime build is incomplete: {result}")
 
 
@@ -1355,14 +1355,21 @@ class RenderedContextBudgetTests(unittest.TestCase):
             ROOT
             / "src/professional-skills/engineering-change-analysis/references/implementation-preparation.md"
         ).read_text(encoding="utf-8")
-        for mode_only_term in (
+        control_template = (
+            ROOT
+            / "src/control-skills/engineering-control-plane/references/engineering-brief-template.md"
+        ).read_text(encoding="utf-8")
+        for control_only_term in (
             "Task Contract v2",
             "Delta Impact:",
-            "## First Executable Slice",
         ):
-            with self.subTest(mode_only_term=mode_only_term):
-                self.assertNotIn(mode_only_term, analysis_root)
-                self.assertIn(mode_only_term, implementation)
+            with self.subTest(control_only_term=control_only_term):
+                self.assertNotIn(control_only_term, analysis_root)
+                self.assertNotIn(control_only_term, implementation)
+                self.assertIn(control_only_term, control_template)
+
+        self.assertNotIn("## First Executable Slice", analysis_root)
+        self.assertIn("`## First Executable Slice`", implementation)
 
     def test_review_profile_keeps_evidence_localization_and_depth_on_all_hosts(
         self,
@@ -5749,8 +5756,8 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     "over_target_candidate_count": 0,
                 },
                 "review": {
-                    "candidate_count": 38_009,
-                    "exact_render_signature_count": 16_641,
+                    "candidate_count": 38_007,
+                    "exact_render_signature_count": 16_640,
                     "over_target_candidate_count": 0,
                 },
             },
@@ -5772,7 +5779,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             global_union["frontier_counts"],
         )
         self.assertEqual(
-            {"professional": 16, "layer3": 67, "active_reference": 266},
+            {"professional": 15, "layer3": 67, "active_reference": 265},
             global_union["safe_complement_counts"],
         )
         self.assertEqual(
@@ -5803,7 +5810,6 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "quality-test-gate",
                 "reliability-observability-gate",
                 "repository-tooling-change-builder",
-                "routing-quality-review",
                 "security-privacy-gate",
             ],
             global_union["safe_complement"]["professional"],
@@ -5812,9 +5818,9 @@ class RenderedContextBudgetTests(unittest.TestCase):
             "frontier_professional": "670f31c8451a9b4fc944ac94496da89cf2e467153b12b091eea773eeee55347b",
             "frontier_layer3": "19eb9224c89564506dc53a42dbe142249116da35bebe8ce600993a52d184e400",
             "frontier_active_reference": "ad6de5ae9c144243d6eb8e1a5c9b6d185009a32af4ce6b87781bfba21b905742",
-            "safe_complement_professional": "8140a635ffa50a39c1ade6ec43be9c9878d04993302933c5bee4934df7a760c8",
+            "safe_complement_professional": "d9b3eee6e4a98320ab5983788f71d2b4d02130e2d4ed0fdaecd73c8dc04768d1",
             "safe_complement_layer3": "23ff1d3fa459336a191d22083aa9b37c3923a315acee6c0e8c4de759ccac6d49",
-            "safe_complement_active_reference": "4b636b9360ec625a296952332399dec30110ad26821df2eafb3644d3f8b25d20",
+            "safe_complement_active_reference": "b93be868d40306dd48576254eb9d5594d841a781777cd71643c00063819184a5",
         }
         actual_membership_sha256 = {
             f"{placement}_{member_kind}": EVAL._sha256_text(
@@ -8546,7 +8552,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         )
 
         for path, expected_sha256 in {
-            "src/professional-skills/platform-infrastructure-change-builder/SKILL.md": "4d43548f48103571f863dc798d5023ae7ad18bd9a674cc74ec14557ee7a74d0a",
+            "src/professional-skills/platform-infrastructure-change-builder/SKILL.md": "2543b9cc91b1efa0696905015b5b6a6d11126798e14c386ad95591b12c1ab1da",
             "src/professional-skills/platform-infrastructure-change-builder/references/iac-source-contracts.md": "a0265060cbbe58e1ac9771511848498335614965a9110aa2af55298773168570",
             "src/foundation/capabilities/powershell-professional-usage/references/pipeline-error-and-native-contracts.md": "ab30d62d5e947340effe9918dd49546f2e69c47806b049c4f125673260833c8e",
             "src/foundation/capabilities/powershell-professional-usage/references/remoting-provider-and-administration-contracts.md": "97ce7438c774d56a64d46fd241c3d6876b97929b8294f43897818185ba812cd4",
@@ -8849,7 +8855,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         )
 
         protected_sources = {
-            "src/professional-skills/platform-infrastructure-change-builder/SKILL.md": "4d43548f48103571f863dc798d5023ae7ad18bd9a674cc74ec14557ee7a74d0a",
+            "src/professional-skills/platform-infrastructure-change-builder/SKILL.md": "2543b9cc91b1efa0696905015b5b6a6d11126798e14c386ad95591b12c1ab1da",
             "src/domain-extensions/cloud-platform-extension/SKILL.md": "6c300ff1c468f83c7b75c54997c67539710e6f8e236fc655d4ecda5e806a4224",
             "src/foundation/capabilities/configuration-runtime-policy/SKILL.md": "a0c6c4b122e76426256bc5deac35b741b32a406255992ac4c958ff10cfb2f9c6",
             "src/foundation/capabilities/infrastructure-as-code-safety/SKILL.md": "30c8a48b94f411059bb8e17e1670d1b5ca79db1c27b06394d5818f14de10c21c",

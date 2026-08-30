@@ -4,15 +4,15 @@ Use this reference when `experience-impact-modeler` needs deeper risk review for
 
 ## Risk Pattern Matrix
 
-| Journey risk | Detection signal | Required model evidence | Escalate to |
+| Journey risk | Detection signal | Required model evidence | Capability boundary |
 | --- | --- | --- | --- |
-| Orphaned entry or exit | Changed screen has no upstream or downstream path. | Actor, entry, decision, cancel, retry, completion, and back-navigation map. | `user-flow-modeling`, `acceptance-criteria-builder` |
-| Missing state ownership | Loading, empty, permission, timeout, partial success, or retry state is not named. | State table with copy, focus, persistence, recovery, and owner. | `interaction-state-modeling`, `quality-test-gate` |
-| Accessibility trap | Modal, drawer, route change, async update, or validation error changes focus. | Keyboard path, focus destination, accessible names, live region, and contrast check. | `quality-test-gate`, `frontend-testing` |
-| Destructive or sensitive action | Delete, revoke, payment, permission, account, compliance, or irreversible action. | Consequence copy, confirmation, denial, audit/receipt, undo or recovery, and safe error state. | `security-privacy-gate`, `delivery-release-gate` |
-| Operational workflow drag | Repeated operator screen adds blocking loading, slow filters, or dense error handling. | Perceived performance behavior, progressive rendering, keyboard efficiency, and recovery path. | `reliability-observability-gate`, `performance-budgeting` |
-| Instrumentation drift | Event, exposure, assignment, metric, dashboard, or A/B conflict changes. | Event taxonomy, exposure proof, assignment unit, guardrails, SRM check, dashboard migration, rollback. | `bigdata-product-extension`, `quality-test-gate` |
-| Stale visual proof | Screenshot/report/manual check predates final route, copy, style, data, or instrumentation edit. | Freshness record tied to final diff and validation command or explicit not-run risk. | `agent-execution-discipline`, `plan-execution-consistency` |
+| Orphaned entry or exit | Changed screen has no upstream or downstream path. | Actor, entry, decision, cancel, retry, completion, and back-navigation map. | User-flow modeling and falsifiable acceptance. |
+| Missing state ownership | Loading, empty, permission, timeout, partial success, or retry state is not named. | State table with copy, focus, persistence, recovery, and owner. | Interaction-state modeling and behavior-proof strategy. |
+| Accessibility trap | Modal, drawer, route change, async update, or validation error changes focus. | Keyboard path, focus destination, accessible names, live region, and contrast check. | Accessibility judgment and browser-level behavior proof. |
+| Destructive or sensitive action | Delete, revoke, payment, permission, account, compliance, or irreversible action. | Consequence copy, confirmation, denial, audit/receipt, undo or recovery, and safe error state. | Security/privacy judgment and release approval. |
+| Operational workflow drag | Repeated operator screen adds blocking loading, slow filters, or dense error handling. | Perceived performance behavior, progressive rendering, keyboard efficiency, and recovery path. | Reliability/observability and performance-budget judgment. |
+| Instrumentation drift | Event, exposure, assignment, metric, dashboard, or A/B conflict changes. | Event taxonomy, exposure proof, assignment unit, guardrails, SRM check, dashboard migration, rollback. | Experiment-analysis and test-proof judgment. |
+| Stale visual proof | Screenshot/report/manual check predates final route, copy, style, data, or instrumentation edit. | Freshness record tied to final diff and validation command or explicit not-run risk. | Evidence-freshness and plan-consistency judgment. |
 
 ## State Pattern Requirements
 
@@ -42,12 +42,12 @@ journey_risk_closure:
   stale_evidence:
     - artifact: ""
       reason: ""
-      next_gate: ""
+      next_owner: ""
   proof_limits:
     proves: ""
     does_not_prove: ""
   residual_risk:
     - risk: ""
       owner: ""
-      next_gate: ""
+      next_owner: ""
 ```

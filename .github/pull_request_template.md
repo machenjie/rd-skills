@@ -42,7 +42,7 @@ Required only when this PR claims formal-release readiness:
 - [ ] The tracked Expert Panel inventory is exactly `evals/expert-panel/readability.json`, `evals/expert-panel/semantic-disposition.json`, and `evals/expert-panel/professional-completeness.json`; each compact attestation is current, at most 4 MiB, byte-equal to `HEAD`, and clean.
 - [ ] Full packets, templates, ballots, capsules, and decisions remained only under ignored `.rd-skills/expert-panel/<run-id>/` or an optional CI/Release artifact.
 - [ ] Readability schema-2 review is current, covers all actionability targets, and has zero tracked tightening, unresolved detector false positives, or required rewrites.
-- [ ] Professional-completeness schema-3 review is current: exact carry uses authenticated direct fresh origins, fresh Skills receive two qualified domain votes plus one architecture vote, all 189 effective packages are accepted, correction/unresolved counts are zero, and contract/plan/bindings/provenance/storage/cost are current.
+- [ ] Professional-completeness schema-3 review is current: exact carry uses authenticated direct fresh origins, fresh Skills receive two qualified domain votes plus one architecture vote, all 188 effective packages are accepted, correction/unresolved counts are zero, and contract/plan/bindings/provenance/storage/cost are current.
 
 ## Evidence Scope and Review
 
@@ -56,10 +56,10 @@ Required only when this PR claims formal-release readiness:
 - Reference structural strict / semantic triage / legacy strict status:
 - Root structural strict / semantic triage / strict status:
 - Readability review status, artifact schema, source fingerprints, actionability coverage, zero-tightening/false-positive/rewrite counts, and clean evidence:
-- Professional-completeness status, schema-3 contract/plan/binding fingerprints, fresh/carry partition, reviewer-pool size, authenticated direct-origin closure, input-byte proxy/ratio, 189/189 effective coverage, zero-correction/unresolved counts, and clean compact evidence:
+- Professional-completeness status, schema-3 contract/plan/binding fingerprints, fresh/carry partition, reviewer-pool size, authenticated direct-origin closure, input-byte proxy/ratio, 188/188 effective coverage, zero-correction/unresolved counts, and clean compact evidence:
 - Aggregate content readiness axes:
 
-Canonical fixed-attestation paths, not Readability or Professional policy config, select Expert Panel evidence; the formal target remains all 189 non-Control packages. These fixed attestations do not prove that the final local formal gate passed.
+Canonical fixed-attestation paths, not Readability or Professional policy config, select Expert Panel evidence; the formal target remains all 188 non-Control packages. These fixed attestations do not prove that the final local formal gate passed.
 
 ## Release Notes
 

@@ -785,8 +785,8 @@ class AffectedProfessionalismTests(unittest.TestCase):
                 entries,
                 release_review_config=EVALUATOR.DEFAULT_RELEASE_REVIEW_CONFIG,
             )
-        self.assertEqual(189, len(selected_entries))
-        self.assertEqual(189, len(execution_scope["fresh_package_ids"]))
+        self.assertEqual(188, len(selected_entries))
+        self.assertEqual(188, len(execution_scope["fresh_package_ids"]))
         self.assertEqual([], execution_scope["carried_package_ids"])
         self.assertEqual([], execution_scope["unevaluated_package_ids"])
         self.assertFalse(execution_scope["baseline_stale_no_carry"])

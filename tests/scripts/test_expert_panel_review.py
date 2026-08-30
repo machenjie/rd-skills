@@ -668,7 +668,7 @@ class ExpertPanelReviewTests(unittest.TestCase):
             3500,
             PANEL.PROFESSIONAL_ADJACENCY_BASELINE_MAX_REQUIRED_CANDIDATES_TOTAL,
         )
-        self.assertEqual(189, PANEL.PROFESSIONAL_PACKAGE_COUNT)
+        self.assertEqual(188, PANEL.PROFESSIONAL_PACKAGE_COUNT)
         for target_count, expected in ((188, 4061), (189, 4083), (190, 4104)):
             with self.subTest(target_count=target_count):
                 self.assertEqual(
@@ -693,12 +693,12 @@ class ExpertPanelReviewTests(unittest.TestCase):
                 "rounding": "floor",
                 "baseline_target_count": 162,
                 "baseline_maximum_required_candidates_total": 3500,
-                "current_target_count": 189,
-                "derived_maximum_required_candidates_total": 4083,
+                "current_target_count": 188,
+                "derived_maximum_required_candidates_total": 4061,
             },
             contract["maximum_required_candidates_total_derivation"],
         )
-        self.assertEqual(4083, contract["maximum_required_candidates_total"])
+        self.assertEqual(4061, contract["maximum_required_candidates_total"])
         current_fingerprint = PANEL._canonical_json_sha256(
             PANEL._professional_completeness_panel_contract()
         )
@@ -1022,13 +1022,13 @@ Route current work to `candidate-a`.
             PANEL.PROFESSIONAL_ADJACENCY_MAX_REQUIRED_CANDIDATES_PER_TARGET,
         )
         self.assertEqual(
-            "8cf2b04bb532329fc19559620f2f6b04ed34ba54735d2e5862031c33407378e0",
+            "a24d605c00e5477f0ea09b4b2eb2aefc32426389980c93efa397fd1c1b41bd4a",
             PANEL._canonical_json_sha256(
                 PANEL._professional_adjacency_selection_contract()
             ),
         )
         self.assertEqual(
-            "7fae52f3e74478563fe681c1542bf28a4aa96ad1e4d295687d8e3112336cc195",
+            "47a7df83b5fa63559c82a52e94a9e374507bbf72a5bff520b1f3e53f193fdd9c",
             PANEL._canonical_json_sha256(
                 PANEL._professional_completeness_panel_contract()
             ),
@@ -1100,13 +1100,13 @@ Route current work to `candidate-a`.
                     ),
                     candidate["declared"],
                 )
-            self.assertEqual(188, adjacency["full_catalog_count"])
+            self.assertEqual(187, adjacency["full_catalog_count"])
             self.assertEqual(
-                list(range(1, 189)),
+                list(range(1, 188)),
                 [candidate["rank"] for candidate in ranking],
             )
             self.assertEqual(
-                188,
+                187,
                 len({candidate["skill_id"] for candidate in ranking}),
             )
             self.assertNotIn("full_catalog_ranking_fingerprint", adjacency)
@@ -1702,7 +1702,7 @@ Route current work to `candidate-a`.
         packet = _professional_packet()
         PANEL.validate_packet(packet)
         self.assertEqual(PANEL.PROFESSIONAL_COMPLETENESS_SCHEMA_VERSION, packet["schema_version"])
-        self.assertEqual(189, len(packet["professional_targets"]))
+        self.assertEqual(188, len(packet["professional_targets"]))
         self.assertEqual(
             603,
             sum(
@@ -1711,7 +1711,7 @@ Route current work to `candidate-a`.
             ),
         )
         self.assertEqual(
-            {"professional": 26, "foundation": 150, "domain": 13},
+            {"professional": 25, "foundation": 150, "domain": 13},
             {
                 layer: sum(
                     target["layer"] == layer
@@ -1744,7 +1744,7 @@ Route current work to `candidate-a`.
                 PANEL._canonical_json_sha256(adjacency["required_candidates"]),
                 adjacency["required_candidates_fingerprint"],
             )
-            self.assertEqual(188, len(adjacency["full_catalog_ranking"]))
+            self.assertEqual(187, len(adjacency["full_catalog_ranking"]))
             self.assertEqual(
                 PANEL._canonical_json_sha256(adjacency["full_catalog_ranking"]),
                 adjacency["full_catalog_ranking_fingerprint"],
@@ -1953,7 +1953,7 @@ Route current work to `candidate-a`.
             (
                 "missing",
                 lambda packet: packet["professional_targets"].pop(),
-                "exactly 189",
+                "exactly 188",
             ),
             (
                 "duplicate",
@@ -2728,7 +2728,7 @@ Route current work to `candidate-a`.
             ],
         )
         self.assertEqual(
-            189 * 3 * len(PANEL.PROFESSIONAL_COMPLETENESS_CRITERIA),
+            188 * 3 * len(PANEL.PROFESSIONAL_COMPLETENESS_CRITERIA),
             record["summary"]["evidence"]["criterion_result_count"],
         )
         self.assertEqual(
@@ -2789,11 +2789,11 @@ Route current work to `candidate-a`.
             record["professional_decisions"][0]["domain_critical_defects"],
         )
         self.assertEqual(
-            189,
+            188,
             record["summary"]["qualification"]["covered_target_count"],
         )
         self.assertEqual(
-            189 * 3 * len(PANEL.PROFESSIONAL_COMPLETENESS_CRITERIA),
+            188 * 3 * len(PANEL.PROFESSIONAL_COMPLETENESS_CRITERIA),
             record["summary"]["evidence"]["criterion_result_count"],
         )
         self.assertEqual(

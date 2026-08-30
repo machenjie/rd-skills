@@ -15,7 +15,7 @@ Build the one Runtime:
 python3 scripts/build.py
 ```
 
-The build emits exactly 27 top-level Skills: 1 Control and 26 Professional.
+The build emits exactly 26 top-level Skills: 1 Control and 25 Professional.
 Foundation and Domain Skills remain in the complete source inventory and are
 compiled only as Professional-owned JIT Layer 3 guidance. [Runtime build](BUILD_PROFILES.md)
 owns composition, temporary completeness validation, supported-host Agent
@@ -89,7 +89,7 @@ directory and is not a full Host-configuration snapshot.
 python3 installers/doctor.py --agent codex --scope user
 ```
 
-Doctor checks the manifest, 27 top-level Skill roots, current build/core/source
+Doctor checks the manifest, 26 top-level Skill roots, current build/core/source
 bindings, legacy residue, and the host-specific Agent Profile contract. Codex,
 Claude, and Copilot must have the exact four-role file set; Cline correctly has
 none. A valid legacy `full` or `dev` manifest is reported as
@@ -159,7 +159,7 @@ python3 scripts/package.py
 python3 installers/install.py --agent openai-api
 ```
 
-Build and package write 27 zip files under the compatibility path
+Build and package write 26 zip files under the compatibility path
 `dist/openai-api/zips/recommended/`. Each zip is named for one top-level
 Control or Professional Skill and contains exactly one matching folder with a
 root `SKILL.md`. Foundation and Domain Skills never receive top-level zips.

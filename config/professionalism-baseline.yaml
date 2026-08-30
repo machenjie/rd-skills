@@ -21,7 +21,6 @@
     "logging-design-gate",
     "quality-test-gate",
     "reliability-observability-gate",
-    "routing-quality-review",
     "security-privacy-gate",
     "task-dag-planner"
   ],

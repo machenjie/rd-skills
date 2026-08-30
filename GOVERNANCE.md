@@ -520,7 +520,7 @@ refresh current evidence.
 - **Selected evidence and current state:** Canonical fixed-attestation paths,
   not Readability or Professional policy config, select Expert Panel evidence;
   the formal target remains
-  all 189 non-Control packages. The Root lifecycle is `pending-changes`, with no
+  all 188 non-Control packages. The Root lifecycle is `pending-changes`, with no
   current snapshot and no formal-release readiness. The sole JSON authority
   therefore reports `release_gate=release-not-ready`. These fixed attestations do
   not prove that the final local formal gate passed.

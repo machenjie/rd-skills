@@ -466,15 +466,15 @@ Own one bounded decision.
                     manifest_path.read_text(encoding="utf-8")
                 )
                 self.assertEqual("recommended", result["profile"])
-                self.assertEqual(27, result["top_level_count"])
+                self.assertEqual(26, result["top_level_count"])
                 self.assertEqual("recommended", manifest["profile"])
                 self.assertEqual(
                     "changeforge.authoritative_build_inputs",
                     manifest["authoritative_build_inputs"]["kind"],
                 )
-                self.assertEqual(27, len(manifest["top_level_skills"]))
+                self.assertEqual(26, len(manifest["top_level_skills"]))
                 self.assertEqual(1, len(manifest["control_skills"]))
-                self.assertEqual(26, len(manifest["professional_skills"]))
+                self.assertEqual(25, len(manifest["professional_skills"]))
                 self.assertEqual(150, len(manifest["foundation_skills"]))
                 self.assertEqual(13, len(manifest["domain_skills"]))
                 self.assertEqual("targeted-product-references", manifest["foundation_mode"])
@@ -634,7 +634,7 @@ Own one bounded decision.
                     self.assertEqual(b"preserve", sentinel.read_bytes())
                 runtime = dist / "universal/skills/recommended"
                 self.assertEqual(
-                    27,
+                    26,
                     len(
                         [
                             path
@@ -843,8 +843,8 @@ Own one bounded decision.
 
     def test_non_product_foundation_candidate_fails_before_reset(self) -> None:
         self._assert_registry_failure_preserves_dist(
-            "layer3_candidates: []",
-            'layer3_candidates: ["skill-authoring-expert"]',
+            'layer3_candidates: ["task-dag-decomposition", "release-rollback"]',
+            'layer3_candidates: ["task-dag-decomposition", "release-rollback", "skill-authoring-expert"]',
             "professional-skills.yaml",
         )
 

@@ -18,5 +18,5 @@ Return one Markdown answer: `Question`; conclusion-first `Answer`; precise
 Limits`; and performed non-mutating `Validation or Next Lookup`.
 
 Do not include an Engineering Brief, implementation plan, First Executable
-Slice, Task Skill, Review Skill, or Task DAG. Do not invent change acceptance,
-task routing, or review work when the user asked only for an answer.
+Slice, Task Contract, Review Boundary, or Task DAG. Do not invent change
+acceptance, execution work, or review work when the user asked only for an answer.

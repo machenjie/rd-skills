@@ -75,8 +75,8 @@ must not replay a Core-owned producer merely to count a second pass.
 ### Single Runtime Completeness Responsibilities
 
 Retiring the development Runtime changes delivery, not proof scope. The source
-authority remains 1 Control, 26 Professional, 150 Foundation, and 13 Domain
-Skills. The fixed Runtime has 27 top-level Skills and 154 JIT Layer 3 entries;
+authority remains 1 Control, 25 Professional, 150 Foundation, and 13 Domain
+Skills. The fixed Runtime has 26 top-level Skills and 154 JIT Layer 3 entries;
 9 authoring/internal Foundation entries remain source-valid but non-Runtime.
 
 The deterministic owner checks cover:
@@ -98,6 +98,32 @@ the repository, `dist/`, packages, and Host discovery. It compares registry and
 source inventories, validates every compact projection and nested link, proves
 154 selector-reachable Runtime items and 9 non-Runtime entries, then removes the
 temporary tree. No development build is created.
+
+### Professional Independence Gate
+
+`python3 scripts/validate-skills.py` applies the Professional transplant test:
+professional judgments must remain valid in an ordinary repository that has no
+rd-skills control-plane implementation. Confirmed self-coupling fails normal
+validation. `python3 scripts/validate-skills.py
+--professional-independence-report` emits the same scope as stable report-only
+JSON and returns success when findings are present; source-collection failures
+remain errors in both modes.
+
+The shared content collector covers Professional root descriptions and bodies,
+all physical Professional References including unindexed files, and all 18
+Professional examples. Generic Engineering Brief, Task Contract, Task DAG,
+First Executable Slice, Review Boundary, and Evidence Ledger concepts are
+negative controls, not findings by name. Registry and Agent Profile runtime
+adapters are allowed when they preserve rather than redefine domain knowledge.
+The transplant test and zero-finding result cover authored governed domain
+content. The canonical Registry-generated `Targeted References` adapter table
+is physically embedded in the source root but logically excluded: it may select
+only an optional Reference and its depth, and may not change the owner,
+invariant, failure behavior, acceptance condition, domain verdict, or proof
+obligation. Manual, noncanonical, malformed, or diverged tables are not exempt.
+Static matching cannot prove the absence of indirect or novel coupling and does
+not cover non-Markdown assets; record those false-negative boundaries with the
+zero-finding result.
 
 Development Affected runs only the selected affected producer and owner-test
 closure; it does not run the local Full Regression above. The
@@ -261,7 +287,7 @@ or consume the tracked ordinary producer reports.
 | Agent behavior comparison | `src/control-model/core-contracts.json#/behavior_eval_contract` and `eval-agent-behavior.py` | Captured handoffs retain their deterministic oracle. The optional blind OLD/NEW mode validates physically separated packet/oracle/observations/caller-supplied-capture/reveal artifacts, opaque agent-visible identifiers, exact same-run bindings, capture byte/provenance integrity, Core-derived routing and Review metrics, and Main-owned pre-dispatch zero-review gates with an explicit decision actor, review candidate, zero dispatch count, and `reviewer_executed=false`. Caller-supplied captures have no Host/verifier-owned receipt trust channel, so effective live evidence remains `not_collected`; behavior improvement, host execution, and elapsed time are never inferred. |
 | Canonical finding compilation | `src/control-model/core-contracts.json#/review_discipline_contract/review_boundary_contract/finding_compiler` and `eval-agent-lightweight.py` | The Primary Review compiles only after its fixed boundary is complete. Its public Handoff exposes a unique `Finding Identity`, `Category`, and boolean `Repair required`; the parser rejects missing or duplicate visible identities. Deterministic fixtures prove stable exact dedup, conservative source-backed semantic reconciliation, partition isolation, lossless evidence/obligation preservation, and canonical-only Repair input; they do not prove live reviewer semantic judgment. |
 | Capability coverage | `evals/capability-coverage/matrix.yaml` and deterministic coverage validators | All 125 entries classify as 81 covered, 39 partial, 0 missing, and 5 intentionally unsupported; covered means catalog/routing evidence, not Professional Completeness. |
-| Build and installation | [Runtime build](BUILD_PROFILES.md) and [Installation](INSTALLATION.md) | The Runtime contains 27 top-level Skills, Foundation/Domain never enter Host discovery, supported hosts receive the declared four Agent Profiles, and manifests, migration, package, and doctor checks match. |
+| Build and installation | [Runtime build](BUILD_PROFILES.md) and [Installation](INSTALLATION.md) | The Runtime contains 26 top-level Skills, Foundation/Domain never enter Host discovery, supported hosts receive the declared four Agent Profiles, and manifests, migration, package, and doctor checks match. |
 | Code generation | [Benchmarks](BENCHMARKS.md) | Definitions, harnesses, and starter negative controls pass; candidate claims require an explicit candidate input. |
 | Open-source publication | [Open-source readiness](OPEN_SOURCE_READINESS.md) | Root license, metadata, contribution, security, and publication checks pass together. |
 
@@ -318,7 +344,7 @@ commit that records the fixed artifact may be `P` while the authenticated
 origin remains `C`. Currentness and Formal Release validate that preserved
 origin authority and do not require `origin_commit == P`.
 
-The Phase 2 inventory is current and final, so the formal target is all 189
+The Phase 2 inventory is current and final, so the formal target is all 188
 non-Control packages. The tracked Expert Panel inventory is exactly
 `evals/expert-panel/readability.json`,
 `evals/expert-panel/semantic-disposition.json`, and
@@ -327,7 +353,7 @@ current compact attestation and is replaced rather than appended. Full runtime
 packets, templates, ballots, capsules, and decisions remain only under the
 ignored `.rd-skills/expert-panel/<run-id>/` or an optional CI/Release artifact.
 Canonical fixed-attestation paths, not Readability or Professional policy
-config, select Expert Panel evidence; the formal target remains all 189
+config, select Expert Panel evidence; the formal target remains all 188
 non-Control packages. A current Semantic Disposition application binds the
 exact fixed-attestation bytes. Replace an attestation only when its strict
 current validator reports source, detector, binding, or contract drift, then

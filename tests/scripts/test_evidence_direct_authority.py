@@ -5,7 +5,6 @@ import json
 import sys
 import unittest
 from pathlib import Path
-from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -13,7 +12,6 @@ SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-import validation_utils as validation
 from fixture_capsule_contract import render_direct_discovery_extension
 from validation_utils import (
     CORE_CONTRACTS,
@@ -37,9 +35,6 @@ def _load_script(name: str, filename: str):
 EVAL_ROUTING = _load_script("evidence_direct_eval_routing", "eval-routing.py")
 EVAL_PRESSURE = _load_script(
     "evidence_direct_eval_pressure", "eval-pressure-behavior.py"
-)
-AUDIT_SKILL_CONTENT = _load_script(
-    "evidence_direct_audit_skill_content", "audit-skill-content.py"
 )
 VALIDATE_AGENT_PROFILES = _load_script(
     "evidence_direct_validate_agent_profiles", "validate-agent-profiles.py"
@@ -73,9 +68,6 @@ LOCAL_DISCOVERY = (
 )
 RISK_ESCALATION = (
     ROOT / "evals" / "pressure" / "hookless" / "direct-discovery-risk-escalation.yaml"
-)
-INTAKE_SKILL = (
-    ROOT / "src" / "professional-skills" / "change-intake-compiler" / "SKILL.md"
 )
 
 
@@ -342,55 +334,28 @@ class EvidenceDirectAuthorityTests(unittest.TestCase):
             with self.subTest(term=term):
                 self.assertIn(term, text)
 
-    def test_intake_semantics_project_to_exact_gap_classes_without_second_owner(
-        self,
-    ) -> None:
+    def test_core_model_owns_the_intake_decision_adapter(self) -> None:
         authority = evidence_resolution_authority(CORE_CONTRACTS)
-        self.assertEqual("change-intake-compiler", authority["semantics_owner"])
-        self.assertTrue(authority["projection_only"])
-        collected = validation.collect_skill_root_source(INTAKE_SKILL)
         self.assertEqual(
-            collected["source_fingerprint"],
-            authority["source_binding"]["source_fingerprint"],
+            "core-control-model", authority["authority_owner"]
         )
         self.assertEqual(
-            validation.evidence_resolution_source_declaration(INTAKE_SKILL)[
-                "gap_classes"
-            ],
-            authority["gap_classes"],
+            "control.evidence-resolution-decision-adapter/v1",
+            authority["adapter_contract"],
         )
         choice = next(
             row for row in authority["gap_classes"] if row["id"] == "user-owned-choice"
         )
+        self.assertEqual("user-owned-decision", choice["input_semantic"])
         self.assertEqual(
             ["semantic-choice", "execution-level-choice"], choice["subtypes"]
         )
 
-    def test_audit_root_collector_and_evidence_binding_share_one_source_reader(
-        self,
-    ) -> None:
-        original = validation.collect_skill_root_source
-        observed: list[str] = []
-
-        def recording_collector(path: Path, *, root: Path = ROOT) -> dict[str, str]:
-            observed.append(path.as_posix())
-            return original(path, root=root)
-
-        with mock.patch.object(
-            AUDIT_SKILL_CONTENT._validation_utils,
-            "collect_skill_root_source",
-            side_effect=recording_collector,
-        ):
-            documents = AUDIT_SKILL_CONTENT._root_skill_documents()
-        self.assertIn(INTAKE_SKILL.as_posix(), observed)
-        intake = next(
-            row
-            for row in documents
-            if row["path"]
-            == "src/professional-skills/change-intake-compiler/SKILL.md"
-            and row["document_part"] == "body"
-        )
-        self.assertIn("source-discoverable fact", intake["text"])
+    def test_core_model_accounts_for_every_professional_input_semantic(self) -> None:
+        authority = evidence_resolution_authority(CORE_CONTRACTS)
+        mapped = {row["input_semantic"] for row in authority["gap_classes"]}
+        mapped.update(authority["non_gap_semantics"])
+        self.assertEqual(set(authority["professional_input_semantics"]), mapped)
 
     def test_source_fact_uses_direct_only_when_semantic_route_and_risk_are_stable(
         self,
@@ -606,27 +571,17 @@ class EvidenceDirectAuthorityTests(unittest.TestCase):
             with self.subTest(term=term):
                 self.assertIn(term.casefold(), prompt)
 
-    def test_core_rejects_source_binding_drift_and_repo_wide_discovery(self) -> None:
-        for field, mutation in (
-            ("source_path", "src/professional-skills/missing/SKILL.md"),
-            ("source_anchor", "not present in the owning Skill"),
-            ("source_fingerprint", "0" * 64),
-        ):
-            with self.subTest(field=field):
-                drift = json.loads(json.dumps(CORE_CONTRACTS))
-                authority = drift["task_contract"]["evidence_resolution"]
-                if field == "source_anchor":
-                    authority["gap_classes"][0][field] = mutation
-                elif field == "source_fingerprint":
-                    authority["source_binding"][field] = mutation
-                else:
-                    authority[field] = mutation
-                self.assertTrue(
-                    any(
-                        "Evidence Resolution" in error
-                        for error in validate_core_contracts(drift)
-                    )
-                )
+    def test_core_rejects_adapter_ownership_drift_and_repo_wide_discovery(self) -> None:
+        drift = json.loads(json.dumps(CORE_CONTRACTS))
+        drift["task_contract"]["evidence_resolution"]["authority_owner"] = (
+            "professional-skill"
+        )
+        self.assertTrue(
+            any(
+                "Evidence Resolution authority owner" in error
+                for error in validate_core_contracts(drift)
+            )
+        )
 
         discovery = json.loads(json.dumps(CORE_CONTRACTS))
         discovery["task_contract"]["direct_bounded_discovery"][

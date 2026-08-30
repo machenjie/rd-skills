@@ -331,7 +331,7 @@ class HooklessArchitectureTests(unittest.TestCase):
     def test_four_registries_have_required_ai_contract_fields(self) -> None:
         specs = {
             "control-skills.yaml": ("control_skills", 1),
-            "professional-skills.yaml": ("professional_skills", 26),
+            "professional-skills.yaml": ("professional_skills", 25),
             "foundation-skills.yaml": ("foundation_skills", 150),
             "domain-skills.yaml": ("domain_skills", 13),
         }

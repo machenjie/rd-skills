@@ -10,10 +10,10 @@ Load when an accepted backend task needs implementation-mode-specific proof beyo
 
 Do not use this reference to diagnose an unknown cause, independently review a diff, or approve completed work.
 
-## External Ownership Hints
+## Capability Boundaries
 
-- When the cause or desired behavior is not yet established, return the assignment to `engineering-change-analysis` for source-backed analysis before implementation.
-- When an implementation or repaired diff needs independent assessment, hand its actual diff/reference and fresh validation to `ai-code-review-refactor`; the task-agent never adopts that review role.
+- Cause discovery and desired-behavior definition are analysis work; implementation stops until source-backed conclusions are supplied.
+- Independent implementation assessment is outside the implementer's authority; provide the actual diff/reference and fresh validation as review inputs.
 
 ## Implementation Modes
 
@@ -29,7 +29,7 @@ Stop repair work without an accepted finding or verified failure mechanism.
 1. Preserve the accepted finding or verified failure mechanism, affected acceptance, target path, and required outcome within the assigned repair rather than a new diagnosis mode.
 2. Confirm current source still exhibits the cited mechanism before editing. When recurrence is credible, scan the mechanism's bounded sibling/caller/contract scope and record results and exclusions; otherwise omit same-pattern claims.
 3. Return the actual repair diff or host-native diff reference, post-repair tests run after the last material edit, proof limits, and residual risk.
-4. When repairing an externally raised finding, hand the repaired diff and fresh evidence back to the independent-review owner for re-review; implementer assertion does not close that finding.
+4. When repairing an externally raised finding, provide the repaired diff and fresh evidence for independent re-review; implementer assertion does not close that finding.
 
 ## Selection Limits
 

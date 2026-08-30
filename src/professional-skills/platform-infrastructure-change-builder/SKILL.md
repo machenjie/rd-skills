@@ -49,7 +49,7 @@ Begin by inspecting target/state/recovery. As `task-agent`, change source, run m
 3. Choose the smallest source change that preserves state identity and recovery.
 4. Validate rendered artifacts and fresh non-mutating proposal evidence against the exact target and versions.
 5. Record unknowns, unverified production state, recovery owner, residual risk, and release boundary.
-6. Route production apply, deployment, release, and rollback authority to `delivery-release-gate`.
+6. Keep production apply, deployment, release, and rollback approval outside this Skill's authority.
 
 ## Stop / Escalation Conditions
 

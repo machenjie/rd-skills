@@ -8791,6 +8791,246 @@ def _physical_references() -> tuple[list[dict], dict[str, str], list[dict]]:
     )
 
 
+def _professional_example_documents() -> tuple[list[dict], list[dict]]:
+    """Collect distributed Professional examples with repository source safety."""
+
+    documents: list[dict] = []
+    errors: list[dict] = []
+    _require_safe_source_path(
+        PROFESSIONAL_SKILLS_DIR,
+        allowed_root=ROOT,
+        source="local",
+        expect_directory=True,
+    )
+    for owner_dir in sorted(PROFESSIONAL_SKILLS_DIR.iterdir()):
+        if owner_dir.name.startswith((".", "_")):
+            continue
+        owner_safe, owner_errors = _safe_source_path(
+            owner_dir,
+            allowed_root=PROFESSIONAL_SKILLS_DIR,
+            source="local",
+            expect_directory=True,
+        )
+        errors.extend(owner_errors)
+        if not owner_safe:
+            continue
+        examples_root = owner_dir / "examples"
+        examples_safe, examples_errors = _safe_source_path(
+            examples_root,
+            allowed_root=owner_dir,
+            source="local",
+            expect_directory=True,
+        )
+        errors.extend(examples_errors)
+        if not examples_safe:
+            continue
+        for path in sorted(examples_root.rglob("*.md")):
+            relative = _repository_relative_path(path)
+            text, source_errors = _safe_markdown_text(
+                path,
+                allowed_root=examples_root,
+                source="local",
+                target=relative,
+            )
+            errors.extend(source_errors)
+            if text is None:
+                continue
+            documents.append(
+                {
+                    "path": relative,
+                    "layer": "professional-skill",
+                    "owner": owner_dir.name,
+                    "kind": "professional-skill",
+                    "text": text,
+                    "line_offset": 0,
+                    "document_part": "example",
+                }
+            )
+    return (
+        sorted(
+            documents,
+            key=lambda document: (
+                str(document["path"]),
+                str(document["document_part"]),
+            ),
+        ),
+        sorted(
+            errors,
+            key=lambda item: (
+                str(item.get("path", "")),
+                int(item.get("line", 0)),
+                str(item.get("code", "")),
+                str(item.get("target", "")),
+            ),
+        ),
+    )
+
+
+def _professional_skill_documents() -> list[dict]:
+    """Collect every governed Professional root, Reference, and example."""
+
+    governed_bodies = _professional_registry_projection_authority()
+    documents = [
+        dict(document)
+        for document in _root_skill_documents()
+        if document.get("layer") == "professional-skill"
+        and document.get("document_part") in {"body", "description"}
+    ]
+    collected_body_paths = {
+        str(document["path"])
+        for document in documents
+        if document.get("document_part") == "body"
+    }
+    if collected_body_paths != set(governed_bodies):
+        raise ValidationProblem(
+            "Professional Registry authority changed during source collection: "
+            f"registry-only={sorted(set(governed_bodies) - collected_body_paths)}, "
+            f"collector-only={sorted(collected_body_paths - set(governed_bodies))}"
+        )
+    for document in documents:
+        if document.get("document_part") == "body":
+            document["governed_text"] = governed_bodies[str(document["path"])]
+    physical, markdown_by_path, reference_errors = _physical_references()
+    documents.extend(
+        {
+            "path": str(item["path"]),
+            "layer": "professional-skill",
+            "owner": str(item["owner"]),
+            "kind": "professional-skill",
+            "text": markdown_by_path[str(item["path"])],
+            "line_offset": 0,
+            "document_part": "reference",
+        }
+        for item in physical
+        if item.get("layer") == "professional"
+    )
+    examples, example_errors = _professional_example_documents()
+    documents.extend(examples)
+    source_errors = [*reference_errors, *example_errors]
+    if source_errors:
+        first = source_errors[0]
+        raise ValidationProblem(
+            "Professional content source collection failed: "
+            f"{first.get('code')}: {first.get('path')}"
+        )
+    return sorted(
+        documents,
+        key=lambda document: (
+            str(document.get("path", "")),
+            str(document.get("document_part", "")),
+        ),
+    )
+
+
+def _professional_registry_projection_authority() -> dict[str, str]:
+    """Bind every exempted Professional projection to current Registry bytes."""
+
+    _require_safe_source_path(
+        PROFESSIONAL_REGISTRY,
+        allowed_root=ROOT / "src" / "registry",
+        source="registry",
+        expect_directory=False,
+    )
+    data = load_yaml_file(PROFESSIONAL_REGISTRY)
+    context = _repository_relative_path(PROFESSIONAL_REGISTRY)
+    _validation_utils.professional_automatic_routing_authority(data, context)
+    registry_errors: list[str] = []
+    rows = _validation_utils.registry_items(
+        data,
+        "professional_skills",
+        PROFESSIONAL_REGISTRY,
+        registry_errors,
+    )
+    if registry_errors:
+        raise ValidationProblem("; ".join(registry_errors))
+
+    root_prefix = _repository_relative_path(PROFESSIONAL_SKILLS_DIR)
+    bindings: dict[str, tuple[str, list[dict]]] = {}
+    seen_names: set[str] = set()
+    seen_packages: set[str] = set()
+    for index, row in enumerate(rows):
+        row_context = f"{context}:professional_skills[{index}]"
+        if not isinstance(row, dict):
+            raise ValidationProblem(f"{row_context} must be a mapping")
+        name = row.get("name")
+        package = _validation_utils.entry_path(row)
+        if not isinstance(name, str) or not name:
+            raise ValidationProblem(f"{row_context}.name must be an exact Skill id")
+        if name in seen_names:
+            raise ValidationProblem(f"{row_context}.name duplicates {name!r}")
+        seen_names.add(name)
+        expected_package = f"{root_prefix}/{name}"
+        if package != expected_package:
+            raise ValidationProblem(
+                f"{row_context}.path must equal {expected_package!r}, found {package!r}"
+            )
+        if package in seen_packages:
+            raise ValidationProblem(f"{row_context}.path duplicates {package!r}")
+        seen_packages.add(package)
+        root_path = f"{package}/SKILL.md"
+        contracts = reference_contracts(
+            row.get("reference_index"),
+            f"{row_context}.reference_index",
+            owner=name,
+        )
+        bindings[root_path] = (name, contracts)
+
+    skill_files = _safe_skill_files_for_root(
+        "professional-skill",
+        PROFESSIONAL_SKILLS_DIR,
+    )
+    actual_root_paths = {
+        _repository_relative_path(skill_file)
+        for _kind, skill_file in skill_files
+    }
+    registry_root_paths = set(bindings)
+    if registry_root_paths != actual_root_paths:
+        raise ValidationProblem(
+            "Professional Registry/package root membership differs: "
+            f"registry-only={sorted(registry_root_paths - actual_root_paths)}, "
+            f"package-only={sorted(actual_root_paths - registry_root_paths)}"
+        )
+
+    governed_bodies: dict[str, str] = {}
+    for _kind, skill_file in skill_files:
+        relative_path = _repository_relative_path(skill_file)
+        name, contracts = bindings[relative_path]
+        metadata, _raw_frontmatter, body = parse_frontmatter(skill_file)
+        if metadata.get("name") != name or skill_file.parent.name != name:
+            raise ValidationProblem(
+                f"{relative_path}: frontmatter, package, and Registry names must "
+                f"all equal {name!r}"
+            )
+        try:
+            source_record = _validation_utils.collect_skill_root_source(
+                skill_file,
+                root=ROOT,
+            )
+            raw_source = source_record["raw_source"]
+            rendered = _validation_utils.render_targeted_reference_section(
+                raw_source,
+                contracts,
+                name,
+            )
+        except (OSError, ValueError, ValidationProblem) as exc:
+            raise ValidationProblem(
+                f"{relative_path}: Professional Registry projection authority "
+                f"failed: {exc}"
+            ) from exc
+        if rendered != raw_source:
+            raise ValidationProblem(
+                f"{relative_path}: Targeted References must equal the exact "
+                "current Professional Registry projection"
+            )
+        governed_bodies[relative_path] = (
+            strip_frontmatter_body_targeted_reference_projection(
+                body,
+                raw_source,
+            )
+        )
+    return governed_bodies
+
+
 def _ai_readability_documents() -> list[dict]:
     """Return every source document governed by the shared readability gate."""
 

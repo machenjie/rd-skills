@@ -88,6 +88,45 @@ task-contract inputs, primary-Skill return language, or generic evidence and
 next-owner handoff. Repeated execution and role scaffolding remains actionable
 in the content audit; it is not allowlisted merely because many Skills share it.
 
+## Professional Independence
+
+A Professional Skill must pass the transplant test: place its governed content
+in an ordinary code repository whose agents know nothing about rd-skills, and
+its professional judgments must still be valid. Professional content declares
+capability and authority boundaries. Registry, Agent Profile, and control-plane
+owners supply runtime routing, dispatch, and adaptation without changing that
+domain knowledge.
+
+The transplant test and a zero-finding result cover authored, governed domain
+content. The canonical Registry-generated `Targeted References` adapter table
+is physically embedded in the source root but logically excluded from that
+content: it may select only an optional Reference and its depth. It may not
+change the capability owner, invariant, failure behavior, acceptance condition,
+domain verdict, or proof obligation. A manual, noncanonical, malformed, or
+diverged table is not an adapter exception and remains governed content.
+
+The audit covers every Professional root description and body, every physical
+Professional Reference whether indexed or not, and all 18 Professional example
+documents. Generic Engineering Brief, Task Contract, Task DAG, First Executable
+Slice, Review Boundary, and Evidence Ledger knowledge is not self-coupling by
+itself. A finding requires contextual evidence that a judgment depends on an
+rd-skills-only role, level, versioned protocol, sibling route, branded schema,
+or control-plane state.
+
+Normal `python3 scripts/validate-skills.py` is the hard gate: each confirmed
+finding is an error and produces a nonzero exit. Maintainers can inventory the
+same deterministic source scope without weakening that gate:
+
+```bash
+python3 scripts/validate-skills.py --professional-independence-report
+```
+
+Report-only mode emits stable JSON and does not fail merely because findings
+exist. Source-collection or schema errors still fail closed. This contextual
+static detector can miss indirect or novel control dependencies and does not
+inspect non-Markdown assets; a zero-finding report is bounded negative evidence,
+not proof that every possible dependency is absent.
+
 ## Targeted References
 
 A reference must answer one named decision problem. Its Registry entry owns
@@ -130,7 +169,10 @@ collector preserves the complete source for document fingerprints, but blanks
 that exact projection with line offsets intact before content budgets, decision
 density, and Root semantic detection. This prevents Registry wording from
 inflating authored Skill content or requiring duplicate semantic dispositions.
-No other section is exempt: a bare link, manual loading rule, or noncanonical
+The projection may select only an optional Reference and its depth; it cannot
+change the owner, invariant, failure behavior, acceptance condition, domain
+verdict, or proof obligation supplied by authored content. No other section is
+exempt: a bare link, manual loading rule, malformed table, or noncanonical
 `Targeted References` body remains governed content and fails the applicable
 contract.
 
@@ -502,7 +544,7 @@ canonical sentence to its logical document-part context and exact source span.
 Ballots decide every finding exactly once; any nested tightening derives each reviewer
 document disposition before the document two-of-three majority. Professional
 completeness schema-3 evidence binds
-all 189 non-Control Skill packages, including complete root and indexed
+all 188 non-Control Skill packages, including complete root and indexed
 Reference content, Registry responsibility and expertise contracts, source
 anchors, examined failure and omission candidates, independently derived
 adjacency evidence, and proof limits. Adjacency evidence embeds the complete
@@ -575,7 +617,7 @@ Formal readiness requires current contract/plan/bindings/provenance and recomput
 cost. Formal readiness requires zero `tracked-tightening`, unresolved
 `detector-false-positive`, or `rewrite-required` readability decisions, zero
 professional corrections, and zero unresolved professional disagreements
-across 189 packages. Static qualification claims prove declared tag coverage,
+across 188 packages. Static qualification claims prove declared tag coverage,
 not real-world identity, credentials, or experience.
 
 Current Professional schema-3 packets store no target-level
@@ -588,7 +630,7 @@ storage keeps one top-level `review_contract_fingerprint`, one shared
 dependency IDs, votes, result, expertise, and direct-origin provenance. It has
 no `source_fingerprints`, per-finding dependency map, or duplicated origin
 material. The tool derives these projections, validates closed fields, and
-requires all 189 packages fresh whenever the Professional review contract
+requires all 188 packages fresh whenever the Professional review contract
 changes.
 
 Professional compact schema-2 bytes use the physical
@@ -643,13 +685,13 @@ Pending or stale evidence remains non-blocking for `authoring_gate`, but keeps
 `src/control-model/core-contracts.json` at
 `final_goal_contract.professional_review_cost_fixtures` owns the professional
 review cost policy and thresholds. Currentness is derived from the measured
-189-case inventory, exact-three review invariants, arithmetic, and ceilings; it
+188-case inventory, exact-three review invariants, arithmetic, and ceilings; it
 does not compare catalog, material, projection, case, or review-contract hashes
 with a checked-in cost snapshot.
 `reports/professionalism-regression-report.json` is the sole machine-readable
 professionalism readiness authority and is derived evidence; it does not own or
 override the cost contract.
-The current 189-package cost fixture satisfies the
+The current 188-package cost fixture satisfies the
 one-reviewer-added-relationship-per-target budget. This static cost result does
 not replace the final Core formal gate.
 
@@ -841,7 +883,7 @@ independent disclosures and do not redefine the authoring gate. Formal release
 requires both axes and the exact Semantic application binding to be current.
 Readability covers every current
 `REVIEW_DENSITY`, `TIGHTEN_BODY`, and readability advisory target. Professional
-completeness covers all 189 non-Control packages. Neither panel can override an
+completeness covers all 188 non-Control packages. Neither panel can override an
 authoring blocker. The complete release check is
 `python3 scripts/eval-core-principles.py --gate formal-release`; its aggregate
 `professionalism-formal-release-ready` outcome requires the producer process to
@@ -858,7 +900,7 @@ bound to the captured `HEAD` and validated locally; Markdown is not a readiness
 authority, and Core authoring refreshes only tracked ordinary JSON.
 
 Canonical fixed-attestation paths, not Readability or Professional policy
-config, select Expert Panel evidence; the formal target remains all 189
+config, select Expert Panel evidence; the formal target remains all 188
 non-Control packages. Formal release requires a current Semantic application
 bound to the exact fixed-attestation bytes. Reuse all three compact attestations
 while their strict current validators pass; replace an axis only after source,

@@ -115,10 +115,10 @@ PROFESSIONAL_COMPLETENESS_INCREMENTAL_SCHEMA_VERSION = (
 PROFESSIONAL_COMPLETENESS_MAX_PLAN_LINEAGE_DEPTH = (
     panel_contracts.PROFESSIONAL_MAXIMUM_PLAN_LINEAGE_DEPTH
 )
-PROFESSIONAL_PACKAGE_COUNT = 189
+PROFESSIONAL_PACKAGE_COUNT = 188
 PROFESSIONAL_LEGACY_PACKAGE_COUNT = 162
 PROFESSIONAL_CURRENT_LAYER_COUNTS = {
-    "professional": 26,
+    "professional": 25,
     "foundation": 150,
     "domain": 13,
 }
@@ -1898,7 +1898,7 @@ def _professional_package_targets(
     root: Path = ROOT,
     historical_schema2: bool = False,
 ) -> list[dict[str, Any]]:
-    """Build the canonical 189-package completeness review surface."""
+    """Build the canonical current-package completeness review surface."""
 
     registry_rows: list[tuple[str, str, dict[str, Any]]] = []
     seen_names: set[str] = set()
@@ -13133,7 +13133,8 @@ def _professional_v3_validate_decision_projection(
         row.get("skill_id") if isinstance(row, dict) else None for row in rows
     ] != sorted(targets):
         raise PanelReviewError(
-            "schema-3 decision must contain 189 Skill-sorted target rows"
+            "schema-3 decision must contain "
+            f"{PROFESSIONAL_PACKAGE_COUNT} Skill-sorted target rows"
         )
     plan_fresh = {
         row["skill_id"] for row in state["plan"]["fresh_targets"]

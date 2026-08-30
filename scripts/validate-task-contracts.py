@@ -268,20 +268,22 @@ ANALYZED_WORK_TEMPLATE_TERMS = {
     ),
 }
 
-PROFESSIONAL_AUTHORITY_TERMS = {
+PROFESSIONAL_KNOWLEDGE_TERMS = {
     "engineering-change-analysis/SKILL.md": (
-        "This root owns mode choice",
-        "the mode contract owns output",
-        "Keep Professional, Layer3, and mode fixed; never reroute",
-        "read-only scope",
+        "Choose the analysis mode",
+        "Separate source fact, supported inference, and unknown",
+        "Prove ownership from current source rather than proximity",
+        "Establish placement from the current dependency graph",
+        "Treat earlier reports and generated graphs as selectors",
     ),
     "engineering-change-analysis/references/implementation-preparation.md": (
-        "current Engineering Brief is the only operational analysis authority",
-        "Specialist analysis are inputs",
-        "complete Task Contract v2",
-        "Task DAGs, Task Contracts, Implementation Handoffs, and Review Handoffs are derived artifacts",
-        "planner does not reselect the First Executable Slice",
-        "updated Brief and redispatch",
+        "current Engineering Brief consolidates the accepted problem",
+        "Task DAGs, Task Contracts",
+        "complete bounded Task Contract",
+        "normal, invalid, boundary, and forbidden outcomes",
+        "same failure or ownership pattern",
+        "Task DAG Boundary",
+        "contradiction that would change an accepted Brief decision",
     ),
     "engineering-change-analysis/examples/example-output.md": (
         "## First Executable Slice",
@@ -289,22 +291,33 @@ PROFESSIONAL_AUTHORITY_TERMS = {
         "## Evidence Gaps and Proof Limits",
     ),
     "task-dag-planner/SKILL.md": (
-        "Brief retains sole operational analysis authority",
-        "preserve its First Executable Slice verbatim",
-        "Never select the First Executable Slice",
-        "Never replace the First Executable Slice",
-        "Never reinterpret the First Executable Slice",
-        "derived artifacts, not a parallel analysis authority",
-        "updated Brief and redispatch of affected tasks",
+        "accepted Engineering Brief",
+        "semantic task boundaries",
+        "blocking-fact edges",
+        "critical path",
+        "shared or unknown workspace, serialize writes",
+        "minimum sufficient Review Boundaries",
+        "visible Evidence Ledger",
+        "return the contradiction",
+    ),
+    "task-dag-planner/references/task-contract-patterns.md": (
+        "Executable Node Contract",
+        "one complete semantic change",
+        "Each DAG edge requires a concrete downstream blocker",
+        "minimum sufficient Review Boundaries",
+        "visible Evidence Ledger",
     ),
 }
 
-FORBIDDEN_PROFESSIONAL_AUTHORITY_TERMS = (
-    "Non-Authoritative Slice Hypothesis",
-    "non-authoritative and non-dispatchable",
-    "independently selects the First Executable Slice",
-    "Select the First Executable Slice independently",
-    "sole final authoritative Task DAG",
+FORBIDDEN_PROFESSIONAL_CONTROL_TERMS = (
+    "Task Contract v2",
+    "Primary Professional Skill",
+    "Effective Level",
+    "Review Round ID",
+    "Core `delta_analysis`",
+    "through Main",
+    "review-agent profile",
+    "Layer 3",
 )
 
 
@@ -591,24 +604,23 @@ def _validate_analyzed_work_authority_templates(
                 f"missing {decision!r}"
             )
 
-def _validate_professional_authority_projections(errors: list[str]) -> None:
-    for relative, terms in PROFESSIONAL_AUTHORITY_TERMS.items():
+def _validate_professional_analysis_contracts(errors: list[str]) -> None:
+    for relative, terms in PROFESSIONAL_KNOWLEDGE_TERMS.items():
         path = PROFESSIONAL_ROOT / relative
         if not path.is_file():
-            errors.append(f"missing analyzed-work projection source {relative}")
+            errors.append(f"missing Professional analysis source {relative}")
             continue
         text = path.read_text(encoding="utf-8")
         normalized = _normalized(text)
         for term in terms:
             if _normalized(term) not in normalized:
                 errors.append(
-                    f"{relative}: missing analyzed-work authority term {term!r}"
+                    f"{relative}: missing Professional knowledge term {term!r}"
                 )
-        for term in FORBIDDEN_PROFESSIONAL_AUTHORITY_TERMS:
+        for term in FORBIDDEN_PROFESSIONAL_CONTROL_TERMS:
             if _normalized(term) in normalized:
                 errors.append(
-                    f"{relative}: contains conflicting analyzed-work authority "
-                    f"term {term!r}"
+                    f"{relative}: contains control-plane protocol term {term!r}"
                 )
 
     try:
@@ -689,7 +701,7 @@ def validate_contracts(reference_root: Path = REFERENCE_ROOT) -> list[str]:
         _validate_template(name, text, schema, errors)
 
     _validate_analyzed_work_authority_templates(texts, errors)
-    _validate_professional_authority_projections(errors)
+    _validate_professional_analysis_contracts(errors)
 
     for name in _PUBLIC_EXECUTION_PREAMBLE_TEMPLATES:
         text = texts.get(name)

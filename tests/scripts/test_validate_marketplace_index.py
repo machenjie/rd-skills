@@ -364,9 +364,9 @@ class ValidateMarketplaceIndexTests(unittest.TestCase):
     def test_item_count_mismatch_names_all_four_layers(self) -> None:
         errors = self.module._item_count_errors([_item()])
         joined = "\n".join(errors)
-        self.assertIn("190 total", joined)
+        self.assertIn("189 total", joined)
         self.assertIn("1 control_skill", joined)
-        self.assertIn("26 professional_skill", joined)
+        self.assertIn("25 professional_skill", joined)
         self.assertIn("150 foundation_skill", joined)
         self.assertIn("13 domain_skill", joined)
 

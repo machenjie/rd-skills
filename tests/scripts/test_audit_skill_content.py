@@ -8,6 +8,7 @@ import json
 import sys
 import tempfile
 import unittest
+from copy import deepcopy
 from datetime import date, timedelta
 from pathlib import Path
 from unittest import mock
@@ -1292,6 +1293,256 @@ class AuditSkillContentDeterminismTests(unittest.TestCase):
         ]
         self.assertTrue(descriptions)
         self.assertTrue(all(item["line_offset"] == 0 for item in descriptions))
+
+    def test_professional_collector_includes_all_distributed_examples(self) -> None:
+        documents = self.module._professional_skill_documents()
+        examples = [
+            item for item in documents if item["document_part"] == "example"
+        ]
+        expected = {
+            f"src/professional-skills/{owner}/examples/example-output.md"
+            for owner in (
+                "acceptance-criteria-builder",
+                "ai-code-review-refactor",
+                "architecture-impact-reviewer",
+                "backend-change-builder",
+                "change-documentation-gate",
+                "change-intake-compiler",
+                "data-api-contract-changer",
+                "data-middleware-change-builder",
+                "delivery-release-gate",
+                "domain-impact-modeler",
+                "engineering-change-analysis",
+                "experience-impact-modeler",
+                "frontend-change-builder",
+                "integration-change-builder",
+                "quality-test-gate",
+                "reliability-observability-gate",
+                "security-privacy-gate",
+                "task-dag-planner",
+            )
+        }
+
+        self.assertEqual(18, len(examples))
+        self.assertEqual(expected, {str(item["path"]) for item in examples})
+        self.assertTrue(all(item["line_offset"] == 0 for item in examples))
+        self.assertTrue(all(str(item["text"]).strip() for item in examples))
+
+    def test_professional_collector_exempts_only_current_registry_projection(self) -> None:
+        documents = self.module._professional_skill_documents()
+        body = next(
+            item
+            for item in documents
+            if item["path"]
+            == "src/professional-skills/security-privacy-gate/SKILL.md"
+            and item["document_part"] == "body"
+        )
+
+        self.assertIn("L3-L5 work needs mode-specific closure", body["text"])
+        self.assertNotIn(
+            "L3-L5 work needs mode-specific closure",
+            body["governed_text"],
+        )
+        self.assertEqual(
+            len(str(body["text"]).splitlines()),
+            len(str(body["governed_text"]).splitlines()),
+        )
+
+    def test_professional_collector_rejects_syntax_valid_registry_divergence(
+        self,
+    ) -> None:
+        original_load = self.module.load_yaml_file
+
+        def diverged(path: Path):
+            data = original_load(path)
+            if path != self.module.PROFESSIONAL_REGISTRY:
+                return data
+            changed = deepcopy(data)
+            row = next(
+                item
+                for item in changed["professional_skills"]
+                if item["name"] == "security-privacy-gate"
+            )
+            row["reference_index"][0]["load_when"] = (
+                "A separately accepted authorization review needs this focused "
+                "decision record"
+            )
+            return changed
+
+        with mock.patch.object(
+            self.module,
+            "load_yaml_file",
+            side_effect=diverged,
+        ):
+            with self.assertRaises(self.module.ValidationProblem):
+                self.module._professional_skill_documents()
+
+    def test_professional_collector_rejects_projection_shape_failures(self) -> None:
+        target = (
+            ROOT
+            / "src/professional-skills/security-privacy-gate/SKILL.md"
+        ).resolve()
+        original_collect = self.module._validation_utils.collect_skill_root_source
+
+        def without_projection(raw: str) -> str:
+            return self.module._validation_utils._TARGETED_REFERENCES_SECTION_RE.sub(
+                "",
+                raw,
+            )
+
+        def repeated_projection(raw: str) -> str:
+            section = self.module._validation_utils._TARGETED_REFERENCES_SECTION_RE.search(
+                raw
+            )
+            self.assertIsNotNone(section)
+            return raw.rstrip("\n") + "\n\n" + section.group(0)
+
+        mutations = {
+            "missing": without_projection,
+            "repeated": repeated_projection,
+            "malformed": lambda raw: raw.replace(
+                "| Path | Type | Load when | Do not load when | Required by | Required output |",
+                "| Path | Type | Load when | Do not load when | Required by | Outputs |",
+                1,
+            ),
+        }
+        for label, mutate in mutations.items():
+            with self.subTest(label=label):
+                def changed(path: Path, *, root: Path):
+                    record = original_collect(path, root=root)
+                    if path.resolve() == target:
+                        record = dict(record)
+                        record["raw_source"] = mutate(record["raw_source"])
+                    return record
+
+                with mock.patch.object(
+                    self.module._validation_utils,
+                    "collect_skill_root_source",
+                    side_effect=changed,
+                ):
+                    with self.assertRaises(self.module.ValidationProblem):
+                        self.module._professional_skill_documents()
+
+    def test_professional_collector_rejects_registry_package_authority_failures(
+        self,
+    ) -> None:
+        original_load = self.module.load_yaml_file
+
+        def remove_row(data: dict) -> None:
+            data["professional_skills"].pop()
+
+        def add_row(data: dict) -> None:
+            row = deepcopy(data["professional_skills"][-1])
+            row["name"] = "extra-professional-skill"
+            row["path"] = "src/professional-skills/extra-professional-skill"
+            data["professional_skills"].append(row)
+
+        def duplicate_name(data: dict) -> None:
+            data["professional_skills"][1]["name"] = data["professional_skills"][0][
+                "name"
+            ]
+
+        def wrong_package(data: dict) -> None:
+            data["professional_skills"][0]["path"] = (
+                "src/professional-skills/wrong-package"
+            )
+
+        mutations = {
+            "missing-registry-row": remove_row,
+            "extra-registry-row": add_row,
+            "duplicate-registry-name": duplicate_name,
+            "wrong-package-path": wrong_package,
+        }
+        for label, mutate in mutations.items():
+            with self.subTest(label=label):
+                def changed(path: Path):
+                    data = original_load(path)
+                    if path == self.module.PROFESSIONAL_REGISTRY:
+                        data = deepcopy(data)
+                        mutate(data)
+                    return data
+
+                with mock.patch.object(
+                    self.module,
+                    "load_yaml_file",
+                    side_effect=changed,
+                ):
+                    with self.assertRaises(self.module.ValidationProblem):
+                        self.module._professional_skill_documents()
+
+    def test_professional_collector_rejects_root_set_and_name_mismatches(self) -> None:
+        original_files = self.module._safe_skill_files_for_root
+        actual = original_files(
+            "professional-skill",
+            self.module.PROFESSIONAL_SKILLS_DIR,
+        )
+        fake = (
+            "professional-skill",
+            self.module.PROFESSIONAL_SKILLS_DIR / "extra-root" / "SKILL.md",
+        )
+
+        for label, roots in {
+            "missing-root": actual[:-1],
+            "extra-root": [*actual, fake],
+        }.items():
+            with self.subTest(label=label):
+                def changed(kind: str, root: Path):
+                    if root == self.module.PROFESSIONAL_SKILLS_DIR:
+                        return roots
+                    return original_files(kind, root)
+
+                with mock.patch.object(
+                    self.module,
+                    "_safe_skill_files_for_root",
+                    side_effect=changed,
+                ):
+                    with self.assertRaises(self.module.ValidationProblem):
+                        self.module._professional_skill_documents()
+
+        target = actual[0][1].resolve()
+        original_parse = self.module.parse_frontmatter
+
+        def wrong_name(path: Path):
+            metadata, frontmatter, body = original_parse(path)
+            if path.resolve() == target:
+                metadata = dict(metadata)
+                metadata["name"] = "wrong-frontmatter-name"
+            return metadata, frontmatter, body
+
+        with mock.patch.object(
+            self.module,
+            "parse_frontmatter",
+            side_effect=wrong_name,
+        ):
+            with self.assertRaises(self.module.ValidationProblem):
+                self.module._professional_skill_documents()
+
+    def test_professional_collector_keeps_authored_body_and_reference_content(
+        self,
+    ) -> None:
+        documents = self.module._professional_skill_documents()
+        body = next(
+            item
+            for item in documents
+            if item["path"]
+            == "src/professional-skills/platform-infrastructure-change-builder/SKILL.md"
+            and item["document_part"] == "body"
+        )
+        reference = next(
+            item
+            for item in documents
+            if item["path"]
+            == "src/professional-skills/engineering-artifact-review/references/review-checklist.md"
+        )
+
+        self.assertIn(
+            "production apply, deployment, release, and rollback approval",
+            body["governed_text"],
+        )
+        self.assertIn(
+            "bounded implementation task with no separate decision artifact",
+            reference["text"],
+        )
 
     def test_readability_spans_cover_wrapped_and_same_line_sentences_exactly(self) -> None:
         long_sentence = " ".join(f"bounded{index}" for index in range(25)) + "."
@@ -2621,7 +2872,7 @@ Return security authority decisions to the service that owns the protected resou
             summary["description_checked_by_kind"],
             {
                 "control-skill": 1,
-                "professional-skill": 26,
+                "professional-skill": 25,
                 "foundation-capability": 150,
                 "domain-extension": 13,
             },

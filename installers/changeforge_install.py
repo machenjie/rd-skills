@@ -25,8 +25,8 @@ HOST_ENFORCEMENT_SOURCE = ROOT / "src" / "agent-profiles" / "host-enforcement.js
 CORE_CONTRACTS_SOURCE = ROOT / "src" / "control-model" / "core-contracts.json"
 BACKUP_DIR_NAME = ".changeforge-backups"
 RUNTIME_PROFILE = "recommended"
-RUNTIME_SKILL_COUNT = 27
-LEGACY_PROFILE_COUNTS = {"recommended": 27, "full": 40, "dev": 190}
+RUNTIME_SKILL_COUNT = 26
+LEGACY_PROFILE_COUNTS = {"recommended": 26, "full": 39, "dev": 189}
 AGENTS = ("codex", "claude", "copilot", "cline", "openai-api")
 SCOPES = ("project", "user", "admin")
 SKILL_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -898,7 +898,7 @@ def _authoritative_legacy_skill_inventories() -> dict[str, Any]:
         raise InstallError(f"cannot load authoritative Skill registries: {exc}") from exc
     expected_counts = {
         "control": 1,
-        "professional": 26,
+        "professional": 25,
         "foundation": 150,
         "domain": 13,
     }

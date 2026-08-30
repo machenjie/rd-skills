@@ -47,11 +47,11 @@
     },
     "max_by_budget_class": {
       "analysis": {
-        "tokens": 2414,
+        "tokens": 2450,
         "soft_target": 4500,
         "hard_ceiling": 5000,
-        "soft_margin_tokens": 2086,
-        "hard_margin_tokens": 2586,
+        "soft_margin_tokens": 2050,
+        "hard_margin_tokens": 2550,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -62,11 +62,11 @@
         "primary_skill": "engineering-change-analysis"
       },
       "task": {
-        "tokens": 2042,
+        "tokens": 2034,
         "soft_target": 3000,
         "hard_ceiling": 3200,
-        "soft_margin_tokens": 958,
-        "hard_margin_tokens": 1158,
+        "soft_margin_tokens": 966,
+        "hard_margin_tokens": 1166,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -122,9 +122,9 @@
         "primary_skill": null
       }
     },
-    "max_duplicate_rule_token_ratio": 0.003713,
-    "duplicate_rule_token_ratio_margin": 0.026287,
-    "max_discovery_metadata_tokens": 1273,
+    "max_duplicate_rule_token_ratio": 0.003714,
+    "duplicate_rule_token_ratio_margin": 0.026286,
+    "max_discovery_metadata_tokens": 1214,
     "loaded_layer3_reference_count": 8,
     "measured_layer3_reference_component_count": 24,
     "loaded_layer3_reference_logical_ids": [

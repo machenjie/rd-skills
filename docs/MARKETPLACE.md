@@ -25,7 +25,7 @@ The payload retains `profile: recommended` only as fixed compatibility metadata.
 | Type | Runtime delivery |
 | --- | --- |
 | Control Skill | top-level; one entry |
-| Professional Skill | top-level; 26 Primary Route owners |
+| Professional Skill | top-level; 25 Primary Route owners |
 | `product` Foundation Skill | capability modifier, compiled only behind a Professional selector |
 | `authoring-only` / internal Foundation Skill | source and routing-validation metadata only |
 | Domain Skill | `modifier-only`, compiled only behind a Professional selector |

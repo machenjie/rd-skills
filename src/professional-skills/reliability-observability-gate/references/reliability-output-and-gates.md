@@ -1,10 +1,10 @@
 # Reliability Output And Gates
 
-Load only for assigned L3-L5 analysis, implementation, or independent review needing mode-specific closure for an owned objective, alert, degradation, capacity/cost, recovery, or incident-readiness decision.
+Load only for analysis, implementation, or independent review needing extended mode-specific closure for an owned objective, alert, degradation, capacity/cost, recovery, or incident-readiness decision.
 
 ## Do Not Load
 
-Do not load without runtime reliability impact or when root/checklist closes the selected risk. Named Layer 3 Skills own specialized lifecycle, algorithm, transaction, queue, security, and implementation mechanisms.
+Do not load without runtime reliability impact or when root/checklist closes the selected risk. Specialized lifecycle, algorithm, transaction, queue, security, and implementation mechanisms remain with their authoritative capability boundaries.
 
 ## Mode Closure
 

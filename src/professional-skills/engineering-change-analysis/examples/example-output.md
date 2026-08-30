@@ -41,10 +41,6 @@ and schema together so mixed contract behavior is not left behind.
 ## First Executable Slice
 
 Task ID: example-api-validation-001
-Status: in_progress
-Level: requested=unspecified; automatic=L3; default=L3; effective=L3; edit=allowed
-Basis: source=analysis_handoff:example-brief; triggers=[]; l2=[]; unresolved=[]
-L5 Evidence: not applicable — effective L3
 Goal: enforce the accepted field rule at the owning service boundary
 Owner: service validation owner
 Inputs: current Engineering Brief, schema, validator, focused tests
@@ -59,10 +55,8 @@ Evidence Requirements: current red/green proof and same-pattern scan result
 Parallel Safety: no parallel writes
 Workspace Requirement: shared; serialize writes
 Integration Owner: service validation owner
-Review Owner: independent review-agent
+Review Boundary: independent review of the validator, schema, focused tests, and consumer-compatibility evidence
 Stop Conditions: ownership, contract, or write scope conflicts with this Brief
-Professional Skill: backend-change-builder
-Layer 3 Skills: none
 
 ## Task Dependencies
 
@@ -75,8 +69,8 @@ The service validation owner integrates schema and validator behavior.
 
 ## Review Boundary
 
-One independent implementation review covers the latest diff and every changed
-file; no Specialist review is triggered by this example.
+One independent implementation review covers the latest diff, every changed
+file, contract behavior, and consumer-compatibility evidence.
 
 ## Evidence Gaps and Proof Limits
 

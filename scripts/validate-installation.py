@@ -494,7 +494,7 @@ def _validate_legacy_profile_upgrades(
     }
     if {name: len(values) for name, values in inventories.items()} != {
         "control": 1,
-        "professional": 26,
+        "professional": 25,
         "foundation": 150,
         "domain": 13,
     }:

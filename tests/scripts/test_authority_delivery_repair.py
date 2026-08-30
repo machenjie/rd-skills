@@ -17,7 +17,6 @@ if str(SCRIPTS) not in sys.path:
 
 import build as BUILD
 import deterministic_route_oracle as ORACLE
-import validation_utils as validation
 from fixture_capsule_contract import decode_public_task_extension
 from validation_utils import (
     CORE_CONTRACTS,
@@ -31,9 +30,6 @@ ROUTING_FIXTURES = (
     ROOT / "evals" / "routing" / "cases.yaml",
     ROOT / "evals" / "routing" / "capability-coverage-cases.yaml",
     ROOT / "evals" / "capability-coverage" / "admission-cases.yaml",
-)
-INTAKE_SKILL = (
-    ROOT / "src" / "professional-skills" / "change-intake-compiler" / "SKILL.md"
 )
 BRIEF = (
     ROOT
@@ -104,24 +100,36 @@ class AuthorityDeliveryRepairTests(unittest.TestCase):
             decode_public_task_extension(legacy_wire)["version"],
         )
 
-    def test_evidence_projection_is_exactly_source_declared(self) -> None:
-        declaration_reader = getattr(
-            validation, "evidence_resolution_source_declaration", None
-        )
-        self.assertTrue(callable(declaration_reader))
-        declaration = declaration_reader(INTAKE_SKILL)
+    def test_evidence_adapter_is_owned_by_the_core_model(self) -> None:
         authority = CORE_CONTRACTS["task_contract"]["evidence_resolution"]
-        self.assertEqual(declaration["gap_classes"], authority["gap_classes"])
-        self.assertEqual(declaration["decision_rules"], authority["decision_rules"])
+        self.assertEqual("core-control-model", authority["authority_owner"])
+        self.assertEqual(
+            "control.evidence-resolution-decision-adapter/v1",
+            authority["adapter_contract"],
+        )
+        self.assertEqual(
+            {
+                "discoverable-fact",
+                "reversible-assumption",
+                "unsafe-or-non-reversible-assumption",
+                "user-owned-decision",
+            },
+            set(authority["professional_input_semantics"]),
+        )
+        self.assertEqual(
+            ["reversible-assumption"], authority["non_gap_semantics"]
+        )
 
-    def test_invented_semantic_and_repo_fact_direct_route_fail_closed(self) -> None:
+    def test_duplicate_semantic_and_repo_fact_direct_route_fail_closed(self) -> None:
         invented = copy.deepcopy(CORE_CONTRACTS)
-        invented["task_contract"]["evidence_resolution"]["gap_classes"][0][
-            "source_semantic"
-        ] = "invented-source-meaning"
+        gap_classes = invented["task_contract"]["evidence_resolution"][
+            "gap_classes"
+        ]
+        gap_classes[0]["input_semantic"] = gap_classes[1]["input_semantic"]
         errors = validate_core_contracts(invented)
         self.assertTrue(
-            any("source declaration" in error for error in errors), errors
+            any("input semantics must remain unique" in error for error in errors),
+            errors,
         )
 
         unsafe_route = copy.deepcopy(CORE_CONTRACTS)
@@ -130,7 +138,8 @@ class AuthorityDeliveryRepairTests(unittest.TestCase):
         ]["route_affecting"] = "direct"
         errors = validate_core_contracts(unsafe_route)
         self.assertTrue(
-            any("source declaration" in error for error in errors), errors
+            any("route-affecting facts must fail closed" in error for error in errors),
+            errors,
         )
 
     def test_brief_names_exact_owner_reachable_jit_projection(self) -> None:

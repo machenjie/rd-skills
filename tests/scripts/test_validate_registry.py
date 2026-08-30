@@ -164,7 +164,7 @@ class FoundationOwnershipRegistryTests(unittest.TestCase):
             for entry in self.professional
             if "review-agent" in entry["role_support"]
         }
-        self.assertEqual(11, len(expected))
+        self.assertEqual(10, len(expected))
         self.assertEqual(expected, set(selector(self.professional, matrix)))
 
         future = copy.deepcopy(self.professional)

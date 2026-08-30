@@ -63,7 +63,7 @@ artifact. Git history audits replaced attestations; do not retain dated, `rN`,
 or last-N copies in the tracked tree.
 
 Canonical fixed-attestation paths, not Readability or Professional policy
-config, select Expert Panel evidence; the formal target remains all 189
+config, select Expert Panel evidence; the formal target remains all 188
 non-Control packages. Formal release requires a current Semantic Disposition
 application bound to the exact fixed-attestation bytes. Reuse each current
 attestation while its strict current validator passes; create and promote a
@@ -217,12 +217,12 @@ artifact upload, tag/object binding on a remote, or remote branch/check state.
       outcome passed for that commit.
 - [ ] Root, Semantic Disposition, Readability, and Professional Completeness
       selectors are current, tracked, byte-equal to `HEAD`, and clean.
-- [ ] Professional Completeness accepts all 189 packages with required fresh or
+- [ ] Professional Completeness accepts all 188 packages with required fresh or
       valid carried votes and no correction or unresolved disagreement.
 - [ ] Readability has no tracked tightening, unresolved detector false positive,
       or rewrite requirement.
 - [ ] The one Runtime builds and packages through its generated manifest; it
-      exposes only 1 Control and 26 Professional top-level Skills.
+      exposes only 1 Control and 25 Professional top-level Skills.
 - [ ] Foundation/Domain completeness and the temporary 163-item Layer 3 stress
       projection pass without creating a top-level or packaged Layer 3 surface.
 - [ ] The handoff states evidence limits, skipped checks, Unverified scope, and

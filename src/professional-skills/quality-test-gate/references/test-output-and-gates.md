@@ -26,7 +26,7 @@ Load only for a named migration, security, release, financial, concurrency, publ
 - Control or isolate time, randomness, IDs, data, concurrency, network behavior, and shared state.
 - Record flaky, skipped, retried, quarantined, partial, and not-run checks as owned limits.
 - Treat source, test, fixture, schema, configuration, generated-input, or lockfile edits as evidence invalidators.
-- Core Guard G decides refresh; Task runs only accepted commands afterward.
+- Refresh affected evidence after the latest material source, test, fixture, schema, or configuration edit; run only authorized commands.
 - Review reports stale or missing evidence without setting timing.
 - Do not label lint, type checking, one test, or manual inspection a full behavior pass.
 

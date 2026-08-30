@@ -137,7 +137,7 @@ def _build_runtime_subject(subject: Path) -> Path:
         result = BUILD.build_profile(BUILD.RUNTIME_PROFILE)
 
     if (
-        result["top_level_count"] != 27
+        result["top_level_count"] != 26
         or result["compiled_layer3_reference_count"] != 154
         or result["agent_profile_count"] != 4
     ):
@@ -734,8 +734,8 @@ class TaskContractTemplateTests(unittest.TestCase):
                     self.tearDown()
                     self.setUp()
 
-    def test_professional_authority_projections_reject_drift(self) -> None:
-        for relative, terms in VALIDATOR.PROFESSIONAL_AUTHORITY_TERMS.items():
+    def test_professional_analysis_contracts_reject_knowledge_drift(self) -> None:
+        for relative, terms in VALIDATOR.PROFESSIONAL_KNOWLEDGE_TERMS.items():
             for term in terms:
                 with self.subTest(path=relative, term=term), tempfile.TemporaryDirectory() as raw:
                     professional_root = Path(raw) / "professional-skills"
@@ -752,12 +752,11 @@ class TaskContractTemplateTests(unittest.TestCase):
                     pattern = r"\s+".join(re.escape(part) for part in term.split())
                     mutated, count = re.subn(
                         pattern,
-                        "REMOVED_PROFESSIONAL_AUTHORITY_TERM",
+                        "REMOVED_PROFESSIONAL_KNOWLEDGE_TERM",
                         text,
-                        count=1,
                         flags=re.IGNORECASE,
                     )
-                    self.assertEqual(1, count, (relative, term))
+                    self.assertGreaterEqual(count, 1, (relative, term))
                     path.write_text(mutated, encoding="utf-8")
                     errors: list[str] = []
                     with mock.patch.object(
@@ -765,11 +764,41 @@ class TaskContractTemplateTests(unittest.TestCase):
                         "PROFESSIONAL_ROOT",
                         professional_root,
                     ):
-                        VALIDATOR._validate_professional_authority_projections(errors)
+                        VALIDATOR._validate_professional_analysis_contracts(errors)
                     self.assertTrue(
-                        any("authority term" in error for error in errors),
+                        any("Professional knowledge term" in error for error in errors),
                         errors,
                     )
+
+    def test_professional_analysis_contracts_reject_control_protocol_reentry(self) -> None:
+        relative = "task-dag-planner/SKILL.md"
+        for term in VALIDATOR.FORBIDDEN_PROFESSIONAL_CONTROL_TERMS:
+            with self.subTest(term=term), tempfile.TemporaryDirectory() as raw:
+                professional_root = Path(raw) / "professional-skills"
+                shutil.copytree(
+                    ROOT / "src" / "professional-skills" / "engineering-change-analysis",
+                    professional_root / "engineering-change-analysis",
+                )
+                shutil.copytree(
+                    ROOT / "src" / "professional-skills" / "task-dag-planner",
+                    professional_root / "task-dag-planner",
+                )
+                path = professional_root / relative
+                path.write_text(
+                    path.read_text(encoding="utf-8") + f"\nControl dependency: {term}\n",
+                    encoding="utf-8",
+                )
+                errors: list[str] = []
+                with mock.patch.object(
+                    VALIDATOR,
+                    "PROFESSIONAL_ROOT",
+                    professional_root,
+                ):
+                    VALIDATOR._validate_professional_analysis_contracts(errors)
+                self.assertTrue(
+                    any("control-plane protocol term" in error for error in errors),
+                    errors,
+                )
 
     def test_task_dag_uses_minimum_sufficient_review_boundaries(self) -> None:
         text = (self.root / "task-dag-template.md").read_text(encoding="utf-8")
@@ -1662,7 +1691,7 @@ class CoreContractModelTests(unittest.TestCase):
             review["validation_evidence_reuse"]["default"],
         )
 
-    def test_delta_impact_is_minimal_and_the_updated_brief_remains_authority(
+    def test_delta_impact_projection_is_control_owned_and_professional_delta_is_generic(
         self,
     ) -> None:
         brief = (REFERENCE_ROOT / "engineering-brief-template.md").read_text(
@@ -1672,7 +1701,7 @@ class CoreContractModelTests(unittest.TestCase):
             ROOT
             / "src/professional-skills/engineering-change-analysis/references/implementation-preparation.md"
         ).read_text(encoding="utf-8")
-        required = (
+        control_terms = (
             "complete updated Engineering Brief remains the only operational analysis authority",
             "Delta Impact:",
             "invalidated=[...]",
@@ -1682,18 +1711,29 @@ class CoreContractModelTests(unittest.TestCase):
             "skills:[...]",
             "reviews:[...]",
             "unlisted=preserved",
-            "unknown",
-            "Proof Limit",
-            "blocked",
             "Main consumes Delta Impact without reinterpreting affected scope",
         )
-        for path, text in (
-            ("engineering-brief-template.md", brief),
-            ("implementation-preparation.md", preparation),
-        ):
-            for term in required:
-                with self.subTest(path=path, term=term):
-                    self.assertIn(term, text)
+        for term in control_terms:
+            with self.subTest(control_term=term):
+                self.assertIn(term, brief)
+                self.assertNotIn(term, preparation)
+
+        for term in ("unknown", "Proof Limit"):
+            with self.subTest(shared_analysis_term=term):
+                self.assertIn(term, brief)
+                self.assertIn(term, preparation)
+
+        normalized_preparation = " ".join(preparation.split())
+        professional_terms = (
+            "Update only the affected Brief decisions",
+            "Preserve unaffected decisions",
+            "transitive impact",
+            "proof limits",
+            "foundational goals or system assumptions",
+        )
+        for term in professional_terms:
+            with self.subTest(professional_term=term):
+                self.assertIn(" ".join(term.split()), normalized_preparation)
 
     def test_review_handoff_projects_finding_relation_without_reinference(self) -> None:
         review = (REFERENCE_ROOT / "review-handoff-template.md").read_text(

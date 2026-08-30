@@ -27,4 +27,4 @@ Load when purpose, placement, level, fields, redaction, correlation, or signal c
 - Choose severity from final consequence and policy; allowlist fields, transform classified data and keep raw URLs, bodies, credentials, identity/free text out of labels.
 - Task proves changed emission with final-edit tests/capture; Review returns verdict/scope. Neither proves production sinks, redaction, sampling, retention, access, cardinality or audit immutability.
 
-Route mechanics to `logging-error-handling`, telemetry to `observability`, secrets to `secret-configuration-security`, and releases to their owner.
+Error mechanics, telemetry design, secret handling, and release approval remain separate capability boundaries; record their decision owners when triggered.

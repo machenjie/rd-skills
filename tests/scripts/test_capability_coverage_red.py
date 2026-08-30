@@ -4462,7 +4462,7 @@ class CapabilityCoverageRedTests(unittest.TestCase):
         case_id = "capcov-mobile-remove-source-inventory"
         registry_contract = {
             "control-skills.yaml": ("control_skills", 1),
-            "professional-skills.yaml": ("professional_skills", 26),
+            "professional-skills.yaml": ("professional_skills", 25),
             "foundation-skills.yaml": ("foundation_skills", 150),
             "domain-skills.yaml": ("domain_skills", 13),
         }
@@ -4489,10 +4489,10 @@ class CapabilityCoverageRedTests(unittest.TestCase):
         }
         total = sum(layer_counts.values())
         non_control = total - layer_counts.get("control_skills", 0)
-        if (total, non_control) != (190, 189):
+        if (total, non_control) != (189, 188):
             errors.append(
                 f"[{case_id}] expected source_inventory="
-                "190-total/189-non-control; "
+                "189-total/188-non-control; "
                 f"actual={total}-total/{non_control}-non-control"
             )
 
@@ -4537,7 +4537,7 @@ class CapabilityCoverageRedTests(unittest.TestCase):
                 f"actual={len(layer3_catalog)}"
             )
 
-        expected_top_level = 27
+        expected_top_level = 26
         if VALIDATION_CONTRACTS.EXPECTED_RUNTIME_TOP_LEVEL_SKILL_COUNT != expected_top_level:
             errors.append(
                 f"[{case_id}] expected runtime_top_level_count={expected_top_level}; "
@@ -4545,7 +4545,7 @@ class CapabilityCoverageRedTests(unittest.TestCase):
                 f"{VALIDATION_CONTRACTS.EXPECTED_RUNTIME_TOP_LEVEL_SKILL_COUNT}"
             )
         expected_delivery = {
-            "top_level_skill": 27,
+            "top_level_skill": 26,
             "targeted_reference": 154,
             "routing_index_only": 9,
         }

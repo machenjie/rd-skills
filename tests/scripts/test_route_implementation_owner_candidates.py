@@ -325,11 +325,11 @@ class ProfessionalRegistryRoutingContractTests(unittest.TestCase):
         self.assertEqual(5, data["schema_version"])
         self.assertEqual(EXPECTED_POLICY, data["automatic_routing_policy"])
         rows = data["professional_skills"]
-        self.assertEqual(26, len(rows))
+        self.assertEqual(25, len(rows))
         modes = [row.get("routing_mode") for row in rows]
         self.assertEqual(9, modes.count("automatic"))
         self.assertEqual(16, modes.count("evidence-only"))
-        self.assertEqual(1, modes.count("not-automatic"))
+        self.assertEqual(0, modes.count("not-automatic"))
         automatic = {
             row["name"]: row["routing_family"]
             for row in rows

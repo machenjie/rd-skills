@@ -132,10 +132,10 @@ def setUpModule() -> None:
         result = BUILD.build_profile(BUILD.RUNTIME_PROFILE)
         if result != {
             "profile": "recommended",
-            "top_level_count": 27,
+            "top_level_count": 26,
             "compiled_layer3_reference_count": 154,
             "agent_profile_count": 4,
-            "zip_count": 27,
+            "zip_count": 26,
         }:
             raise AssertionError(f"unexpected canonical Runtime build result: {result}")
     except BaseException:
@@ -210,7 +210,7 @@ class BuildArtifactConsumerContractTests(unittest.TestCase):
         def fixture(directory: Path) -> Path:
             root = directory / "recommended"
             root.mkdir()
-            for index in range(27):
+            for index in range(26):
                 skill = root / f"skill-{index:02d}"
                 skill.mkdir()
                 (skill / "SKILL.md").write_text("# fixture\n", encoding="utf-8")
@@ -224,13 +224,13 @@ class BuildArtifactConsumerContractTests(unittest.TestCase):
             manifest_path = root / ".changeforge-build-manifest.json"
             self.assertEqual(
                 "hookless-control-plane-v1",
-                consumer(self, root, "recommended", 27)["architecture"],
+                consumer(self, root, "recommended", 26)["architecture"],
             )
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
             manifest["architecture"] = "mutated"
             manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
             with self.assertRaises(AssertionError):
-                consumer(self, root, "recommended", 27)
+                consumer(self, root, "recommended", 26)
 
         with tempfile.TemporaryDirectory() as raw:
             root = fixture(Path(raw))
@@ -241,19 +241,19 @@ class BuildArtifactConsumerContractTests(unittest.TestCase):
             with self.assertRaisesRegex(
                 AssertionError, "authoritative build inputs are stale"
             ):
-                consumer(self, root, "recommended", 27)
+                consumer(self, root, "recommended", 26)
 
         with tempfile.TemporaryDirectory() as raw:
             root = fixture(Path(raw))
             (root / ".changeforge-build-manifest.json").unlink()
             with self.assertRaisesRegex(AssertionError, "build manifest is missing"):
-                consumer(self, root, "recommended", 27)
+                consumer(self, root, "recommended", 26)
 
         with tempfile.TemporaryDirectory() as raw:
             root = fixture(Path(raw))
             (root / "skill-00/SKILL.md").unlink()
             with self.assertRaises(AssertionError):
-                consumer(self, root, "recommended", 27)
+                consumer(self, root, "recommended", 26)
 
 
 class HooklessBuildInstallTests(unittest.TestCase):
@@ -325,7 +325,7 @@ class HooklessBuildInstallTests(unittest.TestCase):
         profile = "recommended"
         root = ROOT / "dist/universal/skills" / profile
         manifest = assert_build_profile_artifact_semantics(
-            self, root, profile, 27
+            self, root, profile, 26
         )
         for retired in ("full", "dev"):
             self.assertFalse((ROOT / "dist/universal/skills" / retired).exists())
@@ -373,7 +373,7 @@ class HooklessBuildInstallTests(unittest.TestCase):
         root = ROOT / "dist/universal/skills/recommended"
         names = {path.name for path in root.iterdir() if (path / "SKILL.md").is_file()}
         self.assertIn("engineering-control-plane", names)
-        self.assertEqual(26, len(names - {"engineering-control-plane"}))
+        self.assertEqual(25, len(names - {"engineering-control-plane"}))
         self.assertTrue((root / "backend-change-builder/references/layer3/transaction-consistency.md").is_file())
 
     def test_execution_level_runtime_reference_reaches_profiles_fallback_and_zip_exactly(self) -> None:
@@ -963,7 +963,7 @@ class HooklessBuildInstallTests(unittest.TestCase):
         plan = quickstart.build_plan(args)
         command_text = " ".join(" ".join(command) for command in plan.commands)
         self.assertFalse(hasattr(plan, "selected_profile"))
-        self.assertEqual(27, plan.expected_skill_count)
+        self.assertEqual(26, plan.expected_skill_count)
         for token in (
             "--profile",
             "--with-hooks",
@@ -995,9 +995,9 @@ class HooklessBuildInstallTests(unittest.TestCase):
                 (target / ".agents/skills/.changeforge-install-manifest.json").read_text()
             )
             self.assertEqual("recommended", manifest["profile"])
-            self.assertEqual(27, len(manifest["installed_skills"]))
+            self.assertEqual(26, len(manifest["installed_skills"]))
             self.assertEqual(1, len(manifest["installed_control_skills"]))
-            self.assertEqual(26, len(manifest["installed_professional_skills"]))
+            self.assertEqual(25, len(manifest["installed_professional_skills"]))
             self.assertEqual([], manifest["installed_foundation_skills"])
             self.assertEqual([], manifest["installed_domain_skills"])
             self.assertEqual(4, len(manifest["installed_agent_profiles"]))

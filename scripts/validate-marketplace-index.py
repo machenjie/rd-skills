@@ -100,7 +100,7 @@ EXPECTED_RUNTIME_TOP_LEVEL_COUNT = (
     EXPECTED_CONTROL_SKILL_COUNT + EXPECTED_PROFESSIONAL_SKILL_COUNT
 )
 EXPECTED_RUNTIME_DELIVERY_MODE_COUNTS = {
-    "top_level_skill": 27,
+    "top_level_skill": EXPECTED_RUNTIME_TOP_LEVEL_COUNT,
     "targeted_reference": 154,
     "routing_index_only": 9,
 }

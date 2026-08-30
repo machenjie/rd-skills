@@ -12,4 +12,4 @@ Load when failure recovery, replay, rollback, reconciliation, or release watch i
 ## Release Watch
 - **Evidence:** rollout metrics, logs, traces, reports, or dashboards that prove recovery.
 - **Pre-release rollback thresholds:** lock wait, query latency, miss storm, queue lag, DLQ depth, drift, errors, and cost.
-- **Handoff:** unresolved capacity, alert, dashboard, or incident-readiness gaps go to `reliability-observability-gate` or `delivery-release-gate` with owner and residual risk.
+- **Capability boundary:** unresolved capacity, alert, dashboard, incident-readiness, or release-approval gaps remain outside data/middleware authority; record their owner and residual risk.

@@ -8,7 +8,7 @@ description: "Use `review-agent` on implementation or repair diffs for hallucina
 ## Role
 
 Support `review-agent` in independently reviewing the actual implementation or
-repair diff. Review is non-mutating and cannot reroute.
+repair diff. Review is non-mutating and does not change its assigned scope.
 
 ## When To Use
 
@@ -22,7 +22,7 @@ repair diff. Review is non-mutating and cannot reroute.
 
 ## Required Inputs
 
-- fixed Goal/Acceptance/Non-goals, boundary, invariants, Level, actual diff and changed paths, and fresh evidence
+- fixed Goal/Acceptance/Non-goals, boundary, invariants, actual diff and changed paths, and fresh evidence
 
 ## Professional Decision Rules
 
@@ -30,7 +30,7 @@ repair diff. Review is non-mutating and cannot reroute.
 - When a finding is proposed, reject it unless current source evidence establishes a reachable failure path.
 - Classify adjacent risk separately.
 - Record reviewed/unreviewed scope, severity, repair boundary, freshness, proof limits, and residual risk.
-- Preserve the non-mutating, no-reroute review boundary.
+- Preserve the non-mutating assigned review boundary.
 
 ## High-Value Gotchas
 
@@ -47,7 +47,7 @@ repair diff. Review is non-mutating and cannot reroute.
 
 ## Stop / Escalation Conditions
 
-- Block on inaccessible diff, stale evidence, or unbounded scope; return out-of-boundary risk to Main without rerouting.
+- Block on inaccessible diff, stale evidence, or unbounded scope; record out-of-boundary risk as unreviewed without expanding authority.
 
 ## Output Contract
 

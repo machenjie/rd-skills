@@ -2141,7 +2141,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
             )
             self.assertEqual(0, plan["plan_lineage_depth"])
             self.assertEqual([], plan["carried_targets"])
-            self.assertEqual(189, len(plan["fresh_targets"]))
+            self.assertEqual(188, len(plan["fresh_targets"]))
             self.assertTrue(
                 all(
                     row["reason_codes"] == ["review-contract-changed"]
@@ -2207,7 +2207,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
             ]
             forged_carry["review_plan"]["plan_lineage_depth"] = 1
             forged_carry["review_plan"]["summary"] = {
-                "total_target_count": 189,
+                "total_target_count": 188,
                 "fresh_target_count": 188,
                 "carried_target_count": 1,
             }
@@ -2757,7 +2757,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
         self.assertLessEqual(capsule_bytes / full_bytes, 1.05)
         self.assertEqual(full_input_projection, capsule_projection)
         self.assertEqual(
-            189,
+            188,
             len(capsule["review_projection"]["material_catalog"]),
         )
 
@@ -3872,7 +3872,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
             baseline_state=_baseline_state(packet, depth=8),
         )
         self.assertEqual(0, plan["plan_lineage_depth"])
-        self.assertEqual(189, len(plan["fresh_targets"]))
+        self.assertEqual(188, len(plan["fresh_targets"]))
         self.assertEqual([], plan["carried_targets"])
         self.assertTrue(
             all(
@@ -3898,7 +3898,7 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
         )
         self.assertEqual(8, plan["plan_lineage_depth"])
         self.assertEqual([], plan["fresh_targets"])
-        self.assertEqual(189, len(plan["carried_targets"]))
+        self.assertEqual(188, len(plan["carried_targets"]))
 
     def test_raw_package_intermediate_change_does_not_override_binding(self) -> None:
         packet = _bootstrap_packet()

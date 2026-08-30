@@ -1,6 +1,6 @@
 # Frontend Change Builder Reference Index
 
-Load only the named decision Reference selected from the source-owned registry; never preload this index or the Reference set.
+Load only one named decision Reference selected from the task-local authoritative decision and reference-selection context; never preload this index or the Reference set.
 
 | Reference | Named decision |
 |---|---|

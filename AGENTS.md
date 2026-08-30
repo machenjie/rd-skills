@@ -101,11 +101,11 @@ gates every indexed Reference's effective type, load, and do-not-load contract.
 
 ## Built Content Rules
 
-The source inventory is 1 Control, 26 Professional, 150 Foundation, and 13
-Domain Skills: 190 total and 189 non-Control. Built Skills must be emitted into
+The source inventory is 1 Control, 25 Professional, 150 Foundation, and 13
+Domain Skills: 189 total and 188 non-Control. Built Skills must be emitted into
 `dist/`, and every installed Skill folder must contain `SKILL.md` at its root.
-The single Runtime exposes 27 top-level Skills: 1 Control and 26 Professional.
-Its delivery is 27/154/9 top-level/targeted/routing-only. The internal
+The single Runtime exposes 26 top-level Skills: 1 Control and 25 Professional.
+Its delivery is 26/154/9 top-level/targeted/routing-only. The internal
 `recommended` directory and manifest identity is retained only for
 compatibility; `full` and `dev` are retired build, install, package, doctor, and
 discovery surfaces. All supported Codex, Claude, and Copilot builds contain the
@@ -187,7 +187,7 @@ non-defect adjacency rationale needs one from each package. The schema-3-only
 phrase matcher cannot bridge generic tokens, lines, or anchors. Relaxed defect
 and uniform-template guards are fingerprinted review contracts;
 schema 1 and schema 2 semantics remain unchanged. Formal release also
-requires all 189 non-Control Skill packages to be accepted with zero
+requires all 188 non-Control Skill packages to be accepted with zero
 professional corrections and zero unresolved professional disagreements.
 Qualification claims are static declarations and do not prove reviewer identity,
 credentials, or experience. Professional schema 1 and schema 2 remain
@@ -211,7 +211,7 @@ every mode.
 Formal Release additionally requires every fixed attestation to be byte-equal to
 `HEAD` and clean; Git history is the audit trail for replaced attestations.
 Runtime plan lineage is capped at eight rounds before a full-fresh checkpoint. A
-review-contract change forces all 189 packages fresh; a local binding change
+review-contract change forces all 188 packages fresh; a local binding change
 reopens only the package and its machine-derived affected dependencies.
 
 The Phase 2 inventory is the current and final inventory. Formal Release requires

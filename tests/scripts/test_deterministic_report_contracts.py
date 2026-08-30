@@ -695,7 +695,7 @@ def _incomplete_expert_review_fixture() -> dict:
             "qualification_summary": None,
             "evidence_summary": None,
             "professional_dispositions": [],
-            "required_target_count": 189,
+            "required_target_count": 188,
             "applied_target_count": 0,
             "accepted_current_count": None,
             "correction_count": None,
@@ -710,7 +710,7 @@ def _formal_professional_dispositions_fixture(
     *, panel_review_id: str
 ) -> list[dict]:
     rows = []
-    for index in range(189):
+    for index in range(188):
         skill_id = f"fixture-skill-{index:03d}"
         target_digest = hashlib.sha256(
             f"fixture-decision:{skill_id}".encode("utf-8")
@@ -853,22 +853,22 @@ def _formal_expert_reviews_fixture() -> dict:
                     "sha256": "d" * 64,
                 }
             ],
-            "required_target_count": 189,
-            "fresh_target_count": 189,
+            "required_target_count": 188,
+            "fresh_target_count": 188,
             "carried_forward_target_count": 0,
-            "applied_target_count": 189,
-            "accepted_current_count": 189,
+            "applied_target_count": 188,
+            "accepted_current_count": 188,
             "correction_count": 0,
             "unresolved_professional_disagreement_count": 0,
             "evidence_contract_satisfied": True,
             "qualification_summary": {
-                "covered_target_count": 189,
+                "covered_target_count": 188,
                 "required_domain_experts_per_target": 2,
                 "required_architecture_experts_per_target": 1,
                 "per_target_panel_size": 3,
                 "fresh_reviewer_pool_size": 3,
-                "effective_domain_vote_count": 378,
-                "effective_architecture_vote_count": 189,
+                "effective_domain_vote_count": 376,
+                "effective_architecture_vote_count": 188,
             },
             "evidence_summary": evidence_summary,
             "review_contract_fingerprint": "e" * 64,
@@ -893,12 +893,12 @@ def _formal_expert_reviews_fixture() -> dict:
             },
             "review_cost_current": True,
             "review_cost": {
-                "fresh_vote_count": 567,
+                "fresh_vote_count": 564,
                 "carried_forward_vote_count": 0,
-                "effective_vote_count": 567,
-                "fresh_criterion_result_count": 5670,
+                "effective_vote_count": 564,
+                "fresh_criterion_result_count": 5640,
                 "carried_forward_criterion_result_count": 0,
-                "effective_criterion_result_count": 5670,
+                "effective_criterion_result_count": 5640,
                 "canonical_capsule_input_bytes_proxy": 303,
                 "full_rereview_deduplicated_capsule_input_bytes_proxy": 300,
                 "input_ratio_ppm": 1_010_000,
@@ -1641,6 +1641,174 @@ class DeterministicReportContractTests(unittest.TestCase):
         self.assertEqual(1, len(blockers))
         self.assertIn("hard_fail_sentences=2", blockers[0].message)
         self.assertIn("compound_bullets=1", blockers[0].message)
+
+    def test_ordinary_semantic_source_currentness_requires_exact_error_contract(
+        self,
+    ) -> None:
+        section = {
+            "semantic_advisories": {
+                "disposition_contract": {
+                    "configured_count": 2,
+                    "entries": [{"candidate_id": "a"}, {"candidate_id": "b"}],
+                }
+            }
+        }
+        wrapper = "semantic_advisories.disposition_contract contains validation errors"
+        prefix = "semantic disposition contract: reference_semantic_dispositions.entries"
+        raw = [
+            f"{prefix}[0]: stale semantic disposition entry",
+            f"{prefix}[1]: stale semantic disposition entry",
+        ]
+        arguments = {
+            "formal": False,
+            "storage_status": "stale",
+            "audit_section_exact_fresh": True,
+            "section": section,
+            "configured_count": 2,
+            "disposition_error_count": 2,
+            "validator_errors": [wrapper, *raw],
+            "wrapper": wrapper,
+            "error_prefix": prefix,
+            "allowed_raw_messages": {"stale semantic disposition entry"},
+        }
+        self.assertTrue(
+            self.regression._ordinary_semantic_source_currentness(**arguments)
+        )
+
+        variants = (
+            {"formal": True},
+            {"storage_status": "current"},
+            {"storage_status": "missing"},
+            {"storage_status": "pending"},
+            {"audit_section_exact_fresh": False},
+            {"configured_count": 1},
+            {"disposition_error_count": 0, "validator_errors": []},
+            {"validator_errors": [wrapper, raw[0]]},
+            {"validator_errors": [wrapper, raw[1], raw[0]]},
+            {"validator_errors": [wrapper, raw[0], raw[0]]},
+            {
+                "validator_errors": [
+                    wrapper,
+                    raw[0],
+                    f"{prefix}[2]: stale semantic disposition entry",
+                ]
+            },
+            {"validator_errors": ["different wrapper", *raw]},
+            {
+                "validator_errors": [
+                    wrapper,
+                    raw[0],
+                    f"{prefix}[1]: disposition schema is malformed",
+                ]
+            },
+        )
+        for changes in variants:
+            with self.subTest(changes=changes):
+                candidate = {**arguments, **changes}
+                self.assertFalse(
+                    self.regression._ordinary_semantic_source_currentness(
+                        **candidate
+                    )
+                )
+
+    def test_reference_and_root_summaries_retain_trusted_stale_error_counts(
+        self,
+    ) -> None:
+        reference = _reference_content_fixture()
+        reference_validator = self.regression._load_reference_validator()
+        reference_counts, _errors = reference_validator._evaluate(
+            reference, strict=False
+        )
+        reference_contract = reference["semantic_advisories"][
+            "disposition_contract"
+        ]
+        reference_contract["configured_count"] = 2
+        reference_contract["entries"] = [{"candidate_id": "a"}, {"candidate_id": "b"}]
+        reference_counts.update(
+            {
+                "semantic_disposition_configured": 2,
+                "semantic_disposition_applied": 0,
+                "semantic_disposition_errors": 2,
+            }
+        )
+        reference_wrapper = (
+            "semantic_advisories.disposition_contract contains validation errors"
+        )
+        reference_errors = [
+            reference_wrapper,
+            "semantic disposition contract: reference_semantic_dispositions.entries[0]: stale semantic disposition entry",
+            "semantic disposition contract: reference_semantic_dispositions.entries[1]: stale semantic disposition entry",
+        ]
+        with mock.patch.object(
+            reference_validator,
+            "_semantic_contract",
+            return_value=(reference_counts, reference_errors),
+        ), mock.patch.object(
+            reference_validator,
+            "_evaluate",
+            side_effect=[
+                (reference_counts, reference_errors),
+                (reference_counts, reference_errors),
+            ],
+        ):
+            reference_summary = self.regression._reference_content_summary(
+                {"reference_content": reference},
+                fresh_reference_content=reference,
+                semantic_storage_status="stale",
+                formal=False,
+            )
+        self.assertEqual(2, reference_summary["semantic_disposition_errors"])
+        self.assertFalse(reference_summary["semantic_triage_complete"])
+        self.assertFalse(reference_summary["strict_ready"])
+
+        root = _root_content_fixture()
+        root_validator = self.regression._load_root_validator()
+        root_counts, _errors = root_validator._evaluate(root, strict=False)
+        root_contract = root["semantic_advisories"]["disposition_contract"]
+        root_contract["configured_count"] = 2
+        root_contract["entries"] = [{"candidate_id": "a"}, {"candidate_id": "b"}]
+        root_counts.update(
+            {
+                "dispositions_configured": 2,
+                "dispositions_applied": 0,
+                "disposition_errors": 2,
+            }
+        )
+        root_errors = [
+            "root semantic disposition contract: root_semantic_dispositions.entries[0]: stale root semantic disposition entry",
+            "root semantic disposition contract: root_semantic_dispositions.entries[1]: evidence.context_fingerprint does not match current candidate",
+        ]
+        with mock.patch.object(
+            root_validator,
+            "_evaluate",
+            side_effect=[
+                (root_counts, root_errors),
+                (root_counts, root_errors),
+            ],
+        ):
+            root_summary = self.regression._root_content_summary(
+                {"root_content": root},
+                fresh_root_content=root,
+                semantic_storage_status="stale",
+                formal=False,
+            )
+        self.assertEqual(2, root_summary["semantic_disposition_errors"])
+        self.assertFalse(root_summary["semantic_triage_complete"])
+        self.assertFalse(root_summary["strict_ready"])
+
+        for summarizer, key, fixture in (
+            (self.regression._reference_content_summary, "reference_content", reference),
+            (self.regression._root_content_summary, "root_content", root),
+        ):
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                summarizer(
+                    {key: fixture},
+                    **{
+                        f"fresh_{key}": fixture,
+                        "semantic_storage_status": "stale",
+                        "formal": True,
+                    },
+                )
 
     def test_reference_content_summary_promotes_strict_counts_to_blockers(self) -> None:
         fixture = _reference_content_fixture()
@@ -2428,7 +2596,7 @@ class DeterministicReportContractTests(unittest.TestCase):
                         "status": "pass",
                         "missing_sections": [],
                     }
-                    for index in range(26)
+                    for index in range(25)
                 ],
             },
             "depth": {"errors": []},
@@ -2477,8 +2645,8 @@ class DeterministicReportContractTests(unittest.TestCase):
         }
         coverage_summary = {
             "status": "pass",
-            "required_skill_count": 26,
-            "pass_count": 26,
+            "required_skill_count": 25,
+            "pass_count": 25,
             "fail_count": 0,
             "not_required_count": 0,
             "failing_skills": [],

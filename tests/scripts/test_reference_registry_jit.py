@@ -248,7 +248,7 @@ class ReferenceRegistryJitTest(unittest.TestCase):
                     source_path,
                 )
                 checked += 1
-        self.assertEqual(190, checked)
+        self.assertEqual(189, checked)
 
     def test_all_indexed_references_have_effective_registry_contracts(self) -> None:
         specs = (
@@ -768,25 +768,16 @@ class ReferenceRegistryJitTest(unittest.TestCase):
                 )
 
         professional_item = SimpleNamespace(registry=eca)
-        for profile in ("recommended", "full", "dev"):
-            with self.subTest(profile=profile):
-                compiled = set(
-                    build._compiled_layer3_names(
-                        profile,
-                        professional_item,
-                        domain_names,
-                        product_foundation_names,
-                    )
-                )
-                self.assertTrue(removed.isdisjoint(compiled))
-                if profile != "dev":
-                    self.assertIn("test-strategy", compiled)
-                if profile == "recommended":
-                    self.assertTrue(domain_names.issubset(compiled))
-                elif profile == "full":
-                    self.assertTrue(domain_names.isdisjoint(compiled))
-                else:
-                    self.assertEqual(set(), compiled)
+        compiled = set(
+            build._compiled_layer3_names(
+                professional_item,
+                domain_names,
+                product_foundation_names,
+            )
+        )
+        self.assertTrue(removed.isdisjoint(compiled))
+        self.assertIn("test-strategy", compiled)
+        self.assertTrue(domain_names.issubset(compiled))
 
     def test_scenario_decomposition_contract_and_jit_owner_are_exact(self) -> None:
         expected_output_contract = [
@@ -851,41 +842,26 @@ class ReferenceRegistryJitTest(unittest.TestCase):
             for item in foundation["foundation_skills"]
             if item["delivery_scope"] == "product"
         }
-        for profile, expected in (
-            ("recommended", True),
-            ("full", True),
-            ("dev", False),
-        ):
-            with self.subTest(profile=profile):
-                acceptance_compiled = set(
-                    build._compiled_layer3_names(
-                        profile,
-                        SimpleNamespace(
-                            registry=professional_by_name[
-                                "acceptance-criteria-builder"
-                            ]
-                        ),
-                        domain_names,
-                        product_foundation_names,
-                    )
-                )
-                eca_compiled = set(
-                    build._compiled_layer3_names(
-                        profile,
-                        SimpleNamespace(
-                            registry=professional_by_name[
-                                "engineering-change-analysis"
-                            ]
-                        ),
-                        domain_names,
-                        product_foundation_names,
-                    )
-                )
-                self.assertEqual(
-                    expected,
-                    "scenario-decomposition" in acceptance_compiled,
-                )
-                self.assertNotIn("scenario-decomposition", eca_compiled)
+        acceptance_compiled = set(
+            build._compiled_layer3_names(
+                SimpleNamespace(
+                    registry=professional_by_name["acceptance-criteria-builder"]
+                ),
+                domain_names,
+                product_foundation_names,
+            )
+        )
+        eca_compiled = set(
+            build._compiled_layer3_names(
+                SimpleNamespace(
+                    registry=professional_by_name["engineering-change-analysis"]
+                ),
+                domain_names,
+                product_foundation_names,
+            )
+        )
+        self.assertIn("scenario-decomposition", acceptance_compiled)
+        self.assertNotIn("scenario-decomposition", eca_compiled)
 
     def test_module_boundary_roles_and_backend_escalation_are_exact(self) -> None:
         foundation = load_yaml_file(ROOT / "src/registry/foundation-skills.yaml")
@@ -923,9 +899,9 @@ class ReferenceRegistryJitTest(unittest.TestCase):
             "proactive-triggers.md"
         ).read_text(encoding="utf-8")
         for phrase in (
-            "Owner-internal placement stays with `implementation-structure-design`.",
+            "Keep placement owner-internal only while the module boundary remains fixed.",
             "If module ownership, public surface, or dependency direction changes, stop implementation.",
-            "Route Analyzed Work to `architecture-impact-reviewer` with `module-boundary-design`.",
+            "architecture ownership and module-boundary decisions are outside this implementation boundary.",
         ):
             self.assertIn(phrase, proactive)
 
@@ -1653,7 +1629,7 @@ class ReferenceRegistryJitTest(unittest.TestCase):
                     )
                 )
 
-        self.assertEqual(109, len(checked))
+        self.assertEqual(110, len(checked))
         self.assertEqual(len(checked), len(set(checked)))
         self.assertEqual([], violations)
 
@@ -1934,7 +1910,7 @@ class ReferenceRegistryJitTest(unittest.TestCase):
         self,
     ) -> None:
         registry = load_yaml_file(ROOT / "src/registry/professional-skills.yaml")
-        self.assertEqual(26, len(registry["professional_skills"]))
+        self.assertEqual(25, len(registry["professional_skills"]))
         checked: list[str] = []
         violations: list[tuple[str, str, int]] = []
         review_count = 0
@@ -1962,7 +1938,7 @@ class ReferenceRegistryJitTest(unittest.TestCase):
                     for finding in ai_readability_findings(markdown, relative)
                 )
 
-        self.assertEqual(109, len(checked))
+        self.assertEqual(108, len(checked))
         self.assertEqual(len(checked), len(set(checked)))
         self.assertLessEqual(review_count, 102)
         self.assertEqual([], violations)
@@ -2350,7 +2326,7 @@ class ReferenceRegistryJitTest(unittest.TestCase):
 
         self.assertEqual(110, len(checked))
         self.assertEqual(len(checked), len(set(checked)))
-        self.assertEqual(3506, line_count)
+        self.assertEqual(3514, line_count)
         self.assertEqual(730, list_sentence_count)
         self.assertEqual(113, review_count)
         self.assertEqual([], violations)
@@ -2926,7 +2902,7 @@ class ReferenceRegistryJitTest(unittest.TestCase):
             ),
         }
         expected_structure = {
-            "ai-product-extension": (25, 17, [17, 5, 3]),
+            "ai-product-extension": (25, 10, [10, 7, 5, 3]),
             "iot-embedded-extension": (15, 7, [6, 7, 2]),
             "payment-trading-extension": (
                 27,

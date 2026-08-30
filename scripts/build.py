@@ -86,7 +86,7 @@ LEGACY_HOOK_FILE_NAMES = (
 )
 EXPECTED_RUNTIME_COUNTS = {
     "control": 1,
-    "professional": 26,
+    "professional": 25,
     "foundation": 150,
     "domain": 13,
 }
@@ -538,11 +538,16 @@ def _preflight_build_plan(
             )
             + f" Skill(s); found {observed_counts}"
         )
-    if len(top_level) != 27 or any(
+    expected_top_level = (
+        EXPECTED_RUNTIME_COUNTS["control"]
+        + EXPECTED_RUNTIME_COUNTS["professional"]
+    )
+    if len(top_level) != expected_top_level or any(
         item.layer not in {"control", "professional"} for item in top_level
     ):
         raise BuildError(
-            "runtime must contain exactly 27 top-level Control and Professional Skills"
+            "runtime must contain exactly "
+            f"{expected_top_level} top-level Control and Professional Skills"
         )
     _validate_built_control_reference_reachability(top_level)
     layer3 = {item.name: item for item in [*items["foundation"], *items["domain"]]}

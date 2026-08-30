@@ -1036,7 +1036,7 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
                                 "evidence_contract_satisfied": False,
                                 "qualification_summary": None,
                                 "evidence_summary": None,
-                                "required_target_count": 189,
+                                "required_target_count": 188,
                                 "applied_target_count": 0,
                                 "accepted_current_count": None,
                                 "correction_count": None,
@@ -1249,7 +1249,7 @@ class CorePrinciplesOutcomeTests(unittest.TestCase):
             "float-count": lambda report: report[
                 "professional_review_cost_fixtures"
             ]["routing_neutral_isolated_material_binding_sensitivity"].update(
-                {"case_count": 189.0}
+                {"case_count": 188.0}
             ),
             "panel-size": lambda report: report["content_readiness"]["expert"][
                 "professional_completeness"

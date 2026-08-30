@@ -17,10 +17,10 @@ Use `analysis-agent` to coordinate evidence, options, workstreams, and the share
 
 ## Do Not Use
 
-- Route ordinary diagnosis to `engineering-change-analysis` and its failure-diagnosis path.
-- Route reliability design or review to `reliability-observability-gate`.
-- Route a release or rollback decision to `delivery-release-gate`.
-- Route post-incident documentation to `change-documentation-gate`.
+- ordinary single-owner diagnosis without active coordination
+- reliability design or review without incident-command work
+- release or rollback approval
+- post-incident documentation after coordination is closed
 - Do not use this Skill to mutate production, deploy, execute a destructive action, or bypass operator authority.
 
 ## Required Inputs
@@ -60,9 +60,9 @@ Use `analysis-agent` to coordinate evidence, options, workstreams, and the share
 
 ## Companion Boundary
 
-- Load `failure-diagnosis` for causal investigation and recurrence proof.
-- Load `observability` for signal selection, freshness, and interpretation.
-- Load `release-rollback` only when a mitigation option needs rollback mechanics; the approval decision remains with `delivery-release-gate`.
+- Causal investigation and recurrence proof belong to diagnosis capability; coordination records their evidence and owner.
+- Signal selection, freshness, and interpretation belong to observability capability; coordination consumes the resulting evidence.
+- Rollback mechanics may inform a mitigation option, but release or rollback approval remains outside this Skill's authority.
 
 ## Stop / Escalation Conditions
 

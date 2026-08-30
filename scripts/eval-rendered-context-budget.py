@@ -5819,14 +5819,14 @@ def _load_runtime_manifest(errors: list[str]) -> dict[str, Any] | None:
         return None
     expected_top_level = [*control, *professional]
     if (
-        len(top_level) != 27
+        len(top_level) != 26
         or len(top_level) != len(set(top_level))
         or set(top_level) != set(expected_top_level)
         or set(top_level) & (set(foundation) | set(domain))
     ):
         errors.append(
             f"{_relative(path)} Runtime discovery must contain exactly one Control "
-            "and 26 Professional Skills with no Foundation or Domain top-level Skill"
+            "and 25 Professional Skills with no Foundation or Domain top-level Skill"
         )
         return None
     return value

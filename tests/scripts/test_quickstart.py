@@ -44,7 +44,7 @@ class QuickstartPlanTests(unittest.TestCase):
             1,
             sum(command[:2] == ("python3", "scripts/build.py") for command in plan.commands),
         )
-        self.assertEqual(27, plan.expected_skill_count)
+        self.assertEqual(26, plan.expected_skill_count)
         command_text = " ".join(" ".join(command) for command in plan.commands)
         self.assertNotIn("--profile", command_text)
 

@@ -9,6 +9,6 @@
 - Add feature flag, rollout, and rollback tasks only when the change triggers them.
 - Verify no cyclic dependency exists.
 - Keep each task reviewable on its own.
-- Assign every task one complete review contract: Strategy, Skill, Scope, and Boundary.
-- For combined review, name the primary Review Skill, covered task IDs, final changed scope, and triggered specialized secondary reviews.
+- Assign every task one complete review contract: strategy, scope, evidence, and boundary.
+- For combined review, name the accountable owner, covered task IDs, final changed scope, and any risk-specific independent reviews.
 - Record topological-sort or acyclicity proof, critical path, collision scan, validation artifact, freshness, plan-execution consistency, and residual risk owner.

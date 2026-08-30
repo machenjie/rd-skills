@@ -31,8 +31,8 @@ class GenerateMarketplaceCatalogTests(unittest.TestCase):
         cls.rendered = cls.module.render_catalog(cls.payload)
 
     def test_catalog_is_derived_from_v3_exported_indexes(self) -> None:
-        self.assertEqual(len(self.payload["index"]["items"]), 190)
-        self.assertEqual(len(self.payload["items"]), 190)
+        self.assertEqual(len(self.payload["index"]["items"]), 189)
+        self.assertEqual(len(self.payload["items"]), 189)
         self.assertEqual(
             self.payload["index"]["schema_version"],
             3,
@@ -55,7 +55,7 @@ class GenerateMarketplaceCatalogTests(unittest.TestCase):
             "## Browse By Runtime Delivery",
         ):
             self.assertIn(section, self.rendered)
-        self.assertIn("| `recommended` | 27 | 154 | 9 |", self.rendered)
+        self.assertIn("| `recommended` | 26 | 154 | 9 |", self.rendered)
         self.assertNotIn("| `full` |", self.rendered)
         self.assertNotIn("| `dev` |", self.rendered)
         self.assertIn("### `engineering-control-plane`", self.rendered)
@@ -111,7 +111,7 @@ class GenerateMarketplaceCatalogTests(unittest.TestCase):
         for token in (
             "`task-agent`",
             "`review-agent`",
-            "no-repo",
+            "source-backed-answer",
             "cross-context",
             "authentication-to-authorization",
         ):

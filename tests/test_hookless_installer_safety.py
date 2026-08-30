@@ -76,9 +76,9 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
 
     def test_installer_has_one_runtime_and_bounded_legacy_input_counts(self) -> None:
         self.assertEqual("recommended", self.helper.RUNTIME_PROFILE)
-        self.assertEqual(27, self.helper.RUNTIME_SKILL_COUNT)
+        self.assertEqual(26, self.helper.RUNTIME_SKILL_COUNT)
         self.assertEqual(
-            {"recommended": 27, "full": 40, "dev": 190},
+            {"recommended": 26, "full": 39, "dev": 189},
             self.helper.LEGACY_PROFILE_COUNTS,
         )
         self.assertFalse(hasattr(self.helper, "PROFILES"))
@@ -237,7 +237,7 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
                     )
                     self.assertEqual("recommended", installed["profile"])
                     self.assertEqual(runtime, set(installed["installed_skills"]))
-                    self.assertEqual(27, len(installed["installed_skills"]))
+                    self.assertEqual(26, len(installed["installed_skills"]))
                     self.assertEqual(4, len(installed["installed_agent_profiles"]))
                     backup = Path(installed["backup_path"])
                     self.assertEqual(
@@ -495,7 +495,7 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
                 self.assertEqual(1, self.install_cli.main())
             self.assertEqual(before, self._tree_snapshot(project))
 
-    def test_cline_runtime_manifest_has_27_skills_and_no_agent_profiles(self) -> None:
+    def test_cline_runtime_manifest_has_26_skills_and_no_agent_profiles(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             project = Path(raw) / "project"
             with (
@@ -524,7 +524,7 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
                 ).read_text(encoding="utf-8")
             )
             self.assertEqual("recommended", manifest["profile"])
-            self.assertEqual(27, len(manifest["installed_skills"]))
+            self.assertEqual(26, len(manifest["installed_skills"]))
             self.assertEqual([], manifest["installed_agent_profiles"])
             self.assertEqual([], manifest["installed_agent_profile_files"])
 
@@ -710,10 +710,10 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
                 result = BUILD.build_profile("recommended")
             if result != {
                 "profile": "recommended",
-                "top_level_count": 27,
+                "top_level_count": 26,
                 "compiled_layer3_reference_count": 154,
                 "agent_profile_count": 4,
-                "zip_count": 27,
+                "zip_count": 26,
             }:
                 raise AssertionError(
                     f"unexpected canonical Runtime build result: {result}"

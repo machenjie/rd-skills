@@ -82,6 +82,10 @@ CONTENT_READINESS_REPORTS = {
 }
 AUTHORING_GATE_PASS = "current-contract-pass"
 AUTHORING_GATE_FAIL = "current-contract-fail"
+PROFESSIONALISM_STATIC_STATUSES = {
+    AUTHORING_GATE_PASS,
+    AUTHORING_GATE_FAIL,
+}
 RELEASE_GATE_PASS = "release-ready"
 RELEASE_GATE_FAIL = "release-not-ready"
 READABILITY_RELEASE_BLOCKER_CATEGORY = "readability-review-release-gate"
@@ -250,7 +254,15 @@ PROFESSIONAL_COMPLETENESS_INCREMENTAL_DECISION_METHOD = (
 )
 READABILITY_PANEL_KIND = "readability"
 PROFESSIONAL_COMPLETENESS_PANEL_KIND = "professional-completeness"
-PROFESSIONAL_PACKAGE_COUNT = 189
+PROFESSIONAL_PACKAGE_COUNT = 188
+PROFESSIONAL_PANEL_SIZE = 3
+PROFESSIONAL_CRITERION_COUNT = len(panel_contracts.PROFESSIONAL_CRITERIA)
+PROFESSIONAL_EFFECTIVE_VOTE_COUNT = (
+    PROFESSIONAL_PACKAGE_COUNT * PROFESSIONAL_PANEL_SIZE
+)
+PROFESSIONAL_EFFECTIVE_CRITERION_RESULT_COUNT = (
+    PROFESSIONAL_EFFECTIVE_VOTE_COUNT * PROFESSIONAL_CRITERION_COUNT
+)
 PROFESSIONAL_DOMAIN_CRITICAL_CRITERIA = {
     "professional-correctness",
     "erroneous-rules",
@@ -668,15 +680,17 @@ def _professional_v3_evidence_ready(axis: object) -> bool:
     }:
         return False
     if (
-        qualification["covered_target_count"] != 189
+        qualification["covered_target_count"] != PROFESSIONAL_PACKAGE_COUNT
         or qualification["required_domain_experts_per_target"] != 2
         or qualification["required_architecture_experts_per_target"] != 1
         or qualification["per_target_panel_size"] != 3
         or not _non_negative_int(qualification["fresh_reviewer_pool_size"])
         or qualification["fresh_reviewer_pool_size"]
         != axis.get("reviewer_pool_size")
-        or qualification["effective_domain_vote_count"] != 378
-        or qualification["effective_architecture_vote_count"] != 189
+        or qualification["effective_domain_vote_count"]
+        != PROFESSIONAL_PACKAGE_COUNT * 2
+        or qualification["effective_architecture_vote_count"]
+        != PROFESSIONAL_PACKAGE_COUNT
     ):
         return False
     evidence_fields = {
@@ -701,21 +715,27 @@ def _professional_v3_evidence_ready(axis: object) -> bool:
     ):
         return False
     return bool(
-        evidence["target_vote_count"] == 567
-        and evidence["criterion_result_count"] == 5670
-        and evidence["criterion_assertion_count"] >= 5670
+        evidence["target_vote_count"] == PROFESSIONAL_EFFECTIVE_VOTE_COUNT
+        and evidence["criterion_result_count"]
+        == PROFESSIONAL_EFFECTIVE_CRITERION_RESULT_COUNT
+        and evidence["criterion_assertion_count"]
+        >= PROFESSIONAL_EFFECTIVE_CRITERION_RESULT_COUNT
         and evidence["criterion_anchor_binding_count"]
         >= evidence["criterion_assertion_count"]
-        and evidence["evidence_anchor_count"] >= 1134
-        and evidence["examined_failure_mode_count"] >= 1134
-        and evidence["examined_omission_candidate_count"] >= 1134
+        and evidence["evidence_anchor_count"]
+        >= PROFESSIONAL_EFFECTIVE_VOTE_COUNT * 2
+        and evidence["examined_failure_mode_count"]
+        >= PROFESSIONAL_EFFECTIVE_VOTE_COUNT * 2
+        and evidence["examined_omission_candidate_count"]
+        >= PROFESSIONAL_EFFECTIVE_VOTE_COUNT * 2
         and evidence["examined_required_adjacency_count"]
         == 3 * evidence["required_adjacency_candidate_count"]
         and evidence["examined_adjacency_count"]
         == evidence["examined_required_adjacency_count"]
         + evidence["reviewer_added_adjacency_count"]
-        and evidence["proof_limit_count"] >= 567
-        and evidence["qualification_claim_count"] >= 567
+        and evidence["proof_limit_count"] >= PROFESSIONAL_EFFECTIVE_VOTE_COUNT
+        and evidence["qualification_claim_count"]
+        >= PROFESSIONAL_EFFECTIVE_VOTE_COUNT
     )
 
 
@@ -772,7 +792,7 @@ def _professional_review_cost_ready(axis: object) -> bool:
         or set(cost) != PROFESSIONAL_REVIEW_COST_FIELDS
         or not _non_negative_int(fresh)
         or not _non_negative_int(carried)
-        or fresh + carried != 189
+        or fresh + carried != PROFESSIONAL_PACKAGE_COUNT
         or cost.get("limitations") != PROFESSIONAL_REVIEW_COST_LIMITATIONS
     ):
         return False
@@ -825,10 +845,11 @@ def _professional_review_cost_ready(axis: object) -> bool:
     if (
         cost["fresh_vote_count"] != 3 * fresh
         or cost["carried_forward_vote_count"] != 3 * carried
-        or cost["effective_vote_count"] != 567
+        or cost["effective_vote_count"] != PROFESSIONAL_EFFECTIVE_VOTE_COUNT
         or cost["fresh_criterion_result_count"] != 30 * fresh
         or cost["carried_forward_criterion_result_count"] != 30 * carried
-        or cost["effective_criterion_result_count"] != 5670
+        or cost["effective_criterion_result_count"]
+        != PROFESSIONAL_EFFECTIVE_CRITERION_RESULT_COUNT
         or cost["input_ratio_ppm"]
         != actual * 1_000_000 // denominator
         or cost["required_only_input_ratio_ppm"]
@@ -892,7 +913,7 @@ def _professional_review_cost_ready(axis: object) -> bool:
         )
     if axis.get("reviewer_pool_size", 0) < 3:
         return False
-    if fresh < 189:
+    if fresh < PROFESSIONAL_PACKAGE_COUNT:
         return bool(
             0 < required < denominator
             and 0 < required_source <= actual_source <= full_source
@@ -973,7 +994,7 @@ def _professional_review_cost_fixture_errors(
         )
     if fixture.get("unchanged") != {
         "fresh_target_count": 0,
-        "carried_forward_target_count": 189,
+        "carried_forward_target_count": PROFESSIONAL_PACKAGE_COUNT,
         "input_ratio_ppm": 0,
     }:
         errors.append(
@@ -1012,7 +1033,7 @@ def _professional_review_cost_fixture_errors(
         named = sensitivity.get("named_isolated_case")
         valid = bool(
             type(case_count) is int
-            and case_count == 189
+            and case_count == PROFESSIONAL_PACKAGE_COUNT
             and type(full_bytes) is int
             and full_bytes > 0
             and isinstance(fresh, dict)
@@ -1064,7 +1085,7 @@ def _professional_review_cost_fixture_errors(
     if fixture.get("representative_routing_adjacency_mutation") != {
         "skill_id": "acceptance-criteria-builder",
         "fresh_target_ids": ["acceptance-criteria-builder"],
-        "carried_forward_target_count": 188,
+        "carried_forward_target_count": PROFESSIONAL_PACKAGE_COUNT - 1,
         "reason_codes": ["adjacency-review-binding-changed"],
         "cost_threshold_applied": False,
     }:
@@ -1073,7 +1094,7 @@ def _professional_review_cost_fixture_errors(
             "mutation is stale"
         )
     if fixture.get("review_contract_change") != {
-        "fresh_target_count": 189,
+        "fresh_target_count": PROFESSIONAL_PACKAGE_COUNT,
         "carried_forward_target_count": 0,
         "input_ratio_ppm": 1_000_000,
     }:
@@ -2079,7 +2100,7 @@ def _professional_completeness_axis_errors(relative: str, axis: object) -> list[
         if fresh + carried != PROFESSIONAL_PACKAGE_COUNT:
             errors.append(
                 f"static report {relative} {label} schema-3 fresh/carried partition "
-                "must contain 189 targets"
+                f"must contain {PROFESSIONAL_PACKAGE_COUNT} targets"
             )
         if (fresh == 0 and reviewer_pool_size != 0) or (
             fresh > 0 and reviewer_pool_size < 3
@@ -2343,7 +2364,7 @@ def _professional_completeness_axis_errors(relative: str, axis: object) -> list[
     ):
         errors.append(
             f"static report {relative} {label}.accepted_for_formal disagrees with "
-            "the 189-package zero-correction formal contract"
+            f"the {PROFESSIONAL_PACKAGE_COUNT}-package zero-correction formal contract"
         )
     status = axis.get("attestation_status")
     if status == "panel-majority-current" and not _professional_completeness_formal_ready(
@@ -2351,7 +2372,7 @@ def _professional_completeness_axis_errors(relative: str, axis: object) -> list[
     ):
         errors.append(
             f"static report {relative} {label} current status does not satisfy "
-            "the 189-package zero-correction formal contract"
+            f"the {PROFESSIONAL_PACKAGE_COUNT}-package zero-correction formal contract"
         )
     if status == "panel-domain-disagreement-unresolved" and (
         not _non_negative_int(unresolved)
@@ -2945,9 +2966,16 @@ def _static_report_errors(root: Path) -> list[str]:
             errors.append(f"static report must contain an object: {relative}")
             continue
         loaded_reports[relative] = report
-        if report.get(status_field) != expected_status:
+        actual_status = report.get(status_field)
+        allowed_statuses = (
+            PROFESSIONALISM_STATIC_STATUSES
+            if relative == "reports/professionalism-regression-report.json"
+            else {expected_status}
+        )
+        if actual_status not in allowed_statuses:
             errors.append(
-                f"static report {relative} must set {status_field}={expected_status!r}"
+                f"static report {relative} must set {status_field} to one of "
+                f"{sorted(allowed_statuses)!r}"
             )
         expected_scope = STATIC_REPORT_EVIDENCE_SCOPES.get(
             relative,

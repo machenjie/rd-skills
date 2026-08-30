@@ -12,7 +12,7 @@ from typing import Callable
 
 AGENTS = ("codex", "claude", "copilot", "cline", "openai-api")
 SCOPES = ("project", "user", "admin")
-EXPECTED_RUNTIME_SKILL_COUNT = 27
+EXPECTED_RUNTIME_SKILL_COUNT = 26
 
 
 @dataclass(frozen=True)

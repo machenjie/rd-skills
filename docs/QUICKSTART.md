@@ -14,7 +14,7 @@ python3 -m pip install .
 
 Do not install `src/` or source registries. Quickstart builds the one Runtime
 into `dist/` before using the installer. There is no Profile choice: every Host
-receives the same 27 top-level Skills, consisting of 1 Control and 26
+receives the same 26 top-level Skills, consisting of 1 Control and 25
 Professional Skills. Foundation and Domain knowledge remains behind targeted
 JIT selectors.
 

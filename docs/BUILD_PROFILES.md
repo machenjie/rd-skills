@@ -3,20 +3,20 @@
 rd-skills has one Runtime build. This filename is retained for link
 compatibility; it does not define a selectable Profile dimension.
 
-The source inventory is 1 Control, 26 Professional, 150 Foundation, and 13
-Domain Skills: 190 total and 189 non-Control. The Runtime exposes 27 top-level
-Skills: 1 Control and 26 Professional. Foundation and Domain Skills never enter
+The source inventory is 1 Control, 25 Professional, 150 Foundation, and 13
+Domain Skills: 189 total and 188 non-Control. The Runtime exposes 26 top-level
+Skills: 1 Control and 25 Professional. Foundation and Domain Skills never enter
 Host top-level discovery.
 
 | Runtime surface | Count | Delivery |
 | --- | ---: | --- |
 | Control | 1 | top-level Skill |
-| Professional | 26 | top-level Skill and Primary Route owner |
+| Professional | 25 | top-level Skill and Primary Route owner |
 | Product Foundation | 141 | capability modifiers compiled behind Professional selectors |
 | Domain | 13 | `modifier-only` Layer 3 items compiled behind Professional selectors |
 | Authoring/internal Foundation | 9 | source and routing-validation inventory only |
 
-The resulting Runtime delivery is 27/154/9
+The resulting Runtime delivery is 26/154/9
 top-level/targeted/routing-only entries. The source Layer 3 catalog contains
 163 entries. Nothing is deleted to reduce Host-visible Skill count: all 150
 Foundation and 13 Domain sources remain governed and validated.

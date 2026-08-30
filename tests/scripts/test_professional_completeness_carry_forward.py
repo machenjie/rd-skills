@@ -875,7 +875,7 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
             PANEL.PROFESSIONAL_LEGACY_LAYER_COUNTS,
         )
         self.assertEqual(
-            {"professional": 26, "foundation": 150, "domain": 13},
+            {"professional": 25, "foundation": 150, "domain": 13},
             PANEL.PROFESSIONAL_CURRENT_LAYER_COUNTS,
         )
         self.assertTrue(
@@ -937,13 +937,13 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
                     )
 
         invalid_cases = (
-            (current, 188),
-            (current, 190),
+            (current, 187),
+            (current, 189),
             (historical, 162.0),
-            (current, 189.0),
+            (current, 188.0),
             (current, True),
             (current, False),
-            (current, "189"),
+            (current, "188"),
             (current, None),
         )
         for source, required_target_count in invalid_cases:
@@ -967,7 +967,7 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
             packet["professional_targets"]
         )
         after = CARRY.canonical_json_bytes(packet)
-        self.assertEqual(189, len(bindings))
+        self.assertEqual(188, len(bindings))
         self.assertEqual(before, after)
         self.assertEqual(
             after,
@@ -1126,7 +1126,7 @@ class ProfessionalPacketCompatibilityTests(unittest.TestCase):
         )
         self.assertEqual(_sha(packet), _sha(adapted))
         self.assertEqual(
-            PANEL._professional_v3_panel_contract(target_count=189),
+            PANEL._professional_v3_panel_contract(target_count=188),
             adapted["panel_contract"],
         )
         self.assertEqual(

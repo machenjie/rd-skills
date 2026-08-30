@@ -532,8 +532,6 @@ def _case(
         result.errors.append(f"unknown Review Skill '{result.review_skill}'")
     elif "review-agent" not in _strings(review.get("role_support")):
         result.errors.append(f"Review Skill '{result.review_skill}' does not support review-agent")
-    if result.primary_skill == "routing-quality-review":
-        result.errors.append("compatibility router cannot own a product task")
     known = set(professional) | set(layer3)
     unknown_excluded = sorted(set(result.excluded_skills) - known)
     if unknown_excluded:

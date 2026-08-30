@@ -30,7 +30,7 @@ Before describing a release as ready:
    verify the root grant, project metadata, release configuration,
    contribution licensing, and security contact together.
 2. Run the current release suite in [Validation](VALIDATION.md).
-3. Confirm the 27-Skill Runtime build, 154/9 JIT/routing-only delivery, 163-item
+3. Confirm the 26-Skill Runtime build, 154/9 JIT/routing-only delivery, 163-item
    temporary Layer 3 completeness proof, and supported-host Agent Profile files.
 4. Confirm install, upgrade, doctor, and uninstall preserve unrelated user content.
 5. Regenerate source-derived catalogs and reports whose inputs changed.

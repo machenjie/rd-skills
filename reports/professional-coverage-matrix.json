@@ -156,7 +156,6 @@
       "requirement-clarification",
       "requirement-structuring",
       "routing-navigation-design",
-      "routing-quality-review",
       "rust-professional-usage",
       "scenario-decomposition",
       "sdk-library-contract-design",
@@ -649,9 +648,6 @@
       "routing-navigation-design": [
         "full-evaluation"
       ],
-      "routing-quality-review": [
-        "full-evaluation"
-      ],
       "rust-professional-usage": [
         "full-evaluation"
       ],
@@ -800,7 +796,7 @@
     "required_skill_count": 10,
     "pass_count": 10,
     "fail_count": 0,
-    "not_required_count": 180
+    "not_required_count": 179
   },
   "rows": [
     {
@@ -808,44 +804,6 @@
       "layer": "control",
       "role_support": [
         "main-control-agent"
-      ],
-      "trigger_contract": "present",
-      "anti_trigger_contract": "present",
-      "layer3_candidates": [],
-      "authoring_status": "pass",
-      "evidence_case_ids": {
-        "positive_route": [],
-        "negative_route": [],
-        "behavior": [],
-        "pressure": [],
-        "release_critical": [],
-        "adversarial_negative_control": []
-      },
-      "evidence_counts": {
-        "positive_route": 0,
-        "negative_route": 0,
-        "behavior": 0,
-        "pressure": 0,
-        "release_critical": 0,
-        "adversarial_negative_control": 0
-      },
-      "coverage_states": {
-        "registered": true,
-        "route_covered": false,
-        "negative_route_covered": false,
-        "behavior_covered": false,
-        "pressure_covered": false,
-        "release_critical_covered": false
-      },
-      "required_states": [],
-      "unmet_required_states": [],
-      "coverage_gate_status": "not-required"
-    },
-    {
-      "name": "routing-quality-review",
-      "layer": "professional",
-      "role_support": [
-        "review-agent"
       ],
       "trigger_contract": "present",
       "anti_trigger_contract": "present",

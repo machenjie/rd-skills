@@ -1,6 +1,6 @@
 ---
 name: change-intake-compiler
-description: "Use `analysis-agent` when engineering intent lacks desired behavior, boundaries, constraints, or completion signals. Skip requests with an accepted Engineering Brief and no-repo direct-answer work."
+description: "Use `analysis-agent` for ambiguous or missing intent: slice desired behavior, boundaries, constraints, and completion signals. Skip an accepted Brief or repository-independent answers fully determined by user facts."
 ---
 
 # change-intake-compiler
@@ -18,7 +18,7 @@ reversible assumptions and user-owned decisions.
 ## Do Not Use
 
 - accepted Engineering Brief already exists
-- no-repo direct-answer mode
+- questions fully determined by user-supplied facts that require no repository evidence or engineering intent compilation
 
 ## Required Inputs
 
@@ -38,17 +38,12 @@ reversible assumptions and user-owned decisions.
 - A source-discoverable fact is not a reason to interrupt the user.
 - Make every reversible assumption explicit in the output.
 
-## Evidence Resolution Source Declaration
+## Gap Classification
 
-The following closed declaration is the semantic source for control-plane gap
-projections. Control may retain labels and actions only when they validate
-exactly against this declaration.
-
-<!-- BEGIN CHANGEFORGE EVIDENCE RESOLUTION SOURCE -->
-```json
-{"contract":"changeforge.evidence-resolution-source/v1","gap_classes":[{"id":"repo-resolvable-fact","source_semantic":"discoverable-fact","source_anchor":"A source-discoverable fact is not a reason to interrupt the user.","subtypes":[]},{"id":"user-owned-choice","source_semantic":"user-owned-choice","source_anchor":"Classify each gap as discoverable fact, reversible assumption, or user-owned choice.","subtypes":["semantic-choice","execution-level-choice"]},{"id":"route-or-material-unknown","source_semantic":"unsafe-or-non-reversible-assumption","source_anchor":"Proceed with explicit reversible assumptions only when they cannot change public behavior, data, authorization, or domain meaning.","subtypes":[]}],"decision_rules":{"repo-resolvable-fact":{"question":"forbidden","route_affecting":"analyzed","otherwise":"direct-bounded-discovery"},"semantic-choice":{"question":"one-minimum-concrete","invalidation":"protected-brief-semantics"},"execution-level-choice":{"question":"one-minimum-concrete","invalidation":"execution-level-projection-only"},"route-or-material-unknown":{"question":"forbidden","decision":"analysis-or-fail-closed"}}}
-```
-<!-- END CHANGEFORGE EVIDENCE RESOLUTION SOURCE -->
+- Treat a discoverable fact as research work: inspect the authorized source and record the evidence instead of asking the requester to supply repository facts.
+- Treat a reversible assumption as provisional only when it is explicit, bounded, and cannot alter public behavior, data, authorization, or domain meaning.
+- Treat a user-owned decision as blocking when engineering evidence cannot determine product semantics, scope, priority, or another stakeholder-owned tradeoff.
+- Treat an unsafe or non-reversible unknown as an unresolved requirement; do not hide it inside an implementation assumption.
 
 ## Execution Checklist
 

@@ -8,7 +8,7 @@
     "No latency, context-size, accuracy, or adoption threshold is evaluated."
   ],
   "routing_cases_checked": 233,
-  "professional_skills_checked": 26,
+  "professional_skills_checked": 25,
   "layer3_skills_checked": 163,
   "errors": [],
   "cases": [
@@ -4651,16 +4651,6 @@
       "primary_case_count": 8,
       "review_case_count": 0,
       "negative_case_count": 1
-    },
-    {
-      "name": "routing-quality-review",
-      "role_support": [
-        "review-agent"
-      ],
-      "task_routable": false,
-      "primary_case_count": 0,
-      "review_case_count": 0,
-      "negative_case_count": 0
     },
     {
       "name": "security-privacy-gate",

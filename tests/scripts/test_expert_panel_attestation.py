@@ -3841,7 +3841,7 @@ class ExpertPanelAttestationRepairTests(unittest.TestCase):
                 mode="fresh",
                 origin_review_id=value["review_id"],
             )
-            for index in range(189)
+            for index in range(188)
         ]
         value["review_cost_input"] = _review_cost_input("full-fresh")
         authority = _professional_authority(value)
@@ -3851,7 +3851,7 @@ class ExpertPanelAttestationRepairTests(unittest.TestCase):
         encoded = ATTESTATION.canonical_attestation_bytes(
             value, expected_professional_current_bindings=authority
         )
-        self.assertEqual(189, value["summary"]["partition"]["effective_target_count"])
+        self.assertEqual(188, value["summary"]["partition"]["effective_target_count"])
         self.assertLessEqual(len(encoded), 1_006_846)
         self.assertGreater(len(encoded), 0)
         self.assertIsNotNone(template)

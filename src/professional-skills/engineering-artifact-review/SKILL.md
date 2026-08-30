@@ -1,6 +1,6 @@
 ---
 name: engineering-artifact-review
-description: "Use `review-agent` for an ordinary Engineering Brief, Task Plan, acceptance, or contract artifact. Route high-risk design and release, deployment, or migration readiness to their specialist reviewers."
+description: "Use `review-agent` for an ordinary Engineering Brief, Task Plan, acceptance, or contract artifact. Exclude high-risk design and release-readiness approval."
 ---
 
 # Engineering Artifact Review
@@ -17,10 +17,10 @@ decisions, dependencies, failure boundaries, and evidence.
 
 ## Do Not Use
 
-- actual implementation diff review; use `ai-code-review-refactor` or a risk-specific Skill
-- an ordinary Direct Task has no separate decision artifact
-- high-risk Engineering Brief; use `high-risk-design-review`
-- release deployment or migration readiness; use `delivery-release-gate`
+- actual implementation diff review
+- bounded implementation task with no separate decision artifact
+- high-risk Engineering Brief specialist review
+- release deployment or migration readiness approval
 
 ## Required Inputs
 
@@ -52,8 +52,8 @@ decisions, dependencies, failure boundaries, and evidence.
 ## Stop / Escalation Conditions
 
 - Stop when the artifact or its material source evidence is unavailable.
-- Route a high-risk Engineering Brief to `high-risk-design-review` without issuing its specialist verdict here.
-- Route release, deployment, or migration readiness to `delivery-release-gate` without issuing a go/no-go verdict here.
+- High-risk Engineering Brief specialist verdicts are outside this Skill's authority; record that scope as unreviewed.
+- Release, deployment, and migration readiness approval are outside this Skill's authority; do not issue a go/no-go verdict here.
 - Escalate destructive, production, privileged, irreversible, security, privacy,
   money, or public-contract choices without authoritative decisions.
 
@@ -68,4 +68,4 @@ decisions, dependencies, failure boundaries, and evidence.
 
 | Path | Type | Load when | Do not load when | Required by | Required output |
 |---|---|---|---|---|---|
-| [review](references/review-checklist.md) | decision-checklist | ordinary pre-implementation artifact decisions have downstream impact | the task is implementation diff review, a Direct Task, high-risk design, or release/deployment/migration readiness | review-agent | checklist-result, residual-risk |
+| [review](references/review-checklist.md) | decision-checklist | ordinary pre-implementation artifact decisions have downstream impact | the task is implementation diff review, a bounded implementation task with no separate decision artifact, high-risk design, or release/deployment/migration readiness | review-agent | checklist-result, residual-risk |

@@ -71,7 +71,7 @@ professional_completeness_review_attestation:
   scope: professional-skill-packages
   decision_method: exact-package-carry-forward-qualified-reviewer-pool-domain-critical-fail-closed
   limitations:
-    - A canonical compact attestation is current only when strict target-local validation accepts all 189 non-Control Skill packages with zero professional corrections or unresolved professional disagreements.
+    - A canonical compact attestation is current only when strict target-local validation accepts all 188 non-Control Skill packages with zero professional corrections or unresolved professional disagreements.
     - Reviewer declarations are static. They do not prove identity, qualifications, or experience.
     - Static panel evidence does not prove real-host Profile startup, wall-clock performance, provider behavior, production accuracy, or installed user experience.
     - Canonical byte proxies do not prove actual token use, reviewer effort, or latency.

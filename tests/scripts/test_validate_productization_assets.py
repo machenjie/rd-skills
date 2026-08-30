@@ -101,9 +101,9 @@ def _incremental_review_cost(cost: dict) -> dict:
     cost.update(
         {
             "fresh_vote_count": 3,
-            "carried_forward_vote_count": 564,
+            "carried_forward_vote_count": 561,
             "fresh_criterion_result_count": 30,
-            "carried_forward_criterion_result_count": 5640,
+            "carried_forward_criterion_result_count": 5610,
             "reviewer_added_request_count": 3,
             "reviewer_added_unique_relationship_count": 1,
             "maximum_reviewer_added_unique_union_to_required_ratio_ppm": 1_000_000,
@@ -288,7 +288,7 @@ def _content_readiness_payload() -> dict:
             },
             "review_cost_current": False,
             "review_cost": None,
-            "required_target_count": 189,
+            "required_target_count": 188,
             "fresh_target_count": 0,
             "carried_forward_target_count": 0,
             "applied_target_count": 0,
@@ -308,7 +308,7 @@ def _content_readiness_payload() -> dict:
         "baseline_comparison": "not-numerically-comparable",
         "content_audit_summary": {
             "skill_detector_fingerprint": "7" * 64,
-            "review_states": {"KEEP": 189},
+            "review_states": {"KEEP": 188},
             "review_reasons": {
                 "classification_block": 0,
                 "ai_readability_hard_fail": 0,
@@ -365,16 +365,16 @@ def _content_readiness_payload() -> dict:
             "status": "pass",
             "unchanged": {
                 "fresh_target_count": 0,
-                "carried_forward_target_count": 189,
+                "carried_forward_target_count": 188,
                 "input_ratio_ppm": 0,
             },
             "routing_neutral_isolated_material_binding_sensitivity": {
-                "case_count": 189,
+                "case_count": 188,
                 "full_rereview_deduplicated_capsule_input_bytes_proxy": 100_000_000,
                 "fresh_target_count": {
                     "min": 3,
                     "sum": 3240,
-                    "mean_milli": 17142,
+                    "mean_milli": 17234,
                     "p95": 35,
                     "max": cost_authority["thresholds"][
                         "maximum_fresh_target_count"
@@ -383,14 +383,14 @@ def _content_readiness_payload() -> dict:
                 "input_ratio_ppm": {
                     "min": 1000,
                     "sum": 18_900_000,
-                    "mean": 100_000,
+                    "mean": 100_531,
                     "p95": 150_000,
                     "max": 200_000,
                 },
                 "named_isolated_case": {
                     "skill_id": "acceptance-criteria-builder",
                     "fresh_target_count": 8,
-                    "carried_forward_target_count": 181,
+                    "carried_forward_target_count": 180,
                     "canonical_capsule_input_bytes_proxy": 10_000_000,
                     "input_ratio_ppm": 100_000,
                 },
@@ -398,12 +398,12 @@ def _content_readiness_payload() -> dict:
             "representative_routing_adjacency_mutation": {
                 "skill_id": "acceptance-criteria-builder",
                 "fresh_target_ids": ["acceptance-criteria-builder"],
-                "carried_forward_target_count": 188,
+                "carried_forward_target_count": 187,
                 "reason_codes": ["adjacency-review-binding-changed"],
                 "cost_threshold_applied": False,
             },
             "review_contract_change": {
-                "fresh_target_count": 189,
+                "fresh_target_count": 188,
                 "carried_forward_target_count": 0,
                 "input_ratio_ppm": 1_000_000,
             },
@@ -523,7 +523,7 @@ def _set_completeness_decision(
     report: dict,
     *,
     corrections: int = 0,
-    applied: int = 189,
+    applied: int = 188,
     status: str | None = None,
 ) -> None:
     axis = report["content_readiness"]["expert"]["professional_completeness"]
@@ -615,7 +615,7 @@ def _set_completeness_decision(
                 "target_decision_fingerprint": f"{index + 400:064x}"[-64:],
             }
         )
-    formal = corrections == 0 and applied == 189 and status in {
+    formal = corrections == 0 and applied == 188 and status in {
         None,
         "panel-majority-current",
     }
@@ -643,28 +643,28 @@ def _set_completeness_decision(
             "panel_artifact_schema_version": 3,
             "evidence_contract_satisfied": True,
             "qualification_summary": {
-                "covered_target_count": 189,
+                "covered_target_count": 188,
                 "required_domain_experts_per_target": 2,
                 "required_architecture_experts_per_target": 1,
                 "per_target_panel_size": 3,
                 "fresh_reviewer_pool_size": 3,
-                "effective_domain_vote_count": 378,
-                "effective_architecture_vote_count": 189,
+                "effective_domain_vote_count": 376,
+                "effective_architecture_vote_count": 188,
             },
             "evidence_summary": {
-                "target_vote_count": 567,
-                "required_adjacency_candidate_count": 945,
-                "criterion_result_count": 5670,
-                "criterion_anchor_binding_count": 5670,
-                "criterion_assertion_count": 5670,
-                "evidence_anchor_count": 1134,
-                "examined_failure_mode_count": 1134,
-                "examined_omission_candidate_count": 1134,
-                "examined_adjacency_count": 2835,
-                "examined_required_adjacency_count": 2835,
+                "target_vote_count": 564,
+                "required_adjacency_candidate_count": 940,
+                "criterion_result_count": 5640,
+                "criterion_anchor_binding_count": 5640,
+                "criterion_assertion_count": 5640,
+                "evidence_anchor_count": 1128,
+                "examined_failure_mode_count": 1128,
+                "examined_omission_candidate_count": 1128,
+                "examined_adjacency_count": 2820,
+                "examined_required_adjacency_count": 2820,
                 "reviewer_added_adjacency_count": 0,
-                "proof_limit_count": 567,
-                "qualification_claim_count": 567,
+                "proof_limit_count": 564,
+                "qualification_claim_count": 564,
             },
             "review_contract_fingerprint": "7" * 64,
             "current_review_contract_fingerprint": "7" * 64,
@@ -688,12 +688,12 @@ def _set_completeness_decision(
             },
             "review_cost_current": True,
             "review_cost": {
-                "fresh_vote_count": 567,
+                "fresh_vote_count": 564,
                 "carried_forward_vote_count": 0,
-                "effective_vote_count": 567,
-                "fresh_criterion_result_count": 5670,
+                "effective_vote_count": 564,
+                "fresh_criterion_result_count": 5640,
                 "carried_forward_criterion_result_count": 0,
-                "effective_criterion_result_count": 5670,
+                "effective_criterion_result_count": 5640,
                 "canonical_capsule_input_bytes_proxy": 303,
                 "full_rereview_deduplicated_capsule_input_bytes_proxy": 300,
                 "input_ratio_ppm": 1_010_000,
@@ -719,7 +719,7 @@ def _set_completeness_decision(
                     "Static round-tree validation cannot prove that historical schema-3 rounds were not deleted.",
                 ],
             },
-            "fresh_target_count": 189,
+            "fresh_target_count": 188,
             "carried_forward_target_count": 0,
             "applied_target_count": applied,
             "accepted_current_count": applied - corrections,
@@ -773,13 +773,13 @@ def _set_compact_completeness_decision(
         axis["reviewer_pool_size"] = 0
         axis["qualification_summary"]["fresh_reviewer_pool_size"] = 0
         axis["fresh_target_count"] = 0
-        axis["carried_forward_target_count"] = 189
+        axis["carried_forward_target_count"] = 188
         axis["review_cost"].update(
             {
                 "fresh_vote_count": 0,
-                "carried_forward_vote_count": 567,
+                "carried_forward_vote_count": 564,
                 "fresh_criterion_result_count": 0,
-                "carried_forward_criterion_result_count": 5670,
+                "carried_forward_criterion_result_count": 5640,
                 "canonical_capsule_input_bytes_proxy": 0,
                 "input_ratio_ppm": 0,
                 "required_only_capsule_input_bytes_proxy": 0,
@@ -872,10 +872,103 @@ class StaticProductizationReportTests(unittest.TestCase):
         }
 
     def _write_current_professionalism_artifacts(self, root: Path) -> None:
+        contract_target = root / "src/control-model/core-contracts.json"
+        contract_target.parent.mkdir(parents=True, exist_ok=True)
+        contract_target.write_bytes(
+            (ROOT / "src/control-model/core-contracts.json").read_bytes()
+        )
         for relative, content in self._current_professionalism_artifacts().items():
             path = root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(content)
+
+    def test_internally_consistent_current_contract_fail_static_report_is_valid(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._write_current_professionalism_artifacts(root)
+
+            self.assertEqual([], self.module._static_report_errors(root))
+
+    def test_current_contract_fail_static_report_remains_fail_closed(self) -> None:
+        mutations = {
+            "no-error-blocker": lambda report: (
+                report.__setitem__("blockers", []),
+                report["summary"].__setitem__("blocker_count", 0),
+            ),
+            "status-mismatch": lambda report: report.__setitem__(
+                "status", "current-contract-pass"
+            ),
+            "release-ready": lambda report: report.__setitem__(
+                "release_gate", "release-ready"
+            ),
+        }
+        for label, mutate in mutations.items():
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                self._write_current_professionalism_artifacts(root)
+                path = root / "reports/professionalism-regression-report.json"
+                report = json.loads(path.read_text(encoding="utf-8"))
+                mutate(report)
+                path.write_text(json.dumps(report), encoding="utf-8")
+
+                self.assertTrue(self.module._static_report_errors(root), label)
+
+    def test_stale_professional_axis_cannot_claim_current_evidence(self) -> None:
+        def set_schema_three(axis: dict) -> None:
+            axis["panel_artifact_schema_version"] = 3
+
+        def set_qualification(axis: dict) -> None:
+            axis["qualification_summary"] = {
+                "covered_target_count": 188,
+                "required_domain_experts_per_target": 2,
+                "required_architecture_experts_per_target": 1,
+                "per_target_panel_size": 3,
+                "fresh_reviewer_pool_size": 0,
+                "effective_domain_vote_count": 376,
+                "effective_architecture_vote_count": 188,
+            }
+
+        def set_evidence(axis: dict) -> None:
+            axis["evidence_summary"] = {
+                "target_vote_count": 564,
+                "required_adjacency_candidate_count": 0,
+                "criterion_result_count": 5640,
+                "criterion_anchor_binding_count": 5640,
+                "criterion_assertion_count": 5640,
+                "evidence_anchor_count": 1128,
+                "examined_failure_mode_count": 1128,
+                "examined_omission_candidate_count": 1128,
+                "examined_adjacency_count": 0,
+                "examined_required_adjacency_count": 0,
+                "reviewer_added_adjacency_count": 0,
+                "proof_limit_count": 564,
+                "qualification_claim_count": 564,
+            }
+
+        mutations = {
+            "current": lambda axis: axis.__setitem__("source_current", True),
+            "schema-three": set_schema_three,
+            "qualification": set_qualification,
+            "evidence-564-5640": set_evidence,
+            "applied-evidence": lambda axis: axis.__setitem__(
+                "applied_target_count", 188
+            ),
+        }
+        for label, mutate in mutations.items():
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                self._write_current_professionalism_artifacts(root)
+                path = root / "reports/professionalism-regression-report.json"
+                report = json.loads(path.read_text(encoding="utf-8"))
+                axis = report["content_readiness"]["expert"][
+                    "professional_completeness"
+                ]
+                mutate(axis)
+                path.write_text(json.dumps(report), encoding="utf-8")
+
+                self.assertTrue(self.module._static_report_errors(root), label)
 
     def test_static_reports_require_deterministic_scope_and_limits(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -1005,7 +1098,7 @@ class StaticProductizationReportTests(unittest.TestCase):
             self.assertEqual("current-contract-pass", readiness["authoring_gate"])
             self.assertEqual("release-not-ready", readiness["release_gate"])
 
-    def test_current_cost_reports_are_consistent_while_release_is_not_ready(
+    def test_current_noncurrent_report_requires_no_professional_cost_evidence(
         self,
     ) -> None:
         reports = self._read_professionalism_reports(ROOT)
@@ -1016,9 +1109,9 @@ class StaticProductizationReportTests(unittest.TestCase):
             completeness = report["content_readiness"]["expert"][
                 "professional_completeness"
             ]
-            self.assertEqual("current-contract-pass", report["authoring_gate"])
+            self.assertEqual("current-contract-fail", report["authoring_gate"])
             self.assertEqual("release-not-ready", report["release_gate"])
-            self.assertEqual([], report["blockers"])
+            self.assertTrue(report["blockers"])
             self.assertTrue(report["release_blockers"])
             self.assertEqual(
                 [],
@@ -1033,45 +1126,32 @@ class StaticProductizationReportTests(unittest.TestCase):
                 self.module.PROFESSIONAL_PACKAGE_COUNT,
                 required_target_count,
             )
-            self.assertEqual(
-                applied_target_count,
-                completeness["fresh_target_count"]
-                + completeness["carried_forward_target_count"],
-            )
-            self.assertLessEqual(applied_target_count, required_target_count)
-            self.assertIs(
+            self.assertEqual(0, applied_target_count)
+            self.assertEqual(0, completeness["fresh_target_count"])
+            self.assertEqual(0, completeness["carried_forward_target_count"])
+            self.assertEqual([], completeness["professional_dispositions"])
+            self.assertIsNone(completeness["qualification_summary"])
+            self.assertIsNone(completeness["evidence_summary"])
+            self.assertIsNone(completeness["review_cost"])
+            self.assertFalse(completeness["review_cost_current"])
+            self.assertFalse(
                 report["content_readiness"]["aggregate"][
                     "professional_completeness_review_current"
-                ],
+                ]
+            )
+            self.assertFalse(
                 self.module._professional_completeness_formal_ready(
                     completeness
-                ),
+                )
             )
 
             fixture = report["professional_review_cost_fixtures"]
             sensitivity = fixture[
                 "routing_neutral_isolated_material_binding_sensitivity"
             ]
-            thresholds = fixture["thresholds"]
             case_count = sensitivity["case_count"]
-            fresh = sensitivity["fresh_target_count"]
-            ratio = sensitivity["input_ratio_ppm"]
-            self.assertEqual("pass", fixture["status"])
+            self.assertEqual("formal-non-current", fixture["status"])
             self.assertEqual(required_target_count, case_count)
-            self.assertLessEqual(
-                fresh["max"], thresholds["maximum_fresh_target_count"]
-            )
-            self.assertLessEqual(
-                fresh["sum"],
-                thresholds["maximum_mean_fresh_target_count"] * case_count,
-            )
-            self.assertLessEqual(
-                ratio["max"], thresholds["maximum_input_ratio_ppm"]
-            )
-            self.assertLessEqual(
-                ratio["sum"],
-                thresholds["maximum_mean_input_ratio_ppm"] * case_count,
-            )
 
     def test_professional_report_semantic_envelope_rejects_tampers(
         self,
@@ -1494,7 +1574,7 @@ class StaticProductizationReportTests(unittest.TestCase):
                     "per-skill-qualified-reviewer-pool-domain-critical-fail-closed"
                 ),
                 "qualification_summary": {
-                    "covered_target_count": 189,
+                    "covered_target_count": 188,
                     "required_domain_experts_per_target": 2,
                     "required_architecture_experts_per_target": 1,
                     "per_target_panel_size": 3,
@@ -1570,19 +1650,19 @@ class StaticProductizationReportTests(unittest.TestCase):
         valid = report["content_readiness"]["expert"]["professional_completeness"]
         self.assertTrue(self.module._professional_v3_evidence_ready(valid))
         cases = (
-            ("qualification_summary", "covered_target_count", (188, 190)),
+            ("qualification_summary", "covered_target_count", (187, 189)),
             (
                 "qualification_summary",
                 "effective_domain_vote_count",
-                (377, 379),
+                (375, 377),
             ),
             (
                 "qualification_summary",
                 "effective_architecture_vote_count",
-                (188, 190),
+                (187, 189),
             ),
-            ("evidence_summary", "target_vote_count", (566, 568)),
-            ("evidence_summary", "criterion_result_count", (5669, 5671)),
+            ("evidence_summary", "target_vote_count", (563, 565)),
+            ("evidence_summary", "criterion_result_count", (5639, 5641)),
         )
         for section, field, neighbors in cases:
             for value in neighbors:
@@ -1612,14 +1692,14 @@ class StaticProductizationReportTests(unittest.TestCase):
             {
                 "reviewer_pool_size": 0,
                 "fresh_target_count": 0,
-                "carried_forward_target_count": 189,
+                "carried_forward_target_count": 188,
                 "review_cost": {
                     "fresh_vote_count": 0,
-                    "carried_forward_vote_count": 567,
-                    "effective_vote_count": 567,
+                    "carried_forward_vote_count": 564,
+                    "effective_vote_count": 564,
                     "fresh_criterion_result_count": 0,
-                    "carried_forward_criterion_result_count": 5670,
-                    "effective_criterion_result_count": 5670,
+                    "carried_forward_criterion_result_count": 5640,
+                    "effective_criterion_result_count": 5640,
                     "canonical_capsule_input_bytes_proxy": 0,
                     "full_rereview_deduplicated_capsule_input_bytes_proxy": 300,
                     "input_ratio_ppm": 0,
@@ -1715,7 +1795,7 @@ class StaticProductizationReportTests(unittest.TestCase):
         _set_completeness_decision(report)
         axis = report["content_readiness"]["expert"]["professional_completeness"]
         axis["fresh_target_count"] = 1
-        axis["carried_forward_target_count"] = 188
+        axis["carried_forward_target_count"] = 187
         valid = _incremental_review_cost(axis["review_cost"])
         self.assertTrue(self.module._professional_review_cost_ready(axis))
 
@@ -1789,7 +1869,7 @@ class StaticProductizationReportTests(unittest.TestCase):
         _set_completeness_decision(report)
         axis = report["content_readiness"]["expert"]["professional_completeness"]
         axis["fresh_target_count"] = 0
-        axis["carried_forward_target_count"] = 189
+        axis["carried_forward_target_count"] = 188
         axis["reviewer_pool_size"] = 0
         axis["qualification_summary"]["fresh_reviewer_pool_size"] = 0
         errors = self.module._professional_completeness_axis_errors(
@@ -2277,7 +2357,7 @@ case is `9` fresh
 
         mutations = {
             "partition": lambda axis: axis.__setitem__(
-                "carried_forward_target_count", 188
+                "carried_forward_target_count", 189
             ),
             "origin-current-review": lambda axis: axis[
                 "professional_dispositions"
@@ -2288,7 +2368,7 @@ case is `9` fresh
                 "reviewer_pool_size", 3
             ),
             "cost": lambda axis: axis["review_cost"].__setitem__(
-                "carried_forward_vote_count", 566
+                "carried_forward_vote_count", 565
             ),
             "cost-currentness": lambda axis: axis.__setitem__(
                 "review_cost_current", False
@@ -2364,7 +2444,7 @@ case is `9` fresh
         report = _content_readiness_payload()
         _set_completeness_decision(
             report,
-            applied=188,
+            applied=187,
             status="panel-majority-incomplete-coverage",
         )
         axis = report["content_readiness"]["expert"]["professional_completeness"]
@@ -2376,7 +2456,7 @@ case is `9` fresh
         errors = self.module._professional_completeness_axis_errors(
             "fixture.json", axis
         )
-        self.assertTrue(any("189-package zero-correction" in item for item in errors), errors)
+        self.assertTrue(any("188-package zero-correction" in item for item in errors), errors)
         self.assertFalse(self.module._professional_completeness_formal_ready(axis))
 
     def test_dual_axis_aggregate_and_release_blockers_are_independent(self) -> None:
@@ -2485,9 +2565,9 @@ case is `9` fresh
                 "source_current": False,
                 "accepted_for_formal": False,
                 "attestation_status": "panel-majority-stale",
-                "required_target_count": 188,
-                "applied_target_count": 188,
-                "accepted_current_count": 188,
+                "required_target_count": 187,
+                "applied_target_count": 187,
+                "accepted_current_count": 187,
             },
         }
         for axis_name, axis_flips in flips.items():
@@ -2573,7 +2653,7 @@ case is `9` fresh
             ),
             "professional-count-mismatch": (
                 "professional_completeness",
-                lambda axis: axis.__setitem__("accepted_current_count", 188),
+                lambda axis: axis.__setitem__("accepted_current_count", 187),
                 "do not sum",
             ),
         }

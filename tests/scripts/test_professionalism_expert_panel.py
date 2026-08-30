@@ -61,12 +61,12 @@ def _formal_release_manifest_fixture() -> dict:
 def _full_fresh_review_cost() -> dict:
     _policy, fingerprint = REGRESSION._professional_review_formal_round_policy()
     return {
-        "fresh_vote_count": 567,
+        "fresh_vote_count": 564,
         "carried_forward_vote_count": 0,
-        "effective_vote_count": 567,
-        "fresh_criterion_result_count": 5670,
+        "effective_vote_count": 564,
+        "fresh_criterion_result_count": 5640,
         "carried_forward_criterion_result_count": 0,
-        "effective_criterion_result_count": 5670,
+        "effective_criterion_result_count": 5640,
         "canonical_capsule_input_bytes_proxy": 1010,
         "full_rereview_deduplicated_capsule_input_bytes_proxy": 1000,
         "input_ratio_ppm": 1_010_000,
@@ -95,9 +95,9 @@ def _all_carry_review_cost() -> dict:
     cost.update(
         {
             "fresh_vote_count": 0,
-            "carried_forward_vote_count": 567,
+            "carried_forward_vote_count": 564,
             "fresh_criterion_result_count": 0,
-            "carried_forward_criterion_result_count": 5670,
+            "carried_forward_criterion_result_count": 5640,
             "canonical_capsule_input_bytes_proxy": 0,
             "input_ratio_ppm": 0,
             "required_only_capsule_input_bytes_proxy": 0,
@@ -764,6 +764,89 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                     root,
                     formal=False,
                     currentness_error=spoofed,
+                )
+
+    def test_professional_package_coverage_stale_requires_exact_trusted_chain(
+        self,
+    ) -> None:
+        professional = self.CURRENT_PATHS[0]
+        panel_kind = (
+            REGRESSION.expert_panel.PROFESSIONAL_COMPLETENESS_PANEL_KIND
+        )
+
+        def coverage_stale(
+            *,
+            outer_message: str = "Professional current authority is invalid",
+            cause_message: str = (
+                "Professional current package authority coverage is stale"
+            ),
+            cause_type=None,
+        ):
+            cause_class = (
+                cause_type
+                or REGRESSION.expert_panel.professional_carry
+                .ProfessionalCarryForwardError
+            )
+            outer = REGRESSION.expert_panel.PanelReviewError(outer_message)
+            outer.__cause__ = cause_class(cause_message)
+            return outer
+
+        exact = coverage_stale()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._storage_repo(root, tracked={professional: b"{}\n"})
+            self.assertEqual(
+                "stale",
+                self._validate_storage(
+                    root,
+                    formal=False,
+                    currentness_error=exact,
+                )[panel_kind],
+            )
+            with self.assertRaisesRegex(ValueError, "formal.*stale"):
+                self._validate_storage(
+                    root,
+                    formal=True,
+                    currentness_error=coverage_stale(),
+                )
+
+            (root / professional).write_bytes(b'{"changed":true}\n')
+            with self.assertRaises(REGRESSION.expert_panel.PanelReviewError):
+                self._validate_storage(
+                    root,
+                    formal=False,
+                    currentness_error=coverage_stale(),
+                )
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._storage_repo(root, untracked={professional: b"{}\n"})
+            with self.assertRaises(REGRESSION.expert_panel.PanelReviewError):
+                self._validate_storage(
+                    root,
+                    formal=False,
+                    currentness_error=coverage_stale(),
+                )
+
+        class LookalikeCarryError(
+            REGRESSION.expert_panel.professional_carry
+            .ProfessionalCarryForwardError
+        ):
+            pass
+
+        negative_chains = (
+            REGRESSION.expert_panel.PanelReviewError(
+                "Professional current authority is invalid"
+            ),
+            coverage_stale(outer_message="Professional current authority is stale"),
+            coverage_stale(cause_message="Professional package authority is stale"),
+            coverage_stale(cause_type=ValueError),
+            coverage_stale(cause_type=LookalikeCarryError),
+        )
+        for error in negative_chains:
+            with self.subTest(error=repr(error)):
+                self.assertFalse(
+                    REGRESSION._expert_panel_currentness_drift(error)
                 )
 
     def test_semantic_target_set_drift_is_stale_only_for_trusted_fixed_bytes(
@@ -2773,23 +2856,23 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                     "required_architecture_experts_per_target": 1,
                     "per_target_panel_size": 3,
                     "fresh_reviewer_pool_size": 3,
-                    "effective_domain_vote_count": 378,
-                    "effective_architecture_vote_count": 189,
+                    "effective_domain_vote_count": 376,
+                    "effective_architecture_vote_count": 188,
                 },
                 "evidence_summary": {
-                    "target_vote_count": 567,
+                    "target_vote_count": 564,
                     "required_adjacency_candidate_count": 905,
-                    "criterion_result_count": 5670,
-                    "criterion_anchor_binding_count": 5670,
-                    "criterion_assertion_count": 5670,
-                    "evidence_anchor_count": 1134,
-                    "examined_failure_mode_count": 1134,
-                    "examined_omission_candidate_count": 1134,
+                    "criterion_result_count": 5640,
+                    "criterion_anchor_binding_count": 5640,
+                    "criterion_assertion_count": 5640,
+                    "evidence_anchor_count": 1128,
+                    "examined_failure_mode_count": 1128,
+                    "examined_omission_candidate_count": 1128,
                     "examined_adjacency_count": 2715,
                     "examined_required_adjacency_count": 2715,
                     "reviewer_added_adjacency_count": 0,
-                    "proof_limit_count": 567,
-                    "qualification_claim_count": 567,
+                    "proof_limit_count": 564,
+                    "qualification_claim_count": 564,
                 },
                 "review_contract_current": True,
                 "review_plan_current": True,
@@ -2885,7 +2968,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
         completeness.update(
             {
                 "fresh_target_count": 0,
-                "carried_forward_target_count": 189,
+                "carried_forward_target_count": 188,
                 "reviewer_pool_size": 0,
                 "review_cost": _all_carry_review_cost(),
             }
@@ -2925,7 +3008,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
         self.assertTrue(
             REGRESSION._professional_review_cost_policy_satisfied(
                 cost,
-                fresh_target_count=189,
+                fresh_target_count=188,
                 carried_forward_target_count=0,
             )
         )
@@ -2943,7 +3026,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
         self.assertTrue(
             REGRESSION._professional_review_cost_policy_satisfied(
                 boundary,
-                fresh_target_count=189,
+                fresh_target_count=188,
                 carried_forward_target_count=0,
             )
         )
@@ -2960,7 +3043,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
         self.assertFalse(
             REGRESSION._professional_review_cost_policy_satisfied(
                 plus_one,
-                fresh_target_count=189,
+                fresh_target_count=188,
                 carried_forward_target_count=0,
             )
         )
@@ -2983,7 +3066,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
         self.assertFalse(
             REGRESSION._professional_review_cost_policy_satisfied(
                 floor_collision,
-                fresh_target_count=189,
+                fresh_target_count=188,
                 carried_forward_target_count=0,
             )
         )
@@ -3228,13 +3311,13 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                 "summary": {
                     "review_cost": {
                         "fresh_vote_count": 3 * len(fresh_ids),
-                        "avoided_vote_count": 3 * (189 - len(fresh_ids)),
+                        "avoided_vote_count": 3 * (188 - len(fresh_ids)),
                         "fresh_criterion_result_count": 30 * len(fresh_ids),
                         "carried_criterion_result_count": 30
-                        * (189 - len(fresh_ids)),
-                        "effective_criterion_result_count": 5670,
+                        * (188 - len(fresh_ids)),
+                        "effective_criterion_result_count": 5640,
                         "avoided_criterion_result_count": 30
-                        * (189 - len(fresh_ids)),
+                        * (188 - len(fresh_ids)),
                         "canonical_capsule_input_bytes_proxy": actual_bytes,
                         "full_rereview_deduplicated_capsule_input_bytes_proxy": full_bytes,
                         "input_ratio_ppm": actual_bytes * 1_000_000 // full_bytes,
@@ -3374,7 +3457,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             REGRESSION._professional_review_cost_policy_satisfied(
                 cost,
                 fresh_target_count=len(fresh_ids),
-                carried_forward_target_count=189 - len(fresh_ids),
+                carried_forward_target_count=188 - len(fresh_ids),
             )
         )
         self.assertEqual(
@@ -3446,7 +3529,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
                 self.assertFalse(
                     REGRESSION._professional_review_cost_policy_satisfied(
                         cost,
-                        fresh_target_count=189,
+                        fresh_target_count=188,
                         carried_forward_target_count=0,
                     )
                 )

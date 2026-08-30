@@ -27,7 +27,7 @@ RUNTIME_PROFILE = "recommended"
 RETIRED_PROFILES = ("full", "dev")
 EXPECTED_RUNTIME_COUNTS = {
     "control": 1,
-    "professional": 26,
+    "professional": 25,
     "foundation": 150,
     "domain": 13,
 }

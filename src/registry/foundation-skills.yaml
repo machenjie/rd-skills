@@ -3739,6 +3739,12 @@ foundation_skills:
         do_not_load_when: "no pressure or boundary behavior is under evaluation"
         required_by: ["analysis-agent", "review-agent", "task-agent"]
         required_output: ["validation-plan", "evidence-gap"]
+      - path: "references/routing-maintenance-checklist.md"
+        type: decision-checklist
+        load_when: "authoring or auditing rd-skills routing registries, fixtures, selector mappings, or owner conflicts"
+        do_not_load_when: "no rd-skills routing asset or generated routing projection changes"
+        required_by: ["analysis-agent", "review-agent", "task-agent"]
+        required_output: ["decision-record", "checklist-result", "residual-risk"]
       - path: "references/tdd-for-skills.md"
         type: targeted
         load_when: "a Skill routing behavior build or installation contract changes and current deterministic evidence does not expose the regression"

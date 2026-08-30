@@ -155,7 +155,6 @@
       "requirement-clarification",
       "requirement-structuring",
       "routing-navigation-design",
-      "routing-quality-review",
       "rust-professional-usage",
       "scenario-decomposition",
       "sdk-library-contract-design",
@@ -648,9 +647,6 @@
       "routing-navigation-design": [
         "full-evaluation"
       ],
-      "routing-quality-review": [
-        "full-evaluation"
-      ],
       "rust-professional-usage": [
         "full-evaluation"
       ],
@@ -783,16 +779,6 @@
       "line_count": 40
     },
     {
-      "name": "routing-quality-review",
-      "kind": "professional",
-      "path": "src/professional-skills/routing-quality-review/SKILL.md",
-      "total_score": 100,
-      "status": "pass",
-      "decision_rule_count": 5,
-      "gotcha_count": 3,
-      "line_count": 75
-    },
-    {
       "name": "change-intake-compiler",
       "kind": "professional",
       "path": "src/professional-skills/change-intake-compiler/SKILL.md",
@@ -800,7 +786,7 @@
       "status": "pass",
       "decision_rule_count": 4,
       "gotcha_count": 3,
-      "line_count": 83
+      "line_count": 78
     },
     {
       "name": "engineering-change-analysis",
@@ -808,9 +794,9 @@
       "path": "src/professional-skills/engineering-change-analysis/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 6,
+      "decision_rule_count": 9,
       "gotcha_count": 1,
-      "line_count": 70
+      "line_count": 75
     },
     {
       "name": "acceptance-criteria-builder",
@@ -828,9 +814,9 @@
       "path": "src/professional-skills/task-dag-planner/SKILL.md",
       "total_score": 100,
       "status": "pass",
-      "decision_rule_count": 24,
+      "decision_rule_count": 22,
       "gotcha_count": 2,
-      "line_count": 97
+      "line_count": 103
     },
     {
       "name": "high-risk-design-review",
@@ -2070,7 +2056,7 @@
       "status": "pass",
       "decision_rule_count": 6,
       "gotcha_count": 5,
-      "line_count": 78
+      "line_count": 86
     },
     {
       "name": "code-clarity-maintainability",
@@ -2229,8 +2215,8 @@
       "total_score": 100,
       "status": "pass",
       "decision_rule_count": 8,
-      "gotcha_count": 5,
-      "line_count": 60
+      "gotcha_count": 11,
+      "line_count": 66
     },
     {
       "name": "plan-execution-consistency",

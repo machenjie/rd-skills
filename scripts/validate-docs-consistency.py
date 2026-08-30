@@ -2060,7 +2060,7 @@ def validate_docs_consistency(
         if phrase.casefold() not in subagent_model.casefold():
             errors.append(f"docs/SUBAGENT_MODEL.md: missing {phrase}")
     authority_requirements = {
-        "docs/BUILD_PROFILES.md": ("27", "163", "Runtime", "manifest"),
+        "docs/BUILD_PROFILES.md": ("26", "163", "Runtime", "manifest"),
         "docs/INSTALLATION.md": ("scripts/build.py", "doctor", "manifest"),
         "docs/RELEASE.md": ("scripts/package.py", "Runtime build", "manifest"),
     }

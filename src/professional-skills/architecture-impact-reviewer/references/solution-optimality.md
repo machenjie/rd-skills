@@ -12,4 +12,4 @@ Derive thresholds from the current repository baseline, representative workload,
 2. How do public or indirect consumers, authoritative data ownership, and effective dependency edges change, and what current source/contract evidence bounds that impact?
 3. If runtime topology changes, what failure, latency, capacity, availability, and operational-ownership consequence follows under the actual platform and workload?
 4. How can the decision be removed, migrated, or contained, and does current policy or impact justify automated enforcement or an ADR rather than source evidence alone?
-5. If multiple architecture-wide tradeoffs remain unresolved, identify `solution-optimality-evaluation` as the broader owner; this reference does not load it automatically.
+5. If multiple architecture-wide tradeoffs remain unresolved, record broader tradeoff analysis as unresolved scope with its evidence need and decision owner.

@@ -28,7 +28,7 @@ Support `task-agent` inside the accepted installed-client boundary.
 
 ## Professional Decision Rules
 
-- Preserve the accepted route/targets through active named References and carriers.
+- Preserve the accepted scope and target behavior through the affected platform and framework boundaries.
 - Inspect owner, consumers, tests, and target/package facts before the smallest complete change.
 - Record target checks, unavailable evidence, proof limits, and residual risk.
 
@@ -43,7 +43,7 @@ Support `task-agent` inside the accepted installed-client boundary.
 ## Stop / Escalation Conditions
 
 - Stop on unresolved target, owner, client contract, artifact, or environment.
-- Main owns release and routing.
+- Release approval and task routing are outside this Skill's authority.
 
 ## Output Contract
 

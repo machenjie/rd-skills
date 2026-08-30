@@ -622,46 +622,35 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
                     exact_references=invalid,
                 )
 
-    def test_built_roots_are_compact_across_all_profiles_and_source_is_complete(self) -> None:
+    def test_built_roots_are_compact_for_runtime_and_source_is_complete(self) -> None:
         items = BUILD._load_items("professional", list(self.rows.values()))
         with tempfile.TemporaryDirectory() as temporary:
             for item in items:
                 source_root = (item.path / "SKILL.md").read_text(encoding="utf-8")
                 self.assertIn("## Targeted References", source_root)
-                prefixes = []
-                for profile in BUILD.PROFILES:
-                    with self.subTest(professional=item.name, profile=profile):
-                        root = Path(temporary) / profile / item.name
-                        BUILD._copy_skill_tree(item.path, root)
-                        BUILD._write_compact_professional_projection(root, item)
-                        BUILD._append_layer3_entrypoint(root, profile)
-                        rendered = (root / "SKILL.md").read_text(encoding="utf-8")
-                        self.assertNotIn("## Targeted References", rendered)
-                        self.assertEqual(
-                            1, rendered.count("## JIT Reference Delivery")
-                        )
-                        self.assertEqual(
-                            1,
-                            rendered.count(
-                                "engineering-control-plane/references/selectors/"
-                                f"{item.name}.json"
-                            ),
-                        )
-                        for heading in BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS:
-                            self.assertIn(f"## {heading}", rendered)
-                        expected_delivery = {
-                            "recommended": "No Foundation or Domain Layer 3 items are assigned to this Skill.",
-                            "full": "Domain items are top-level Skills; no Foundation items are compiled for this Skill.",
-                            "dev": "Foundation and Domain items are top-level Skills; no Layer 3 references are compiled.",
-                        }[profile]
-                        self.assertEqual(
-                            expected_delivery,
-                            rendered.split("## Layer 3 Delivery\n\n", 1)[1].strip(),
-                        )
-                        self.assertNotIn("Never preload Layer 3", rendered)
-                        self.assertNotIn("Layer 3 index or catalog", rendered)
-                        prefixes.append(rendered.split("## Layer 3 Delivery", 1)[0])
-                self.assertEqual(1, len(set(prefixes)))
+                with self.subTest(professional=item.name):
+                    root = Path(temporary) / BUILD.RUNTIME_PROFILE / item.name
+                    BUILD._copy_skill_tree(item.path, root)
+                    BUILD._write_compact_professional_projection(root, item)
+                    BUILD._append_layer3_entrypoint(root)
+                    rendered = (root / "SKILL.md").read_text(encoding="utf-8")
+                    self.assertNotIn("## Targeted References", rendered)
+                    self.assertEqual(1, rendered.count("## JIT Reference Delivery"))
+                    self.assertEqual(
+                        1,
+                        rendered.count(
+                            "engineering-control-plane/references/selectors/"
+                            f"{item.name}.json"
+                        ),
+                    )
+                    for heading in BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS:
+                        self.assertIn(f"## {heading}", rendered)
+                    self.assertEqual(
+                        "No Foundation or Domain Layer 3 items are assigned to this Skill.",
+                        rendered.split("## Layer 3 Delivery\n\n", 1)[1].strip(),
+                    )
+                    self.assertNotIn("Never preload Layer 3", rendered)
+                    self.assertNotIn("Layer 3 index or catalog", rendered)
                 self.assertEqual(
                     source_root,
                     (item.path / "SKILL.md").read_text(encoding="utf-8"),
@@ -678,24 +667,23 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
                 source_path = item.path / "SKILL.md"
                 source_root = source_path.read_text(encoding="utf-8")
                 self.assertIn("## Targeted References", source_root)
-                for profile in BUILD.PROFILES:
-                    with self.subTest(skill=item.name, profile=profile):
-                        root = Path(temporary) / profile / item.name
-                        root.mkdir(parents=True)
-                        (root / "SKILL.md").write_text(
-                            source_root, encoding="utf-8"
-                        )
-                        BUILD._write_compact_layer3_root_projection(root, item)
-                        rendered = (root / "SKILL.md").read_text(encoding="utf-8")
-                        self.assertNotIn("## Targeted References", rendered)
-                        for forbidden in (
-                            "## JIT Reference Delivery",
-                            "Current-Professional JIT",
-                            "engineering-control-plane/references/selectors/",
-                            "never select/reroute/preload",
-                            "index/catalog",
-                        ):
-                            self.assertNotIn(forbidden, rendered)
+                with self.subTest(skill=item.name):
+                    root = Path(temporary) / BUILD.RUNTIME_PROFILE / item.name
+                    root.mkdir(parents=True)
+                    (root / "SKILL.md").write_text(
+                        source_root, encoding="utf-8"
+                    )
+                    BUILD._write_compact_layer3_root_projection(root, item)
+                    rendered = (root / "SKILL.md").read_text(encoding="utf-8")
+                    self.assertNotIn("## Targeted References", rendered)
+                    for forbidden in (
+                        "## JIT Reference Delivery",
+                        "Current-Professional JIT",
+                        "engineering-control-plane/references/selectors/",
+                        "never select/reroute/preload",
+                        "index/catalog",
+                    ):
+                        self.assertNotIn(forbidden, rendered)
                 self.assertEqual(source_root, source_path.read_text(encoding="utf-8"))
 
     def test_compiled_layer3_projection_has_no_jit_control_and_keeps_references(self) -> None:
@@ -731,17 +719,13 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
                         self.assertTrue((item.path / contract["path"]).is_file())
 
     def test_built_named_reference_receipt_and_inventory_are_complete(self) -> None:
-        expected_counts = {"recommended": 27, "full": 40, "dev": 190}
         named = "references/generator-and-plugin-contracts.md"
         registries = BUILD._load_registries()
         items = {
             layer: BUILD._load_items(layer, rows)
             for layer, rows in registries.items()
         }
-        for profile, expected_count in expected_counts.items():
-            self.assertEqual(
-                expected_count, len(BUILD._top_level_items(profile, items))
-            )
+        self.assertEqual(26, len(BUILD._top_level_items(items)))
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             professional = root / "repository-tooling-change-builder"
@@ -805,8 +789,8 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
                 any(row["type"] == "index" for row in partition["reference_records"])
             )
         self.assertEqual(
-            189,
-            len(BUILD._top_level_items("dev", items)) - 1,
+            188,
+            sum(len(rows) for layer, rows in items.items() if layer != "control"),
         )
 
 

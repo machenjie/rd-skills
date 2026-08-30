@@ -17,7 +17,7 @@ python3 --version
 python3 -m pip install .
 ```
 
-rd-skills has one Runtime. It exposes exactly 1 Control and 26 Professional
+rd-skills has one Runtime. It exposes exactly 1 Control and 25 Professional
 Skills at the Host top level. Foundation and Domain knowledge remains complete,
 but is loaded only through the selected Professional Skill's Layer 3 selector.
 There is no Runtime selection flag.

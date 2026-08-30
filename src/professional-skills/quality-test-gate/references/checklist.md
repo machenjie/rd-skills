@@ -8,14 +8,14 @@
 - Choose E2E tests for critical user flows.
 - Include migration, rollback, and data repair tests when needed.
 - Review fixture realism and mock boundaries.
-- Consume exact commands, expected signals, and combined coverage from `targeted-validation-selection`; keep proof admissibility and pass criteria with this gate.
+- Consume repository-defined commands, expected signals, and combined coverage only after proof strategy is fixed; keep proof admissibility and pass criteria with this capability.
 - Record residual risk and manual verification.
 
 ## Professional Decision Rules
 
 - Own proof strategy and acceptance-to-signal mapping before command selection.
-- Use `targeted-validation-selection` only after strategy selection, and only for repository-defined command and coverage selection.
-- Leave evidence timing and refresh decisions to Core Guard G and the validation-freshness contract.
+- Select repository-defined commands and coverage only after strategy selection.
+- Treat any material source, test, fixture, schema, or configuration edit as invalidating earlier validation evidence; refresh affected checks after the latest edit.
 - Map scoped acceptance and material risk to the smallest test levels that exercise the regression and negative mechanisms under deterministic controls.
 
 ## High-Value Gotchas

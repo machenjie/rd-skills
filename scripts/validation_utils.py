@@ -320,51 +320,6 @@ def collect_skill_root_source(path: Path, *, root: Path = ROOT) -> dict[str, str
     }
 
 
-def evidence_resolution_source_declaration(
-    path: Path | None = None,
-    *,
-    root: Path = ROOT,
-    source_record: dict[str, str] | None = None,
-) -> dict[str, Any]:
-    """Read the closed Evidence Resolution declaration from its owning Skill."""
-
-    if source_record is None:
-        if path is None:
-            raise ValueError("Evidence Resolution source declaration needs a Skill path")
-        source_record = collect_skill_root_source(path, root=root)
-    raw_source = source_record.get("raw_source")
-    if not isinstance(raw_source, str):
-        raise ValueError("Evidence Resolution source declaration lacks collected source")
-    begin = "<!-- BEGIN CHANGEFORGE EVIDENCE RESOLUTION SOURCE -->"
-    end = "<!-- END CHANGEFORGE EVIDENCE RESOLUTION SOURCE -->"
-    if raw_source.count(begin) != 1 or raw_source.count(end) != 1:
-        raise ValueError(
-            "Evidence Resolution source declaration markers must occur exactly once"
-        )
-    payload = raw_source.split(begin, 1)[1].split(end, 1)[0].strip()
-    if not payload.startswith("```json\n") or not payload.endswith("\n```"):
-        raise ValueError(
-            "Evidence Resolution source declaration must be one fenced JSON object"
-        )
-    try:
-        declaration = json.loads(payload[len("```json\n") : -len("\n```")])
-    except (json.JSONDecodeError, TypeError) as exc:
-        raise ValueError("Evidence Resolution source declaration is invalid JSON") from exc
-    if not isinstance(declaration, dict) or set(declaration) != {
-        "contract",
-        "gap_classes",
-        "decision_rules",
-    }:
-        raise ValueError("Evidence Resolution source declaration fields are not closed")
-    if declaration["contract"] != "changeforge.evidence-resolution-source/v1":
-        raise ValueError("Evidence Resolution source declaration contract is invalid")
-    if not isinstance(declaration["gap_classes"], list) or not isinstance(
-        declaration["decision_rules"], dict
-    ):
-        raise ValueError("Evidence Resolution source declaration shape is invalid")
-    return declaration
-
-
 def skill_source_anchor_fingerprint(anchors: Iterable[str]) -> str:
     """Fingerprint ordered normalized anchors without redefining their meaning."""
 
@@ -6244,7 +6199,7 @@ def validate_core_contracts(
                 or thresholds["maximum_mean_input_ratio_ppm"]
                 > thresholds["maximum_input_ratio_ppm"]
                 or thresholds["maximum_input_ratio_ppm"] > 1_000_000
-                or thresholds["maximum_fresh_target_count"] > 189
+                or thresholds["maximum_fresh_target_count"] > 188
             ):
                 valid_thresholds = False
                 errors.append(
@@ -7550,10 +7505,10 @@ def validate_core_contracts(
 
         evidence = task["evidence_resolution"]
         evidence_fields = {
-            "semantics_owner",
-            "source_path",
-            "projection_only",
-            "source_binding",
+            "authority_owner",
+            "adapter_contract",
+            "professional_input_semantics",
+            "non_gap_semantics",
             "gap_classes",
             "route_affecting_surfaces",
             "decision_rules",
@@ -7562,140 +7517,86 @@ def validate_core_contracts(
         }
         if exact_keys(evidence, evidence_fields, "task_contract.evidence_resolution"):
             assert isinstance(evidence, dict)
-            source_path_value = evidence["source_path"]
-            source_path = (
-                PurePosixPath(source_path_value)
-                if isinstance(source_path_value, str)
-                else None
-            )
+            if evidence["authority_owner"] != "core-control-model":
+                errors.append(
+                    "Task Evidence Resolution authority owner must be the Core control model"
+                )
             if (
-                source_path is None
-                or source_path.is_absolute()
-                or source_path.name != "SKILL.md"
-                or ".." in source_path.parts
+                evidence["adapter_contract"]
+                != "control.evidence-resolution-decision-adapter/v1"
             ):
                 errors.append(
-                    "Task Evidence Resolution source_path must name one repository root SKILL.md"
+                    "Task Evidence Resolution adapter contract must use the supported version"
                 )
-                source_record = None
-            else:
-                if evidence["semantics_owner"] != source_path.parent.name:
-                    errors.append(
-                        "Task Evidence Resolution semantics_owner must match its owning Skill path"
-                    )
-                try:
-                    source_record = collect_skill_root_source(
-                        root / source_path,
-                        root=root,
-                    )
-                except ValueError as exc:
-                    errors.append(f"Task Evidence Resolution source_path is invalid: {exc}")
-                    source_record = None
-            if evidence["projection_only"] is not True:
-                errors.append("Task Evidence Resolution must remain projection-only")
-
-            source_declaration: dict[str, Any] | None = None
-            if source_record is not None:
-                try:
-                    source_declaration = evidence_resolution_source_declaration(
-                        source_record=source_record,
-                    )
-                except ValueError as exc:
-                    errors.append(
-                        f"Task Evidence Resolution source declaration is invalid: {exc}"
-                    )
-
-            binding = evidence["source_binding"]
-            if exact_keys(
-                binding,
-                {
-                    "collector",
-                    "normalization",
-                    "source_fingerprint",
-                    "anchor_fingerprint",
-                },
-                "task_contract.evidence_resolution.source_binding",
-            ):
-                assert isinstance(binding, dict)
-                if binding["collector"] != SKILL_ROOT_SOURCE_COLLECTOR_ID:
-                    errors.append(
-                        "Task Evidence Resolution must use the root Skill content collector"
-                    )
-                if binding["normalization"] != SKILL_ROOT_SOURCE_NORMALIZATION:
-                    errors.append(
-                        "Task Evidence Resolution source normalization must remain canonical"
-                    )
-                if source_record is not None and binding["source_fingerprint"] != source_record[
-                    "source_fingerprint"
-                ]:
-                    errors.append(
-                        "Task Evidence Resolution source fingerprint does not match the owning Skill"
-                    )
+            professional_semantics = string_list(
+                evidence["professional_input_semantics"],
+                "task_contract.evidence_resolution.professional_input_semantics",
+            )
+            if len(professional_semantics) != len(set(professional_semantics)):
+                errors.append(
+                    "Task Evidence Resolution professional input semantics must remain unique"
+                )
+            non_gap_semantics = string_list(
+                evidence["non_gap_semantics"],
+                "task_contract.evidence_resolution.non_gap_semantics",
+            )
+            if len(non_gap_semantics) != len(set(non_gap_semantics)):
+                errors.append(
+                    "Task Evidence Resolution non-gap semantics must remain unique"
+                )
 
             gap_classes = evidence["gap_classes"]
-            anchors: list[str] = []
             gap_rows: list[dict[str, Any]] = []
             if not isinstance(gap_classes, list) or len(gap_classes) != 3:
                 errors.append(
-                    "Task Evidence Resolution must project exactly three source-backed gap classes"
+                    "Task Evidence Resolution adapter must define exactly three gap classes"
                 )
             else:
                 for index, row in enumerate(gap_classes):
                     context = f"task_contract.evidence_resolution.gap_classes[{index}]"
                     if not exact_keys(
                         row,
-                        {"id", "source_semantic", "source_anchor", "subtypes"},
+                        {"id", "input_semantic", "subtypes"},
                         context,
                     ):
                         continue
                     assert isinstance(row, dict)
                     if any(
                         not isinstance(row[field], str) or not row[field].strip()
-                        for field in ("id", "source_semantic", "source_anchor")
+                        for field in ("id", "input_semantic")
                     ):
-                        errors.append(f"{context} source projection fields must be non-empty")
+                        errors.append(f"{context} adapter fields must be non-empty")
                         continue
                     subtypes = string_list(
                         row["subtypes"], f"{context}.subtypes", nonempty=False
                     )
-                    anchor = normalize_skill_root_source(row["source_anchor"])
-                    anchors.append(anchor)
                     gap_rows.append(row)
-                    if (
-                        source_record is not None
-                        and anchor not in source_record["normalized_source"]
-                    ):
-                        errors.append(
-                            f"Task Evidence Resolution source anchor {index} is absent from the owning Skill"
-                        )
                     if len(subtypes) != len(set(subtypes)):
                         errors.append(f"{context}.subtypes must remain unique")
                 ids = [row["id"] for row in gap_rows]
-                semantics = [row["source_semantic"] for row in gap_rows]
-                if len(ids) != len(set(ids)) or len(semantics) != len(set(semantics)):
+                semantics = [row["input_semantic"] for row in gap_rows]
+                if len(ids) != len(set(ids)):
                     errors.append(
-                        "Task Evidence Resolution class IDs and source semantics must be unique"
+                        "Task Evidence Resolution gap class IDs must remain unique"
+                    )
+                if len(semantics) != len(set(semantics)):
+                    errors.append(
+                        "Task Evidence Resolution input semantics must remain unique"
                     )
                 if len([row for row in gap_rows if row["subtypes"]]) != 1:
                     errors.append(
-                        "Task Evidence Resolution must have one source-backed user-choice projection"
+                        "Task Evidence Resolution must have one user-choice adapter class"
                     )
-            if isinstance(binding, dict) and set(binding) == {
-                "collector",
-                "normalization",
-                "source_fingerprint",
-                "anchor_fingerprint",
-            } and binding["anchor_fingerprint"] != skill_source_anchor_fingerprint(anchors):
+            gap_semantics = [row["input_semantic"] for row in gap_rows]
+            if set(gap_semantics) & set(non_gap_semantics):
                 errors.append(
-                    "Task Evidence Resolution anchor fingerprint does not match normalized source anchors"
+                    "Task Evidence Resolution gap and non-gap semantics must be disjoint"
                 )
-
-            if (
-                source_declaration is not None
-                and gap_classes != source_declaration["gap_classes"]
+            if set(gap_semantics) | set(non_gap_semantics) != set(
+                professional_semantics
             ):
                 errors.append(
-                    "Task Evidence Resolution gap classes differ from the source declaration"
+                    "Task Evidence Resolution must account for every professional input semantic exactly once"
                 )
 
             decision_rules = evidence["decision_rules"]
@@ -7713,13 +7614,6 @@ def validate_core_contracts(
                     errors.append(
                         "Task Evidence Resolution decision rules must be non-empty objects"
                     )
-                if (
-                    source_declaration is not None
-                    and decision_rules != source_declaration["decision_rules"]
-                ):
-                    errors.append(
-                        "Task Evidence Resolution decision rules differ from the source declaration"
-                    )
             route_surfaces = string_list(
                 evidence["route_affecting_surfaces"],
                 "task_contract.evidence_resolution.route_affecting_surfaces",
@@ -7736,6 +7630,20 @@ def validate_core_contracts(
                 errors.append(
                     "Task Evidence Resolution paths must reuse route_decision_contract"
                 )
+            if isinstance(decision_rules, dict):
+                fact_rules = [
+                    rule
+                    for rule in decision_rules.values()
+                    if isinstance(rule, dict) and "route_affecting" in rule
+                ]
+                if (
+                    len(fact_rules) != 1
+                    or fact_rules[0].get("route_affecting") not in paths
+                    or fact_rules[0].get("route_affecting") == "direct"
+                ):
+                    errors.append(
+                        "Task Evidence Resolution route-affecting facts must fail closed to a non-Direct path"
+                    )
             if evidence["maximum_user_questions"] != 1:
                 errors.append("Task Evidence Resolution permits one user question at most")
 
@@ -12460,7 +12368,7 @@ _REFERENCE_BROKEN_CONDITION_RES = (
     re.compile(r"^(?:(?:patterns|checklist|evidence):\s*)?or\b", re.IGNORECASE),
 )
 FRONTMATTER_DELIMITER = "---"
-EXPECTED_PROFESSIONAL_SKILL_COUNT = 26
+EXPECTED_PROFESSIONAL_SKILL_COUNT = 25
 EXPECTED_CONTROL_SKILL_COUNT = 1
 EXPECTED_FOUNDATION_CAPABILITY_COUNT = 150
 EXPECTED_DOMAIN_EXTENSION_COUNT = 13
@@ -12602,7 +12510,7 @@ def professional_automatic_routing_contract_errors(
     expected_counts = {
         "automatic": 9,
         "evidence-only": 16,
-        "not-automatic": 1,
+        "not-automatic": 0,
     }
     if mode_counts != expected_counts:
         errors.append(

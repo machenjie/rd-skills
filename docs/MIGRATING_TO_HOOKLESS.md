@@ -26,11 +26,12 @@ python3 installers/upgrade.py --agent codex --scope user
 python3 installers/doctor.py --agent codex --scope user
 ```
 
-The upgrader validates exact current and legacy manifest inventories. A legacy
-`full` manifest contributes managed top-level Domain Skills; a legacy `dev`
-manifest contributes managed top-level Foundation and Domain Skills. Upgrade
-removes those managed directories and writes the one 27-Skill Runtime manifest
-without an intermediate uninstall.
+The upgrader validates exact current and historical legacy manifest
+inventories. A historical `full` manifest contributes managed top-level Domain
+Skills; a historical `dev` manifest contributes managed top-level Foundation
+and Domain Skills. Upgrade removes those managed directories and writes the
+one 26-Skill Runtime manifest without an intermediate uninstall. These legacy
+identities are migration inputs, not supported build or discovery choices.
 
 Upgrade must complete its managed-content backup before any live mutation. It
 preserves unrelated top-level user files and Skill directories in place. A user
@@ -47,7 +48,7 @@ restore only verified paths. rd-skills has no automatic restore command.
 
 ## Behavioral Changes
 
-- The Host discovers only 1 Control and 26 Professional Skills.
+- The Host discovers only 1 Control and 25 Professional Skills.
 - Foundation guidance is a capability modifier; Domain guidance is
   `modifier-only`. Neither is a top-level Runtime Skill.
 - Main fixes the Primary Professional route once. Task and Review do not rerun

@@ -463,12 +463,12 @@ class HooklessEvaluationTests(unittest.TestCase):
             "reports/skill-professionalism-eval.json",
             {
                 "evaluation_kind": "static-authoring-structure",
-                "skills_checked": 190,
+                "skills_checked": 189,
                 "error_count": 0,
             },
         )
         self.assertEqual("static-authoring-structure", report["evaluation_kind"])
-        self.assertEqual(190, report["skills_checked"])
+        self.assertEqual(189, report["skills_checked"])
         self.assertEqual(0, report["error_count"])
 
 
