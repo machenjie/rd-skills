@@ -122,8 +122,9 @@ still dominate the result.
 Declared Host/Profile capability is static configuration, not runtime truth.
 Dispatch uses invocation-scoped effective capability and fails closed on absent
 or unknown facts. Semantic Role stays fixed while a proven Host Executor may be
-replaced, carrying Professional Skill, Layer3, Level/Basis/history, scope,
-acceptance, validation, review, handoff, and stop conditions unchanged. Main
+replaced, carrying the full Task Contract and external route bindings, including
+Professional Skill, Domain, Layer3, Level/Basis/history, scope, acceptance,
+validation, review, handoff, and stop conditions unchanged. Main
 never absorbs implementation work when no executor is available. Current
 invocation evidence precedes verifiable current Host Surface session evidence;
 same-session mismatch excludes that executor/class before fallback, with no

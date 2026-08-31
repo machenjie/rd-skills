@@ -11461,6 +11461,7 @@ def validate_route_decision(
     *,
     main_execution: object,
     routing_authority: object,
+    accepted_analysis_task_id: str | None = None,
     contract: dict[str, object] | None = None,
 ) -> list[str]:
     """Validate one route projection without selecting a route or computing a level."""
@@ -11783,6 +11784,8 @@ def validate_route_decision(
                 {row["id"]: row for row in l2_rows},
                 raw_evidence,
                 EXECUTION_LEVEL_MODEL,
+                current_task_id=main_object["task_id"],
+                accepted_analysis_task_id=accepted_analysis_task_id,
             )
         except ExecutionLevelError as exc:
             errors.append(f"route Level evidence reuse is invalid: {exc}")
@@ -11966,6 +11969,9 @@ def _validate_atomic_l2_fact_reuse(
     l2_evaluations: dict[str, dict[str, object]],
     task_evidence: object,
     contract: dict[str, object],
+    *,
+    current_task_id: str | None,
+    accepted_analysis_task_id: str | None,
 ) -> None:
     """Bind reused task evidence by exact fact ID and proof strength."""
 
@@ -11979,7 +11985,22 @@ def _validate_atomic_l2_fact_reuse(
     forbidden_kinds = set(reuse["route_conclusion_kinds_forbidden"])
     proven_mapping = reuse["proven_kind_to_l2_predicate"]
     facts_by_id: dict[str, dict[str, object]] = {}
+    if current_task_id is not None and (
+        not isinstance(current_task_id, str) or not current_task_id.strip()
+    ):
+        raise ExecutionLevelError("current Task ID must be non-empty text")
+    if accepted_analysis_task_id is not None and (
+        not isinstance(accepted_analysis_task_id, str)
+        or not accepted_analysis_task_id.strip()
+    ):
+        raise ExecutionLevelError(
+            "accepted analysis handoff Task ID must be non-empty text"
+        )
     if task_evidence is not None:
+        if current_task_id is None:
+            raise ExecutionLevelError(
+                "task evidence reuse requires the current Task ID"
+            )
         if not isinstance(task_evidence, list):
             raise ExecutionLevelError("task evidence reuse input must be a list")
         task_ids: set[str] = set()
@@ -12006,6 +12027,10 @@ def _validate_atomic_l2_fact_reuse(
             task_ids.add(fact["task_id"])
         if len(task_ids) > 1:
             raise ExecutionLevelError("task evidence reuse must remain task-local")
+        if task_ids and task_ids != {current_task_id}:
+            raise ExecutionLevelError(
+                "task evidence reuse must belong to the current Task ID"
+            )
 
     for predicate, evaluation in l2_evaluations.items():
         anchor = evaluation.get("source_anchor")
@@ -12015,9 +12040,19 @@ def _validate_atomic_l2_fact_reuse(
             accepted_analysis = (
                 evaluation.get("evidence_kind") == "analysis_handoff"
                 and anchor.startswith(accepted_analysis_prefix)
+                and current_task_id is not None
+                and accepted_analysis_task_id == current_task_id
             )
             if accepted_analysis:
                 continue
+            if (
+                evaluation.get("evidence_kind") == "analysis_handoff"
+                and anchor.startswith(accepted_analysis_prefix)
+            ):
+                raise ExecutionLevelError(
+                    f"protected repository L2 predicate {predicate!r} requires "
+                    "an accepted Engineering Brief handoff for the current Task"
+                )
             if not anchor.startswith(prefix):
                 raise ExecutionLevelError(
                     f"protected repository L2 predicate {predicate!r} requires "
@@ -12111,6 +12146,8 @@ def compute_execution_level(
     prior_historical_max_floor: str | None = None,
     prior_historical_max_effective: str | None = None,
     task_evidence: list[dict[str, object]] | None = None,
+    current_task_id: str | None = None,
+    accepted_analysis_task_id: str | None = None,
     contract: dict[str, object] | None = None,
 ) -> dict[str, object]:
     """Apply the unique Core execution-level formula to explicit main-agent evidence."""
@@ -12301,7 +12338,13 @@ def compute_execution_level(
             unresolved.append(identifier)
         canonical_l2.append({"id": identifier, **evaluation})
 
-    _validate_atomic_l2_fact_reuse(l2_evaluations, task_evidence, contract)
+    _validate_atomic_l2_fact_reuse(
+        l2_evaluations,
+        task_evidence,
+        contract,
+        current_task_id=current_task_id,
+        accepted_analysis_task_id=accepted_analysis_task_id,
+    )
 
     def canonical_eligibility(
         registry_field: str,

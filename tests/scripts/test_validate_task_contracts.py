@@ -23,21 +23,21 @@ import validation_utils as VALIDATION_UTILS  # noqa: E402
 import build as BUILD  # noqa: E402
 from fixture_capsule_contract import (  # noqa: E402
     FixtureCapsuleError,
-    canonical_capsule_sha256,
+    canonical_capsule_sha256 as _canonical_capsule_sha256,
     completion_claim_errors,
     completion_transition_errors,
     decode_public_task_extension,
-    encode_public_task_extension,
+    encode_public_task_extension as _encode_public_task_extension,
     evidence_ledger_errors,
-    execution_level_migration_errors,
-    render_fixture_capsule_payload,
+    execution_level_migration_errors as _execution_level_migration_errors,
+    render_fixture_capsule_payload as _render_fixture_capsule_payload,
     trace_execution_level_migration_errors,
 )
 from validation_utils import (  # noqa: E402
     COMPLETION_STATE_MODEL,
     CORE_CONTRACTS,
     ExecutionLevelError,
-    compute_execution_level,
+    compute_execution_level as _compute_execution_level,
     count_o200k_base_tokens,
     execution_level_integrity_fallback,
     execution_level_runtime_payload,
@@ -50,6 +50,92 @@ from validation_utils import (  # noqa: E402
     validate_core_contracts,
     execution_level_router_block,
 )
+
+
+_TEST_LEVEL_TASK_ID = "task-contract-level-fixture"
+
+
+def _accepted_analysis_task_id(value: object, task_id: str) -> str | None:
+    if not isinstance(value, dict):
+        return None
+    basis = value.get("level_basis")
+    rows = basis.get("l2_eligibility") if isinstance(basis, dict) else None
+    protected = set(
+        CORE_CONTRACTS["execution_level_contract"]["atomic_fact_reuse"][
+            "protected_repository_predicates"
+        ]
+    )
+    if isinstance(rows, list) and any(
+        isinstance(row, dict)
+        and row.get("id") in protected
+        and row.get("status") == "true"
+        and row.get("evidence_kind") == "analysis_handoff"
+        for row in rows
+    ):
+        return task_id
+    return None
+
+
+def compute_execution_level(**kwargs):
+    task_id = kwargs.setdefault("current_task_id", _TEST_LEVEL_TASK_ID)
+    if "accepted_analysis_task_id" not in kwargs:
+        rows = kwargs.get("l2_evaluations")
+        protected = set(
+            CORE_CONTRACTS["execution_level_contract"]["atomic_fact_reuse"][
+                "protected_repository_predicates"
+            ]
+        )
+        if isinstance(rows, dict) and any(
+            predicate in protected
+            and isinstance(evaluation, dict)
+            and evaluation.get("status") == "true"
+            and evaluation.get("evidence_kind") == "analysis_handoff"
+            for predicate, evaluation in rows.items()
+        ):
+            kwargs["accepted_analysis_task_id"] = task_id
+    return _compute_execution_level(**kwargs)
+
+
+def encode_public_task_extension(value, **kwargs):
+    task_id = kwargs.setdefault("current_task_id", _TEST_LEVEL_TASK_ID)
+    kwargs.setdefault(
+        "accepted_analysis_task_id",
+        _accepted_analysis_task_id(value, task_id),
+    )
+    return _encode_public_task_extension(value, **kwargs)
+
+
+def render_fixture_capsule_payload(step, payload, **kwargs):
+    task_id = payload.get("task_id", _TEST_LEVEL_TASK_ID)
+    kwargs.setdefault(
+        "accepted_analysis_task_id",
+        _accepted_analysis_task_id(
+            payload.get("execution_level_extension"), task_id
+        ),
+    )
+    return _render_fixture_capsule_payload(step, payload, **kwargs)
+
+
+def canonical_capsule_sha256(step, payload, **kwargs):
+    task_id = payload.get("task_id", _TEST_LEVEL_TASK_ID)
+    kwargs.setdefault(
+        "accepted_analysis_task_id",
+        _accepted_analysis_task_id(
+            payload.get("execution_level_extension"), task_id
+        ),
+    )
+    return _canonical_capsule_sha256(step, payload, **kwargs)
+
+
+def execution_level_migration_errors(payload, **kwargs):
+    task_id = payload.get("task_id", _TEST_LEVEL_TASK_ID)
+    kwargs.setdefault(
+        "accepted_analysis_task_id",
+        _accepted_analysis_task_id(
+            payload.get("execution_level_extension"), task_id
+        ),
+    )
+    return _execution_level_migration_errors(payload, **kwargs)
 
 
 def _load_validator():
@@ -4415,7 +4501,15 @@ class CoreContractModelTests(unittest.TestCase):
         decoded = decode_public_task_extension(
             encode_public_task_extension(unknown_l2)
         )
-        self.assertEqual(["single-bounded-owner"], decoded["basis"]["l2"])
+        self.assertEqual(
+            [
+                "single-bounded-owner",
+                "local-scope-only",
+                "no-shared-contract-or-external-consumer",
+                "no-unresolved-owner-placement-verification-or-rollback-gap",
+            ],
+            decoded["basis"]["l2"],
+        )
         self.assertEqual(
             ["single-bounded-owner"], decoded["basis"]["unresolved"]
         )
@@ -4452,7 +4546,7 @@ class CoreContractModelTests(unittest.TestCase):
         )
         self.assertEqual([unknown_trigger["id"]], decoded["basis"]["triggers"])
         self.assertEqual([unknown_trigger["id"]], decoded["basis"]["unresolved"])
-        self.assertEqual("L2", decoded["level"]["automatic"])
+        self.assertEqual("L3", decoded["level"]["automatic"])
         self.assertEqual("allowed", decoded["level"]["edit"])
 
         mixed = copy.deepcopy(base)
@@ -4472,7 +4566,11 @@ class CoreContractModelTests(unittest.TestCase):
         self.assertNotIn("unresolved=", encoded)
         decoded = decode_public_task_extension(encoded)
         expected_triggers = [trigger_rows[0]["id"], trigger_rows[1]["id"]]
-        expected_l2 = [l2_rows[0]["id"], l2_rows[1]["id"]]
+        expected_l2 = [
+            row["id"]
+            for row in l2_rows
+            if row["status"] in {"false", "unknown"}
+        ]
         expected_unresolved = [trigger_rows[1]["id"], l2_rows[1]["id"]]
         self.assertEqual(expected_triggers, decoded["basis"]["triggers"])
         self.assertEqual(expected_l2, decoded["basis"]["l2"])
@@ -4569,7 +4667,7 @@ class CoreContractModelTests(unittest.TestCase):
         lines = encoded.splitlines()
         malformed = (
             "not-a-public-extension",
-            encoded.replace("automatic=L2", "automatic=L3", 1),
+            encoded.replace("automatic=L3", "automatic=L2", 1),
             "\n".join([lines[1], lines[0]]),
             encoded + "\nIdentity: digest=retired; path=retired",
             lines[0],
@@ -4658,7 +4756,7 @@ class CoreContractModelTests(unittest.TestCase):
             {"task": 15, "review": 15, "analysis": 8, "utility": 2},
             counts,
         )
-        self.assertEqual({"L2": 12, "L3": 7, "L4": 11}, levels)
+        self.assertEqual({"L2": 2, "L3": 17, "L4": 11}, levels)
 
     def test_analysis_capsule_forbids_execution_level_extension(self) -> None:
         analysis = _first_fixture_step("analysis")
@@ -4711,7 +4809,18 @@ class CoreContractModelTests(unittest.TestCase):
                 else:
                     rows = basis["l2_eligibility"]
                     assert isinstance(rows, list)
-                    rows[0]["status"] = "false"
+                    protected = set(
+                        CORE_CONTRACTS["execution_level_contract"][
+                            "atomic_fact_reuse"
+                        ]["protected_repository_predicates"]
+                    )
+                    for row in rows:
+                        if row["id"] in protected:
+                            row["status"] = "true"
+                            row["evidence_kind"] = "analysis_handoff"
+                            row["source_anchor"] = (
+                                "analysis_handoff:fixture:fabricated:" + row["id"]
+                            )
                 with self.assertRaisesRegex(
                     FixtureCapsuleError,
                     "cover the trigger registry|automatic_level is not canonical",

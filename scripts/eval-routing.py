@@ -650,6 +650,8 @@ def _compute_decision_level(
         l5_confirmation=confirmation,
         prior_historical_max_floor=prior_historical_max_floor,
         prior_historical_max_effective=prior_historical_max_effective,
+        current_task_id="task-decision-eval",
+        accepted_analysis_task_id="task-decision-eval",
     )
 
 
@@ -738,6 +740,7 @@ def _evaluate_level_invariance(
                 main_execution=_main_execution_from_level(
                     level, task_id=semantic_route["task_id"]
                 ),
+                accepted_analysis_task_id=semantic_route["task_id"],
             )
             fixed_route = _route_fixed_fields(route_decision)
             layer3_selector_runtime_projection(
@@ -813,7 +816,9 @@ def _evaluate_l5_confirmation(
             )
             results[state] = result
             public_projections[state] = project_engineering_brief_task_execution(
-                semantic_route["brief_semantics"], result
+                semantic_route["brief_semantics"],
+                result,
+                task_id=semantic_route["task_id"],
             )
             if state == "pending":
                 continue
@@ -822,6 +827,7 @@ def _evaluate_l5_confirmation(
                 main_execution=_main_execution_from_level(
                     result, task_id=semantic_route["task_id"]
                 ),
+                accepted_analysis_task_id=semantic_route["task_id"],
             )
             routes[state] = _route_fixed_fields(route_decision)
             fixed = routes[state]

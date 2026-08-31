@@ -1249,17 +1249,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -1745,17 +1734,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -2578,16 +2556,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -3561,17 +3529,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -4594,19 +4551,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -5443,16 +5387,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -6015,18 +5949,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -7042,19 +6964,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -7756,21 +7665,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -8607,21 +8501,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -9503,16 +9382,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -10376,21 +10245,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -11435,18 +11289,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -12366,18 +12208,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -13135,16 +12965,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -13951,16 +13771,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -14749,16 +14559,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -15707,18 +15507,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -17000,24 +16788,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7",
-                "route-evidence-8",
-                "route-evidence-9"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -18432,24 +18202,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7",
-                "route-evidence-8",
-                "route-evidence-9"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -19847,24 +19599,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7",
-                "route-evidence-8",
-                "route-evidence-9"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -20818,27 +20552,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7",
-                "route-evidence-8",
-                "route-evidence-9",
-                "route-evidence-10",
-                "route-evidence-11",
-                "route-evidence-12"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -21834,16 +21547,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -22738,16 +22441,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -23920,25 +23613,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7",
-                "route-evidence-8",
-                "route-evidence-9",
-                "route-evidence-10"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -24810,18 +24484,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -26120,23 +25782,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7",
-                "route-evidence-8"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -26859,18 +26504,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -27684,24 +27317,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7",
-                "route-evidence-8",
-                "route-evidence-9"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -28644,19 +28259,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -29715,19 +29317,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -30653,19 +30242,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -31913,19 +31489,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -32944,19 +32507,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -33794,24 +33344,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7",
-                "route-evidence-8",
-                "route-evidence-9"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -34544,18 +34076,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -35550,18 +35070,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -36886,24 +36394,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7",
-                "route-evidence-8",
-                "route-evidence-9"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -37807,16 +37297,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -38652,17 +38132,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -39455,19 +38924,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -40663,18 +40119,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -41515,16 +40959,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -42333,19 +41767,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -43112,18 +42533,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -43732,20 +43141,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -44395,20 +43790,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -45021,17 +44402,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -45843,16 +45213,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -47090,20 +46450,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -47751,18 +47097,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -48718,18 +48052,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -49367,20 +48689,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -50132,21 +49440,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -50798,21 +50091,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "quality-test-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -51836,18 +51114,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -52610,20 +51876,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -53196,18 +52448,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -53763,18 +53003,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -54291,17 +53519,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -55123,16 +54340,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -56250,21 +55457,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -56994,19 +56186,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -58155,21 +57334,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -59053,19 +58217,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -59963,17 +59114,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -60580,18 +59720,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -61337,20 +60465,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -62250,22 +61364,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             }
           ],
           "task_evidence": [
@@ -63284,18 +62382,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             }
           ],
           "task_evidence": [
@@ -64107,24 +63193,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "quality-test-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7",
-                "route-evidence-8",
-                "route-evidence-9"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -65558,20 +64626,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -66271,20 +65325,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -66926,18 +65966,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -67905,19 +66933,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -68693,18 +67708,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -69160,17 +68163,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -69936,16 +68928,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -70772,16 +69754,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -71590,16 +70562,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -72426,16 +71388,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -73243,16 +72195,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -74079,16 +73021,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -74900,16 +73832,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -75700,16 +74622,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -76518,16 +75430,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -77324,16 +76226,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -78160,16 +77052,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -78978,16 +77860,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -79814,16 +78686,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -80602,18 +79464,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -81364,19 +80214,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -82179,19 +81016,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -83028,16 +81852,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -83834,16 +82648,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -84670,16 +83474,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -85488,16 +84282,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -86324,16 +85108,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -87141,16 +85915,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -88268,21 +87032,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -89490,21 +88239,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -90387,16 +89121,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -91187,16 +89911,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -92002,16 +90716,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -92838,16 +91542,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -93665,16 +92359,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -94483,16 +93167,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -95472,18 +94146,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -96419,18 +95081,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -97350,18 +96000,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -98063,18 +96701,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -98803,18 +97429,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -99628,20 +98242,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -100532,20 +99132,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -101341,18 +99927,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -102070,18 +100644,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -102820,18 +101382,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -103544,20 +102094,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -104333,20 +102869,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -105200,16 +103722,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -106018,16 +104530,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -106854,16 +105356,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -107681,16 +106173,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -108498,16 +106980,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -109334,16 +107806,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -110084,20 +108546,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -110887,20 +109335,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -111677,20 +110111,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -112454,20 +110874,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -113321,16 +111727,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -114139,16 +112535,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -114975,16 +113361,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -115802,16 +114178,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -116619,16 +114985,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -117600,18 +115956,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -118531,18 +116875,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -119239,20 +117571,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -120251,18 +118569,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -120872,17 +119178,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             }
           ],
           "task_evidence": [
@@ -121644,23 +119939,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "quality-test-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7",
-                "route-evidence-8"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -122777,18 +121055,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -123345,18 +121611,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -124115,20 +122369,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -124765,20 +123005,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -125435,18 +123661,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -126617,19 +124831,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -127443,16 +125644,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -128312,16 +126503,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -129234,16 +127415,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -130094,16 +128265,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -130972,16 +129133,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -131832,16 +129983,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -132861,18 +131002,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -133779,18 +131908,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -134719,18 +132836,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -135637,18 +133742,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -136577,18 +134670,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -137506,18 +135587,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -138275,16 +136344,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -139570,22 +137629,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             }
           ],
           "task_evidence": [
@@ -140906,22 +138949,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             }
           ],
           "task_evidence": [
@@ -141818,16 +139845,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -142659,16 +140676,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -143473,16 +141480,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -144323,16 +142320,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -145129,16 +143116,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -146064,16 +144041,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -146862,16 +144829,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -147862,16 +145819,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -149022,18 +146969,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -149891,24 +147826,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7",
-                "route-evidence-8",
-                "route-evidence-9"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             }
           ],
           "task_evidence": [
@@ -151101,19 +149018,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -151935,19 +149839,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -152647,20 +150538,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -153870,19 +151747,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -154739,22 +152603,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -155776,19 +153624,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -156568,23 +154403,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "quality-test-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7",
-                "route-evidence-8"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -157751,19 +155569,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -158699,19 +156504,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -159793,25 +157585,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7",
-                "route-evidence-8",
-                "route-evidence-9",
-                "route-evidence-10"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             }
           ],
           "task_evidence": [
@@ -160990,18 +158763,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -162202,22 +159963,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             }
           ],
           "task_evidence": [
@@ -163633,18 +161378,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -164877,16 +162610,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -166024,19 +163747,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "quality-test-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -167285,23 +164995,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7",
-                "route-evidence-8"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             }
           ],
           "task_evidence": [
@@ -168281,22 +165974,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -169377,23 +167054,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7",
-                "route-evidence-8"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             }
           ],
           "task_evidence": [
@@ -170673,19 +168333,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -171717,19 +169364,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -173030,23 +170664,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7",
-                "route-evidence-8"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -174323,25 +171940,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7",
-                "route-evidence-8",
-                "route-evidence-9",
-                "route-evidence-10"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -175502,23 +173100,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "quality-test-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7",
-                "route-evidence-8"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -176742,17 +174323,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -178361,17 +175931,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -179970,17 +177529,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -181373,17 +178921,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -182858,18 +180395,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -183798,18 +181323,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -184993,22 +182506,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -186382,22 +183879,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -187694,21 +185175,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -188482,17 +185948,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -189020,17 +186475,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -189545,17 +186989,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -190335,21 +187768,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -191253,20 +188671,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -192389,20 +189793,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -193288,20 +190678,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -193979,21 +191355,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -194784,20 +192145,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -195552,22 +192899,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -196630,18 +193961,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -197473,21 +194792,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             }
           ],
           "task_evidence": [
@@ -198390,20 +195694,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             }
           ],
           "task_evidence": [
@@ -199513,20 +196803,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             }
           ],
           "task_evidence": [
@@ -200412,20 +197688,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             }
           ],
           "task_evidence": [
@@ -201117,21 +198379,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             }
           ],
           "task_evidence": [
@@ -201908,20 +199155,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             }
           ],
           "task_evidence": [
@@ -202691,22 +199924,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3",
-                "route-evidence-4",
-                "route-evidence-5",
-                "route-evidence-6",
-                "route-evidence-7"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             }
           ],
           "task_evidence": [
@@ -203630,16 +200847,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -204430,16 +201637,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -205248,16 +202445,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -206048,16 +203235,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -206866,16 +204043,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -207675,16 +204842,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -208475,16 +205632,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -209444,18 +206591,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -210349,18 +207484,6 @@
               "rejection_reasons": [
                 "not-selected-by-review-route-precedence"
               ],
-              "skill": "routing-quality-review"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
               "skill": "security-privacy-gate"
             }
           ],
@@ -210973,18 +208096,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1",
-                "route-evidence-2",
-                "route-evidence-3"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -211755,16 +208866,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,
@@ -212564,16 +209665,6 @@
                 "not-selected-by-review-route-precedence"
               ],
               "skill": "reliability-observability-gate"
-            },
-            {
-              "eligible": false,
-              "evidence_ids": [
-                "route-evidence-1"
-              ],
-              "rejection_reasons": [
-                "not-selected-by-review-route-precedence"
-              ],
-              "skill": "routing-quality-review"
             },
             {
               "eligible": false,

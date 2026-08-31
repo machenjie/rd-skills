@@ -51,6 +51,7 @@ from validation_utils import (
 from fixture_capsule_contract import (
     CONTRACT_VERSION as FIXTURE_CAPSULE_CONTRACT_VERSION,
     FixtureCapsuleError,
+    accepted_analysis_task_id_for_dispatch,
     parse_layer3_reference_id,
     trace_execution_level_migration_errors,
     validate_and_render_fixture_capsule,
@@ -5468,7 +5469,12 @@ def _case_transfer_measurement(case: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(payload, dict):
             continue
         contract_type = payload.get("contract_type")
-        capsule_text = validate_and_render_fixture_capsule(step)
+        capsule_text = validate_and_render_fixture_capsule(
+            step,
+            accepted_analysis_task_id=accepted_analysis_task_id_for_dispatch(
+                steps, index
+            ),
+        )
         capsule_tokens = count_o200k_base_tokens(capsule_text)
         capsule_source = f"{_relative(FIXTURES)}#/{case_id}/steps/{index}/fixture_capsule"
         if contract_type == "analysis":
@@ -6086,10 +6092,22 @@ def _fixture_cases(document: dict[str, Any]) -> list[tuple[str, dict[str, Any]]]
     return result
 
 
-def _dispatch_metadata_errors(case_id: str, index: int, step: dict[str, Any]) -> list[str]:
+def _dispatch_metadata_errors(
+    case_id: str,
+    index: int,
+    step: dict[str, Any],
+    steps: list[dict[str, Any]] | None = None,
+) -> list[str]:
     errors: list[str] = []
     try:
-        validate_and_render_fixture_capsule(step)
+        validate_and_render_fixture_capsule(
+            step,
+            accepted_analysis_task_id=(
+                accepted_analysis_task_id_for_dispatch(steps, index)
+                if steps is not None
+                else None
+            ),
+        )
     except FixtureCapsuleError as exc:
         errors.append(f"{case_id}: dispatch step {index} has invalid fixture Capsule: {exc}")
     mode = step.get("mode")
@@ -6617,7 +6635,12 @@ def _capsule_envelopes(
             if not isinstance(step, dict) or step.get("action") != "dispatch":
                 continue
             try:
-                rendered = validate_and_render_fixture_capsule(step)
+                rendered = validate_and_render_fixture_capsule(
+                    step,
+                    accepted_analysis_task_id=accepted_analysis_task_id_for_dispatch(
+                        steps, index
+                    ),
+                )
                 budget_class = _budget_class(
                     step,
                     str(case.get("kind") or ""),
@@ -8144,7 +8167,9 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
             if not isinstance(raw_step, dict) or raw_step.get("action") != "dispatch":
                 continue
             dispatch_count += 1
-            step_errors = _dispatch_metadata_errors(case_id, index, raw_step)
+            step_errors = _dispatch_metadata_errors(
+                case_id, index, raw_step, steps
+            )
             step_errors.extend(
                 f"{case_id}: dispatch step {index} {error}"
                 for error in trace_execution_level_migration_errors(steps, index)
@@ -8157,7 +8182,12 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
             errors.extend(step_errors)
             if step_errors:
                 continue
-            canonical_capsule = validate_and_render_fixture_capsule(raw_step)
+            canonical_capsule = validate_and_render_fixture_capsule(
+                raw_step,
+                accepted_analysis_task_id=accepted_analysis_task_id_for_dispatch(
+                    steps, index
+                ),
+            )
             role = str(raw_step.get("profile"))
             primary = str(raw_step.get("primary_skill") or "")
             layer3 = raw_step.get("layer3_skills", [])

@@ -78,6 +78,18 @@ class DocsCoreProjectionTests(unittest.TestCase):
         target.write_bytes(source.read_bytes())
         return target
 
+    def test_executor_substitution_carries_domain_and_full_contract_bindings(
+        self,
+    ) -> None:
+        operating_model = (ROOT / "docs" / "OPERATING_MODEL.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn(
+            "full Task Contract and external route bindings, including Professional "
+            "Skill, Domain, Layer3",
+            " ".join(operating_model.split()),
+        )
+
     def _copy_paths(self, root: Path, relatives: tuple[str, ...]) -> None:
         for relative in relatives:
             source = ROOT / relative

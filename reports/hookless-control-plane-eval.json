@@ -37,7 +37,7 @@
       "actual_valid": false,
       "matches_expected": true,
       "claim_errors": [
-        "review requirement Review assignment authority is invalid",
+        "review requirement task Capsule authority is invalid: execution Level Basis is invalid: protected repository L2 predicate 'single-bounded-owner' requires an accepted Engineering Brief handoff for the current Task",
         "high-risk review is required by the current task Capsule binding"
       ]
     },
@@ -1130,8 +1130,74 @@
       ]
     }
   ],
-  "task_focus_fixture_count": 51,
+  "task_focus_fixture_count": 59,
   "task_focus_fixtures": [
+    {
+      "id": "focus-direct-candidate-confirmed-edit-l3",
+      "scenario": "direct-confirmation",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-direct-candidate-wrong-owner-zero-edit-analysis",
+      "scenario": "direct-confirmation",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-direct-candidate-shared-contract-zero-edit-analysis",
+      "scenario": "direct-confirmation",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-direct-incomplete-proof-zero-edit-analysis",
+      "scenario": "direct-confirmation",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-runtime-static-declaration-unknown-blocked",
+      "scenario": "runtime-capability",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-runtime-fallback-preserves-role-and-contract",
+      "scenario": "runtime-capability",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
+    {
+      "id": "focus-runtime-mismatch-worker-reroute-forbidden",
+      "scenario": "runtime-capability",
+      "expected_valid": false,
+      "actual_valid": false,
+      "matches_expected": true,
+      "errors": [
+        "focus-runtime-mismatch-worker-reroute-forbidden: [worker-reroute] CAPABILITY_MISMATCH never authorizes Worker rerouting"
+      ]
+    },
+    {
+      "id": "focus-runtime-same-session-mismatch-excludes-fallback",
+      "scenario": "runtime-capability",
+      "expected_valid": true,
+      "actual_valid": true,
+      "matches_expected": true,
+      "errors": []
+    },
     {
       "id": "focus-current-diff-blocker",
       "scenario": "finding",

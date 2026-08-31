@@ -36,7 +36,7 @@ def _load_module():
 EVAL = _load_module()
 SOURCE_ROOT = ROOT
 FOCUS_BASELINE_SHA256 = (
-    "5ac20a053f33b67e8f0d00749d44d886d9e1c490c76f64e19aed6d80dc7cad73"
+    "5111857d64e4da46d781559ceea1896980648c6d6b13858425c7d16e768a2322"
 )
 
 
@@ -1819,21 +1819,26 @@ class RenderedContextBudgetTests(unittest.TestCase):
         document = EVAL.json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
         cases = EVAL._fixture_cases(document)
         dispatches = [
-            (case["id"], index, step)
+            (case["id"], index, step, case["steps"])
             for _group, case in cases
             for index, step in enumerate(case["steps"])
             if step.get("action") == "dispatch"
         ]
         self.assertEqual(16, len(cases))
         self.assertEqual(40, len(dispatches))
-        for case_id, index, step in dispatches:
+        for case_id, index, step, steps in dispatches:
             with self.subTest(case=case_id, step=index):
                 self.assertNotIn("dispatch_capsule", step)
                 if "utility_capsule" in step:
                     self.assertNotIn("layer3_references", step)
                 else:
                     self.assertIsInstance(step.get("layer3_references"), list)
-                self.assertEqual([], EVAL._dispatch_metadata_errors(case_id, index, step))
+                self.assertEqual(
+                    [],
+                    EVAL._dispatch_metadata_errors(
+                        case_id, index, step, steps
+                    ),
+                )
 
     def test_utility_assignment_requires_current_canonical_baseline_state(self) -> None:
         document = EVAL.json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
@@ -1873,9 +1878,14 @@ class RenderedContextBudgetTests(unittest.TestCase):
         selected = copy.deepcopy(migration["steps"][6])
         without_nested = copy.deepcopy(selected)
         without_nested["layer3_references"] = []
-        selected_text = validate_and_render_fixture_capsule(selected)
+        selected_text = validate_and_render_fixture_capsule(
+            selected,
+            accepted_analysis_task_id="task-data-migration-1",
+        )
         without_hash = canonical_capsule_sha256(
-            without_nested, without_nested["fixture_capsule"]
+            without_nested,
+            without_nested["fixture_capsule"],
+            accepted_analysis_task_id="task-data-migration-1",
         )
         self.assertIn(
             "transaction-consistency/references/evidence-patterns.md",
@@ -4023,7 +4033,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         mapping = EVAL._canonical_focus_mapping(current, baseline)
         self.assertEqual([], mapping["errors"])
         self.assertEqual("pass", mapping["status"])
-        self.assertEqual(51, len(mapping["rows"]))
+        self.assertEqual(59, len(mapping["rows"]))
         self.assertEqual(
             {
                 "raw-route-equal",
@@ -5748,7 +5758,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "task": {
                     "candidate_count": 19_281,
                     "exact_render_signature_count": 19_281,
-                    "over_target_candidate_count": 1,
+                    "over_target_candidate_count": 112,
                 },
                 "analyzed_task": {
                     "candidate_count": 66_150,
@@ -5775,23 +5785,65 @@ class RenderedContextBudgetTests(unittest.TestCase):
         )
         global_union = frontier["global_task_review_union"]
         self.assertEqual(
-            {"professional": 1, "layer3": 1, "active_reference": 1},
+            {"professional": 5, "layer3": 28, "active_reference": 6},
             global_union["frontier_counts"],
         )
         self.assertEqual(
-            {"professional": 15, "layer3": 67, "active_reference": 265},
+            {"professional": 11, "layer3": 40, "active_reference": 260},
             global_union["safe_complement_counts"],
         )
         self.assertEqual(
-            ["change-documentation-gate"],
+            [
+                "change-documentation-gate",
+                "installed-client-change-builder",
+                "integration-change-builder",
+                "repository-tooling-change-builder",
+                "security-privacy-gate",
+            ],
             global_union["frontier"]["professional"],
         )
         self.assertEqual(
-            ["documentation-generation"],
+            [
+                "ai-product-extension",
+                "android-platform-extension",
+                "build-tool-professional-usage",
+                "client-application-testing",
+                "client-lifecycle-state-restoration",
+                "configuration-runtime-policy",
+                "consumer-impact-analysis",
+                "contract-testing",
+                "cross-platform-client-extension",
+                "csharp-dotnet-professional-usage",
+                "dependency-vulnerability-scanning",
+                "design-pattern-selection",
+                "documentation-generation",
+                "failure-contract-design",
+                "idempotency-retry-design",
+                "ios-ipados-platform-extension",
+                "kotlin-professional-usage",
+                "linux-desktop-platform-extension",
+                "macos-platform-extension",
+                "minimal-correct-implementation",
+                "offline-sync-conflict-resolution",
+                "privacy-data-lifecycle",
+                "state-management-design",
+                "swift-professional-usage",
+                "targeted-validation-selection",
+                "threat-modeling",
+                "web-security",
+                "windows-platform-extension",
+            ],
             global_union["frontier"]["layer3"],
         )
         self.assertEqual(
-            ["documentation-generation/references/benchmarks-and-patterns.md"],
+            [
+                "ai-product-extension/references/checklist.md",
+                "client-lifecycle-state-restoration/references/restoration-boundaries.md",
+                "dependency-vulnerability-scanning/references/evidence-patterns.md",
+                "documentation-generation/references/benchmarks-and-patterns.md",
+                "kotlin-professional-usage/references/coroutine-flow-state-contracts.md",
+                "kotlin-professional-usage/references/type-interop-and-dsl-contracts.md",
+            ],
             global_union["frontier"]["active_reference"],
         )
         self.assertEqual(
@@ -5803,24 +5855,20 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "delivery-release-gate",
                 "engineering-artifact-review",
                 "high-risk-design-review",
-                "installed-client-change-builder",
-                "integration-change-builder",
                 "logging-design-gate",
                 "platform-infrastructure-change-builder",
                 "quality-test-gate",
                 "reliability-observability-gate",
-                "repository-tooling-change-builder",
-                "security-privacy-gate",
             ],
             global_union["safe_complement"]["professional"],
         )
         expected_membership_sha256 = {
-            "frontier_professional": "670f31c8451a9b4fc944ac94496da89cf2e467153b12b091eea773eeee55347b",
-            "frontier_layer3": "19eb9224c89564506dc53a42dbe142249116da35bebe8ce600993a52d184e400",
-            "frontier_active_reference": "ad6de5ae9c144243d6eb8e1a5c9b6d185009a32af4ce6b87781bfba21b905742",
-            "safe_complement_professional": "d9b3eee6e4a98320ab5983788f71d2b4d02130e2d4ed0fdaecd73c8dc04768d1",
-            "safe_complement_layer3": "23ff1d3fa459336a191d22083aa9b37c3923a315acee6c0e8c4de759ccac6d49",
-            "safe_complement_active_reference": "b93be868d40306dd48576254eb9d5594d841a781777cd71643c00063819184a5",
+            "frontier_professional": "05ea3553f9f11039c7cc955109c3e8c2cde1287d54e019cf040fa94ce139d114",
+            "frontier_layer3": "29532ec3aefd2dc81ba3e725e4814e5405fdfaac7ae337986e0dd18cbf4511a3",
+            "frontier_active_reference": "7b755df04debe3ace3c012e6b23ec6a89308a95711a1b7a7480fc3b67d166b39",
+            "safe_complement_professional": "08263e9035ab66f4b588c2baba8a88dcea7460dea6e3eae93c0e819f2bf99a92",
+            "safe_complement_layer3": "4d7deb92ce7c91731298b01c7cad4717912b4beefe91bb7f97c955f5dd9cb209",
+            "safe_complement_active_reference": "fa6031c51a27a2f80d92f099eeff34529c65529d6dc3f0a7ccb28cb64751d18e",
         }
         actual_membership_sha256 = {
             f"{placement}_{member_kind}": EVAL._sha256_text(
@@ -5913,7 +5961,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         direct = frontier["budget_classes"]["task"]
         review = frontier["budget_classes"]["review"]
         self.assertEqual(
-            {"professional": 1, "layer3": 1, "active_reference": 1},
+            {"professional": 5, "layer3": 28, "active_reference": 6},
             direct["frontier_counts"],
         )
         self.assertEqual(

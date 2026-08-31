@@ -39,6 +39,7 @@ from fixture_capsule_contract import (
     UTILITY_ASSIGNMENT_REQUIRED_CLAIMS,
     UTILITY_RETURN_FIELDS,
     UTILITY_RETURN_REQUIRED_CLAIMS,
+    accepted_analysis_task_id_for_dispatch,
     completion_claim_errors as _core_completion_claim_errors,
     completion_transition_errors,
     combined_review_completion_errors,
@@ -10310,7 +10311,12 @@ def _profile_errors(
             mode = step.get("mode")
             professional_references = step.get("professional_references")
             try:
-                validate_and_render_fixture_capsule(step)
+                validate_and_render_fixture_capsule(
+                    step,
+                    accepted_analysis_task_id=accepted_analysis_task_id_for_dispatch(
+                        steps, index
+                    ),
+                )
             except FixtureCapsuleError as exc:
                 errors.append(
                     f"{case_id}: dispatch at step {index} has invalid fixture Capsule: {exc}"
@@ -12570,6 +12576,8 @@ def _risk_calibration_fixture_results(
                     l2_evaluations=l2,
                     prior_historical_max_floor=prior_floor,
                     prior_historical_max_effective=prior_effective,
+                    current_task_id=f"task-{case_id}-decision-eval",
+                    accepted_analysis_task_id=f"task-{case_id}-decision-eval",
                 )
                 action = classify_concrete_action_authority(decision["action_authority"])
             except ExecutionLevelError as exc:

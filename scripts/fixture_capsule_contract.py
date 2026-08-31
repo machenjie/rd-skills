@@ -264,6 +264,7 @@ def execution_level_migration_errors(
     lifecycle_status: str,
     next_action: str,
     step: dict[str, Any] | None = None,
+    accepted_analysis_task_id: str | None = None,
 ) -> list[str]:
     """Gate legacy v2 work, exempting only completed read-only access."""
 
@@ -284,11 +285,14 @@ def execution_level_migration_errors(
                 payload[EXECUTION_LEVEL_EXTENSION_FIELD],
                 EXECUTION_LEVEL_MODEL,
                 allow_legacy_read=allow_legacy_read,
+                current_task_id=payload.get("task_id"),
+                accepted_analysis_task_id=accepted_analysis_task_id,
             )
             _validate_payload_shape(
                 step,
                 payload,
                 allow_legacy_execution_read=allow_legacy_read,
+                accepted_analysis_task_id=accepted_analysis_task_id,
             )
         except FixtureCapsuleError as exc:
             return [f"execution-level migration extension is invalid: {exc}"]
@@ -309,6 +313,48 @@ _TRACE_EXECUTION_ACTIONS = {
     "review": "review",
     "re-review": "review",
 }
+
+
+def accepted_analysis_task_id_for_dispatch(
+    steps: object,
+    dispatch_index: int,
+) -> str | None:
+    """Return the current Task only when a prior visible accepted Brief binds it."""
+
+    if (
+        not isinstance(steps, list)
+        or not isinstance(dispatch_index, int)
+        or isinstance(dispatch_index, bool)
+        or not 0 <= dispatch_index < len(steps)
+    ):
+        return None
+    dispatch = steps[dispatch_index]
+    if not isinstance(dispatch, dict):
+        return None
+    payload = dispatch.get("fixture_capsule")
+    task_id = payload.get("task_id") if isinstance(payload, dict) else None
+    if not isinstance(task_id, str) or not task_id.strip():
+        return None
+    accepted_task_id: str | None = None
+    for event in steps[:dispatch_index]:
+        if not isinstance(event, dict) or event.get("actor") != "analysis-agent":
+            continue
+        if event.get("action") == "first_executable_slice":
+            if event.get("brief_status") != "accepted":
+                continue
+        elif event.get("action") == "brief":
+            if (
+                event.get("analysis_kind") != "delta"
+                or event.get("protected_decision_invalidated") is not True
+                or not isinstance(event.get("accepted_brief_id"), str)
+            ):
+                continue
+        else:
+            continue
+        downstream = event.get("downstream_task")
+        projected = downstream.get("task_id") if isinstance(downstream, dict) else None
+        accepted_task_id = projected if projected == task_id else None
+    return accepted_task_id
 
 
 def trace_execution_level_migration_errors(
@@ -376,6 +422,9 @@ def trace_execution_level_migration_errors(
         lifecycle_status=status,
         next_action=next_action,
         step=step,
+        accepted_analysis_task_id=accepted_analysis_task_id_for_dispatch(
+            steps, dispatch_index
+        ),
     )
     return [f"classified next action {next_action}: {error}" for error in errors]
 
@@ -1762,6 +1811,8 @@ def _active_execution_decision(
     execution_contract: dict[str, Any],
     *,
     allow_legacy_read: bool = False,
+    current_task_id: str | None = None,
+    accepted_analysis_task_id: str | None = None,
 ) -> dict[str, Any]:
     """Validate v2 for active work, with an explicit completed/read v1 exception."""
 
@@ -1884,6 +1935,8 @@ def _active_execution_decision(
             l5_confirmation=confirmation,
             prior_historical_max_floor=value.get("prior_historical_max_floor"),
             prior_historical_max_effective=value.get("prior_historical_max_effective"),
+            current_task_id=current_task_id,
+            accepted_analysis_task_id=accepted_analysis_task_id,
             contract=execution_contract,
         )
     except ExecutionLevelError as exc:
@@ -2052,6 +2105,8 @@ def encode_public_task_extension(
     value: object,
     *,
     execution_contract: dict[str, Any] | None = None,
+    current_task_id: str | None = None,
+    accepted_analysis_task_id: str | None = None,
 ) -> str:
     """Encode the active lightweight public execution decision projection."""
 
@@ -2059,7 +2114,12 @@ def encode_public_task_extension(
         EXECUTION_LEVEL_MODEL if execution_contract is None else execution_contract
     )
     _active_public_schema(execution_contract)
-    extension = _active_execution_decision(value, execution_contract)
+    extension = _active_execution_decision(
+        value,
+        execution_contract,
+        current_task_id=current_task_id,
+        accepted_analysis_task_id=accepted_analysis_task_id,
+    )
     basis = extension["level_basis"]
     trigger_rows = basis["trigger_evaluations"]
     if "l1_eligibility" not in basis:
@@ -2431,6 +2491,8 @@ def engineering_brief_protected_fields() -> tuple[str, ...]:
 def project_engineering_brief_task_execution(
     brief_semantics: object,
     execution_result: object,
+    *,
+    task_id: str,
 ) -> dict[str, object]:
     """Project one accepted Brief plus Main execution through canonical owners."""
 
@@ -2486,7 +2548,11 @@ def project_engineering_brief_task_execution(
         "source_authority": "task_contract.analyzed_work_authority",
         "brief_semantics": canonical_semantics,
         "execution_level_extension": decode_public_task_extension(
-            encode_public_task_extension(extension)
+            encode_public_task_extension(
+                extension,
+                current_task_id=task_id,
+                accepted_analysis_task_id=task_id,
+            )
         ),
     }
 
@@ -2549,12 +2615,26 @@ def engineering_brief_execution_transition_errors(
     return errors
 
 
-def _render_execution_level_extension(value: object) -> list[str]:
-    extension = _active_execution_decision(value, EXECUTION_LEVEL_MODEL)
+def _render_execution_level_extension(
+    value: object,
+    *,
+    current_task_id: str,
+    accepted_analysis_task_id: str | None,
+) -> list[str]:
+    extension = _active_execution_decision(
+        value,
+        EXECUTION_LEVEL_MODEL,
+        current_task_id=current_task_id,
+        accepted_analysis_task_id=accepted_analysis_task_id,
+    )
     return [
         "## Execution Level",
         "",
-        *encode_public_task_extension(extension).splitlines(),
+        *encode_public_task_extension(
+            extension,
+            current_task_id=current_task_id,
+            accepted_analysis_task_id=accepted_analysis_task_id,
+        ).splitlines(),
         "",
     ]
 
@@ -2611,7 +2691,12 @@ def render_direct_discovery_extension(payload: object) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def _render_task(step: dict[str, Any], payload: dict[str, Any]) -> str:
+def _render_task(
+    step: dict[str, Any],
+    payload: dict[str, Any],
+    *,
+    accepted_analysis_task_id: str | None,
+) -> str:
     task_id = _metadata_identifier(payload.get("task_id"), "task_id")
     status = _metadata_identifier(payload.get("status"), "status")
     if status != TASK_CONTRACT_MODEL["assignment_initial_status"]:
@@ -2684,7 +2769,9 @@ def _render_task(step: dict[str, Any], payload: dict[str, Any]) -> str:
         if contract_field == "Status" and EXECUTION_LEVEL_EXTENSION_FIELD in payload:
             lines.extend(
                 _render_execution_level_extension(
-                    payload[EXECUTION_LEVEL_EXTENSION_FIELD]
+                    payload[EXECUTION_LEVEL_EXTENSION_FIELD],
+                    current_task_id=values["Task ID"],
+                    accepted_analysis_task_id=accepted_analysis_task_id,
                 )
             )
     lines.extend(_render_skill_selection(step))
@@ -2734,6 +2821,7 @@ def _validate_payload_shape(
     payload: dict[str, Any],
     *,
     allow_legacy_execution_read: bool = False,
+    accepted_analysis_task_id: str | None = None,
 ) -> str:
     if "dispatch_capsule" in step:
         raise FixtureCapsuleError(
@@ -2787,6 +2875,8 @@ def _validate_payload_shape(
             payload[EXECUTION_LEVEL_EXTENSION_FIELD],
             EXECUTION_LEVEL_MODEL,
             allow_legacy_read=allow_legacy_execution_read,
+            current_task_id=payload.get("task_id"),
+            accepted_analysis_task_id=accepted_analysis_task_id,
         )
     if contract_type == "utility":
         if any(
@@ -2803,9 +2893,19 @@ def _validate_payload_shape(
     return contract_type
 
 
-def _render_normal(step: dict[str, Any], payload: dict[str, Any], contract_type: str) -> str:
+def _render_normal(
+    step: dict[str, Any],
+    payload: dict[str, Any],
+    contract_type: str,
+    *,
+    accepted_analysis_task_id: str | None,
+) -> str:
     if contract_type == "task":
-        return _render_task(step, payload)
+        return _render_task(
+            step,
+            payload,
+            accepted_analysis_task_id=accepted_analysis_task_id,
+        )
     title = {
         "analysis": "Analysis Assignment",
         "review": "Review Assignment",
@@ -2832,7 +2932,9 @@ def _render_normal(step: dict[str, Any], payload: dict[str, Any], contract_type:
         lines.extend(_render_scalar("Task ID", task_id))
         lines.extend(
             _render_execution_level_extension(
-                payload[EXECUTION_LEVEL_EXTENSION_FIELD]
+                payload[EXECUTION_LEVEL_EXTENSION_FIELD],
+                current_task_id=task_id,
+                accepted_analysis_task_id=accepted_analysis_task_id,
             )
         )
     lines.extend(
@@ -3158,25 +3260,53 @@ def _render_utility(step: dict[str, Any]) -> str:
 def render_fixture_capsule_payload(
     step: dict[str, Any],
     payload: dict[str, Any],
+    *,
+    accepted_analysis_task_id: str | None = None,
 ) -> str:
     """Validate a structured payload and render the canonical measured Capsule."""
 
-    contract_type = _validate_payload_shape(step, payload)
+    contract_type = _validate_payload_shape(
+        step,
+        payload,
+        accepted_analysis_task_id=accepted_analysis_task_id,
+    )
     if contract_type == "utility":
         return _render_utility(step)
-    return _render_normal(step, payload, contract_type)
+    return _render_normal(
+        step,
+        payload,
+        contract_type,
+        accepted_analysis_task_id=accepted_analysis_task_id,
+    )
 
 
-def canonical_capsule_sha256(step: dict[str, Any], payload: dict[str, Any]) -> str:
-    text = render_fixture_capsule_payload(step, payload)
+def canonical_capsule_sha256(
+    step: dict[str, Any],
+    payload: dict[str, Any],
+    *,
+    accepted_analysis_task_id: str | None = None,
+) -> str:
+    text = render_fixture_capsule_payload(
+        step,
+        payload,
+        accepted_analysis_task_id=accepted_analysis_task_id,
+    )
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def validate_and_render_fixture_capsule(step: dict[str, Any]) -> str:
+def validate_and_render_fixture_capsule(
+    step: dict[str, Any],
+    *,
+    accepted_analysis_task_id: str | None = None,
+) -> str:
     payload = step.get("fixture_capsule")
     if not isinstance(payload, dict):
         raise FixtureCapsuleError("dispatch requires a fixture_capsule mapping")
-    rendered = render_fixture_capsule_payload(step, payload)
+    rendered = render_fixture_capsule_payload(
+        step,
+        payload,
+        accepted_analysis_task_id=accepted_analysis_task_id,
+    )
     expected = payload.get("canonical_sha256")
     actual = hashlib.sha256(rendered.encode("utf-8")).hexdigest()
     if not isinstance(expected, str) or expected != actual:

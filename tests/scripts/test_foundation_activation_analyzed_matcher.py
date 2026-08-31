@@ -66,23 +66,30 @@ def _main_execution(
         }
         for row in execution_contract["trigger_registry"]
     }
-    shared_contract_id = "no-shared-contract-or-external-consumer"
+    protected_repository_predicates = set(
+        execution_contract["atomic_fact_reuse"]["protected_repository_predicates"]
+    )
     l2_evaluations = {
         row["id"]: {
-            "status": "false" if row["id"] == shared_contract_id else "true",
+            "status": (
+                "false"
+                if row["id"] in protected_repository_predicates
+                else "true"
+            ),
             "evidence_kind": "analysis_handoff",
             "source_anchor": f"handoff:{case_task_id}:l2:{row['id']}",
         }
         for row in execution_contract["l2_eligibility"]
     }
-    if shared_contract_id not in l2_evaluations:
+    if not protected_repository_predicates <= set(l2_evaluations):
         raise AssertionError(
-            f"Core contract lacks required L2 predicate {shared_contract_id!r}"
+            "Core contract lacks a protected repository L2 predicate"
         )
     computed = compute_execution_level(
         requested="unspecified",
         trigger_evaluations=trigger_evaluations,
         l2_evaluations=l2_evaluations,
+        current_task_id=case_task_id,
         contract=execution_contract,
     )
     if (

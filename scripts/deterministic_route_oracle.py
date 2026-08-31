@@ -13962,6 +13962,7 @@ def _route_impl(
     main_execution: object,
     domain_registry: object = None,
     professional_registry: object = None,
+    accepted_analysis_task_id: str | None = None,
 ) -> dict[str, Any]:
     """Run one complete deterministic route and validate its Core projection."""
 
@@ -17022,6 +17023,7 @@ def _route_impl(
         envelope,
         main_execution=decision_main,
         routing_authority=authority,
+        accepted_analysis_task_id=accepted_analysis_task_id,
     )
     if decision_errors:
         raise RoutingIntegrityError("; ".join(decision_errors))
@@ -17039,6 +17041,7 @@ def route(
     main_execution: object,
     domain_registry: object = None,
     professional_registry: object = None,
+    accepted_analysis_task_id: str | None = None,
 ) -> dict[str, Any]:
     """Return one exact validated Core route-decision envelope."""
 
@@ -17047,6 +17050,7 @@ def route(
         main_execution=main_execution,
         domain_registry=domain_registry,
         professional_registry=professional_registry,
+        accepted_analysis_task_id=accepted_analysis_task_id,
     )["route_decision"]
 
 
@@ -17056,6 +17060,7 @@ def route_with_trace(
     main_execution: object,
     domain_registry: object = None,
     professional_registry: object = None,
+    accepted_analysis_task_id: str | None = None,
 ) -> dict[str, Any]:
     """Return one canonical route decision plus its proven winner trace."""
 
@@ -17064,4 +17069,5 @@ def route_with_trace(
         main_execution=main_execution,
         domain_registry=domain_registry,
         professional_registry=professional_registry,
+        accepted_analysis_task_id=accepted_analysis_task_id,
     )

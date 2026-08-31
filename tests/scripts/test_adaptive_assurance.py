@@ -130,10 +130,86 @@ def _compute(
         l5_confirmation=confirmation,
         prior_historical_max_floor=prior_floor,
         prior_historical_max_effective=prior_effective,
+        current_task_id="task-adaptive-assurance",
+        accepted_analysis_task_id=(
+            "task-adaptive-assurance" if source == "analysis_handoff" else None
+        ),
     )
 
 
 class AdaptiveAssuranceTests(unittest.TestCase):
+    def test_current_task_accepted_analysis_handoff_can_prove_l2(self) -> None:
+        triggers, l1, l2, l5 = _evidence(
+            source="analysis_handoff", l1_status="false"
+        )
+
+        result = compute_execution_level(
+            requested="unspecified",
+            trigger_evaluations=triggers,
+            l1_evaluations=l1,
+            l2_evaluations=l2,
+            l5_assurance_evaluations=l5,
+            current_task_id="task-accepted-analysis",
+            accepted_analysis_task_id="task-accepted-analysis",
+        )
+
+        self.assertEqual("L2", result["effective_level"])
+
+    def test_direct_prefix_cannot_impersonate_an_accepted_analysis_handoff(
+        self,
+    ) -> None:
+        triggers, l1, l2, l5 = _evidence(
+            source="analysis_handoff", l1_status="false"
+        )
+
+        with self.assertRaisesRegex(
+            ExecutionLevelError,
+            "accepted.*Brief|analysis handoff.*Task",
+        ):
+            compute_execution_level(
+                requested="unspecified",
+                trigger_evaluations=triggers,
+                l1_evaluations=l1,
+                l2_evaluations=l2,
+                l5_assurance_evaluations=l5,
+                current_task_id="task-direct-prefix",
+            )
+
+    def test_complete_foreign_task_fact_set_cannot_prove_current_task_l2(
+        self,
+    ) -> None:
+        triggers, l1, l2, l5 = _evidence(
+            source="user_fact", l1_status="false"
+        )
+        facts = []
+        for index, (kind, predicate) in enumerate(
+            EXECUTION["atomic_fact_reuse"]["proven_kind_to_l2_predicate"].items()
+        ):
+            fact_id = f"foreign-fact-{index}"
+            facts.append(
+                {
+                    "id": fact_id,
+                    "kind": kind,
+                    "task_id": "task-foreign",
+                    "source_anchor": f"current-source:{predicate}",
+                }
+            )
+            l2[predicate]["source_anchor"] = f"task_evidence:{fact_id}"
+
+        with self.assertRaisesRegex(
+            ExecutionLevelError,
+            "current Task|task-local",
+        ):
+            compute_execution_level(
+                requested="unspecified",
+                trigger_evaluations=triggers,
+                l1_evaluations=l1,
+                l2_evaluations=l2,
+                l5_assurance_evaluations=l5,
+                task_evidence=facts,
+                current_task_id="task-current",
+            )
+
     def test_bare_user_claims_cannot_prove_protected_repository_l2_facts(
         self,
     ) -> None:
@@ -190,6 +266,7 @@ class AdaptiveAssuranceTests(unittest.TestCase):
                         "source_anchor": "src/example.py#candidate",
                     }
                 ],
+                current_task_id="task-direct-fact-reuse",
             )
 
     def test_proven_atomic_direct_facts_can_satisfy_only_their_l2_predicates(
@@ -220,6 +297,7 @@ class AdaptiveAssuranceTests(unittest.TestCase):
             l2_evaluations=l2,
             l5_assurance_evaluations=l5,
             task_evidence=facts,
+            current_task_id="task-direct-fact-reuse",
         )
         self.assertEqual("L2", result["effective_level"])
 
@@ -243,6 +321,7 @@ class AdaptiveAssuranceTests(unittest.TestCase):
                 l2_evaluations=l2,
                 l5_assurance_evaluations=l5,
                 task_evidence=wrong,
+                current_task_id="task-direct-fact-reuse",
             )
 
     def test_material_floor_dominates_complete_proven_direct_facts(self) -> None:
@@ -276,6 +355,7 @@ class AdaptiveAssuranceTests(unittest.TestCase):
             l5_assurance_evaluations=l5,
             l5_confirmation="not-required",
             task_evidence=facts,
+            current_task_id="task-direct-material-floor",
         )
         self.assertGreaterEqual(int(result["effective_level"][1:]), 4)
 
@@ -321,6 +401,8 @@ class AdaptiveAssuranceTests(unittest.TestCase):
                 l2_evaluations=l2,
                 l5_assurance_evaluations=l5,
                 l5_confirmation="not-required",
+                current_task_id="task-adaptive-assurance",
+                accepted_analysis_task_id="task-adaptive-assurance",
             )
             self.assertEqual("L2", result["minimum_eligible_level"], identifier)
             self.assertNotEqual("L1", result["effective_level"], identifier)
@@ -380,7 +462,9 @@ class AdaptiveAssuranceTests(unittest.TestCase):
         self.assertEqual("L4", rejected["effective_level"])
         self.assertEqual("allowed", rejected["edit_status"])
 
-        explicit = _compute(requested="L5", source="user_fact")
+        explicit = _compute(
+            requested="L5", source="user_fact", l2_status="false"
+        )
         self.assertEqual("L5", explicit["effective_level"])
         self.assertEqual("explicit", explicit["l5_confirmation"])
 
@@ -458,7 +542,11 @@ class AdaptiveAssuranceTests(unittest.TestCase):
             "l5_confirmation": result["l5_confirmation"],
             "level_basis": result["level_basis"],
         }
-        encoded = encode_public_task_extension(extension)
+        encoded = encode_public_task_extension(
+            extension,
+            current_task_id="task-adaptive-assurance",
+            accepted_analysis_task_id="task-adaptive-assurance",
+        )
         self.assertIn("minimum=L1", encoded)
         self.assertIn("c=not-required", encoded)
         self.assertEqual("execution-level/v2", decode_public_task_extension(encoded)["version"])
