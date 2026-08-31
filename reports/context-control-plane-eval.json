@@ -33,11 +33,11 @@
   },
   "rendered_context_summary": {
     "max_main": {
-      "tokens": 2177,
+      "tokens": 2299,
       "soft_target": 2305,
       "hard_ceiling": 2650,
-      "soft_margin_tokens": 128,
-      "hard_margin_tokens": 473,
+      "soft_margin_tokens": 6,
+      "hard_margin_tokens": 351,
       "within_soft_target": true,
       "within_hard_ceiling": true,
       "budget_signal": null,
@@ -47,11 +47,11 @@
     },
     "max_by_budget_class": {
       "analysis": {
-        "tokens": 2450,
+        "tokens": 2437,
         "soft_target": 4500,
         "hard_ceiling": 5000,
-        "soft_margin_tokens": 2050,
-        "hard_margin_tokens": 2550,
+        "soft_margin_tokens": 2063,
+        "hard_margin_tokens": 2563,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -62,11 +62,11 @@
         "primary_skill": "engineering-change-analysis"
       },
       "task": {
-        "tokens": 2034,
+        "tokens": 2187,
         "soft_target": 3000,
         "hard_ceiling": 3200,
-        "soft_margin_tokens": 966,
-        "hard_margin_tokens": 1166,
+        "soft_margin_tokens": 813,
+        "hard_margin_tokens": 1013,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -77,11 +77,11 @@
         "primary_skill": "backend-change-builder"
       },
       "analyzed_task": {
-        "tokens": 3719,
+        "tokens": 3755,
         "soft_target": 6000,
         "hard_ceiling": 6500,
-        "soft_margin_tokens": 2281,
-        "hard_margin_tokens": 2781,
+        "soft_margin_tokens": 2245,
+        "hard_margin_tokens": 2745,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -92,11 +92,11 @@
         "primary_skill": "delivery-release-gate"
       },
       "review": {
-        "tokens": 2224,
+        "tokens": 2284,
         "soft_target": 3700,
         "hard_ceiling": 4000,
-        "soft_margin_tokens": 1476,
-        "hard_margin_tokens": 1776,
+        "soft_margin_tokens": 1416,
+        "hard_margin_tokens": 1716,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -107,11 +107,11 @@
         "primary_skill": "architecture-impact-reviewer"
       },
       "utility": {
-        "tokens": 850,
+        "tokens": 886,
         "soft_target": 2000,
         "hard_ceiling": 2500,
-        "soft_margin_tokens": 1150,
-        "hard_margin_tokens": 1650,
+        "soft_margin_tokens": 1114,
+        "hard_margin_tokens": 1614,
         "within_soft_target": true,
         "within_hard_ceiling": true,
         "budget_signal": null,
@@ -122,9 +122,9 @@
         "primary_skill": null
       }
     },
-    "max_duplicate_rule_token_ratio": 0.003714,
-    "duplicate_rule_token_ratio_margin": 0.026286,
-    "max_discovery_metadata_tokens": 1214,
+    "max_duplicate_rule_token_ratio": 0.00364,
+    "duplicate_rule_token_ratio_margin": 0.02636,
+    "max_discovery_metadata_tokens": 1216,
     "loaded_layer3_reference_count": 8,
     "measured_layer3_reference_component_count": 24,
     "loaded_layer3_reference_logical_ids": [
@@ -183,8 +183,8 @@
       "derivation": "consumed lightweight reducer result; no second semantic reducer"
     },
     "measurement_kind": "candidate-subject-only",
-    "gross_tokens": 14640,
-    "non_compressible_tokens": 14640,
+    "gross_tokens": 15057,
+    "non_compressible_tokens": 15057,
     "compressible_tokens": 0,
     "compressible_ratio": 0.0,
     "measured_case_count": 14,
