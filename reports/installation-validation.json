@@ -16,7 +16,7 @@
     "agent_profile_roots": 7,
     "built_skill_directories": 260,
     "error_count": 0,
-    "legacy_profile_migrations": 2,
+    "legacy_profile_migrations": 3,
     "obsolete_runtime_artifacts": 0,
     "skill_roots": 10,
     "zip_count": 26

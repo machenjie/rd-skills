@@ -73,11 +73,12 @@ Cline. Repeat doctor independently when diagnosing a changed installation:
 python3 installers/doctor.py --agent codex --scope user
 ```
 
-A healthy result confirms 27 installed Skills, the manifest, current
+A healthy result confirms 26 installed Skills, the manifest, current
 source/core bindings, and the host-specific Agent Profile expectation. Doctor
-reports a legacy `full` or `dev` manifest as migration-required; run upgrade
-without uninstalling first. Repository doctor evidence does not prove that the
-real Host loaded the files.
+reports an exact historical 27-Skill `recommended`, 40-Skill `full`, or
+190-Skill `dev` manifest as migration-required; run upgrade without
+uninstalling first. Repository doctor evidence does not prove that the real
+Host loaded the files.
 
 ## OpenAI API Zip Path
 

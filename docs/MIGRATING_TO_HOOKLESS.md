@@ -12,7 +12,7 @@ packages, or a runtime state machine.
    required by local policy.
 3. Build the current Runtime.
 4. Preview upgrade against the existing installation. Do not uninstall a
-   legacy `full` or `dev` installation first.
+   historical `recommended`, `full`, or `dev` installation first.
 
 ```bash
 python3 scripts/build.py
@@ -26,12 +26,21 @@ python3 installers/upgrade.py --agent codex --scope user
 python3 installers/doctor.py --agent codex --scope user
 ```
 
-The upgrader validates exact current and historical legacy manifest
-inventories. A historical `full` manifest contributes managed top-level Domain
-Skills; a historical `dev` manifest contributes managed top-level Foundation
-and Domain Skills. Upgrade removes those managed directories and writes the
-one 26-Skill Runtime manifest without an intermediate uninstall. These legacy
-identities are migration inputs, not supported build or discovery choices.
+The upgrader validates the exact current 26-Skill manifest and the closed
+historical 27/40/190 manifest generation. Every historical profile contains
+the retired managed `routing-quality-review` Skill; a historical `full`
+manifest also contains managed top-level Domain Skills, and a historical `dev`
+manifest contains managed top-level Foundation and Domain Skills. Upgrade
+removes those managed directories and writes the one 26-Skill Runtime manifest
+without an intermediate uninstall. These historical identities are migration
+inputs, not supported build or discovery choices.
+
+The historical generation is embedded in the installer with fixed fingerprints
+for the unchanged layers. Runtime migration does not require `.git` history and
+does not infer an old managed set from arbitrary current Registry contents. All
+five manifest inventory fields must identify the same supported generation; a
+forged, partial, duplicate, unsafe, or hybrid inventory fails before mutation,
+including with `--force`.
 
 Upgrade must complete its managed-content backup before any live mutation. It
 preserves unrelated top-level user files and Skill directories in place. A user

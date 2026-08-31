@@ -26,7 +26,45 @@ CORE_CONTRACTS_SOURCE = ROOT / "src" / "control-model" / "core-contracts.json"
 BACKUP_DIR_NAME = ".changeforge-backups"
 RUNTIME_PROFILE = "recommended"
 RUNTIME_SKILL_COUNT = 26
-LEGACY_PROFILE_COUNTS = {"recommended": 26, "full": 39, "dev": 189}
+CURRENT_RUNTIME_PROFILE_COUNTS = {"recommended": 26}
+HISTORICAL_PROFILE_COUNTS = {"recommended": 27, "full": 40, "dev": 190}
+CURRENT_INVENTORY_GENERATION = "runtime-26"
+HISTORICAL_INVENTORY_GENERATION = "runtime-27"
+HISTORICAL_UNCHANGED_LAYER_SHA256 = {
+    "control": "46f66196a4887257b390bbd6302c1160dab50b6c078b4afacac520b8ee3c04e4",
+    "foundation": "bed21019ab7e9e802252638fde77d90b850904620031460f0d6499b01defee66",
+    "domain": "3a8d304206971885fe7a6f5cbfdf17ee6c0d3eec8e836de6ab8e7c2b252d231b",
+}
+HISTORICAL_RUNTIME_27_PROFESSIONAL_SKILLS = frozenset(
+    {
+        "acceptance-criteria-builder",
+        "ai-code-review-refactor",
+        "architecture-impact-reviewer",
+        "backend-change-builder",
+        "change-documentation-gate",
+        "change-intake-compiler",
+        "data-api-contract-changer",
+        "data-middleware-change-builder",
+        "delivery-release-gate",
+        "domain-impact-modeler",
+        "engineering-artifact-review",
+        "engineering-change-analysis",
+        "experience-impact-modeler",
+        "frontend-change-builder",
+        "high-risk-design-review",
+        "incident-response-coordinator",
+        "installed-client-change-builder",
+        "integration-change-builder",
+        "logging-design-gate",
+        "platform-infrastructure-change-builder",
+        "quality-test-gate",
+        "reliability-observability-gate",
+        "repository-tooling-change-builder",
+        "routing-quality-review",
+        "security-privacy-gate",
+        "task-dag-planner",
+    }
+)
 AGENTS = ("codex", "claude", "copilot", "cline", "openai-api")
 SCOPES = ("project", "user", "admin")
 SKILL_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -195,15 +233,19 @@ class InstallTargets:
 
 @dataclass(frozen=True)
 class InstalledManifestClassification:
-    """Validated ownership facts from one current or legacy hookless manifest."""
+    """Validated ownership facts from a current or supported historical manifest."""
 
     profile: str
+    inventory_generation: str
     skill_names: frozenset[str]
     profile_files: frozenset[str]
 
     @property
     def migration_required(self) -> bool:
-        return self.profile != RUNTIME_PROFILE
+        return (
+            self.inventory_generation != CURRENT_INVENTORY_GENERATION
+            or self.profile != RUNTIME_PROFILE
+        )
 
 
 def _path_lexists(path: Path) -> bool:
@@ -888,8 +930,21 @@ def managed_profile_files(manifest: dict[str, Any] | None) -> set[str]:
     return _manifest_names(manifest, "installed_agent_profile_files", _valid_profile_file_name)
 
 
-def _authoritative_legacy_skill_inventories() -> dict[str, Any]:
-    """Derive current and legacy ownership sets from the build-owned registries."""
+def _profile_skill_inventories(layers: dict[str, set[str]]) -> dict[str, set[str]]:
+    return {
+        "recommended": layers["control"] | layers["professional"],
+        "full": layers["control"] | layers["professional"] | layers["domain"],
+        "dev": set().union(*layers.values()),
+    }
+
+
+def _inventory_sha256(names: set[str]) -> str:
+    payload = "".join(f"{name}\n" for name in sorted(names)).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _authoritative_current_skill_inventories() -> dict[str, Any]:
+    """Return the current exact ownership sets from the build-owned registries."""
 
     module = _load_current_build_authority()
     try:
@@ -929,15 +984,63 @@ def _authoritative_legacy_skill_inventories() -> dict[str, Any]:
         all_names |= layer_names
         layers[layer] = layer_names
     profiles = {
-        "recommended": layers["control"] | layers["professional"],
-        "full": layers["control"] | layers["professional"] | layers["domain"],
-        "dev": set(all_names),
+        RUNTIME_PROFILE: layers["control"] | layers["professional"],
     }
     if {
         profile: len(names) for profile, names in profiles.items()
-    } != LEGACY_PROFILE_COUNTS:
-        raise InstallError("authoritative legacy Skill inventories have invalid counts")
+    } != CURRENT_RUNTIME_PROFILE_COUNTS:
+        raise InstallError("authoritative current Skill inventories have invalid counts")
     return {"layers": layers, "profiles": profiles}
+
+
+def _historical_runtime_27_skill_inventories(
+    current_layers: dict[str, set[str]],
+) -> dict[str, Any]:
+    """Return the closed 27-Skill predecessor generation without Git history.
+
+    Control, Foundation, and Domain were unchanged in the 27-to-26 transition.
+    Their exact sorted-name fingerprints bind that fact and fail closed if a
+    future Registry generation drifts. The historical Professional set is
+    explicit because it owns the retired top-level Skill.
+    """
+
+    for layer, expected_digest in HISTORICAL_UNCHANGED_LAYER_SHA256.items():
+        observed = current_layers.get(layer)
+        if not isinstance(observed, set) or _inventory_sha256(observed) != expected_digest:
+            raise InstallError(
+                "historical Runtime inventory bridge is stale for "
+                f"the {layer} Registry"
+            )
+    layers = {
+        "control": set(current_layers["control"]),
+        "professional": set(HISTORICAL_RUNTIME_27_PROFESSIONAL_SKILLS),
+        "foundation": set(current_layers["foundation"]),
+        "domain": set(current_layers["domain"]),
+    }
+    profiles = _profile_skill_inventories(layers)
+    if {
+        profile: len(names) for profile, names in profiles.items()
+    } != HISTORICAL_PROFILE_COUNTS:
+        raise InstallError("historical Runtime inventory bridge has invalid counts")
+    return {"layers": layers, "profiles": profiles}
+
+
+def _expected_manifest_inventory_fields(
+    layers: dict[str, set[str]],
+    profiles: dict[str, set[str]],
+    profile: str,
+) -> dict[str, set[str]]:
+    return {
+        "installed_skills": profiles[profile],
+        "installed_control_skills": layers["control"],
+        "installed_professional_skills": layers["professional"],
+        "installed_foundation_skills": (
+            layers["foundation"] if profile == "dev" else set()
+        ),
+        "installed_domain_skills": (
+            layers["domain"] if profile in {"full", "dev"} else set()
+        ),
+    }
 
 
 def _manifest_role_names(manifest: dict[str, Any]) -> set[str]:
@@ -975,8 +1078,8 @@ def classify_installed_manifest(
             f"installed manifest compiled_layer3_format must equal {COMPILED_LAYER3_FORMAT!r}"
         )
     profile = manifest.get("profile")
-    if not isinstance(profile, str) or profile not in LEGACY_PROFILE_COUNTS:
-        raise InstallError(f"installed manifest has unsupported legacy profile {profile!r}")
+    if not isinstance(profile, str) or profile not in HISTORICAL_PROFILE_COUNTS:
+        raise InstallError(f"installed manifest has unsupported profile identity {profile!r}")
     if manifest.get("agent") != agent:
         raise InstallError("installed manifest agent does not match the requested agent")
     if manifest.get("scope") != scope:
@@ -991,29 +1094,54 @@ def classify_installed_manifest(
             "installed manifest agent_profile_target does not match the resolved target"
         )
 
-    authority = _authoritative_legacy_skill_inventories()
-    layers = authority["layers"]
-    profiles = authority["profiles"]
-    if not isinstance(layers, dict) or not isinstance(profiles, dict):
-        raise InstallError("authoritative legacy Skill inventories are malformed")
-    expected_skills = profiles[profile]
-    expected_fields = {
-        "installed_skills": expected_skills,
-        "installed_control_skills": layers["control"],
-        "installed_professional_skills": layers["professional"],
-        "installed_foundation_skills": (
-            layers["foundation"] if profile == "dev" else set()
-        ),
-        "installed_domain_skills": (
-            layers["domain"] if profile in {"full", "dev"} else set()
-        ),
+    authority = _authoritative_current_skill_inventories()
+    current_layers = authority["layers"]
+    current_profiles = authority["profiles"]
+    if not isinstance(current_layers, dict) or not isinstance(current_profiles, dict):
+        raise InstallError("authoritative current Skill inventories are malformed")
+    inventory_fields = (
+        "installed_skills",
+        "installed_control_skills",
+        "installed_professional_skills",
+        "installed_foundation_skills",
+        "installed_domain_skills",
+    )
+    observed_fields = {
+        field: _manifest_names(manifest, field, _valid_skill_name)
+        for field in inventory_fields
     }
-    for field, expected in expected_fields.items():
-        observed = _manifest_names(manifest, field, _valid_skill_name)
-        if observed != expected:
+    current_fields = (
+        _expected_manifest_inventory_fields(
+            current_layers,
+            current_profiles,
+            profile,
+        )
+        if profile == RUNTIME_PROFILE
+        else None
+    )
+    if current_fields is not None and observed_fields == current_fields:
+        generation = CURRENT_INVENTORY_GENERATION
+        expected_skills = current_profiles[profile]
+    else:
+        historical = _historical_runtime_27_skill_inventories(current_layers)
+        historical_layers = historical["layers"]
+        historical_profiles = historical["profiles"]
+        if not isinstance(historical_layers, dict) or not isinstance(
+            historical_profiles, dict
+        ):
+            raise InstallError("historical Runtime inventory bridge is malformed")
+        historical_fields = _expected_manifest_inventory_fields(
+            historical_layers,
+            historical_profiles,
+            profile,
+        )
+        if observed_fields != historical_fields:
             raise InstallError(
-                f"installed manifest field {field} does not match the exact {profile} inventory"
+                "installed manifest inventory fields do not match one exact "
+                f"supported {profile} generation"
             )
+        generation = HISTORICAL_INVENTORY_GENERATION
+        expected_skills = historical_profiles[profile]
 
     expected_profile_files = expected_agent_profile_files(agent)
     observed_profile_files = managed_profile_files(manifest)
@@ -1028,6 +1156,7 @@ def classify_installed_manifest(
         )
     return InstalledManifestClassification(
         profile=profile,
+        inventory_generation=generation,
         skill_names=frozenset(expected_skills),
         profile_files=frozenset(expected_profile_files),
     )

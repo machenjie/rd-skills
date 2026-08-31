@@ -27,6 +27,8 @@ from validation_utils import (
 ROOT = Path(__file__).resolve().parents[1]
 RUNTIME_NAME = "recommended"
 RETIRED_RUNTIME_NAMES = ("full", "dev")
+HISTORICAL_RUNTIME_PROFILES = ("recommended", "full", "dev")
+HISTORICAL_RETIRED_PROFESSIONAL_SKILLS = {"routing-quality-review"}
 BUILD_MANIFEST = ".changeforge-build-manifest.json"
 EVIDENCE_LIMITATIONS = (
     "Simulated local installation does not prove real-host Profile startup or wall-clock performance.",
@@ -502,7 +504,16 @@ def _validate_legacy_profile_upgrades(
         return 0
 
     passed = 0
-    for legacy_profile in RETIRED_RUNTIME_NAMES:
+    historical_professional = (
+        inventories["professional"] | HISTORICAL_RETIRED_PROFESSIONAL_SKILLS
+    )
+    if len(historical_professional) != 26:
+        errors.append(
+            "legacy migration smoke: historical Professional inventory is incomplete"
+        )
+        return 0
+
+    for legacy_profile in HISTORICAL_RUNTIME_PROFILES:
         project = temporary_root / f"legacy-{legacy_profile}"
         project.mkdir()
         install = _run(
@@ -524,10 +535,13 @@ def _validate_legacy_profile_upgrades(
                 f"legacy {legacy_profile} migration manifest is invalid: {exc}"
             )
             continue
-        legacy_layer3 = set(inventories["domain"])
+        legacy_layer3: set[str] = set()
+        if legacy_profile in {"full", "dev"}:
+            legacy_layer3 |= inventories["domain"]
         if legacy_profile == "dev":
             legacy_layer3 |= inventories["foundation"]
-        for name in sorted(legacy_layer3):
+        retired_skills = legacy_layer3 | HISTORICAL_RETIRED_PROFESSIONAL_SKILLS
+        for name in sorted(retired_skills):
             legacy_skill = skills / name
             legacy_skill.mkdir()
             (legacy_skill / "SKILL.md").write_text(
@@ -535,7 +549,7 @@ def _validate_legacy_profile_upgrades(
             )
         legacy_skills = (
             inventories["control"]
-            | inventories["professional"]
+            | historical_professional
             | legacy_layer3
         )
         manifest.update(
@@ -544,14 +558,18 @@ def _validate_legacy_profile_upgrades(
                 "installed_skills": sorted(legacy_skills),
                 "installed_control_skills": sorted(inventories["control"]),
                 "installed_professional_skills": sorted(
-                    inventories["professional"]
+                    historical_professional
                 ),
                 "installed_foundation_skills": (
                     sorted(inventories["foundation"])
                     if legacy_profile == "dev"
                     else []
                 ),
-                "installed_domain_skills": sorted(inventories["domain"]),
+                "installed_domain_skills": (
+                    sorted(inventories["domain"])
+                    if legacy_profile in {"full", "dev"}
+                    else []
+                ),
             }
         )
         manifest_path.write_text(
@@ -580,11 +598,11 @@ def _validate_legacy_profile_upgrades(
             )
             continue
         remaining_legacy = sorted(
-            name for name in legacy_layer3 if (skills / name).exists()
+            name for name in retired_skills if (skills / name).exists()
         )
         if remaining_legacy:
             errors.append(
-                f"legacy {legacy_profile} migration retained managed Layer 3 "
+                f"legacy {legacy_profile} migration retained managed retired "
                 f"Skills: {remaining_legacy}"
             )
             continue

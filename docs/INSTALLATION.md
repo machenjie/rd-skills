@@ -92,8 +92,9 @@ python3 installers/doctor.py --agent codex --scope user
 Doctor checks the manifest, 26 top-level Skill roots, current build/core/source
 bindings, legacy residue, and the host-specific Agent Profile contract. Codex,
 Claude, and Copilot must have the exact four-role file set; Cline correctly has
-none. A valid legacy `full` or `dev` manifest is reported as
-migration-required. Doctor is artifact evidence, not proof of real-Host
+none. An exact historical 27-Skill `recommended`, 40-Skill `full`, or
+190-Skill `dev` manifest is reported as migration-required before current
+build-digest checks. Doctor is artifact evidence, not proof of real-Host
 startup.
 
 ## Upgrade And Legacy Runtime Migration
@@ -109,10 +110,19 @@ python3 installers/doctor.py --agent codex --scope user
 ```
 
 Upgrade requires an existing rd-skills manifest. It accepts the exact current
-or legacy `recommended`, `full`, and `dev` inventories, validates ownership,
-and migrates all of them to the fixed Runtime manifest. For legacy installs it
-removes managed top-level Domain Skills and, for `dev`, managed top-level
-Foundation Skills. It does not require an intermediate uninstall.
+26-Skill `recommended` inventory and the closed historical 27/40/190
+`recommended`/`full`/`dev` generation, validates ownership, and migrates each
+historical inventory to the fixed Runtime manifest. The historical bridge is
+embedded installation metadata with fixed layer fingerprints; it does not read
+Git history or infer ownership from arbitrary current Registry contents. It
+removes the retired managed `routing-quality-review` directory, managed
+top-level Domain Skills from `full`, and managed top-level Foundation Skills
+from `dev`. It does not require an intermediate uninstall.
+
+All five inventory fields must match one supported generation exactly. Extra,
+missing, replacement, duplicate, unsafe, or current/historical hybrid names
+fail before backup or target mutation, and `--force` does not bypass this
+ownership check.
 
 Before any live cleanup or replacement, upgrade must create a complete backup
 of the currently managed Skill directories, managed Agent Profile files,
@@ -145,9 +155,10 @@ python3 installers/uninstall.py --agent codex --scope user --dry-run
 python3 installers/uninstall.py --agent codex --scope user
 ```
 
-Uninstall accepts current and exact legacy manifests and removes only their
-declared managed inventory plus bounded known legacy artifacts. It does not
-remove unrelated user content or restore a backup automatically.
+Uninstall accepts current and exact supported historical manifests and removes
+only the classified generation's declared managed inventory plus bounded known
+legacy artifacts. It does not remove unrelated user content or restore a
+backup automatically.
 
 ## OpenAI API Zip Output
 
