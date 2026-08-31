@@ -1068,8 +1068,8 @@ class TaskContractTemplateTests(unittest.TestCase):
             text,
         )
         self.assertIn(
-            "Inside an already-known stable owner/test/consumer boundary, bounded\n"
-            "confirmation may inspect only the named checks below",
+            "Inside the strong candidate's bounded owner/test/consumer read boundary,\n"
+            "bounded confirmation may inspect only the named checks below",
             text,
         )
         for allowed in (
@@ -1083,7 +1083,7 @@ class TaskContractTemplateTests(unittest.TestCase):
             with self.subTest(allowed=allowed):
                 self.assertIn(allowed, text)
         self.assertIn(
-            "route/risk invalidated -> stop\nbefore editing and return to Main for Analysis",
+            "route/risk invalidated -> edit=0, stop\nbefore editing, and return to Main for initial Analysis",
             text,
         )
 

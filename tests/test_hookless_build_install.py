@@ -933,8 +933,9 @@ class HooklessBuildInstallTests(unittest.TestCase):
             'tools: ["read","search","web"]',
             copilot_analysis_frontmatter,
         )
+        self.assertNotIn("Current external-read mode:", copilot_analysis)
         self.assertIn(
-            "Current external-read mode: external_source_read=prompt-enforced.",
+            "Declared tool boundary: read, search, external-source-read.",
             copilot_analysis,
         )
         for forbidden in ("edit", "execute", "agent", "*", "mcp"):

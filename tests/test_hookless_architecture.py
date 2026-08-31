@@ -55,7 +55,10 @@ class HooklessArchitectureTests(unittest.TestCase):
             ROOT / "scripts/validate-built-skill-reference-links.py",
         ):
             source = path.read_text(encoding="utf-8")
-            self.assertNotIn('PROFILES = ("recommended", "full", "dev")', source)
+            self.assertNotRegex(
+                source,
+                r'(?m)^PROFILES = \("recommended", "full", "dev"\)$',
+            )
             self.assertNotIn('add_argument("--profile"', source)
 
     def test_source_boundary_contains_only_authoring_assets(self) -> None:
@@ -109,12 +112,12 @@ class HooklessArchitectureTests(unittest.TestCase):
             "direct task",
             "analyzed work",
             "first executable slice",
-            "explicit owner/scope/placement/acceptance/validation/rollback",
-            "no unresolved material risk",
-            "category cannot force analysis",
-            "unresolved behavior/rollback/material impact or an unknown owner/module/system/verification boundary routes to analyzed work",
-            "already-known stable owner/test/consumer boundary",
-            "bounded confirmation",
+            "fixed professional/domain/layer3/scope",
+            "no shared/cross/external/material/choice signal",
+            "category-agnostic",
+            "unknown owner/module/system/verification -> analyzed",
+            "strong owner candidate",
+            "read-first confirmation",
             "engineering-change-analysis",
             "synchronous/unknown capability",
             "actual diff/every changed file/validation results",

@@ -19,12 +19,21 @@ canonical in the [Subagent model](SUBAGENT_MODEL.md).
 
 ## Permission and Host Enforcement
 
-Host tool configuration is authoritative where supported. The source matrix is
+Host tool configuration declares a static capability ceiling. The source matrix is
 `src/agent-profiles/host-enforcement.json`; its closed statuses are
 `native-enforced`, `sandbox-enforced`, `prompt-enforced`, and `unsupported`.
 Build and install manifests bind that matrix and its digest, while doctor reports
-the resulting configuration. Configuration is not proof of observed host
-behavior.
+the resulting configuration. Configuration and `rendered_tools` are not
+invocation truth. Dispatch uses only invocation-scoped effective runtime facts;
+missing, stale, unrecognized, or `unknown` facts are unavailable.
+
+Semantic Role remains one of the four Profiles even when the Host Executor
+changes. A proven replacement executor receives the complete original Task
+Contract unchanged; without one, Main blocks rather than implementing. A worker
+with a capability mismatch returns the canonical zero-edit
+`CAPABILITY_MISMATCH` only and never reroutes. Copilot CLI, Copilot VS Code, and
+Copilot Coding Agent are independent declared Host Surfaces under the compatible
+Copilot delivery family; none of those declarations proves a live invocation.
 
 When a host cannot express a fine-grained restriction, the generated Profile
 states the limit as prompt-enforced. rd-skills does not add an executable

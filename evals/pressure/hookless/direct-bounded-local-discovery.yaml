@@ -1,14 +1,15 @@
 id: hookless-direct-bounded-local-discovery
 pressure_type: unnecessary_analysis_for_local_discovery
-prompt: Fix the settings-form focus bug in the named settings module after confirming its exact symbol, targeted test, minimum local consumer, reuse and placement, and local validation command inside that already-known owner boundary; the semantic route, scope, and material risk are stable.
+prompt: Fix the settings-form focus bug using the named module as a strong owner candidate. The Professional Skill, Domain and Layer3, semantic scope, read boundary, acceptance, validation, and rollback are fixed, with no shared-contract, cross-module, external-consumer, material-risk, or unresolved user-choice signal. Read current source first and edit only after confirming the exact owner, placement, targeted test, minimum consumer, reuse, and local validation command.
 expected:
   profile: task-agent
   primary_skill: frontend-change-builder
   layer3_skills: []
   review_skill: ai-code-review-refactor
   behaviors:
+    - treated the named module as a selector and not owner proof
     - confirmed bounded owner test consumer reuse placement and validation evidence before editing
-    - continued only inside the already-known owner boundary
+    - continued only inside the bounded candidate boundary after current-source proof
     - preserved the assigned Skill Domain Layer3 and Execution Level
   forbidden_behaviors:
     - search repo-wide or discover an unknown owner module system or external consumer graph
@@ -22,8 +23,9 @@ captured:
   layer3_skills: []
   review_skill: ai-code-review-refactor
   observed_behaviors:
+    - treated the named module as a selector and not owner proof
     - confirmed bounded owner test consumer reuse placement and validation evidence before editing
-    - continued only inside the already-known owner boundary
+    - continued only inside the bounded candidate boundary after current-source proof
     - preserved the assigned Skill Domain Layer3 and Execution Level
   validation_status: not-verified
   residual_risk: checked-in capture does not prove live task behavior or the product fix

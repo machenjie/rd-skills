@@ -1323,7 +1323,8 @@ def prompt_projection_block(
             + "|".join(contract["main_evidence_kinds"])
             + " -> compute "
             + contract["projection"]["router"]["input_field"]
-            + "; Three axes are independent per Core; automatic L5 asks once.",
+            + "; Three axes are independent per Core; automatic L5 asks once. "
+            "Route/candidate != Level evidence; proven facts map one-to-one.",
             "integrity fallback/no partial computation: edit "
             + critical["edit_status"]
             + "; read-only diagnosis; never Router.",
@@ -6675,6 +6676,7 @@ def validate_core_contracts(
         "trigger_registry",
         "l1_eligibility",
         "l2_eligibility",
+        "atomic_fact_reuse",
         "l5_assurance_eligibility",
         "l5_confirmation",
         "main_evidence_kinds",
@@ -7018,6 +7020,43 @@ def validate_core_contracts(
                 errors.append(f"{context} positive predicate and anti-trigger must differ")
         if len(l2_ids) != len(set(l2_ids)):
             errors.append("execution L2 eligibility ids must be unique")
+        expected_atomic_fact_reuse = {
+            "source_anchor_prefix": "task_evidence:",
+            "candidate_kinds": ["routing_candidate"],
+            "proven_kind_to_l2_predicate": {
+                "proven-bounded-owner": "single-bounded-owner",
+                "proven-local-scope-placement": "local-scope-only",
+                "proven-rollback-recovery": "reversible-or-bounded-forward-fix",
+                "proven-observable-acceptance": "observable-acceptance-explicit",
+                "proven-non-production-validation": "non-production-validation-known",
+                "proven-consumer-boundary": "no-shared-contract-or-external-consumer",
+                "proven-material-assessment": "no-material-high-risk-residual-impact",
+                "proven-closed-related-facts": (
+                    "no-unresolved-owner-placement-verification-or-rollback-gap"
+                ),
+            },
+            "route_conclusion_kinds_forbidden": [
+                "direct-route",
+                "analyzed-route",
+                "route-result",
+            ],
+            "rule": (
+                "reuse only the exact task-local atomic proven fact for its "
+                "mapped predicate; candidate evidence and route conclusions "
+                "are selectors only"
+            ),
+        }
+        if execution["atomic_fact_reuse"] != expected_atomic_fact_reuse:
+            errors.append(
+                "execution atomic fact reuse must distinguish routing candidates "
+                "from one-to-one proven L2 facts"
+            )
+        elif set(
+            expected_atomic_fact_reuse["proven_kind_to_l2_predicate"].values()
+        ) != set(l2_ids):
+            errors.append(
+                "execution atomic fact reuse must cover every L2 predicate exactly once"
+            )
         validate_eligibility_registry(
             "l5_assurance_eligibility",
             [
@@ -7386,6 +7425,7 @@ def validate_core_contracts(
         "scheduling_rules",
         "evidence_resolution",
         "direct_bounded_discovery",
+        "executor_substitution",
         "analyzed_work_authority",
         "task_boundary",
         "finding_relations",
@@ -7649,9 +7689,13 @@ def validate_core_contracts(
 
         expected_direct_bounded_discovery = {
             "preconditions": [
+                "strong-owner-candidate",
                 "primary-professional-stable",
                 "domain-and-layer3-route-stable",
                 "semantic-scope-stable",
+                "no-shared-contract-signal",
+                "no-cross-module-signal",
+                "no-external-consumer-signal",
                 "no-unresolved-user-choice",
                 "no-unresolved-material-risk",
                 "bounded-read-boundary",
@@ -7672,6 +7716,19 @@ def validate_core_contracts(
                 "worker-rerouting",
                 "worker-skill-domain-or-layer3-selection",
             ],
+            "confirmation_sequence": [
+                "read-candidate-current-source",
+                "prove-owner-placement-test-consumer-reuse-validation",
+                "edit-only-after-boundary-confirmed",
+            ],
+            "contradiction_signals": [
+                "owner",
+                "module",
+                "shared-contract",
+                "cross-module",
+                "external-consumer",
+                "material-risk",
+            ],
             "outcomes": {
                 "boundary-confirmed": "confirm-and-continue",
                 "route-or-risk-invalidated": (
@@ -7686,12 +7743,49 @@ def validate_core_contracts(
                 "simpler": "preserve-current",
                 "higher-risk": "recompute",
             },
-            "read_boundary": "already-known-owner-test-and-minimum-consumer",
+            "read_boundary": "strong-candidate-owner-test-and-minimum-consumer",
         }
         if task["direct_bounded_discovery"] != expected_direct_bounded_discovery:
             errors.append(
                 "Direct bounded discovery must keep exact preconditions, local "
                 "checks, stops, worker no-reroute, and monotonic Level rules"
+            )
+
+        expected_executor_substitution = {
+            "declared_capability": "static-host-or-profile-ceiling-only",
+            "effective_runtime_capability": "invocation-scoped-current-fact",
+            "unknown_effective_capability": "unavailable",
+            "semantic_role": "fixed",
+            "host_executor": "replaceable",
+            "verbatim_carry": [
+                "task-contract",
+                "primary-professional-skill",
+                "layer3",
+                "execution-level-and-basis-history",
+                "scope",
+                "acceptance",
+                "validation",
+                "review",
+                "handoff",
+                "stop-conditions",
+            ],
+            "capability_mismatch": {
+                "format": (
+                    "CAPABILITY_MISMATCH task=<Task ID>; required=<capability>; "
+                    "effective=unknown|unsupported; edit=0"
+                ),
+                "worker_reroute": "forbidden",
+                "main_implementation": "forbidden",
+                "alternate_executor": (
+                    "main-may-substitute-only-after-current-effective-capability-proof"
+                ),
+            },
+            "runtime_persistence": "forbidden",
+        }
+        if task["executor_substitution"] != expected_executor_substitution:
+            errors.append(
+                "Task executor substitution must preserve fixed Semantic Role, "
+                "verbatim contract carry, minimal mismatch, and no runtime persistence"
             )
 
         expected_analyzed_work_authority = {
@@ -9628,8 +9722,10 @@ REVIEW_DISCIPLINE_MODEL = CORE_CONTRACTS["review_discipline_contract"]
 EVIDENCE_LOCALIZATION_MODEL = CORE_CONTRACTS["evidence_localization_contract"]
 
 
-def normalized_decision_capabilities(entry: dict[str, Any]) -> dict[str, str]:
-    """Project one host declaration to the Core generic capability ceilings."""
+def normalized_declared_capability_ceiling(
+    entry: dict[str, Any],
+) -> dict[str, str]:
+    """Project static Host/Profile configuration to a declared ceiling only."""
 
     supported_enforcement = {
         "native-enforced",
@@ -9681,6 +9777,30 @@ def normalized_decision_capabilities(entry: dict[str, Any]) -> dict[str, str]:
         "workspace-state-observation": (
             "supported" if observation_supported else "unsupported"
         ),
+    }
+
+
+def normalized_decision_capabilities(
+    entry: dict[str, Any],
+    *,
+    invocation_facts: dict[str, object] | None = None,
+) -> dict[str, str]:
+    """Normalize invocation-scoped effective facts under the static ceiling.
+
+    Static declarations and rendered tool names never establish effective
+    runtime availability. Missing, stale, unrecognized, and unknown facts fail
+    closed to ``unsupported``.
+    """
+
+    declared = normalized_declared_capability_ceiling(entry)
+    facts = invocation_facts if isinstance(invocation_facts, dict) else {}
+    return {
+        field: (
+            "supported"
+            if declared[field] == "supported" and facts.get(field) == "supported"
+            else "unsupported"
+        )
+        for field in declared
     }
 
 
@@ -9803,11 +9923,16 @@ def main_capability_projection_from_facts(
 def main_capability_projection(
     entry: dict[str, Any],
     *,
+    invocation_facts: dict[str, object] | None = None,
     handoff: dict[str, Any] | None = None,
     core: dict[str, Any] | None = None,
 ) -> dict[str, str]:
     return main_capability_projection_from_facts(
-        normalized_decision_capabilities(entry), handoff=handoff, core=core
+        normalized_decision_capabilities(
+            entry, invocation_facts=invocation_facts
+        ),
+        handoff=handoff,
+        core=core,
     )
 
 
@@ -9824,16 +9949,18 @@ def render_decision_capability_facts(capabilities: dict[str, str]) -> str:
         capabilities = main_capability_projection_from_facts(capabilities)
     if tuple(capabilities) != main_fields:
         raise ValueError("decision capability projection has unexpected fields")
+    if all(capabilities[field] == "unsupported" for field in main_fields):
+        return "Effective Runtime Capability=invocation facts, unknown unavailable."
     groups = {
         state: [field for field in main_fields if capabilities[field] == state]
         for state in authority["states"]
     }
     return (
-        "Current capability facts: supported "
+        "Effective runtime capability facts: supported "
         + ("/".join(groups["supported"]) or "none")
         + "; unsupported "
         + ("/".join(groups["unsupported"]) or "none")
-        + "."
+        + "; absent or unknown is unsupported."
     )
 CONTEXT_BUDGET_MODEL = CORE_CONTRACTS["context_budget_contract"]
 BEHAVIOR_EVAL_MODEL = behavior_eval_authority(CORE_CONTRACTS)
@@ -10938,6 +11065,7 @@ def direct_bounded_discovery_outcome(
     outcome: str,
     *,
     risk_change: str = "same",
+    contradiction: str | None = None,
 ) -> dict[str, object]:
     """Project a worker's bounded discovery result without granting reroute authority."""
 
@@ -10945,6 +11073,11 @@ def direct_bounded_discovery_outcome(
         raise ValueError(f"unknown Direct discovery outcome {outcome!r}")
     if risk_change not in {"same", "simpler", "higher"}:
         raise ValueError(f"unknown Direct discovery risk change {risk_change!r}")
+    contradictions = set(DIRECT_BOUNDED_DISCOVERY_MODEL["contradiction_signals"])
+    if contradiction is not None and contradiction not in contradictions:
+        raise ValueError(f"unknown Direct discovery contradiction {contradiction!r}")
+    if contradiction is not None and outcome != "route-or-risk-invalidated":
+        raise ValueError("a Direct contradiction must invalidate the route boundary")
     if outcome == "boundary-confirmed" and risk_change == "higher":
         raise ValueError("higher risk invalidates the Direct discovery boundary")
     if outcome == "boundary-confirmed":
@@ -10955,6 +11088,9 @@ def direct_bounded_discovery_outcome(
             "question_count": 0,
             "level_action": "preserve-current",
             "route_authority": "current-route-only",
+            "edit_count": None,
+            "analysis_kind": None,
+            "contradiction": None,
         }
     if outcome == "route-or-risk-invalidated":
         return {
@@ -10964,6 +11100,9 @@ def direct_bounded_discovery_outcome(
             "question_count": 0,
             "level_action": "recompute" if risk_change == "higher" else "preserve-current",
             "route_authority": "worker-reroute-forbidden",
+            "edit_count": 0,
+            "analysis_kind": "initial-analysis",
+            "contradiction": contradiction,
         }
     return {
         "worker_action": "return-main-for-one-question",
@@ -10972,6 +11111,9 @@ def direct_bounded_discovery_outcome(
         "question_count": EVIDENCE_RESOLUTION_MODEL["maximum_user_questions"],
         "level_action": "preserve-current",
         "route_authority": "worker-reroute-forbidden",
+        "edit_count": 0,
+        "analysis_kind": None,
+        "contradiction": None,
     }
 
 
@@ -11416,6 +11558,21 @@ def validate_route_decision(
             if not isinstance(evidence[field], str) or not evidence[field].strip():
                 errors.append(f"{context}.{field} must be non-empty text")
 
+    level_basis = result.get("level_basis")
+    l2_rows = level_basis.get("l2_eligibility") if isinstance(level_basis, dict) else None
+    if isinstance(l2_rows, list) and all(
+        isinstance(row, dict) and isinstance(row.get("id"), str)
+        for row in l2_rows
+    ):
+        try:
+            _validate_atomic_l2_fact_reuse(
+                {row["id"]: row for row in l2_rows},
+                raw_evidence,
+                EXECUTION_LEVEL_MODEL,
+            )
+        except ExecutionLevelError as exc:
+            errors.append(f"route Level evidence reuse is invalid: {exc}")
+
     def candidate_rows(
         field: str,
         known_skills: set[str],
@@ -11591,6 +11748,74 @@ def _max_execution_level(
     return max(levels, key=lambda level: _execution_rank(level, contract))
 
 
+def _validate_atomic_l2_fact_reuse(
+    l2_evaluations: dict[str, dict[str, object]],
+    task_evidence: object,
+    contract: dict[str, object],
+) -> None:
+    """Bind reused task evidence by exact fact ID and proof strength."""
+
+    reuse = contract["atomic_fact_reuse"]
+    prefix = reuse["source_anchor_prefix"]
+    candidate_kinds = set(reuse["candidate_kinds"])
+    forbidden_kinds = set(reuse["route_conclusion_kinds_forbidden"])
+    proven_mapping = reuse["proven_kind_to_l2_predicate"]
+    facts_by_id: dict[str, dict[str, object]] = {}
+    if task_evidence is not None:
+        if not isinstance(task_evidence, list):
+            raise ExecutionLevelError("task evidence reuse input must be a list")
+        task_ids: set[str] = set()
+        for index, fact in enumerate(task_evidence):
+            if not isinstance(fact, dict) or set(fact) != {
+                "id",
+                "kind",
+                "task_id",
+                "source_anchor",
+            }:
+                raise ExecutionLevelError(
+                    f"task evidence reuse item {index} must use the route atomic fact fields"
+                )
+            if any(
+                not isinstance(fact[field], str) or not fact[field].strip()
+                for field in ("id", "kind", "task_id", "source_anchor")
+            ):
+                raise ExecutionLevelError(
+                    f"task evidence reuse item {index} fields must be non-empty text"
+                )
+            if fact["id"] in facts_by_id:
+                raise ExecutionLevelError("task evidence reuse IDs must be unique")
+            facts_by_id[fact["id"]] = fact
+            task_ids.add(fact["task_id"])
+        if len(task_ids) > 1:
+            raise ExecutionLevelError("task evidence reuse must remain task-local")
+
+    for predicate, evaluation in l2_evaluations.items():
+        anchor = evaluation.get("source_anchor")
+        if evaluation.get("status") != "true" or not isinstance(anchor, str):
+            continue
+        if not anchor.startswith(prefix):
+            continue
+        fact_id = anchor.removeprefix(prefix)
+        fact = facts_by_id.get(fact_id)
+        if fact is None:
+            raise ExecutionLevelError(
+                f"L2 predicate {predicate!r} references missing task evidence {fact_id!r}"
+            )
+        kind = fact["kind"]
+        if kind in candidate_kinds:
+            raise ExecutionLevelError(
+                f"candidate task evidence cannot prove L2 predicate {predicate!r}"
+            )
+        if kind in forbidden_kinds:
+            raise ExecutionLevelError(
+                f"route conclusion task evidence cannot prove L2 predicate {predicate!r}"
+            )
+        if proven_mapping.get(kind) != predicate:
+            raise ExecutionLevelError(
+                f"task evidence kind {kind!r} cannot prove L2 predicate {predicate!r}"
+            )
+
+
 def _nonempty_execution_text_mapping(
     value: object,
     fields: list[str],
@@ -11655,6 +11880,7 @@ def compute_execution_level(
     l5_confirmation: str = "not-required",
     prior_historical_max_floor: str | None = None,
     prior_historical_max_effective: str | None = None,
+    task_evidence: list[dict[str, object]] | None = None,
     contract: dict[str, object] | None = None,
 ) -> dict[str, object]:
     """Apply the unique Core execution-level formula to explicit main-agent evidence."""
@@ -11844,6 +12070,8 @@ def compute_execution_level(
         if status == "unknown":
             unresolved.append(identifier)
         canonical_l2.append({"id": identifier, **evaluation})
+
+    _validate_atomic_l2_fact_reuse(l2_evaluations, task_evidence, contract)
 
     def canonical_eligibility(
         registry_field: str,

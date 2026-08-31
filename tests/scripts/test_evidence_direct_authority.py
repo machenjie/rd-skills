@@ -69,6 +69,19 @@ LOCAL_DISCOVERY = (
 RISK_ESCALATION = (
     ROOT / "evals" / "pressure" / "hookless" / "direct-discovery-risk-escalation.yaml"
 )
+CAPABILITY_MISMATCH = (
+    ROOT / "evals" / "pressure" / "hookless" / "runtime-capability-mismatch.yaml"
+)
+EXECUTOR_SUBSTITUTION = (
+    ROOT / "evals" / "pressure" / "hookless" / "executor-substitution-contract.yaml"
+)
+EVIDENCE_REVIEW = (
+    ROOT
+    / "evals"
+    / "pressure"
+    / "hookless"
+    / "optimization-evidence-review-preservation.yaml"
+)
 
 
 class EvidenceDirectAuthorityTests(unittest.TestCase):
@@ -427,9 +440,71 @@ class EvidenceDirectAuthorityTests(unittest.TestCase):
         self.assertEqual("return-main-for-one-question", choice["worker_action"])
         self.assertEqual(1, choice["question_count"])
 
+    def test_direct_candidate_confirmation_is_read_first_and_contradictions_edit_zero(
+        self,
+    ) -> None:
+        direct = CORE_CONTRACTS["task_contract"]["direct_bounded_discovery"]
+        self.assertIn("strong-owner-candidate", direct["preconditions"])
+        self.assertEqual(
+            [
+                "read-candidate-current-source",
+                "prove-owner-placement-test-consumer-reuse-validation",
+                "edit-only-after-boundary-confirmed",
+            ],
+            direct["confirmation_sequence"],
+        )
+        for signal in (
+            "shared-contract",
+            "cross-module",
+            "external-consumer",
+            "material-risk",
+        ):
+            with self.subTest(signal=signal):
+                outcome = direct_bounded_discovery_outcome(
+                    "route-or-risk-invalidated",
+                    contradiction=signal,
+                )
+                self.assertEqual(0, outcome["edit_count"])
+                self.assertEqual("initial-analysis", outcome["analysis_kind"])
+                self.assertEqual("worker-reroute-forbidden", outcome["route_authority"])
+
+    def test_runtime_capability_mismatch_is_minimal_and_never_reroutes(self) -> None:
+        mismatch = CORE_CONTRACTS["task_contract"]["executor_substitution"][
+            "capability_mismatch"
+        ]
+        self.assertEqual(
+            "CAPABILITY_MISMATCH task=<Task ID>; required=<capability>; "
+            "effective=unknown|unsupported; edit=0",
+            mismatch["format"],
+        )
+        self.assertEqual("forbidden", mismatch["worker_reroute"])
+        self.assertEqual("forbidden", mismatch["main_implementation"])
+
+    def test_executor_substitution_preserves_role_and_complete_task_contract(self) -> None:
+        substitution = CORE_CONTRACTS["task_contract"]["executor_substitution"]
+        self.assertEqual("fixed", substitution["semantic_role"])
+        self.assertEqual("replaceable", substitution["host_executor"])
+        self.assertEqual(
+            [
+                "task-contract",
+                "primary-professional-skill",
+                "layer3",
+                "execution-level-and-basis-history",
+                "scope",
+                "acceptance",
+                "validation",
+                "review",
+                "handoff",
+                "stop-conditions",
+            ],
+            substitution["verbatim_carry"],
+        )
+
     def test_direct_template_and_capsule_projection_name_exact_boundaries(self) -> None:
         text = " ".join(DIRECT_TEMPLATE.read_text(encoding="utf-8").split())
         for term in (
+            "strong owner candidate",
+            "Candidate is not owner proof",
             "exact owning symbol/file",
             "relevant existing test",
             "minimum local consumer",
@@ -440,6 +515,9 @@ class EvidenceDirectAuthorityTests(unittest.TestCase):
             "Worker rerouting",
             "confirm and continue",
             "stop before editing and return to Main",
+            "shared-contract",
+            "cross-module",
+            "external-consumer",
         ):
             with self.subTest(term=term):
                 self.assertIn(term, text)
@@ -471,7 +549,7 @@ class EvidenceDirectAuthorityTests(unittest.TestCase):
                 self.assertNotIn(obsolete, combined)
         for required in (
             "unknown owner/module/system/verification boundary",
-            "already-known stable owner/test/consumer boundary",
+            "strong owner candidate",
             "bounded confirmation",
         ):
             with self.subTest(required=required):
@@ -498,7 +576,7 @@ class EvidenceDirectAuthorityTests(unittest.TestCase):
             "route-or-material-unknown",
             "semantic-choice",
             "execution-level-choice",
-            "Direct bounded discovery",
+            "Direct outcomes",
             "Worker never reroutes",
         ):
             self.assertIn(term, prompt)
@@ -604,8 +682,23 @@ class EvidenceDirectAuthorityTests(unittest.TestCase):
             local["expected"]["behaviors"],
         )
         self.assertIn(
-            "returned to Main before editing without selecting a new Skill Domain or Layer3",
+            "returned zero edit to Main for initial Analysis without selecting a new Skill Domain or Layer3",
             escalation["expected"]["behaviors"],
+        )
+        mismatch = load_yaml_file(CAPABILITY_MISMATCH)
+        substitution = load_yaml_file(EXECUTOR_SUBSTITUTION)
+        preservation = load_yaml_file(EVIDENCE_REVIEW)
+        self.assertIn(
+            "treated absent effective runtime capability as unavailable despite the static declaration",
+            mismatch["expected"]["behaviors"],
+        )
+        self.assertIn(
+            "preserved Semantic Role Professional Skill Layer3 Execution Level Basis history scope acceptance validation review handoff and stop conditions unchanged",
+            substitution["expected"]["behaviors"],
+        )
+        self.assertIn(
+            "captured the exact current diff and sent every changed file to independent review",
+            preservation["expected"]["behaviors"],
         )
         report = EVAL_PRESSURE.evaluate_pressure_cases()
         self.assertEqual([], report["errors"])

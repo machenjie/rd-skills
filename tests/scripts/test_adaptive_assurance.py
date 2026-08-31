@@ -17,6 +17,7 @@ from fixture_capsule_contract import (  # noqa: E402
 )
 from validation_utils import (  # noqa: E402
     CORE_CONTRACTS,
+    ExecutionLevelError,
     compute_execution_level,
     load_yaml_file,
     validate_core_contracts,
@@ -122,6 +123,120 @@ def _compute(
 
 
 class AdaptiveAssuranceTests(unittest.TestCase):
+    def test_candidate_task_evidence_cannot_prove_an_l2_predicate(self) -> None:
+        triggers, l1, l2, l5 = _evidence(
+            source="user_fact", l1_status="false"
+        )
+        l2["single-bounded-owner"]["source_anchor"] = (
+            "task_evidence:owner-candidate"
+        )
+        with self.assertRaisesRegex(
+            ExecutionLevelError,
+            "candidate.*single-bounded-owner|single-bounded-owner.*candidate",
+        ):
+            compute_execution_level(
+                requested="unspecified",
+                trigger_evaluations=triggers,
+                l1_evaluations=l1,
+                l2_evaluations=l2,
+                l5_assurance_evaluations=l5,
+                task_evidence=[
+                    {
+                        "id": "owner-candidate",
+                        "kind": "routing_candidate",
+                        "task_id": "task-direct-fact-reuse",
+                        "source_anchor": "src/example.py#candidate",
+                    }
+                ],
+            )
+
+    def test_proven_atomic_direct_facts_can_satisfy_only_their_l2_predicates(
+        self,
+    ) -> None:
+        reuse = EXECUTION["atomic_fact_reuse"]
+        mapping = reuse["proven_kind_to_l2_predicate"]
+        triggers, l1, l2, l5 = _evidence(
+            source="user_fact", l1_status="false"
+        )
+        facts = []
+        for index, (kind, predicate) in enumerate(mapping.items()):
+            fact_id = f"direct-fact-{index}"
+            facts.append(
+                {
+                    "id": fact_id,
+                    "kind": kind,
+                    "task_id": "task-direct-fact-reuse",
+                    "source_anchor": f"current-source:{predicate}",
+                }
+            )
+            l2[predicate]["source_anchor"] = f"task_evidence:{fact_id}"
+
+        result = compute_execution_level(
+            requested="unspecified",
+            trigger_evaluations=triggers,
+            l1_evaluations=l1,
+            l2_evaluations=l2,
+            l5_assurance_evaluations=l5,
+            task_evidence=facts,
+        )
+        self.assertEqual("L2", result["effective_level"])
+
+        wrong = copy.deepcopy(facts)
+        first_kind, first_predicate = next(iter(mapping.items()))
+        wrong[0]["kind"] = next(
+            kind for kind in mapping if kind != first_kind
+        )
+        self.assertEqual(
+            f"task_evidence:{wrong[0]['id']}",
+            l2[first_predicate]["source_anchor"],
+        )
+        with self.assertRaisesRegex(
+            ExecutionLevelError,
+            "cannot prove|can prove only|must use proven kind",
+        ):
+            compute_execution_level(
+                requested="unspecified",
+                trigger_evaluations=triggers,
+                l1_evaluations=l1,
+                l2_evaluations=l2,
+                l5_assurance_evaluations=l5,
+                task_evidence=wrong,
+            )
+
+    def test_material_floor_dominates_complete_proven_direct_facts(self) -> None:
+        reuse = EXECUTION["atomic_fact_reuse"]
+        triggers, l1, l2, l5 = _evidence(
+            source="user_fact",
+            l1_status="false",
+            matched_trigger="public-api-event-schema-compatibility",
+        )
+        facts = []
+        for index, (kind, predicate) in enumerate(
+            reuse["proven_kind_to_l2_predicate"].items()
+        ):
+            fact_id = f"material-direct-fact-{index}"
+            facts.append(
+                {
+                    "id": fact_id,
+                    "kind": kind,
+                    "task_id": "task-direct-material-floor",
+                    "source_anchor": f"current-source:{predicate}",
+                }
+            )
+            l2[predicate]["source_anchor"] = f"task_evidence:{fact_id}"
+        l2["no-material-high-risk-residual-impact"]["status"] = "false"
+
+        result = compute_execution_level(
+            requested="unspecified",
+            trigger_evaluations=triggers,
+            l1_evaluations=l1,
+            l2_evaluations=l2,
+            l5_assurance_evaluations=l5,
+            l5_confirmation="not-required",
+            task_evidence=facts,
+        )
+        self.assertGreaterEqual(int(result["effective_level"][1:]), 4)
+
     def test_core_declares_closed_adaptive_assurance_contract(self) -> None:
         self.assertEqual([], validate_core_contracts(CORE_CONTRACTS))
         self.assertEqual(2, EXECUTION["schema_version"])

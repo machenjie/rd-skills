@@ -110,7 +110,11 @@ class BuildSafetyTests(unittest.TestCase):
         matrix = BUILD._load_host_enforcement()
         handoff = self._current_handoff("reviewer-accessible-native-reference")
         projection = BUILD._main_capability_projection(
-            matrix["hosts"]["codex"], handoff=handoff
+            matrix["hosts"]["codex"],
+            invocation_facts=BUILD._normalized_declared_capability_ceiling(
+                matrix["hosts"]["codex"]
+            ),
+            handoff=handoff,
         )
         self.assertEqual(
             {
@@ -126,7 +130,11 @@ class BuildSafetyTests(unittest.TestCase):
         matrix = BUILD._load_host_enforcement()
         handoff = self._current_handoff("exact-change-content")
         projection = BUILD._main_capability_projection(
-            matrix["hosts"]["copilot"], handoff=handoff
+            matrix["hosts"]["copilot"],
+            invocation_facts=BUILD._normalized_declared_capability_ceiling(
+                matrix["hosts"]["copilot"]
+            ),
+            handoff=handoff,
         )
         self.assertEqual("supported", projection["not-required"])
         self.assertEqual("supported", projection["exact-change-evidence-read"])
@@ -162,7 +170,11 @@ class BuildSafetyTests(unittest.TestCase):
         for index, handoff in enumerate(mutations):
             with self.subTest(index=index):
                 projection = BUILD._main_capability_projection(
-                    matrix["hosts"]["copilot"], handoff=handoff
+                    matrix["hosts"]["copilot"],
+                    invocation_facts=BUILD._normalized_declared_capability_ceiling(
+                        matrix["hosts"]["copilot"]
+                    ),
+                    handoff=handoff,
                 )
                 self.assertEqual("unsupported", projection["not-required"])
                 self.assertEqual(
@@ -178,6 +190,9 @@ class BuildSafetyTests(unittest.TestCase):
         )
         projection = BUILD._main_capability_projection(
             matrix["hosts"]["codex"],
+            invocation_facts=BUILD._normalized_declared_capability_ceiling(
+                matrix["hosts"]["codex"]
+            ),
             handoff=self._current_handoff("reviewer-accessible-native-reference"),
             core=core,
         )
@@ -1138,6 +1153,15 @@ Own one bounded decision.
                 **{capability: "supported" for capability in BUILD.DECISION_CAPABILITY_FIELDS},
                 "supplied-change-delivery": "unsupported",
             },
+            BUILD._normalized_declared_capability_ceiling(
+                matrix["hosts"]["codex"]
+            ),
+        )
+        self.assertEqual(
+            {
+                capability: "unsupported"
+                for capability in BUILD.DECISION_CAPABILITY_FIELDS
+            },
             BUILD._normalized_decision_capabilities(matrix["hosts"]["codex"]),
         )
         unknown_adapter = dict(matrix["hosts"]["codex"])
@@ -1160,13 +1184,9 @@ Own one bounded decision.
         }
         for renderer, host in renderer_hosts.items():
             host_contract = matrix["hosts"][host]
-            capability_facts = BUILD._main_capability_projection(host_contract)
             rendered = renderer(profiles["main-control-agent"], matrix)
-            self.assertIn(
-                BUILD._render_decision_capability_facts(capability_facts),
-                rendered,
-            )
-            self.assertEqual(1, rendered.count("Current capability facts:"))
+            self.assertNotIn("Current capability facts:", rendered)
+            self.assertNotIn("Current external-read mode:", rendered)
         claude = BUILD._render_claude_profile(profiles["review-agent"], matrix)
         copilot = BUILD._render_copilot_profile(profiles["review-agent"], matrix)
         self.assertNotIn("Current capability facts:", claude)
@@ -1191,7 +1211,7 @@ Own one bounded decision.
                 self.assertEqual(set(BUILD.DECISION_CAPABILITY_FIELDS), set(ceilings))
                 self.assertEqual(expected_fields, set(projection))
                 self.assertEqual("unsupported", projection["not-required"])
-                self.assertEqual("supported", projection["non-mutating-validation"])
+                self.assertEqual("unsupported", projection["non-mutating-validation"])
                 self.assertEqual("unsupported", projection["exact-change-evidence-read"])
                 self.assertEqual(
                     "unsupported",
@@ -1299,7 +1319,7 @@ Own one bounded decision.
             (
                 '"rendered_tools": ["read", "search", "web"]',
                 '"rendered_tools": ["read", "search", "web", "execute"]',
-                "copilot:analysis-agent must expose only read, search, and web",
+                "copilot-vscode: analysis tools do not match the surface ceiling",
             ),
         )
         for old, new, error in mutations:

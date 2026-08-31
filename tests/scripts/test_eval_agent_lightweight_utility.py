@@ -1989,7 +1989,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
     def test_task_focus_relation_review_repair_and_cost_matrix_is_closed(self) -> None:
         results, errors = EVAL._task_focus_fixture_results(self.task_focus_cases)
         self.assertEqual([], errors)
-        self.assertEqual(51, len(results))
+        self.assertEqual(57, len(results))
         self.assertTrue(all(result["matches_expected"] for result in results))
         self.assertEqual(
             {
@@ -2001,6 +2001,8 @@ class LightweightUtilityContractTests(unittest.TestCase):
                 "analysis-level",
                 "review-readiness",
                 "capability-equivalence",
+                "direct-confirmation",
+                "runtime-capability",
                 "engineering-choice",
             },
             {result["scenario"] for result in results},
@@ -4435,6 +4437,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
             "focus-rejects-l4-default-prereview": "L4 does not default to pre-implementation review",
             "focus-rejects-stale-repair-evidence": "fresh validation, latest actual diff, and fresh independent review",
             "focus-rejects-unrelated-repair-file": "revert the unrelated changed file",
+            "focus-runtime-mismatch-worker-reroute-forbidden": "never authorizes Worker rerouting",
         }
         by_id = {case["id"]: case for case in self.task_focus_cases}
         for case_id, message in expected.items():
@@ -4447,6 +4450,12 @@ class LightweightUtilityContractTests(unittest.TestCase):
         self.assertEqual([], errors)
         by_id = {result["id"]: result for result in results}
         required = {
+            "focus-direct-candidate-confirmed-edit-l3",
+            "focus-direct-candidate-wrong-owner-zero-edit-analysis",
+            "focus-direct-candidate-shared-contract-zero-edit-analysis",
+            "focus-runtime-static-declaration-unknown-blocked",
+            "focus-runtime-fallback-preserves-role-and-contract",
+            "focus-runtime-mismatch-worker-reroute-forbidden",
             "focus-analysis-owner-unresolved-task-l2",
             "focus-analysis-explicit-repair-task-level",
             "focus-analysis-standard-task-l3",
@@ -4462,6 +4471,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
             "focus-review-supplied-artifact-ready",
             "focus-review-unsupported-capability-blocked",
             "focus-review-normal-flow-no-post-review-export",
+            "focus-repair-fresh-latest-evidence",
             "focus-capability-equivalent-adapter-metadata",
         }
         self.assertTrue(required <= set(by_id), required - set(by_id))

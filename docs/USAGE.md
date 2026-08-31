@@ -15,9 +15,11 @@ routing intent; it does not prove native Slash support.
 
 ## Copyable Direct Task Request
 
-Use Direct Task for explicit, reversible, local work with known ownership and
-verification and no material public-contract, migration, authorization,
-privacy, security, financial, production, or irreversible risk.
+Use Direct Task for explicit, reversible, local work with one strong owner
+candidate, fixed Professional/Domain/Layer3 and semantic scope, bounded reads,
+and no shared-contract, cross-module, external-consumer, unresolved choice, or
+material public-contract, migration, authorization, privacy, security,
+financial, production, or irreversible risk.
 
 ```text
 /engineering-control-plane
@@ -29,8 +31,13 @@ Verify: Run `python3 -m unittest tests.test_example`.
 Stop if the owner, public contract, or verification command differs from this request.
 ```
 
-Replace the paths and test command with repository facts. Expected interaction:
-`main-control-agent` assigns one bounded task to `task-agent`; after the final
+Replace the paths and test command with candidate selectors. They do not prove
+ownership. The task reads current source first and proves owner, placement,
+relevant test, minimum consumer boundary, reuse, and executable validation
+before editing. A contradiction returns zero edit through Main to initial
+Analysis; a simpler confirmation never lowers the active Level. Expected
+interaction: `main-control-agent` assigns one bounded task to `task-agent`;
+after the final
 edit, targeted validation runs and `review-agent` reviews the actual diff and
 every changed file. Ordinary findings accumulate during review and re-review
 until the fixed scope and required risk dimensions are complete. Material
@@ -87,17 +94,24 @@ supplied artifact. If no acceptance document exists, replace that bullet with
 `- Acceptance: <observable criteria for this change>;` so the reviewer has an
 explicit contract instead of an invented file.
 
-Depending on normalized capability facts, `review-agent` consumes an accessible
+Depending on invocation-scoped effective capability facts, `review-agent` consumes an accessible
 native change reference or a supplied exact artifact. Review is blocked before
 dispatch when the producer has not supplied exact evidence; only a legacy or
 incomplete handoff may use one bounded pre-review recovery. The reviewer does
 not repair findings or generate change artifacts.
 
 Native change reads, evidence export, supplied delivery, and reviewer
-consumption are independent capability facts. Supplied review receives actual
+consumption are independent effective capability facts. Static Host/Profile
+configuration and rendered tool names are declared ceilings only. Supplied
+review receives actual
 unified-diff content; native review receives a current reference readable by the
 assigned reviewer. Static support, a digest, a path, or a command-output label
 does not make Review Input Ready.
+
+Route and Execution Level remain independent. A Direct or Analyzed conclusion
+is never Level evidence. An atomic task fact may be reused only after its proof
+kind matches the corresponding Level predicate; a routing candidate remains a
+selector and cannot satisfy an L2 predicate.
 
 ## What You Should See
 

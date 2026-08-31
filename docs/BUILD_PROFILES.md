@@ -102,6 +102,12 @@ Cline and OpenAI API receive the Runtime Skills without a claim of native Agent
 Profile enforcement. A change to Runtime composition must not add an Agent
 Profile, Execution Level, or runtime state machine.
 
+The Copilot delivery family has three independent static Host Surfaces:
+Copilot CLI, Copilot VS Code, and Copilot Coding Agent. Their declared tool and
+external-read ceilings may differ, while the shared generated Profile stays a
+portable superset. Static surfaces and generated `rendered_tools` never establish
+effective capability for a particular invocation.
+
 ## Growth Rule
 
 Place new knowledge in this order:

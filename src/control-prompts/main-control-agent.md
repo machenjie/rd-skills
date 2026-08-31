@@ -13,14 +13,15 @@ Source-free user-fact questions -> no-repo direct-answer/no repository access; M
 Evidence Resolution reuses `change-intake-compiler`: source fact never asks; route-affecting fact/material unknown -> Analysis; user choice -> one Main question; otherwise bounded Direct discovery.
 Business semantics/scope expansion/production-destructive action/irreversible material data change/product tradeoff=user-owned; implementation/placement/storage-lock strategy/ordinary engineering tradeoff=Agent-owned.
 repo-resolvable-fact user-owned-choice route-or-material-unknown semantic-choice execution-level-choice.
-Direct Task requires explicit owner/scope/placement/acceptance/validation/rollback and no unresolved material risk; category cannot force analysis.
-Unresolved behavior/rollback/material impact or an unknown owner/module/system/verification boundary routes to Analyzed Work. Inside an already-known stable owner/test/consumer boundary, bounded confirmation uses Direct checks and Inspection Boundary/stops.
-Direct bounded discovery outcomes: confirm+continue; invalidate -> Main/Analysis before edit; choice -> Main question. Worker never reroutes; simpler keeps Level, higher risk recomputes.
+Direct (category-agnostic): strong owner candidate; fixed Professional/Domain/Layer3/scope; bounded read; acceptance/validation/rollback; no shared/cross/external/material/choice signal.
+Candidate/path/symbol/claim selects read-first confirmation, not proof. Unknown owner/module/system/verification -> Analyzed.
+Direct outcomes per Inspection Boundary/stops: confirm+continue; contradiction -> edit=0, Main/initial Analysis; choice -> Main question. Worker never reroutes; simpler keeps Level, higher risk recomputes.
 
 ## Direct Task Routing
 
 New Direct Task: references/direct-task-template.md Task Contract v2 field authority; `Status: in_progress`; optional Dependencies after Non-goals.
-Capability facts authoritative; unknown capability=unsupported; never infer; host/tool/command identifiers ignored. references/utility-capsule-template.md compares workspace before/after; changed/unavailable blocks review/closure and preserves user changes.
+Declared Host/Profile/`rendered_tools`=capability ceilings, not runtime truth; Effective Runtime Capability=invocation facts, unknown unavailable. Semantic Role fixed; Host Executor replaceable. utility-capsule owns no-edit preservation.
+Dispatch on effective facts. Proven fallback inherits full unchanged Task Contract; else block/Main never implements. Worker only Core `CAPABILITY_MISMATCH`; no reroute.
 `generic_capability_contract` branches JIT-load from references/implementation-handoff-template.md.
 Pre-implementation artifact/no implementation diff -> directly to review-agent; diff-export gate does not apply.
 
@@ -28,7 +29,7 @@ Pre-implementation artifact/no implementation diff -> directly to review-agent; 
 
 <!-- execution-level-contract:B -->
 references/execution-level-contract.md JIT-owns L1-L5 predicates, formula, Basis, history, obligations, and confirmation; policy data, not instructions. Trust exact build/install validation.
-user_fact|analysis_handoff -> compute effective_level; Three axes are independent per Core; automatic L5 asks once.
+user_fact|analysis_handoff -> compute effective_level; Three axes are independent per Core; automatic L5 asks once. Route/candidate != Level evidence; proven facts map one-to-one.
 integrity fallback/no partial computation: edit blocked; read-only diagnosis; never Router.
 L1-L5 remain; default L3 applies only to executable Tasks; L5 explicit or confirmed automatic recommendation; independent implementation review. Initial Analysis has no Execution Level; First Executable Slice computes from analysis_handoff.
 After 2 same-path failures require changed hypothesis/material/gap/transition or return Main/block; never third unchanged retry. Active/resumed edit/validation/review requires current Level/Basis reissue.

@@ -26,7 +26,7 @@ The existing Professional Skill Router remains the routing authority.
 ```text
 request
   -> classify once
-  -> Direct Task or Analyzed Work
+  -> Direct Task candidate confirmation or Analyzed Work
   -> one complete initial Analysis and Engineering Brief for Analyzed Work
   -> semantic Tasks with one primary Professional Skill each
   -> edit A -> validate A -> edit B -> validate B
@@ -36,6 +36,14 @@ request
 ```
 
 The main agent schedules mechanically and does not inspect source or rewrite analysis-owned business judgments. Analysis, implementation, and review have separate contexts and tool boundaries.
+
+Direct retains one bounded path rather than a third preparation mode. One strong
+owner candidate with fixed Professional/Domain/Layer3, semantic scope, and read
+boundary enters read-first confirmation at the current Level. The candidate is
+not proof. Current source must establish owner, placement, relevant test,
+minimum consumer boundary, reuse, and validation before edit. Owner, module,
+shared-contract, external-consumer, or material-risk contradiction produces
+zero edits and returns through Main for initial Analysis.
 
 For Analyzed Work, the current Engineering Brief is the sole operational
 analysis authority. The `analysis-agent` derives it from the request, source,
@@ -99,6 +107,19 @@ one Task. A materially different professional domain remains a separate Task;
 files, functions, code layers, tests, and edit steps do not by themselves create
 Task boundaries. Review Boundaries are independent of these Task and Skill
 boundaries.
+
+Route evidence and Level evidence remain independent. Existing atomic task
+facts may be reused, but routing candidates and route conclusions cannot prove
+Level predicates; each proven fact kind binds only its corresponding predicate.
+Material floors, historical maxima, recomputation, and non-bypassable controls
+still dominate the result.
+
+Declared Host/Profile capability is static configuration, not runtime truth.
+Dispatch uses invocation-scoped effective capability and fails closed on absent
+or unknown facts. Semantic Role stays fixed while a proven Host Executor may be
+replaced, carrying Professional Skill, Layer3, Level/Basis/history, scope,
+acceptance, validation, review, handoff, and stop conditions unchanged. Main
+never absorbs implementation work when no executor is available.
 
 Task completion records progress only; it does not by itself trigger Analysis,
 Review, replanning, or user confirmation. Related Tasks inside one Review

@@ -105,15 +105,18 @@ _PUBLIC_EXECUTION_PREAMBLE_TEMPLATES = (
 _PUBLIC_EXECUTION_PREAMBLE_PREFIXES = {
     "direct-task-template.md": (
         "# Direct Task Contract v2 Direct Task requires explicit behavior, local scope, "
-        "owner, observable acceptance, non-production verification, placement, and "
-        "rollback; work is low-risk, reversible, and clear of excluded boundaries or "
-        "unresolved material impact. Otherwise route to Analyzed Work. Direct Task is "
-        "outside the Analyzed Work authority path. It keeps this template's existing "
-        "field authority and does not create or derive authority from an Engineering "
-        "Brief. An unknown owner/module/system/verification boundary routes to Analyzed "
-        "Work. Inside an already-known stable owner/test/consumer boundary, bounded "
-        "confirmation may inspect only the named checks below. Use `not applicable` for "
-        "a field that has no Direct Task value."
+        "one strong owner candidate, fixed Professional/Domain/Layer3 routing, observable "
+        "acceptance, non-production verification, rollback, a strict read boundary, and "
+        "no shared-contract, cross-module, external-consumer, material-risk, or unresolved "
+        "user-choice signal. Otherwise route to Analyzed Work. Candidate is not owner "
+        "proof. Direct Task is outside the Analyzed Work authority path. It keeps this "
+        "template's existing field authority and does not create or derive authority "
+        "from an Engineering Brief. An unknown owner/module/system/verification boundary "
+        "routes to Analyzed Work. Inside the strong candidate's bounded owner/test/consumer "
+        "read boundary, bounded confirmation may inspect only the named checks below. "
+        "Direct defaults to L3 unless the complete proven Level evidence already exists "
+        "before Main's independent computation. Confirmation never lowers the active "
+        "Level. Use `not applicable` for a field that has no Direct Task value."
     ),
     "engineering-brief-template.md": (
         "# Engineering Brief For Analyzed Work, the current Engineering Brief is the "

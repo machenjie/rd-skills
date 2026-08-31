@@ -1,18 +1,21 @@
 # Direct Task Contract v2
 
-Direct Task requires explicit behavior, local scope, owner, observable
-acceptance, non-production verification, placement, and rollback; work is
-low-risk, reversible, and clear of excluded boundaries or unresolved material
-impact. Otherwise route to Analyzed Work.
+Direct Task requires explicit behavior, local scope, one strong owner candidate,
+fixed Professional/Domain/Layer3 routing, observable acceptance, non-production
+verification, rollback, a strict read boundary, and no shared-contract,
+cross-module, external-consumer, material-risk, or unresolved user-choice signal.
+Otherwise route to Analyzed Work. Candidate is not owner proof.
 
 Direct Task is outside the Analyzed Work authority path. It keeps this
 template's existing field authority and does not create or derive authority
 from an Engineering Brief.
 
 An unknown owner/module/system/verification boundary routes to Analyzed Work.
-Inside an already-known stable owner/test/consumer boundary, bounded
-confirmation may inspect only the named checks below. Use `not applicable` for
-a field that has no Direct Task value.
+Inside the strong candidate's bounded owner/test/consumer read boundary,
+bounded confirmation may inspect only the named checks below. Direct defaults
+to L3 unless the complete proven Level evidence already exists before Main's
+independent computation. Confirmation never lowers the active Level. Use `not
+applicable` for a field that has no Direct Task value.
 
 The public Execution Level lines use Core public `execution-level/v2`. The integrity
 fallback for missing, malformed, or duplicate public execution-level data is
@@ -49,14 +52,17 @@ L5 Evidence: when=effective L5 only; requires=independent pre-implementation rev
 
 ## Inspection Boundary
 
-Name the already known owner, test, and consumer boundaries. Direct bounded
-discovery requires a stable Primary Professional, Domain / Layer3 route,
-semantic scope, no unresolved user choice or material risk, and a bounded read
-boundary. Known exact file, symbol, or section locations—and any exact owner
-claim—are selectors, not owner proof: read them first. When current source confirms its owning/change
-role, stop discovery. A same-owner/route/contract rename or move permits only
-bounded correction and never changes the Brief; an owner/module/public
-contract/security/migration/external-consumer contradiction stops before edit
+Name the strong owner candidate and bounded test and consumer reads. Direct
+bounded discovery requires fixed Primary Professional, Domain / Layer3 route,
+semantic scope, no unresolved user choice, and no shared-contract,
+cross-module, external-consumer, security, migration, money, or material-risk
+signal. Known exact file, symbol, or section locations—and any exact owner
+claim—are selectors, not owner proof: read them first. Candidate is not Owner
+Proof. When current source proves the owner and placement, relevant test,
+minimum consumer boundary, reuse decision, and executable validation, stop
+discovery. A same-owner/route/contract rename or move permits only bounded
+correction and never changes the Brief; an owner/module/shared-contract/
+cross-module/external-consumer/material-risk contradiction stops before edit
 and returns through Main. Direct has no accepted Brief, so this requests
 initial Analysis, never Delta. Otherwise search candidate locations, then read
 the minimum complete evidence needed for the decision; widen only when current
@@ -79,11 +85,12 @@ rerouting, and Worker selection of a new Skill, Domain, or Layer3.
 
 ## Inspection Stop Conditions
 
-The only outcomes are: confirm and continue; route/risk invalidated -> stop
-before editing and return to Main for Analysis; user-owned choice discovered ->
-stop before editing and return to Main, which asks one minimum concrete
-question. A simpler discovery never lowers the current Level; higher risk
-requires Main to recompute it. Task and Review workers never reroute.
+The only outcomes are: confirm and continue; route/risk invalidated -> edit=0, stop
+before editing, and return to Main for initial Analysis; user-owned choice
+discovered -> stop before editing and return to Main, which asks one minimum
+concrete question. A simpler discovery never lowers the current Level; higher risk
+requires Main to recompute it. Task and Review workers never reroute or change
+the assigned Professional Skill, Domain, Layer3, or route.
 Current source proves repository facts only; it cannot rewrite Desired
 Behavior, Acceptance, Non-goals, or target architecture.
 

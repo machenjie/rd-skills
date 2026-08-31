@@ -1,6 +1,6 @@
 {
   "schema_version": 4,
-  "source_summary": "Static configuration-level enforcement declared by each generated host projection. This matrix contains no host-execution observation.",
+  "source_summary": "Declared static Host/Profile capability ceilings only. This matrix and rendered_tools contain no invocation-scoped Effective Runtime Capability observation.",
   "status_values": [
     "native-enforced",
     "sandbox-enforced",
@@ -10,6 +10,38 @@
   "mode_values": {
     "diff_input_mode": ["native", "supplied-artifact", "unsupported"],
     "validation_mode": ["native-read-only", "task-no-edit", "unsupported"]
+  },
+  "host_surfaces": {
+    "copilot-cli": {
+      "delivery_family": "copilot",
+      "profile_interpretation": "copilot-cli-custom-agent",
+      "roles": {
+        "main-control-agent": {"rendered_tools": ["agent"], "external_source_read": "unsupported"},
+        "analysis-agent": {"rendered_tools": ["read", "search"], "external_source_read": "unsupported"},
+        "task-agent": {"rendered_tools": ["read", "search", "edit", "execute"], "external_source_read": "unsupported"},
+        "review-agent": {"rendered_tools": ["read", "search"], "external_source_read": "unsupported"}
+      }
+    },
+    "copilot-vscode": {
+      "delivery_family": "copilot",
+      "profile_interpretation": "vscode-custom-agent",
+      "roles": {
+        "main-control-agent": {"rendered_tools": ["agent"], "external_source_read": "unsupported"},
+        "analysis-agent": {"rendered_tools": ["read", "search", "web"], "external_source_read": "prompt-enforced"},
+        "task-agent": {"rendered_tools": ["read", "search", "edit", "execute"], "external_source_read": "unsupported"},
+        "review-agent": {"rendered_tools": ["read", "search"], "external_source_read": "unsupported"}
+      }
+    },
+    "copilot-coding-agent": {
+      "delivery_family": "copilot",
+      "profile_interpretation": "github-coding-agent-custom-agent",
+      "roles": {
+        "main-control-agent": {"rendered_tools": ["agent"], "external_source_read": "unsupported"},
+        "analysis-agent": {"rendered_tools": ["read", "search"], "external_source_read": "unsupported"},
+        "task-agent": {"rendered_tools": ["read", "search", "edit", "execute"], "external_source_read": "unsupported"},
+        "review-agent": {"rendered_tools": ["read", "search"], "external_source_read": "unsupported"}
+      }
+    }
   },
   "hosts": {
     "codex": {
@@ -143,8 +175,7 @@
           "external_source_read": "prompt-enforced",
           "rendered_tools": ["read", "search", "web"],
           "limitations": [
-            "VS Code exposes its read-only Web search and fetch capability through the official web tool alias; minimum-public-information and prompt boundaries remain authoritative.",
-            "GitHub Copilot coding agent ignores unsupported tools and has no mapped Web capability, so cloud execution remains fail closed."
+            "The shared Copilot profile requests the portable union declared by the three independent Copilot Host Surfaces; an invocation must still prove effective Web availability."
           ]
         },
         "task-agent": {

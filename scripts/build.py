@@ -38,6 +38,7 @@ from validation_utils import (
     load_yaml_file,
     main_capability_projection as _main_capability_projection,
     main_capability_projection_from_facts as _main_capability_projection_from_facts,
+    normalized_declared_capability_ceiling as _normalized_declared_capability_ceiling,
     normalized_decision_capabilities as _normalized_decision_capabilities,
     parse_frontmatter,
     prompt_projection_errors,
@@ -132,6 +133,7 @@ ENFORCEMENT_STATUSES = (
     "unsupported",
 )
 ENFORCEMENT_HOSTS = ("codex", "claude", "copilot", "cline", "openai-api")
+COPILOT_SURFACES = ("copilot-cli", "copilot-vscode", "copilot-coding-agent")
 ENFORCEMENT_CAPABILITIES = (
     "tool_allowlist",
     "workspace_write_protection",
@@ -1458,6 +1460,7 @@ def _load_host_enforcement() -> dict[str, Any]:
         "source_summary",
         "status_values",
         "mode_values",
+        "host_surfaces",
         "hosts",
     }:
         raise BuildError("host enforcement matrix fields must match schema v4")
@@ -1493,7 +1496,7 @@ def _load_host_enforcement() -> dict[str, Any]:
             raise BuildError(f"{host}: invalid diff_input_mode")
         if validation_mode not in HOST_MODE_VALUES["validation_mode"]:
             raise BuildError(f"{host}: invalid validation_mode")
-        if tuple(_normalized_decision_capabilities(entry)) != DECISION_CAPABILITY_FIELDS:
+        if tuple(_normalized_declared_capability_ceiling(entry)) != DECISION_CAPABILITY_FIELDS:
             raise BuildError(f"{host}: normalized decision capabilities drift from Core")
         if utility_no_edit not in ENFORCEMENT_STATUSES:
             raise BuildError(f"{host}: invalid utility_no_edit enforcement")
@@ -1555,14 +1558,52 @@ def _load_host_enforcement() -> dict[str, Any]:
         raise BuildError(
             "claude:analysis-agent must expose only the native read and Web read tools"
         )
-    if hosts["copilot"]["roles"]["analysis-agent"]["rendered_tools"] != [
-        "read",
-        "search",
-        "web",
-    ]:
-        raise BuildError(
-            "copilot:analysis-agent must expose only read, search, and web"
-        )
+    surfaces = data.get("host_surfaces")
+    if not isinstance(surfaces, dict) or tuple(surfaces) != COPILOT_SURFACES:
+        raise BuildError("host enforcement must declare the three Copilot surfaces")
+    expected_surface_tools = {
+        "copilot-cli": ["read", "search"],
+        "copilot-vscode": ["read", "search", "web"],
+        "copilot-coding-agent": ["read", "search"],
+    }
+    for surface, expected_analysis_tools in expected_surface_tools.items():
+        entry = surfaces[surface]
+        if not isinstance(entry, dict) or set(entry) != {
+            "delivery_family",
+            "profile_interpretation",
+            "roles",
+        }:
+            raise BuildError(f"{surface}: Host Surface fields are invalid")
+        if entry.get("delivery_family") != "copilot":
+            raise BuildError(f"{surface}: delivery family must remain copilot")
+        if not isinstance(entry.get("profile_interpretation"), str) or not entry[
+            "profile_interpretation"
+        ].strip():
+            raise BuildError(f"{surface}: profile interpretation is required")
+        surface_roles = entry.get("roles")
+        if not isinstance(surface_roles, dict) or set(surface_roles) != expected_roles:
+            raise BuildError(f"{surface}: roles must be the four static profiles")
+        for role, role_entry in surface_roles.items():
+            if not isinstance(role_entry, dict) or set(role_entry) != {
+                "rendered_tools",
+                "external_source_read",
+            }:
+                raise BuildError(f"{surface}:{role}: Host Surface role fields are invalid")
+            tools = role_entry["rendered_tools"]
+            if not isinstance(tools, list) or any(
+                not isinstance(tool, str) or not tool for tool in tools
+            ):
+                raise BuildError(f"{surface}:{role}: rendered tools must be a string list")
+            if role_entry["external_source_read"] not in ENFORCEMENT_STATUSES:
+                raise BuildError(f"{surface}:{role}: external read declaration is invalid")
+            if role != "analysis-agent" and role_entry["external_source_read"] != "unsupported":
+                raise BuildError(f"{surface}:{role}: external read must remain unsupported")
+        if surface_roles["analysis-agent"]["rendered_tools"] != expected_analysis_tools:
+            raise BuildError(f"{surface}: analysis tools do not match the surface ceiling")
+    if hosts["copilot"]["roles"]["analysis-agent"]["rendered_tools"] != _copilot_portable_tools(
+        data, "analysis-agent"
+    ):
+        raise BuildError("copilot:analysis-agent must equal the portable surface union")
     for host in ("claude", "copilot"):
         review = hosts[host]["roles"]["review-agent"]
         if review["read_only_command_semantics"] != "unsupported":
@@ -1646,22 +1687,20 @@ def _profile_instructions(
             raise BuildError(f"missing profile prompt {prompt_path}")
         instructions = f"{instructions}\n\n{path.read_text(encoding='utf-8').strip()}"
     tools = ", ".join(_string_list(profile.get("tools")))
-    capability_projection = ""
-    if host is not None and profile.get("name") == "main-control-agent":
-        matrix = enforcement or _load_host_enforcement()
-        host_entry = matrix["hosts"][host]
-        capability_facts = _main_capability_projection(host_entry)
-        capability_projection = "\n\n" + _render_decision_capability_facts(capability_facts)
-    elif host is not None and profile.get("name") == "analysis-agent":
-        matrix = enforcement or _load_host_enforcement()
-        mode = matrix["hosts"][host]["roles"]["analysis-agent"][
-            "external_source_read"
-        ]
-        capability_projection = (
-            "\n\nCurrent external-read mode: "
-            f"external_source_read={mode}."
-        )
-    return f"{instructions}\n\nDeclared tool boundary: {tools}.{capability_projection}"
+    return f"{instructions}\n\nDeclared tool boundary: {tools}."
+
+
+def _copilot_portable_tools(matrix: dict[str, Any], role: str) -> list[str]:
+    """Return the stable shared-file union across independent Copilot surfaces."""
+
+    tools: list[str] = []
+    for surface in COPILOT_SURFACES:
+        for tool in matrix["host_surfaces"][surface]["roles"][role][
+            "rendered_tools"
+        ]:
+            if tool not in tools:
+                tools.append(tool)
+    return tools
 
 
 def _validate_rendered_prompt_embedding(
@@ -1731,7 +1770,7 @@ def _render_copilot_profile(
     profile: dict[str, Any], enforcement: dict[str, Any] | None = None
 ) -> str:
     matrix = enforcement or _load_host_enforcement()
-    tools = matrix["hosts"]["copilot"]["roles"][profile["name"]]["rendered_tools"]
+    tools = _copilot_portable_tools(matrix, profile["name"])
     rendered = json.dumps(list(dict.fromkeys(tools)), separators=(",", ":"))
     model_invocation = (
         "disable-model-invocation: true\n"

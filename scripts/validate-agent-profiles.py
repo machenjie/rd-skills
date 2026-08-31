@@ -22,6 +22,7 @@ from validation_utils import (
     ROLE_CONTRACT_MODEL,
     fail_many,
     main_capability_projection as _main_capability_projection,
+    normalized_declared_capability_ceiling as _normalized_declared_capability_ceiling,
     normalized_decision_capabilities as _normalized_decision_capabilities,
     render_decision_capability_facts as _render_decision_capability_facts,
     validate_ai_readability,
@@ -67,6 +68,7 @@ HOST_MODE_VALUES = {
 }
 NATIVE_DIFF_SAFEGUARDS = ["--no-pager", "--no-ext-diff", "--no-textconv"]
 ENFORCEMENT_HOSTS = {"codex", "claude", "copilot", "cline", "openai-api"}
+COPILOT_SURFACES = {"copilot-cli", "copilot-vscode", "copilot-coding-agent"}
 EXTERNAL_READ_MODEL = CORE_CONTRACTS["external_read_contract"]
 EXTERNAL_READ_HOST_MODES = {
     "codex": "prompt-enforced",
@@ -86,6 +88,7 @@ ROLE_MINIMAL_REQUIRED_GROUPS = {
         ("Task Capsule", "Professional Skill", "Layer 3 Delivery", "capsule-named"),
         ("Consume Main's bound effective Level", "never calculate or recompute"),
         ("inspect the owner", "tests", "minimum consumer", "authorized scope"),
+        ("CAPABILITY_MISMATCH", "effective=unknown|unsupported", "edit=0", "without rerouting"),
         ("observable normal", "invalid", "boundary", "forbidden", "validation signal"),
         ("smallest complete change", "test-only API widening", "unrelated refactors"),
         ("Test-first is required",),
@@ -620,30 +623,6 @@ def _expected_built_instruction_surface(
         sections.append(canonical_prompt)
 
     sections.append(f"Declared tool boundary: {', '.join(tools)}.")
-    if name == "main-control-agent":
-        host_entry = hosts.get(platform)
-        if not isinstance(host_entry, dict):
-            return None
-        capability_facts = _main_capability_projection(host_entry)
-        sections.append(_render_decision_capability_facts(capability_facts))
-    elif name == "analysis-agent":
-        host_entry = hosts.get(platform)
-        if not isinstance(host_entry, dict):
-            return None
-        roles = host_entry.get("roles")
-        if not isinstance(roles, dict):
-            return None
-        role_entry = roles.get("analysis-agent")
-        if not isinstance(role_entry, dict):
-            return None
-        external_mode = role_entry.get("external_source_read")
-        if not isinstance(external_mode, str):
-            return None
-        sections.append(
-            "Current external-read mode: "
-            f"external_source_read={external_mode}."
-        )
-
     expected = "\n\n".join(sections)
     return expected if platform == "codex" else expected + "\n"
 
@@ -763,6 +742,7 @@ def main(argv: list[str] | None = None) -> int:
         "source_summary",
         "status_values",
         "mode_values",
+        "host_surfaces",
         "hosts",
     }
     if set(enforcement) != expected_enforcement_fields:
@@ -805,7 +785,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         if host_entry.get("native_diff_safeguards") != expected_safeguards:
             errors.append(f"{host}: native diff safeguards do not match adapter mode")
-        if tuple(_normalized_decision_capabilities(host_entry)) != DECISION_CAPABILITY_FIELDS:
+        if tuple(_normalized_declared_capability_ceiling(host_entry)) != DECISION_CAPABILITY_FIELDS:
             errors.append(f"{host}: normalized decision capabilities drift from Core")
         roles = host_entry.get("roles")
         if not isinstance(roles, dict) or set(roles) != set(ROLE_CONTRACT_MODEL):
@@ -861,6 +841,46 @@ def main(argv: list[str] | None = None) -> int:
         errors.append(
             "claude:analysis-agent must expose only the native read and Web read tools"
         )
+    surfaces = enforcement.get("host_surfaces")
+    if not isinstance(surfaces, dict) or set(surfaces) != COPILOT_SURFACES:
+        errors.append("host enforcement must declare the three Copilot surfaces")
+        surfaces = {}
+    expected_surface_tools = {
+        "copilot-cli": ["read", "search"],
+        "copilot-vscode": ["read", "search", "web"],
+        "copilot-coding-agent": ["read", "search"],
+    }
+    for surface, expected_analysis_tools in expected_surface_tools.items():
+        entry = surfaces.get(surface)
+        if not isinstance(entry, dict) or set(entry) != {
+            "delivery_family",
+            "profile_interpretation",
+            "roles",
+        }:
+            errors.append(f"{surface}: Host Surface fields are invalid")
+            continue
+        if entry.get("delivery_family") != "copilot":
+            errors.append(f"{surface}: delivery family must remain copilot")
+        roles = entry.get("roles")
+        if not isinstance(roles, dict) or set(roles) != set(ROLE_CONTRACT_MODEL):
+            errors.append(f"{surface}: roles must be the four static Profiles")
+            continue
+        for role, role_entry in roles.items():
+            if not isinstance(role_entry, dict) or set(role_entry) != {
+                "rendered_tools",
+                "external_source_read",
+            }:
+                errors.append(f"{surface}:{role}: Host Surface role fields are invalid")
+                continue
+            if not isinstance(role_entry.get("rendered_tools"), list):
+                errors.append(f"{surface}:{role}: rendered_tools must be a list")
+            if role_entry.get("external_source_read") not in ENFORCEMENT_STATUSES:
+                errors.append(f"{surface}:{role}: external read declaration is invalid")
+            if role != "analysis-agent" and role_entry.get("external_source_read") != "unsupported":
+                errors.append(f"{surface}:{role}: external read must remain unsupported")
+        analysis = roles.get("analysis-agent", {})
+        if analysis.get("rendered_tools") != expected_analysis_tools:
+            errors.append(f"{surface}: analysis tools do not match the surface ceiling")
     copilot_analysis_tools = (
         hosts.get("copilot", {})
         .get("roles", {})
@@ -869,7 +889,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     if copilot_analysis_tools != ["read", "search", "web"]:
         errors.append(
-            "copilot:analysis-agent must expose only read, search, and web"
+            "copilot:analysis-agent must expose only read, search, and web "
+            "as the portable surface union"
         )
     for host in ("claude", "copilot"):
         review = hosts.get(host, {}).get("roles", {}).get("review-agent", {})
@@ -973,48 +994,15 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 if '"execute"' in tools_line or tools_line != expected_tools_line:
                     errors.append("copilot:review-agent must omit execute and use read/search")
-            if name == "main-control-agent":
-                host_entry = hosts.get(platform, {})
-                capability_facts = _main_capability_projection(host_entry)
-                expected_modes = _render_decision_capability_facts(capability_facts)
-                if expected_modes not in text:
-                    errors.append(f"{platform}:{name}: missing exact capability facts")
-            elif name == "analysis-agent":
-                expected_mode = (
-                    hosts.get(platform, {})
-                    .get("roles", {})
-                    .get("analysis-agent", {})
-                    .get("external_source_read")
-                )
-                expected_external_mode = (
-                    "Current external-read mode: "
-                    f"external_source_read={expected_mode}."
-                )
-                if expected_external_mode not in text:
-                    errors.append(
-                        f"{platform}:{name}: missing exact external-read mode"
-                    )
-                if (
-                    text.count("Current external-read mode:") != 1
-                    or text.count("external_source_read=") != 1
-                ):
-                    errors.append(
-                        f"{platform}:{name}: external-read mode must be injected exactly once"
-                    )
-            elif any(
-                marker in text
-                for marker in (
-                    "Current capability facts:",
-                    "bounded-source-read=",
-                    "workspace-mutation=",
-                    "native-change-read=",
-                    "supplied-change-delivery=",
-                    "reviewer-change-consume=",
-                    "Current external-read mode:",
-                    "external_source_read=",
-                )
+            for marker in (
+                "Current capability facts:",
+                "Current external-read mode:",
+                "external_source_read=",
             ):
-                errors.append(f"{platform}:{name}: worker Profile must not receive control capability facts")
+                if marker in text:
+                    errors.append(
+                        f"{platform}:{name}: static runtime capability projection is forbidden"
+                    )
 
     if ENFORCEMENT_SOURCE.is_file():
         expected_digest = hashlib.sha256(ENFORCEMENT_SOURCE.read_bytes()).hexdigest()

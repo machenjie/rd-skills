@@ -213,64 +213,65 @@ class AgentProfileReadabilityTests(unittest.TestCase):
             "- Never reload references/main-control-agent.md.\n"
             "- Dispatch only/no target-code access.\n"
             "- No worker: business acceptance/placement, Brief/DAG authoring, implementation review.\n"
-            "- Capability facts authoritative; host/tool/command identifiers absent/unrecognized=unsupported.\n"
+            "- Effective invocation capability facts authoritative; static Host/Profile/rendered_tools are declared ceilings only; absent/unrecognized/unknown=unsupported.\n"
+            "- Substitute Host Executor only with current effective proof while preserving Semantic Role and full Task Contract; otherwise block; never implement.\n"
             "- Forward reviewer-accessible exact evidence."
         )
 
         self.assertEqual(expected, main["instructions"])
         self.assertIn("Dispatch only/no target-code access", main["instructions"])
 
-    def test_review_evidence_capabilities_are_four_independent_dimensions(self) -> None:
+    def test_static_declarations_are_only_ceilings_and_runtime_facts_fail_closed(self) -> None:
         enforcement = json.loads(
             VALIDATOR.ENFORCEMENT_SOURCE.read_text(encoding="utf-8")
         )
-        expected = {
-            "codex": {
-                "native-change-read": "supported",
-                "change-evidence-export": "supported",
-                "supplied-change-delivery": "unsupported",
-                "reviewer-change-consume": "supported",
-            },
-            "claude": {
-                "native-change-read": "unsupported",
-                "change-evidence-export": "supported",
-                "supplied-change-delivery": "supported",
-                "reviewer-change-consume": "supported",
-            },
-            "copilot": {
-                "native-change-read": "unsupported",
-                "change-evidence-export": "supported",
-                "supplied-change-delivery": "supported",
-                "reviewer-change-consume": "supported",
-            },
-        }
-        for host, expected_dimensions in expected.items():
+        for host in ("codex", "claude", "copilot"):
             with self.subTest(host=host):
                 actual = VALIDATOR._normalized_decision_capabilities(
                     enforcement["hosts"][host]
                 )
                 self.assertEqual(
-                    expected_dimensions,
-                    {field: actual.get(field) for field in expected_dimensions},
+                    {field: "unsupported" for field in VALIDATOR.DECISION_CAPABILITY_FIELDS},
+                    actual,
                 )
 
-        no_task_export = copy.deepcopy(enforcement["hosts"]["codex"])
-        no_task_export["roles"]["task-agent"]["rendered_tools"] = ["read", "edit"]
-        capabilities = VALIDATOR._normalized_decision_capabilities(no_task_export)
-        self.assertEqual("supported", capabilities["native-change-read"])
-        self.assertEqual("unsupported", capabilities["change-evidence-export"])
-        self.assertEqual("unsupported", capabilities["supplied-change-delivery"])
-        self.assertEqual("supported", capabilities["reviewer-change-consume"])
-
-        no_reviewer_consumer = copy.deepcopy(enforcement["hosts"]["copilot"])
-        no_reviewer_consumer["roles"]["review-agent"]["rendered_tools"] = []
-        capabilities = VALIDATOR._normalized_decision_capabilities(
-            no_reviewer_consumer
+        declared = VALIDATOR._normalized_declared_capability_ceiling(
+            enforcement["hosts"]["codex"]
         )
-        self.assertEqual("unsupported", capabilities["native-change-read"])
-        self.assertEqual("supported", capabilities["change-evidence-export"])
-        self.assertEqual("supported", capabilities["supplied-change-delivery"])
-        self.assertEqual("unsupported", capabilities["reviewer-change-consume"])
+        effective = VALIDATOR._normalized_decision_capabilities(
+            enforcement["hosts"]["codex"],
+            invocation_facts=declared,
+        )
+        self.assertEqual(declared, effective)
+
+        unknown = dict(declared)
+        unknown["workspace-mutation"] = "unknown"
+        effective = VALIDATOR._normalized_decision_capabilities(
+            enforcement["hosts"]["codex"],
+            invocation_facts=unknown,
+        )
+        self.assertEqual("unsupported", effective["workspace-mutation"])
+
+    def test_copilot_surfaces_are_independent_static_declarations(self) -> None:
+        enforcement = json.loads(
+            VALIDATOR.ENFORCEMENT_SOURCE.read_text(encoding="utf-8")
+        )
+        surfaces = enforcement["host_surfaces"]
+        self.assertEqual(
+            {"copilot-cli", "copilot-vscode", "copilot-coding-agent"},
+            set(surfaces),
+        )
+        self.assertEqual(
+            ["read", "search", "web"],
+            surfaces["copilot-vscode"]["roles"]["analysis-agent"][
+                "rendered_tools"
+            ],
+        )
+        for surface in ("copilot-cli", "copilot-coding-agent"):
+            self.assertEqual(
+                ["read", "search"],
+                surfaces[surface]["roles"]["analysis-agent"]["rendered_tools"],
+            )
 
     def test_profile_rule_limits_are_core_driven_and_enforced(self) -> None:
         limits = VALIDATOR.PROFILE_CONTRACT_MODEL["instruction_rule_count"]
@@ -586,8 +587,9 @@ class AgentProfileReadabilityTests(unittest.TestCase):
 
     def test_main_profile_rejects_prompt_owned_contract_copies(self) -> None:
         anchor = (
-            "Capability facts authoritative; host/tool/command identifiers "
-            "absent/unrecognized=unsupported."
+            "Effective invocation capability facts authoritative; static "
+            "Host/Profile/rendered_tools are declared ceilings only; "
+            "absent/unrecognized/unknown=unsupported."
         )
         copied_rules = (
             "Task Contract v2 starts assignments.",
@@ -810,7 +812,7 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         analysis = profiles["analysis-agent"]
         implementation = (
             ROOT
-            / "src/professional-skills/engineering-change-analysis/references/implementation-preparation.md"
+            / "src/control-skills/engineering-control-plane/references/engineering-brief-template.md"
         ).read_text(encoding="utf-8")
         self.assertIn("selected Professional/mode contract owns", analysis)
         for term in (
@@ -926,7 +928,7 @@ class AgentProfileReadabilityTests(unittest.TestCase):
                     output,
                 )
 
-    def test_external_read_mode_is_injected_only_into_analysis_profiles(self) -> None:
+    def test_static_capability_and_external_read_modes_are_not_injected(self) -> None:
         source = json.loads(VALIDATOR.SOURCE.read_text(encoding="utf-8"))
         enforcement = json.loads(
             VALIDATOR.ENFORCEMENT_SOURCE.read_text(encoding="utf-8")
@@ -938,20 +940,15 @@ class AgentProfileReadabilityTests(unittest.TestCase):
             ("copilot", BUILDER._render_copilot_profile),
         ):
             with self.subTest(host=host):
-                analysis = renderer(profiles["analysis-agent"], enforcement)
-                expected_mode = enforcement["hosts"][host]["roles"][
-                    "analysis-agent"
-                ]["external_source_read"]
-                self.assertEqual(
-                    1,
-                    analysis.count(
-                        "Current external-read mode: "
-                        f"external_source_read={expected_mode}."
-                    ),
-                )
-                for role in ("main-control-agent", "task-agent", "review-agent"):
+                for role in (
+                    "main-control-agent",
+                    "analysis-agent",
+                    "task-agent",
+                    "review-agent",
+                ):
                     rendered = renderer(profiles[role], enforcement)
                     self.assertNotIn("Current external-read mode:", rendered)
+                    self.assertNotIn("Current capability facts:", rendered)
 
 
 if __name__ == "__main__":

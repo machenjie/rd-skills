@@ -5960,6 +5960,8 @@ def _task_focus_case_errors(case: object) -> list[str]:
         "analysis-level",
         "review-readiness",
         "capability-equivalence",
+        "direct-confirmation",
+        "runtime-capability",
         "engineering-choice",
     }:
         reject("focus-scenario", "task-focus scenario is not in the closed set")
@@ -6036,6 +6038,230 @@ def _task_focus_case_errors(case: object) -> list[str]:
             reject("task-level", "executable Task Level does not follow L2/L3/L4/L5 policy")
         if decision["level_computation_point"] != expected_point:
             reject("level-timing", "Execution Level must be computed at the executable Task")
+
+    elif scenario == "direct-confirmation":
+        if tuple(inputs) != (
+            "owner_candidate",
+            "professional_fixed",
+            "domain_layer3_fixed",
+            "semantic_scope_fixed",
+            "read_boundary_bounded",
+            "entry_signals_absent",
+            "unresolved_user_choice",
+            "confirmation",
+        ) or tuple(decision) != (
+            "entry_route",
+            "effective_level",
+            "outcome",
+            "edit_count",
+        ):
+            reject(
+                "direct-confirmation-shape",
+                "direct-confirmation fields are not canonical",
+            )
+            return errors
+        if not isinstance(inputs["owner_candidate"], str) or not inputs[
+            "owner_candidate"
+        ].strip():
+            reject(
+                "direct-owner-candidate",
+                "Direct confirmation requires one strong owner candidate",
+            )
+            return errors
+        boolean_fields = (
+            "professional_fixed",
+            "domain_layer3_fixed",
+            "semantic_scope_fixed",
+            "read_boundary_bounded",
+            "entry_signals_absent",
+            "unresolved_user_choice",
+        )
+        if any(type(inputs[field]) is not bool for field in boolean_fields):
+            reject(
+                "direct-confirmation-shape",
+                "Direct confirmation preconditions must be booleans",
+            )
+            return errors
+        confirmation = inputs["confirmation"]
+        if confirmation not in {
+            "confirmed",
+            "owner-contradiction",
+            "shared-contract-contradiction",
+        }:
+            reject(
+                "direct-confirmation-result",
+                "Direct confirmation result is not canonical",
+            )
+            return errors
+        entry_eligible = all(
+            inputs[field]
+            for field in (
+                "professional_fixed",
+                "domain_layer3_fixed",
+                "semantic_scope_fixed",
+                "read_boundary_bounded",
+                "entry_signals_absent",
+            )
+        ) and not inputs["unresolved_user_choice"]
+        expected_entry = "direct" if entry_eligible else "analyzed"
+        expected_level = "L3" if entry_eligible else None
+        confirmed = entry_eligible and confirmation == "confirmed"
+        expected_outcome = "edit" if confirmed else "main-initial-analysis"
+        expected_edits = 1 if confirmed else 0
+        if decision["entry_route"] != expected_entry:
+            reject(
+                "direct-entry-route",
+                "strong candidate preconditions alone select Direct confirmation",
+            )
+        if decision["effective_level"] != expected_level:
+            reject(
+                "direct-entry-level",
+                "candidate Direct confirmation defaults to L3 and never lowers during confirmation",
+            )
+        if decision["outcome"] != expected_outcome or decision[
+            "edit_count"
+        ] != expected_edits:
+            reject(
+                "direct-confirmation-boundary",
+                "owner or shared-contract contradiction requires zero edits and Main initial Analysis",
+            )
+
+    elif scenario == "runtime-capability":
+        if tuple(inputs) != (
+            "declared_capability",
+            "effective_capability",
+            "semantic_role",
+            "host_executor",
+            "fallback_effective_capability",
+            "fallback_executor",
+            "original_contract",
+            "forwarded_contract",
+            "worker_report",
+            "worker_reroute",
+            "main_implements",
+        ) or tuple(decision) != (
+            "capability_available",
+            "executor",
+            "semantic_role",
+            "dispatch",
+            "edit_count",
+        ):
+            reject(
+                "runtime-capability-shape",
+                "runtime-capability fields are not canonical",
+            )
+            return errors
+        capability_states = {"supported", "unsupported", "unknown"}
+        if inputs["declared_capability"] not in capability_states or inputs[
+            "effective_capability"
+        ] not in capability_states or inputs[
+            "fallback_effective_capability"
+        ] not in capability_states:
+            reject(
+                "runtime-capability-state",
+                "declared and effective capability states must use the closed set",
+            )
+            return errors
+        if inputs["semantic_role"] not in {
+            "main-control-agent",
+            "analysis-agent",
+            "task-agent",
+            "review-agent",
+        }:
+            reject("semantic-role", "Semantic Role must remain one of the four roles")
+            return errors
+        contract_fields = (
+            "task_id",
+            "professional_skill",
+            "layer3",
+            "execution_level_basis_history",
+            "scope",
+            "acceptance",
+            "validation",
+            "review",
+            "handoff",
+            "stop_conditions",
+        )
+        original = inputs["original_contract"]
+        forwarded = inputs["forwarded_contract"]
+        if not isinstance(original, dict) or tuple(original) != contract_fields:
+            reject(
+                "runtime-task-contract",
+                "original Task Contract must use the complete canonical carry fields",
+            )
+            return errors
+        current_available = inputs["effective_capability"] == "supported"
+        fallback_candidate = (
+            not current_available
+            and inputs["fallback_effective_capability"] == "supported"
+            and isinstance(inputs["fallback_executor"], str)
+            and bool(inputs["fallback_executor"].strip())
+        )
+        fallback_available = fallback_candidate and forwarded == original
+        expected_available = current_available or fallback_available
+        expected_executor = (
+            inputs["host_executor"]
+            if current_available
+            else inputs["fallback_executor"]
+            if fallback_available
+            else None
+        )
+        expected_dispatch = (
+            "current-executor"
+            if current_available
+            else "fallback-executor"
+            if fallback_available
+            else "blocked"
+        )
+        expected_edits = 1 if expected_available else 0
+        if decision["capability_available"] is not expected_available:
+            reject(
+                "effective-runtime-capability",
+                "static declaration and unknown runtime capability cannot authorize execution",
+            )
+        if decision["executor"] != expected_executor or decision[
+            "dispatch"
+        ] != expected_dispatch:
+            reject(
+                "host-executor",
+                "dispatch must use current effective capability or a proven fallback executor",
+            )
+        if decision["semantic_role"] != inputs["semantic_role"]:
+            reject(
+                "semantic-role",
+                "executor substitution must preserve the Semantic Role",
+            )
+        if fallback_candidate and forwarded != original:
+            reject(
+                "runtime-task-contract",
+                "executor substitution must preserve the full Task Contract unchanged",
+            )
+        if decision["edit_count"] != expected_edits:
+            reject(
+                "runtime-edit-authority",
+                "unavailable effective capability requires zero edits",
+            )
+        if not current_available:
+            expected_report = (
+                "CAPABILITY_MISMATCH task="
+                f"{original['task_id']}; required=workspace-mutation; "
+                f"effective={inputs['effective_capability']}; edit=0"
+            )
+            if inputs["worker_report"] != expected_report:
+                reject(
+                    "capability-mismatch",
+                    "worker mismatch must be the minimal canonical CAPABILITY_MISMATCH",
+                )
+        if inputs["worker_reroute"]:
+            reject(
+                "worker-reroute",
+                "CAPABILITY_MISMATCH never authorizes Worker rerouting",
+            )
+        if inputs["main_implements"]:
+            reject(
+                "main-implements",
+                "Main must remain dispatch-only when no executor is available",
+            )
 
     elif scenario == "review-readiness":
         if tuple(inputs) != (
@@ -12542,9 +12768,9 @@ def main(argv: list[str] | None = None) -> int:
                 "review discipline fixture count must remain exactly 35, found "
                 f"{len(review_discipline_results)}"
             )
-        if len(task_focus_results) != 51:
+        if len(task_focus_results) != 57:
             errors.append(
-                "task-focus fixture count must remain exactly 51, found "
+                "task-focus fixture count must remain exactly 57, found "
                 f"{len(task_focus_results)}"
             )
         if len(combined_review_results) != 15:
