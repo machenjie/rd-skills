@@ -619,6 +619,7 @@ GENERIC_CAPABILITY_STATES = set(
     REVIEW_DISCIPLINE_MODEL["generic_capability_contract"]["states"]
 )
 TASK_BOUNDARY_MODEL = CORE_CONTRACTS["task_contract"]["task_boundary"]
+RUNTIME_TASK_CONTRACT_FIELDS = tuple(CORE_CONTRACTS["task_contract"]["fields"])
 FINDING_RELATION_MODEL = CORE_CONTRACTS["task_contract"]["finding_relations"]
 FINDING_COMPILER_MODEL = REVIEW_DISCIPLINE_MODEL["review_boundary_contract"][
     "finding_compiler"
@@ -6131,11 +6132,24 @@ def _task_focus_case_errors(case: object) -> list[str]:
             "declared_capability",
             "effective_capability",
             "semantic_role",
+            "required_capability",
             "host_executor",
             "fallback_effective_capability",
             "fallback_executor",
             "original_contract",
             "forwarded_contract",
+            "professional_skill",
+            "forwarded_professional_skill",
+            "domain",
+            "forwarded_domain",
+            "layer3",
+            "forwarded_layer3",
+            "execution_level_basis_history",
+            "forwarded_execution_level_basis_history",
+            "review_binding",
+            "forwarded_review_binding",
+            "handoff_binding",
+            "forwarded_handoff_binding",
             "worker_report",
             "worker_reroute",
             "main_implements",
@@ -6170,26 +6184,67 @@ def _task_focus_case_errors(case: object) -> list[str]:
         }:
             reject("semantic-role", "Semantic Role must remain one of the four roles")
             return errors
-        contract_fields = (
-            "task_id",
-            "professional_skill",
-            "layer3",
-            "execution_level_basis_history",
-            "scope",
-            "acceptance",
-            "validation",
-            "review",
-            "handoff",
-            "stop_conditions",
-        )
-        original = inputs["original_contract"]
-        forwarded = inputs["forwarded_contract"]
-        if not isinstance(original, dict) or tuple(original) != contract_fields:
+        if not isinstance(inputs["required_capability"], str) or not inputs[
+            "required_capability"
+        ].strip():
             reject(
-                "runtime-task-contract",
-                "original Task Contract must use the complete canonical carry fields",
+                "runtime-required-capability",
+                "runtime capability trajectory requires one named invocation capability",
             )
             return errors
+        original = inputs["original_contract"]
+        forwarded = inputs["forwarded_contract"]
+        if (
+            not isinstance(original, dict)
+            or tuple(original) != RUNTIME_TASK_CONTRACT_FIELDS
+        ):
+            reject(
+                "runtime-task-contract",
+                "original Task Contract must use the complete Core Task Contract v2 fields",
+            )
+            return errors
+        if not isinstance(original["Task ID"], str) or not original["Task ID"].strip():
+            reject("runtime-task-contract", "Task Contract Task ID must be non-empty")
+            return errors
+        explicit_binding_pairs = (
+            ("professional_skill", "forwarded_professional_skill"),
+            ("domain", "forwarded_domain"),
+            ("layer3", "forwarded_layer3"),
+            (
+                "execution_level_basis_history",
+                "forwarded_execution_level_basis_history",
+            ),
+            ("review_binding", "forwarded_review_binding"),
+            ("handoff_binding", "forwarded_handoff_binding"),
+        )
+        original_bindings_valid = (
+            isinstance(inputs["professional_skill"], str)
+            and bool(inputs["professional_skill"].strip())
+            and isinstance(inputs["domain"], str)
+            and bool(inputs["domain"].strip())
+            and isinstance(inputs["layer3"], list)
+            and all(
+                isinstance(item, str) and bool(item.strip())
+                for item in inputs["layer3"]
+            )
+            and isinstance(inputs["execution_level_basis_history"], dict)
+            and tuple(inputs["execution_level_basis_history"])
+            == ("level", "basis", "history")
+            and isinstance(inputs["review_binding"], dict)
+            and bool(inputs["review_binding"])
+            and isinstance(inputs["handoff_binding"], dict)
+            and bool(inputs["handoff_binding"])
+        )
+        if not original_bindings_valid:
+            reject(
+                "runtime-substitution-bindings",
+                "executor substitution bindings must explicitly name Professional, Domain, Layer3, Level/Basis/history, review, and handoff",
+            )
+            return errors
+        bindings_unchanged = all(
+            inputs[original_field] == inputs[forwarded_field]
+            for original_field, forwarded_field in explicit_binding_pairs
+        )
         current_available = inputs["effective_capability"] == "supported"
         fallback_candidate = (
             not current_available
@@ -6197,7 +6252,14 @@ def _task_focus_case_errors(case: object) -> list[str]:
             and isinstance(inputs["fallback_executor"], str)
             and bool(inputs["fallback_executor"].strip())
         )
-        fallback_available = fallback_candidate and forwarded == original
+        contract_unchanged = (
+            isinstance(forwarded, dict)
+            and tuple(forwarded) == RUNTIME_TASK_CONTRACT_FIELDS
+            and forwarded == original
+        )
+        fallback_available = (
+            fallback_candidate and contract_unchanged and bindings_unchanged
+        )
         expected_available = current_available or fallback_available
         expected_executor = (
             inputs["host_executor"]
@@ -6213,7 +6275,10 @@ def _task_focus_case_errors(case: object) -> list[str]:
             if fallback_available
             else "blocked"
         )
-        expected_edits = 1 if expected_available else 0
+        role_can_mutate = bool(
+            EDIT_ACTIONS & PROFILE_ACTIONS[inputs["semantic_role"]]
+        )
+        expected_edits = 1 if expected_available and role_can_mutate else 0
         if decision["capability_available"] is not expected_available:
             reject(
                 "effective-runtime-capability",
@@ -6231,20 +6296,31 @@ def _task_focus_case_errors(case: object) -> list[str]:
                 "semantic-role",
                 "executor substitution must preserve the Semantic Role",
             )
-        if fallback_candidate and forwarded != original:
+        if fallback_candidate and not contract_unchanged:
             reject(
                 "runtime-task-contract",
                 "executor substitution must preserve the full Task Contract unchanged",
             )
-        if decision["edit_count"] != expected_edits:
+        if fallback_candidate and not bindings_unchanged:
             reject(
-                "runtime-edit-authority",
-                "unavailable effective capability requires zero edits",
+                "runtime-substitution-bindings",
+                "executor substitution must preserve all explicit route, Level, review, and handoff bindings unchanged",
             )
+        if decision["edit_count"] != expected_edits:
+            if expected_available and not role_can_mutate:
+                reject(
+                    "semantic-role-effect",
+                    "Semantic Role cannot mutate or implement even when its required capability is available",
+                )
+            else:
+                reject(
+                    "runtime-edit-authority",
+                    "unavailable effective capability requires zero edits",
+                )
         if not current_available:
             expected_report = (
                 "CAPABILITY_MISMATCH task="
-                f"{original['task_id']}; required=workspace-mutation; "
+                f"{original['Task ID']}; required={inputs['required_capability']}; "
                 f"effective={inputs['effective_capability']}; edit=0"
             )
             if inputs["worker_report"] != expected_report:

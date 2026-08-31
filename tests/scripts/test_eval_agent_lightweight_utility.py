@@ -2008,6 +2008,141 @@ class LightweightUtilityContractTests(unittest.TestCase):
             {result["scenario"] for result in results},
         )
 
+    def test_runtime_capability_preserves_complete_contract_and_role_effects(self) -> None:
+        cases = {
+            case["id"]: case
+            for case in self.task_focus_cases
+            if case["scenario"] == "runtime-capability"
+        }
+        positive = cases["focus-runtime-fallback-preserves-role-and-contract"]
+        core_fields = tuple(EVAL.CORE_CONTRACTS["task_contract"]["fields"])
+        self.assertEqual(core_fields, EVAL.RUNTIME_TASK_CONTRACT_FIELDS)
+        self.assertEqual(core_fields, tuple(positive["inputs"]["original_contract"]))
+        self.assertEqual(
+            positive["inputs"]["original_contract"],
+            positive["inputs"]["forwarded_contract"],
+        )
+        for mutation in ("missing-field", "extra-field", "reordered-fields"):
+            with self.subTest(contract_shape=mutation):
+                case = copy.deepcopy(positive)
+                case["id"] = f"probe-runtime-contract-{mutation}"
+                forwarded = case["inputs"]["forwarded_contract"]
+                if mutation == "missing-field":
+                    forwarded.pop("Owner")
+                elif mutation == "extra-field":
+                    forwarded["Route"] = "direct"
+                else:
+                    case["inputs"]["forwarded_contract"] = dict(
+                        reversed(tuple(forwarded.items()))
+                    )
+                self.assertTrue(any(
+                    "full Task Contract unchanged" in error
+                    for error in EVAL._task_focus_case_errors(case)
+                ))
+        for field in (
+            "professional_skill",
+            "domain",
+            "layer3",
+            "execution_level_basis_history",
+            "review_binding",
+            "handoff_binding",
+        ):
+            self.assertEqual(
+                positive["inputs"][field],
+                positive["inputs"][f"forwarded_{field}"],
+            )
+
+        contract_mutations = {
+            "Owner": "fallback executor selected a different owner",
+            "Non-goals": ["Fallback may change the contract."],
+            "Allowed Write Scope": ["unbounded/**"],
+            "Evidence Requirements": ["command success only"],
+        }
+        for field, mutation in contract_mutations.items():
+            with self.subTest(contract_mutation=field):
+                case = copy.deepcopy(positive)
+                case["id"] = f"probe-runtime-contract-{field}"
+                case["inputs"]["forwarded_contract"][field] = mutation
+                self.assertNotEqual(
+                    case["inputs"]["original_contract"][field],
+                    case["inputs"]["forwarded_contract"][field],
+                )
+                self.assertTrue(any(
+                    "full Task Contract unchanged" in error
+                    for error in EVAL._task_focus_case_errors(case)
+                ))
+
+        binding_mutations = {
+            "forwarded_professional_skill": "backend-change-builder",
+            "forwarded_domain": "different-domain",
+            "forwarded_layer3": [],
+            "forwarded_execution_level_basis_history": {
+                "level": "L2",
+                "basis": "changed",
+                "history": ["L2"],
+            },
+            "forwarded_review_binding": {"skill": "different-review"},
+            "forwarded_handoff_binding": {"kind": "different-handoff"},
+        }
+        for field, mutation in binding_mutations.items():
+            with self.subTest(binding_mutation=field):
+                case = copy.deepcopy(positive)
+                case["id"] = f"probe-runtime-binding-{field}"
+                case["inputs"][field] = mutation
+                self.assertTrue(any(
+                    "explicit route, Level, review, and handoff bindings unchanged"
+                    in error
+                    for error in EVAL._task_focus_case_errors(case)
+                ))
+
+        role_capabilities = {
+            "review-agent": "exact-change-evidence-read",
+            "analysis-agent": "repository-read",
+            "main-control-agent": "subagent-dispatch",
+        }
+        for role, capability in role_capabilities.items():
+            with self.subTest(role=role):
+                case = copy.deepcopy(positive)
+                case["id"] = f"probe-runtime-role-{role}"
+                case["inputs"].update({
+                    "effective_capability": "supported",
+                    "semantic_role": role,
+                    "required_capability": capability,
+                    "host_executor": f"executor-{role}",
+                    "fallback_effective_capability": "unsupported",
+                    "fallback_executor": None,
+                    "forwarded_contract": None,
+                    "forwarded_professional_skill": None,
+                    "forwarded_domain": None,
+                    "forwarded_layer3": None,
+                    "forwarded_execution_level_basis_history": None,
+                    "forwarded_review_binding": None,
+                    "forwarded_handoff_binding": None,
+                    "worker_report": None,
+                    "main_implements": role == "main-control-agent",
+                })
+                case["decision"].update({
+                    "capability_available": True,
+                    "executor": f"executor-{role}",
+                    "semantic_role": role,
+                    "dispatch": "current-executor",
+                    "edit_count": 1,
+                })
+                case["expected_valid"] = False
+                case["expected_error"] = "cannot mutate or implement"
+                self.assertEqual(role, case["inputs"]["semantic_role"])
+                self.assertEqual(capability, case["inputs"]["required_capability"])
+                self.assertEqual("supported", case["inputs"]["effective_capability"])
+                self.assertEqual(1, case["decision"]["edit_count"])
+                self.assertTrue(any(
+                    "cannot mutate or implement" in error
+                    for error in EVAL._task_focus_case_errors(case)
+                ))
+                non_mutating = copy.deepcopy(case)
+                non_mutating["decision"]["edit_count"] = 0
+                non_mutating["inputs"]["main_implements"] = False
+                self.assertEqual([], EVAL._task_focus_case_errors(non_mutating))
+
     def test_orchestration_dedup_structural_positive_and_negative_controls(self) -> None:
         results, errors = EVAL._orchestration_fixture_results(
             self.orchestration_cases
