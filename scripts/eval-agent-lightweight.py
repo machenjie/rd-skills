@@ -6192,6 +6192,12 @@ def _task_focus_case_errors(case: object) -> list[str]:
                 "runtime capability trajectory requires one named invocation capability",
             )
             return errors
+        if inputs["required_capability"] not in GENERIC_CAPABILITY_FIELDS:
+            reject(
+                "runtime-required-capability",
+                "unknown Core capability identifier must fail closed",
+            )
+            return errors
         original = inputs["original_contract"]
         forwarded = inputs["forwarded_contract"]
         if (
@@ -6278,7 +6284,13 @@ def _task_focus_case_errors(case: object) -> list[str]:
         role_can_mutate = bool(
             EDIT_ACTIONS & PROFILE_ACTIONS[inputs["semantic_role"]]
         )
-        expected_edits = 1 if expected_available and role_can_mutate else 0
+        mutation_capability_available = (
+            expected_available
+            and inputs["required_capability"] == "workspace-mutation"
+        )
+        expected_edits = (
+            1 if mutation_capability_available and role_can_mutate else 0
+        )
         if decision["capability_available"] is not expected_available:
             reject(
                 "effective-runtime-capability",
@@ -6311,6 +6323,11 @@ def _task_focus_case_errors(case: object) -> list[str]:
                 reject(
                     "semantic-role-effect",
                     "Semantic Role cannot mutate or implement even when its required capability is available",
+                )
+            elif expected_available and not mutation_capability_available:
+                reject(
+                    "runtime-capability-effect",
+                    "write execution requires effective workspace-mutation; non-mutation capabilities require zero edits",
                 )
             else:
                 reject(

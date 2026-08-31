@@ -2017,6 +2017,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
         positive = cases["focus-runtime-fallback-preserves-role-and-contract"]
         core_fields = tuple(EVAL.CORE_CONTRACTS["task_contract"]["fields"])
         self.assertEqual(core_fields, EVAL.RUNTIME_TASK_CONTRACT_FIELDS)
+        self.assertIn("workspace-mutation", EVAL.GENERIC_CAPABILITY_FIELDS)
         self.assertEqual(core_fields, tuple(positive["inputs"]["original_contract"]))
         self.assertEqual(
             positive["inputs"]["original_contract"],
@@ -2095,10 +2096,70 @@ class LightweightUtilityContractTests(unittest.TestCase):
                     for error in EVAL._task_focus_case_errors(case)
                 ))
 
+        def current_executor_case(capability: str) -> dict[str, object]:
+            case = copy.deepcopy(positive)
+            case["id"] = f"probe-runtime-current-{capability}"
+            case["inputs"].update(
+                {
+                    "effective_capability": "supported",
+                    "required_capability": capability,
+                    "host_executor": "current-executor",
+                    "fallback_effective_capability": "unsupported",
+                    "fallback_executor": None,
+                    "forwarded_contract": None,
+                    "forwarded_professional_skill": None,
+                    "forwarded_domain": None,
+                    "forwarded_layer3": None,
+                    "forwarded_execution_level_basis_history": None,
+                    "forwarded_review_binding": None,
+                    "forwarded_handoff_binding": None,
+                    "worker_report": None,
+                }
+            )
+            case["decision"].update(
+                {
+                    "capability_available": True,
+                    "executor": "current-executor",
+                    "dispatch": "current-executor",
+                }
+            )
+            return case
+
+        current_mutation = current_executor_case("workspace-mutation")
+        current_mutation["decision"]["edit_count"] = 1
+        self.assertEqual([], EVAL._task_focus_case_errors(current_mutation))
+        self.assertEqual([], EVAL._task_focus_case_errors(positive))
+
+        non_mutation_capabilities = set(EVAL.GENERIC_CAPABILITY_FIELDS) - {
+            "workspace-mutation"
+        }
+        self.assertGreater(len(non_mutation_capabilities), 1)
+        for capability in sorted(non_mutation_capabilities):
+            with self.subTest(non_mutation_capability=capability):
+                case = current_executor_case(capability)
+                case["decision"]["edit_count"] = 1
+                self.assertTrue(
+                    any(
+                        "workspace-mutation" in error
+                        for error in EVAL._task_focus_case_errors(case)
+                    )
+                )
+                case["decision"]["edit_count"] = 0
+                self.assertEqual([], EVAL._task_focus_case_errors(case))
+
+        unknown_capability = current_executor_case("unknown-workspace-write")
+        unknown_capability["decision"]["edit_count"] = 0
+        self.assertTrue(
+            any(
+                "unknown Core capability" in error
+                for error in EVAL._task_focus_case_errors(unknown_capability)
+            )
+        )
+
         role_capabilities = {
-            "review-agent": "exact-change-evidence-read",
-            "analysis-agent": "repository-read",
-            "main-control-agent": "subagent-dispatch",
+            "review-agent": "reviewer-change-consume",
+            "analysis-agent": "bounded-source-read",
+            "main-control-agent": "workspace-state-observation",
         }
         for role, capability in role_capabilities.items():
             with self.subTest(role=role):
