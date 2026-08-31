@@ -576,6 +576,7 @@ class DecisionEvalTests(unittest.TestCase):
         semantics = document["level_invariance"]["semantic_route"][
             "brief_semantics"
         ]
+        task_id = document["level_invariance"]["semantic_route"]["task_id"]
         level = EVAL_ROUTING._compute_decision_level(
             "unspecified",
             evidence_profile="material-l5",
@@ -583,7 +584,7 @@ class DecisionEvalTests(unittest.TestCase):
             prior_historical_max_floor="L4",
             prior_historical_max_effective="L4",
         )
-        projection = projector(semantics, level)
+        projection = projector(semantics, level, task_id=task_id)
         self.assertEqual(
             "task_contract.analyzed_work_authority",
             projection["source_authority"],
@@ -592,7 +593,7 @@ class DecisionEvalTests(unittest.TestCase):
         missing = copy.deepcopy(semantics)
         del missing["invariants"]
         with self.assertRaises(FIXTURE_CAPSULE.FixtureCapsuleError):
-            projector(missing, level)
+            projector(missing, level, task_id=task_id)
 
         changed = copy.deepcopy(projection)
         changed["brief_semantics"]["scope"] = "changed scope"
