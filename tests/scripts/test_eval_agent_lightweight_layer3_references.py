@@ -241,7 +241,7 @@ class LightweightLayer3ReferenceTests(unittest.TestCase):
             },
         )
         self.assertEqual(
-            "065d07de9cff56cc7866265bc3d593eac4057cc21a8368b1043d5beb80400008",
+            "b5016dda6ebd6856aefe1cffa7dde393fcf41f0c7cff856529339f06c7a751c6",
             review["fixture_capsule"]["canonical_sha256"],
         )
         self.assertEqual(
@@ -284,7 +284,11 @@ class LightweightLayer3ReferenceTests(unittest.TestCase):
                 changed = without_nested["steps"][6]
                 changed["fixture_capsule"][
                     "canonical_sha256"
-                ] = canonical_capsule_sha256(changed, changed["fixture_capsule"])
+                ] = canonical_capsule_sha256(
+                    changed,
+                    changed["fixture_capsule"],
+                    accepted_analysis_task_id="task-data-migration-1",
+                )
                 without_metrics, without_errors = EVAL._metrics(
                     without_nested, self.professional, self.layer3
                 )
@@ -297,25 +301,29 @@ class LightweightLayer3ReferenceTests(unittest.TestCase):
         )
 
     def test_owner_must_be_selected_in_same_dispatch(self) -> None:
-        step = copy.deepcopy(self.step)
+        steps = copy.deepcopy(self.case["steps"])
+        step = steps[6]
         step["layer3_references"] = [
             "cache-design/references/evidence-patterns.md"
         ]
         errors = EVAL._profile_errors(
-            "owner-mismatch", [step], self.professional, self.layer3
+            "owner-mismatch", steps, self.professional, self.layer3
         )
         self.assertTrue(any("must be selected" in error for error in errors), errors)
 
     def test_reference_must_be_registry_indexed(self) -> None:
-        step = copy.deepcopy(self.step)
+        steps = copy.deepcopy(self.case["steps"])
+        step = steps[6]
         step["layer3_references"] = [
             "transaction-consistency/references/not-indexed.md"
         ]
         step["fixture_capsule"]["canonical_sha256"] = canonical_capsule_sha256(
-            step, step["fixture_capsule"]
+            step,
+            step["fixture_capsule"],
+            accepted_analysis_task_id="task-data-migration-1",
         )
         errors = EVAL._profile_errors(
-            "unindexed", [step], self.professional, self.layer3
+            "unindexed", steps, self.professional, self.layer3
         )
         self.assertTrue(any("not indexed" in error for error in errors), errors)
 
