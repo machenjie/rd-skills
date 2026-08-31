@@ -164,7 +164,7 @@ def _execution_evidence(
                 else "not_matched"
             ),
             "evidence_kind": "analysis_handoff",
-            "source_anchor": f"handoff:{row['id']}",
+            "source_anchor": f"analysis_handoff:handoff:{row['id']}",
             "plausible_critical": (
                 row["id"] == unknown_trigger == "unknown-critical-boundary"
             ),
@@ -205,7 +205,7 @@ def _execution_evidence(
         row["id"]: {
             "status": l2_status,
             "evidence_kind": "analysis_handoff",
-            "source_anchor": f"handoff:{row['id']}",
+            "source_anchor": f"analysis_handoff:handoff:{row['id']}",
         }
         for row in CORE_CONTRACTS["execution_level_contract"]["l2_eligibility"]
     }
@@ -1078,7 +1078,7 @@ class TaskContractTemplateTests(unittest.TestCase):
             "minimum local consumer",
             "local reuse candidate",
             "local validation command",
-            "placement within the already-known owner boundary",
+            "placement required to establish the confirmed owner boundary",
         ):
             with self.subTest(allowed=allowed):
                 self.assertIn(allowed, text)
@@ -1095,7 +1095,7 @@ class TaskContractTemplateTests(unittest.TestCase):
                 "minimum-local-consumer",
                 "local-reuse-candidate",
                 "local-validation-command",
-                "placement-within-known-owner-boundary",
+                "placement-for-confirmed-owner-boundary",
             ],
             discovery["allowed_checks"],
         )
@@ -3688,7 +3688,7 @@ class CoreContractModelTests(unittest.TestCase):
             row["id"]: {
                 "status": "matched" if row["id"] == changed["id"] else "not_matched",
                 "evidence_kind": "analysis_handoff",
-                "source_anchor": f"handoff:{row['id']}",
+                "source_anchor": f"analysis_handoff:handoff:{row['id']}",
                 "plausible_critical": False,
             }
             for row in execution["trigger_registry"]
@@ -3697,7 +3697,7 @@ class CoreContractModelTests(unittest.TestCase):
             row["id"]: {
                 "status": "true",
                 "evidence_kind": "analysis_handoff",
-                "source_anchor": f"handoff:{row['id']}",
+                "source_anchor": f"analysis_handoff:handoff:{row['id']}",
             }
             for row in execution["l2_eligibility"]
         }
@@ -4643,9 +4643,17 @@ class CoreContractModelTests(unittest.TestCase):
                     *extension["level_basis"]["trigger_evaluations"],
                     *extension["level_basis"]["l2_eligibility"],
                 ):
-                    self.assertTrue(
-                        row["source_anchor"].startswith(f"fixture:{case['id']}:")
+                    expected_prefix = (
+                        f"analysis_handoff:fixture:{case['id']}:"
+                        if row.get("evidence_kind") == "analysis_handoff"
+                        and row.get("status") == "true"
+                        and row.get("id")
+                        in CORE_CONTRACTS["execution_level_contract"][
+                            "atomic_fact_reuse"
+                        ]["protected_repository_predicates"]
+                        else f"fixture:{case['id']}:"
                     )
+                    self.assertTrue(row["source_anchor"].startswith(expected_prefix))
         self.assertEqual(
             {"task": 15, "review": 15, "analysis": 8, "utility": 2},
             counts,

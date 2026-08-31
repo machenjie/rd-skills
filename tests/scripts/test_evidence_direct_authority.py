@@ -419,8 +419,14 @@ class EvidenceDirectAuthorityTests(unittest.TestCase):
     def test_direct_discovery_has_only_three_outcomes_and_worker_never_reroutes(
         self,
     ) -> None:
+        direct = CORE_CONTRACTS["task_contract"]["direct_bounded_discovery"]
+        complete_evidence = {
+            field: "proven" for field in direct["confirmation_evidence_fields"]
+        }
         confirmed = direct_bounded_discovery_outcome(
-            "boundary-confirmed", risk_change="simpler"
+            "boundary-confirmed",
+            risk_change="simpler",
+            confirmation_evidence=complete_evidence,
         )
         self.assertTrue(confirmed["may_edit"])
         self.assertEqual("confirm-and-continue", confirmed["worker_action"])
@@ -440,6 +446,16 @@ class EvidenceDirectAuthorityTests(unittest.TestCase):
         self.assertEqual("return-main-for-one-question", choice["worker_action"])
         self.assertEqual(1, choice["question_count"])
 
+        incomplete = dict(complete_evidence)
+        incomplete.pop("reuse-decision")
+        invalidated_proof = direct_bounded_discovery_outcome(
+            "boundary-confirmed",
+            confirmation_evidence=incomplete,
+        )
+        self.assertFalse(invalidated_proof["may_edit"])
+        self.assertEqual(0, invalidated_proof["edit_count"])
+        self.assertEqual("initial-analysis", invalidated_proof["analysis_kind"])
+
     def test_direct_candidate_confirmation_is_read_first_and_contradictions_edit_zero(
         self,
     ) -> None:
@@ -447,9 +463,9 @@ class EvidenceDirectAuthorityTests(unittest.TestCase):
         self.assertIn("strong-owner-candidate", direct["preconditions"])
         self.assertEqual(
             [
-                "read-candidate-current-source",
-                "prove-owner-placement-test-consumer-reuse-validation",
-                "edit-only-after-boundary-confirmed",
+                "read-strong-candidate-boundary-current-source",
+                "prove-owner-placement-test-consumer-reuse-validation-and-bounded-evidence-closure",
+                "edit-only-after-confirmed-owner-boundary",
             ],
             direct["confirmation_sequence"],
         )
@@ -486,8 +502,23 @@ class EvidenceDirectAuthorityTests(unittest.TestCase):
         self.assertEqual("replaceable", substitution["host_executor"])
         self.assertEqual(
             [
+                "current-invocation-fact",
+                "host-surface-session-evidence",
+                "current-session-capability-mismatch",
+                "unknown-unavailable",
+            ],
+            substitution["runtime_fact_precedence"],
+        )
+        self.assertEqual(
+            "exclude-executor-or-class-from-subsequent-fallback",
+            substitution["same_session_mismatch"],
+        )
+        self.assertEqual("block", substitution["no_legal_executor"])
+        self.assertEqual(
+            [
                 "task-contract",
                 "primary-professional-skill",
+                "domain",
                 "layer3",
                 "execution-level-and-basis-history",
                 "scope",
@@ -510,7 +541,10 @@ class EvidenceDirectAuthorityTests(unittest.TestCase):
             "minimum local consumer",
             "local reuse candidate",
             "local validation command",
-            "already-known owner boundary",
+            "strong candidate boundary",
+            "confirmed owner boundary",
+            "bounded-evidence closure",
+            "Any false, absent, unknown, or Proof Limit item",
             "repo-wide discovery",
             "Worker rerouting",
             "confirm and continue",
@@ -521,6 +555,7 @@ class EvidenceDirectAuthorityTests(unittest.TestCase):
         ):
             with self.subTest(term=term):
                 self.assertIn(term, text)
+        self.assertNotIn("already-known owner boundary", text)
 
         rendered = render_direct_discovery_extension(
             {

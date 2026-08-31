@@ -47,6 +47,31 @@ from validation_utils import (  # noqa: E402
 
 class BuildSafetyTests(unittest.TestCase):
     @staticmethod
+    def _current_invocation_facts(
+        entry: dict[str, object], host_surface: str
+    ) -> dict[str, object]:
+        identity = {
+            "task_id": "task-build-capability",
+            "session_id": "session-build-capability",
+            "host_surface": host_surface,
+            "executor": f"{host_surface}-executor",
+            "executor_class": f"{host_surface}-task-agent",
+        }
+        declared = BUILD._normalized_declared_capability_ceiling(entry)
+        return {
+            **identity,
+            "evidence": [
+                {
+                    "source": "current-invocation-fact",
+                    **identity,
+                    "capability": capability,
+                    "state": state,
+                }
+                for capability, state in declared.items()
+            ],
+        }
+
+    @staticmethod
     def _current_handoff(kind: str) -> dict[str, object]:
         capabilities = {
             "native-change-read": "unsupported",
@@ -111,8 +136,8 @@ class BuildSafetyTests(unittest.TestCase):
         handoff = self._current_handoff("reviewer-accessible-native-reference")
         projection = BUILD._main_capability_projection(
             matrix["hosts"]["codex"],
-            invocation_facts=BUILD._normalized_declared_capability_ceiling(
-                matrix["hosts"]["codex"]
+            invocation_facts=self._current_invocation_facts(
+                matrix["hosts"]["codex"], "codex"
             ),
             handoff=handoff,
         )
@@ -131,8 +156,8 @@ class BuildSafetyTests(unittest.TestCase):
         handoff = self._current_handoff("exact-change-content")
         projection = BUILD._main_capability_projection(
             matrix["hosts"]["copilot"],
-            invocation_facts=BUILD._normalized_declared_capability_ceiling(
-                matrix["hosts"]["copilot"]
+            invocation_facts=self._current_invocation_facts(
+                matrix["hosts"]["copilot"], "copilot-vscode"
             ),
             handoff=handoff,
         )
@@ -171,8 +196,8 @@ class BuildSafetyTests(unittest.TestCase):
             with self.subTest(index=index):
                 projection = BUILD._main_capability_projection(
                     matrix["hosts"]["copilot"],
-                    invocation_facts=BUILD._normalized_declared_capability_ceiling(
-                        matrix["hosts"]["copilot"]
+                    invocation_facts=self._current_invocation_facts(
+                        matrix["hosts"]["copilot"], "copilot-vscode"
                     ),
                     handoff=handoff,
                 )
@@ -190,8 +215,8 @@ class BuildSafetyTests(unittest.TestCase):
         )
         projection = BUILD._main_capability_projection(
             matrix["hosts"]["codex"],
-            invocation_facts=BUILD._normalized_declared_capability_ceiling(
-                matrix["hosts"]["codex"]
+            invocation_facts=self._current_invocation_facts(
+                matrix["hosts"]["codex"], "codex"
             ),
             handoff=self._current_handoff("reviewer-accessible-native-reference"),
             core=core,

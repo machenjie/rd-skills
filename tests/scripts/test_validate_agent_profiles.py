@@ -214,7 +214,8 @@ class AgentProfileReadabilityTests(unittest.TestCase):
             "- Dispatch only/no target-code access.\n"
             "- No worker: business acceptance/placement, Brief/DAG authoring, implementation review.\n"
             "- Effective invocation capability facts authoritative; static Host/Profile/rendered_tools are declared ceilings only; absent/unrecognized/unknown=unsupported.\n"
-            "- Substitute Host Executor only with current effective proof while preserving Semantic Role and full Task Contract; otherwise block; never implement.\n"
+            "- Runtime precedence per Host Executor: current invocation fact, verifiable current Host Surface session evidence, current-session mismatch negative evidence, else unknown/unsupported.\n"
+            "- Same-session mismatch excludes that Host Executor/class; substitute only with current effective proof, unchanged Semantic Role and full Task Contract, Professional/Domain/Layer3, Level/Basis/history, Scope/Acceptance/Validation, Review/Handoff, and Stops; otherwise block; never implement or reselect.\n"
             "- Forward reviewer-accessible exact evidence."
         )
 
@@ -238,19 +239,146 @@ class AgentProfileReadabilityTests(unittest.TestCase):
         declared = VALIDATOR._normalized_declared_capability_ceiling(
             enforcement["hosts"]["codex"]
         )
+        identity = {
+            "task_id": "task-profile-runtime",
+            "session_id": "session-profile-runtime",
+            "host_surface": "codex",
+            "executor": "codex-local",
+            "executor_class": "codex-task-agent",
+        }
+        evidence = {
+            **identity,
+            "evidence": [
+                {
+                    "source": "current-invocation-fact",
+                    **identity,
+                    "capability": capability,
+                    "state": state,
+                }
+                for capability, state in declared.items()
+            ],
+        }
         effective = VALIDATOR._normalized_decision_capabilities(
-            enforcement["hosts"]["codex"],
-            invocation_facts=declared,
+            enforcement["hosts"]["codex"], invocation_facts=evidence
         )
         self.assertEqual(declared, effective)
 
-        unknown = dict(declared)
-        unknown["workspace-mutation"] = "unknown"
+        unknown = copy.deepcopy(evidence)
+        next(
+            fact
+            for fact in unknown["evidence"]
+            if fact["capability"] == "workspace-mutation"
+        )["state"] = "unknown"
         effective = VALIDATOR._normalized_decision_capabilities(
             enforcement["hosts"]["codex"],
             invocation_facts=unknown,
         )
         self.assertEqual("unsupported", effective["workspace-mutation"])
+
+    def test_workspace_mutation_ceiling_requires_write_tools_and_enforcement(
+        self,
+    ) -> None:
+        enforcement = json.loads(
+            VALIDATOR.ENFORCEMENT_SOURCE.read_text(encoding="utf-8")
+        )
+        supported = enforcement["hosts"]["codex"]
+        self.assertEqual(
+            "supported",
+            VALIDATOR._normalized_declared_capability_ceiling(supported)[
+                "workspace-mutation"
+            ],
+        )
+
+        delivery_only = copy.deepcopy(supported)
+        delivery_only["roles"]["task-agent"]["rendered_tools"] = [
+            "read",
+            "search",
+        ]
+        self.assertEqual(
+            "unsupported",
+            VALIDATOR._normalized_declared_capability_ceiling(delivery_only)[
+                "workspace-mutation"
+            ],
+        )
+
+        unenforced = copy.deepcopy(supported)
+        unenforced["roles"]["task-agent"]["tool_allowlist"] = "unsupported"
+        self.assertEqual(
+            "unsupported",
+            VALIDATOR._normalized_declared_capability_ceiling(unenforced)[
+                "workspace-mutation"
+            ],
+        )
+
+    def test_runtime_capability_requires_current_executor_provenance(self) -> None:
+        enforcement = json.loads(
+            VALIDATOR.ENFORCEMENT_SOURCE.read_text(encoding="utf-8")
+        )
+        host = enforcement["hosts"]["codex"]
+        declared = VALIDATOR._normalized_declared_capability_ceiling(host)
+        self.assertEqual(
+            "unsupported",
+            VALIDATOR._normalized_decision_capabilities(
+                host, invocation_facts=declared
+            )["workspace-mutation"],
+        )
+
+        evidence = {
+            "task_id": "task-runtime-provenance",
+            "session_id": "session-current",
+            "host_surface": "codex",
+            "executor": "codex-local",
+            "executor_class": "codex-task-agent",
+            "evidence": [
+                {
+                    "source": "current-invocation-fact",
+                    "task_id": "task-runtime-provenance",
+                    "session_id": "session-current",
+                    "host_surface": "codex",
+                    "executor": "codex-local",
+                    "executor_class": "codex-task-agent",
+                    "capability": "workspace-mutation",
+                    "state": "supported",
+                }
+            ],
+        }
+        self.assertEqual(
+            "supported",
+            VALIDATOR._normalized_decision_capabilities(
+                host, invocation_facts=evidence
+            )["workspace-mutation"],
+        )
+        stale = copy.deepcopy(evidence)
+        stale["evidence"][0]["session_id"] = "session-stale"
+        self.assertEqual(
+            "unsupported",
+            VALIDATOR._normalized_decision_capabilities(
+                host, invocation_facts=stale
+            )["workspace-mutation"],
+        )
+
+        host_surface = copy.deepcopy(evidence)
+        host_surface["evidence"][0]["source"] = (
+            "host-surface-session-evidence"
+        )
+        self.assertEqual(
+            "supported",
+            VALIDATOR._normalized_decision_capabilities(
+                host, invocation_facts=host_surface
+            )["workspace-mutation"],
+        )
+
+        mismatch = copy.deepcopy(evidence)
+        mismatch["evidence"][0].update(
+            source="current-session-capability-mismatch",
+            state="unsupported",
+        )
+        self.assertEqual(
+            "unsupported",
+            VALIDATOR._normalized_decision_capabilities(
+                host, invocation_facts=mismatch
+            )["workspace-mutation"],
+        )
 
     def test_copilot_surfaces_are_independent_static_declarations(self) -> None:
         enforcement = json.loads(

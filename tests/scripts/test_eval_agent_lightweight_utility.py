@@ -1989,7 +1989,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
     def test_task_focus_relation_review_repair_and_cost_matrix_is_closed(self) -> None:
         results, errors = EVAL._task_focus_fixture_results(self.task_focus_cases)
         self.assertEqual([], errors)
-        self.assertEqual(57, len(results))
+        self.assertEqual(59, len(results))
         self.assertTrue(all(result["matches_expected"] for result in results))
         self.assertEqual(
             {
@@ -2101,11 +2101,27 @@ class LightweightUtilityContractTests(unittest.TestCase):
             case["id"] = f"probe-runtime-current-{capability}"
             case["inputs"].update(
                 {
-                    "effective_capability": "supported",
+                    "declared_capability": "supported",
+                    "fallback_declared_capability": "unsupported",
                     "required_capability": capability,
+                    "host_surface": "current-surface",
                     "host_executor": "current-executor",
-                    "fallback_effective_capability": "unsupported",
+                    "host_executor_class": "current-executor-class",
+                    "fallback_host_surface": "none",
                     "fallback_executor": None,
+                    "fallback_executor_class": None,
+                    "capability_evidence": [
+                        {
+                            "source": "current-invocation-fact",
+                            "task_id": case["inputs"]["task_id"],
+                            "session_id": case["inputs"]["session_id"],
+                            "host_surface": "current-surface",
+                            "executor": "current-executor",
+                            "executor_class": "current-executor-class",
+                            "capability": capability,
+                            "state": "supported",
+                        }
+                    ],
                     "forwarded_contract": None,
                     "forwarded_professional_skill": None,
                     "forwarded_domain": None,
@@ -2163,37 +2179,30 @@ class LightweightUtilityContractTests(unittest.TestCase):
         }
         for role, capability in role_capabilities.items():
             with self.subTest(role=role):
-                case = copy.deepcopy(positive)
+                case = current_executor_case(capability)
                 case["id"] = f"probe-runtime-role-{role}"
-                case["inputs"].update({
-                    "effective_capability": "supported",
-                    "semantic_role": role,
-                    "required_capability": capability,
-                    "host_executor": f"executor-{role}",
-                    "fallback_effective_capability": "unsupported",
-                    "fallback_executor": None,
-                    "forwarded_contract": None,
-                    "forwarded_professional_skill": None,
-                    "forwarded_domain": None,
-                    "forwarded_layer3": None,
-                    "forwarded_execution_level_basis_history": None,
-                    "forwarded_review_binding": None,
-                    "forwarded_handoff_binding": None,
-                    "worker_report": None,
-                    "main_implements": role == "main-control-agent",
-                })
-                case["decision"].update({
-                    "capability_available": True,
-                    "executor": f"executor-{role}",
-                    "semantic_role": role,
-                    "dispatch": "current-executor",
-                    "edit_count": 1,
-                })
+                case["inputs"].update(
+                    {
+                        "semantic_role": role,
+                        "main_implements": role == "main-control-agent",
+                    }
+                )
+                case["decision"].update(
+                    {
+                        "capability_available": True,
+                        "executor": "current-executor",
+                        "semantic_role": role,
+                        "dispatch": "current-executor",
+                        "edit_count": 1,
+                    }
+                )
                 case["expected_valid"] = False
                 case["expected_error"] = "cannot mutate or implement"
                 self.assertEqual(role, case["inputs"]["semantic_role"])
                 self.assertEqual(capability, case["inputs"]["required_capability"])
-                self.assertEqual("supported", case["inputs"]["effective_capability"])
+                self.assertEqual(
+                    "supported", case["inputs"]["capability_evidence"][0]["state"]
+                )
                 self.assertEqual(1, case["decision"]["edit_count"])
                 self.assertTrue(any(
                     "cannot mutate or implement" in error
@@ -2203,6 +2212,23 @@ class LightweightUtilityContractTests(unittest.TestCase):
                 non_mutating["decision"]["edit_count"] = 0
                 non_mutating["inputs"]["main_implements"] = False
                 self.assertEqual([], EVAL._task_focus_case_errors(non_mutating))
+
+    def test_direct_confirmation_requires_complete_bounded_proof(self) -> None:
+        direct = next(
+            copy.deepcopy(case)
+            for case in self.task_focus_cases
+            if case["id"] == "focus-direct-candidate-confirmed-edit-l3"
+        )
+        direct["inputs"]["confirmation_evidence"] = {
+            "owner": "proven",
+            "placement": "proven",
+            "relevant-test": "proven",
+            "consumer-boundary": "proven",
+            "executable-validation": "proven",
+            "bounded-evidence-closure": "proven",
+        }
+        direct["decision"].update({"outcome": "main-initial-analysis", "edit_count": 0})
+        self.assertEqual([], EVAL._task_focus_case_errors(direct))
 
     def test_orchestration_dedup_structural_positive_and_negative_controls(self) -> None:
         results, errors = EVAL._orchestration_fixture_results(

@@ -31,6 +31,7 @@ from validation_utils import (
     professional_review_skill_ids,
     reference_paths,
     report_output_paths,
+    resolve_runtime_capability_fact,
 )
 from fixture_capsule_contract import (
     FixtureCapsuleError,
@@ -6049,6 +6050,7 @@ def _task_focus_case_errors(case: object) -> list[str]:
             "read_boundary_bounded",
             "entry_signals_absent",
             "unresolved_user_choice",
+            "confirmation_evidence",
             "confirmation",
         ) or tuple(decision) != (
             "entry_route",
@@ -6094,6 +6096,27 @@ def _task_focus_case_errors(case: object) -> list[str]:
                 "Direct confirmation result is not canonical",
             )
             return errors
+        proof_model = CORE_CONTRACTS["task_contract"]["direct_bounded_discovery"]
+        proof_fields = set(proof_model["confirmation_evidence_fields"])
+        proof_states = set(proof_model["confirmation_evidence_states"])
+        confirmation_evidence = inputs["confirmation_evidence"]
+        if (
+            not isinstance(confirmation_evidence, dict)
+            or set(confirmation_evidence) - proof_fields
+            or any(
+                state not in proof_states
+                for state in confirmation_evidence.values()
+            )
+        ):
+            reject(
+                "direct-confirmation-evidence",
+                "Direct confirmation evidence must use only the Core bounded proof fields and states",
+            )
+            return errors
+        proof_complete = (
+            set(confirmation_evidence) == proof_fields
+            and all(state == "proven" for state in confirmation_evidence.values())
+        )
         entry_eligible = all(
             inputs[field]
             for field in (
@@ -6106,7 +6129,7 @@ def _task_focus_case_errors(case: object) -> list[str]:
         ) and not inputs["unresolved_user_choice"]
         expected_entry = "direct" if entry_eligible else "analyzed"
         expected_level = "L3" if entry_eligible else None
-        confirmed = entry_eligible and confirmation == "confirmed"
+        confirmed = entry_eligible and confirmation == "confirmed" and proof_complete
         expected_outcome = "edit" if confirmed else "main-initial-analysis"
         expected_edits = 1 if confirmed else 0
         if decision["entry_route"] != expected_entry:
@@ -6124,18 +6147,24 @@ def _task_focus_case_errors(case: object) -> list[str]:
         ] != expected_edits:
             reject(
                 "direct-confirmation-boundary",
-                "owner or shared-contract contradiction requires zero edits and Main initial Analysis",
+                "incomplete bounded proof or a contradiction requires zero edits and Main initial Analysis",
             )
 
     elif scenario == "runtime-capability":
         if tuple(inputs) != (
             "declared_capability",
-            "effective_capability",
+            "fallback_declared_capability",
+            "task_id",
+            "session_id",
             "semantic_role",
             "required_capability",
+            "host_surface",
             "host_executor",
-            "fallback_effective_capability",
+            "host_executor_class",
+            "fallback_host_surface",
             "fallback_executor",
+            "fallback_executor_class",
+            "capability_evidence",
             "original_contract",
             "forwarded_contract",
             "professional_skill",
@@ -6167,13 +6196,11 @@ def _task_focus_case_errors(case: object) -> list[str]:
             return errors
         capability_states = {"supported", "unsupported", "unknown"}
         if inputs["declared_capability"] not in capability_states or inputs[
-            "effective_capability"
-        ] not in capability_states or inputs[
-            "fallback_effective_capability"
+            "fallback_declared_capability"
         ] not in capability_states:
             reject(
                 "runtime-capability-state",
-                "declared and effective capability states must use the closed set",
+                "declared capability states must use the closed set",
             )
             return errors
         if inputs["semantic_role"] not in {
@@ -6251,10 +6278,42 @@ def _task_focus_case_errors(case: object) -> list[str]:
             inputs[original_field] == inputs[forwarded_field]
             for original_field, forwarded_field in explicit_binding_pairs
         )
-        current_available = inputs["effective_capability"] == "supported"
+        def capability_resolution(
+            declared_field: str,
+            surface_field: str,
+            executor_field: str,
+            executor_class_field: str,
+        ) -> dict[str, object]:
+            return resolve_runtime_capability_fact(
+                declared_capability=inputs[declared_field],
+                required_capability=inputs["required_capability"],
+                invocation_facts={
+                    "task_id": inputs["task_id"],
+                    "session_id": inputs["session_id"],
+                    "host_surface": inputs[surface_field],
+                    "executor": inputs[executor_field],
+                    "executor_class": inputs[executor_class_field],
+                    "evidence": inputs["capability_evidence"],
+                },
+            )
+
+        current_resolution = capability_resolution(
+            "declared_capability",
+            "host_surface",
+            "host_executor",
+            "host_executor_class",
+        )
+        fallback_resolution = capability_resolution(
+            "fallback_declared_capability",
+            "fallback_host_surface",
+            "fallback_executor",
+            "fallback_executor_class",
+        )
+        current_available = current_resolution["state"] == "supported"
         fallback_candidate = (
             not current_available
-            and inputs["fallback_effective_capability"] == "supported"
+            and fallback_resolution["state"] == "supported"
+            and fallback_resolution["same_session_mismatch"] is False
             and isinstance(inputs["fallback_executor"], str)
             and bool(inputs["fallback_executor"].strip())
         )
@@ -6338,7 +6397,7 @@ def _task_focus_case_errors(case: object) -> list[str]:
             expected_report = (
                 "CAPABILITY_MISMATCH task="
                 f"{original['Task ID']}; required={inputs['required_capability']}; "
-                f"effective={inputs['effective_capability']}; edit=0"
+                f"effective={current_resolution['state']}; edit=0"
             )
             if inputs["worker_report"] != expected_report:
                 reject(
@@ -12470,7 +12529,10 @@ def _risk_calibration_fixture_results(
                 row["id"]: {
                     "status": "not_matched",
                     "evidence_kind": "analysis_handoff",
-                    "source_anchor": f"fixture:{case_id}:decision-{index}:{row['id']}",
+                    "source_anchor": (
+                        f"analysis_handoff:fixture:{case_id}:decision-{index}:"
+                        f"{row['id']}"
+                    ),
                     "plausible_critical": False,
                 }
                 for row in execution["trigger_registry"]
@@ -12488,7 +12550,10 @@ def _risk_calibration_fixture_results(
                 row["id"]: {
                     "status": "true" if decision["l2_eligible"] else "false",
                     "evidence_kind": "analysis_handoff",
-                    "source_anchor": f"fixture:{case_id}:decision-{index}:{row['id']}",
+                    "source_anchor": (
+                        f"analysis_handoff:fixture:{case_id}:decision-{index}:"
+                        f"{row['id']}"
+                    ),
                 }
                 for row in execution["l2_eligibility"]
             }
@@ -12861,9 +12926,9 @@ def main(argv: list[str] | None = None) -> int:
                 "review discipline fixture count must remain exactly 35, found "
                 f"{len(review_discipline_results)}"
             )
-        if len(task_focus_results) != 57:
+        if len(task_focus_results) != 59:
             errors.append(
-                "task-focus fixture count must remain exactly 57, found "
+                "task-focus fixture count must remain exactly 59, found "
                 f"{len(task_focus_results)}"
             )
         if len(combined_review_results) != 15:

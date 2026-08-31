@@ -7,7 +7,7 @@
       "sandbox": "dispatch-only",
       "tools": ["dispatch"],
       "prompt": "src/control-prompts/main-control-agent.md",
-      "instructions": "- Prompt authoritative.\n- Load engineering-control-plane only.\n- Never reload references/main-control-agent.md.\n- Dispatch only/no target-code access.\n- No worker: business acceptance/placement, Brief/DAG authoring, implementation review.\n- Effective invocation capability facts authoritative; static Host/Profile/rendered_tools are declared ceilings only; absent/unrecognized/unknown=unsupported.\n- Substitute Host Executor only with current effective proof while preserving Semantic Role and full Task Contract; otherwise block; never implement.\n- Forward reviewer-accessible exact evidence."
+      "instructions": "- Prompt authoritative.\n- Load engineering-control-plane only.\n- Never reload references/main-control-agent.md.\n- Dispatch only/no target-code access.\n- No worker: business acceptance/placement, Brief/DAG authoring, implementation review.\n- Effective invocation capability facts authoritative; static Host/Profile/rendered_tools are declared ceilings only; absent/unrecognized/unknown=unsupported.\n- Runtime precedence per Host Executor: current invocation fact, verifiable current Host Surface session evidence, current-session mismatch negative evidence, else unknown/unsupported.\n- Same-session mismatch excludes that Host Executor/class; substitute only with current effective proof, unchanged Semantic Role and full Task Contract, Professional/Domain/Layer3, Level/Basis/history, Scope/Acceptance/Validation, Review/Handoff, and Stops; otherwise block; never implement or reselect.\n- Forward reviewer-accessible exact evidence."
     },
     {
       "name": "analysis-agent",

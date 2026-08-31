@@ -4999,6 +4999,7 @@ def validate_core_contracts(
             "fields",
             "injected_fields",
             "states",
+            "declared_workspace_mutation_ceiling",
             "decision_inputs",
             "ignored_adapter_metadata",
             "equivalence_rule",
@@ -5035,6 +5036,19 @@ def validate_core_contracts(
             "fields"
         ) or capability_contract.get("states") != ["supported", "unsupported"]:
             errors.append("generic capability vocabulary must remain closed and ordered")
+        elif capability_contract.get("declared_workspace_mutation_ceiling") != {
+            "requires": [
+                "supported-profile-delivery",
+                "task-agent-write-semantic-tool",
+                "task-agent-tool-allowlist-not-unsupported",
+                "task-agent-workspace-write-protection-not-unsupported",
+            ],
+            "write_semantic_tools": ["edit", "Edit", "Write", "execute", "Bash"],
+        }:
+            errors.append(
+                "declared workspace mutation ceiling must require delivery, "
+                "write-semantic tools, and task-agent static enforcement"
+            )
         else:
             capability_fields = capability_contract["fields"]
             prompt_branches = capability_contract.get("prompt_branches")
@@ -7023,6 +7037,13 @@ def validate_core_contracts(
         expected_atomic_fact_reuse = {
             "source_anchor_prefix": "task_evidence:",
             "candidate_kinds": ["routing_candidate"],
+            "protected_repository_predicates": [
+                "single-bounded-owner",
+                "local-scope-only",
+                "no-shared-contract-or-external-consumer",
+                "no-unresolved-owner-placement-verification-or-rollback-gap",
+            ],
+            "accepted_analysis_source_prefix": "analysis_handoff:",
             "proven_kind_to_l2_predicate": {
                 "proven-bounded-owner": "single-bounded-owner",
                 "proven-local-scope-placement": "local-scope-only",
@@ -7041,9 +7062,10 @@ def validate_core_contracts(
                 "route-result",
             ],
             "rule": (
-                "reuse only the exact task-local atomic proven fact for its "
-                "mapped predicate; candidate evidence and route conclusions "
-                "are selectors only"
+                "protected repository predicates require either the exact "
+                "task-local atomic proven fact mapped to that predicate or an "
+                "accepted analysis_handoff anchor; bare user claims, candidate "
+                "evidence, and route conclusions are selectors only"
             ),
         }
         if execution["atomic_fact_reuse"] != expected_atomic_fact_reuse:
@@ -7706,7 +7728,7 @@ def validate_core_contracts(
                 "minimum-local-consumer",
                 "local-reuse-candidate",
                 "local-validation-command",
-                "placement-within-known-owner-boundary",
+                "placement-for-confirmed-owner-boundary",
             ],
             "prohibited": [
                 "repo-wide-discovery",
@@ -7717,9 +7739,24 @@ def validate_core_contracts(
                 "worker-skill-domain-or-layer3-selection",
             ],
             "confirmation_sequence": [
-                "read-candidate-current-source",
-                "prove-owner-placement-test-consumer-reuse-validation",
-                "edit-only-after-boundary-confirmed",
+                "read-strong-candidate-boundary-current-source",
+                "prove-owner-placement-test-consumer-reuse-validation-and-bounded-evidence-closure",
+                "edit-only-after-confirmed-owner-boundary",
+            ],
+            "confirmation_evidence_fields": [
+                "owner",
+                "placement",
+                "relevant-test",
+                "consumer-boundary",
+                "reuse-decision",
+                "executable-validation",
+                "bounded-evidence-closure",
+            ],
+            "confirmation_evidence_states": [
+                "proven",
+                "false",
+                "unknown",
+                "proof-limit",
             ],
             "contradiction_signals": [
                 "owner",
@@ -7743,7 +7780,9 @@ def validate_core_contracts(
                 "simpler": "preserve-current",
                 "higher-risk": "recompute",
             },
-            "read_boundary": "strong-candidate-owner-test-and-minimum-consumer",
+            "read_boundary": (
+                "strong-candidate-boundary-owner-test-and-minimum-consumer"
+            ),
         }
         if task["direct_bounded_discovery"] != expected_direct_bounded_discovery:
             errors.append(
@@ -7757,9 +7796,34 @@ def validate_core_contracts(
             "unknown_effective_capability": "unavailable",
             "semantic_role": "fixed",
             "host_executor": "replaceable",
+            "runtime_fact_precedence": [
+                "current-invocation-fact",
+                "host-surface-session-evidence",
+                "current-session-capability-mismatch",
+                "unknown-unavailable",
+            ],
+            "runtime_evidence_fields": [
+                "source",
+                "task_id",
+                "session_id",
+                "host_surface",
+                "executor",
+                "executor_class",
+                "capability",
+                "state",
+            ],
+            "runtime_evidence_states": ["supported", "unsupported", "unknown"],
+            "same_session_mismatch": (
+                "exclude-executor-or-class-from-subsequent-fallback"
+            ),
+            "eligible_executor": (
+                "current-proven-capability-and-no-same-session-mismatch-exclusion"
+            ),
+            "no_legal_executor": "block",
             "verbatim_carry": [
                 "task-contract",
                 "primary-professional-skill",
+                "domain",
                 "layer3",
                 "execution-level-and-basis-history",
                 "scope",
@@ -7776,6 +7840,8 @@ def validate_core_contracts(
                 ),
                 "worker_reroute": "forbidden",
                 "main_implementation": "forbidden",
+                "worker_skill_or_level_reselection": "forbidden",
+                "semantic_role_fallback": "forbidden",
                 "alternate_executor": (
                     "main-may-substitute-only-after-current-effective-capability-proof"
                 ),
@@ -9712,6 +9778,7 @@ EVIDENCE_RESOLUTION_MODEL = TASK_CONTRACT_MODEL["evidence_resolution"]
 DIRECT_BOUNDED_DISCOVERY_MODEL = TASK_CONTRACT_MODEL[
     "direct_bounded_discovery"
 ]
+EXECUTOR_SUBSTITUTION_MODEL = TASK_CONTRACT_MODEL["executor_substitution"]
 EVIDENCE_LEDGER_MODEL = CORE_CONTRACTS["visible_evidence_contract"]
 COMPLETION_STATE_MODEL = CORE_CONTRACTS["completion_state"]
 ROLE_CONTRACT_MODEL = CORE_CONTRACTS["roles"]
@@ -9758,9 +9825,23 @@ def normalized_declared_capability_ceiling(
         "task-no-edit",
     }
     observation_supported = entry.get("utility_no_edit") in supported_enforcement
+    task_role = roles.get("task-agent")
+    task_role = task_role if isinstance(task_role, dict) else {}
+    mutation_ceiling = REVIEW_DISCIPLINE_MODEL["generic_capability_contract"][
+        "declared_workspace_mutation_ceiling"
+    ]
+    mutation_supported = (
+        profile_supported
+        and bool(
+            rendered_tools("task-agent")
+            & set(mutation_ceiling["write_semantic_tools"])
+        )
+        and task_role.get("tool_allowlist") != "unsupported"
+        and task_role.get("workspace_write_protection") != "unsupported"
+    )
     return {
         "bounded-source-read": "supported" if profile_supported else "unsupported",
-        "workspace-mutation": "supported" if profile_supported else "unsupported",
+        "workspace-mutation": "supported" if mutation_supported else "unsupported",
         "non-mutating-validation": (
             "supported" if validation_supported else "unsupported"
         ),
@@ -9780,6 +9861,124 @@ def normalized_declared_capability_ceiling(
     }
 
 
+def resolve_runtime_capability_fact(
+    *,
+    declared_capability: str,
+    required_capability: str,
+    invocation_facts: object,
+) -> dict[str, object]:
+    """Resolve one executor capability from current visible dispatch evidence."""
+
+    unknown = {
+        "state": "unknown",
+        "source": "unknown-unavailable",
+        "same_session_mismatch": False,
+    }
+    fields = tuple(EXECUTOR_SUBSTITUTION_MODEL["runtime_evidence_fields"])
+    precedence = tuple(EXECUTOR_SUBSTITUTION_MODEL["runtime_fact_precedence"])
+    sources = precedence[:-1]
+    states = set(EXECUTOR_SUBSTITUTION_MODEL["runtime_evidence_states"])
+    capability_fields = set(
+        REVIEW_DISCIPLINE_MODEL["generic_capability_contract"]["injected_fields"]
+    )
+    if declared_capability not in {"supported", "unsupported"}:
+        return unknown
+    if required_capability not in capability_fields:
+        return unknown
+    if declared_capability == "unsupported":
+        return {
+            "state": "unsupported",
+            "source": "static-ceiling",
+            "same_session_mismatch": False,
+        }
+    envelope_fields = {
+        "task_id",
+        "session_id",
+        "host_surface",
+        "executor",
+        "executor_class",
+        "evidence",
+    }
+    if not isinstance(invocation_facts, dict) or set(invocation_facts) != envelope_fields:
+        return unknown
+    identity_fields = (
+        "task_id",
+        "session_id",
+        "host_surface",
+        "executor",
+        "executor_class",
+    )
+    if any(
+        not isinstance(invocation_facts[field], str)
+        or not invocation_facts[field].strip()
+        for field in identity_fields
+    ):
+        return unknown
+    evidence = invocation_facts["evidence"]
+    if not isinstance(evidence, list):
+        return unknown
+    canonical: list[dict[str, str]] = []
+    for fact in evidence:
+        if (
+            not isinstance(fact, dict)
+            or tuple(fact) != fields
+            or any(
+                not isinstance(fact[field], str) or not fact[field].strip()
+                for field in fields
+            )
+            or fact["source"] not in sources
+            or fact["state"] not in states
+            or fact["capability"] not in capability_fields
+            or (
+                fact["source"] == "current-session-capability-mismatch"
+                and fact["state"] != "unsupported"
+            )
+        ):
+            return unknown
+        canonical.append(fact)
+
+    def exact_identity(fact: dict[str, str]) -> bool:
+        return all(fact[field] == invocation_facts[field] for field in identity_fields)
+
+    mismatch_facts = [
+        fact
+        for fact in canonical
+        if fact["source"] == "current-session-capability-mismatch"
+        and fact["task_id"] == invocation_facts["task_id"]
+        and fact["session_id"] == invocation_facts["session_id"]
+        and fact["capability"] == required_capability
+        and (
+            fact["executor"] == invocation_facts["executor"]
+            or fact["executor_class"] == invocation_facts["executor_class"]
+        )
+    ]
+    mismatch_excluded = bool(mismatch_facts)
+    for source in precedence[:-2]:
+        matches = [
+            fact
+            for fact in canonical
+            if fact["source"] == source
+            and fact["capability"] == required_capability
+            and exact_identity(fact)
+        ]
+        if matches:
+            matching_states = {fact["state"] for fact in matches}
+            if len(matching_states) != 1:
+                return unknown
+            return {
+                "state": matching_states.pop(),
+                "source": source,
+                "same_session_mismatch": mismatch_excluded,
+            }
+    if mismatch_excluded:
+        return {
+            "state": "unsupported",
+            "source": "current-session-capability-mismatch",
+            "same_session_mismatch": True,
+        }
+    return unknown
+
+
 def normalized_decision_capabilities(
     entry: dict[str, Any],
     *,
@@ -9793,11 +9992,15 @@ def normalized_decision_capabilities(
     """
 
     declared = normalized_declared_capability_ceiling(entry)
-    facts = invocation_facts if isinstance(invocation_facts, dict) else {}
     return {
         field: (
             "supported"
-            if declared[field] == "supported" and facts.get(field) == "supported"
+            if resolve_runtime_capability_fact(
+                declared_capability=declared[field],
+                required_capability=field,
+                invocation_facts=invocation_facts,
+            )["state"]
+            == "supported"
             else "unsupported"
         )
         for field in declared
@@ -11066,6 +11269,7 @@ def direct_bounded_discovery_outcome(
     *,
     risk_change: str = "same",
     contradiction: str | None = None,
+    confirmation_evidence: object = None,
 ) -> dict[str, object]:
     """Project a worker's bounded discovery result without granting reroute authority."""
 
@@ -11080,6 +11284,16 @@ def direct_bounded_discovery_outcome(
         raise ValueError("a Direct contradiction must invalidate the route boundary")
     if outcome == "boundary-confirmed" and risk_change == "higher":
         raise ValueError("higher risk invalidates the Direct discovery boundary")
+    proof_fields = set(DIRECT_BOUNDED_DISCOVERY_MODEL["confirmation_evidence_fields"])
+    proof_states = set(DIRECT_BOUNDED_DISCOVERY_MODEL["confirmation_evidence_states"])
+    proof_complete = (
+        isinstance(confirmation_evidence, dict)
+        and set(confirmation_evidence) == proof_fields
+        and all(state in proof_states for state in confirmation_evidence.values())
+        and all(state == "proven" for state in confirmation_evidence.values())
+    )
+    if outcome == "boundary-confirmed" and not proof_complete:
+        outcome = "route-or-risk-invalidated"
     if outcome == "boundary-confirmed":
         return {
             "worker_action": "confirm-and-continue",
@@ -11758,6 +11972,10 @@ def _validate_atomic_l2_fact_reuse(
     reuse = contract["atomic_fact_reuse"]
     prefix = reuse["source_anchor_prefix"]
     candidate_kinds = set(reuse["candidate_kinds"])
+    protected_repository_predicates = set(
+        reuse["protected_repository_predicates"]
+    )
+    accepted_analysis_prefix = reuse["accepted_analysis_source_prefix"]
     forbidden_kinds = set(reuse["route_conclusion_kinds_forbidden"])
     proven_mapping = reuse["proven_kind_to_l2_predicate"]
     facts_by_id: dict[str, dict[str, object]] = {}
@@ -11793,6 +12011,18 @@ def _validate_atomic_l2_fact_reuse(
         anchor = evaluation.get("source_anchor")
         if evaluation.get("status") != "true" or not isinstance(anchor, str):
             continue
+        if predicate in protected_repository_predicates:
+            accepted_analysis = (
+                evaluation.get("evidence_kind") == "analysis_handoff"
+                and anchor.startswith(accepted_analysis_prefix)
+            )
+            if accepted_analysis:
+                continue
+            if not anchor.startswith(prefix):
+                raise ExecutionLevelError(
+                    f"protected repository L2 predicate {predicate!r} requires "
+                    "accepted analysis_handoff or exact proven task evidence"
+                )
         if not anchor.startswith(prefix):
             continue
         fact_id = anchor.removeprefix(prefix)

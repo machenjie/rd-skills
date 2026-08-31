@@ -740,6 +740,7 @@
       "fields": ["bounded-source-read", "workspace-mutation", "non-mutating-validation", "native-change-read", "change-evidence-export", "supplied-change-delivery", "reviewer-change-consume", "workspace-state-observation"],
       "injected_fields": ["bounded-source-read", "workspace-mutation", "non-mutating-validation", "native-change-read", "change-evidence-export", "supplied-change-delivery", "reviewer-change-consume", "workspace-state-observation"],
       "states": ["supported", "unsupported"],
+      "declared_workspace_mutation_ceiling": {"requires": ["supported-profile-delivery", "task-agent-write-semantic-tool", "task-agent-tool-allowlist-not-unsupported", "task-agent-workspace-write-protection-not-unsupported"], "write_semantic_tools": ["edit", "Edit", "Write", "execute", "Bash"]},
       "decision_inputs": "capability-state-only",
       "ignored_adapter_metadata": ["host-identity", "tool-identifier", "command-spelling"],
       "equivalence_rule": "equal-capability-state-produces-equal-routing-level-review-and-completion-decisions",
@@ -1401,6 +1402,8 @@
     "atomic_fact_reuse": {
       "source_anchor_prefix": "task_evidence:",
       "candidate_kinds": ["routing_candidate"],
+      "protected_repository_predicates": ["single-bounded-owner", "local-scope-only", "no-shared-contract-or-external-consumer", "no-unresolved-owner-placement-verification-or-rollback-gap"],
+      "accepted_analysis_source_prefix": "analysis_handoff:",
       "proven_kind_to_l2_predicate": {
         "proven-bounded-owner": "single-bounded-owner",
         "proven-local-scope-placement": "local-scope-only",
@@ -1412,7 +1415,7 @@
         "proven-closed-related-facts": "no-unresolved-owner-placement-verification-or-rollback-gap"
       },
       "route_conclusion_kinds_forbidden": ["direct-route", "analyzed-route", "route-result"],
-      "rule": "reuse only the exact task-local atomic proven fact for its mapped predicate; candidate evidence and route conclusions are selectors only"
+      "rule": "protected repository predicates require either the exact task-local atomic proven fact mapped to that predicate or an accepted analysis_handoff anchor; bare user claims, candidate evidence, and route conclusions are selectors only"
     },
     "l5_assurance_eligibility": [
       {"id": "confirmed-material-l4", "positive_predicate": "a non-provisional material L4 consequence is confirmed", "anti_trigger": "material L4 is absent, provisional, or unresolved", "source_anchor": "analysis handoff material assessment"},
@@ -1564,9 +1567,11 @@
     },
     "direct_bounded_discovery": {
       "preconditions": ["strong-owner-candidate", "primary-professional-stable", "domain-and-layer3-route-stable", "semantic-scope-stable", "no-shared-contract-signal", "no-cross-module-signal", "no-external-consumer-signal", "no-unresolved-user-choice", "no-unresolved-material-risk", "bounded-read-boundary"],
-      "allowed_checks": ["exact-owning-symbol-or-file", "relevant-existing-test", "minimum-local-consumer", "local-reuse-candidate", "local-validation-command", "placement-within-known-owner-boundary"],
+      "allowed_checks": ["exact-owning-symbol-or-file", "relevant-existing-test", "minimum-local-consumer", "local-reuse-candidate", "local-validation-command", "placement-for-confirmed-owner-boundary"],
       "prohibited": ["repo-wide-discovery", "unknown-owner-module-or-system", "unknown-external-consumer-graph", "security-money-migration-or-domain-boundary-discovery", "worker-rerouting", "worker-skill-domain-or-layer3-selection"],
-      "confirmation_sequence": ["read-candidate-current-source", "prove-owner-placement-test-consumer-reuse-validation", "edit-only-after-boundary-confirmed"],
+      "confirmation_sequence": ["read-strong-candidate-boundary-current-source", "prove-owner-placement-test-consumer-reuse-validation-and-bounded-evidence-closure", "edit-only-after-confirmed-owner-boundary"],
+      "confirmation_evidence_fields": ["owner", "placement", "relevant-test", "consumer-boundary", "reuse-decision", "executable-validation", "bounded-evidence-closure"],
+      "confirmation_evidence_states": ["proven", "false", "unknown", "proof-limit"],
       "contradiction_signals": ["owner", "module", "shared-contract", "cross-module", "external-consumer", "material-risk"],
       "outcomes": {
         "boundary-confirmed": "confirm-and-continue",
@@ -1575,7 +1580,7 @@
       },
       "worker_route_authority": false,
       "level_rules": {"simpler": "preserve-current", "higher-risk": "recompute"},
-      "read_boundary": "strong-candidate-owner-test-and-minimum-consumer"
+      "read_boundary": "strong-candidate-boundary-owner-test-and-minimum-consumer"
     },
     "executor_substitution": {
       "declared_capability": "static-host-or-profile-ceiling-only",
@@ -1583,11 +1588,19 @@
       "unknown_effective_capability": "unavailable",
       "semantic_role": "fixed",
       "host_executor": "replaceable",
-      "verbatim_carry": ["task-contract", "primary-professional-skill", "layer3", "execution-level-and-basis-history", "scope", "acceptance", "validation", "review", "handoff", "stop-conditions"],
+      "runtime_fact_precedence": ["current-invocation-fact", "host-surface-session-evidence", "current-session-capability-mismatch", "unknown-unavailable"],
+      "runtime_evidence_fields": ["source", "task_id", "session_id", "host_surface", "executor", "executor_class", "capability", "state"],
+      "runtime_evidence_states": ["supported", "unsupported", "unknown"],
+      "same_session_mismatch": "exclude-executor-or-class-from-subsequent-fallback",
+      "eligible_executor": "current-proven-capability-and-no-same-session-mismatch-exclusion",
+      "no_legal_executor": "block",
+      "verbatim_carry": ["task-contract", "primary-professional-skill", "domain", "layer3", "execution-level-and-basis-history", "scope", "acceptance", "validation", "review", "handoff", "stop-conditions"],
       "capability_mismatch": {
         "format": "CAPABILITY_MISMATCH task=<Task ID>; required=<capability>; effective=unknown|unsupported; edit=0",
         "worker_reroute": "forbidden",
         "main_implementation": "forbidden",
+        "worker_skill_or_level_reselection": "forbidden",
+        "semantic_role_fallback": "forbidden",
         "alternate_executor": "main-may-substitute-only-after-current-effective-capability-proof"
       },
       "runtime_persistence": "forbidden"
@@ -2012,7 +2025,7 @@
   "prompt_contract": {
     "schema_version": 1,
     "path": "src/control-prompts/main-control-agent.md",
-    "document_sha256": "4ad4871d9133c0ed2eccd9606b52c0eea7100885d64e2bf535f59cc6092c384a",
+    "document_sha256": "2f86fafb79929e79d8fd14cb1af339be3b74f1f8b844d0ba8c7d95b4bc565270",
     "managed_projections": [
       {"id": "execution-level-contract", "section": "Execution Level and Validation", "required_contracts": ["execution_level_contract"]},
       {"id": "review-evidence-contract", "section": "Review and Repair", "required_contracts": ["visible_evidence_contract", "review_discipline_contract", "task_contract"]},

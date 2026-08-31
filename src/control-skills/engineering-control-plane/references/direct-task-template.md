@@ -69,15 +69,23 @@ the minimum complete evidence needed for the decision; widen only when current
 source remains insufficient. Search, Top-K, ranked results, repository maps,
 truncated results, prior summaries, and nearby files are selectors, not proof.
 Top-K is not a complete corpus. Completeness claims require declared coverage
-or a Proof Limit. Within the already-known owner boundary, inspection may
-confirm only:
+or a Proof Limit. Within the strong candidate boundary, inspection may confirm
+only the items below. The boundary becomes a confirmed owner boundary only
+when current-source evidence proves every item and bounded-evidence closure:
 
 - exact owning symbol/file;
 - relevant existing test;
 - minimum local consumer;
 - local reuse candidate;
 - local validation command; and
-- placement within the already-known owner boundary.
+- placement required to establish the confirmed owner boundary.
+
+Record owner, placement, relevant test, consumer boundary, reuse decision,
+executable validation, and bounded-evidence closure separately as `proven`,
+`false`, `unknown`, or `proof-limit`. Every item must be `proven` before edit.
+Any false, absent, unknown, or Proof Limit item invalidates the Direct boundary:
+edit=0 and return through Main for initial Analysis. Unknown never proves no
+risk and never authorizes an unbounded search.
 
 Prohibit repo-wide discovery, an unknown owner/module/system or external
 consumer graph, security/money/migration/domain-boundary discovery, Worker

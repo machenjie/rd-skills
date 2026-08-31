@@ -594,7 +594,7 @@ def _execution_evidence(
                 else "not_matched"
             ),
             "evidence_kind": source,
-            "source_anchor": f"decision-eval:{identifier}",
+            "source_anchor": f"analysis_handoff:decision-eval:{identifier}",
             "plausible_critical": False,
         }
         if material_l4 and identifier == material_trigger:
@@ -607,7 +607,7 @@ def _execution_evidence(
         row["id"]: {
             "status": "true" if l2_true else "false",
             "evidence_kind": source,
-            "source_anchor": f"decision-eval:{row['id']}",
+            "source_anchor": f"analysis_handoff:decision-eval:{row['id']}",
         }
         for row in contract["l2_eligibility"]
     }
@@ -615,7 +615,7 @@ def _execution_evidence(
         row["id"]: {
             "status": "true" if l1_true else "false",
             "evidence_kind": source,
-            "source_anchor": f"decision-eval:{row['id']}",
+            "source_anchor": f"analysis_handoff:decision-eval:{row['id']}",
         }
         for row in contract["l1_eligibility"]
     }
@@ -623,7 +623,7 @@ def _execution_evidence(
         row["id"]: {
             "status": "true" if l5_true else "false",
             "evidence_kind": source,
-            "source_anchor": f"decision-eval:{row['id']}",
+            "source_anchor": f"analysis_handoff:decision-eval:{row['id']}",
         }
         for row in contract["l5_assurance_eligibility"]
     }

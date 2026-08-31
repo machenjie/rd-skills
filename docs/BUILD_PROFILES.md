@@ -107,6 +107,10 @@ Copilot CLI, Copilot VS Code, and Copilot Coding Agent. Their declared tool and
 external-read ceilings may differ, while the shared generated Profile stays a
 portable superset. Static surfaces and generated `rendered_tools` never establish
 effective capability for a particular invocation.
+Declared `workspace-mutation` requires both supported task-agent delivery and a
+write-semantic tool (`edit`, `Write`, `execute`, or `Bash`) with the required
+task-agent enforcement surfaces not unsupported. Invocation/session evidence
+still decides whether that declared ceiling is effective now.
 
 ## Growth Rule
 

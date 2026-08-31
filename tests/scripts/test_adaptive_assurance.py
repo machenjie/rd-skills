@@ -69,6 +69,17 @@ def _evidence(
         }
         for row in EXECUTION["l2_eligibility"]
     }
+    if source == "user_fact":
+        for predicate in (
+            "single-bounded-owner",
+            "local-scope-only",
+            "no-shared-contract-or-external-consumer",
+            "no-unresolved-owner-placement-verification-or-rollback-gap",
+        ):
+            l2[predicate]["evidence_kind"] = "analysis_handoff"
+            l2[predicate]["source_anchor"] = (
+                f"analysis_handoff:{predicate}"
+            )
     if matched_trigger is not None and next(
         item["floor"] for item in EXECUTION["trigger_registry"]
         if item["id"] == matched_trigger
@@ -123,6 +134,37 @@ def _compute(
 
 
 class AdaptiveAssuranceTests(unittest.TestCase):
+    def test_bare_user_claims_cannot_prove_protected_repository_l2_facts(
+        self,
+    ) -> None:
+        protected = (
+            "single-bounded-owner",
+            "local-scope-only",
+            "no-shared-contract-or-external-consumer",
+            "no-unresolved-owner-placement-verification-or-rollback-gap",
+        )
+        for predicate in protected:
+            with self.subTest(predicate=predicate):
+                triggers, l1, l2, l5 = _evidence(
+                    source="analysis_handoff", l1_status="false"
+                )
+                l2[predicate] = {
+                    "status": "true",
+                    "evidence_kind": "user_fact",
+                    "source_anchor": f"user_fact:owner-claim:{predicate}",
+                }
+                with self.assertRaisesRegex(
+                    ExecutionLevelError,
+                    "protected repository L2 predicate|proven task evidence",
+                ):
+                    compute_execution_level(
+                        requested="unspecified",
+                        trigger_evaluations=triggers,
+                        l1_evaluations=l1,
+                        l2_evaluations=l2,
+                        l5_assurance_evaluations=l5,
+                    )
+
     def test_candidate_task_evidence_cannot_prove_an_l2_predicate(self) -> None:
         triggers, l1, l2, l5 = _evidence(
             source="user_fact", l1_status="false"

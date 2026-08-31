@@ -34,7 +34,8 @@ Stop if the owner, public contract, or verification command differs from this re
 Replace the paths and test command with candidate selectors. They do not prove
 ownership. The task reads current source first and proves owner, placement,
 relevant test, minimum consumer boundary, reuse, and executable validation
-before editing. A contradiction returns zero edit through Main to initial
+plus bounded-evidence closure before editing. Any false, absent, unknown, or
+Proof Limit returns zero edit through Main to initial
 Analysis; a simpler confirmation never lowers the active Level. Expected
 interaction: `main-control-agent` assigns one bounded task to `task-agent`;
 after the final
@@ -111,7 +112,10 @@ does not make Review Input Ready.
 Route and Execution Level remain independent. A Direct or Analyzed conclusion
 is never Level evidence. An atomic task fact may be reused only after its proof
 kind matches the corresponding Level predicate; a routing candidate remains a
-selector and cannot satisfy an L2 predicate.
+selector and cannot satisfy an L2 predicate. Repository-bound owner, placement,
+consumer-boundary, and closed-gap predicates require an accepted analysis
+handoff or their exact mapped task-local proven atom; bare owner/path/file/symbol
+claims do not qualify.
 
 ## What You Should See
 

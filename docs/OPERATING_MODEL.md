@@ -43,7 +43,9 @@ boundary enters read-first confirmation at the current Level. The candidate is
 not proof. Current source must establish owner, placement, relevant test,
 minimum consumer boundary, reuse, and validation before edit. Owner, module,
 shared-contract, external-consumer, or material-risk contradiction produces
-zero edits and returns through Main for initial Analysis.
+zero edits and returns through Main for initial Analysis. Every confirmation item
+must be proven, including bounded-evidence closure; false, absent, unknown, or a
+Proof Limit is route-or-risk invalidation rather than permission to edit.
 
 For Analyzed Work, the current Engineering Brief is the sole operational
 analysis authority. The `analysis-agent` derives it from the request, source,
@@ -111,6 +113,9 @@ boundaries.
 Route evidence and Level evidence remain independent. Existing atomic task
 facts may be reused, but routing candidates and route conclusions cannot prove
 Level predicates; each proven fact kind binds only its corresponding predicate.
+The repository-bound owner, local placement, consumer-boundary, and closed-gap
+predicates accept only their exact task-local proven atom or an accepted analysis
+handoff; a user path, file, symbol, or owner claim remains a candidate selector.
 Material floors, historical maxima, recomputation, and non-bypassable controls
 still dominate the result.
 
@@ -119,7 +124,10 @@ Dispatch uses invocation-scoped effective capability and fails closed on absent
 or unknown facts. Semantic Role stays fixed while a proven Host Executor may be
 replaced, carrying Professional Skill, Layer3, Level/Basis/history, scope,
 acceptance, validation, review, handoff, and stop conditions unchanged. Main
-never absorbs implementation work when no executor is available.
+never absorbs implementation work when no executor is available. Current
+invocation evidence precedes verifiable current Host Surface session evidence;
+same-session mismatch excludes that executor/class before fallback, with no
+persistent runtime state.
 
 Task completion records progress only; it does not by itself trigger Analysis,
 Review, replanning, or user confirmation. Related Tasks inside one Review

@@ -9,19 +9,18 @@ Bounded subagents authorized; permission required: scope expansion/destructive/p
 ## Choose Exactly One Path
 
 Choose exactly Direct Task or Analyzed Work.
-Source-free user-fact questions -> no-repo direct-answer/no repository access; Main relays/closes. Source/professional evidence or control prompts -> source-backed analysis.
-Evidence Resolution reuses `change-intake-compiler`: source fact never asks; route-affecting fact/material unknown -> Analysis; user choice -> one Main question; otherwise bounded Direct discovery.
-Business semantics/scope expansion/production-destructive action/irreversible material data change/product tradeoff=user-owned; implementation/placement/storage-lock strategy/ordinary engineering tradeoff=Agent-owned.
-repo-resolvable-fact user-owned-choice route-or-material-unknown semantic-choice execution-level-choice.
-Direct (category-agnostic): strong owner candidate; fixed Professional/Domain/Layer3/scope; bounded read; acceptance/validation/rollback; no shared/cross/external/material/choice signal.
-Candidate/path/symbol/claim selects read-first confirmation, not proof. Unknown owner/module/system/verification -> Analyzed.
-Direct outcomes per Inspection Boundary/stops: confirm+continue; contradiction -> edit=0, Main/initial Analysis; choice -> Main question. Worker never reroutes; simpler keeps Level, higher risk recomputes.
+Source-free user-fact questions = no-repo direct-answer/no repository access; Main relays/closes. Source/professional evidence or control prompts -> source-backed analysis.
+Evidence Resolution reuses `change-intake-compiler`; source fact never asks; route-affecting fact/material unknown -> Analysis; user choice -> one Main question; otherwise bounded Direct discovery.
+Business semantics/scope expansion/production-destructive action/irreversible material data change/product tradeoff=user-owned-choice; implementation/placement/storage-lock strategy/ordinary engineering tradeoff=Agent. repo-resolvable-fact route-or-material-unknown semantic-choice execution-level-choice.
+Direct/category-agnostic requires: strong owner candidate; fixed Professional/Domain/Layer3/scope; bounded read; no shared/cross/external/material/choice signal.
+Candidate/path/symbol/claim selects read-first confirmation, not proof; Unknown owner/module/system/verification -> Analyzed.
+Direct outcomes/Inspection Boundary/stops: Direct template confirmation proven=confirmed owner boundary/confirm+continue; otherwise edit=0, Main/initial Analysis; choice -> Main question. Worker never reroutes; simpler keeps Level; higher risk recomputes.
 
 ## Direct Task Routing
 
 New Direct Task: references/direct-task-template.md Task Contract v2 field authority; `Status: in_progress`; optional Dependencies after Non-goals.
-Declared Host/Profile/`rendered_tools`=capability ceilings, not runtime truth; Effective Runtime Capability=invocation facts, unknown unavailable. Semantic Role fixed; Host Executor replaceable. utility-capsule owns no-edit preservation.
-Dispatch on effective facts. Proven fallback inherits full unchanged Task Contract; else block/Main never implements. Worker only Core `CAPABILITY_MISMATCH`; no reroute.
+Declared Host/Profile/`rendered_tools`=capability ceilings—not runtime truth. Effective Runtime Capability=invocation facts: current executor > verifiable current Host Surface session evidence > same-session mismatch negative > unknown unavailable. Semantic Role fixed; Host Executor replaceable; utility-capsule owns no-edit preservation.
+Dispatch on effective facts; mismatch excludes executor/class. Proven fallback inherits full unchanged Task Contract/Core bindings; else block/Main never implements. Worker: Core `CAPABILITY_MISMATCH`; no reroute/reselection.
 `generic_capability_contract` branches JIT-load from references/implementation-handoff-template.md.
 Pre-implementation artifact/no implementation diff -> directly to review-agent; diff-export gate does not apply.
 
@@ -37,8 +36,8 @@ After 2 same-path failures require changed hypothesis/material/gap/transition or
 
 ## Analyzed Work
 
-Answer/diagnosis: evidence/proof limits unless change requested. engineering-change-analysis -> current Engineering Brief and First Executable Slice; dispatch verbatim, never reinterpret.
-references/engineering-brief-template.md JIT-owns protected semantics, Specialist/DAG/handoff limits/Delta rules. Main owns Path/Level projection/Review scheduling/user interaction; Task/Review never changes route authority.
+Answer/diagnosis: evidence/proof limits unless change requested. engineering-change-analysis -> current Engineering Brief+First Executable Slice; dispatch verbatim, never reinterpret.
+references/engineering-brief-template.md JIT-owns protected semantics, Specialist/DAG/handoff limits/Delta rules. Main owns Path/Level projection/Review scheduling/user interaction; Authorized routes skip selectors; Task/Review never changes route authority.
 blocked -> main-control-agent -> analysis-agent -> updated Engineering Brief -> redispatch affected tasks. `task_contract.analyzed_work_authority`: analyze once; Delta/reroute only on its decision triggers.
 Synchronous/unknown capability: stop at Slice; multi-task -> DAG; else task-agent. Direct Task/non-implementation paths remain unchanged.
 
@@ -49,7 +48,6 @@ Start the Slice, ask one concrete user-owned decision, or report the evidence ga
 ## Scheduling and Context
 
 references/professional-skill-router.md JIT-owns Professional/Layer3 selection.
-Main owns Direct/initial routes; Brief owns analyzed routes. Authorized routes skip selectors; Task/Review never reroute; Level changes assurance only.
 requested task > DAG > blockers > adjacent; adjacent never preempts task/DAG. New DAG task assignment: Task Contract v2, `Status: in_progress`.
 task_contract.task_boundary; Task completion=progress; Related work uses combined final-diff review. Shared or unknown workspace: parallel read-only tasks, serial writes.
 
