@@ -4783,7 +4783,7 @@ class CoreContractModelTests(unittest.TestCase):
             "## Review Input Ready",
             "Latest Changed Paths:",
             "Exact Reviewable Change Evidence:",
-            "Reviewer Capability Accessibility:",
+            "Reviewer Artifact Accessibility:",
             "Validation After Latest Material Edit:",
             "Fixed Review Scope:",
         ):
@@ -4791,12 +4791,13 @@ class CoreContractModelTests(unittest.TestCase):
         self.assertIn("same Implementation Handoff", text)
         self.assertIn("changed-file summary", text)
 
-    def test_utility_capsule_is_capability_driven_not_git_command_driven(self) -> None:
+    def test_utility_capsule_uses_declared_operations_not_git_commands(self) -> None:
         text = (
             REFERENCE_ROOT / "utility-capsule-template.md"
         ).read_text(encoding="utf-8")
-        self.assertIn("exact change evidence export capability", text)
-        self.assertIn("workspace state observation capability", text)
+        self.assertIn("exact change evidence export operation", text)
+        self.assertIn("workspace state observation operation", text)
+        self.assertIn("do not infer permission from a capability name", text)
         self.assertNotIn("git --no-pager", text)
 
     def test_extended_capsule_rejects_prose_or_fabricated_level_basis(self) -> None:

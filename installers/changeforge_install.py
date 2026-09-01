@@ -717,6 +717,33 @@ def validated_built_profile_sha256(
     return {str(role): str(digest) for role, digest in rendered.items()}
 
 
+def _load_current_build_authority() -> Any:
+    """Load the canonical build owner without duplicating source contracts."""
+
+    build_script = ROOT / "scripts" / "build.py"
+    spec = importlib.util.spec_from_file_location(
+        "changeforge_installer_build_authority", build_script
+    )
+    if spec is None or spec.loader is None:
+        raise InstallError("cannot load the current Agent Profile renderer")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    scripts_path = str(ROOT / "scripts")
+    inserted_scripts_path = scripts_path not in sys.path
+    if inserted_scripts_path:
+        sys.path.insert(0, scripts_path)
+    try:
+        spec.loader.exec_module(module)
+    except Exception as exc:
+        raise InstallError(
+            f"cannot render current authoritative Agent Profiles: {exc}"
+        ) from exc
+    finally:
+        if inserted_scripts_path:
+            sys.path.remove(scripts_path)
+    return module
+
+
 def validated_built_core_model(agent: str, scope: str) -> dict[str, Any]:
     """Return core-model metadata anchored in the current validated build."""
 

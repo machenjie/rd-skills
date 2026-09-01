@@ -584,7 +584,7 @@
           "profile": "task-agent",
           "mode": "validation-only/no-edit",
           "professional_references": [],
-          "fixture_capsule": {"contract_version":"changeforge.fixture-capsule.v2","contract_type":"utility","template":"utility-capsule","canonical_sha256":"98b7b8ff6b2e8332ab4c720e6c7e53ec0c7be7a30bc7f463775ddb8c8bd6fdf6"},
+          "fixture_capsule": {"contract_version":"changeforge.fixture-capsule.v2","contract_type":"utility","template":"utility-capsule","canonical_sha256":"9fabce6e9069d33136ffd3e0647202e9591ef742735fcf7560e9031195e2c035"},
           "utility_capsule": {
             "task_id": "utility-validation-owner-test",
             "status": "in_progress",

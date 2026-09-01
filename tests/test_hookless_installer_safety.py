@@ -497,6 +497,55 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
             )
             self.assertFalse(classified.migration_required)
 
+    def test_copilot_upgrade_dry_run_loads_current_build_authority_for_manifest_classification(
+        self,
+    ) -> None:
+        authority = self.helper._load_current_build_authority()
+        self.assertTrue(callable(authority._load_registries))
+
+        with tempfile.TemporaryDirectory() as raw:
+            project = Path(raw) / "project"
+            skills, profiles = self._install_current_project_for("copilot", project)
+            assert profiles is not None
+            manifest = json.loads(
+                (skills / self.helper.MANIFEST_NAME).read_text(encoding="utf-8")
+            )
+            classified = self.helper.classify_installed_manifest(
+                manifest,
+                agent="copilot",
+                scope="project",
+                targets=self.helper.InstallTargets(skills=skills, profiles=profiles),
+            )
+            self.assertEqual(
+                self.helper.CURRENT_INVENTORY_GENERATION,
+                classified.inventory_generation,
+            )
+
+            before = self._tree_snapshot(project)
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with (
+                mock.patch.object(
+                    sys,
+                    "argv",
+                    [
+                        "upgrade.py",
+                        "--agent",
+                        "copilot",
+                        "--scope",
+                        "project",
+                        "--target",
+                        str(project),
+                        "--dry-run",
+                    ],
+                ),
+                redirect_stdout(stdout),
+                redirect_stderr(stderr),
+            ):
+                self.assertEqual(0, self.upgrade_cli.main(), stderr.getvalue())
+            self.assertEqual(before, self._tree_snapshot(project))
+            self.assertIn("upgrade: dry run", stdout.getvalue())
+
     def test_historical_bridge_fails_closed_when_an_unchanged_layer_fingerprint_drifts(self) -> None:
         layers = self._authoritative_layer_names()
         layers["domain"] = set(layers["domain"]) | {"future-domain-skill"}
