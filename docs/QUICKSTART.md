@@ -71,7 +71,9 @@ A healthy result is intentionally short:
 ✓ installation healthy
 
 Next:
-Open or restart your AI coding tool and run the first task.
+Open or restart Codex.
+Start with $engineering-control-plane and describe the task in natural language.
+The full rd-skills workflow is available on Codex.
 ```
 
 Use `--verbose` to see inventory, source binding, host configuration, and digest details:
@@ -88,14 +90,15 @@ Open a small repository in your AI coding tool. If the table below gives a verif
 
 ### Host invocation
 
-| Host or surface | Start the request with |
-| --- | --- |
-| Codex | `$engineering-control-plane` |
-| Claude Code | `/engineering-control-plane` |
-| GitHub Copilot CLI | `/engineering-control-plane` |
-| Cline | Install target only; live Skill invocation and workflow behavior are not established by the current host contract. |
-| Other GitHub Copilot surfaces | Use the invocation supported by that surface; support is surface-dependent. |
-| OpenAI API | Package output only; invoke the packaged Skill through your API integration. |
+| Host or surface | Artifact delivery | Live Skill invocation | Full rd-skills workflow | Limit |
+| --- | --- | --- | --- | --- |
+| Codex | Skills + Agent Profiles | `$engineering-control-plane` | Available | Artifacts checked; live loading not proved |
+| Claude Code | Skills + Agent Profiles | `/engineering-control-plane` | Available | Artifacts checked; live loading not proved |
+| Copilot CLI | Skills + Agent Profiles | `/engineering-control-plane` | Available | Copilot CLI only |
+| Cline | Skills only | Not established | Not established | Artifact delivery only |
+| OpenAI API | Zip packages | Not applicable | API integration owns orchestration | API integration only |
+
+Other Copilot surfaces are separate surfaces. Do not assume the Copilot CLI invocation or workflow availability applies to them.
 
 For Codex, enter this normal engineering request:
 
@@ -126,7 +129,7 @@ Continue with [Usage](USAGE.md) for everyday task examples and result interpreta
 - If doctor reports a file, configuration, permission, ownership, or migration problem, follow [Troubleshooting and Recovery](INSTALLATION.md#troubleshooting-and-recovery). Do not add `--force` until you have inspected the exact conflict.
 - If doctor is healthy but the tool does not respond to the invocation in the table, restart the tool and confirm you installed for the same tool and scope. Doctor does not prove that a live host loaded the files.
 - In Codex, type `$engineering-control-plane`, not `/engineering-control-plane`.
-- For other GitHub Copilot surfaces, confirm that surface's current Skill invocation support instead of assuming the Copilot CLI syntax applies.
+- For other Copilot surfaces, confirm that surface's current Skill invocation support instead of assuming the Copilot CLI syntax applies.
 - For Cline, doctor can verify installed files, but the current host contract does not establish live Skill loading, an explicit invocation, validation, or independent review.
 - If the task stops for a decision, answer the concrete scope, safety, compatibility, or production question instead of broadening the request implicitly.
 - For a reproducible problem, use [Support](../SUPPORT.md) and remove secrets from the output you share.

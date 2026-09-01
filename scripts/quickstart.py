@@ -4,15 +4,29 @@
 from __future__ import annotations
 
 import argparse
+import re
 import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
+ROOT = Path(__file__).resolve().parents[1]
+INSTALLER_DIR = ROOT / "installers"
+if str(INSTALLER_DIR) not in sys.path:
+    sys.path.insert(0, str(INSTALLER_DIR))
+
+from changeforge_install import InstallError, product_next_step_lines  # noqa: E402
+
 AGENTS = ("codex", "claude", "copilot", "cline", "openai-api")
 SCOPES = ("project", "user", "admin")
 EXPECTED_RUNTIME_SKILL_COUNT = 26
+MATERIAL_SUCCESS_RE = re.compile(
+    r"\b(?:warn(?:ing)?|legacy|backup|recover(?:y|able)?|restore|rollback|"
+    r"migration|migrated|cleanup|cleaned\s+up|removed?)\b",
+    re.IGNORECASE,
+)
+MATERIAL_CONTINUATION_RE = re.compile(r"^(?:\s+\S|\s*[-*]\s+\S)")
 
 
 @dataclass(frozen=True)
@@ -89,9 +103,31 @@ def run_plan(
                     if completed.stderr:
                         print(completed.stderr, end="", file=sys.stderr)
                     return int(completed.returncode)
+                material = _material_success_output(completed.stdout)
+                if material:
+                    print(material, end="")
+                if completed.stderr:
+                    print(completed.stderr, end="", file=sys.stderr)
         except subprocess.CalledProcessError as exc:
             return int(exc.returncode)
     return 0
+
+
+def _material_success_output(output: str) -> str:
+    """Keep successful mutation, warning, and recovery effects plus continuations."""
+
+    kept: list[str] = []
+    material_precedes = False
+    for line in output.splitlines(keepends=True):
+        if MATERIAL_SUCCESS_RE.search(line):
+            kept.append(line)
+            material_precedes = True
+            continue
+        if material_precedes and MATERIAL_CONTINUATION_RE.match(line):
+            kept.append(line)
+            continue
+        material_precedes = False
+    return "".join(kept)
 
 
 def _print_plan(plan: QuickstartPlan) -> None:
@@ -106,12 +142,10 @@ def _print_plan(plan: QuickstartPlan) -> None:
         print("- Agent Profiles: not emitted for this host; standard Skills only")
 
 
-def _print_next_step() -> None:
+def _print_next_step(lines: tuple[str, ...]) -> None:
     print("Next:")
-    print(
-        "Open or restart your AI coding tool, then describe your first "
-        "engineering task in natural language."
-    )
+    for line in lines:
+        print(line)
 
 
 def main() -> int:
@@ -129,7 +163,8 @@ def main() -> int:
     args = parser.parse_args()
     try:
         plan = build_plan(args)
-    except ValueError as exc:
+        next_step = product_next_step_lines(args.agent)
+    except (ValueError, InstallError) as exc:
         print(f"quickstart: ERROR: {exc}", file=sys.stderr)
         return 2
     if args.dry_run or args.verbose:
@@ -146,7 +181,7 @@ def main() -> int:
         return 0
     print("✓ rd-skills setup complete")
     print()
-    _print_next_step()
+    _print_next_step(next_step)
     return 0
 
 

@@ -2,7 +2,7 @@
 
 After installation, use rd-skills by describing the engineering outcome you want. You do not need to choose a specialist, name an internal workflow, or investigate the repository before asking.
 
-Skill invocation is host-specific. The examples below use Codex, where Skills use `$skill-name`. The [host invocation table](QUICKSTART.md#host-invocation) records verified Claude Code and Copilot CLI syntax. Cline remains an install/build target, but the current host contract does not establish live Skill loading, an explicit invocation, validation, or independent review.
+Skill invocation is host-specific. The examples below use Codex, where Skills use `$skill-name`. The [host invocation table](QUICKSTART.md#host-invocation) distinguishes artifact delivery, live invocation, and full-workflow availability. Cline has Skills artifacts only; live invocation and the full workflow are not established. OpenAI API packages are used through an API integration. Copilot CLI facts do not apply automatically to other Copilot surfaces.
 
 ## Describe the task
 

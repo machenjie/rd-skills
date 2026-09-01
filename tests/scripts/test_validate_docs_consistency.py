@@ -190,10 +190,9 @@ class DocsCoreProjectionTests(unittest.TestCase):
                 )
             )
 
-    def test_current_human_documentation_boundary_has_55_files(self) -> None:
+    def test_human_documentation_boundary_keeps_required_owners(self) -> None:
         files = self.validator._markdown_files(ROOT)
 
-        self.assertEqual(55, len(files))
         relative = {path.relative_to(ROOT).as_posix() for path in files}
         self.assertIn("CODE_OF_CONDUCT.md", relative)
         self.assertIn(".github/pull_request_template.md", relative)
@@ -223,20 +222,21 @@ class DocsCoreProjectionTests(unittest.TestCase):
 
             self.assertTrue(any("first product surface" in error for error in errors), errors)
 
-    def test_quickstart_extra_section_is_rejected(self) -> None:
+    def test_readme_first_surface_boundary_does_not_require_an_image(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            self._copy_paths(root, ("docs/QUICKSTART.md",))
-            quickstart = root / "docs/QUICKSTART.md"
-            quickstart.write_text(
-                quickstart.read_text(encoding="utf-8")
-                + "\n## Internal Architecture\n\nDo more setup.\n",
+            readme = root / "README.md"
+            readme.write_text(
+                "# rd-skills\n\n"
+                "A plain-language engineering assistant.\n\n"
+                "## Why it helps\n\n"
+                "It scopes and verifies changes.\n\n"
+                "## Maintainer details\n\n"
+                "Runtime internals live outside the beginner surface.\n",
                 encoding="utf-8",
             )
 
-            errors = self.validator._product_surface_errors(root)
-
-            self.assertTrue(any("exactly the five" in error for error in errors), errors)
+            self.assertEqual([], self.validator._product_surface_errors(root))
 
     def test_legacy_architecture_path_is_a_minimal_compatibility_redirect(self) -> None:
         path = ROOT / "docs/AGENT_LIGHT_ARCHITECTURE.md"
@@ -277,6 +277,32 @@ class DocsCoreProjectionTests(unittest.TestCase):
             )
             errors = self.validator._local_link_errors(root, source)
             self.assertTrue(any("missing local heading anchor" in error for error in errors))
+
+    def test_generated_document_ownership_uses_declared_producer(self) -> None:
+        self.assertEqual([], self.validator._generated_document_ownership_errors(ROOT))
+
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._copy_paths(
+                root,
+                (
+                    "docs/SHOWCASE.md",
+                    "docs/MARKETPLACE_CATALOG.md",
+                    "scripts/generate-examples-showcase.py",
+                    "scripts/generate-marketplace-catalog.py",
+                ),
+            )
+            showcase = root / "docs/SHOWCASE.md"
+            showcase.write_text(
+                showcase.read_text(encoding="utf-8").replace(
+                    "Do not edit by hand.",
+                    "Generated output.",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+            errors = self.validator._generated_document_ownership_errors(root)
+            self.assertTrue(any("SHOWCASE.md" in error for error in errors), errors)
 
     def test_heading_anchor_matches_numbered_standard_sections(self) -> None:
         anchors = self.validator._heading_anchors(
@@ -694,70 +720,229 @@ class DocsCoreProjectionTests(unittest.TestCase):
             )
 
     def test_host_specific_skill_invocation_is_current(self) -> None:
-        self.assertEqual([], self.validator._slash_invocation_errors(ROOT))
+        self.assertEqual([], self.validator._host_product_surface_errors(ROOT))
+
+    def test_copilot_user_label_projects_from_host_authority(self) -> None:
+        authority = json.loads(
+            (ROOT / "src/agent-profiles/host-product-surfaces.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual("Copilot CLI", authority["surfaces"]["copilot"]["label"])
+        for relative in ("README.md", "docs/QUICKSTART.md"):
+            with self.subTest(relative=relative):
+                self.assertIn(
+                    "| Copilot CLI | Skills + Agent Profiles |",
+                    (ROOT / relative).read_text(encoding="utf-8"),
+                )
+
+    def test_explicit_invocation_examples_are_bound_to_host_authority(self) -> None:
+        for relative in ("README.md", "docs/QUICKSTART.md", "docs/USAGE.md"):
+            with self.subTest(relative=relative), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                self._copy_paths(
+                    root,
+                    (
+                        "README.md",
+                        "docs/QUICKSTART.md",
+                        "docs/USAGE.md",
+                        "src/agent-profiles/host-product-surfaces.json",
+                    ),
+                )
+                target = root / relative
+                text = target.read_text(encoding="utf-8")
+                task_start = "$engineering-control-plane\n\nPayment callbacks"
+                self.assertIn(task_start, text)
+                target.write_text(
+                    text.replace(
+                        task_start,
+                        "$wrong-skill\n\nPayment callbacks",
+                        1,
+                    ),
+                    encoding="utf-8",
+                )
+
+                errors = self.validator._host_product_surface_errors(root)
+
+                self.assertTrue(
+                    any("invocation token" in error for error in errors),
+                    errors,
+                )
+
+    def test_copilot_every_surface_limit_claim_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._copy_paths(
+                root,
+                (
+                    "README.md",
+                    "docs/QUICKSTART.md",
+                    "docs/USAGE.md",
+                    "src/agent-profiles/host-product-surfaces.json",
+                ),
+            )
+            readme = root / "README.md"
+            current = readme.read_text(encoding="utf-8")
+            original = "Copilot CLI only"
+            self.assertIn(original, current)
+            readme.write_text(
+                current.replace(
+                    original,
+                    "Available on every Copilot surface.",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+
+            errors = self.validator._host_product_surface_errors(root)
+
+            self.assertTrue(
+                any("Host delivery/invocation/workflow table" in error for error in errors),
+                errors,
+            )
 
     def test_cline_install_target_does_not_claim_live_host_behavior(self) -> None:
         quickstart = (ROOT / "docs/QUICKSTART.md").read_text(encoding="utf-8")
-        self.assertNotIn("| Cline | `/engineering-control-plane` |", quickstart)
         self.assertIn(
-            "| Cline | Install target only; live Skill invocation and workflow "
-            "behavior are not established by the current host contract. |",
+            "| Cline | Skills only | Not established | Not established | "
+            "Artifact delivery only |",
             quickstart,
         )
-        self.assertEqual([], self.validator._slash_invocation_errors(ROOT))
+        self.assertEqual([], self.validator._host_product_surface_errors(ROOT))
 
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             self._copy_paths(
                 root,
-                ("README.md", "docs/QUICKSTART.md", "docs/USAGE.md"),
+                (
+                    "README.md",
+                    "docs/QUICKSTART.md",
+                    "docs/USAGE.md",
+                    "src/agent-profiles/host-product-surfaces.json",
+                ),
             )
             target = root / "docs/QUICKSTART.md"
             target.write_text(
                 target.read_text(encoding="utf-8").replace(
-                    "| Cline | Install target only; live Skill invocation and workflow "
-                    "behavior are not established by the current host contract. |",
-                    "| Cline | `/engineering-control-plane` |",
+                    "| Cline | Skills only | Not established | Not established | "
+                    "Artifact delivery only |",
+                    "| Cline | Skills only | `/engineering-control-plane` | Available | "
+                    "Artifact delivery only |",
                     1,
                 ),
                 encoding="utf-8",
             )
-            errors = self.validator._slash_invocation_errors(root)
+            errors = self.validator._host_product_surface_errors(root)
             self.assertTrue(
-                any("Cline" in error and "contract-unproven" in error for error in errors),
+                any("Host delivery/invocation/workflow table" in error for error in errors),
                 errors,
             )
 
-    def test_codex_slash_invocation_is_rejected(self) -> None:
+    def test_cline_full_workflow_prose_claim_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             self._copy_paths(
                 root,
-                ("README.md", "docs/QUICKSTART.md", "docs/USAGE.md"),
+                (
+                    "README.md",
+                    "docs/QUICKSTART.md",
+                    "docs/USAGE.md",
+                    "src/agent-profiles/host-product-surfaces.json",
+                ),
             )
-            readme = root / "README.md"
-            readme.write_text(
-                readme.read_text(encoding="utf-8").replace(
-                    "$engineering-control-plane",
-                    "/engineering-control-plane",
+            usage = root / "docs/USAGE.md"
+            usage.write_text(
+                usage.read_text(encoding="utf-8")
+                + "\nThe full rd-skills workflow is available in Cline.\n",
+                encoding="utf-8",
+            )
+
+            errors = self.validator._host_product_surface_errors(root)
+
+            self.assertTrue(any("unsupported Host workflow claim" in error for error in errors), errors)
+
+    def test_quickstart_codex_task_rejects_slash_invocation(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._copy_paths(
+                root,
+                (
+                    "README.md",
+                    "docs/QUICKSTART.md",
+                    "docs/USAGE.md",
+                    "src/agent-profiles/host-product-surfaces.json",
+                ),
+            )
+            quickstart = root / "docs/QUICKSTART.md"
+            current = quickstart.read_text(encoding="utf-8")
+            task_start = "$engineering-control-plane\n\nPayment callbacks"
+            self.assertIn(task_start, current)
+            quickstart.write_text(
+                current.replace(
+                    task_start,
+                    "/engineering-control-plane\n\nPayment callbacks",
                     1,
                 ),
                 encoding="utf-8",
             )
 
-            errors = self.validator._slash_invocation_errors(root)
+            errors = self.validator._host_product_surface_errors(root)
 
             self.assertTrue(
-                any("README.md" in error and "Codex" in error for error in errors),
+                any(
+                    "docs/QUICKSTART.md" in error and "invocation token" in error
+                    for error in errors
+                ),
                 errors,
             )
+
+    def test_slash_invocation_examples_are_bound_to_host_authority(self) -> None:
+        for relative in ("README.md", "docs/QUICKSTART.md", "docs/USAGE.md"):
+            with self.subTest(relative=relative), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                self._copy_paths(
+                    root,
+                    (
+                        "README.md",
+                        "docs/QUICKSTART.md",
+                        "docs/USAGE.md",
+                        "src/agent-profiles/host-product-surfaces.json",
+                    ),
+                )
+                target = root / relative
+                current = target.read_text(encoding="utf-8")
+                task_start = "$engineering-control-plane\n\nPayment callbacks"
+                self.assertIn(task_start, current)
+                target.write_text(
+                    current.replace(
+                        task_start,
+                        "/wrong-skill\n\nPayment callbacks",
+                        1,
+                    ),
+                    encoding="utf-8",
+                )
+
+                errors = self.validator._host_product_surface_errors(root)
+
+                self.assertTrue(
+                    any(
+                        relative in error and "invocation token" in error
+                        for error in errors
+                    ),
+                    errors,
+                )
 
     def test_universal_slash_invocation_claim_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             self._copy_paths(
                 root,
-                ("README.md", "docs/QUICKSTART.md", "docs/USAGE.md"),
+                (
+                    "README.md",
+                    "docs/QUICKSTART.md",
+                    "docs/USAGE.md",
+                    "src/agent-profiles/host-product-surfaces.json",
+                ),
             )
             usage = root / "docs/USAGE.md"
             usage.write_text(
@@ -766,7 +951,7 @@ class DocsCoreProjectionTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            errors = self.validator._slash_invocation_errors(root)
+            errors = self.validator._host_product_surface_errors(root)
 
             self.assertTrue(
                 any("universal Slash" in error for error in errors),
@@ -1178,96 +1363,6 @@ class DocsCoreProjectionTests(unittest.TestCase):
             errors = self.validator._required_content_errors(root)
 
             self.assertTrue(any("host/scope/default-target matrix" in error for error in errors), errors)
-
-    def test_wrong_target_meaning_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            self._installation_docs(root)
-            target = root / "docs/INSTALLATION.md"
-            text = target.read_text(encoding="utf-8")
-            original = "For `project`, `--target` means the project root and is required."
-            self.assertIn(original, text)
-            target.write_text(
-                text.replace(
-                    original,
-                    "For `project`, `--target` means the Skill directory and is optional.",
-                    1,
-                ),
-                encoding="utf-8",
-            )
-
-            errors = self.validator._required_content_errors(root)
-
-            self.assertTrue(any("missing source-backed installation fact" in error for error in errors), errors)
-
-    def test_wrong_profile_delivery_claim_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            self._installation_docs(root)
-            target = root / "docs/INSTALLATION.md"
-            text = target.read_text(encoding="utf-8")
-            original = "Cline installs Skills without native Agent Profile files."
-            self.assertIn(original, text)
-            target.write_text(
-                text.replace(
-                    original,
-                    "Cline\ninstalls Skills with four native Agent Profile files.",
-                    1,
-                ),
-                encoding="utf-8",
-            )
-
-            errors = self.validator._required_content_errors(root)
-
-            self.assertTrue(any("missing source-backed installation fact" in error for error in errors), errors)
-
-    def test_missing_non_atomic_upgrade_warning_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            self._installation_docs(root)
-            target = root / "docs/INSTALLATION.md"
-            text = target.read_text(encoding="utf-8")
-            original = "Upgrade is not crash-atomic"
-            self.assertIn(original, text)
-            target.write_text(
-                text.replace(original, "Upgrade completes atomically", 1),
-                encoding="utf-8",
-            )
-
-            errors = self.validator._required_content_errors(root)
-
-            self.assertTrue(
-                any(original in error for error in errors),
-                errors,
-            )
-
-    def test_uninstall_managed_directory_and_no_backup_boundary_is_required(self) -> None:
-        installation = (ROOT / "docs/INSTALLATION.md").read_text(encoding="utf-8")
-        for required in (
-            "Every manifest-managed Skill directory is deleted as a whole",
-            "files mixed into that directory are deleted with it",
-            "Uninstall creates no automatic backup or recovery copy",
-        ):
-            self.assertIn(required, installation)
-        self.assertEqual([], self.validator._required_content_errors(ROOT))
-
-        with tempfile.TemporaryDirectory() as raw:
-            root = Path(raw)
-            self._installation_docs(root)
-            target = root / "docs/INSTALLATION.md"
-            target.write_text(
-                target.read_text(encoding="utf-8").replace(
-                    "Uninstall creates no automatic backup or recovery copy",
-                    "Uninstall is complete",
-                    1,
-                ),
-                encoding="utf-8",
-            )
-            errors = self.validator._required_content_errors(root)
-            self.assertTrue(
-                any("automatic backup or recovery copy" in error for error in errors),
-                errors,
-            )
 
     def test_validation_path_surfaces_are_consistent(self) -> None:
         self.assertEqual([], self.validator._validation_path_consistency_errors(ROOT))

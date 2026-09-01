@@ -77,7 +77,6 @@ STATIC_REPORT_CONTRACTS = {
 STATIC_REPORT_EVIDENCE_SCOPES = {
     "reports/rendered-context-budget.json": "deterministic-rendered-artifacts",
 }
-DEMO_GIF = "docs/assets/rd-skills-demo.gif"
 CONTENT_READINESS_REPORTS = {
     "reports/professionalism-regression-report.json",
 }
@@ -3007,103 +3006,10 @@ def _static_report_errors(root: Path) -> list[str]:
     return errors
 
 
-def _gif_frame_count(data: bytes) -> int | None:
-    """Return the image-frame count for a structurally valid GIF file."""
-    if len(data) < 14 or data[:6] not in {b"GIF87a", b"GIF89a"}:
-        return None
-    width = int.from_bytes(data[6:8], "little")
-    height = int.from_bytes(data[8:10], "little")
-    if width == 0 or height == 0:
-        return None
-
-    offset = 13
-    logical_screen_packed = data[10]
-    if logical_screen_packed & 0x80:
-        color_count = 2 << (logical_screen_packed & 0x07)
-        offset += 3 * color_count
-    if offset > len(data):
-        return None
-
-    def skip_sub_blocks(start: int) -> int | None:
-        cursor = start
-        while cursor < len(data):
-            block_size = data[cursor]
-            cursor += 1
-            if block_size == 0:
-                return cursor
-            cursor += block_size
-            if cursor > len(data):
-                return None
-        return None
-
-    frame_count = 0
-    while offset < len(data):
-        marker = data[offset]
-        offset += 1
-        if marker == 0x3B:
-            return frame_count if offset == len(data) else None
-        if marker == 0x21:
-            if offset >= len(data):
-                return None
-            offset += 1  # extension label
-            next_offset = skip_sub_blocks(offset)
-            if next_offset is None:
-                return None
-            offset = next_offset
-            continue
-        if marker != 0x2C or offset + 9 > len(data):
-            return None
-
-        descriptor_packed = data[offset + 8]
-        offset += 9
-        if descriptor_packed & 0x80:
-            color_count = 2 << (descriptor_packed & 0x07)
-            offset += 3 * color_count
-        if offset >= len(data):
-            return None
-        offset += 1  # LZW minimum code size
-        next_offset = skip_sub_blocks(offset)
-        if next_offset is None:
-            return None
-        offset = next_offset
-        frame_count += 1
-    return None
-
-
-def _demo_gif_errors(root: Path) -> list[str]:
-    errors: list[str] = []
-    asset = root / DEMO_GIF
-    if not asset.is_file():
-        return [f"missing demo GIF: {DEMO_GIF}"]
-
-    try:
-        frame_count = _gif_frame_count(asset.read_bytes())
-    except OSError:
-        frame_count = None
-    if frame_count is None:
-        errors.append("demo GIF is not a valid GIF animation")
-    elif frame_count < 2:
-        suffix = "frame" if frame_count == 1 else "frames"
-        errors.append(
-            f"demo GIF must be animated (found {frame_count} {suffix})"
-        )
-
-    readme = root / "README.md"
-    if readme.is_file():
-        try:
-            readme_text = readme.read_text(encoding="utf-8")
-        except OSError:
-            readme_text = ""
-        if f"]({DEMO_GIF})" not in readme_text:
-            errors.append(f"README.md must embed {DEMO_GIF}")
-    return errors
-
-
 def validate_productization_assets(root: Path = ROOT) -> list[str]:
     errors = [f"missing required product asset: {path}" for path in REQUIRED if not (root / path).is_file()]
     errors.extend(f"forbidden product path remains: {path}" for path in FORBIDDEN if (root / path).exists())
     errors.extend(_docs_errors(root))
-    errors.extend(_demo_gif_errors(root))
     errors.extend(_static_report_errors(root))
 
     schema_path = root / "schemas/marketplace-index.schema.json"

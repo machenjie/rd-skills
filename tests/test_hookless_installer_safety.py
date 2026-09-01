@@ -121,6 +121,91 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
         )
         self.assertFalse(hasattr(self.helper, "PROFILES"))
 
+    def test_host_product_surfaces_are_closed_and_compatible_with_delivery(self) -> None:
+        contract = self.helper.read_host_product_surfaces()
+
+        self.assertEqual(1, contract["schema_version"])
+        self.assertEqual(set(self.helper.AGENTS), set(contract["surfaces"]))
+        self.assertEqual(
+            set(self.helper.AGENTS),
+            {
+                surface["host_enforcement_id"]
+                for surface in contract["surfaces"].values()
+            },
+        )
+        self.assertEqual(
+            "$engineering-control-plane",
+            contract["surfaces"]["codex"]["invocation"],
+        )
+        self.assertEqual(
+            "/engineering-control-plane",
+            contract["surfaces"]["claude"]["invocation"],
+        )
+        self.assertEqual(
+            "/engineering-control-plane",
+            contract["surfaces"]["copilot"]["invocation"],
+        )
+        self.assertIsNone(contract["surfaces"]["cline"]["invocation"])
+        self.assertEqual(
+            "not-established",
+            contract["surfaces"]["cline"]["full_workflow"],
+        )
+        self.assertIsNone(contract["surfaces"]["openai-api"]["invocation"])
+        self.assertEqual(
+            "integration-owned",
+            contract["surfaces"]["openai-api"]["full_workflow"],
+        )
+
+    def test_host_product_surface_loader_rejects_workflow_without_profile_delivery(self) -> None:
+        contract = {
+            "schema_version": 1,
+            "kind": "rd-skills-host-product-surfaces",
+            "surfaces": {
+                agent: dict(surface)
+                for agent, surface in self.helper.read_host_product_surfaces()[
+                    "surfaces"
+                ].items()
+            },
+        }
+        contract["surfaces"]["cline"]["full_workflow"] = "available"
+        with tempfile.TemporaryDirectory() as raw:
+            source = Path(raw) / "host-product-surfaces.json"
+            source.write_text(json.dumps(contract), encoding="utf-8")
+            with mock.patch.object(self.helper, "HOST_PRODUCT_SURFACES_SOURCE", source):
+                with self.assertRaisesRegex(
+                    self.helper.InstallError,
+                    "full workflow requires Agent Profile delivery",
+                ):
+                    self.helper.read_host_product_surfaces()
+
+    def test_host_product_surface_loader_rejects_live_invocation_above_host_ceiling(self) -> None:
+        for agent in ("cline", "openai-api"):
+            with self.subTest(agent=agent), tempfile.TemporaryDirectory() as raw:
+                contract = {
+                    "schema_version": 1,
+                    "kind": "rd-skills-host-product-surfaces",
+                    "surfaces": {
+                        name: dict(surface)
+                        for name, surface in self.helper.read_host_product_surfaces()[
+                            "surfaces"
+                        ].items()
+                    },
+                }
+                contract["surfaces"][agent]["live_skill_invocation"] = "supported"
+                contract["surfaces"][agent]["invocation"] = "/engineering-control-plane"
+                source = Path(raw) / "host-product-surfaces.json"
+                source.write_text(json.dumps(contract), encoding="utf-8")
+                with mock.patch.object(
+                    self.helper,
+                    "HOST_PRODUCT_SURFACES_SOURCE",
+                    source,
+                ):
+                    with self.assertRaisesRegex(
+                        self.helper.InstallError,
+                        "exceeds host skill-loading ceiling",
+                    ):
+                        self.helper.read_host_product_surfaces()
+
     def test_public_installer_help_and_obsolete_profile_rejection_are_profile_free(self) -> None:
         for script in ("install", "upgrade", "doctor"):
             with self.subTest(script=script):
@@ -769,6 +854,26 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
             self.assertIn("installed inventory", verbose)
             self.assertIn("source binding", verbose)
             self.assertIn("digests", verbose)
+
+    def test_doctor_next_step_is_host_aware(self) -> None:
+        expected = {
+            "codex": ("$engineering-control-plane",),
+            "claude": ("/engineering-control-plane",),
+            "copilot": ("Copilot CLI",),
+            "cline": ("full rd-skills workflow", "not established"),
+            "openai-api": ("packages were generated and verified",),
+        }
+        for agent, phrases in expected.items():
+            with self.subTest(agent=agent):
+                output = io.StringIO()
+                with redirect_stdout(output):
+                    self.doctor_cli._print_success(agent)
+                rendered = output.getvalue()
+                self.assertIn("Next:", rendered)
+                for phrase in phrases:
+                    self.assertIn(phrase, rendered)
+                if agent in {"cline", "openai-api"}:
+                    self.assertNotIn("run the first task", rendered)
 
     def test_legacy_dry_run_is_zero_mutation_and_uninstall_accepts_exact_legacy_set(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

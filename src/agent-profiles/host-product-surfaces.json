@@ -1,0 +1,51 @@
+{
+  "kind": "rd-skills-host-product-surfaces",
+  "schema_version": 1,
+  "surfaces": {
+    "claude": {
+      "artifact_delivery": "skills-and-agent-profiles",
+      "full_workflow": "available",
+      "host_enforcement_id": "claude",
+      "invocation": "/engineering-control-plane",
+      "label": "Claude Code",
+      "limitation_code": "artifact-health-only",
+      "live_skill_invocation": "supported"
+    },
+    "cline": {
+      "artifact_delivery": "skills-only",
+      "full_workflow": "not-established",
+      "host_enforcement_id": "cline",
+      "invocation": null,
+      "label": "Cline",
+      "limitation_code": "artifact-delivery-only",
+      "live_skill_invocation": "not-established"
+    },
+    "codex": {
+      "artifact_delivery": "skills-and-agent-profiles",
+      "full_workflow": "available",
+      "host_enforcement_id": "codex",
+      "invocation": "$engineering-control-plane",
+      "label": "Codex",
+      "limitation_code": "artifact-health-only",
+      "live_skill_invocation": "supported"
+    },
+    "copilot": {
+      "artifact_delivery": "skills-and-agent-profiles",
+      "full_workflow": "available",
+      "host_enforcement_id": "copilot",
+      "invocation": "/engineering-control-plane",
+      "label": "Copilot CLI",
+      "limitation_code": "copilot-cli-only",
+      "live_skill_invocation": "supported"
+    },
+    "openai-api": {
+      "artifact_delivery": "zip-packages",
+      "full_workflow": "integration-owned",
+      "host_enforcement_id": "openai-api",
+      "invocation": null,
+      "label": "OpenAI API",
+      "limitation_code": "api-integration-only",
+      "live_skill_invocation": "not-applicable"
+    }
+  }
+}

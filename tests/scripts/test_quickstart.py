@@ -181,6 +181,53 @@ class QuickstartPlanTests(unittest.TestCase):
         )
         self.assertEqual("", stdout.getvalue())
 
+    def test_run_plan_preserves_material_success_output_and_all_stderr(self) -> None:
+        plan = self.quickstart.QuickstartPlan(
+            expected_skill_count=26,
+            commands=(("python3", "installers/install.py"),),
+            doctor_expected=False,
+            agent_profiles=(),
+        )
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with (
+            mock.patch.object(
+                self.quickstart.subprocess,
+                "run",
+                return_value=subprocess.CompletedProcess(
+                    args=list(plan.commands[0]),
+                    returncode=0,
+                    stdout=(
+                        "install: internal inventory=26\n"
+                        "install: removed 2 legacy artifacts\n"
+                        "- legacy hooks directory\n"
+                        "install: backup written to /safe/recovery/backup\n"
+                        "  restore this path before retrying\n"
+                        "install: manifest digest=internal\n"
+                    ),
+                    stderr="warning: restart the host before continuing\n",
+                ),
+            ),
+            redirect_stdout(stdout),
+            redirect_stderr(stderr),
+        ):
+            self.assertEqual(
+                0,
+                self.quickstart.run_plan(plan, dry_run=False, verbose=False),
+            )
+
+        self.assertEqual(
+            "install: removed 2 legacy artifacts\n"
+            "- legacy hooks directory\n"
+            "install: backup written to /safe/recovery/backup\n"
+            "  restore this path before retrying\n",
+            stdout.getvalue(),
+        )
+        self.assertEqual(
+            "warning: restart the host before continuing\n",
+            stderr.getvalue(),
+        )
+
     def test_run_plan_forwards_failure_details_and_exact_exit(self) -> None:
         plan = self.quickstart.QuickstartPlan(
             expected_skill_count=26,
@@ -221,35 +268,37 @@ class QuickstartPlanTests(unittest.TestCase):
         self.assertEqual("install: specific problem\n", stdout.getvalue())
         self.assertEqual("install: actionable failure\n", stderr.getvalue())
 
-    def test_normal_output_hides_internal_plan_and_gives_next_step(self) -> None:
-        stdout = io.StringIO()
-        with (
-            mock.patch.object(
-                sys,
-                "argv",
-                [
-                    "quickstart.py",
-                    "--agent",
-                    "codex",
-                    "--scope",
-                    "project",
-                    "--target",
-                    "/tmp/project",
-                ],
-            ),
-            mock.patch.object(self.quickstart, "run_plan", return_value=0),
-            redirect_stdout(stdout),
-        ):
-            self.assertEqual(0, self.quickstart.main())
+    def test_normal_output_gives_authority_derived_next_step_per_host(self) -> None:
+        expected = {
+            "codex": ("$engineering-control-plane", "full rd-skills workflow"),
+            "claude": ("/engineering-control-plane", "full rd-skills workflow"),
+            "copilot": ("/engineering-control-plane", "Copilot CLI"),
+            "cline": ("artifacts are healthy", "not established"),
+            "openai-api": ("packages were generated and verified", "API integration"),
+        }
+        for agent, required in expected.items():
+            with self.subTest(agent=agent):
+                stdout = io.StringIO()
+                argv = ["quickstart.py", "--agent", agent]
+                if agent != "openai-api":
+                    argv.extend(("--scope", "user"))
+                with (
+                    mock.patch.object(sys, "argv", argv),
+                    mock.patch.object(self.quickstart, "run_plan", return_value=0),
+                    redirect_stdout(stdout),
+                ):
+                    self.assertEqual(0, self.quickstart.main())
 
-        output = stdout.getvalue()
-        self.assertIn("✓ rd-skills setup complete", output)
-        self.assertIn("Next:", output)
-        self.assertIn("Open or restart your AI coding tool", output)
-        self.assertNotIn("command plan", output)
-        self.assertNotIn("expected standard Skills", output)
-        self.assertNotIn("Agent Profiles", output)
-        self.assertNotIn("scripts/build.py", output)
+                output = stdout.getvalue()
+                self.assertIn("✓ rd-skills setup complete", output)
+                self.assertIn("Next:", output)
+                for phrase in required:
+                    self.assertIn(phrase, output)
+                if agent in {"cline", "openai-api"}:
+                    self.assertNotIn("run the first task", output)
+                self.assertNotIn("command plan", output)
+                self.assertNotIn("expected standard Skills", output)
+                self.assertNotIn("scripts/build.py", output)
 
     def test_dry_run_and_verbose_show_diagnostic_plan(self) -> None:
         for extra_args in (["--dry-run"], ["--verbose"]):

@@ -20,7 +20,7 @@ Include:
 - whether the target was default or explicit;
 - operating system and Python version;
 - the first specific error and relevant redacted output; and
-- `doctor --verbose` output when the problem concerns installation artifacts.
+- output from the matching real command, for example `python3 installers/doctor.py --agent codex --scope user --verbose`, when the problem concerns installation artifacts.
 
 Remove usernames, private absolute paths, repository contents, tokens, credentials, customer data, and other secrets before posting.
 

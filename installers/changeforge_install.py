@@ -22,6 +22,9 @@ MANIFEST_NAME = ".changeforge-install-manifest.json"
 BUILD_MANIFEST_NAME = ".changeforge-build-manifest.json"
 COMPILED_LAYER3_FORMAT = "ai-consumption-v1"
 HOST_ENFORCEMENT_SOURCE = ROOT / "src" / "agent-profiles" / "host-enforcement.json"
+HOST_PRODUCT_SURFACES_SOURCE = (
+    ROOT / "src" / "agent-profiles" / "host-product-surfaces.json"
+)
 CORE_CONTRACTS_SOURCE = ROOT / "src" / "control-model" / "core-contracts.json"
 BACKUP_DIR_NAME = ".changeforge-backups"
 RUNTIME_PROFILE = "recommended"
@@ -79,6 +82,27 @@ ENFORCEMENT_STATUSES = {
     "sandbox-enforced",
     "prompt-enforced",
     "unsupported",
+}
+PRODUCT_ARTIFACT_DELIVERY = {
+    "skills-and-agent-profiles",
+    "skills-only",
+    "zip-packages",
+}
+PRODUCT_LIVE_SKILL_INVOCATION = {
+    "supported",
+    "not-established",
+    "not-applicable",
+}
+PRODUCT_FULL_WORKFLOW = {
+    "available",
+    "not-established",
+    "integration-owned",
+}
+PRODUCT_LIMITATION_CODES = {
+    "artifact-health-only",
+    "copilot-cli-only",
+    "artifact-delivery-only",
+    "api-integration-only",
 }
 HOST_ENFORCEMENT_CAPABILITIES = {
     "profile_delivery",
@@ -880,6 +904,141 @@ def host_enforcement_for_agent(agent: str) -> dict[str, Any]:
     if agent not in AGENTS:
         raise InstallError(f"unsupported agent {agent!r}")
     return dict(read_host_enforcement_source()["hosts"][agent])
+
+
+def read_host_product_surfaces(source: Path | None = None) -> dict[str, Any]:
+    """Load the closed product-surface projection over installer agent identities."""
+
+    value = load_json(source or HOST_PRODUCT_SURFACES_SOURCE)
+    if value is None:
+        raise InstallError("missing host product-surface authority")
+    if set(value) != {"schema_version", "kind", "surfaces"}:
+        raise InstallError("host product-surface authority has unexpected fields")
+    if value.get("schema_version") != 1:
+        raise InstallError("host product-surface authority must use schema_version 1")
+    if value.get("kind") != "rd-skills-host-product-surfaces":
+        raise InstallError("host product-surface authority has an invalid kind")
+    surfaces = value.get("surfaces")
+    if not isinstance(surfaces, dict) or set(surfaces) != set(AGENTS):
+        raise InstallError("host product-surface authority must contain every installer agent")
+
+    expected_fields = {
+        "label",
+        "artifact_delivery",
+        "live_skill_invocation",
+        "invocation",
+        "full_workflow",
+        "host_enforcement_id",
+        "limitation_code",
+    }
+    skill_hosts = {agent for agent, _scope in SOURCE_SKILL_ROOTS}
+    profile_hosts = {agent for agent, _scope in SOURCE_PROFILE_ROOTS}
+    enforcement_hosts = read_host_enforcement_source()["hosts"]
+    enforcement_ids: set[str] = set()
+    for agent in AGENTS:
+        surface = surfaces[agent]
+        if not isinstance(surface, dict) or set(surface) != expected_fields:
+            raise InstallError(f"{agent}: product-surface fields must match schema 1")
+        label = surface.get("label")
+        enforcement_id = surface.get("host_enforcement_id")
+        limitation_code = surface.get("limitation_code")
+        if not isinstance(label, str) or not label.strip():
+            raise InstallError(f"{agent}: product-surface label must be non-empty")
+        if enforcement_id != agent or enforcement_id not in enforcement_hosts:
+            raise InstallError(f"{agent}: host enforcement reference must match its agent")
+        if enforcement_id in enforcement_ids:
+            raise InstallError(f"{agent}: duplicate host enforcement reference")
+        enforcement_ids.add(enforcement_id)
+        if limitation_code not in PRODUCT_LIMITATION_CODES:
+            raise InstallError(f"{agent}: invalid product limitation code")
+
+        delivery = surface.get("artifact_delivery")
+        live = surface.get("live_skill_invocation")
+        invocation = surface.get("invocation")
+        workflow = surface.get("full_workflow")
+        if delivery not in PRODUCT_ARTIFACT_DELIVERY:
+            raise InstallError(f"{agent}: invalid artifact delivery class")
+        if live not in PRODUCT_LIVE_SKILL_INVOCATION:
+            raise InstallError(f"{agent}: invalid live Skill invocation status")
+        if workflow not in PRODUCT_FULL_WORKFLOW:
+            raise InstallError(f"{agent}: invalid full workflow status")
+        if live == "supported":
+            if not isinstance(invocation, str) or not invocation.strip():
+                raise InstallError(f"{agent}: supported live invocation requires syntax")
+        elif invocation is not None:
+            raise InstallError(f"{agent}: invocation syntax requires supported live loading")
+        if (
+            live == "supported"
+            and enforcement_hosts[enforcement_id]["skill_loading"] == "unsupported"
+        ):
+            raise InstallError(f"{agent}: live invocation exceeds host skill-loading ceiling")
+
+        has_skills = agent in skill_hosts
+        has_profiles = agent in profile_hosts
+        expected_delivery = (
+            "zip-packages"
+            if agent == "openai-api"
+            else "skills-and-agent-profiles"
+            if has_profiles
+            else "skills-only"
+        )
+        if delivery != expected_delivery or (agent != "openai-api" and not has_skills):
+            raise InstallError(f"{agent}: artifact delivery conflicts with installer sources")
+        if agent == "openai-api" and (has_skills or has_profiles):
+            raise InstallError("openai-api: package delivery must not have install sources")
+        if workflow == "available" and (live != "supported" or not has_profiles):
+            raise InstallError(
+                f"{agent}: full workflow requires Agent Profile delivery and live invocation"
+            )
+        if agent == "openai-api" and workflow != "integration-owned":
+            raise InstallError("openai-api: workflow must remain integration-owned")
+        if agent != "openai-api" and workflow == "integration-owned":
+            raise InstallError(f"{agent}: integration-owned workflow is API-only")
+        expected_limit = (
+            "api-integration-only"
+            if workflow == "integration-owned"
+            else "artifact-delivery-only"
+            if workflow == "not-established"
+            else "copilot-cli-only"
+            if agent == "copilot"
+            else "artifact-health-only"
+        )
+        if limitation_code != expected_limit:
+            raise InstallError(f"{agent}: product limitation conflicts with surface status")
+    if enforcement_ids != set(enforcement_hosts):
+        raise InstallError("host product surfaces must map every enforcement host exactly once")
+    return value
+
+
+def host_product_surface_for_agent(agent: str) -> dict[str, Any]:
+    if agent not in AGENTS:
+        raise InstallError(f"unsupported agent {agent!r}")
+    return dict(read_host_product_surfaces()["surfaces"][agent])
+
+
+def product_next_step_lines(agent: str) -> tuple[str, ...]:
+    """Project a truthful successful follow-up from the structured authority."""
+
+    surface = host_product_surface_for_agent(agent)
+    workflow = surface["full_workflow"]
+    if workflow == "available":
+        return (
+            f"Open or restart {surface['label']}.",
+            f"Start with {surface['invocation']} and describe the task in natural language.",
+            f"The full rd-skills workflow is available on {surface['label']}.",
+        )
+    if workflow == "not-established":
+        return (
+            f"Installed {surface['label']} Skill artifacts are healthy.",
+            f"For {surface['label']}, live Skill invocation and the full rd-skills "
+            "workflow are not established.",
+        )
+    if workflow == "integration-owned":
+        return (
+            "The rd-skills packages were generated and verified.",
+            "Use them through your OpenAI API integration.",
+        )
+    raise InstallError(f"{agent}: unsupported full workflow status")
 
 
 def _manifest_names(

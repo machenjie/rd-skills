@@ -24,12 +24,6 @@ request
 
 You describe the problem. rd-skills carries the process.
 
-## Demo
-
-A duplicate-order webhook bug, fixed from one natural-language request with targeted tests and an independent review.
-
-![rd-skills real engineering demo](docs/assets/rd-skills-demo.gif)
-
 ## Install
 
 Requirements: Python 3.11 or newer and a checkout of this repository. From the repository root:
@@ -74,13 +68,13 @@ If ownership, safety, or impact is unclear, it investigates first. It stops befo
 
 Supported hosts are `codex`, `claude`, `copilot`, `cline`, and `openai-api`.
 
-| Tool | Personal setup | Project setup | Notes |
-| --- | --- | --- | --- |
-| Codex | yes | yes | Also supports an explicitly authorized admin scope. |
-| Claude | yes | yes | Restart the tool after installation. |
-| GitHub Copilot | yes | yes | Host capabilities depend on the active Copilot environment. |
-| Cline | yes | yes | Install/build target only; the current host contract does not establish live Skill loading or workflow behavior. |
-| OpenAI API | package output | n/a | Produces local zip packages; it does not install into a live host. |
+| Host or surface | Artifact delivery | Live Skill invocation | Full rd-skills workflow | Limit |
+| --- | --- | --- | --- | --- |
+| Codex | Skills + Agent Profiles | `$engineering-control-plane` | Available | Artifacts checked; live loading not proved |
+| Claude Code | Skills + Agent Profiles | `/engineering-control-plane` | Available | Artifacts checked; live loading not proved |
+| Copilot CLI | Skills + Agent Profiles | `/engineering-control-plane` | Available | Copilot CLI only |
+| Cline | Skills only | Not established | Not established | Artifact delivery only |
+| OpenAI API | Zip packages | Not applicable | API integration owns orchestration | API integration only |
 
 Project scope requires `--target` with the project root. Exact paths, scopes, and recovery rules live in [Advanced Installation & Recovery](docs/INSTALLATION.md).
 

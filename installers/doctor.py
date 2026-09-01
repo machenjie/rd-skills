@@ -21,6 +21,7 @@ from changeforge_install import (
     classify_installed_manifest,
     host_enforcement_for_agent,
     legacy_residue_paths,
+    product_next_step_lines,
     read_manifest,
     resolve_source_profile_dir,
     resolve_targets,
@@ -52,32 +53,33 @@ def _print_enforcement(agent: str, enforcement: dict) -> None:
             print(f"  limitation: {limitation}")
 
 
-def _print_runtime_success() -> None:
-    print("✓ rd-skills installed")
-    print("✓ expected configuration found")
-    print("✓ installation healthy")
+def _print_success(
+    agent: str,
+    next_step: tuple[str, ...] | None = None,
+) -> None:
+    if agent == "openai-api":
+        print("✓ rd-skills package found")
+        print("✓ expected package contents found")
+        print("✓ package healthy")
+    else:
+        print("✓ rd-skills installed")
+        print("✓ expected configuration found")
+        print("✓ installation healthy")
     print()
-    print(
-        "Doctor verifies installation artifacts. It does not prove your AI "
-        "coding tool loaded rd-skills."
-    )
+    if agent == "openai-api":
+        print(
+            "Doctor verifies package artifacts. It does not prove a real host "
+            "loaded rd-skills."
+        )
+    else:
+        print(
+            "Doctor verifies installation artifacts. It does not prove your AI "
+            "coding tool loaded rd-skills."
+        )
     print()
     print("Next:")
-    print("Open or restart your AI coding tool and run the first task.")
-
-
-def _print_openai_package_success() -> None:
-    print("✓ rd-skills package found")
-    print("✓ expected package contents found")
-    print("✓ package healthy")
-    print()
-    print(
-        "Doctor verifies package artifacts. It does not prove a real host "
-        "loaded rd-skills."
-    )
-    print()
-    print("Next:")
-    print("Use the generated package with your OpenAI API integration.")
+    for line in next_step or product_next_step_lines(agent):
+        print(line)
 
 
 def _profile_projection_issues(
@@ -180,13 +182,14 @@ def main() -> int:
     args = parser.parse_args()
     try:
         expected_enforcement = host_enforcement_for_agent(args.agent)
+        next_step = product_next_step_lines(args.agent)
         if args.agent == "openai-api":
             source = resolve_source_profile_dir(args.agent, args.scope)
             validate_openai_bundles(source)
             if args.verbose:
                 print(f"doctor: source binding package_root={source}")
                 _print_enforcement(args.agent, expected_enforcement)
-            _print_openai_package_success()
+            _print_success(args.agent, next_step)
             return 0
         targets = resolve_targets(args.agent, args.scope, args.target)
         manifest = read_manifest(targets.skills)
@@ -289,7 +292,7 @@ def main() -> int:
                     "doctor: observed-installed Profile files match declared "
                     "digests and critical fields"
                 )
-        _print_runtime_success()
+        _print_success(args.agent, next_step)
         return 0
     except InstallError as exc:
         print(f"doctor: ERROR: {exc}", file=sys.stderr)
