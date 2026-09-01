@@ -1,128 +1,132 @@
 # Quickstart
 
-This path starts at a fresh checkout and ends with a first bounded engineering
-request. Run commands from the repository root.
+This guide starts at a fresh checkout and ends with your first successful rd-skills task. Run commands from the repository root.
 
-## Prepare
+## 1. Install
 
-rd-skills requires Python 3.11 or newer. Install its declared dependencies:
+You need Python 3.11 or newer. Install the repository's declared dependencies:
 
 ```bash
 python3 --version
 python3 -m pip install .
 ```
 
-Do not install `src/` or source registries. Quickstart builds the one Runtime
-into `dist/` before using the installer. There is no Profile choice: every Host
-receives the same 26 top-level Skills, consisting of 1 Control and 25
-Professional Skills. Foundation and Domain knowledge remains behind targeted
-JIT selectors.
+Do not copy `src/` into an AI coding tool. The setup command builds and installs the supported artifacts for you.
 
-## Choose A Host And Scope
+## 2. Choose your AI coding tool
 
-Supported hosts are `codex`, `claude`, `copilot`, `cline`, and `openai-api`.
-Codex supports `project`, `user`, and `admin`; Claude, Copilot, and Cline support
-`project` and `user`. OpenAI API produces zip files and has no installation
-scope. Codex, Claude, and Copilot receive four native Agent Profile files; Cline
-and OpenAI API receive standard Skills only.
-
-Runtime and Agent Profile are different concepts. Runtime is the fixed Skill
-surface and JIT knowledge path. The four Agent Profiles are the static main,
-analysis, task, and review execution roles; users do not select among them as an
-installation profile.
-
-Use `user` for a personal default. Use `project` to keep installation inside a
-specific checkout; replace `/absolute/path/to/project` below with the real
-project root. Use Codex `admin` only with explicit administrative approval; see
-[Installation](INSTALLATION.md#host-scope-and-default-targets).
-
-## Preview Before Writing
-
-Preview a user installation:
-
-```bash
-python3 scripts/quickstart.py --agent codex --scope user --dry-run
-```
-
-Preview a project installation:
-
-```bash
-python3 scripts/quickstart.py --agent claude --scope project --target /absolute/path/to/project --dry-run
-```
-
-The preview prints the build, install, and doctor plan but does not execute it.
-
-## Install And Run Doctor
-
-Run the same plan without `--dry-run`:
+For a personal Codex installation:
 
 ```bash
 python3 scripts/quickstart.py --agent codex --scope user
 ```
 
-For project scope:
+Use the matching tool name for another personal installation:
 
 ```bash
-python3 scripts/quickstart.py --agent claude --scope project --target /absolute/path/to/project
+python3 scripts/quickstart.py --agent claude --scope user
+python3 scripts/quickstart.py --agent copilot --scope user
+python3 scripts/quickstart.py --agent cline --scope user
 ```
 
-Quickstart builds, installs, and runs doctor for Codex, Claude, Copilot, and
-Cline. Repeat doctor independently when diagnosing a changed installation:
+To keep rd-skills inside one project, provide that project root:
+
+```bash
+python3 scripts/quickstart.py --agent codex --scope project --target /absolute/path/to/project
+```
+
+Preview the exact plan without building or writing files:
+
+```bash
+python3 scripts/quickstart.py --agent codex --scope user --dry-run
+```
+
+Add `--verbose` when you need the command plan and detailed command output.
+
+Supported hosts are `codex`, `claude`, `copilot`, `cline`, and `openai-api`.
+Codex supports `project`, `user`, and `admin`; Claude, Copilot, and Cline support `project` and `user`.
+OpenAI API produces zip files and has no installation scope.
+
+For OpenAI API packages, run:
+
+```bash
+python3 scripts/quickstart.py --agent openai-api
+```
+
+For Codex admin scope, non-default targets, exact installed paths, and permission boundaries, use [Advanced Installation & Recovery](INSTALLATION.md#host-scope-and-default-targets).
+
+## 3. Verify
+
+Quickstart checks the installation automatically for Codex, Claude, Copilot, and Cline. You can run the check again:
 
 ```bash
 python3 installers/doctor.py --agent codex --scope user
 ```
 
-A healthy result confirms 26 installed Skills, the manifest, current
-source/core bindings, and the host-specific Agent Profile expectation. Doctor
-reports an exact historical 27-Skill `recommended`, 40-Skill `full`, or
-190-Skill `dev` manifest as migration-required; run upgrade without
-uninstalling first. Repository doctor evidence does not prove that the real
-Host loaded the files.
-
-## OpenAI API Zip Path
-
-Preview and then generate the fixed Runtime bundle set:
-
-```bash
-python3 scripts/quickstart.py --agent openai-api --dry-run
-python3 scripts/quickstart.py --agent openai-api
-```
-
-The second command builds and validates one zip per top-level Skill under the
-compatibility path `dist/openai-api/zips/recommended/`. It does not install
-files or run runtime doctor. See [OpenAI API zip output](INSTALLATION.md#openai-api-zip-output)
-for the direct build/validation commands and package boundary.
-
-## Submit A First Task
-
-Slash Skill syntax is `/skill-name`. Open a small test repository in the
-configured host. Start with `/engineering-control-plane`, then replace the
-example path and command with real values:
+A healthy result is intentionally short:
 
 ```text
-/engineering-control-plane
+✓ rd-skills installed
+✓ expected configuration found
+✓ installation healthy
 
-Goal: Add an empty-string check to `src/example.py` without changing its public API.
-Acceptance: Empty input returns the existing validation error; valid input is unchanged.
-Allowed scope: `src/example.py` and its existing test file only.
-Verify: Run `python3 -m unittest tests.test_example`.
-Stop if ownership, contract risk, or verification differs from this request.
+Next:
+Open or restart your AI coding tool and run the first task.
 ```
 
-Some hosts do not provide native Slash UI or autocomplete. Put the literal
-`/engineering-control-plane` in the request text in that case. It expresses
-routing intent; it does not prove native Slash support.
+Use `--verbose` to see inventory, source binding, host configuration, and digest details:
 
-Expected outcome: the main profile chooses the Direct Task path and fixes one
-Primary Professional route. The task agent receives that route plus zero to
-three selector-chosen Layer 3 items and necessary Targeted References; it does
-not globally reroute or preload a catalog. A task agent implements and validates
-the latest edit, and a separate review agent inspects the actual diff. The final
-handoff records changed files, commands and results, freshness, unverified
-scope, and residual risk. Unknown ownership or material risk switches to
-Analyzed Work before editing.
+```bash
+python3 installers/doctor.py --agent codex --scope user --verbose
+```
 
-Continue with [Usage](USAGE.md) for three request patterns and expected decision
-points. If setup fails, use [Installation troubleshooting](INSTALLATION.md#troubleshooting-and-recovery)
-instead of adding `--force` without inspecting the conflict.
+Doctor verifies installation artifacts. It does not prove your AI coding tool loaded rd-skills. Open or restart the tool before the first task.
+
+## 4. Run your first task
+
+Open a small repository in your AI coding tool. If the table below gives a verified invocation for that host or surface, start the request with it.
+
+### Host invocation
+
+| Host or surface | Start the request with |
+| --- | --- |
+| Codex | `$engineering-control-plane` |
+| Claude Code | `/engineering-control-plane` |
+| GitHub Copilot CLI | `/engineering-control-plane` |
+| Cline | Install target only; live Skill invocation and workflow behavior are not established by the current host contract. |
+| Other GitHub Copilot surfaces | Use the invocation supported by that surface; support is surface-dependent. |
+| OpenAI API | Package output only; invoke the packaged Skill through your API integration. |
+
+For Codex, enter this normal engineering request:
+
+```text
+$engineering-control-plane
+
+Payment callbacks sometimes create the same order twice.
+Find the cause and fix it. Add the necessary regression test and verify the change.
+```
+
+Do not type `/engineering-control-plane` at the start of a Codex request. Codex reserves leading Slash input for its own command menu and uses the `$skill-name` form for Skills.
+
+You do not need to know the responsible file, the exact test, or rd-skills internals. If you already know useful facts, add them below the request:
+
+```text
+The callback handler is probably under payments/.
+Keep the public response unchanged.
+The repository test command is pytest -q.
+```
+
+rd-skills should inspect the current code, identify the cause and affected boundary, make a bounded change, run relevant checks after the edit, have the change independently inspected, and report what changed and what remains unverified.
+
+Continue with [Usage](USAGE.md) for everyday task examples and result interpretation.
+
+## 5. If it did not work
+
+- If quickstart failed, rerun the same command with `--verbose` and keep the first specific error.
+- If doctor reports a file, configuration, permission, ownership, or migration problem, follow [Troubleshooting and Recovery](INSTALLATION.md#troubleshooting-and-recovery). Do not add `--force` until you have inspected the exact conflict.
+- If doctor is healthy but the tool does not respond to the invocation in the table, restart the tool and confirm you installed for the same tool and scope. Doctor does not prove that a live host loaded the files.
+- In Codex, type `$engineering-control-plane`, not `/engineering-control-plane`.
+- For other GitHub Copilot surfaces, confirm that surface's current Skill invocation support instead of assuming the Copilot CLI syntax applies.
+- For Cline, doctor can verify installed files, but the current host contract does not establish live Skill loading, an explicit invocation, validation, or independent review.
+- If the task stops for a decision, answer the concrete scope, safety, compatibility, or production question instead of broadening the request implicitly.
+- For a reproducible problem, use [Support](../SUPPORT.md) and remove secrets from the output you share.

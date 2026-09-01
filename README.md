@@ -1,118 +1,106 @@
 # rd-skills
 
-rd-skills is an engineering control plane for AI coding agents. It routes one
-task to one Professional Skill, separates analysis, implementation, and review,
-loads focused guidance only when needed, and requires current evidence before
-completion.
+rd-skills helps AI coding tools turn a plain-language engineering request into a scoped, tested, independently checked change.
 
-This repository authors and validates rd-skills Skills and Agent Profiles.
-Install built artifacts from `dist/`; never install `src/` directly.
+## Why rd-skills
 
-## Start
-
-Requirements: Python 3.11 or newer and a checkout of this repository.
-
-```bash
-python3 --version
-python3 -m pip install .
-```
-
-rd-skills has one Runtime. It exposes exactly 1 Control and 25 Professional
-Skills at the Host top level. Foundation and Domain knowledge remains complete,
-but is loaded only through the selected Professional Skill's Layer 3 selector.
-There is no Runtime selection flag.
-
-Supported hosts are `codex`, `claude`, `copilot`, `cline`, and `openai-api`.
-Project scope requires `--target` with the project root. See
-[Installation](docs/INSTALLATION.md) for supported scopes and paths.
-
-Preview a Codex user installation:
-
-```bash
-python3 scripts/quickstart.py --agent codex --scope user --dry-run
-```
-
-Install and run the built-in checks:
-
-```bash
-python3 scripts/quickstart.py --agent codex --scope user
-python3 installers/doctor.py --agent codex --scope user
-```
-
-Use another host or project scope through [Quickstart](docs/QUICKSTART.md).
-
-## Submit A First Task
-
-Slash Skill syntax: `/skill-name`.
-
-Start with `/engineering-control-plane`. Replace the sample paths and command
-with facts from a small test repository:
+Ordinary AI coding often looks like this:
 
 ```text
-/engineering-control-plane
-
-Goal: Add an empty-string check to src/example.py without changing its public API.
-Acceptance: Empty input returns the existing validation error; valid input is unchanged.
-Allowed scope: src/example.py and its existing test file only.
-Verify: Run python3 -m unittest tests.test_example.
-Stop if: Ownership, the public contract, or the verification command differs.
+request → find code → edit → run a test → done
 ```
 
-Some hosts do not provide native Slash UI or autocomplete. Enter the literal
-`/engineering-control-plane` in the request text in that case. It expresses
-routing intent; it does not prove native Slash support.
+rd-skills adds the engineering work that makes a change easier to trust:
 
-A bounded implementation should produce:
+```text
+request
+→ understand the repository boundary
+→ use the right professional guidance
+→ change the right owner
+→ verify the actual risk
+→ independently check the change
+→ finish only with current results
+```
 
-- one primary Professional Skill;
-- implementation by a `task-agent`;
-- validation after the final edit;
-- independent review by a `review-agent`;
-- a handoff with changed files, results, Unverified scope, and Residual risk.
+You describe the problem. rd-skills carries the process.
 
-Unknown ownership, placement, impact, or verification switches the request to
-Analyzed Work before editing. [Usage](docs/USAGE.md) provides Direct Task,
-Analyzed Work, and review-only examples.
+## Demo
 
-## Boundaries
+A duplicate-order webhook bug, fixed from one natural-language request with targeted tests and an independent review.
 
-- `main-control-agent` dispatches only.
-- `analysis-agent` reads and analyzes; it alone may perform claim-triggered,
-  read-only external evidence lookup when the host explicitly supports it.
-- `task-agent` implements and validates bounded work.
-- `review-agent` independently reviews without repairing its own findings.
-- Shared-workspace writes are serial.
-- Foundation capabilities and modifier-only Domains are never Runtime
-  top-level Skills. A task follows `Control -> Primary Professional -> selector
-  -> 0..3 Layer 3 items -> required References`; only concrete task signals
-  load that guidance.
+![rd-skills real engineering demo](docs/assets/rd-skills-demo.gif)
 
-For Analyzed Work, the current Engineering Brief is the sole operational
-analysis authority and contains the complete First Executable Slice. Main
-dispatches that Task Contract v2 verbatim; DAGs and handoffs only project it.
-Discovery does not expand repair scope: only current-task findings may enter the
-repair loop, scope blockers return to analysis, and adjacent findings are
-reported without preempting the requested task. Review depth comes from the
-existing Effective Level rather than a separate review-level system.
+## Install
 
-## Evidence Limits
+Requirements: Python 3.11 or newer and a checkout of this repository. From the repository root:
 
-Repository checks cover static contracts, deterministic and captured fixtures,
-builds, packages, and simulated installation. They do not prove real-host
-startup, host-enforced permissions, wall-clock performance, production
-accuracy, provider behavior, official marketplace publication, or installed
-user experience.
+```bash
+python3 -m pip install .
+python3 scripts/quickstart.py --agent codex --scope user
+```
 
-## Documentation
+That command builds the current checkout, installs it for Codex, and checks the installed files. Other tools and project-local installation are covered in [Quickstart](docs/QUICKSTART.md).
+
+## First task
+
+Open or restart Codex, then enter:
+
+```text
+$engineering-control-plane
+
+Payment callbacks sometimes create the same order twice.
+Find the cause and fix it. Add the necessary regression test and verify the change.
+```
+
+Invocation syntax is host-specific. Codex uses `$engineering-control-plane`; see the [Quickstart host invocation table](docs/QUICKSTART.md#host-invocation) for verified Claude Code and Copilot CLI syntax, Cline's current limitation, and OpenAI API packaging.
+
+You can add paths, acceptance criteria, constraints, or a test command when you know them. You do not need to investigate the repository first.
+
+## What rd-skills does
+
+For an implementation request, rd-skills:
+
+- reads the current code before changing it;
+- finds the owning code and checks nearby consumers;
+- applies guidance suited to the task and its risks;
+- makes the smallest complete change it can support;
+- validates after the final edit;
+- asks a separate reviewer to inspect the actual change; and
+- reports changed files, results, limits, and any decision still needed from you.
+
+If ownership, safety, or impact is unclear, it investigates first. It stops before destructive, privileged, production, or out-of-scope actions that need your decision.
+
+## Supported hosts
+
+Supported hosts are `codex`, `claude`, `copilot`, `cline`, and `openai-api`.
+
+| Tool | Personal setup | Project setup | Notes |
+| --- | --- | --- | --- |
+| Codex | yes | yes | Also supports an explicitly authorized admin scope. |
+| Claude | yes | yes | Restart the tool after installation. |
+| GitHub Copilot | yes | yes | Host capabilities depend on the active Copilot environment. |
+| Cline | yes | yes | Install/build target only; the current host contract does not establish live Skill loading or workflow behavior. |
+| OpenAI API | package output | n/a | Produces local zip packages; it does not install into a live host. |
+
+Project scope requires `--target` with the project root. Exact paths, scopes, and recovery rules live in [Advanced Installation & Recovery](docs/INSTALLATION.md).
+
+## Get started
+
+Follow [Quickstart](docs/QUICKSTART.md) from a fresh checkout to a verified installation and first task.
+
+## Usage
+
+See [Usage](docs/USAGE.md) for everyday prompts, useful optional context, result interpretation, common questions, and troubleshooting.
+
+## Learn more
 
 - [Documentation map](docs/README.md)
-- [Quickstart](docs/QUICKSTART.md)
-- [Installation and recovery](docs/INSTALLATION.md)
-- [Usage](docs/USAGE.md)
-- [Validation](docs/VALIDATION.md)
-- [Release](docs/RELEASE.md)
-- [Skill content governance](docs/SKILL_CONTENT_GOVERNANCE.md)
+- [Advanced Installation & Recovery](docs/INSTALLATION.md)
+- [How the system is structured](docs/HOOKLESS_ARCHITECTURE.md)
+- [Support](SUPPORT.md)
 
-Community policies: [Contributing](CONTRIBUTING.md),
-[Governance](GOVERNANCE.md), [Security](SECURITY.md),
-[Support](SUPPORT.md), and [Code of Conduct](CODE_OF_CONDUCT.md).
+This repository authors and validates rd-skills. Install built artifacts from `dist/`; never install `src/` directly.
+
+Static panel evidence does not prove real-host Profile startup, wall-clock performance, provider behavior, production accuracy, or installed user experience.
+
+Community policies: [Contributing](CONTRIBUTING.md), [Governance](GOVERNANCE.md), [Security](SECURITY.md), and [Code of Conduct](CODE_OF_CONDUCT.md).

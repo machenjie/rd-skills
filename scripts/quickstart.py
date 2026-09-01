@@ -64,16 +64,54 @@ def run_plan(
     plan: QuickstartPlan,
     *,
     dry_run: bool,
-    runner: Callable[[list[str]], object] = subprocess.check_call,
+    verbose: bool = False,
+    runner: Callable[[list[str]], object] | None = None,
 ) -> int:
     if dry_run:
         return 0
     for command in plan.commands:
+        argv = list(command)
         try:
-            runner(list(command))
+            if runner is not None:
+                runner(argv)
+            elif verbose:
+                subprocess.check_call(argv)
+            else:
+                completed = subprocess.run(
+                    argv,
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                )
+                if completed.returncode:
+                    if completed.stdout:
+                        print(completed.stdout, end="")
+                    if completed.stderr:
+                        print(completed.stderr, end="", file=sys.stderr)
+                    return int(completed.returncode)
         except subprocess.CalledProcessError as exc:
             return int(exc.returncode)
     return 0
+
+
+def _print_plan(plan: QuickstartPlan) -> None:
+    print("quickstart: command plan")
+    for command in plan.commands:
+        print("- " + " ".join(command))
+    print("quickstart: diagnostics")
+    print(f"- expected standard Skills: {plan.expected_skill_count}")
+    if plan.agent_profiles:
+        print("- Agent Profiles: " + ", ".join(plan.agent_profiles))
+    else:
+        print("- Agent Profiles: not emitted for this host; standard Skills only")
+
+
+def _print_next_step() -> None:
+    print("Next:")
+    print(
+        "Open or restart your AI coding tool, then describe your first "
+        "engineering task in natural language."
+    )
 
 
 def main() -> int:
@@ -83,23 +121,33 @@ def main() -> int:
     parser.add_argument("--target", type=Path)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--no-doctor", action="store_true")
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Show the command plan and detailed command output.",
+    )
     args = parser.parse_args()
     try:
         plan = build_plan(args)
     except ValueError as exc:
         print(f"quickstart: ERROR: {exc}", file=sys.stderr)
         return 2
-    print("quickstart: command plan")
-    for command in plan.commands:
-        print("- " + " ".join(command))
-    print("quickstart: summary")
-    print(f"- expected standard Skills: {plan.expected_skill_count}")
-    if plan.agent_profiles:
-        print("- Agent Profiles: " + ", ".join(plan.agent_profiles))
-    else:
-        print("- Agent Profiles: not emitted for this host; standard Skills only")
-    print("- next prompt: Use engineering-control-plane for bounded engineering work.")
-    return run_plan(plan, dry_run=args.dry_run)
+    if args.dry_run or args.verbose:
+        _print_plan(plan)
+    result = run_plan(plan, dry_run=args.dry_run, verbose=args.verbose)
+    if result:
+        print(
+            f"quickstart: ERROR: setup stopped after a command failed (exit {result}).",
+            file=sys.stderr,
+        )
+        return result
+    if args.dry_run:
+        print("✓ dry run complete; no files changed")
+        return 0
+    print("✓ rd-skills setup complete")
+    print()
+    _print_next_step()
+    return 0
 
 
 if __name__ == "__main__":

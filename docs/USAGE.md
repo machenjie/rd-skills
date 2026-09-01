@@ -1,181 +1,208 @@
 # Usage
 
-rd-skills coordinates engineering work through one control prompt, four
-bounded Agent Profiles, one primary Professional Skill per task, and only the
-Layer 3 guidance triggered by concrete risk or technology.
+After installation, use rd-skills by describing the engineering outcome you want. You do not need to choose a specialist, name an internal workflow, or investigate the repository before asking.
 
-Slash Skill syntax is `/skill-name`. Start with
-`/engineering-control-plane`. Give observable acceptance, a bounded scope, and
-a repository-native verification command when you know them. The main control
-agent chooses exactly one path; task agents do not reroute themselves.
+Skill invocation is host-specific. The examples below use Codex, where Skills use `$skill-name`. The [host invocation table](QUICKSTART.md#host-invocation) records verified Claude Code and Copilot CLI syntax. Cline remains an install/build target, but the current host contract does not establish live Skill loading, an explicit invocation, validation, or independent review.
 
-Some hosts do not provide native Slash UI or autocomplete. Put the literal
-`/engineering-control-plane` in the request text in that case. It expresses
-routing intent; it does not prove native Slash support.
+## Describe the task
 
-## Copyable Direct Task Request
-
-Use Direct Task for explicit, reversible, local work with one strong owner
-candidate, fixed Professional/Domain/Layer3 and semantic scope, bounded reads,
-and no shared-contract, cross-module, external-consumer, unresolved choice, or
-material public-contract, migration, authorization, privacy, security,
-financial, production, or irreversible risk.
+A useful request can be as short as:
 
 ```text
-/engineering-control-plane
+$engineering-control-plane
 
-Goal: Add an empty-string guard to `src/example.py` without changing its public API.
-Acceptance: Empty input returns the existing validation error; current valid-input behavior stays unchanged.
-Allowed scope: `src/example.py` and `tests/test_example.py` only.
-Verify: Run `python3 -m unittest tests.test_example`.
-Stop if the owner, public contract, or verification command differs from this request.
+Payment callbacks sometimes create the same order twice.
+Find the cause and fix it. Add the necessary regression test and verify the change.
 ```
 
-Replace the paths and test command with candidate selectors. They do not prove
-ownership. The task reads current source first and proves owner, placement,
-relevant test, minimum consumer boundary, reuse, and executable validation
-plus bounded-evidence closure before editing. Any false, absent, unknown, or
-Proof Limit returns zero edit through Main to initial
-Analysis; a simpler confirmation never lowers the active Level. Expected
-interaction: `main-control-agent` assigns one bounded task to `task-agent`;
-after the final
-edit, targeted validation runs and `review-agent` reviews the actual diff and
-every changed file. Ordinary findings accumulate during review and re-review
-until the fixed scope and required risk dimensions are complete. Material
-current-task findings from the same Review Round and Task ID return as exactly
-one same-Task Repair assignment, followed by fresh validation and a covering
-re-review. New material findings in that re-review use the same rule for the
-next round.
+State the outcome and important constraints in normal language. rd-skills reads the repository to discover ownership, placement, consumers, and available checks before it edits.
 
-## Copyable Analyzed Work Request
+## Helpful information
 
-Use Analyzed Work when ownership, impact, or validation is unknown; multiple
-modules are involved; or contract, migration, architecture, security, privacy,
-financial, production, or irreversible risk may exist.
+Add any facts you already know. None of these are mandatory:
+
+- the behavior you observe and the behavior you expect;
+- a reproducible input, error message, or failing test;
+- likely files or modules;
+- public behavior that must remain compatible;
+- files or systems that must not change;
+- the repository's test, lint, build, or migration command;
+- rollout, security, data, performance, or accessibility concerns; and
+- a point where you want rd-skills to stop and ask.
+
+Paths and commands are useful clues, not proof. rd-skills still checks the current source before relying on them.
+
+## What rd-skills handles
+
+For implementation work, rd-skills normally:
+
+1. reads the relevant source, tests, and repository rules;
+2. identifies the owning code and nearby consumers;
+3. decides whether it can safely edit or must investigate first;
+4. applies the professional guidance needed for the concrete task;
+5. makes the smallest complete change supported by current facts;
+6. runs checks that cover the changed behavior and risk;
+7. has a separate reviewer inspect the actual latest change; and
+8. reports results, limits, remaining risk, and any next action.
+
+It does not silently authorize destructive operations, production changes, privilege elevation, unmanaged-file replacement, or scope outside your request.
+
+## Natural-language examples
+
+### Bug
 
 ```text
-/engineering-control-plane
+$engineering-control-plane
 
-Desired behavior: Rename the customer status field used by the API, background jobs, and analytics exports.
-Known scope: The API and worker are in this repository; downstream consumers and migration order are unknown.
-Acceptance: Produce a source-backed compatibility and rollout plan, identify the owning surfaces, and start only the earliest safe reversible implementation slice.
-Verify: Map each acceptance item to a current test, schema check, or explicit evidence gap.
-Stop for a breaking consumer decision, production data change, destructive migration, or scope outside this repository.
+The settings page crashes when a saved account has no display label.
+Find the cause, fix the owning component, and add a regression test.
+Keep the behavior for labeled accounts unchanged.
 ```
 
-Expected interaction: `analysis-agent` reads the bounded source and returns an
-Engineering Brief with ownership, invariants, consumer/failure impact,
-acceptance-to-validation mapping, and the First Executable Slice. A Task DAG is
-used only when real dependencies, owners, or useful parallel work exist.
-The Analysis assignment and Brief have no Execution Level. The Level is computed
-only after the executable slice is known, using the analysis handoff as evidence.
-Implementation proceeds only within the accepted slice and receives independent
-diff review.
+For intermittent or repeated failures, include timestamps, correlation IDs, or a minimal reproduction if available. rd-skills should prove the cause rather than repeat the same attempted fix.
 
-## Copyable Review-Only Request
-
-Use review-only when you want a non-modifying assessment of an existing
-implementation diff:
+### Feature
 
 ```text
-/engineering-control-plane
+$engineering-control-plane
 
-Mode: Review only. Do not edit or repair files.
-
-Review the current implementation diff and every changed file against:
-- the acceptance source at `<replace-with-real-repository-path-or-supplied-artifact>`;
-- repository architecture and compatibility rules;
-- validation results supplied with the diff.
-
-Return blocking findings first with file/line evidence, then unverified scope and residual risk. If an actual diff is unavailable, report that boundary instead of inferring from a changed-file summary.
+Add validation, submitting, success, and failed-save states to the checkout address form.
+Preserve keyboard navigation and existing design-system behavior.
+Add the relevant component tests.
 ```
 
-Before pasting, replace the acceptance-source placeholder with the real path or
-supplied artifact. If no acceptance document exists, replace that bullet with
-`- Acceptance: <observable criteria for this change>;` so the reviewer has an
-explicit contract instead of an invented file.
+If interaction, accessibility, or ownership is unclear, rd-skills may inspect and plan the affected user flow before editing.
 
-Depending on invocation-scoped effective capability facts, `review-agent` consumes an accessible
-native change reference or a supplied exact artifact. Review is blocked before
-dispatch when the producer has not supplied exact evidence; only a legacy or
-incomplete handoff may use one bounded pre-review recovery. The reviewer does
-not repair findings or generate change artifacts.
+### Refactor
 
-Native change reads, evidence export, supplied delivery, and reviewer
-consumption are independent effective capability facts. Static Host/Profile
-configuration and rendered tool names are declared ceilings only. Supplied
-review receives actual
-unified-diff content; native review receives a current reference readable by the
-assigned reviewer. Static support, a digest, a path, or a command-output label
-does not make Review Input Ready.
+```text
+$engineering-control-plane
 
-Route and Execution Level remain independent. A Direct or Analyzed conclusion
-is never Level evidence. An atomic task fact may be reused only after its proof
-kind matches the corresponding Level predicate; a routing candidate remains a
-selector and cannot satisfy an L2 predicate. Repository-bound owner, placement,
-consumer-boundary, and closed-gap predicates require an accepted analysis
-handoff or their exact mapped task-local proven atom; bare owner/path/file/symbol
-claims do not qualify.
+Remove the duplicate retry calculation shared by the invoice worker and webhook handler.
+Keep public behavior unchanged and reuse the existing owner if one exists.
+Run the focused tests for both consumers.
+```
 
-## What You Should See
+A refactor should still state the invariant it preserves. “Clean this up” alone leaves correctness unclear.
 
-For implementation work, expect these observable stages:
+### API change
 
-1. Path and Skill selection: Direct Task or Analyzed Work, one primary
-   Professional Skill, and only named Layer 3 guidance.
-2. A bounded task contract or Engineering Brief with scope, acceptance,
-   verification, non-goals, and stop conditions.
-3. A Review Input Ready implementation handoff from the latest material edit,
-   including changed paths, exact change evidence, reviewer accessibility,
-   fresh targeted validation, and fixed review scope.
-4. Independent review of the actual latest diff and all changed files.
-5. One same-Round, same-Task Repair batch for material current-task findings,
-   preserving each finding's scope and proof obligations, followed by fresh
-   validation and focused covering re-review. Initial Review remains complete;
-   Re-review checks only inherited findings, the Repair diff and regressions,
-   affected dependents, and frozen Acceptance/Invariant/Contract/risk boundaries;
-   it records frozen professional-risk validity without reopening Initial scope.
-   Each Task ID permits at most two automatic Repair rounds; Delta Analysis does
-   not reset the count. Remaining blockers fail closed, protected invalidation
-   returns to Analysis and invalidates affected validation/review evidence until
-   a changed Task, fresh validation, and PASS re-review, while adjacent findings
-   remain record-only.
-6. A visible closure handoff whose status is supported by current evidence.
+```text
+$engineering-control-plane
 
-After Review Input Ready dispatch, a blocked Review is valid only when required
-review surface becomes unavailable, required current Evidence becomes stale,
-or current Evidence invalidates protected Authority or the Engineering Brief.
-It reports Reviewed Scope, Unreviewed Scope, and Proof Limit; protected
-invalidation returns through Main to Delta Analysis.
+Add MFA enrollment status to the login response.
+Check authentication and compatibility impact before changing the contract.
+Update the contract tests and call out any consumer decision I need to make.
+```
 
-No-edit validation or diff export uses before/after workspace change-set checks.
-A changed or unavailable no-edit check invalidates that utility result.
+Public API work may pause for a compatibility, versioning, or rollout choice instead of guessing.
 
-## Decisions That Stay With You
+### Migration
 
-rd-skills can dispatch bounded work without asking permission. It stops for a
-concrete user-owned decision when work needs scope expansion, destructive or
-production action, privilege elevation, data migration, replacement of
-unmanaged content, or a choice not supported by evidence. It should ask one
-specific question, not repeat the same preparation loop.
+```text
+$engineering-control-plane
 
-If a request crosses a new material risk or owner boundary, the task returns a
-Scope / Risk Escalation before editing outside the accepted scope.
+Split customer_name into given_name and family_name without breaking current clients.
+Map all readers and writers, propose a safe rollout and rollback sequence, then implement only the earliest reversible step.
+Do not touch production data.
+```
 
-## Final Handoff Contents
+Schema, data, and cross-service changes are planned around compatibility, recovery, and ordering. Production execution remains a separate authority boundary.
 
-An implementation handoff records status, task and owner, result, expected
-output, changed files, exact change evidence or a reviewer-accessible native
-reference, commands, validation results, last-edit/validation ordering, and the
-five Review Input Ready facts. Its visible task-local
-Evidence Ledger identifies current `latest-material-edit` and
-`validation-passed` claims. Closure also reports independent review findings,
-unverified scope, residual risk, and the next step.
+### Review
 
-Captured fixtures prove fixture conformance only; they are not real-host or
-Copilot execution evidence. Repository evidence does not prove real-host
-enforcement or production correctness. Review the larger routes in the generated [Scenario
-Showcase](SHOWCASE.md) and their source prompts in the [examples
-index](../examples/README.md). See [AI control boundaries](AI_CONTROL_BOUNDARIES.md)
-for enforcement limits and [Subagent model](SUBAGENT_MODEL.md) for detailed role
-contracts.
+```text
+$engineering-control-plane
+
+Review only. Do not edit files.
+Inspect the current diff and every changed file for correctness, compatibility, security, and missing regression coverage.
+Return blocking findings first with file and line evidence, then list what you could not verify.
+```
+
+Provide the actual diff or make it accessible in the current workspace. A changed-file summary alone is not enough for an exact change review.
+
+### High-risk change
+
+```text
+$engineering-control-plane
+
+Design wallet-based subscription authorization.
+Do not implement or perform a transaction.
+Identify the human approval, key custody, idempotency, reconciliation, and rollback boundaries first.
+```
+
+Security, payments, irreversible actions, credentials, and production authority require explicit boundaries. Stopping for your decision is expected behavior.
+
+## Understand the result
+
+A completed implementation response should make these points easy to find:
+
+- **Changed:** the files and behavior that changed.
+- **Verified:** the commands that ran after the latest edit and their results.
+- **Reviewed:** the independently checked change and any findings resolved.
+- **Unverified:** behavior or environments the available checks did not prove.
+- **Residual risk:** risk that remains after the completed checks.
+- **Next:** a user decision, rollout step, or follow-up only when one is still necessary.
+
+“Tests passed” is not proof of a live deployment, real host loading, provider behavior, or production correctness. The result should name those limits when they matter.
+
+## When rd-skills asks you
+
+Most repository-local, reversible work can proceed without repeated confirmation. rd-skills asks one focused question when the answer belongs to you, for example:
+
+- whether to expand beyond the requested scope;
+- whether a public compatibility break is acceptable;
+- which of two unsupported product behaviors is intended;
+- whether unmanaged content may be replaced;
+- whether to perform a destructive, privileged, production, or data-changing action; or
+- which external system or consumer is authoritative.
+
+If current source can answer the question safely, rd-skills should investigate instead of asking you to do preliminary repository research.
+
+## Common questions
+
+### Do I need to learn the Skill names?
+
+No. When the [host invocation table](QUICKSTART.md#host-invocation) gives a verified invocation, use it and describe the task. In Codex, that is `$engineering-control-plane`. Cline does not currently have a contract-backed live invocation or full workflow guarantee.
+
+### Do I need to provide acceptance criteria?
+
+No. State the observable outcome and constraints you know. Precise acceptance is helpful when the behavior is subtle or compatibility matters.
+
+### Can I provide a file or test command?
+
+Yes. rd-skills treats it as a useful candidate and verifies it against the repository rather than assuming it is authoritative.
+
+### Why did rd-skills investigate before editing?
+
+Ownership, impact, verification, or safety was not yet supported by current source. The goal is to avoid a fast change in the wrong place.
+
+### Why did it stop after the same failure happened twice?
+
+Repeating an unchanged attempt is unlikely to create new information. rd-skills requires a changed hypothesis, new evidence, or a different safe path before retrying.
+
+### Can doctor say the AI tool loaded rd-skills?
+
+No. Doctor verifies installed artifacts. Restart the tool and run a small real task to check the live experience.
+
+## Common problems
+
+| Problem | What to do |
+| --- | --- |
+| The host rejects the invocation | Check the [host invocation table](QUICKSTART.md#host-invocation). In Codex, use `$engineering-control-plane`, not a leading Slash command. |
+| The tool ignores the request after installation | Restart it, confirm the tool and scope you installed, then rerun doctor. |
+| The task stops before editing | Read the stated ownership, safety, compatibility, or scope gap and answer only the concrete question. |
+| The task edits too broadly | Restate the allowed scope and preserved behavior; ask it to stop if ownership differs. |
+| A validation command is unavailable | Provide the repository's supported command if known, or ask rd-skills to report the gap without claiming completion. |
+| A review cannot inspect the change | Make the actual diff and changed files accessible; do not substitute a summary. |
+| An installation or upgrade check fails | Use [Advanced Installation & Recovery](INSTALLATION.md#troubleshooting-and-recovery). |
+
+For reproducible bugs, include the command, tool, scope, operating system, Python version, and redacted output described in [Support](../SUPPORT.md).
+
+## Advanced documentation
+
+- [Advanced Installation & Recovery](INSTALLATION.md) for paths, scopes, dry runs, conflicts, backups, upgrade, uninstall, packages, and recovery.
+- [Migrating older installations](MIGRATING_TO_HOOKLESS.md) for historical installation cleanup and rollback.
+- [System architecture](HOOKLESS_ARCHITECTURE.md) for how the product is structured internally.
+- [AI control boundaries](AI_CONTROL_BOUNDARIES.md) for host capability and enforcement limits.
+- [Documentation map](README.md) for maintainer, validation, benchmark, and release material.

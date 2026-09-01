@@ -1,32 +1,33 @@
 # Support
 
-This project supports rd-skills skill authoring, validation, build, packaging, installation, upgrade, uninstall, and runtime artifact verification.
+Start with the owner of the problem:
 
-## Where To Ask
+- First installation or first task: [Quickstart](docs/QUICKSTART.md).
+- Everyday prompts, results, or task behavior: [Usage](docs/USAGE.md).
+- Paths, scopes, permissions, conflicts, backup, upgrade, uninstall, or recovery: [Advanced Installation & Recovery](docs/INSTALLATION.md#troubleshooting-and-recovery).
+- A historical `recommended`, `full`, or `dev` installation: [Migration](docs/MIGRATING_TO_HOOKLESS.md).
+- A suspected vulnerability: follow the private reporting instructions in [Security](SECURITY.md), not a public issue.
 
-- Use GitHub issues for reproducible bugs, documentation gaps, validation failures, packaging problems, and feature requests.
-- Use pull requests for proposed fixes that include validation evidence.
-- Use private maintainer channels for security issues or reports containing sensitive details.
+## Report a reproducible problem
 
-## What To Include
+Use GitHub issues for reproducible bugs, documentation gaps, validation failures, packaging problems, and feature requests. Use pull requests for proposed fixes with current validation results.
 
-For support requests, include:
+Include:
 
-- The command you ran.
-- The selected agent: `codex`, `claude`, `copilot`, `cline`, or `openai-api`.
-- The selected scope: `project`, `user`, or `admin` when applicable.
-- The operating system and Python version.
-- Relevant terminal output with secrets removed.
+- the exact command or natural-language request;
+- the selected tool: `codex`, `claude`, `copilot`, `cline`, or `openai-api`;
+- the selected scope: `project`, `user`, or `admin` when applicable;
+- whether the target was default or explicit;
+- operating system and Python version;
+- the first specific error and relevant redacted output; and
+- `doctor --verbose` output when the problem concerns installation artifacts.
 
-## Out Of Scope
+Remove usernames, private absolute paths, repository contents, tokens, credentials, customer data, and other secrets before posting.
 
-The project does not provide support for:
+## Support boundary
 
-- Personal asset ingestion, scanning, indexing, summarization, mapping, packaging, or installation.
-- Installing raw `src/` content as runtime skills.
-- Runtime behavior caused by external private knowledge bases or user-specific technical archives.
-- Secrets, private keys, tokens, customer data, or private repository content shared in public issues.
+This project supports rd-skills authoring, validation, build, packaging, installation, upgrade, uninstall, and installed-artifact verification.
 
-For a first setup, start with [docs/QUICKSTART.md](docs/QUICKSTART.md). Use
-[docs/INSTALLATION.md](docs/INSTALLATION.md#troubleshooting-and-recovery) for
-installation recovery and [docs/USAGE.md](docs/USAGE.md) for request patterns.
+It does not support personal asset ingestion, private archive indexing, user-specific content packaging, installing raw `src/` content, or behavior caused by external private knowledge bases.
+
+Doctor can prove the installed artifact contract. It cannot prove that a real AI coding tool loaded the files, that a provider enforced declared permissions, or that production behavior is correct.

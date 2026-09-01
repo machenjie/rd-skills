@@ -908,19 +908,20 @@ class HooklessBuildInstallTests(unittest.TestCase):
         for host, root in roots.items():
             suffix = expected_suffixes[host]
             main = (root / f"main-control-agent{suffix}").read_text()
-            capabilities = BUILD._normalized_decision_capabilities(
-                BUILD._load_host_enforcement()["hosts"][host]
-            )
-            self.assertIn(
-                BUILD._render_decision_capability_facts(capabilities),
-                main,
-            )
             self.assertNotIn("Current host modes:", main)
             self.assertNotIn("diff_input_mode=", main)
             self.assertNotIn("validation_mode=", main)
-            for name in ("analysis-agent", "task-agent", "review-agent"):
-                worker = (root / f"{name}{suffix}").read_text()
-                self.assertNotIn("Current capability facts:", worker)
+            for name in (
+                "main-control-agent",
+                "analysis-agent",
+                "task-agent",
+                "review-agent",
+            ):
+                profile = (root / f"{name}{suffix}").read_text()
+                self.assertIn("Declared tool boundary:", profile)
+                self.assertNotIn("Current capability facts:", profile)
+                self.assertNotIn("Current external-read mode:", profile)
+                self.assertNotIn("external_source_read=", profile)
         for path in (ROOT / "dist/codex/project/.codex/agents").glob("*.toml"):
             self.assertNotIn("permission_enforcement", path.read_text())
         copilot = ROOT / "dist/copilot/project/.github/agents"
@@ -1028,10 +1029,40 @@ class HooklessBuildInstallTests(unittest.TestCase):
                 cwd=ROOT, text=True, capture_output=True, check=False,
             )
             self.assertEqual(0, doctor.returncode, doctor.stderr or doctor.stdout)
-            self.assertIn("tool_allowlist=prompt-enforced", doctor.stdout)
-            self.assertIn("diff_input_mode=native", doctor.stdout)
-            self.assertIn("validation_mode=native-read-only", doctor.stdout)
-            self.assertIn("utility_no_edit=prompt-enforced", doctor.stdout)
+            self.assertIn("✓ rd-skills installed", doctor.stdout)
+            self.assertIn("✓ expected configuration found", doctor.stdout)
+            self.assertIn("✓ installation healthy", doctor.stdout)
+            self.assertNotIn("tool_allowlist=", doctor.stdout)
+            self.assertNotIn("diff_input_mode=", doctor.stdout)
+            self.assertNotIn("validation_mode=", doctor.stdout)
+            self.assertNotIn("utility_no_edit=", doctor.stdout)
+
+            verbose_doctor = subprocess.run(
+                [
+                    sys.executable,
+                    "installers/doctor.py",
+                    "--agent",
+                    "codex",
+                    "--scope",
+                    "project",
+                    "--target",
+                    str(target),
+                    "--verbose",
+                ],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(
+                0,
+                verbose_doctor.returncode,
+                verbose_doctor.stderr or verbose_doctor.stdout,
+            )
+            self.assertIn("tool_allowlist=prompt-enforced", verbose_doctor.stdout)
+            self.assertIn("diff_input_mode=native", verbose_doctor.stdout)
+            self.assertIn("validation_mode=native-read-only", verbose_doctor.stdout)
+            self.assertIn("utility_no_edit=prompt-enforced", verbose_doctor.stdout)
             uninstall = subprocess.run(
                 [sys.executable, "installers/uninstall.py", "--agent", "codex", "--scope", "project", "--target", str(target)],
                 cwd=ROOT, text=True, capture_output=True, check=False,
@@ -1292,6 +1323,74 @@ class HooklessBuildInstallTests(unittest.TestCase):
                 )
                 self.assertNotEqual(0, doctor.returncode, doctor.stderr or doctor.stdout)
                 self.assertIn("legacy host mode projection is forbidden", doctor.stdout)
+
+    def test_doctor_rejects_static_runtime_capability_projection_for_every_profile(self) -> None:
+        layouts = {
+            "codex": (Path(".codex/agents"), ".toml"),
+            "claude": (Path(".claude/agents"), ".md"),
+            "copilot": (Path(".github/agents"), ".agent.md"),
+        }
+        roles = (
+            "main-control-agent",
+            "analysis-agent",
+            "task-agent",
+            "review-agent",
+        )
+        marker = "Current capability facts: invocation-scoped value must not be static."
+        for agent, (relative, suffix) in layouts.items():
+            with self.subTest(agent=agent), tempfile.TemporaryDirectory() as raw:
+                target = Path(raw) / "project"
+                install = subprocess.run(
+                    [
+                        sys.executable,
+                        "installers/install.py",
+                        "--agent",
+                        agent,
+                        "--scope",
+                        "project",
+                        "--target",
+                        str(target),
+                    ],
+                    cwd=ROOT,
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                )
+                self.assertEqual(0, install.returncode, install.stderr or install.stdout)
+                for role in roles:
+                    with self.subTest(agent=agent, role=role):
+                        profile = target / relative / f"{role}{suffix}"
+                        original = profile.read_text(encoding="utf-8")
+                        profile.write_text(
+                            original + f"\n# {marker}\n",
+                            encoding="utf-8",
+                        )
+                        doctor = subprocess.run(
+                            [
+                                sys.executable,
+                                "installers/doctor.py",
+                                "--agent",
+                                agent,
+                                "--scope",
+                                "project",
+                                "--target",
+                                str(target),
+                            ],
+                            cwd=ROOT,
+                            text=True,
+                            capture_output=True,
+                            check=False,
+                        )
+                        self.assertNotEqual(
+                            0,
+                            doctor.returncode,
+                            doctor.stderr or doctor.stdout,
+                        )
+                        self.assertIn(
+                            "static runtime capability projection is forbidden",
+                            doctor.stdout,
+                        )
+                        profile.write_text(original, encoding="utf-8")
 
     def test_doctor_ignores_unrelated_user_profile(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

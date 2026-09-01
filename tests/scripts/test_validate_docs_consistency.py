@@ -190,16 +190,53 @@ class DocsCoreProjectionTests(unittest.TestCase):
                 )
             )
 
-    def test_current_human_documentation_boundary_has_56_files(self) -> None:
+    def test_current_human_documentation_boundary_has_55_files(self) -> None:
         files = self.validator._markdown_files(ROOT)
 
-        self.assertEqual(56, len(files))
+        self.assertEqual(55, len(files))
         relative = {path.relative_to(ROOT).as_posix() for path in files}
         self.assertIn("CODE_OF_CONDUCT.md", relative)
         self.assertIn(".github/pull_request_template.md", relative)
         self.assertIn("reports/README.md", relative)
         self.assertIn("evals/codegen/README.md", relative)
         self.assertIn("docs/AGENT_LIGHT_ARCHITECTURE.md", relative)
+        self.assertNotIn("docs/ROUTING_EXAMPLES.md", relative)
+
+    def test_beginner_product_surface_hides_internal_protocol(self) -> None:
+        self.assertEqual([], self.validator._product_surface_errors(ROOT))
+
+    def test_readme_first_surface_internal_term_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._copy_paths(root, ("README.md",))
+            readme = root / "README.md"
+            readme.write_text(
+                readme.read_text(encoding="utf-8").replace(
+                    "rd-skills",
+                    "rd-skills Runtime",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+
+            errors = self.validator._product_surface_errors(root)
+
+            self.assertTrue(any("first product surface" in error for error in errors), errors)
+
+    def test_quickstart_extra_section_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._copy_paths(root, ("docs/QUICKSTART.md",))
+            quickstart = root / "docs/QUICKSTART.md"
+            quickstart.write_text(
+                quickstart.read_text(encoding="utf-8")
+                + "\n## Internal Architecture\n\nDo more setup.\n",
+                encoding="utf-8",
+            )
+
+            errors = self.validator._product_surface_errors(root)
+
+            self.assertTrue(any("exactly the five" in error for error in errors), errors)
 
     def test_legacy_architecture_path_is_a_minimal_compatibility_redirect(self) -> None:
         path = ROOT / "docs/AGENT_LIGHT_ARCHITECTURE.md"
@@ -656,10 +693,66 @@ class DocsCoreProjectionTests(unittest.TestCase):
                 errors,
             )
 
-    def test_slash_skill_onboarding_is_current(self) -> None:
+    def test_host_specific_skill_invocation_is_current(self) -> None:
         self.assertEqual([], self.validator._slash_invocation_errors(ROOT))
 
-    def test_old_non_slash_onboarding_is_rejected(self) -> None:
+    def test_cline_install_target_does_not_claim_live_host_behavior(self) -> None:
+        quickstart = (ROOT / "docs/QUICKSTART.md").read_text(encoding="utf-8")
+        self.assertNotIn("| Cline | `/engineering-control-plane` |", quickstart)
+        self.assertIn(
+            "| Cline | Install target only; live Skill invocation and workflow "
+            "behavior are not established by the current host contract. |",
+            quickstart,
+        )
+        self.assertEqual([], self.validator._slash_invocation_errors(ROOT))
+
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._copy_paths(
+                root,
+                ("README.md", "docs/QUICKSTART.md", "docs/USAGE.md"),
+            )
+            target = root / "docs/QUICKSTART.md"
+            target.write_text(
+                target.read_text(encoding="utf-8").replace(
+                    "| Cline | Install target only; live Skill invocation and workflow "
+                    "behavior are not established by the current host contract. |",
+                    "| Cline | `/engineering-control-plane` |",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+            errors = self.validator._slash_invocation_errors(root)
+            self.assertTrue(
+                any("Cline" in error and "contract-unproven" in error for error in errors),
+                errors,
+            )
+
+    def test_codex_slash_invocation_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._copy_paths(
+                root,
+                ("README.md", "docs/QUICKSTART.md", "docs/USAGE.md"),
+            )
+            readme = root / "README.md"
+            readme.write_text(
+                readme.read_text(encoding="utf-8").replace(
+                    "$engineering-control-plane",
+                    "/engineering-control-plane",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+
+            errors = self.validator._slash_invocation_errors(root)
+
+            self.assertTrue(
+                any("README.md" in error and "Codex" in error for error in errors),
+                errors,
+            )
+
+    def test_universal_slash_invocation_claim_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             self._copy_paths(
@@ -668,16 +761,17 @@ class DocsCoreProjectionTests(unittest.TestCase):
             )
             usage = root / "docs/USAGE.md"
             usage.write_text(
-                usage.read_text(encoding="utf-8").replace(
-                    "/engineering-control-plane",
-                    "Use engineering-control-plane",
-                ),
+                usage.read_text(encoding="utf-8")
+                + "\nAll supported hosts use `/engineering-control-plane`.\n",
                 encoding="utf-8",
             )
 
             errors = self.validator._slash_invocation_errors(root)
 
-            self.assertTrue(any("docs/USAGE.md" in error for error in errors), errors)
+            self.assertTrue(
+                any("universal Slash" in error for error in errors),
+                errors,
+            )
 
     def test_shell_fences_have_no_usage_placeholders(self) -> None:
         errors = []
@@ -1112,7 +1206,7 @@ class DocsCoreProjectionTests(unittest.TestCase):
             self._installation_docs(root)
             target = root / "docs/INSTALLATION.md"
             text = target.read_text(encoding="utf-8")
-            original = "Cline\ninstalls Skills without native Agent Profile files."
+            original = "Cline installs Skills without native Agent Profile files."
             self.assertIn(original, text)
             target.write_text(
                 text.replace(
@@ -1144,6 +1238,34 @@ class DocsCoreProjectionTests(unittest.TestCase):
 
             self.assertTrue(
                 any(original in error for error in errors),
+                errors,
+            )
+
+    def test_uninstall_managed_directory_and_no_backup_boundary_is_required(self) -> None:
+        installation = (ROOT / "docs/INSTALLATION.md").read_text(encoding="utf-8")
+        for required in (
+            "Every manifest-managed Skill directory is deleted as a whole",
+            "files mixed into that directory are deleted with it",
+            "Uninstall creates no automatic backup or recovery copy",
+        ):
+            self.assertIn(required, installation)
+        self.assertEqual([], self.validator._required_content_errors(ROOT))
+
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._installation_docs(root)
+            target = root / "docs/INSTALLATION.md"
+            target.write_text(
+                target.read_text(encoding="utf-8").replace(
+                    "Uninstall creates no automatic backup or recovery copy",
+                    "Uninstall is complete",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+            errors = self.validator._required_content_errors(root)
+            self.assertTrue(
+                any("automatic backup or recovery copy" in error for error in errors),
                 errors,
             )
 

@@ -134,6 +134,8 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
                 )
                 self.assertEqual(0, help_result.returncode, help_result.stderr)
                 self.assertNotIn("--profile", help_result.stdout)
+                if script == "doctor":
+                    self.assertIn("--verbose", help_result.stdout)
                 with tempfile.TemporaryDirectory() as raw:
                     project = Path(raw) / "project"
                     before = self._tree_snapshot(Path(raw))
@@ -713,6 +715,61 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
             resolve_source.assert_not_called()
             self.assertIn("migration required", output.getvalue().lower())
 
+    def test_doctor_healthy_output_is_concise_unless_verbose(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            project = Path(raw) / "project"
+            self._install_current_project(project)
+
+            def run_doctor(*extra_args: str) -> tuple[int, str, str]:
+                stdout = io.StringIO()
+                stderr = io.StringIO()
+                with (
+                    mock.patch.object(
+                        sys,
+                        "argv",
+                        [
+                            "doctor.py",
+                            "--agent",
+                            "codex",
+                            "--scope",
+                            "project",
+                            "--target",
+                            str(project),
+                            *extra_args,
+                        ],
+                    ),
+                    redirect_stdout(stdout),
+                    redirect_stderr(stderr),
+                ):
+                    result = self.doctor_cli.main()
+                return result, stdout.getvalue(), stderr.getvalue()
+
+            result, normal, stderr = run_doctor()
+            self.assertEqual(0, result, stderr or normal)
+            self.assertIn("✓ rd-skills installed", normal)
+            self.assertIn("✓ expected configuration found", normal)
+            self.assertIn("✓ installation healthy", normal)
+            self.assertIn("Next:", normal)
+            self.assertIn(
+                "does not prove your AI coding tool loaded rd-skills",
+                normal,
+            )
+            self.assertNotIn("tool_allowlist=", normal)
+            self.assertNotIn("diff_input_mode=", normal)
+            self.assertNotIn("validation_mode=", normal)
+            self.assertNotIn("utility_no_edit=", normal)
+            self.assertNotIn("digest", normal.lower())
+
+            result, verbose, stderr = run_doctor("--verbose")
+            self.assertEqual(0, result, stderr or verbose)
+            self.assertIn("tool_allowlist=prompt-enforced", verbose)
+            self.assertIn("diff_input_mode=native", verbose)
+            self.assertIn("validation_mode=native-read-only", verbose)
+            self.assertIn("utility_no_edit=prompt-enforced", verbose)
+            self.assertIn("installed inventory", verbose)
+            self.assertIn("source binding", verbose)
+            self.assertIn("digests", verbose)
+
     def test_legacy_dry_run_is_zero_mutation_and_uninstall_accepts_exact_legacy_set(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             project = Path(raw) / "project"
@@ -910,17 +967,36 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
             self.assertEqual([], manifest["installed_agent_profiles"])
             self.assertEqual([], manifest["installed_agent_profile_files"])
 
-    def test_capability_fact_projection_reuses_canonical_build_renderer(self) -> None:
-        from tests.scripts.test_build_safety import BUILD as build
+    def test_host_enforcement_is_a_declared_ceiling_not_runtime_fact_projection(self) -> None:
+        enforcement = json.loads(
+            (
+                self.runtime_root / "src/agent-profiles/host-enforcement.json"
+            ).read_text(encoding="utf-8")
+        )
+        self.assertIn(
+            "Declared static Host/Profile capability ceilings only",
+            enforcement["source_summary"],
+        )
+        self.assertIn(
+            "no invocation-scoped Effective Runtime Capability observation",
+            enforcement["source_summary"],
+        )
 
-        enforcement = self.helper.host_enforcement_for_agent("codex")
-        expected = build._render_decision_capability_facts(
-            build._normalized_decision_capabilities(enforcement)
-        )
-        self.assertEqual(
-            expected,
-            self.helper.canonical_profile_capability_facts(enforcement),
-        )
+        layouts = {
+            "codex": ("dist/codex/project/.codex/agents", ".toml"),
+            "claude": ("dist/claude/project/.claude/agents", ".md"),
+            "copilot": ("dist/copilot/project/.github/agents", ".agent.md"),
+        }
+        for host, (relative, suffix) in layouts.items():
+            for role in self.helper.AGENT_PROFILE_NAMES:
+                with self.subTest(host=host, role=role):
+                    text = (
+                        self.runtime_root / relative / f"{role}{suffix}"
+                    ).read_text(encoding="utf-8")
+                    self.assertIn("Declared tool boundary:", text)
+                    self.assertNotIn("Current capability facts:", text)
+                    self.assertNotIn("Current external-read mode:", text)
+                    self.assertNotIn("external_source_read=", text)
 
     def test_install_and_upgrade_preflight_rejects_overlap_without_mutation(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

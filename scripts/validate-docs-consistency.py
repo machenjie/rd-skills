@@ -56,7 +56,6 @@ VOLATILE_FACT_DOCS = (
     "AGENTS.md",
     ".github/pull_request_template.md",
     "docs/BUILD_PROFILES.md",
-    "docs/QUICKSTART.md",
     "docs/VALIDATION.md",
     "docs/SCORECARD.md",
     "docs/BENCHMARKS.md",
@@ -79,7 +78,7 @@ STATIC_EVIDENCE_PROOF_LIMIT_DOCS = (
     "docs/SCORECARD.md",
     "docs/skill_professionalism_standard/SKILL_PROFESSIONALISM_EVALUATION_AND_GOVERNANCE.md",
 )
-SLASH_ONBOARDING_DOCS = (
+HOST_INVOCATION_ONBOARDING_DOCS = (
     "README.md",
     "docs/QUICKSTART.md",
     "docs/USAGE.md",
@@ -93,7 +92,7 @@ SHELL_PLACEHOLDER_RE = re.compile(
     r"COMPLETED_BALLOT|REVIEWER_[ABC])(?:\.json)?\b",
     re.MULTILINE,
 )
-EXPECTED_HUMAN_DOC_COUNT = 56
+EXPECTED_HUMAN_DOC_COUNT = 55
 INSTALL_CONTRACT_SOURCE = "installers/changeforge_install.py"
 HOST_LABELS = {
     "codex": "Codex",
@@ -339,8 +338,11 @@ REQUIRED_NAVIGATION = {
         "docs/USAGE.md",
     ),
     "docs/USAGE.md": (
-        "docs/SHOWCASE.md",
-        "examples/README.md",
+        "SUPPORT.md",
+        "docs/AI_CONTROL_BOUNDARIES.md",
+        "docs/HOOKLESS_ARCHITECTURE.md",
+        "docs/INSTALLATION.md",
+        "docs/MIGRATING_TO_HOOKLESS.md",
     ),
     "docs/README.md": (
         "docs/AI_CONTROL_BOUNDARIES.md",
@@ -356,7 +358,6 @@ REQUIRED_NAVIGATION = {
         "docs/QUALITY_MODEL.md",
         "docs/QUICKSTART.md",
         "docs/RELEASE.md",
-        "docs/ROUTING_EXAMPLES.md",
         "docs/SCORECARD.md",
         "docs/SHOWCASE.md",
         "docs/SKILL_CONTENT_GOVERNANCE.md",
@@ -377,6 +378,51 @@ REQUIRED_NAVIGATION = {
         "evals/pressure/README.md",
     ),
 }
+README_PRODUCT_HEADINGS = (
+    "Why rd-skills",
+    "Demo",
+    "Install",
+    "First task",
+    "What rd-skills does",
+    "Supported hosts",
+    "Get started",
+    "Usage",
+    "Learn more",
+)
+QUICKSTART_PRODUCT_HEADINGS = (
+    "1. Install",
+    "2. Choose your AI coding tool",
+    "3. Verify",
+    "4. Run your first task",
+    "5. If it did not work",
+)
+README_FIRST_SURFACE_FORBIDDEN = (
+    "runtime",
+    "layer 3",
+    "foundation",
+    "domain",
+    "engineering brief",
+    "execution level",
+    "evidence ledger",
+    "review boundary",
+    "manifest",
+    "digest",
+    "fingerprint",
+    "validator",
+    "benchmark",
+)
+BEGINNER_PROTOCOL_TUTORIAL_TERMS = (
+    "direct task",
+    "analyzed work",
+    "primary professional",
+    "layer 3",
+    "review input ready",
+    "repair round",
+    "evidence ledger",
+    "effective level",
+    "engineering brief",
+    "execution level",
+)
 DEVELOPMENT_AFFECTED_COMMANDS = (
     "python3 scripts/eval-core-principles.py --gate affected --base <base> --head <head>",
     "python3 scripts/run-ci-tests.py run --base <base> --head <head>",
@@ -931,7 +977,6 @@ def _required_volatile_projections(authority: dict[str, Any]) -> dict[str, tuple
             reference_inventory,
             unindexed_templates,
         ),
-        "docs/QUICKSTART.md": (runtime_count,),
         "docs/VALIDATION.md": (routing, admission, layer3, matrix, runtime_count),
         "docs/SCORECARD.md": (inventory, routing, admission, layer3, matrix, delivery_counts),
         "docs/BENCHMARKS.md": (f"all {counts['domain']} Domain Skills",),
@@ -1202,33 +1247,143 @@ def _current_evidence_projection_errors(root: Path) -> list[str]:
 
 def _slash_invocation_errors(root: Path) -> list[str]:
     errors: list[str] = []
-    for relative in SLASH_ONBOARDING_DOCS:
+    requirements = {
+        "README.md": (
+            "$engineering-control-plane",
+            "[Quickstart host invocation table](docs/QUICKSTART.md#host-invocation)",
+            "Install/build target only; the current host contract does not "
+            "establish live Skill loading or workflow behavior.",
+        ),
+        "docs/QUICKSTART.md": (
+            "### Host invocation",
+            "| Codex | `$engineering-control-plane` |",
+            "| Claude Code | `/engineering-control-plane` |",
+            "| GitHub Copilot CLI | `/engineering-control-plane` |",
+            "| Cline | Install target only; live Skill invocation and workflow "
+            "behavior are not established by the current host contract. |",
+            "| Other GitHub Copilot surfaces |",
+            "| OpenAI API | Package output only;",
+        ),
+        "docs/USAGE.md": (
+            "$engineering-control-plane",
+            "[host invocation table](QUICKSTART.md#host-invocation)",
+            "The examples below use Codex",
+            "Cline remains an install/build target, but the current host contract "
+            "does not establish live Skill loading, an explicit invocation, "
+            "validation, or independent review.",
+        ),
+    }
+    texts: dict[str, str] = {}
+    for relative in HOST_INVOCATION_ONBOARDING_DOCS:
         path = root / relative
         if not path.is_file():
             continue
         text = path.read_text(encoding="utf-8")
-        if "/engineering-control-plane" not in text:
+        texts[relative] = text
+        for required in requirements[relative]:
+            if required not in text:
+                errors.append(
+                    f"{relative}: missing host-specific Skill invocation contract: "
+                    f"{required}"
+                )
+
+    for relative in ("README.md", "docs/USAGE.md"):
+        text = texts.get(relative, "")
+        if re.search(r"(?m)^\s*/engineering-control-plane\s*$", text):
             errors.append(
-                f"{relative}: first-task onboarding must name /engineering-control-plane"
+                f"{relative}: Codex onboarding must use $engineering-control-plane, "
+                "not /engineering-control-plane"
             )
-        if re.search(
-            r"Use\s+`?engineering-control-plane`?",
-            text,
-            re.IGNORECASE,
-        ):
-            errors.append(
-                f"{relative}: old non-Slash engineering-control-plane onboarding remains"
-            )
-    readme = root / "README.md"
-    if readme.is_file() and "Slash Skill syntax: `/skill-name`." not in readme.read_text(
-        encoding="utf-8"
+
+    quickstart = texts.get("docs/QUICKSTART.md", "")
+    if re.search(
+        r"(?mi)^\|\s*Codex\s*\|[^\n]*/engineering-control-plane",
+        quickstart,
     ):
-        errors.append("README.md: missing canonical Slash Skill syntax")
-    fallback = "does not prove native Slash support"
-    for relative in ("docs/QUICKSTART.md", "docs/USAGE.md"):
-        path = root / relative
-        if path.is_file() and fallback not in path.read_text(encoding="utf-8"):
-            errors.append(f"{relative}: missing bounded non-native Slash fallback")
+        errors.append(
+            "docs/QUICKSTART.md: Codex host row must use "
+            "$engineering-control-plane, not /engineering-control-plane"
+        )
+    if re.search(
+        r"(?mi)^\|\s*Cline\s*\|[^\n]*/engineering-control-plane",
+        quickstart,
+    ):
+        errors.append(
+            "docs/QUICKSTART.md: Cline must remain an install target without a "
+            "contract-unproven live invocation"
+        )
+
+    universal_slash_patterns = (
+        re.compile(
+            r"\b(?:all\s+(?:supported\s+)?hosts?|every\s+host)\s+"
+            r"(?:use|uses|start|starts|invoke|invokes)[^\n]*"
+            r"/engineering-control-plane",
+            re.IGNORECASE,
+        ),
+        re.compile(r"Slash Skill syntax\s+(?:is|:)\s+`/skill-name`", re.IGNORECASE),
+        re.compile(
+            r"Start requests with\s+`?/engineering-control-plane`?",
+            re.IGNORECASE,
+        ),
+    )
+    for relative, text in texts.items():
+        if any(pattern.search(text) for pattern in universal_slash_patterns):
+            errors.append(
+                f"{relative}: universal Slash invocation claim conflicts with "
+                "the host-specific Skill invocation contract"
+            )
+    return errors
+
+
+def _product_surface_errors(root: Path) -> list[str]:
+    errors: list[str] = []
+    readme = root / "README.md"
+    if readme.is_file():
+        text = readme.read_text(encoding="utf-8")
+        headings = tuple(re.findall(r"(?m)^## (.+?)\s*$", text))
+        if headings != README_PRODUCT_HEADINGS:
+            errors.append(
+                "README.md: product headings must follow the fixed "
+                "understand/demo/install/first-task/next-links order"
+            )
+        demo = text.find("## Demo")
+        first_surface = text if demo < 0 else text[:demo]
+        normalized = first_surface.casefold()
+        for term in README_FIRST_SURFACE_FORBIDDEN:
+            if term in normalized:
+                errors.append(
+                    f"README.md: first product surface exposes internal term {term}"
+                )
+
+    quickstart = root / "docs/QUICKSTART.md"
+    if quickstart.is_file():
+        text = quickstart.read_text(encoding="utf-8")
+        headings = tuple(re.findall(r"(?m)^## (.+?)\s*$", text))
+        if headings != QUICKSTART_PRODUCT_HEADINGS:
+            errors.append(
+                "docs/QUICKSTART.md: beginner path must contain exactly the five "
+                "Install/Choose/Verify/First task/Failure sections"
+            )
+        normalized = text.casefold()
+        for term in ("runtime", *BEGINNER_PROTOCOL_TUTORIAL_TERMS):
+            if term in normalized:
+                errors.append(
+                    f"docs/QUICKSTART.md: beginner path teaches internal term {term}"
+                )
+
+    usage = root / "docs/USAGE.md"
+    if usage.is_file():
+        normalized = usage.read_text(encoding="utf-8").casefold()
+        for term in BEGINNER_PROTOCOL_TUTORIAL_TERMS:
+            if term in normalized:
+                errors.append(
+                    f"docs/USAGE.md: daily-use guide teaches internal term {term}"
+                )
+
+    if (root / "docs/ROUTING_EXAMPLES.md").exists():
+        errors.append(
+            "docs/ROUTING_EXAMPLES.md: scenarios must be owned by docs/USAGE.md"
+        )
     return errors
 
 
@@ -1669,7 +1824,6 @@ def _installation_contract_errors(root: Path) -> list[str]:
             "Supported hosts are `codex`, `claude`, `copilot`, `cline`, and `openai-api`.",
             "Codex supports `project`, `user`, and `admin`; Claude, Copilot, and Cline support `project` and `user`.",
             "OpenAI API produces zip files and has no installation scope.",
-            "Codex, Claude, and Copilot receive four native Agent Profile files; Cline and OpenAI API receive standard Skills only.",
         ),
         "docs/INSTALLATION.md": (
             "Codex, Claude, and Copilot install the four static Agent Profiles.",
@@ -1701,19 +1855,18 @@ def _required_content_errors(root: Path) -> list[str]:
         "README.md": (
             "Python 3.11",
             "python3 -m pip install .",
-            "--dry-run",
-            "installers/doctor.py",
-            "engineering-control-plane",
-            "Unverified",
-            "Residual risk",
+            "python3 scripts/quickstart.py --agent codex --scope user",
+            "$engineering-control-plane",
+            "Ordinary AI coding",
+            "What rd-skills does",
         ),
         "docs/QUICKSTART.md": (
             "Python 3.11",
             "--dry-run",
+            "--verbose",
             "installers/doctor.py",
-            "OpenAI API Zip Path",
-            "Submit A First Task",
-            "Expected outcome",
+            "4. Run your first task",
+            "does not prove your AI coding tool loaded rd-skills",
         ),
         "docs/INSTALLATION.md": (
             "--backup",
@@ -1724,16 +1877,29 @@ def _required_content_errors(root: Path) -> list[str]:
             "Unmanaged top-level files and directories remain in place",
             "A user file mixed inside a managed Skill directory is included "
             "in the backup",
+            "Every manifest-managed Skill directory is deleted as a whole",
+            "files mixed into that directory are deleted with it",
+            "Uninstall creates no automatic backup or recovery copy",
             "Upgrade is not crash-atomic",
             "Troubleshooting And Recovery",
             "dist/openai-api/zips/recommended/",
         ),
         "docs/USAGE.md": (
-            "Copyable Direct Task Request",
-            "Copyable Analyzed Work Request",
-            "Copyable Review-Only Request",
-            "Decisions That Stay With You",
-            "Final Handoff Contents",
+            "Describe the task",
+            "Helpful information",
+            "What rd-skills handles",
+            "Bug",
+            "Feature",
+            "Refactor",
+            "API",
+            "Migration",
+            "Review",
+            "Understand the result",
+            "Common questions",
+            "Common problems",
+            "Advanced documentation",
+            "Unverified",
+            "Residual risk",
         ),
         "docs/BUILD_PROFILES.md": (
             "Foundation and Domain Skills never enter Host top-level discovery",
@@ -2034,6 +2200,7 @@ def validate_docs_consistency(
     errors.extend(_volatile_fact_errors(root))
     errors.extend(_current_evidence_projection_errors(root))
     errors.extend(_slash_invocation_errors(root))
+    errors.extend(_product_surface_errors(root))
     errors.extend(_release_process_errors(root))
 
     errors.extend(_core_projection_errors(root))

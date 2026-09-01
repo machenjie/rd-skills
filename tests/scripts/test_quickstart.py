@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import argparse
+import io
 import importlib.util
 import subprocess
 import sys
 import unittest
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -61,6 +64,222 @@ class QuickstartPlanTests(unittest.TestCase):
 
         self.assertEqual((), plan.agent_profiles)
 
+    def test_explicit_options_preserve_exact_command_plan(self) -> None:
+        plan = self.quickstart.build_plan(
+            argparse.Namespace(
+                agent="codex",
+                scope="project",
+                target=Path("/tmp/project"),
+                dry_run=True,
+                no_doctor=False,
+            )
+        )
+
+        self.assertEqual(
+            (
+                ("python3", "scripts/build.py"),
+                (
+                    "python3",
+                    "installers/install.py",
+                    "--agent",
+                    "codex",
+                    "--scope",
+                    "project",
+                    "--target",
+                    "/tmp/project",
+                    "--dry-run",
+                ),
+                (
+                    "python3",
+                    "installers/doctor.py",
+                    "--agent",
+                    "codex",
+                    "--scope",
+                    "project",
+                    "--target",
+                    "/tmp/project",
+                ),
+            ),
+            plan.commands,
+        )
+
+        openai_plan = self.quickstart.build_plan(
+            argparse.Namespace(
+                agent="openai-api",
+                scope=None,
+                target=None,
+                dry_run=False,
+                no_doctor=False,
+            )
+        )
+        self.assertEqual(
+            (
+                ("python3", "scripts/build.py"),
+                (
+                    "python3",
+                    "installers/install.py",
+                    "--agent",
+                    "openai-api",
+                    "--scope",
+                    "project",
+                ),
+            ),
+            openai_plan.commands,
+        )
+        self.assertFalse(openai_plan.doctor_expected)
+
+    def test_runtime_scope_is_rejected_before_execution(self) -> None:
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with (
+            mock.patch.object(
+                sys,
+                "argv",
+                ["quickstart.py", "--agent", "codex"],
+            ),
+            mock.patch.object(self.quickstart, "run_plan") as run_plan,
+            redirect_stdout(stdout),
+            redirect_stderr(stderr),
+        ):
+            self.assertEqual(2, self.quickstart.main())
+
+        run_plan.assert_not_called()
+        self.assertEqual("", stdout.getvalue())
+        self.assertIn("--scope is required for runtime installs", stderr.getvalue())
+
+    def test_run_plan_keeps_argv_and_hides_success_diagnostics(self) -> None:
+        plan = self.quickstart.QuickstartPlan(
+            expected_skill_count=26,
+            commands=(("python3", "scripts/build.py"),),
+            doctor_expected=False,
+            agent_profiles=(),
+        )
+        stdout = io.StringIO()
+        with (
+            mock.patch.object(
+                self.quickstart.subprocess,
+                "run",
+                return_value=subprocess.CompletedProcess(
+                    args=["python3", "scripts/build.py"],
+                    returncode=0,
+                    stdout="internal build diagnostics\n",
+                    stderr="",
+                ),
+            ) as child,
+            redirect_stdout(stdout),
+        ):
+            self.assertEqual(
+                0,
+                self.quickstart.run_plan(plan, dry_run=False, verbose=False),
+            )
+
+        child.assert_called_once_with(
+            ["python3", "scripts/build.py"],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual("", stdout.getvalue())
+
+    def test_run_plan_forwards_failure_details_and_exact_exit(self) -> None:
+        plan = self.quickstart.QuickstartPlan(
+            expected_skill_count=26,
+            commands=(
+                ("python3", "installers/install.py", "--scope", "user"),
+                ("python3", "installers/doctor.py", "--scope", "user"),
+            ),
+            doctor_expected=True,
+            agent_profiles=(),
+        )
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with (
+            mock.patch.object(
+                self.quickstart.subprocess,
+                "run",
+                return_value=subprocess.CompletedProcess(
+                    args=list(plan.commands[0]),
+                    returncode=7,
+                    stdout="install: specific problem\n",
+                    stderr="install: actionable failure\n",
+                ),
+            ) as child,
+            redirect_stdout(stdout),
+            redirect_stderr(stderr),
+        ):
+            self.assertEqual(
+                7,
+                self.quickstart.run_plan(plan, dry_run=False, verbose=False),
+            )
+
+        child.assert_called_once_with(
+            ["python3", "installers/install.py", "--scope", "user"],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual("install: specific problem\n", stdout.getvalue())
+        self.assertEqual("install: actionable failure\n", stderr.getvalue())
+
+    def test_normal_output_hides_internal_plan_and_gives_next_step(self) -> None:
+        stdout = io.StringIO()
+        with (
+            mock.patch.object(
+                sys,
+                "argv",
+                [
+                    "quickstart.py",
+                    "--agent",
+                    "codex",
+                    "--scope",
+                    "project",
+                    "--target",
+                    "/tmp/project",
+                ],
+            ),
+            mock.patch.object(self.quickstart, "run_plan", return_value=0),
+            redirect_stdout(stdout),
+        ):
+            self.assertEqual(0, self.quickstart.main())
+
+        output = stdout.getvalue()
+        self.assertIn("✓ rd-skills setup complete", output)
+        self.assertIn("Next:", output)
+        self.assertIn("Open or restart your AI coding tool", output)
+        self.assertNotIn("command plan", output)
+        self.assertNotIn("expected standard Skills", output)
+        self.assertNotIn("Agent Profiles", output)
+        self.assertNotIn("scripts/build.py", output)
+
+    def test_dry_run_and_verbose_show_diagnostic_plan(self) -> None:
+        for extra_args in (["--dry-run"], ["--verbose"]):
+            with self.subTest(extra_args=extra_args):
+                stdout = io.StringIO()
+                with (
+                    mock.patch.object(
+                        sys,
+                        "argv",
+                        [
+                            "quickstart.py",
+                            "--agent",
+                            "codex",
+                            "--scope",
+                            "project",
+                            "--target",
+                            "/tmp/project",
+                            *extra_args,
+                        ],
+                    ),
+                    mock.patch.object(self.quickstart, "run_plan", return_value=0),
+                    redirect_stdout(stdout),
+                ):
+                    self.assertEqual(0, self.quickstart.main())
+
+                output = stdout.getvalue()
+                self.assertIn("quickstart: command plan", output)
+                self.assertIn("python3 scripts/build.py", output)
+                self.assertIn("expected standard Skills: 26", output)
+
     def test_public_help_and_parser_reject_obsolete_profile_before_execution(self) -> None:
         help_result = subprocess.run(
             [sys.executable, str(SCRIPT), "--help"],
@@ -71,6 +290,7 @@ class QuickstartPlanTests(unittest.TestCase):
         )
         self.assertEqual(0, help_result.returncode, help_result.stderr)
         self.assertNotIn("--profile", help_result.stdout)
+        self.assertIn("--verbose", help_result.stdout)
 
         obsolete = subprocess.run(
             [

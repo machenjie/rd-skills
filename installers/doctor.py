@@ -18,7 +18,6 @@ from changeforge_install import (
     RUNTIME_SKILL_COUNT,
     SCOPES,
     InstallError,
-    canonical_profile_capability_facts,
     classify_installed_manifest,
     host_enforcement_for_agent,
     legacy_residue_paths,
@@ -51,6 +50,34 @@ def _print_enforcement(agent: str, enforcement: dict) -> None:
         )
         for limitation in capabilities.get("limitations", []):
             print(f"  limitation: {limitation}")
+
+
+def _print_runtime_success() -> None:
+    print("✓ rd-skills installed")
+    print("✓ expected configuration found")
+    print("✓ installation healthy")
+    print()
+    print(
+        "Doctor verifies installation artifacts. It does not prove your AI "
+        "coding tool loaded rd-skills."
+    )
+    print()
+    print("Next:")
+    print("Open or restart your AI coding tool and run the first task.")
+
+
+def _print_openai_package_success() -> None:
+    print("✓ rd-skills package found")
+    print("✓ expected package contents found")
+    print("✓ package healthy")
+    print()
+    print(
+        "Doctor verifies package artifacts. It does not prove a real host "
+        "loaded rd-skills."
+    )
+    print()
+    print("Next:")
+    print("Use the generated package with your OpenAI API integration.")
 
 
 def _profile_projection_issues(
@@ -86,7 +113,11 @@ def _profile_projection_issues(
         "task-agent": "workspace-write",
         "review-agent": "read-only",
     }
-    expected_capability_facts = canonical_profile_capability_facts(enforcement)
+    static_runtime_capability_markers = (
+        "Current capability facts:",
+        "Current external-read mode:",
+        "external_source_read=",
+    )
     legacy_mode_markers = (
         "Current host modes:",
         "diff_input_mode=",
@@ -106,17 +137,12 @@ def _profile_projection_issues(
         expected_tools = enforcement["roles"][role]["rendered_tools"]
         if "Declared tool boundary:" not in text:
             issues.append(f"{path.name}: missing declared tool boundary")
-        if role == "main-control-agent":
-            if expected_capability_facts not in text:
-                issues.append(f"{path.name}: missing exact current capability facts")
-            if any(marker in text for marker in legacy_mode_markers):
-                issues.append(f"{path.name}: legacy host mode projection is forbidden")
-        elif "Current capability facts:" in text or any(
-            marker in text for marker in legacy_mode_markers
-        ):
+        if any(marker in text for marker in static_runtime_capability_markers):
             issues.append(
-                f"{path.name}: worker Profile must not receive Main capability facts or legacy host modes"
+                f"{path.name}: static runtime capability projection is forbidden"
             )
+        if any(marker in text for marker in legacy_mode_markers):
+            issues.append(f"{path.name}: legacy host mode projection is forbidden")
         if agent == "codex":
             try:
                 payload = tomllib.loads(text)
@@ -125,16 +151,6 @@ def _profile_projection_issues(
                 continue
             if payload.get("sandbox_mode") != expected_sandbox[role]:
                 issues.append(f"{path.name}: sandbox_mode is not the declared default")
-            instructions = str(payload.get("developer_instructions") or "")
-            if role == "main-control-agent":
-                if expected_capability_facts not in instructions:
-                    issues.append(
-                        f"{path.name}: parsed instructions omit current capability facts"
-                    )
-                if any(marker in instructions for marker in legacy_mode_markers):
-                    issues.append(
-                        f"{path.name}: parsed instructions contain legacy host modes"
-                    )
         elif agent == "claude":
             match = re.search(r"^tools:\s*(.*)$", text, re.MULTILINE)
             actual_tools = [item.strip() for item in match.group(1).split(",")] if match else []
@@ -156,14 +172,21 @@ def main() -> int:
     parser.add_argument("--agent", choices=AGENTS, required=True)
     parser.add_argument("--scope", choices=SCOPES, required=True)
     parser.add_argument("--target", type=Path)
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Show inventory, source binding, and host enforcement details.",
+    )
     args = parser.parse_args()
     try:
         expected_enforcement = host_enforcement_for_agent(args.agent)
         if args.agent == "openai-api":
             source = resolve_source_profile_dir(args.agent, args.scope)
             validate_openai_bundles(source)
-            _print_enforcement(args.agent, expected_enforcement)
-            print("doctor: OpenAI API runtime output is healthy")
+            if args.verbose:
+                print(f"doctor: source binding package_root={source}")
+                _print_enforcement(args.agent, expected_enforcement)
+            _print_openai_package_success()
             return 0
         targets = resolve_targets(args.agent, args.scope, args.target)
         manifest = read_manifest(targets.skills)
@@ -244,10 +267,29 @@ def main() -> int:
             for issue in issues:
                 print(f"- {issue}")
             return 1
-        _print_enforcement(args.agent, expected_enforcement)
-        if targets.profiles is not None:
-            print("doctor: observed-installed Profile files match declared digests and critical fields")
-        print("doctor: hookless installation is healthy")
+        if args.verbose:
+            print(
+                "doctor: installed inventory "
+                f"Skills={len(installed_skills)} Agent Profiles={len(installed_files)}"
+            )
+            core_model = manifest.get("core_model") if manifest is not None else None
+            core_digest = (
+                core_model.get("sha256", "missing")
+                if isinstance(core_model, dict)
+                else "missing"
+            )
+            print(
+                "doctor: source binding "
+                f"source_version={manifest.get('source_version') if manifest else 'missing'} "
+                f"core_model_sha256={core_digest}"
+            )
+            _print_enforcement(args.agent, expected_enforcement)
+            if targets.profiles is not None:
+                print(
+                    "doctor: observed-installed Profile files match declared "
+                    "digests and critical fields"
+                )
+        _print_runtime_success()
         return 0
     except InstallError as exc:
         print(f"doctor: ERROR: {exc}", file=sys.stderr)

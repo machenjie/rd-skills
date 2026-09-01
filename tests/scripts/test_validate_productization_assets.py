@@ -135,6 +135,22 @@ def _load_module():
     return module
 
 
+def _gif_fixture(*, frame_count: int) -> bytes:
+    """Return a minimal structurally valid 1x1 GIF test fixture."""
+    header = (
+        b"GIF89a"
+        b"\x01\x00\x01\x00"
+        b"\x80\x00\x00"
+        b"\x00\x00\x00\xff\xff\xff"
+    )
+    frame = (
+        b"\x21\xf9\x04\x00\x01\x00\x00\x00"
+        b"\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00"
+        b"\x02\x02\x44\x01\x00"
+    )
+    return header + frame * frame_count + b"\x3b"
+
+
 def _content_readiness_payload() -> dict:
     cost_authority = json.loads(
         (ROOT / "src/control-model/core-contracts.json").read_text(encoding="utf-8")
@@ -2858,6 +2874,61 @@ case is `9` fresh
             ),
             errors,
         )
+
+    def test_demo_gif_is_required_and_linked_from_readme(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            (root / "README.md").write_text("# rd-skills\n", encoding="utf-8")
+
+            errors = self.module._demo_gif_errors(root)
+
+        self.assertIn("missing demo GIF: docs/assets/rd-skills-demo.gif", errors)
+
+    def test_demo_gif_rejects_invalid_and_static_files(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            readme = root / "README.md"
+            asset = root / "docs/assets/rd-skills-demo.gif"
+            asset.parent.mkdir(parents=True)
+            readme.write_text(
+                "![rd-skills demo](docs/assets/rd-skills-demo.gif)\n",
+                encoding="utf-8",
+            )
+
+            asset.write_bytes(b"not-a-gif")
+            self.assertIn(
+                "demo GIF is not a valid GIF animation",
+                self.module._demo_gif_errors(root),
+            )
+
+            asset.write_bytes(_gif_fixture(frame_count=1))
+            self.assertIn(
+                "demo GIF must be animated (found 1 frame)",
+                self.module._demo_gif_errors(root),
+            )
+
+    def test_demo_gif_rejects_unlinked_asset_and_accepts_animated_asset(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            readme = root / "README.md"
+            asset = root / "docs/assets/rd-skills-demo.gif"
+            asset.parent.mkdir(parents=True)
+            asset.write_bytes(_gif_fixture(frame_count=2))
+            readme.write_text("# rd-skills\n", encoding="utf-8")
+
+            self.assertIn(
+                "README.md must embed docs/assets/rd-skills-demo.gif",
+                self.module._demo_gif_errors(root),
+            )
+
+            readme.write_text(
+                "![rd-skills demo](docs/assets/rd-skills-demo.gif)\n",
+                encoding="utf-8",
+            )
+            self.assertEqual([], self.module._demo_gif_errors(root))
+
+            asset.write_bytes(_gif_fixture(frame_count=2).replace(b"GIF89a", b"GIF87a", 1))
+            self.assertEqual([], self.module._demo_gif_errors(root))
 
     def test_authoring_assets_exclude_release_only_markdown_and_duplicate_json(
         self,
