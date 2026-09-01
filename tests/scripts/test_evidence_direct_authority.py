@@ -69,11 +69,11 @@ LOCAL_DISCOVERY = (
 RISK_ESCALATION = (
     ROOT / "evals" / "pressure" / "hookless" / "direct-discovery-risk-escalation.yaml"
 )
-CAPABILITY_MISMATCH = (
-    ROOT / "evals" / "pressure" / "hookless" / "runtime-capability-mismatch.yaml"
+DIRECT_HOST_OPERATION = (
+    ROOT / "evals" / "pressure" / "hookless" / "direct-host-operation.yaml"
 )
-EXECUTOR_SUBSTITUTION = (
-    ROOT / "evals" / "pressure" / "hookless" / "executor-substitution-contract.yaml"
+OBSERVED_EXECUTION_BLOCKER = (
+    ROOT / "evals" / "pressure" / "hookless" / "observed-execution-blocker.yaml"
 )
 EVIDENCE_REVIEW = (
     ROOT
@@ -484,52 +484,33 @@ class EvidenceDirectAuthorityTests(unittest.TestCase):
                 self.assertEqual("initial-analysis", outcome["analysis_kind"])
                 self.assertEqual("worker-reroute-forbidden", outcome["route_authority"])
 
-    def test_runtime_capability_mismatch_is_minimal_and_never_reroutes(self) -> None:
-        mismatch = CORE_CONTRACTS["task_contract"]["executor_substitution"][
-            "capability_mismatch"
-        ]
+    def test_actual_execution_blocker_is_minimal_and_task_bound(self) -> None:
+        execution = CORE_CONTRACTS["task_contract"]["execution_boundary"]
         self.assertEqual(
-            "CAPABILITY_MISMATCH task=<Task ID>; required=<capability>; "
-            "effective=unknown|unsupported; edit=0",
-            mismatch["format"],
+            "EXECUTION_BLOCKED task=<Task ID>; operation=<read|edit|execute>; "
+            "observed=<actual host/tool failure>",
+            execution["blocker_format"],
         )
-        self.assertEqual("forbidden", mismatch["worker_reroute"])
-        self.assertEqual("forbidden", mismatch["main_implementation"])
+        self.assertEqual("forbidden", execution["preflight_capability_proof"])
+        self.assertEqual(
+            "current-nonempty-task-id-not-unspecified",
+            execution["blocker_task_id"],
+        )
 
-    def test_executor_substitution_preserves_role_and_complete_task_contract(self) -> None:
-        substitution = CORE_CONTRACTS["task_contract"]["executor_substitution"]
-        self.assertEqual("fixed", substitution["semantic_role"])
-        self.assertEqual("replaceable", substitution["host_executor"])
+    def test_retry_preserves_role_and_complete_task_contract(self) -> None:
+        retry = CORE_CONTRACTS["task_contract"]["execution_boundary"][
+            "retry_continuity"
+        ]
+        self.assertEqual("unchanged-current-task-id", retry["task_id"])
         self.assertEqual(
-            [
-                "current-invocation-fact",
-                "host-surface-session-evidence",
-                "current-session-capability-mismatch",
-                "unknown-unavailable",
-            ],
-            substitution["runtime_fact_precedence"],
+            "complete-and-byte-for-byte-equivalent-field-values",
+            retry["task_contract"],
         )
         self.assertEqual(
-            "exclude-executor-or-class-from-subsequent-fallback",
-            substitution["same_session_mismatch"],
+            "unchanged",
+            retry["route_level_review_and_handoff_bindings"],
         )
-        self.assertEqual("block", substitution["no_legal_executor"])
-        self.assertEqual(
-            [
-                "task-contract",
-                "primary-professional-skill",
-                "domain",
-                "layer3",
-                "execution-level-and-basis-history",
-                "scope",
-                "acceptance",
-                "validation",
-                "review",
-                "handoff",
-                "stop-conditions",
-            ],
-            substitution["verbatim_carry"],
-        )
+        self.assertEqual("forbidden", retry["task_unspecified"])
 
     def test_direct_template_and_capsule_projection_name_exact_boundaries(self) -> None:
         text = " ".join(DIRECT_TEMPLATE.read_text(encoding="utf-8").split())
@@ -720,16 +701,16 @@ class EvidenceDirectAuthorityTests(unittest.TestCase):
             "returned zero edit to Main for initial Analysis without selecting a new Skill Domain or Layer3",
             escalation["expected"]["behaviors"],
         )
-        mismatch = load_yaml_file(CAPABILITY_MISMATCH)
-        substitution = load_yaml_file(EXECUTOR_SUBSTITUTION)
+        direct_operation = load_yaml_file(DIRECT_HOST_OPERATION)
+        blocker = load_yaml_file(OBSERVED_EXECUTION_BLOCKER)
         preservation = load_yaml_file(EVIDENCE_REVIEW)
         self.assertIn(
-            "treated absent effective runtime capability as unavailable despite the static declaration",
-            mismatch["expected"]["behaviors"],
+            "invoked the current Host read edit and execute tools directly within the Task Contract",
+            direct_operation["expected"]["behaviors"],
         )
         self.assertIn(
-            "preserved Semantic Role Professional Skill Layer3 Execution Level Basis history scope acceptance validation review handoff and stop conditions unchanged",
-            substitution["expected"]["behaviors"],
+            "preserved the complete Task Contract for any later Retry",
+            blocker["expected"]["behaviors"],
         )
         self.assertIn(
             "captured the exact current diff and sent every changed file to independent review",

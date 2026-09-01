@@ -104,13 +104,12 @@ Profile, Execution Level, or runtime state machine.
 
 The Copilot delivery family has three independent static Host Surfaces:
 Copilot CLI, Copilot VS Code, and Copilot Coding Agent. Their declared tool and
-external-read ceilings may differ, while the shared generated Profile stays a
-portable superset. Static surfaces and generated `rendered_tools` never establish
-effective capability for a particular invocation.
-Declared `workspace-mutation` requires both supported task-agent delivery and a
-write-semantic tool (`edit`, `Write`, `execute`, or `Bash`) with the required
-task-agent enforcement surfaces not unsupported. Invocation/session evidence
-still decides whether that declared ceiling is effective now.
+external-read delivery may differ, while the shared generated Profile stays a
+portable superset. The Task Agent invokes the tools actually delivered by the
+current Host within the static Role, Task Contract, sandbox, and tool boundary.
+The build does not infer an invocation capability state or a fallback Host
+Executor. Actual tool, permission, sandbox, and required-artifact failures are
+reported from the attempted operation with the current real Task ID.
 
 ## Growth Rule
 

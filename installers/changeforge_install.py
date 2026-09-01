@@ -110,12 +110,12 @@ HOST_ENFORCEMENT_CAPABILITIES = {
     "subagent_dispatch",
     "partial_handoff",
     "isolated_workspace",
-    "utility_no_edit",
 }
 ROLE_ENFORCEMENT_CAPABILITIES = {
     "tool_allowlist",
     "workspace_write_protection",
     "read_only_command_semantics",
+    "external_source_read",
 }
 LEGACY_PROFILE_NAMES = (
     "analysis-worker",
@@ -717,44 +717,6 @@ def validated_built_profile_sha256(
     return {str(role): str(digest) for role, digest in rendered.items()}
 
 
-def _load_current_build_authority() -> Any:
-    """Load the canonical build owner without duplicating source contracts."""
-
-    build_script = ROOT / "scripts" / "build.py"
-    spec = importlib.util.spec_from_file_location(
-        "changeforge_installer_build_authority", build_script
-    )
-    if spec is None or spec.loader is None:
-        raise InstallError("cannot load the current Agent Profile renderer")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    scripts_path = str(ROOT / "scripts")
-    inserted_scripts_path = scripts_path not in sys.path
-    if inserted_scripts_path:
-        sys.path.insert(0, scripts_path)
-    try:
-        spec.loader.exec_module(module)
-    except Exception as exc:
-        raise InstallError(f"cannot render current authoritative Agent Profiles: {exc}") from exc
-    finally:
-        if inserted_scripts_path:
-            sys.path.remove(scripts_path)
-    return module
-
-
-def canonical_profile_capability_facts(enforcement: dict[str, Any]) -> str:
-    """Return the exact Main projection from the canonical build renderer."""
-
-    module = _load_current_build_authority()
-    try:
-        capabilities = module._normalized_decision_capabilities(enforcement)
-        return str(module._render_decision_capability_facts(capabilities))
-    except Exception as exc:
-        raise InstallError(
-            f"cannot render current authoritative capability facts: {exc}"
-        ) from exc
-
-
 def validated_built_core_model(agent: str, scope: str) -> dict[str, Any]:
     """Return core-model metadata anchored in the current validated build."""
 
@@ -838,58 +800,34 @@ def validate_build_core_model(build: dict[str, Any]) -> dict[str, Any]:
 
 def read_host_enforcement_source() -> dict[str, Any]:
     value = load_json(HOST_ENFORCEMENT_SOURCE)
-    if value is None or value.get("schema_version") != 4:
-        raise InstallError("host enforcement source must use schema_version 4")
+    if value is None or value.get("schema_version") != 5:
+        raise InstallError("host enforcement source must use schema_version 5")
     statuses = value.get("status_values")
     if not isinstance(statuses, list) or set(statuses) != ENFORCEMENT_STATUSES:
         raise InstallError("host enforcement source has an invalid status enum")
     hosts = value.get("hosts")
     if not isinstance(hosts, dict) or set(hosts) != set(AGENTS):
         raise InstallError("host enforcement source must contain every supported agent")
-    expected_mode_values = {
-        "diff_input_mode": ["native", "supplied-artifact", "unsupported"],
-        "validation_mode": ["native-read-only", "task-no-edit", "unsupported"],
-    }
-    if value.get("mode_values") != expected_mode_values:
-        raise InstallError("host enforcement source has invalid adapter mode values")
-    expected_host_fields = HOST_ENFORCEMENT_CAPABILITIES | {
-        "diff_input_mode",
-        "validation_mode",
-        "native_diff_safeguards",
-        "roles",
-    }
-    host_mode_values = {
-        field: set(values) for field, values in expected_mode_values.items()
-    }
+    expected_host_fields = HOST_ENFORCEMENT_CAPABILITIES | {"roles"}
     for agent in AGENTS:
         entry = hosts[agent]
         if not isinstance(entry, dict) or set(entry) != expected_host_fields:
-            raise InstallError(f"{agent}: host enforcement fields must match schema v4")
+            raise InstallError(f"{agent}: host enforcement fields must match schema v5")
         for capability in HOST_ENFORCEMENT_CAPABILITIES:
             if entry.get(capability) not in ENFORCEMENT_STATUSES:
                 raise InstallError(f"{agent}: invalid {capability} enforcement")
-        diff_input_mode = entry.get("diff_input_mode")
-        validation_mode = entry.get("validation_mode")
-        utility_no_edit = entry.get("utility_no_edit")
-        if diff_input_mode not in host_mode_values["diff_input_mode"]:
-            raise InstallError(f"{agent}: invalid diff_input_mode")
-        if validation_mode not in host_mode_values["validation_mode"]:
-            raise InstallError(f"{agent}: invalid validation_mode")
-        if utility_no_edit not in ENFORCEMENT_STATUSES:
-            raise InstallError(f"{agent}: invalid utility_no_edit enforcement")
-        expected_safeguards = (
-            ["--no-pager", "--no-ext-diff", "--no-textconv"]
-            if diff_input_mode == "native"
-            else []
-        )
-        if entry.get("native_diff_safeguards") != expected_safeguards:
-            raise InstallError(f"{agent}: native diff safeguards do not match adapter mode")
         roles = entry.get("roles")
         if not isinstance(roles, dict) or set(roles) != set(AGENT_PROFILE_NAMES):
             raise InstallError(f"{agent}: enforcement roles must be the four static Profiles")
         for role, role_entry in roles.items():
-            if not isinstance(role_entry, dict):
-                raise InstallError(f"{agent}:{role}: enforcement entry must be an object")
+            expected_role_fields = ROLE_ENFORCEMENT_CAPABILITIES | {
+                "rendered_tools",
+                "limitations",
+            }
+            if not isinstance(role_entry, dict) or set(role_entry) != expected_role_fields:
+                raise InstallError(
+                    f"{agent}:{role}: enforcement entry must match schema v5"
+                )
             for capability in ROLE_ENFORCEMENT_CAPABILITIES:
                 if role_entry.get(capability) not in ENFORCEMENT_STATUSES:
                     raise InstallError(f"{agent}:{role}: invalid {capability} enforcement")

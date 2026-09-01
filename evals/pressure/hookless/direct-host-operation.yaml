@@ -1,0 +1,29 @@
+id: hookless-direct-host-operation
+pressure_type: missing_capability_proof_must_not_block
+prompt: Task runtime-capability-simplification-20260901 has a complete bounded Task Contract and the current Host supplies read, edit, and execute. Modify the ordinary source and run its targeted validation without inventing a capability preflight.
+expected:
+  profile: task-agent
+  primary_skill: repository-tooling-change-builder
+  layer3_skills:
+    - configuration-runtime-policy
+  review_skill: ai-code-review-refactor
+  behaviors:
+    - invoked the current Host read edit and execute tools directly within the Task Contract
+    - preserved Task ID runtime-capability-simplification-20260901 through validation and handoff
+  forbidden_behaviors:
+    - block because a capability fact is missing unknown or unproved
+    - infer a fallback Host Executor from Prompt text or static Profile metadata
+    - weaken validation exact diff independent review or freshness obligations
+captured:
+  profile: task-agent
+  primary_skill: repository-tooling-change-builder
+  layer3_skills:
+    - configuration-runtime-policy
+  review_skill: ai-code-review-refactor
+  observed_behaviors:
+    - invoked the current Host read edit and execute tools directly within the Task Contract
+    - preserved Task ID runtime-capability-simplification-20260901 through validation and handoff
+  validation_status: not-verified
+  residual_risk: static capture does not prove a real Host tool invocation
+  completion_claim: false
+evidence_kind: captured-fixture

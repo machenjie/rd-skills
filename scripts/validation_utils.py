@@ -1352,9 +1352,9 @@ def prompt_projection_block(
         lines = [
             begin,
             "Before review-agent dispatch, Review Input Ready=latest changed paths+post-latest-edit validation+fixed scope.",
-            "exact delivered unified diff or current reviewer-readable native reference+instance consumption capability also required. Static host support alone is never readiness; forward evidence unchanged; never send Review to export it.",
-            "Missing=>review dispatch=0; Legacy/incomplete permits one recovery; Review before Task before Review is forbidden.",
-            "references/implementation-handoff-template.md JIT-owns Ledger State/currentness, freshness, capability branches, and review proof. Latest material edit invalidates validation/evidence; Claims: "
+            "Exact delivered unified diff or current reviewer-readable native reference is also required; the assigned reviewer can read the delivered current artifact. Forward evidence unchanged; never send Review to export it.",
+            "Missing=>review dispatch=0; Review before Task before Review is forbidden.",
+            "references/implementation-handoff-template.md JIT-owns Ledger State/currentness, freshness, artifact readability, and review proof. Latest material edit invalidates validation/evidence; Claims: "
             + proof["latest_material_edit_claim"]
             + ", "
             + proof["validation_claim"]
@@ -4911,7 +4911,6 @@ def validate_core_contracts(
         "applies_to",
         "profile_capability_id",
         "review_input_readiness",
-        "generic_capability_contract",
         "trace_action",
         "event_fields",
         "diff_fields",
@@ -4966,138 +4965,70 @@ def validate_core_contracts(
             errors.append(
                 "review_discipline_contract.trace_action must be 'review-discipline'"
             )
-        readiness = review_discipline["review_input_readiness"]
-        if not isinstance(readiness, dict) or readiness.get(
-            "required_fields"
-        ) != [
-            "latest_changed_paths",
-            "exact_change_evidence",
-            "reviewer_capability_accessibility",
-            "validation_after_latest_material_edit",
-            "fixed_review_scope",
-        ] or readiness.get("review_dispatch_count_when_missing") != 0:
-            errors.append(
-                "review input readiness must fail before review dispatch when "
-                "any producer evidence is missing"
-            )
-        elif readiness.get("native_evidence_fields") != [
-            "reference",
-            "generation",
-            "reviewer",
-            "changed_paths",
-            "readable",
-        ] or readiness.get("native_evidence_rule") != (
-            "structured-current-reference-binds-assigned-reviewer-generation-"
-            "changed-paths-and-readability"
-        ):
-            errors.append(
-                "native review evidence must bind the assigned reviewer, current "
-                "generation, exact changed paths, and readable instance"
-            )
-        capability_contract = review_discipline["generic_capability_contract"]
-        capability_contract_fields = {
-            "fields",
-            "injected_fields",
-            "states",
-            "declared_workspace_mutation_ceiling",
-            "decision_inputs",
-            "ignored_adapter_metadata",
-            "equivalence_rule",
-            "prompt_branches",
-        }
-        if not exact_keys(
-            capability_contract,
-            capability_contract_fields,
-            "review_discipline_contract.generic_capability_contract",
-        ):
-            capability_contract = {}
-        if capability_contract.get(
-            "decision_inputs"
-        ) != "capability-state-only" or capability_contract.get(
-            "equivalence_rule"
-        ) != (
-            "equal-capability-state-produces-equal-routing-level-review-and-"
-            "completion-decisions"
-        ):
-            errors.append(
-                "generic control decisions must depend only on normalized "
-                "capability state"
-            )
-        elif capability_contract.get("fields") != [
-            "bounded-source-read",
-            "workspace-mutation",
-            "non-mutating-validation",
-            "native-change-read",
-            "change-evidence-export",
-            "supplied-change-delivery",
-            "reviewer-change-consume",
-            "workspace-state-observation",
-        ] or capability_contract.get("injected_fields") != capability_contract.get(
-            "fields"
-        ) or capability_contract.get("states") != ["supported", "unsupported"]:
-            errors.append("generic capability vocabulary must remain closed and ordered")
-        elif capability_contract.get("declared_workspace_mutation_ceiling") != {
-            "requires": [
-                "supported-profile-delivery",
-                "task-agent-write-semantic-tool",
-                "task-agent-tool-allowlist-not-unsupported",
-                "task-agent-workspace-write-protection-not-unsupported",
+        expected_readiness = {
+            "producer": "current-task-agent",
+            "consumer": "main-control-agent-before-review-dispatch",
+            "required_fields": [
+                "latest_changed_paths",
+                "exact_change_evidence",
+                "reviewer_artifact_accessibility",
+                "validation_after_latest_material_edit",
+                "fixed_review_scope",
             ],
-            "write_semantic_tools": ["edit", "Edit", "Write", "execute", "Bash"],
-        }:
+            "exact_change_evidence_kinds": [
+                "exact-change-content",
+                "exact-before-after",
+                "reviewer-accessible-native-reference",
+                "equivalent-exact-artifact",
+            ],
+            "forbidden_substitutes": [
+                "changed-file-summary",
+                "prose-description",
+                "implementer-self-report",
+                "digest",
+                "command-output",
+                "filename",
+                "identifier",
+                "opaque-reference",
+            ],
+            "supplied_evidence_rule": (
+                "actual-unified-diff-content-not-path-label-or-opaque-reference"
+            ),
+            "native_evidence_rule": (
+                "structured-current-reference-binds-assigned-reviewer-generation-"
+                "changed-paths-and-readability"
+            ),
+            "native_evidence_fields": [
+                "reference",
+                "generation",
+                "reviewer",
+                "changed_paths",
+                "readable",
+            ],
+            "artifact_accessibility_fields": [
+                "reviewer",
+                "generation",
+                "changed_paths",
+                "readable",
+            ],
+            "delivery_rule": (
+                "main-forwards-exact-payload-or-reference-without-summary-or-regeneration"
+            ),
+            "accessibility_rule": (
+                "assigned-reviewer-can-read-delivered-exact-evidence-for-current-"
+                "generation-and-changed-paths"
+            ),
+            "normal_flow": "same-implementation-handoff-before-review",
+            "missing_field_outcome": "blocked-before-review-dispatch",
+            "review_dispatch_count_when_missing": 0,
+            "reviewer_generation": False,
+            "reviewer_mutation": False,
+        }
+        if review_discipline["review_input_readiness"] != expected_readiness:
             errors.append(
-                "declared workspace mutation ceiling must require delivery, "
-                "write-semantic tools, and task-agent static enforcement"
+                "review input readiness must directly bind current exact artifacts, "
+                "fresh validation, and fixed scope before review dispatch"
             )
-        else:
-            capability_fields = capability_contract["fields"]
-            prompt_branches = capability_contract.get("prompt_branches")
-            expected_prompt_fields = [
-                "native-change-read",
-                "change-evidence-export",
-                "supplied-change-delivery",
-                "reviewer-change-consume",
-                "non-mutating-validation",
-            ]
-            if not isinstance(prompt_branches, list) or [
-                branch.get("field") if isinstance(branch, dict) else None
-                for branch in prompt_branches
-            ] != expected_prompt_fields:
-                errors.append(
-                    "generic capability prompt branches must use the five canonical "
-                    "injected decision fields in order"
-                )
-            else:
-                for index, branch in enumerate(prompt_branches):
-                    if not exact_keys(
-                        branch,
-                        {"field", "next_field", "branches"},
-                        f"review_discipline_contract.generic_capability_contract."
-                        f"prompt_branches[{index}]",
-                    ):
-                        continue
-                    field = branch["field"]
-                    if field not in capability_fields:
-                        errors.append(
-                            f"generic capability prompt field {field!r} is not injected"
-                        )
-                    expected_next = (
-                        expected_prompt_fields[index + 1]
-                        if index + 1 < len(expected_prompt_fields)
-                        else None
-                    )
-                    if branch["next_field"] != expected_next:
-                        errors.append(
-                            "generic capability prompt branches must form one ordered chain"
-                        )
-                    modes = branch["branches"]
-                    if not isinstance(modes, list) or [
-                        mode.get("value") if isinstance(mode, dict) else None
-                        for mode in modes
-                    ] != ["supported", "unsupported"]:
-                        errors.append(
-                            f"generic capability prompt field {field!r} must use closed states"
-                        )
         expected_event_fields = [
             "actor",
             "action",
@@ -7447,7 +7378,7 @@ def validate_core_contracts(
         "scheduling_rules",
         "evidence_resolution",
         "direct_bounded_discovery",
-        "executor_substitution",
+        "execution_boundary",
         "analyzed_work_authority",
         "task_boundary",
         "finding_relations",
@@ -7790,68 +7721,50 @@ def validate_core_contracts(
                 "checks, stops, worker no-reroute, and monotonic Level rules"
             )
 
-        expected_executor_substitution = {
-            "declared_capability": "static-host-or-profile-ceiling-only",
-            "effective_runtime_capability": "invocation-scoped-current-fact",
-            "unknown_effective_capability": "unavailable",
-            "semantic_role": "fixed",
-            "host_executor": "replaceable",
-            "runtime_fact_precedence": [
-                "current-invocation-fact",
-                "host-surface-session-evidence",
-                "current-session-capability-mismatch",
-                "unknown-unavailable",
+        expected_execution_boundary = {
+            "semantic_role": "task-agent",
+            "operations": ["read", "search", "edit", "execute"],
+            "preflight_capability_proof": "forbidden",
+            "authority_inputs": [
+                "semantic-role",
+                "task-contract-scope",
+                "host-tool-and-sandbox-enforcement",
             ],
-            "runtime_evidence_fields": [
-                "source",
-                "task_id",
-                "session_id",
-                "host_surface",
-                "executor",
-                "executor_class",
-                "capability",
-                "state",
-            ],
-            "runtime_evidence_states": ["supported", "unsupported", "unknown"],
-            "same_session_mismatch": (
-                "exclude-executor-or-class-from-subsequent-fallback"
+            "operation_rule": (
+                "invoke-current-host-tool-directly-within-task-contract"
             ),
-            "eligible_executor": (
-                "current-proven-capability-and-no-same-session-mismatch-exclusion"
-            ),
-            "no_legal_executor": "block",
-            "verbatim_carry": [
-                "task-contract",
-                "primary-professional-skill",
-                "domain",
-                "layer3",
-                "execution-level-and-basis-history",
-                "scope",
-                "acceptance",
-                "validation",
-                "review",
-                "handoff",
-                "stop-conditions",
+            "blocking_failure_classes": [
+                "tool-unavailable",
+                "permission-denied",
+                "sandbox-denied",
+                "required-artifact-unavailable",
             ],
-            "capability_mismatch": {
-                "format": (
-                    "CAPABILITY_MISMATCH task=<Task ID>; required=<capability>; "
-                    "effective=unknown|unsupported; edit=0"
-                ),
-                "worker_reroute": "forbidden",
-                "main_implementation": "forbidden",
-                "worker_skill_or_level_reselection": "forbidden",
-                "semantic_role_fallback": "forbidden",
-                "alternate_executor": (
-                    "main-may-substitute-only-after-current-effective-capability-proof"
-                ),
+            "blocker_operations": ["read", "edit", "execute"],
+            "blocker_format": (
+                "EXECUTION_BLOCKED task=<Task ID>; "
+                "operation=<read|edit|execute>; observed=<actual host/tool failure>"
+            ),
+            "blocker_task_id": "current-nonempty-task-id-not-unspecified",
+            "blocker_observation": "nonempty-actual-host-tool-failure",
+            "forbidden_blocker_inputs": [
+                "missing-capability-proof",
+                "unknown-capability",
+                "prompt-inferred-capability",
+                "required-capability-name",
+                "rendered-tools-inference",
+            ],
+            "retry_continuity": {
+                "task_id": "unchanged-current-task-id",
+                "task_contract": "complete-and-byte-for-byte-equivalent-field-values",
+                "route_level_review_and_handoff_bindings": "unchanged",
+                "task_unspecified": "forbidden",
             },
             "runtime_persistence": "forbidden",
         }
-        if task["executor_substitution"] != expected_executor_substitution:
+        if task["execution_boundary"] != expected_execution_boundary:
             errors.append(
-                "Task executor substitution must preserve fixed Semantic Role, "
-                "verbatim contract carry, minimal mismatch, and no runtime persistence"
+                "Task execution boundary must use direct Host operations, actual "
+                "failure blockers, and complete retry Task continuity"
             )
 
         expected_analyzed_work_authority = {
@@ -8648,7 +8561,7 @@ def validate_core_contracts(
                     expected_labels = [
                         "Latest Changed Paths",
                         "Exact Reviewable Change Evidence",
-                        "Reviewer Capability Accessibility",
+                        "Reviewer Artifact Accessibility",
                         "Validation After Latest Material Edit",
                         "Fixed Review Scope",
                     ]
@@ -9185,7 +9098,7 @@ def validate_core_contracts(
         "task_contract_section",
         "completion_section",
         "evidence_section",
-        "capability_section",
+        "execution_section",
         "freshness_projection_ids_by_section",
         "forbidden_storage_projection_ids_by_section",
     }
@@ -9251,7 +9164,7 @@ def validate_core_contracts(
             "task_contract_section",
             "completion_section",
             "evidence_section",
-            "capability_section",
+            "execution_section",
         ):
             if prompt[section_field] not in prompt_headings:
                 errors.append(f"prompt_contract.{section_field} is not an ordered heading")
@@ -9778,7 +9691,7 @@ EVIDENCE_RESOLUTION_MODEL = TASK_CONTRACT_MODEL["evidence_resolution"]
 DIRECT_BOUNDED_DISCOVERY_MODEL = TASK_CONTRACT_MODEL[
     "direct_bounded_discovery"
 ]
-EXECUTOR_SUBSTITUTION_MODEL = TASK_CONTRACT_MODEL["executor_substitution"]
+EXECUTION_BOUNDARY_MODEL = TASK_CONTRACT_MODEL["execution_boundary"]
 EVIDENCE_LEDGER_MODEL = CORE_CONTRACTS["visible_evidence_contract"]
 COMPLETION_STATE_MODEL = CORE_CONTRACTS["completion_state"]
 ROLE_CONTRACT_MODEL = CORE_CONTRACTS["roles"]
@@ -9789,381 +9702,197 @@ REVIEW_DISCIPLINE_MODEL = CORE_CONTRACTS["review_discipline_contract"]
 EVIDENCE_LOCALIZATION_MODEL = CORE_CONTRACTS["evidence_localization_contract"]
 
 
-def normalized_declared_capability_ceiling(
-    entry: dict[str, Any],
-) -> dict[str, str]:
-    """Project static Host/Profile configuration to a declared ceiling only."""
-
-    supported_enforcement = {
-        "native-enforced",
-        "sandbox-enforced",
-        "prompt-enforced",
-    }
-    profile_supported = entry.get("profile_delivery") in supported_enforcement
-    roles = entry.get("roles")
-    roles = roles if isinstance(roles, dict) else {}
-
-    def rendered_tools(role: str) -> set[str]:
-        role_facts = roles.get(role)
-        tools = role_facts.get("rendered_tools") if isinstance(role_facts, dict) else None
-        return set(tools) if isinstance(tools, list) else set()
-
-    diff_input_mode = entry.get("diff_input_mode")
-    native_change_read = profile_supported and diff_input_mode == "native"
-    change_evidence_export = profile_supported and bool(
-        rendered_tools("task-agent") & {"execute", "Bash"}
+def _valid_current_task_id(value: object) -> bool:
+    return (
+        isinstance(value, str)
+        and bool(value.strip())
+        and value.strip().casefold() != "unspecified"
     )
-    supplied_change_delivery = (
-        profile_supported and diff_input_mode == "supplied-artifact"
-    )
-    reviewer_change_consume = profile_supported and bool(
-        rendered_tools("review-agent")
-        & {"read", "Read", "search", "Grep", "Glob", "execute-read-only"}
-    )
-    validation_supported = entry.get("validation_mode") in {
-        "native-read-only",
-        "task-no-edit",
-    }
-    observation_supported = entry.get("utility_no_edit") in supported_enforcement
-    task_role = roles.get("task-agent")
-    task_role = task_role if isinstance(task_role, dict) else {}
-    mutation_ceiling = REVIEW_DISCIPLINE_MODEL["generic_capability_contract"][
-        "declared_workspace_mutation_ceiling"
-    ]
-    mutation_supported = (
-        profile_supported
-        and bool(
-            rendered_tools("task-agent")
-            & set(mutation_ceiling["write_semantic_tools"])
-        )
-        and task_role.get("tool_allowlist") != "unsupported"
-        and task_role.get("workspace_write_protection") != "unsupported"
-    )
-    return {
-        "bounded-source-read": "supported" if profile_supported else "unsupported",
-        "workspace-mutation": "supported" if mutation_supported else "unsupported",
-        "non-mutating-validation": (
-            "supported" if validation_supported else "unsupported"
-        ),
-        "native-change-read": "supported" if native_change_read else "unsupported",
-        "change-evidence-export": (
-            "supported" if change_evidence_export else "unsupported"
-        ),
-        "supplied-change-delivery": (
-            "supported" if supplied_change_delivery else "unsupported"
-        ),
-        "reviewer-change-consume": (
-            "supported" if reviewer_change_consume else "unsupported"
-        ),
-        "workspace-state-observation": (
-            "supported" if observation_supported else "unsupported"
-        ),
-    }
 
 
-def resolve_runtime_capability_fact(
+def task_operation_outcome(
     *,
-    declared_capability: str,
-    required_capability: str,
-    invocation_facts: object,
-) -> dict[str, object]:
-    """Resolve one executor capability from current visible dispatch evidence."""
+    task_id: str,
+    operation: str,
+    target: str,
+    result: str,
+    failure_class: str | None = None,
+    observed: str | None = None,
+) -> dict[str, str]:
+    """Model one direct Host operation without a capability preflight."""
 
-    unknown = {
-        "state": "unknown",
-        "source": "unknown-unavailable",
-        "same_session_mismatch": False,
-    }
-    fields = tuple(EXECUTOR_SUBSTITUTION_MODEL["runtime_evidence_fields"])
-    precedence = tuple(EXECUTOR_SUBSTITUTION_MODEL["runtime_fact_precedence"])
-    sources = precedence[:-1]
-    states = set(EXECUTOR_SUBSTITUTION_MODEL["runtime_evidence_states"])
-    capability_fields = set(
-        REVIEW_DISCIPLINE_MODEL["generic_capability_contract"]["injected_fields"]
+    if not _valid_current_task_id(task_id):
+        raise ValueError("Task ID must be current, non-empty, and not unspecified")
+    if operation not in EXECUTION_BOUNDARY_MODEL["operations"]:
+        raise ValueError("operation is outside the Task execution boundary")
+    if not isinstance(target, str) or not target.strip():
+        raise ValueError("operation target must be non-empty")
+    if result == "succeeded":
+        if failure_class is not None or observed is not None:
+            raise ValueError("successful operation cannot carry failure evidence")
+        return {"status": "continue", "task_id": task_id, "operation": operation}
+    if result != "failed":
+        raise ValueError("operation result must be succeeded or failed")
+    if failure_class not in EXECUTION_BOUNDARY_MODEL["blocking_failure_classes"]:
+        raise ValueError("blocking requires an actual host or tool failure")
+    if not isinstance(observed, str) or not observed.strip():
+        raise ValueError("blocking requires an actual host or tool failure")
+    blocker_operation = "read" if operation == "search" else operation
+    blocker = (
+        f"EXECUTION_BLOCKED task={task_id}; operation={blocker_operation}; "
+        f"observed={observed.strip()}"
     )
-    if declared_capability not in {"supported", "unsupported"}:
-        return unknown
-    if required_capability not in capability_fields:
-        return unknown
-    if declared_capability == "unsupported":
-        return {
-            "state": "unsupported",
-            "source": "static-ceiling",
-            "same_session_mismatch": False,
-        }
-    envelope_fields = {
-        "task_id",
-        "session_id",
-        "host_surface",
-        "executor",
-        "executor_class",
-        "evidence",
+    errors = execution_blocker_errors(blocker, current_task_id=task_id)
+    if errors:
+        raise ValueError("blocking requires an actual host or tool failure")
+    return {
+        "status": "blocked",
+        "task_id": task_id,
+        "operation": blocker_operation,
+        "blocker": blocker,
     }
-    if not isinstance(invocation_facts, dict) or set(invocation_facts) != envelope_fields:
-        return unknown
-    identity_fields = (
-        "task_id",
-        "session_id",
-        "host_surface",
-        "executor",
-        "executor_class",
-    )
-    if any(
-        not isinstance(invocation_facts[field], str)
-        or not invocation_facts[field].strip()
-        for field in identity_fields
+
+
+_EXECUTION_BLOCKER_RE = re.compile(
+    r"^EXECUTION_BLOCKED task=(?P<task>[^;\n]+); "
+    r"operation=(?P<operation>read|edit|execute); "
+    r"observed=(?P<observed>[^\n]+)$"
+)
+_ACTUAL_FAILURE_MARKERS = (
+    "tool unavailable",
+    "command not found",
+    "permission denied",
+    "operation not permitted",
+    "sandbox denied",
+    "sandbox",
+    "required artifact unavailable",
+    "no such file",
+)
+
+
+def execution_blocker_errors(
+    value: object,
+    *,
+    current_task_id: str,
+) -> list[str]:
+    """Validate the visible actual-failure blocker and Task ID continuity."""
+
+    errors: list[str] = []
+    if not _valid_current_task_id(current_task_id):
+        return ["current Task ID must be non-empty and not unspecified"]
+    if not isinstance(value, str):
+        return ["execution blocker must be the canonical visible string"]
+    match = _EXECUTION_BLOCKER_RE.fullmatch(value)
+    if match is None:
+        return ["execution blocker must match the canonical actual-failure format"]
+    if match.group("task") != current_task_id:
+        errors.append("execution blocker must preserve the current Task ID")
+    observed = match.group("observed").strip().casefold()
+    if not any(marker in observed for marker in _ACTUAL_FAILURE_MARKERS):
+        errors.append("execution blocker must quote an actual host or tool failure")
+    return errors
+
+
+def task_retry_continuity_errors(
+    original: object,
+    retry: object,
+) -> list[str]:
+    """Require Retry to preserve the real Task ID and complete Task Contract."""
+
+    errors: list[str] = []
+    fields = tuple(TASK_CONTRACT_MODEL["fields"])
+    if not isinstance(original, dict) or tuple(original) != fields:
+        return ["original assignment must be a complete Task Contract"]
+    if not isinstance(retry, dict) or tuple(retry) != fields:
+        return ["Retry must preserve the complete Task Contract"]
+    task_id = original.get("Task ID")
+    if not _valid_current_task_id(task_id):
+        errors.append("original Task ID must be real and not unspecified")
+    if retry.get("Task ID") != task_id or not _valid_current_task_id(
+        retry.get("Task ID")
     ):
-        return unknown
-    evidence = invocation_facts["evidence"]
-    if not isinstance(evidence, list):
-        return unknown
-    canonical: list[dict[str, str]] = []
-    for fact in evidence:
-        if (
-            not isinstance(fact, dict)
-            or tuple(fact) != fields
-            or any(
-                not isinstance(fact[field], str) or not fact[field].strip()
-                for field in fields
-            )
-            or fact["source"] not in sources
-            or fact["state"] not in states
-            or fact["capability"] not in capability_fields
-            or (
-                fact["source"] == "current-session-capability-mismatch"
-                and fact["state"] != "unsupported"
-            )
-        ):
-            return unknown
-        canonical.append(fact)
-
-    def exact_identity(fact: dict[str, str]) -> bool:
-        return all(fact[field] == invocation_facts[field] for field in identity_fields)
-
-    mismatch_facts = [
-        fact
-        for fact in canonical
-        if fact["source"] == "current-session-capability-mismatch"
-        and fact["task_id"] == invocation_facts["task_id"]
-        and fact["session_id"] == invocation_facts["session_id"]
-        and fact["capability"] == required_capability
-        and (
-            fact["executor"] == invocation_facts["executor"]
-            or fact["executor_class"] == invocation_facts["executor_class"]
-        )
-    ]
-    mismatch_excluded = bool(mismatch_facts)
-    for source in precedence[:-2]:
-        matches = [
-            fact
-            for fact in canonical
-            if fact["source"] == source
-            and fact["capability"] == required_capability
-            and exact_identity(fact)
-        ]
-        if matches:
-            matching_states = {fact["state"] for fact in matches}
-            if len(matching_states) != 1:
-                return unknown
-            return {
-                "state": matching_states.pop(),
-                "source": source,
-                "same_session_mismatch": mismatch_excluded,
-            }
-    if mismatch_excluded:
-        return {
-            "state": "unsupported",
-            "source": "current-session-capability-mismatch",
-            "same_session_mismatch": True,
-        }
-    return unknown
+        errors.append("Retry must preserve the same real Task ID")
+    if retry != original:
+        errors.append("Retry must preserve every complete Task Contract field value")
+    return errors
 
 
-def normalized_decision_capabilities(
-    entry: dict[str, Any],
+def _unified_diff_changed_paths(value: str) -> list[str]:
+    paths: list[str] = []
+    for line in value.splitlines():
+        match = re.fullmatch(r"diff --git a/(.+) b/(.+)", line)
+        if match is None or match.group(1) != match.group(2):
+            continue
+        path = match.group(2)
+        if path not in paths:
+            paths.append(path)
+    return paths
+
+
+def review_input_ready(
+    handoff: object,
     *,
-    invocation_facts: dict[str, object] | None = None,
-) -> dict[str, str]:
-    """Normalize invocation-scoped effective facts under the static ceiling.
+    core: dict[str, Any] | None = None,
+) -> bool:
+    """Derive Review Input Ready from delivered artifacts, not capabilities."""
 
-    Static declarations and rendered tool names never establish effective
-    runtime availability. Missing, stale, unrecognized, and unknown facts fail
-    closed to ``unsupported``.
-    """
-
-    declared = normalized_declared_capability_ceiling(entry)
-    return {
-        field: (
-            "supported"
-            if resolve_runtime_capability_fact(
-                declared_capability=declared[field],
-                required_capability=field,
-                invocation_facts=invocation_facts,
-            )["state"]
-            == "supported"
-            else "unsupported"
-        )
-        for field in declared
-    }
-
-
-def _current_handoff_selected_capabilities(
-    handoff: dict[str, Any] | None,
-    facts: dict[str, str],
-    authority: dict[str, Any],
-) -> tuple[str, ...] | None:
-    """Return the selected evidence path only for a current complete handoff."""
-
+    authority = CORE_CONTRACTS if core is None else core
     if not isinstance(handoff, dict):
-        return None
+        return False
     try:
         readiness = authority["review_discipline_contract"][
             "review_input_readiness"
         ]
         required_fields = tuple(readiness["required_fields"])
         exact_kinds = set(readiness["exact_change_evidence_kinds"])
+        access_fields = tuple(readiness["artifact_accessibility_fields"])
+        native_fields = tuple(readiness["native_evidence_fields"])
     except (KeyError, TypeError):
-        return None
-    if any(field not in handoff for field in required_fields):
-        return None
-    latest = handoff.get("latest_changed_paths")
-    fixed = handoff.get("fixed_review_scope")
-    evidence = handoff.get("exact_change_evidence")
-    access = handoff.get("reviewer_capability_accessibility")
-    validation = handoff.get("validation_after_latest_material_edit")
+        return False
+    if tuple(handoff) != required_fields:
+        return False
+    latest = handoff["latest_changed_paths"]
+    evidence = handoff["exact_change_evidence"]
+    access = handoff["reviewer_artifact_accessibility"]
+    validation = handoff["validation_after_latest_material_edit"]
     if (
         not isinstance(latest, list)
         or not latest
-        or not all(isinstance(path, str) and path for path in latest)
-        or fixed != latest
+        or len(latest) != len(set(latest))
+        or not all(isinstance(path, str) and bool(path.strip()) for path in latest)
+        or handoff["fixed_review_scope"] != latest
         or not isinstance(evidence, dict)
-        or evidence.get("kind") not in exact_kinds
-        or type(evidence.get("generation")) is not int
+        or tuple(evidence) != ("kind", "artifact", "generation")
+        or evidence["kind"] not in exact_kinds
+        or type(evidence["generation"]) is not int
+        or evidence["generation"] < 0
         or not isinstance(access, dict)
+        or tuple(access) != access_fields
+        or access["reviewer"] != "review-agent"
+        or access["generation"] != evidence["generation"]
+        or access["changed_paths"] != latest
+        or access["readable"] is not True
         or not isinstance(validation, dict)
         or validation.get("result") != "passed"
         or validation.get("generation") != evidence["generation"]
     ):
-        return None
-    kind = evidence["kind"]
-    artifact = evidence.get("artifact")
-    if kind == "reviewer-accessible-native-reference":
-        selected = (
-            "native-change-read",
-            "reviewer-change-consume",
-            "non-mutating-validation",
+        return False
+    artifact = evidence["artifact"]
+    if evidence["kind"] == "reviewer-accessible-native-reference":
+        return (
+            isinstance(artifact, dict)
+            and tuple(artifact) == native_fields
+            and artifact["generation"] == evidence["generation"]
+            and artifact["reviewer"] == "review-agent"
+            and artifact["changed_paths"] == latest
+            and artifact["readable"] is True
+            and isinstance(artifact["reference"], str)
+            and bool(artifact["reference"].strip())
         )
-        if (
-            not isinstance(artifact, dict)
-            or set(readiness.get("native_evidence_fields", [])) - set(artifact)
-            or artifact.get("generation") != evidence["generation"]
-            or artifact.get("reviewer") != "review-agent"
-            or artifact.get("changed_paths") != latest
-            or artifact.get("readable") is not True
-            or not isinstance(artifact.get("reference"), str)
-            or not artifact["reference"].startswith("native-change://")
-        ):
-            return None
-    else:
-        selected = (
-            "change-evidence-export",
-            "supplied-change-delivery",
-            "reviewer-change-consume",
-            "non-mutating-validation",
-        )
-        if not isinstance(artifact, str) or not artifact.startswith("diff --git "):
-            return None
-    if any(
-        facts.get(field) != "supported" or access.get(field) != "supported"
-        for field in selected
-    ):
-        return None
-    return selected
-
-
-def main_capability_projection_from_facts(
-    facts: dict[str, str],
-    *,
-    handoff: dict[str, Any] | None = None,
-    core: dict[str, Any] | None = None,
-) -> dict[str, str]:
-    """Derive Main's four current decisions from Core, ceilings, and one handoff."""
-
-    authority = CORE_CONTRACTS if core is None else core
-    try:
-        contract = authority["review_discipline_contract"][
-            "generic_capability_contract"
-        ]
-    except (KeyError, TypeError) as exc:
-        raise ValueError("Core capability projection authority is incomplete") from exc
-    required = {
-        "native-change-read",
-        "change-evidence-export",
-        "supplied-change-delivery",
-        "reviewer-change-consume",
-        "non-mutating-validation",
-    }
-    if not required <= set(contract.get("injected_fields", [])):
-        raise ValueError("Core capability projection fields are incomplete")
-    selected = None
-    if all(facts.get(field) in {"supported", "unsupported"} for field in required):
-        selected = _current_handoff_selected_capabilities(
-            handoff, facts, authority
-        )
-    ready = selected is not None
-    return {
-        "exact-change-evidence-read": "supported" if ready else "unsupported",
-        "reviewer-accessible-change-reference": (
-            "supported" if ready else "unsupported"
-        ),
-        "non-mutating-validation": facts.get(
-            "non-mutating-validation", "unsupported"
-        ),
-        "not-required": "supported" if ready else "unsupported",
-    }
-
-
-def main_capability_projection(
-    entry: dict[str, Any],
-    *,
-    invocation_facts: dict[str, object] | None = None,
-    handoff: dict[str, Any] | None = None,
-    core: dict[str, Any] | None = None,
-) -> dict[str, str]:
-    return main_capability_projection_from_facts(
-        normalized_decision_capabilities(
-            entry, invocation_facts=invocation_facts
-        ),
-        handoff=handoff,
-        core=core,
-    )
-
-
-def render_decision_capability_facts(capabilities: dict[str, str]) -> str:
-    authority = REVIEW_DISCIPLINE_MODEL["generic_capability_contract"]
-    ceiling_fields = tuple(authority["injected_fields"])
-    main_fields = (
-        "exact-change-evidence-read",
-        "reviewer-accessible-change-reference",
-        "non-mutating-validation",
-        "not-required",
-    )
-    if tuple(capabilities) == ceiling_fields:
-        capabilities = main_capability_projection_from_facts(capabilities)
-    if tuple(capabilities) != main_fields:
-        raise ValueError("decision capability projection has unexpected fields")
-    if all(capabilities[field] == "unsupported" for field in main_fields):
-        return "Effective Runtime Capability=invocation facts, unknown unavailable."
-    groups = {
-        state: [field for field in main_fields if capabilities[field] == state]
-        for state in authority["states"]
-    }
     return (
-        "Effective runtime capability facts: supported "
-        + ("/".join(groups["supported"]) or "none")
-        + "; unsupported "
-        + ("/".join(groups["unsupported"]) or "none")
-        + "; absent or unknown is unsupported."
+        isinstance(artifact, str)
+        and artifact.startswith("diff --git ")
+        and _unified_diff_changed_paths(artifact) == latest
     )
 CONTEXT_BUDGET_MODEL = CORE_CONTRACTS["context_budget_contract"]
 BEHAVIOR_EVAL_MODEL = behavior_eval_authority(CORE_CONTRACTS)

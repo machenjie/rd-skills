@@ -124,8 +124,8 @@ def _load_source_report(path: Path | None = None) -> dict[str, Any]:
 
 def _load_host_enforcement() -> dict[str, Any]:
     matrix = _read_json(HOST_ENFORCEMENT, "host enforcement matrix")
-    if matrix.get("schema_version") != 4 or not isinstance(matrix.get("hosts"), dict):
-        raise ValueError("host enforcement matrix must use schema_version 4 and contain hosts")
+    if matrix.get("schema_version") != 5 or not isinstance(matrix.get("hosts"), dict):
+        raise ValueError("host enforcement matrix must use schema_version 5 and contain hosts")
     return matrix
 
 
@@ -345,7 +345,7 @@ def main(argv: list[str] | None = None) -> int:
             "conditional_isolated_write_contract": bool(
                 conditional.get("conditional_isolated_write_contract")
             ),
-            "utility_no_edit_workspace_gate": bool(utility_rows)
+            "utility_workspace_unchanged_gate": bool(utility_rows)
             and all(item["metrics"].get("utility_workspace_diff_unchanged") for item in utility_rows),
             "route_once_skill_budget": not any("Skill loads" in error for error in errors),
             "transferred_context_measurement_valid": True,

@@ -19,9 +19,9 @@ Direct outcomes/Inspection Boundary/stops: Direct template confirmation proven=c
 ## Direct Task Routing
 
 New Direct Task: references/direct-task-template.md Task Contract v2 field authority; `Status: in_progress`; optional Dependencies after Non-goals.
-Declared Host/Profile/`rendered_tools`=capability ceilings—not runtime truth. Effective Runtime Capability=invocation facts: current executor > verifiable current Host Surface session evidence > same-session mismatch negative > unknown unavailable. Semantic Role fixed; Host Executor replaceable; utility-capsule owns no-edit preservation.
-Dispatch on effective facts; mismatch excludes executor/class. Proven fallback inherits full unchanged Task Contract/Core bindings; else block/Main never implements. Worker: Core `CAPABILITY_MISMATCH`; no reroute/reselection.
-`generic_capability_contract` branches JIT-load from references/implementation-handoff-template.md.
+Semantic Role+Task Contract scope+Host tools/sandbox are the execution boundary. Task uses read/search/edit/execute with no capability self-proof; invoke directly. Main never implements.
+Only an actual tool/permission/sandbox/required-artifact failure blocks: `EXECUTION_BLOCKED task=<Task ID>; operation=read|edit|execute; observed=<actual host/tool failure>`. Never missing capability proof blocks, and never infer a capability name from Prompt text.
+Retry carries the same real Task ID and complete unchanged Task Contract plus route/Level/review/handoff bindings; task=unspecified forbidden.
 Pre-implementation artifact/no implementation diff -> directly to review-agent; diff-export gate does not apply.
 
 ### Execution Level and Validation
@@ -39,7 +39,7 @@ After 2 same-path failures require changed hypothesis/material/gap/transition or
 Answer/diagnosis: evidence/proof limits unless change requested. engineering-change-analysis -> current Engineering Brief+First Executable Slice; dispatch verbatim, never reinterpret.
 references/engineering-brief-template.md JIT-owns protected semantics, Specialist/DAG/handoff limits/Delta rules. Main owns Path/Level projection/Review scheduling/user interaction; Authorized routes skip selectors; Task/Review never changes route authority.
 blocked -> main-control-agent -> analysis-agent -> updated Engineering Brief -> redispatch affected tasks. `task_contract.analyzed_work_authority`: analyze once; Delta/reroute only on its decision triggers.
-Synchronous/unknown capability: stop at Slice; multi-task -> DAG; else task-agent. Direct Task/non-implementation paths remain unchanged.
+Stop at Slice; multi-task -> DAG; else task-agent. Direct Task/non-implementation paths remain unchanged.
 
 ### Preparation Loop Breaker
 
@@ -55,9 +55,9 @@ task_contract.task_boundary; Task completion=progress; Related work uses combine
 
 <!-- review-evidence-contract:B -->
 Before review-agent dispatch, Review Input Ready=latest changed paths+post-latest-edit validation+fixed scope.
-exact delivered unified diff or current reviewer-readable native reference+instance consumption capability also required. Static host support alone is never readiness; forward evidence unchanged; never send Review to export it.
-Missing=>review dispatch=0; Legacy/incomplete permits one recovery; Review before Task before Review is forbidden.
-references/implementation-handoff-template.md JIT-owns Ledger State/currentness, freshness, capability branches, and review proof. Latest material edit invalidates validation/evidence; Claims: latest-material-edit, validation-passed.
+Exact delivered unified diff or current reviewer-readable native reference is also required; the assigned reviewer can read the delivered current artifact. Forward evidence unchanged; never send Review to export it.
+Missing=>review dispatch=0; Review before Task before Review is forbidden.
+references/implementation-handoff-template.md JIT-owns Ledger State/currentness, freshness, artifact readability, and review proof. Latest material edit invalidates validation/evidence; Claims: latest-material-edit, validation-passed.
 Current review-agent evidence: actual diff/every changed file/validation results/changed-scope-reviewed/high-risk-review-passed/blocking-findings-none|blocking-findings-resolved.
 not-required JIT-loads from the Handoff owner; Missing/inconsistent authority/binding fails closed→reissue.
 The fixed Review Boundary closes first. Material current-task findings with the same Review Round ID+Task ID form exactly one Repair batch; cross-Task batch is forbidden. Adjacent record-only: no Repair/Analysis; ordinary finding no Analysis; scope-blocker or protected Authority/Brief invalidation→Main bounded Delta. Repair requires fresh validation/re-review: fresh validation, latest actual diff, fresh re-review.

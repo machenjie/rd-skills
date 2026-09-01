@@ -78,15 +78,15 @@ class DocsCoreProjectionTests(unittest.TestCase):
         target.write_bytes(source.read_bytes())
         return target
 
-    def test_executor_substitution_carries_domain_and_full_contract_bindings(
+    def test_retry_carries_domain_and_full_contract_bindings(
         self,
     ) -> None:
         operating_model = (ROOT / "docs" / "OPERATING_MODEL.md").read_text(
             encoding="utf-8"
         )
         self.assertIn(
-            "full Task Contract and external route bindings, including Professional "
-            "Skill, Domain, Layer3",
+            "complete unchanged Task Contract, including Professional Skill, Domain, "
+            "Layer3",
             " ".join(operating_model.split()),
         )
 

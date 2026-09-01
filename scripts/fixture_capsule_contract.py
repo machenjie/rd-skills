@@ -99,7 +99,7 @@ _LAYER3_REFERENCE_NAME_RE = re.compile(r"[a-z0-9][a-z0-9._-]*\.md\Z")
 _LAYER3_REFERENCE_FORBIDDEN_CHARS = frozenset("?#*[]{}")
 _LAYER3_REFERENCE_FORBIDDEN_NAMES = frozenset({"index.md", "catalog.md"})
 UTILITY_MODES = {"diff-export/no-edit", "validation-only/no-edit"}
-NO_EDIT_ENFORCEMENTS = {"supported"}
+NO_EDIT_ENFORCEMENTS = {"semantic-role+host-enforcement"}
 CHANGE_SET_RE = re.compile(r"(?:tracked|staged|untracked):(none|present|changed)")
 TYPE_TO_ROLE = {
     "analysis": "analysis-agent",
@@ -218,10 +218,10 @@ UTILITY_RETURN_FIELDS = (
 )
 UTILITY_ASSIGNMENT_REQUIRED_CLAIMS = ("workspace baseline captured",)
 UTILITY_RETURN_REQUIRED_CLAIMS = ("workspace unchanged", "utility result delivered")
-UTILITY_CAPABILITY_OPERATIONS = {
+UTILITY_OPERATIONS = {
     "workspace-state-observation",
     "change-evidence-export",
-    "non-mutating-validation",
+    "validation-check",
 }
 COMPLETION_CLAIM_FIELDS = (
     "request_kind",
@@ -1541,7 +1541,7 @@ def _command(value: object, label: str) -> str:
     tokens = _lexical_tokens(normalized)
     if len(tokens) > 1 and len(set(tokens)) == 1:
         raise FixtureCapsuleError(f"{label} must not repeat one command token")
-    if normalized in UTILITY_CAPABILITY_OPERATIONS:
+    if normalized in UTILITY_OPERATIONS:
         return normalized
     if not _is_command(normalized):
         raise FixtureCapsuleError(f"{label} must be a recognizable non-empty command")

@@ -36,10 +36,7 @@ from changeforge_install import (
 def _print_enforcement(agent: str, enforcement: dict) -> None:
     print(
         "doctor: declared-default profile enforcement "
-        f"host={agent} delivery={enforcement['profile_delivery']} "
-        f"diff_input_mode={enforcement['diff_input_mode']} "
-        f"validation_mode={enforcement['validation_mode']} "
-        f"utility_no_edit={enforcement['utility_no_edit']}"
+        f"host={agent} delivery={enforcement['profile_delivery']}"
     )
     for role, capabilities in enforcement["roles"].items():
         print(
@@ -120,12 +117,6 @@ def _profile_projection_issues(
         "Current external-read mode:",
         "external_source_read=",
     )
-    legacy_mode_markers = (
-        "Current host modes:",
-        "diff_input_mode=",
-        "validation_mode=",
-        "utility_no_edit=",
-    )
     for role in AGENT_PROFILE_NAMES:
         path = profile_root / f"{role}{suffix}"
         raw = payloads.get(role)
@@ -143,8 +134,6 @@ def _profile_projection_issues(
             issues.append(
                 f"{path.name}: static runtime capability projection is forbidden"
             )
-        if any(marker in text for marker in legacy_mode_markers):
-            issues.append(f"{path.name}: legacy host mode projection is forbidden")
         if agent == "codex":
             try:
                 payload = tomllib.loads(text)

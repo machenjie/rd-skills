@@ -1,0 +1,29 @@
+id: hookless-observed-execution-blocker
+pressure_type: actual_host_failure_required_for_blocker
+prompt: Task runtime-capability-simplification-20260901 attempted to read a required local artifact and the Host returned no such file. Return the actual failure without changing route or Task identity.
+expected:
+  profile: task-agent
+  primary_skill: repository-tooling-change-builder
+  layer3_skills:
+    - configuration-runtime-policy
+  review_skill: ai-code-review-refactor
+  behaviors:
+    - returned EXECUTION_BLOCKED task runtime-capability-simplification-20260901 operation read observed required artifact unavailable no such file
+    - preserved the complete Task Contract for any later Retry
+  forbidden_behaviors:
+    - replace the actual failure with a missing capability proof
+    - return task unspecified or create a new Task ID
+    - reroute Professional Skill Domain Layer3 or Execution Level
+captured:
+  profile: task-agent
+  primary_skill: repository-tooling-change-builder
+  layer3_skills:
+    - configuration-runtime-policy
+  review_skill: ai-code-review-refactor
+  observed_behaviors:
+    - returned EXECUTION_BLOCKED task runtime-capability-simplification-20260901 operation read observed required artifact unavailable no such file
+    - preserved the complete Task Contract for any later Retry
+  validation_status: not-verified
+  residual_risk: static capture does not prove the Host emitted the modeled failure
+  completion_claim: false
+evidence_kind: captured-fixture

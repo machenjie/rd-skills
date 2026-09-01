@@ -119,16 +119,15 @@ handoff; a user path, file, symbol, or owner claim remains a candidate selector.
 Material floors, historical maxima, recomputation, and non-bypassable controls
 still dominate the result.
 
-Declared Host/Profile capability is static configuration, not runtime truth.
-Dispatch uses invocation-scoped effective capability and fails closed on absent
-or unknown facts. Semantic Role stays fixed while a proven Host Executor may be
-replaced, carrying the full Task Contract and external route bindings, including
-Professional Skill, Domain, Layer3, Level/Basis/history, scope, acceptance,
-validation, review, handoff, and stop conditions unchanged. Main
-never absorbs implementation work when no executor is available. Current
-invocation evidence precedes verifiable current Host Surface session evidence;
-same-session mismatch excludes that executor/class before fallback, with no
-persistent runtime state.
+Semantic Role, Task Contract scope, and Host tool/sandbox enforcement are the
+ordinary execution boundary. A Task Agent invokes `read`, `search`, `edit`, and
+`execute` directly; missing capability proof never blocks the operation. Only an
+actual tool, permission, sandbox, or required-artifact failure returns
+`EXECUTION_BLOCKED` with the current real Task ID, operation, and observed
+failure. Retry preserves the same Task ID and the complete unchanged Task
+Contract, including Professional Skill, Domain, Layer3, Level/Basis/history,
+scope, acceptance, validation, review, handoff, and stop conditions. Main never
+absorbs implementation work.
 
 Task completion records progress only; it does not by itself trigger Analysis,
 Review, replanning, or user confirmation. Related Tasks inside one Review

@@ -86,7 +86,7 @@ invalidates older validation and review evidence.
 
 Latest Changed Paths:
 Exact Reviewable Change Evidence:
-Reviewer Capability Accessibility:
+Reviewer Artifact Accessibility:
 Validation After Latest Material Edit:
 Fixed Review Scope:
 
@@ -96,12 +96,12 @@ content, an exact before/after representation, a reviewer-accessible native
 change reference, or an equivalent exact artifact whose actual bytes are
 delivered and readable by the assigned reviewer. A changed-file summary,
 digest, prose description, command output, filename, opaque reference, or
-implementer self-report is not evidence. Static host support is a capability
-ceiling, not current-instance readiness. Main forwards the exact payload or
-reference identity without summarizing or regenerating it. If any value is
+implementer self-report is not evidence. Static host support is not artifact
+readability. Record whether the assigned reviewer can
+read the delivered current evidence for its generation and exact paths. Main
+forwards the exact payload or reference identity without summarizing or regenerating it. If any value is
 missing, remain blocked before review and let the current producer complete the
-handoff; do not send a reviewer first. Only a legacy/incomplete handoff may use
-one bounded recovery before review.
+handoff; do not send a reviewer first.
 
 ## Evidence Ledger
 
@@ -128,27 +128,6 @@ unavailable proof.
 
 ## Residual Risk
 ```
-
-Main JIT-loads this template for Core `generic_capability_contract` decisions:
-
-`native-change-read`:
-- `supported`: a current native change reference may be used only when it binds
-  the assigned `review-agent`, current generation, exact changed paths, and a
-  readable delivered instance.
-- `unsupported`: native path unavailable; use the supplied path or block before review.
-`change-evidence-export`:
-- `supported`: the current Task can capture exact change evidence for the
-  current generation.
-- `unsupported`: change evidence capture unavailable; block before review.
-`supplied-change-delivery`:
-- `supported`: deliver actual unified diff content unchanged for exact delivery.
-- `unsupported`: supplied path unavailable; block before review.
-`reviewer-change-consume`:
-- `supported`: prove the delivered instance readable by the assigned `review-agent`.
-- `unsupported`: block review before dispatch; diff scope unverified.
-`non-mutating-validation`:
-- `supported`: non-mutating validation -> current evidence.
-- `unsupported`: block validation; unverified.
 
 `not-required` still requires ordinary independent review and digest-only matching
 to both lower-risk authorities. Missing or inconsistent authority/binding fails closed

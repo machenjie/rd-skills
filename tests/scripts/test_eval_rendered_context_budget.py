@@ -3163,7 +3163,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             "review-level": "review-agent",
             "analysis-level": "main-control-agent",
             "review-readiness": "main-control-agent",
-            "capability-equivalence": "main-control-agent",
+            "task-execution": "task-agent",
             "cost": "task-agent",
         }
         for scenario, role in expected.items():
@@ -3209,11 +3209,11 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     "authority-only-not-loaded",
                     measured["native_sources"]["core"]["content_scope"],
                 )
-        capability = self._focus_case("capability-equivalence")
+        capability = self._focus_case("task-execution")
         measured = EVAL._focus_case_cost(
             self._focus_row(capability), capability, ROOT, subject="candidate", host="codex"
         )
-        self.assertNotEqual("task-agent", measured["actor_profile_binding"]["profile"])
+        self.assertEqual("task-agent", measured["actor_profile_binding"]["profile"])
 
     def test_focus_cost_core_growth_does_not_change_loaded_tokens(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

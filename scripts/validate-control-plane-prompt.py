@@ -61,7 +61,6 @@ COPIED_LINE_ALLOWANCES = (
     "[professional-skill-router.md](references/professional-skill-router.md)",
     "[implementation-handoff-template.md](references/implementation-handoff-template.md)",
 )
-MODE_BRANCH_RE = re.compile(r"^- `([^`]+)`:\s*(.*)$")
 FENCED_MARKDOWN_RE = re.compile(
     r"^```markdown\s*$\n(?P<body>.*?)^```\s*$",
     re.MULTILINE | re.DOTALL,
@@ -70,7 +69,6 @@ PROMPT_TEMPLATE_BINDINGS = (
     ("direct-task-template.md", ("main-control-agent",)),
     ("implementation-handoff-template.md", ("task-agent",)),
 )
-CAPABILITY_BRANCH_OWNER = REFERENCE_ROOT / "implementation-handoff-template.md"
 ANALYZED_WORK_OWNER = REFERENCE_ROOT / "engineering-brief-template.md"
 ANALYZED_WORK_PROMPT_TERMS = {
     "Analyzed Work": (
@@ -396,98 +394,26 @@ def _validate_analyzed_work_authority(text: str, errors: list[str]) -> None:
         )
 
 
-def _validate_capability_branches(text: str, errors: list[str]) -> None:
+def _validate_execution_boundary(text: str, errors: list[str]) -> None:
     prompt_section = extract_section_body(
-        text, PROMPT_CONTRACT_MODEL["capability_section"]
+        text, PROMPT_CONTRACT_MODEL["execution_section"]
     )
     if prompt_section is None:
-        errors.append("cannot validate capability branches: missing Direct Task Routing")
+        errors.append("cannot validate execution boundary: missing Direct Task Routing")
         return
-    core_projection = (
-        "`generic_capability_contract` branches JIT-load from "
-        "references/implementation-handoff-template.md."
-    )
-    if prompt_section.count(core_projection) != 1:
-        errors.append(
-            "Direct Task Routing must contain the exact Core capability owner projection"
-        )
-    for field in (
-        "exact-change-evidence-read",
-        "reviewer-accessible-change-reference",
+    for term in (
+        "CAPABILITY_MISMATCH",
+        "bounded-source-read",
+        "workspace-mutation",
         "non-mutating-validation",
-        "not-required",
+        "generic_capability_contract",
+        "Host Executor",
+        "same-session mismatch",
     ):
-        if field in prompt_section:
+        if term in prompt_section:
             errors.append(
-                f"Direct Task Routing must not duplicate build-derived capability {field!r}"
+                f"Direct Task Routing contains obsolete runtime capability mechanism {term!r}"
             )
-    if not CAPABILITY_BRANCH_OWNER.is_file():
-        errors.append("missing generic capability branch JIT owner")
-        return
-    section = CAPABILITY_BRANCH_OWNER.read_text(encoding="utf-8")
-
-    regions: dict[str, str] = {}
-    branch_contracts = REVIEW_DISCIPLINE_MODEL["generic_capability_contract"][
-        "prompt_branches"
-    ]
-    for branch_contract in branch_contracts:
-        field = branch_contract["field"]
-        next_field = branch_contract["next_field"]
-        marker = f"`{field}`"
-        if section.count(marker) != 1:
-            errors.append(
-                f"capability JIT owner must name field {field!r} exactly once"
-            )
-            continue
-        start = section.index(marker) + len(marker)
-        if next_field is None:
-            regions[field] = section[start:]
-            continue
-        next_marker = f"`{next_field}`"
-        if section.count(next_marker) != 1:
-            continue
-        end = section.index(next_marker)
-        if end <= start:
-            errors.append(f"capability field {field!r} must precede {next_field!r}")
-            continue
-        regions[field] = section[start:end]
-
-    for branch_contract in branch_contracts:
-        field = branch_contract["field"]
-        expected_branches = branch_contract["branches"]
-        region = regions.get(field)
-        if region is None:
-            continue
-        order: list[str] = []
-        bodies: dict[str, str] = {}
-        current: str | None = None
-        for line in region.splitlines():
-            match = MODE_BRANCH_RE.match(line)
-            if match:
-                current = match.group(1)
-                order.append(current)
-                bodies[current] = match.group(2)
-            elif current is not None and line.startswith("  "):
-                bodies[current] += " " + line.strip()
-            else:
-                current = None
-
-        expected_order = [branch["value"] for branch in expected_branches]
-        if order != expected_order:
-            errors.append(
-                f"{field} branches must be exactly {', '.join(expected_order)} in order; "
-                f"found {', '.join(order) or 'none'}"
-            )
-        for branch in expected_branches:
-            mode = branch["value"]
-            terms = branch["required_terms"]
-            folded = _fold(bodies.get(mode, ""))
-            missing = [term for term in terms if term.casefold() not in folded]
-            if missing:
-                errors.append(
-                    f"{field}={mode} branch missing action terms: "
-                    + ", ".join(repr(term) for term in missing)
-                )
 
 
 def _validate_context_budget(text: str, errors: list[str]) -> tuple[int, int]:
@@ -563,7 +489,7 @@ def main() -> int:
         )
     _validate_concepts(text, errors)
     _validate_analyzed_work_authority(text, errors)
-    _validate_capability_branches(text, errors)
+    _validate_execution_boundary(text, errors)
     folded = _fold(text)
     for field in LEGACY_HOST_MODE_FIELDS:
         if field in folded:

@@ -847,10 +847,15 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
 
             result, verbose, stderr = run_doctor("--verbose")
             self.assertEqual(0, result, stderr or verbose)
+            self.assertIn(
+                "doctor: declared-default profile enforcement "
+                "host=codex delivery=native-enforced",
+                verbose,
+            )
             self.assertIn("tool_allowlist=prompt-enforced", verbose)
-            self.assertIn("diff_input_mode=native", verbose)
-            self.assertIn("validation_mode=native-read-only", verbose)
-            self.assertIn("utility_no_edit=prompt-enforced", verbose)
+            self.assertNotIn("diff_input_mode=", verbose)
+            self.assertNotIn("validation_mode=", verbose)
+            self.assertNotIn("utility_no_edit=", verbose)
             self.assertIn("installed inventory", verbose)
             self.assertIn("source binding", verbose)
             self.assertIn("digests", verbose)

@@ -19,28 +19,22 @@ canonical in the [Subagent model](SUBAGENT_MODEL.md).
 
 ## Permission and Host Enforcement
 
-Host tool configuration declares a static capability ceiling. The source matrix is
-`src/agent-profiles/host-enforcement.json`; its closed statuses are
+Host tool configuration declares the tools and enforcement supplied to each
+role. The source matrix is `src/agent-profiles/host-enforcement.json`; its closed statuses are
 `native-enforced`, `sandbox-enforced`, `prompt-enforced`, and `unsupported`.
 Build and install manifests bind that matrix and its digest, while doctor reports
-the resulting configuration. Configuration and `rendered_tools` are not
-invocation truth. Dispatch uses only invocation-scoped effective runtime facts;
-missing, stale, unrecognized, or `unknown` facts are unavailable.
-For each executor, current invocation facts outrank verifiable current Host
-Surface session evidence; a same-session mismatch is negative evidence that
-excludes that executor or executor class from fallback. Otherwise capability is
-unknown. No observation is written back to the static matrix.
+the resulting configuration. A Task Agent invokes the delivered
+`read`/`search`/`edit`/`execute` tool directly within its Semantic Role and Task
+Contract scope. There is no runtime capability preflight or Host Executor
+fallback inference. Only a tool-unavailable, permission-denied, sandbox-denied,
+or required-artifact-unavailable result from the actual operation blocks. The
+visible blocker is `EXECUTION_BLOCKED task=<Task ID>;
+operation=<read|edit|execute>; observed=<actual host/tool failure>`. Retry keeps
+the same real Task ID and the complete unchanged Task Contract.
 
-Semantic Role remains one of the four Profiles even when the Host Executor
-changes. A proven replacement executor receives the complete original Task
-Contract unchanged; without one, Main blocks rather than implementing. A worker
-with a capability mismatch returns the canonical zero-edit
-`CAPABILITY_MISMATCH` only and never reroutes. Copilot CLI, Copilot VS Code, and
-Copilot Coding Agent are independent declared Host Surfaces under the compatible
-Copilot delivery family; none of those declarations proves a live invocation.
-The static `workspace-mutation` ceiling additionally requires supported delivery,
-a task-agent write-semantic tool, and non-unsupported task-agent enforcement
-surfaces. It is still only a ceiling, never edit authorization.
+Copilot CLI, Copilot VS Code, and Copilot Coding Agent remain independent
+declared Host Surfaces under one compatible delivery family. Their static
+delivery metadata does not become a probabilistic runtime state machine.
 
 When a host cannot express a fine-grained restriction, the generated Profile
 states the limit as prompt-enforced. rd-skills does not add an executable
@@ -58,8 +52,8 @@ For supplied-artifact hosts, actual evidence is delivered unified-diff content,
 not a digest, summary, filename, command output, or opaque identifier. For a
 native host, the assigned reviewer must be able to read the delivered current
 reference bound to the assigned reviewer, current generation, exact paths, and
-readable delivered instance. Host support is only a capability ceiling; Main proves accessibility
-for this handoff, and Review never exports its own evidence.
+readable delivered instance. Main verifies the delivered artifact is actually
+readable for this handoff, and Review never exports its own evidence.
 rd-skills does not persist private runtime ledgers, prompt transcripts, or an
 internal task-state database. The exact artifact and completion flow is owned by
 the [Operating model](OPERATING_MODEL.md).

@@ -432,7 +432,7 @@ class HooklessEvaluationTests(unittest.TestCase):
         self.assertTrue(context["checks"]["current_write_parallelism_unsupported"])
         self.assertTrue(context["checks"]["shared_workspace_serial_write"])
         self.assertTrue(context["checks"]["conditional_isolated_write_contract"])
-        self.assertTrue(context["checks"]["utility_no_edit_workspace_gate"])
+        self.assertTrue(context["checks"]["utility_workspace_unchanged_gate"])
         self.assertTrue(context["checks"]["transferred_context_measurement_valid"])
         self.assertNotIn("live_metrics", context)
 

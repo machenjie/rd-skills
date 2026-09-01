@@ -1739,7 +1739,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
             "missing-field": ("review-input-handoff-shape", None),
             "wrong-field-order": ("review-input-handoff-shape", None),
             "forbidden-evidence-kind": ("review-input-evidence-kind", None),
-            "unsupported-capability": ("review-input-capability", None),
+            "unreadable-artifact": ("review-input-artifact-access", None),
             "stale-validation": ("review-input-validation", None),
             "duplicate-validation": ("review-input-validation", None),
             "changed-path-mismatch": ("review-input-changed-paths", None),
@@ -1771,7 +1771,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
                             "fixed_review_scope",
                             "latest_changed_paths",
                             "exact_change_evidence",
-                            "reviewer_capability_accessibility",
+                            "reviewer_artifact_accessibility",
                             "validation_after_latest_material_edit",
                         )
                     }
@@ -1779,10 +1779,8 @@ class LightweightUtilityContractTests(unittest.TestCase):
                     handoff.update(reordered)
                 elif mutation == "forbidden-evidence-kind":
                     handoff["exact_change_evidence"]["kind"] = "changed-file-summary"
-                elif mutation == "unsupported-capability":
-                    handoff["reviewer_capability_accessibility"][
-                        "reviewer-change-consume"
-                    ] = "unsupported"
+                elif mutation == "unreadable-artifact":
+                    handoff["reviewer_artifact_accessibility"]["readable"] = False
                 elif mutation == "stale-validation":
                     handoff["validation_after_latest_material_edit"]["generation"] = 0
                 elif mutation == "duplicate-validation":
@@ -2000,218 +1998,47 @@ class LightweightUtilityContractTests(unittest.TestCase):
                 "cost",
                 "analysis-level",
                 "review-readiness",
-                "capability-equivalence",
                 "direct-confirmation",
-                "runtime-capability",
+                "task-execution",
                 "engineering-choice",
             },
             {result["scenario"] for result in results},
         )
 
-    def test_runtime_capability_preserves_complete_contract_and_role_effects(self) -> None:
+    def test_task_execution_preserves_contract_and_blocks_only_actual_failures(self) -> None:
         cases = {
             case["id"]: case
             for case in self.task_focus_cases
-            if case["scenario"] == "runtime-capability"
+            if case["scenario"] == "task-execution"
         }
-        positive = cases["focus-runtime-fallback-preserves-role-and-contract"]
+        positive = cases["focus-task-edit-direct"]
         core_fields = tuple(EVAL.CORE_CONTRACTS["task_contract"]["fields"])
         self.assertEqual(core_fields, EVAL.RUNTIME_TASK_CONTRACT_FIELDS)
-        self.assertIn("workspace-mutation", EVAL.GENERIC_CAPABILITY_FIELDS)
         self.assertEqual(core_fields, tuple(positive["inputs"]["original_contract"]))
-        self.assertEqual(
-            positive["inputs"]["original_contract"],
-            positive["inputs"]["forwarded_contract"],
-        )
-        for mutation in ("missing-field", "extra-field", "reordered-fields"):
-            with self.subTest(contract_shape=mutation):
-                case = copy.deepcopy(positive)
-                case["id"] = f"probe-runtime-contract-{mutation}"
-                forwarded = case["inputs"]["forwarded_contract"]
-                if mutation == "missing-field":
-                    forwarded.pop("Owner")
-                elif mutation == "extra-field":
-                    forwarded["Route"] = "direct"
-                else:
-                    case["inputs"]["forwarded_contract"] = dict(
-                        reversed(tuple(forwarded.items()))
-                    )
-                self.assertTrue(any(
-                    "full Task Contract unchanged" in error
-                    for error in EVAL._task_focus_case_errors(case)
-                ))
-        for field in (
-            "professional_skill",
-            "domain",
-            "layer3",
-            "execution_level_basis_history",
-            "review_binding",
-            "handoff_binding",
-        ):
-            self.assertEqual(
-                positive["inputs"][field],
-                positive["inputs"][f"forwarded_{field}"],
-            )
-
-        contract_mutations = {
-            "Owner": "fallback executor selected a different owner",
-            "Non-goals": ["Fallback may change the contract."],
-            "Allowed Write Scope": ["unbounded/**"],
-            "Evidence Requirements": ["command success only"],
-        }
-        for field, mutation in contract_mutations.items():
-            with self.subTest(contract_mutation=field):
-                case = copy.deepcopy(positive)
-                case["id"] = f"probe-runtime-contract-{field}"
-                case["inputs"]["forwarded_contract"][field] = mutation
-                self.assertNotEqual(
-                    case["inputs"]["original_contract"][field],
-                    case["inputs"]["forwarded_contract"][field],
-                )
-                self.assertTrue(any(
-                    "full Task Contract unchanged" in error
-                    for error in EVAL._task_focus_case_errors(case)
-                ))
-
-        binding_mutations = {
-            "forwarded_professional_skill": "backend-change-builder",
-            "forwarded_domain": "different-domain",
-            "forwarded_layer3": [],
-            "forwarded_execution_level_basis_history": {
-                "level": "L2",
-                "basis": "changed",
-                "history": ["L2"],
-            },
-            "forwarded_review_binding": {"skill": "different-review"},
-            "forwarded_handoff_binding": {"kind": "different-handoff"},
-        }
-        for field, mutation in binding_mutations.items():
-            with self.subTest(binding_mutation=field):
-                case = copy.deepcopy(positive)
-                case["id"] = f"probe-runtime-binding-{field}"
-                case["inputs"][field] = mutation
-                self.assertTrue(any(
-                    "explicit route, Level, review, and handoff bindings unchanged"
-                    in error
-                    for error in EVAL._task_focus_case_errors(case)
-                ))
-
-        def current_executor_case(capability: str) -> dict[str, object]:
-            case = copy.deepcopy(positive)
-            case["id"] = f"probe-runtime-current-{capability}"
-            case["inputs"].update(
-                {
-                    "declared_capability": "supported",
-                    "fallback_declared_capability": "unsupported",
-                    "required_capability": capability,
-                    "host_surface": "current-surface",
-                    "host_executor": "current-executor",
-                    "host_executor_class": "current-executor-class",
-                    "fallback_host_surface": "none",
-                    "fallback_executor": None,
-                    "fallback_executor_class": None,
-                    "capability_evidence": [
-                        {
-                            "source": "current-invocation-fact",
-                            "task_id": case["inputs"]["task_id"],
-                            "session_id": case["inputs"]["session_id"],
-                            "host_surface": "current-surface",
-                            "executor": "current-executor",
-                            "executor_class": "current-executor-class",
-                            "capability": capability,
-                            "state": "supported",
-                        }
-                    ],
-                    "forwarded_contract": None,
-                    "forwarded_professional_skill": None,
-                    "forwarded_domain": None,
-                    "forwarded_layer3": None,
-                    "forwarded_execution_level_basis_history": None,
-                    "forwarded_review_binding": None,
-                    "forwarded_handoff_binding": None,
-                    "worker_report": None,
-                }
-            )
-            case["decision"].update(
-                {
-                    "capability_available": True,
-                    "executor": "current-executor",
-                    "dispatch": "current-executor",
-                }
-            )
-            return case
-
-        current_mutation = current_executor_case("workspace-mutation")
-        current_mutation["decision"]["edit_count"] = 1
-        self.assertEqual([], EVAL._task_focus_case_errors(current_mutation))
         self.assertEqual([], EVAL._task_focus_case_errors(positive))
-
-        non_mutation_capabilities = set(EVAL.GENERIC_CAPABILITY_FIELDS) - {
-            "workspace-mutation"
-        }
-        self.assertGreater(len(non_mutation_capabilities), 1)
-        for capability in sorted(non_mutation_capabilities):
-            with self.subTest(non_mutation_capability=capability):
-                case = current_executor_case(capability)
-                case["decision"]["edit_count"] = 1
-                self.assertTrue(
-                    any(
-                        "workspace-mutation" in error
-                        for error in EVAL._task_focus_case_errors(case)
-                    )
-                )
-                case["decision"]["edit_count"] = 0
-                self.assertEqual([], EVAL._task_focus_case_errors(case))
-
-        unknown_capability = current_executor_case("unknown-workspace-write")
-        unknown_capability["decision"]["edit_count"] = 0
+        for case_id in (
+            "focus-task-search-direct",
+            "focus-task-execute-direct",
+            "focus-task-tmp-read-direct",
+            "focus-task-read-actual-failure",
+            "focus-task-edit-host-denied",
+            "focus-task-execute-sandbox-denied",
+            "focus-task-retry-preserves-contract",
+        ):
+            self.assertEqual([], EVAL._task_focus_case_errors(cases[case_id]))
+        retry = cases["focus-task-retry-preserves-contract"]
+        self.assertEqual(
+            retry["inputs"]["original_contract"],
+            retry["inputs"]["retry_contract"],
+        )
+        changed_retry = copy.deepcopy(retry)
+        changed_retry["inputs"]["retry_contract"]["Task ID"] = "different-task"
         self.assertTrue(
             any(
-                "unknown Core capability" in error
-                for error in EVAL._task_focus_case_errors(unknown_capability)
+                "Retry must preserve the same real Task ID" in error
+                for error in EVAL._task_focus_case_errors(changed_retry)
             )
         )
-
-        role_capabilities = {
-            "review-agent": "reviewer-change-consume",
-            "analysis-agent": "bounded-source-read",
-            "main-control-agent": "workspace-state-observation",
-        }
-        for role, capability in role_capabilities.items():
-            with self.subTest(role=role):
-                case = current_executor_case(capability)
-                case["id"] = f"probe-runtime-role-{role}"
-                case["inputs"].update(
-                    {
-                        "semantic_role": role,
-                        "main_implements": role == "main-control-agent",
-                    }
-                )
-                case["decision"].update(
-                    {
-                        "capability_available": True,
-                        "executor": "current-executor",
-                        "semantic_role": role,
-                        "dispatch": "current-executor",
-                        "edit_count": 1,
-                    }
-                )
-                case["expected_valid"] = False
-                case["expected_error"] = "cannot mutate or implement"
-                self.assertEqual(role, case["inputs"]["semantic_role"])
-                self.assertEqual(capability, case["inputs"]["required_capability"])
-                self.assertEqual(
-                    "supported", case["inputs"]["capability_evidence"][0]["state"]
-                )
-                self.assertEqual(1, case["decision"]["edit_count"])
-                self.assertTrue(any(
-                    "cannot mutate or implement" in error
-                    for error in EVAL._task_focus_case_errors(case)
-                ))
-                non_mutating = copy.deepcopy(case)
-                non_mutating["decision"]["edit_count"] = 0
-                non_mutating["inputs"]["main_implements"] = False
-                self.assertEqual([], EVAL._task_focus_case_errors(non_mutating))
 
     def test_direct_confirmation_requires_complete_bounded_proof(self) -> None:
         direct = next(
@@ -3628,9 +3455,9 @@ class LightweightUtilityContractTests(unittest.TestCase):
             "fixed-review-scope": lambda inputs: inputs.update(
                 review_scope_fixed=False
             ),
-            "reviewer-consumption-capability": lambda inputs: inputs.update(
-                **{"reviewer-change-consume": "unsupported"}
-            ),
+            "reviewer-artifact-readability": lambda inputs: inputs[
+                "reviewer_artifact_accessibility"
+            ].update(readable=False),
         }
         for name, mutate in mutations.items():
             negative = copy.deepcopy(base)
@@ -3639,7 +3466,6 @@ class LightweightUtilityContractTests(unittest.TestCase):
             negative["decision"] = {
                 "review_input_ready": False,
                 "review_dispatches": 0,
-                "legacy_recovery_attempts": 0,
                 "completion": "blocked-before-review",
             }
             with self.subTest(missing=name):
@@ -4659,15 +4485,18 @@ class LightweightUtilityContractTests(unittest.TestCase):
             "focus-rejects-l4-default-prereview": "L4 does not default to pre-implementation review",
             "focus-rejects-stale-repair-evidence": "fresh validation, latest actual diff, and fresh independent review",
             "focus-rejects-unrelated-repair-file": "revert the unrelated changed file",
-            "focus-runtime-mismatch-worker-reroute-forbidden": "never authorizes Worker rerouting",
+            "focus-task-read-actual-failure": "",
         }
         by_id = {case["id"]: case for case in self.task_focus_cases}
         for case_id, message in expected.items():
             with self.subTest(case=case_id):
                 errors = EVAL._task_focus_case_errors(by_id[case_id])
-                self.assertTrue(any(message in error for error in errors), errors)
+                if message:
+                    self.assertTrue(any(message in error for error in errors), errors)
+                else:
+                    self.assertEqual([], errors)
 
-    def test_analysis_level_review_readiness_and_capability_cases_are_covered(self) -> None:
+    def test_analysis_level_review_readiness_and_task_execution_cases_are_covered(self) -> None:
         results, errors = EVAL._task_focus_fixture_results(self.task_focus_cases)
         self.assertEqual([], errors)
         by_id = {result["id"]: result for result in results}
@@ -4675,9 +4504,13 @@ class LightweightUtilityContractTests(unittest.TestCase):
             "focus-direct-candidate-confirmed-edit-l3",
             "focus-direct-candidate-wrong-owner-zero-edit-analysis",
             "focus-direct-candidate-shared-contract-zero-edit-analysis",
-            "focus-runtime-static-declaration-unknown-blocked",
-            "focus-runtime-fallback-preserves-role-and-contract",
-            "focus-runtime-mismatch-worker-reroute-forbidden",
+            "focus-task-edit-direct",
+            "focus-task-execute-direct",
+            "focus-task-tmp-read-direct",
+            "focus-task-read-actual-failure",
+            "focus-task-edit-host-denied",
+            "focus-task-execute-sandbox-denied",
+            "focus-task-retry-preserves-contract",
             "focus-analysis-owner-unresolved-task-l2",
             "focus-analysis-explicit-repair-task-level",
             "focus-analysis-standard-task-l3",
@@ -4691,10 +4524,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
             "focus-review-stale-validation-blocked",
             "focus-review-native-reference-ready",
             "focus-review-supplied-artifact-ready",
-            "focus-review-unsupported-capability-blocked",
-            "focus-review-normal-flow-no-post-review-export",
             "focus-repair-fresh-latest-evidence",
-            "focus-capability-equivalent-adapter-metadata",
         }
         self.assertTrue(required <= set(by_id), required - set(by_id))
         self.assertTrue(all(by_id[case_id]["matches_expected"] for case_id in required))
@@ -4787,34 +4617,30 @@ class LightweightUtilityContractTests(unittest.TestCase):
             with self.subTest(case=case_id):
                 self.assertEqual([], EVAL._task_focus_case_errors(negative))
                 self.assertEqual(0, negative["decision"]["review_dispatches"])
-                self.assertEqual(0, negative["decision"]["legacy_recovery_attempts"])
 
-    def test_review_readiness_requires_read_reference_and_validation_capabilities(self) -> None:
+    def test_review_readiness_requires_readable_artifact_and_fresh_validation(self) -> None:
         case = {
             "id": "review-reference-unsupported-boundary",
             "scenario": "review-readiness",
             "inputs": {
-                "handoff_kind": "normal",
                 "latest_changed_paths": True,
                 "change_evidence_kind": "exact-change-content",
                 "change_evidence_artifact": "diff --git a/owner.py b/owner.py\n--- a/owner.py\n+++ b/owner.py\n@@ -1 +1 @@\n-old\n+new\n",
-                "native-change-read": "unsupported",
-                "change-evidence-export": "supported",
-                "supplied-change-delivery": "supported",
-                "reviewer-change-consume": "unsupported",
-                "non-mutating-validation": "supported",
+                "reviewer_artifact_accessibility": {
+                    "reviewer": "review-agent",
+                    "generation": 9,
+                    "changed_paths": ["owner.py"],
+                    "readable": False,
+                },
                 "validation_generation": 9,
                 "latest_material_edit_generation": 9,
                 "review_scope_fixed": True,
-                "reviewer_mutation_capability": False,
-                "reviewer_execute_capability": False,
-                "workspace-state-observation": "supported",
+                "reviewer_mutation": False,
                 "post_review_change_export": False,
             },
             "decision": {
                 "review_input_ready": False,
                 "review_dispatches": 0,
-                "legacy_recovery_attempts": 0,
                 "completion": "blocked-before-review",
             },
             "expected_valid": True,
@@ -4862,7 +4688,6 @@ class LightweightUtilityContractTests(unittest.TestCase):
                 negative["decision"] = {
                     "review_input_ready": False,
                     "review_dispatches": 0,
-                    "legacy_recovery_attempts": 0,
                     "completion": "blocked-before-review",
                 }
                 self.assertEqual([], EVAL._task_focus_case_errors(negative))
@@ -5128,48 +4953,13 @@ class LightweightUtilityContractTests(unittest.TestCase):
         )
         self.assertTrue(any("analysis-initial-order" in error for error in errors), errors)
 
-    def test_capability_equivalence_ignores_arbitrary_adapter_metadata(self) -> None:
-        capabilities = {
-            field: "supported" for field in EVAL.GENERIC_CAPABILITY_FIELDS
-        }
-        case = {
-            "id": "capability-equivalence-arbitrary-metadata",
-            "scenario": "capability-equivalence",
-            "inputs": {
-                "adapters": [
-                    {
-                        "adapter_metadata": {"native_name": "alpha", "mode": "one"},
-                        "capabilities": capabilities,
-                    },
-                    {
-                        "adapter_metadata": {
-                            "provider": "beta",
-                            "native_identifier": "different",
-                            "extra": ["ignored"],
-                        },
-                        "capabilities": dict(capabilities),
-                    },
-                ]
-            },
-            "decision": {
-                "results": [
-                    {
-                        "routing": "direct",
-                        "execution_level": "L3",
-                        "review_required": True,
-                        "completion": "ready-for-review",
-                    },
-                    {
-                        "routing": "direct",
-                        "execution_level": "L3",
-                        "review_required": True,
-                        "completion": "ready-for-review",
-                    },
-                ]
-            },
-            "expected_valid": True,
-            "expected_error": None,
-        }
+    def test_adapter_metadata_does_not_participate_in_task_execution(self) -> None:
+        case = next(
+            item
+            for item in self.task_focus_cases
+            if item["id"] == "focus-task-edit-direct"
+        )
+        self.assertNotIn("adapter_metadata", case["inputs"])
         self.assertEqual([], EVAL._task_focus_case_errors(case))
 
     def test_release_reviews_use_one_typed_guard_per_review_outcome(self) -> None:
@@ -5982,7 +5772,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
                 "task_id",
                 "latest_changed_paths",
                 "exact_change_evidence",
-                "reviewer_capability_accessibility",
+                "reviewer_artifact_accessibility",
                 "validation_after_latest_material_edit",
                 "fixed_review_scope",
             },
@@ -7022,7 +6812,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
         case["steps"][1]["utility_capsule"]["commands_allowed"][-1] = command
         case["steps"][2]["utility_evidence"]["commands_run"][1] = command
         self.assertTrue(
-            any("not declared as non-mutating validation" in error for error in self._errors(case))
+            any("other than the declared validation check" in error for error in self._errors(case))
         )
 
     def test_generic_utility_rejects_native_tool_command_or_shell_identifiers(self) -> None:
@@ -7038,26 +6828,23 @@ class LightweightUtilityContractTests(unittest.TestCase):
                 case["steps"][2]["utility_evidence"]["commands_run"][1] = identifier
                 self.assertTrue(any("unsafe" in error for error in self._errors(case)))
 
-    def test_generic_utility_accepts_only_normalized_capability_operations(self) -> None:
+    def test_generic_utility_accepts_only_normalized_operations(self) -> None:
         self.assertEqual(
             {
                 "workspace-state-observation",
                 "change-evidence-export",
-                "non-mutating-validation",
+                "validation-check",
             },
-            EVAL.UTILITY_CAPABILITY_OPERATIONS,
+            EVAL.UTILITY_OPERATIONS,
         )
-        for operation in EVAL.UTILITY_CAPABILITY_OPERATIONS:
+        for operation in EVAL.UTILITY_OPERATIONS:
             with self.subTest(operation=operation):
                 self.assertTrue(EVAL._utility_command_is_safe(operation))
 
-    def test_workspace_observation_is_capability_driven(self) -> None:
+    def test_workspace_observation_is_a_direct_declared_operation(self) -> None:
         for case in self.utility_cases:
             self.assertNotIn("host_modes", case)
-            self.assertEqual(
-                set(EVAL.GENERIC_CAPABILITY_FIELDS),
-                set(case["capability_facts"]),
-            )
+            self.assertNotIn("capability_facts", case)
             checks = case["steps"][1]["utility_capsule"]["workspace_baseline"]["check_commands"]
             self.assertEqual(["workspace-state-observation"], checks)
             self.assertNotIn("git", " ".join(checks).casefold())
@@ -7094,7 +6881,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
             "interleaved": [
                 "workspace-state-observation",
                 "change-evidence-export",
-                "non-mutating-validation",
+                "validation-check",
                 "workspace-state-observation",
             ],
             "missing-post": [

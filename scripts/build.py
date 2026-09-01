@@ -36,17 +36,12 @@ from validation_utils import (
     layer3_selector_normalized_control_projections,
     execution_level_runtime_reference_errors,
     load_yaml_file,
-    main_capability_projection as _main_capability_projection,
-    main_capability_projection_from_facts as _main_capability_projection_from_facts,
-    normalized_declared_capability_ceiling as _normalized_declared_capability_ceiling,
-    normalized_decision_capabilities as _normalized_decision_capabilities,
     parse_frontmatter,
     prompt_projection_errors,
     reference_contracts,
     reference_type_for_path,
     required_expertise_tag_errors,
     render_compact_markdown_table,
-    render_decision_capability_facts as _render_decision_capability_facts,
     render_targeted_reference_section,
     role_contract_map_errors,
 )
@@ -146,24 +141,7 @@ HOST_ENFORCEMENT_CAPABILITIES = (
     "subagent_dispatch",
     "partial_handoff",
     "isolated_workspace",
-    "utility_no_edit",
 )
-GENERIC_CAPABILITY_CONTRACT = CORE_CONTRACTS["review_discipline_contract"][
-    "generic_capability_contract"
-]
-DECISION_CAPABILITY_FIELDS = tuple(GENERIC_CAPABILITY_CONTRACT["injected_fields"])
-DECISION_CAPABILITY_STATES = tuple(GENERIC_CAPABILITY_CONTRACT["states"])
-MAIN_DECISION_CAPABILITY_FIELDS = (
-    "exact-change-evidence-read",
-    "reviewer-accessible-change-reference",
-    "non-mutating-validation",
-    "not-required",
-)
-HOST_MODE_VALUES = {
-    "diff_input_mode": ("native", "supplied-artifact", "unsupported"),
-    "validation_mode": ("native-read-only", "task-no-edit", "unsupported"),
-}
-NATIVE_DIFF_SAFEGUARDS = ("--no-pager", "--no-ext-diff", "--no-textconv")
 EXTERNAL_READ_HOST_MODES = {
     "codex": "prompt-enforced",
     "claude": "native-enforced",
@@ -1453,25 +1431,20 @@ def _load_host_enforcement() -> dict[str, Any]:
         data = json.loads(HOST_ENFORCEMENT_SOURCE.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         raise BuildError(f"invalid host enforcement JSON: {exc}") from exc
-    if not isinstance(data, dict) or data.get("schema_version") != 4:
-        raise BuildError("host enforcement matrix must use schema_version 4")
+    if not isinstance(data, dict) or data.get("schema_version") != 5:
+        raise BuildError("host enforcement matrix must use schema_version 5")
     if set(data) != {
         "schema_version",
         "source_summary",
         "status_values",
-        "mode_values",
         "host_surfaces",
         "hosts",
     }:
-        raise BuildError("host enforcement matrix fields must match schema v4")
+        raise BuildError("host enforcement matrix fields must match schema v5")
     if tuple(data.get("status_values") or ()) != ENFORCEMENT_STATUSES:
         raise BuildError("host enforcement status_values must match the fixed status enum")
     if not isinstance(data.get("source_summary"), str) or not data["source_summary"].strip():
         raise BuildError("host enforcement matrix requires source_summary")
-    if data.get("mode_values") != {
-        field: list(values) for field, values in HOST_MODE_VALUES.items()
-    }:
-        raise BuildError("host enforcement mode_values must match the adapter contract")
     hosts = data.get("hosts")
     if not isinstance(hosts, dict) or set(hosts) != set(ENFORCEMENT_HOSTS):
         raise BuildError("host enforcement matrix must contain exactly the supported hosts")
@@ -1479,31 +1452,13 @@ def _load_host_enforcement() -> dict[str, Any]:
     for host, entry in hosts.items():
         expected_fields = {
             *HOST_ENFORCEMENT_CAPABILITIES,
-            "diff_input_mode",
-            "validation_mode",
-            "native_diff_safeguards",
             "roles",
         }
         if not isinstance(entry, dict) or set(entry) != expected_fields:
-            raise BuildError(f"{host}: host enforcement fields must match schema v4")
+            raise BuildError(f"{host}: host enforcement fields must match schema v5")
         for capability in HOST_ENFORCEMENT_CAPABILITIES:
             if entry.get(capability) not in ENFORCEMENT_STATUSES:
                 raise BuildError(f"{host}: invalid {capability} enforcement")
-        diff_input_mode = entry.get("diff_input_mode")
-        validation_mode = entry.get("validation_mode")
-        utility_no_edit = entry.get("utility_no_edit")
-        if diff_input_mode not in HOST_MODE_VALUES["diff_input_mode"]:
-            raise BuildError(f"{host}: invalid diff_input_mode")
-        if validation_mode not in HOST_MODE_VALUES["validation_mode"]:
-            raise BuildError(f"{host}: invalid validation_mode")
-        if tuple(_normalized_declared_capability_ceiling(entry)) != DECISION_CAPABILITY_FIELDS:
-            raise BuildError(f"{host}: normalized decision capabilities drift from Core")
-        if utility_no_edit not in ENFORCEMENT_STATUSES:
-            raise BuildError(f"{host}: invalid utility_no_edit enforcement")
-        safeguards = entry.get("native_diff_safeguards")
-        expected_safeguards = list(NATIVE_DIFF_SAFEGUARDS) if diff_input_mode == "native" else []
-        if safeguards != expected_safeguards:
-            raise BuildError(f"{host}: native diff safeguards do not match adapter mode")
         roles = entry.get("roles")
         if not isinstance(roles, dict) or set(roles) != expected_roles:
             raise BuildError(f"{host}: enforcement roles must be the four static profiles")
@@ -1517,7 +1472,7 @@ def _load_host_enforcement() -> dict[str, Any]:
             }
             if set(role_entry) != expected_role_fields:
                 raise BuildError(
-                    f"{host}:{role}: enforcement fields must match schema v3"
+                    f"{host}:{role}: enforcement fields must match schema v5"
                 )
             for capability in ENFORCEMENT_CAPABILITIES:
                 if role_entry.get(capability) not in ENFORCEMENT_STATUSES:

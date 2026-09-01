@@ -1633,30 +1633,34 @@ class TaskContractTemplateTests(unittest.TestCase):
 
 
 class CoreContractModelTests(unittest.TestCase):
-    def test_generic_capability_contract_uses_only_injected_canonical_ids(self) -> None:
+    def test_execution_boundary_uses_actual_operations_and_failures(self) -> None:
+        task = CORE_CONTRACTS["task_contract"]
         review = CORE_CONTRACTS["review_discipline_contract"]
-        capabilities = review["generic_capability_contract"]
-        fields = capabilities["fields"]
-        self.assertEqual(fields, capabilities["injected_fields"])
-        self.assertEqual(len(fields), len(set(fields)))
-        self.assertTrue(all("_" not in field for field in fields))
+        execution = task["execution_boundary"]
+        self.assertEqual(
+            ["read", "search", "edit", "execute"],
+            execution["operations"],
+        )
+        self.assertEqual("forbidden", execution["preflight_capability_proof"])
         self.assertEqual(
             [
-                "native-change-read",
-                "change-evidence-export",
-                "supplied-change-delivery",
-                "reviewer-change-consume",
-                "non-mutating-validation",
+                "tool-unavailable",
+                "permission-denied",
+                "sandbox-denied",
+                "required-artifact-unavailable",
             ],
-            [branch["field"] for branch in capabilities["prompt_branches"]],
+            execution["blocking_failure_classes"],
         )
-        self.assertTrue(
-            set(branch["field"] for branch in capabilities["prompt_branches"])
-            <= set(fields)
-        )
-        self.assertNotIn(
-            "host_mode_branches",
-            CORE_CONTRACTS["prompt_contract"],
+        self.assertNotIn("executor_substitution", task)
+        self.assertNotIn("generic_capability_contract", review)
+        self.assertEqual(
+            [
+                "reviewer",
+                "generation",
+                "changed_paths",
+                "readable",
+            ],
+            review["review_input_readiness"]["artifact_accessibility_fields"],
         )
         self.assertEqual([], validate_core_contracts(CORE_CONTRACTS))
 

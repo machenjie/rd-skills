@@ -277,7 +277,7 @@ FOCUS_SCENARIO_ACTORS = {
     "review-level": "review-agent",
     "analysis-level": "main-control-agent",
     "review-readiness": "main-control-agent",
-    "capability-equivalence": "main-control-agent",
+    "task-execution": "task-agent",
     "cost": "task-agent",
     "engineering-choice": "main-control-agent",
 }
@@ -1110,7 +1110,7 @@ def _focus_case_actor_authority(
         )
         authority_value = review_policy.get("final_review_profile")
         actor = authority_value
-    elif scenario in {"review-readiness", "capability-equivalence"}:
+    elif scenario == "review-readiness":
         authority_pointer = (
             "/review_discipline_contract/review_input_readiness/consumer"
         )
@@ -1120,18 +1120,6 @@ def _focus_case_actor_authority(
             if isinstance(authority_value, str)
             else None
         )
-        if scenario == "capability-equivalence":
-            capability_contract = review_contract.get(
-                "generic_capability_contract"
-            )
-            if (
-                not isinstance(capability_contract, dict)
-                or not isinstance(capability_contract.get("fields"), list)
-                or not capability_contract["fields"]
-            ):
-                raise ValueError(
-                    "capability-equivalence lacks a closed Core capability contract"
-                )
     elif scenario == "analysis-level":
         authority_pointer = (
             "/execution_level_contract/lifecycle/first_computation_point"

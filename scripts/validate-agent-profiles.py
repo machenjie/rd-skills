@@ -21,10 +21,6 @@ from validation_utils import (
     PROMPT_CONTRACT_MODEL,
     ROLE_CONTRACT_MODEL,
     fail_many,
-    main_capability_projection as _main_capability_projection,
-    normalized_declared_capability_ceiling as _normalized_declared_capability_ceiling,
-    normalized_decision_capabilities as _normalized_decision_capabilities,
-    render_decision_capability_facts as _render_decision_capability_facts,
     validate_ai_readability,
 )
 
@@ -51,22 +47,7 @@ HOST_ENFORCEMENT_CAPABILITIES = {
     "subagent_dispatch",
     "partial_handoff",
     "isolated_workspace",
-    "utility_no_edit",
 }
-GENERIC_CAPABILITY_CONTRACT = REVIEW_DISCIPLINE_MODEL["generic_capability_contract"]
-DECISION_CAPABILITY_FIELDS = tuple(GENERIC_CAPABILITY_CONTRACT["injected_fields"])
-DECISION_CAPABILITY_STATES = set(GENERIC_CAPABILITY_CONTRACT["states"])
-MAIN_DECISION_CAPABILITY_FIELDS = (
-    "exact-change-evidence-read",
-    "reviewer-accessible-change-reference",
-    "non-mutating-validation",
-    "not-required",
-)
-HOST_MODE_VALUES = {
-    "diff_input_mode": ("native", "supplied-artifact", "unsupported"),
-    "validation_mode": ("native-read-only", "task-no-edit", "unsupported"),
-}
-NATIVE_DIFF_SAFEGUARDS = ["--no-pager", "--no-ext-diff", "--no-textconv"]
 ENFORCEMENT_HOSTS = {"codex", "claude", "copilot", "cline", "openai-api"}
 COPILOT_SURFACES = {"copilot-cli", "copilot-vscode", "copilot-coding-agent"}
 EXTERNAL_READ_MODEL = CORE_CONTRACTS["external_read_contract"]
@@ -88,13 +69,14 @@ ROLE_MINIMAL_REQUIRED_GROUPS = {
         ("Task Capsule", "Professional Skill", "Layer 3 Delivery", "capsule-named"),
         ("Consume Main's bound effective Level", "never calculate or recompute"),
         ("inspect the owner", "tests", "minimum consumer", "authorized scope"),
-        ("CAPABILITY_MISMATCH", "effective=unknown|unsupported", "edit=0", "without rerouting"),
+        ("read/search/edit/execute", "directly", "no capability self-proof"),
+        ("EXECUTION_BLOCKED", "Task ID", "actual tool/permission/sandbox/required-artifact failure", "task=unspecified"),
         ("observable normal", "invalid", "boundary", "forbidden", "validation signal"),
         ("smallest complete change", "test-only API widening", "unrelated refactors"),
         ("Test-first is required",),
         ("RED proves absent target behavior", "environment", "unrelated failure"),
         ("latest material edit invalidates", "fresh targeted validation", "latest-material-edit", "validation-passed"),
-        ("two same-path failures", "never a third unchanged retry"),
+        ("2 same-path failures", "third unchanged retry"),
         ("final edit", "fresh validation", "exact change capture", "Implementation Handoff"),
         ("latest changed paths", "exact change capture", "reviewer accessibility", "fixed review scope", "missing or stale facts block"),
         ("Utility mode", "daemon", "database", "private evidence storage", "runtime task state engine", "hidden protocol record"),
@@ -146,12 +128,6 @@ MAIN_SOURCE_DERIVED_REFERENCE_PROJECTIONS = {
         "references/implementation-handoff-template.md JIT-owns Ledger State/currentness"
     ),
 }
-MAIN_CORE_CAPABILITY_REFERENCE_PROJECTION = (
-    "`generic_capability_contract` branches JIT-load from "
-    "references/implementation-handoff-template.md."
-)
-
-
 def role_control_reference_errors(role: str, text: str) -> list[str]:
     """Reject undeclared or cross-role control Reference consumption."""
 
@@ -172,12 +148,6 @@ def role_control_reference_errors(role: str, text: str) -> list[str]:
                     and MAIN_SOURCE_DERIVED_REFERENCE_PROJECTIONS[name] in line
                 )
             ]
-            if line.strip() == MAIN_CORE_CAPABILITY_REFERENCE_PROJECTION:
-                names = [
-                    name
-                    for name in names
-                    if name != "implementation-handoff-template.md"
-                ]
         for name in names:
             path = f"references/{name}"
             owners = contracts.get(path)
@@ -741,7 +711,6 @@ def main(argv: list[str] | None = None) -> int:
         "schema_version",
         "source_summary",
         "status_values",
-        "mode_values",
         "host_surfaces",
         "hosts",
     }
@@ -750,12 +719,8 @@ def main(argv: list[str] | None = None) -> int:
             "host enforcement matrix fields must be exactly "
             f"{sorted(expected_enforcement_fields)}"
         )
-    if enforcement.get("schema_version") != 4 or set(enforcement.get("status_values") or []) != ENFORCEMENT_STATUSES:
-        errors.append("host enforcement matrix must use schema_version 4 and the fixed status enum")
-    if enforcement.get("mode_values") != {
-        field: list(values) for field, values in HOST_MODE_VALUES.items()
-    }:
-        errors.append("host enforcement mode_values must match the adapter contract")
+    if enforcement.get("schema_version") != 5 or set(enforcement.get("status_values") or []) != ENFORCEMENT_STATUSES:
+        errors.append("host enforcement matrix must use schema_version 5 and the fixed status enum")
     if not isinstance(hosts, dict) or set(hosts) != ENFORCEMENT_HOSTS:
         errors.append("host enforcement matrix must contain exactly the supported hosts")
         hosts = {}
@@ -763,30 +728,12 @@ def main(argv: list[str] | None = None) -> int:
         if not isinstance(host_entry, dict):
             errors.append(f"{host}: enforcement entry must be an object")
             continue
-        expected_fields = HOST_ENFORCEMENT_CAPABILITIES | {
-            "diff_input_mode",
-            "validation_mode",
-            "native_diff_safeguards",
-            "roles",
-        }
+        expected_fields = HOST_ENFORCEMENT_CAPABILITIES | {"roles"}
         if set(host_entry) != expected_fields:
             errors.append(f"{host}: host fields must be exactly {sorted(expected_fields)}")
         for capability in HOST_ENFORCEMENT_CAPABILITIES:
             if host_entry.get(capability) not in ENFORCEMENT_STATUSES:
                 errors.append(f"{host}: invalid {capability} enforcement")
-        if host_entry.get("diff_input_mode") not in HOST_MODE_VALUES["diff_input_mode"]:
-            errors.append(f"{host}: invalid diff_input_mode")
-        if host_entry.get("validation_mode") not in HOST_MODE_VALUES["validation_mode"]:
-            errors.append(f"{host}: invalid validation_mode")
-        expected_safeguards = (
-            NATIVE_DIFF_SAFEGUARDS
-            if host_entry.get("diff_input_mode") == "native"
-            else []
-        )
-        if host_entry.get("native_diff_safeguards") != expected_safeguards:
-            errors.append(f"{host}: native diff safeguards do not match adapter mode")
-        if tuple(_normalized_declared_capability_ceiling(host_entry)) != DECISION_CAPABILITY_FIELDS:
-            errors.append(f"{host}: normalized decision capabilities drift from Core")
         roles = host_entry.get("roles")
         if not isinstance(roles, dict) or set(roles) != set(ROLE_CONTRACT_MODEL):
             errors.append(f"{host}: enforcement roles must be the exact four profiles")

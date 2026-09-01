@@ -47,39 +47,7 @@ from validation_utils import (  # noqa: E402
 
 class BuildSafetyTests(unittest.TestCase):
     @staticmethod
-    def _current_invocation_facts(
-        entry: dict[str, object], host_surface: str
-    ) -> dict[str, object]:
-        identity = {
-            "task_id": "task-build-capability",
-            "session_id": "session-build-capability",
-            "host_surface": host_surface,
-            "executor": f"{host_surface}-executor",
-            "executor_class": f"{host_surface}-task-agent",
-        }
-        declared = BUILD._normalized_declared_capability_ceiling(entry)
-        return {
-            **identity,
-            "evidence": [
-                {
-                    "source": "current-invocation-fact",
-                    **identity,
-                    "capability": capability,
-                    "state": state,
-                }
-                for capability, state in declared.items()
-            ],
-        }
-
-    @staticmethod
     def _current_handoff(kind: str) -> dict[str, object]:
-        capabilities = {
-            "native-change-read": "unsupported",
-            "change-evidence-export": "supported",
-            "supplied-change-delivery": "supported",
-            "reviewer-change-consume": "supported",
-            "non-mutating-validation": "supported",
-        }
         artifact: object = (
             "diff --git a/owner.py b/owner.py\n"
             "--- a/owner.py\n"
@@ -87,13 +55,6 @@ class BuildSafetyTests(unittest.TestCase):
             "@@ -1 +1 @@\n-old\n+new\n"
         )
         if kind == "reviewer-accessible-native-reference":
-            capabilities.update(
-                {
-                    "native-change-read": "supported",
-                    "change-evidence-export": "unsupported",
-                    "supplied-change-delivery": "unsupported",
-                }
-            )
             artifact = {
                 "reference": "native-change://codex/current-worktree",
                 "generation": 7,
@@ -108,7 +69,12 @@ class BuildSafetyTests(unittest.TestCase):
                 "artifact": artifact,
                 "generation": 7,
             },
-            "reviewer_capability_accessibility": capabilities,
+            "reviewer_artifact_accessibility": {
+                "reviewer": "review-agent",
+                "generation": 7,
+                "changed_paths": ["owner.py"],
+                "readable": True,
+            },
             "validation_after_latest_material_edit": {
                 "evidence_id": "focused-projection-test",
                 "result": "passed",
@@ -117,64 +83,35 @@ class BuildSafetyTests(unittest.TestCase):
             "fixed_review_scope": ["owner.py"],
         }
 
-    def test_capability_projection_has_one_validation_utils_owner(self) -> None:
-        self.assertIs(
-            VALIDATION.normalized_decision_capabilities,
-            BUILD._normalized_decision_capabilities,
+    def test_review_readiness_has_one_deterministic_owner(self) -> None:
+        self.assertTrue(
+            VALIDATION.review_input_ready(
+                self._current_handoff("exact-change-content")
+            )
         )
-        self.assertIs(
-            VALIDATION.main_capability_projection,
-            BUILD._main_capability_projection,
-        )
-        self.assertIs(
-            VALIDATION.render_decision_capability_facts,
-            BUILD._render_decision_capability_facts,
-        )
+        for obsolete in (
+            "_normalized_declared_capability_ceiling",
+            "_normalized_decision_capabilities",
+            "_main_capability_projection",
+            "_render_decision_capability_facts",
+        ):
+            self.assertFalse(hasattr(BUILD, obsolete), obsolete)
 
-    def test_not_required_requires_current_complete_native_handoff(self) -> None:
-        matrix = BUILD._load_host_enforcement()
+    def test_review_ready_requires_current_complete_native_handoff(self) -> None:
         handoff = self._current_handoff("reviewer-accessible-native-reference")
-        projection = BUILD._main_capability_projection(
-            matrix["hosts"]["codex"],
-            invocation_facts=self._current_invocation_facts(
-                matrix["hosts"]["codex"], "codex"
-            ),
-            handoff=handoff,
-        )
-        self.assertEqual(
-            {
-                "exact-change-evidence-read": "supported",
-                "reviewer-accessible-change-reference": "supported",
-                "non-mutating-validation": "supported",
-                "not-required": "supported",
-            },
-            projection,
-        )
+        self.assertTrue(VALIDATION.review_input_ready(handoff))
 
-    def test_not_required_requires_current_complete_supplied_handoff(self) -> None:
-        matrix = BUILD._load_host_enforcement()
+    def test_review_ready_requires_current_complete_supplied_handoff(self) -> None:
         handoff = self._current_handoff("exact-change-content")
-        projection = BUILD._main_capability_projection(
-            matrix["hosts"]["copilot"],
-            invocation_facts=self._current_invocation_facts(
-                matrix["hosts"]["copilot"], "copilot-vscode"
-            ),
-            handoff=handoff,
-        )
-        self.assertEqual("supported", projection["not-required"])
-        self.assertEqual("supported", projection["exact-change-evidence-read"])
-        self.assertEqual(
-            "supported", projection["reviewer-accessible-change-reference"]
-        )
+        self.assertTrue(VALIDATION.review_input_ready(handoff))
 
-    def test_not_required_fails_closed_for_incomplete_or_mismatched_handoff(self) -> None:
-        matrix = BUILD._load_host_enforcement()
+    def test_review_ready_fails_closed_for_incomplete_or_mismatched_handoff(self) -> None:
         valid = self._current_handoff("exact-before-after")
         mutations = []
         for field in (
             "latest_changed_paths",
             "exact_change_evidence",
-            "reviewer_capability_accessibility",
+            "reviewer_artifact_accessibility",
             "validation_after_latest_material_edit",
             "fixed_review_scope",
         ):
@@ -187,41 +124,24 @@ class BuildSafetyTests(unittest.TestCase):
         wrong_scope = copy.deepcopy(valid)
         wrong_scope["fixed_review_scope"] = ["different.py"]
         mutations.append(wrong_scope)
-        unsupported = copy.deepcopy(valid)
-        unsupported["reviewer_capability_accessibility"][
-            "reviewer-change-consume"
-        ] = "unsupported"
-        mutations.append(unsupported)
+        unreadable = copy.deepcopy(valid)
+        unreadable["reviewer_artifact_accessibility"]["readable"] = False
+        mutations.append(unreadable)
         for index, handoff in enumerate(mutations):
             with self.subTest(index=index):
-                projection = BUILD._main_capability_projection(
-                    matrix["hosts"]["copilot"],
-                    invocation_facts=self._current_invocation_facts(
-                        matrix["hosts"]["copilot"], "copilot-vscode"
-                    ),
-                    handoff=handoff,
-                )
-                self.assertEqual("unsupported", projection["not-required"])
-                self.assertEqual(
-                    "unsupported",
-                    projection["reviewer-accessible-change-reference"],
-                )
+                self.assertFalse(VALIDATION.review_input_ready(handoff))
 
-    def test_not_required_is_independent_of_l5_confirmation_states(self) -> None:
-        matrix = BUILD._load_host_enforcement()
+    def test_review_readiness_is_independent_of_l5_confirmation_states(self) -> None:
         core = copy.deepcopy(BUILD.CORE_CONTRACTS)
         core["execution_level_contract"]["l5_confirmation"]["states"].remove(
             "not-required"
         )
-        projection = BUILD._main_capability_projection(
-            matrix["hosts"]["codex"],
-            invocation_facts=self._current_invocation_facts(
-                matrix["hosts"]["codex"], "codex"
-            ),
-            handoff=self._current_handoff("reviewer-accessible-native-reference"),
-            core=core,
+        self.assertTrue(
+            VALIDATION.review_input_ready(
+                self._current_handoff("reviewer-accessible-native-reference"),
+                core=core,
+            )
         )
-        self.assertEqual("supported", projection["not-required"])
 
     @staticmethod
     def _windows_translating_write_text(
@@ -1159,56 +1079,18 @@ Own one bounded decision.
             "prompt-enforced",
             matrix["hosts"]["codex"]["roles"]["main-control-agent"]["tool_allowlist"],
         )
-        self.assertEqual(4, matrix["schema_version"])
-        self.assertEqual(
-            {
-                "diff_input_mode": ["native", "supplied-artifact", "unsupported"],
-                "validation_mode": ["native-read-only", "task-no-edit", "unsupported"],
-            },
-            matrix["mode_values"],
-        )
-        self.assertEqual(
-            ["--no-pager", "--no-ext-diff", "--no-textconv"],
-            matrix["hosts"]["codex"]["native_diff_safeguards"],
-        )
-        for host in ("claude", "copilot", "cline", "openai-api"):
-            self.assertEqual([], matrix["hosts"][host]["native_diff_safeguards"])
-        self.assertEqual(
-            {
-                **{capability: "supported" for capability in BUILD.DECISION_CAPABILITY_FIELDS},
-                "supplied-change-delivery": "unsupported",
-            },
-            BUILD._normalized_declared_capability_ceiling(
-                matrix["hosts"]["codex"]
-            ),
-        )
-        self.assertEqual(
-            {
-                capability: "unsupported"
-                for capability in BUILD.DECISION_CAPABILITY_FIELDS
-            },
-            BUILD._normalized_decision_capabilities(matrix["hosts"]["codex"]),
-        )
-        unknown_adapter = dict(matrix["hosts"]["codex"])
-        unknown_adapter.update(
-            {
-                "profile_delivery": "unknown-native-id",
-                "diff_input_mode": "unknown-native-id",
-                "validation_mode": "unknown-native-id",
-                "utility_no_edit": "unknown-native-id",
-            }
-        )
-        self.assertEqual(
-            {capability: "unsupported" for capability in BUILD.DECISION_CAPABILITY_FIELDS},
-            BUILD._normalized_decision_capabilities(unknown_adapter),
-        )
+        self.assertEqual(5, matrix["schema_version"])
+        self.assertNotIn("mode_values", matrix)
+        for host in matrix["hosts"].values():
+            self.assertNotIn("native_diff_safeguards", host)
+            self.assertNotIn("diff_input_mode", host)
+            self.assertNotIn("validation_mode", host)
         renderer_hosts = {
             BUILD._render_codex_profile: "codex",
             BUILD._render_claude_profile: "claude",
             BUILD._render_copilot_profile: "copilot",
         }
         for renderer, host in renderer_hosts.items():
-            host_contract = matrix["hosts"][host]
             rendered = renderer(profiles["main-control-agent"], matrix)
             self.assertNotIn("Current capability facts:", rendered)
             self.assertNotIn("Current external-read mode:", rendered)
@@ -1221,67 +1103,20 @@ Own one bounded decision.
         self.assertIn('tools: ["read","search"]', copilot)
         self.assertNotIn('"execute"', copilot.split("---", 2)[1])
 
-    def test_main_capability_projection_is_core_derived_and_role_minimal(self) -> None:
+    def test_main_profile_has_no_runtime_capability_projection(self) -> None:
         matrix = BUILD._load_host_enforcement()
-        expected_fields = {
-            "exact-change-evidence-read",
-            "reviewer-accessible-change-reference",
-            "non-mutating-validation",
-            "not-required",
+        profiles = {
+            profile["name"]: profile for profile in BUILD._load_agent_profiles()
         }
         for host in ("codex", "claude", "copilot"):
-            ceilings = BUILD._normalized_decision_capabilities(matrix["hosts"][host])
-            projection = BUILD._main_capability_projection(matrix["hosts"][host])
             with self.subTest(host=host):
-                self.assertEqual(set(BUILD.DECISION_CAPABILITY_FIELDS), set(ceilings))
-                self.assertEqual(expected_fields, set(projection))
-                self.assertEqual("unsupported", projection["not-required"])
-                self.assertEqual("unsupported", projection["non-mutating-validation"])
-                self.assertEqual("unsupported", projection["exact-change-evidence-read"])
-                self.assertEqual(
-                    "unsupported",
-                    projection["reviewer-accessible-change-reference"],
-                )
-                self.assertEqual(
-                    BUILD._render_decision_capability_facts(projection),
-                    BUILD._render_decision_capability_facts(ceilings),
-                )
-
-        unknown = copy.deepcopy(matrix["hosts"]["codex"])
-        unknown.update(
-            profile_delivery="unknown",
-            diff_input_mode="unknown",
-            validation_mode="unknown",
-            utility_no_edit="unknown",
-        )
-        unknown_ceilings = BUILD._normalized_decision_capabilities(unknown)
-        unknown_projection = BUILD._main_capability_projection(unknown)
-        self.assertEqual(
-            {field: "unsupported" for field in BUILD.DECISION_CAPABILITY_FIELDS},
-            unknown_ceilings,
-        )
-        self.assertEqual(
-            {
-                "exact-change-evidence-read": "unsupported",
-                "reviewer-accessible-change-reference": "unsupported",
-                "non-mutating-validation": "unsupported",
-                "not-required": "unsupported",
-            },
-            unknown_projection,
-        )
-        self.assertEqual(
-            BUILD._render_decision_capability_facts(unknown_projection),
-            BUILD._render_decision_capability_facts(unknown_ceilings),
-        )
-
-        core = copy.deepcopy(BUILD.CORE_CONTRACTS)
-        core["execution_level_contract"]["l5_confirmation"]["states"].remove(
-            "not-required"
-        )
-        self.assertEqual(
-            projection,
-            BUILD._main_capability_projection(matrix["hosts"]["codex"], core=core),
-        )
+                rendered = {
+                    "codex": BUILD._render_codex_profile,
+                    "claude": BUILD._render_claude_profile,
+                    "copilot": BUILD._render_copilot_profile,
+                }[host](profiles["main-control-agent"], matrix)
+                self.assertNotIn("Current capability facts:", rendered)
+                self.assertNotIn("CAPABILITY_MISMATCH", rendered)
 
     def test_copilot_analysis_projects_only_bounded_web_read_tools(self) -> None:
         matrix = BUILD._load_host_enforcement()
@@ -1328,18 +1163,18 @@ Own one bounded decision.
                     matrix["hosts"]["copilot"]["roles"][role]["rendered_tools"],
                 )
 
-    def test_host_enforcement_rejects_stale_schema_and_unknown_modes(self) -> None:
+    def test_host_enforcement_rejects_stale_schema_and_invalid_enforcement(self) -> None:
         mutations = (
-            ('"schema_version": 4', '"schema_version": 3', "schema_version 4"),
+            ('"schema_version": 5', '"schema_version": 4', "schema_version 5"),
             (
-                '"diff_input_mode": "supplied-artifact"',
-                '"diff_input_mode": "stale-mode"',
-                "invalid diff_input_mode",
+                '"profile_delivery": "native-enforced"',
+                '"profile_delivery": "stale-mode"',
+                "invalid profile_delivery enforcement",
             ),
             (
-                '"native_diff_safeguards": ["--no-pager", "--no-ext-diff", "--no-textconv"]',
-                '"native_diff_safeguards": ["--no-pager", "--no-ext-diff"]',
-                "native diff safeguards",
+                '"tool_allowlist": "prompt-enforced"',
+                '"tool_allowlist": "stale-mode"',
+                "invalid tool_allowlist enforcement status",
             ),
             (
                 '"rendered_tools": ["read", "search", "web"]',

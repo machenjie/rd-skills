@@ -213,172 +213,39 @@ class AgentProfileReadabilityTests(unittest.TestCase):
             "- Never reload references/main-control-agent.md.\n"
             "- Dispatch only/no target-code access.\n"
             "- No worker: business acceptance/placement, Brief/DAG authoring, implementation review.\n"
-            "- Effective invocation capability facts authoritative; static Host/Profile/rendered_tools are declared ceilings only; absent/unrecognized/unknown=unsupported.\n"
-            "- Runtime precedence per Host Executor: current invocation fact, verifiable current Host Surface session evidence, current-session mismatch negative evidence, else unknown/unsupported.\n"
-            "- Same-session mismatch excludes that Host Executor/class; substitute only with current effective proof, unchanged Semantic Role and full Task Contract, Professional/Domain/Layer3, Level/Basis/history, Scope/Acceptance/Validation, Review/Handoff, and Stops; otherwise block; never implement or reselect.\n"
+            "- Semantic Role, Task Contract, and Host tools/sandbox own direct execution; only actual failure blocks.\n"
+            "- Retry preserves the same real Task ID and complete unchanged Task Contract with route/Level/review/handoff bindings; Main never implements; task=unspecified is forbidden.\n"
             "- Forward reviewer-accessible exact evidence."
         )
 
         self.assertEqual(expected, main["instructions"])
         self.assertIn("Dispatch only/no target-code access", main["instructions"])
 
-    def test_static_declarations_are_only_ceilings_and_runtime_facts_fail_closed(self) -> None:
+    def test_host_matrix_declares_tools_and_enforcement_without_runtime_state(self) -> None:
         enforcement = json.loads(
             VALIDATOR.ENFORCEMENT_SOURCE.read_text(encoding="utf-8")
         )
+        self.assertEqual(5, enforcement["schema_version"])
         for host in ("codex", "claude", "copilot"):
             with self.subTest(host=host):
-                actual = VALIDATOR._normalized_decision_capabilities(
-                    enforcement["hosts"][host]
+                task = enforcement["hosts"][host]["roles"]["task-agent"]
+                self.assertTrue(
+                    {"edit", "execute", "Write", "Bash"}
+                    & set(task["rendered_tools"]),
+                    host,
                 )
-                self.assertEqual(
-                    {field: "unsupported" for field in VALIDATOR.DECISION_CAPABILITY_FIELDS},
-                    actual,
+                self.assertIn(
+                    task["tool_allowlist"],
+                    {"native-enforced", "sandbox-enforced", "prompt-enforced"},
                 )
-
-        declared = VALIDATOR._normalized_declared_capability_ceiling(
-            enforcement["hosts"]["codex"]
-        )
-        identity = {
-            "task_id": "task-profile-runtime",
-            "session_id": "session-profile-runtime",
-            "host_surface": "codex",
-            "executor": "codex-local",
-            "executor_class": "codex-task-agent",
-        }
-        evidence = {
-            **identity,
-            "evidence": [
-                {
-                    "source": "current-invocation-fact",
-                    **identity,
-                    "capability": capability,
-                    "state": state,
-                }
-                for capability, state in declared.items()
-            ],
-        }
-        effective = VALIDATOR._normalized_decision_capabilities(
-            enforcement["hosts"]["codex"], invocation_facts=evidence
-        )
-        self.assertEqual(declared, effective)
-
-        unknown = copy.deepcopy(evidence)
-        next(
-            fact
-            for fact in unknown["evidence"]
-            if fact["capability"] == "workspace-mutation"
-        )["state"] = "unknown"
-        effective = VALIDATOR._normalized_decision_capabilities(
-            enforcement["hosts"]["codex"],
-            invocation_facts=unknown,
-        )
-        self.assertEqual("unsupported", effective["workspace-mutation"])
-
-    def test_workspace_mutation_ceiling_requires_write_tools_and_enforcement(
-        self,
-    ) -> None:
-        enforcement = json.loads(
-            VALIDATOR.ENFORCEMENT_SOURCE.read_text(encoding="utf-8")
-        )
-        supported = enforcement["hosts"]["codex"]
-        self.assertEqual(
-            "supported",
-            VALIDATOR._normalized_declared_capability_ceiling(supported)[
-                "workspace-mutation"
-            ],
-        )
-
-        delivery_only = copy.deepcopy(supported)
-        delivery_only["roles"]["task-agent"]["rendered_tools"] = [
-            "read",
-            "search",
-        ]
-        self.assertEqual(
-            "unsupported",
-            VALIDATOR._normalized_declared_capability_ceiling(delivery_only)[
-                "workspace-mutation"
-            ],
-        )
-
-        unenforced = copy.deepcopy(supported)
-        unenforced["roles"]["task-agent"]["tool_allowlist"] = "unsupported"
-        self.assertEqual(
-            "unsupported",
-            VALIDATOR._normalized_declared_capability_ceiling(unenforced)[
-                "workspace-mutation"
-            ],
-        )
-
-    def test_runtime_capability_requires_current_executor_provenance(self) -> None:
-        enforcement = json.loads(
-            VALIDATOR.ENFORCEMENT_SOURCE.read_text(encoding="utf-8")
-        )
-        host = enforcement["hosts"]["codex"]
-        declared = VALIDATOR._normalized_declared_capability_ceiling(host)
-        self.assertEqual(
-            "unsupported",
-            VALIDATOR._normalized_decision_capabilities(
-                host, invocation_facts=declared
-            )["workspace-mutation"],
-        )
-
-        evidence = {
-            "task_id": "task-runtime-provenance",
-            "session_id": "session-current",
-            "host_surface": "codex",
-            "executor": "codex-local",
-            "executor_class": "codex-task-agent",
-            "evidence": [
-                {
-                    "source": "current-invocation-fact",
-                    "task_id": "task-runtime-provenance",
-                    "session_id": "session-current",
-                    "host_surface": "codex",
-                    "executor": "codex-local",
-                    "executor_class": "codex-task-agent",
-                    "capability": "workspace-mutation",
-                    "state": "supported",
-                }
-            ],
-        }
-        self.assertEqual(
-            "supported",
-            VALIDATOR._normalized_decision_capabilities(
-                host, invocation_facts=evidence
-            )["workspace-mutation"],
-        )
-        stale = copy.deepcopy(evidence)
-        stale["evidence"][0]["session_id"] = "session-stale"
-        self.assertEqual(
-            "unsupported",
-            VALIDATOR._normalized_decision_capabilities(
-                host, invocation_facts=stale
-            )["workspace-mutation"],
-        )
-
-        host_surface = copy.deepcopy(evidence)
-        host_surface["evidence"][0]["source"] = (
-            "host-surface-session-evidence"
-        )
-        self.assertEqual(
-            "supported",
-            VALIDATOR._normalized_decision_capabilities(
-                host, invocation_facts=host_surface
-            )["workspace-mutation"],
-        )
-
-        mismatch = copy.deepcopy(evidence)
-        mismatch["evidence"][0].update(
-            source="current-session-capability-mismatch",
-            state="unsupported",
-        )
-        self.assertEqual(
-            "unsupported",
-            VALIDATOR._normalized_decision_capabilities(
-                host, invocation_facts=mismatch
-            )["workspace-mutation"],
-        )
+        serialized = json.dumps(enforcement)
+        for obsolete in (
+            "diff_input_mode",
+            "validation_mode",
+            "utility_no_edit",
+            "native_diff_safeguards",
+        ):
+            self.assertNotIn(obsolete, serialized)
 
     def test_copilot_surfaces_are_independent_static_declarations(self) -> None:
         enforcement = json.loads(
@@ -715,9 +582,8 @@ class AgentProfileReadabilityTests(unittest.TestCase):
 
     def test_main_profile_rejects_prompt_owned_contract_copies(self) -> None:
         anchor = (
-            "Effective invocation capability facts authoritative; static "
-            "Host/Profile/rendered_tools are declared ceilings only; "
-            "absent/unrecognized/unknown=unsupported."
+            "Semantic Role, Task Contract, and Host tools/sandbox own direct "
+            "execution; only actual failure blocks."
         )
         copied_rules = (
             "Task Contract v2 starts assignments.",

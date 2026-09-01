@@ -1059,10 +1059,15 @@ class HooklessBuildInstallTests(unittest.TestCase):
                 verbose_doctor.returncode,
                 verbose_doctor.stderr or verbose_doctor.stdout,
             )
+            self.assertIn(
+                "doctor: declared-default profile enforcement "
+                "host=codex delivery=native-enforced",
+                verbose_doctor.stdout,
+            )
             self.assertIn("tool_allowlist=prompt-enforced", verbose_doctor.stdout)
-            self.assertIn("diff_input_mode=native", verbose_doctor.stdout)
-            self.assertIn("validation_mode=native-read-only", verbose_doctor.stdout)
-            self.assertIn("utility_no_edit=prompt-enforced", verbose_doctor.stdout)
+            self.assertNotIn("diff_input_mode=", verbose_doctor.stdout)
+            self.assertNotIn("validation_mode=", verbose_doctor.stdout)
+            self.assertNotIn("utility_no_edit=", verbose_doctor.stdout)
             uninstall = subprocess.run(
                 [sys.executable, "installers/uninstall.py", "--agent", "codex", "--scope", "project", "--target", str(target)],
                 cwd=ROOT, text=True, capture_output=True, check=False,
@@ -1268,61 +1273,6 @@ class HooklessBuildInstallTests(unittest.TestCase):
                     "installed Agent Profile files do not match the validated build",
                     doctor.stdout,
                 )
-
-    def test_doctor_rejects_legacy_host_mode_marker_for_every_host(self) -> None:
-        layouts = {
-            "codex": Path(".codex/agents/main-control-agent.toml"),
-            "claude": Path(".claude/agents/main-control-agent.md"),
-            "copilot": Path(".github/agents/main-control-agent.agent.md"),
-        }
-        legacy = (
-            "Current host modes: diff_input_mode=native; "
-            "validation_mode=native-read-only; utility_no_edit=prompt-enforced."
-        )
-        for agent, relative in layouts.items():
-            with self.subTest(agent=agent), tempfile.TemporaryDirectory() as raw:
-                target = Path(raw) / "project"
-                install = subprocess.run(
-                    [
-                        sys.executable,
-                        "installers/install.py",
-                        "--agent",
-                        agent,
-                        "--scope",
-                        "project",
-                        "--target",
-                        str(target),
-                    ],
-                    cwd=ROOT,
-                    text=True,
-                    capture_output=True,
-                    check=False,
-                )
-                self.assertEqual(0, install.returncode, install.stderr or install.stdout)
-                profile = target / relative
-                profile.write_text(
-                    profile.read_text(encoding="utf-8") + f"\n# {legacy}\n",
-                    encoding="utf-8",
-                )
-
-                doctor = subprocess.run(
-                    [
-                        sys.executable,
-                        "installers/doctor.py",
-                        "--agent",
-                        agent,
-                        "--scope",
-                        "project",
-                        "--target",
-                        str(target),
-                    ],
-                    cwd=ROOT,
-                    text=True,
-                    capture_output=True,
-                    check=False,
-                )
-                self.assertNotEqual(0, doctor.returncode, doctor.stderr or doctor.stdout)
-                self.assertIn("legacy host mode projection is forbidden", doctor.stdout)
 
     def test_doctor_rejects_static_runtime_capability_projection_for_every_profile(self) -> None:
         layouts = {

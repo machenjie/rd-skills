@@ -3,9 +3,9 @@
 Use this contract only for `validation-only/no-edit` or `diff-export/no-edit`.
 The task-agent loads no Professional Skill or Layer 3 guidance, does not use the
 Implementation Handoff, and must not edit, repair, access the network, fetch, or
-contact remotes. Injected capability facts, not a host/tool/command name,
-decide whether the operation is supported. An unsupported required capability
-blocks the utility before operation.
+contact remotes. Runtime capability facts are not an execution preflight. Invoke
+the capsule-named local operation directly. Only an actual Host/tool failure
+blocks the utility, and the blocker preserves the current real Task ID.
 Capture a pre-operation workspace change set with one adjacent ordered check group, exactly
 one allowed operation, then the identical adjacent check group. Preserve user changes. A
 `changed` or `unavailable` check invalidates the Utility
@@ -31,8 +31,8 @@ Exactly `validation-only/no-edit` or `diff-export/no-edit`.
 
 ## No-edit Enforcement
 
-Record the injected no-edit enforcement capability state. This is a behavioral
-contract, not a runtime write block.
+Record the semantic no-edit boundary and the Host sandbox or tool enforcement
+that applies. This is not a runtime capability state.
 
 ## Goal
 
@@ -54,13 +54,15 @@ it exists or mark the check unavailable. A dirty baseline is allowed and must re
 ## Commands Allowed
 
 Allow only capsule-named local/offline non-mutating pre/post checks through the
-workspace state observation capability. `diff-export/no-edit` additionally
-requires an exact change evidence export capability. The host adapter may name
-its native tool or command, but generic control logic must not depend on that
-identifier or spelling. Return output as supplied content or a host-native
+workspace state observation operation. `diff-export/no-edit` additionally runs
+one exact change evidence export operation. Invoke the current Host tool
+directly; do not infer permission from a capability name. Return output as supplied content or a host-native
 artifact, never a new workspace file; do not validate or review.
 For validation, additionally allow only capsule-named
 non-modifying checks; do not repair or review.
+An actual tool/permission/sandbox/required-artifact failure returns
+`EXECUTION_BLOCKED task=<Task ID>; operation=<read|edit|execute>; observed=<actual host/tool failure>`;
+`task=unspecified` is forbidden.
 
 ## Expected Evidence
 

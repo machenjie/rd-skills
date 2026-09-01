@@ -66,9 +66,8 @@ class ControlPromptProjectionTests(unittest.TestCase):
         )
         text = raw.decode("utf-8")
         mutated = text.replace(
-            "`generic_capability_contract` branches JIT-load from "
-            "references/implementation-handoff-template.md.",
-            "Injected Main capability projection decides exact evidence.",
+            "the assigned reviewer can read the delivered current artifact",
+            "the assigned reviewer cannot read the delivered current artifact",
             1,
         )
         self.assertTrue(
