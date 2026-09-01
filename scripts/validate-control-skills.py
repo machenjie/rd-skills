@@ -44,14 +44,11 @@ try:
     _HOST_ENFORCEMENT = json.loads(HOST_ENFORCEMENT_SOURCE.read_text(encoding="utf-8"))
 except (OSError, json.JSONDecodeError):
     _HOST_ENFORCEMENT = {}
-FORBIDDEN_HOST_MODE_BRANCH_LITERALS = tuple(
-    dict.fromkeys(
-        value
-        for values in (_HOST_ENFORCEMENT.get("mode_values") or {}).values()
-        if isinstance(values, list)
-        for value in values
-        if isinstance(value, str)
-    )
+FORBIDDEN_HOST_MODE_BRANCH_LITERALS = (
+    "native-enforced",
+    "sandbox-enforced",
+    "prompt-enforced",
+    "unsupported",
 )
 LEGACY_HOST_MODE_FIELDS = ("diff_inspection", "validation_execution")
 FORBIDDEN_OBSOLETE_MECHANISMS = (
@@ -250,8 +247,21 @@ def _validate_no_host_mode_branches(body: str, errors: list[str]) -> None:
             )
 
 
+def _validate_host_enforcement_status_owner(errors: list[str]) -> None:
+    if (
+        _HOST_ENFORCEMENT.get("schema_version") != 5
+        or tuple(_HOST_ENFORCEMENT.get("status_values") or ())
+        != FORBIDDEN_HOST_MODE_BRANCH_LITERALS
+    ):
+        errors.append(
+            "host-enforcement schema v5 status_values must match the non-empty "
+            "control Skill host-branch exclusion enum"
+        )
+
+
 def main() -> int:
     errors: list[str] = []
+    _validate_host_enforcement_status_owner(errors)
     if not SKILL.is_file():
         errors.append("missing engineering-control-plane/SKILL.md")
         return fail_many("validate-control-skills", errors)

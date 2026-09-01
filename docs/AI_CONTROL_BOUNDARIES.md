@@ -30,7 +30,13 @@ fallback inference. Only a tool-unavailable, permission-denied, sandbox-denied,
 or required-artifact-unavailable result from the actual operation blocks. The
 visible blocker is `EXECUTION_BLOCKED task=<Task ID>;
 operation=<read|edit|execute>; observed=<actual host/tool failure>`. Retry keeps
-the same real Task ID and the complete unchanged Task Contract.
+the same real Task ID and the complete unchanged Task Contract. Before the Host
+call, a pure scope preflight normalizes explicit targets against the workspace
+and Allowed Read/Write Scope, rejects traversal or symlink escape, and invokes
+no Host tool when blocked. Execute checks only explicit write targets; unknown
+side effects remain enforced by the Host sandbox. The actual Host/tool
+invocation event and raw output are the sole failure proof. A static mapping or
+canonical blocker formatter validates syntax only and cannot prove a failure.
 
 Copilot CLI, Copilot VS Code, and Copilot Coding Agent remain independent
 declared Host Surfaces under one compatible delivery family. Their static
@@ -50,10 +56,11 @@ must follow the latest material edit, and implementation review uses the actual
 diff and every changed file. Older-scope evidence cannot authorize closure.
 For supplied-artifact hosts, actual evidence is delivered unified-diff content,
 not a digest, summary, filename, command output, or opaque identifier. For a
-native host, the assigned reviewer must be able to read the delivered current
-reference bound to the assigned reviewer, current generation, exact paths, and
-readable delivered instance. Main verifies the delivered artifact is actually
-readable for this handoff, and Review never exports its own evidence.
+native host, the reference counts only after the Host actually dereferences it
+and binds the exact read content to the assigned reviewer, current generation,
+and exact paths. A `readable` self-report or nonexistent reference cannot
+satisfy the static readiness helper. Main verifies the bound content is
+actually readable for this handoff, and Review never exports its own evidence.
 rd-skills does not persist private runtime ledgers, prompt transcripts, or an
 internal task-state database. The exact artifact and completion flow is owned by
 the [Operating model](OPERATING_MODEL.md).

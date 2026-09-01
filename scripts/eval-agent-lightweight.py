@@ -8,7 +8,6 @@ import copy
 import hashlib
 import json
 import re
-import shlex
 import statistics
 import sys
 from pathlib import Path
@@ -31,9 +30,13 @@ from validation_utils import (
     professional_review_skill_ids,
     reference_paths,
     report_output_paths,
+    exact_change_evidence_accessible,
+    native_change_reference_bound,
     review_input_ready,
-    task_operation_outcome,
+    execution_blocker_errors,
+    task_operation_preflight,
     task_retry_continuity_errors,
+    unified_diff_paths,
 )
 from fixture_capsule_contract import (
     FixtureCapsuleError,
@@ -1471,241 +1474,8 @@ def _classify_semantic_repair_trajectory(
     }, []
 
 
-def _git_diff_header_paths(header: str) -> tuple[str, str] | None:
-    try:
-        fields = shlex.split(header)
-    except ValueError:
-        return None
-    if (
-        len(fields) != 4
-        or fields[:2] != ["diff", "--git"]
-        or not fields[2].startswith("a/")
-        or not fields[3].startswith("b/")
-        or len(fields[2]) <= 2
-        or len(fields[3]) <= 2
-    ):
-        return None
-    return fields[2][2:], fields[3][2:]
-
-
-def _diff_metadata_values(lines: list[str]) -> dict[str, str] | None:
-    patterns = (
-        ("index", r"index [0-9a-f]+\.\.[0-9a-f]+(?: [0-7]{6})?"),
-        ("old-mode", r"old mode [0-7]{6}"),
-        ("new-mode", r"new mode [0-7]{6}"),
-        ("new-file", r"new file mode [0-7]{6}"),
-        ("deleted-file", r"deleted file mode [0-7]{6}"),
-        ("similarity", r"similarity index [0-9]+%"),
-        ("dissimilarity", r"dissimilarity index [0-9]+%"),
-        ("rename-from", r"rename from (.+)"),
-        ("rename-to", r"rename to (.+)"),
-        ("copy-from", r"copy from (.+)"),
-        ("copy-to", r"copy to (.+)"),
-    )
-    values: dict[str, str] = {}
-    for line in lines:
-        matched = False
-        for key, pattern in patterns:
-            match = re.fullmatch(pattern, line)
-            if match is None:
-                continue
-            if key in values:
-                return None
-            values[key] = match.group(1) if match.lastindex else line
-            matched = True
-            break
-        if not matched:
-            return None
-    return values
-
-
-def _diff_metadata_form(
-    lines: list[str],
-    before_path: str,
-    after_path: str,
-    content_kind: str,
-) -> str | None:
-    values = _diff_metadata_values(lines)
-    if values is None:
-        return None
-    keys = set(values)
-    rename_keys = {"rename-from", "rename-to"}
-    copy_keys = {"copy-from", "copy-to"}
-    similarity_keys = {"similarity", "dissimilarity"}
-    if len(keys & similarity_keys) > 1:
-        return None
-
-    if keys & (rename_keys | copy_keys):
-        if keys & rename_keys and keys & copy_keys:
-            return None
-        form = "rename" if keys & rename_keys else "copy"
-        pair = rename_keys if form == "rename" else copy_keys
-        if (
-            before_path == after_path
-            or not pair <= keys
-            or len(keys & similarity_keys) != 1
-            or not keys <= pair | similarity_keys | {"index"}
-            or values[f"{form}-from"] != before_path
-            or values[f"{form}-to"] != after_path
-            or (content_kind == "none" and "index" in keys)
-        ):
-            return None
-        return form
-
-    if before_path != after_path:
-        return None
-    if "new-file" in keys or "deleted-file" in keys:
-        if (
-            content_kind not in {"text", "binary"}
-            or {"new-file", "deleted-file"} <= keys
-        ):
-            return None
-        form = "new" if "new-file" in keys else "delete"
-        marker = "new-file" if form == "new" else "deleted-file"
-        return form if keys <= {marker, "index"} else None
-
-    mode_keys = {"old-mode", "new-mode"}
-    if keys & mode_keys and not mode_keys <= keys:
-        return None
-    if content_kind == "none":
-        return "mode" if keys == mode_keys else None
-    if content_kind not in {"text", "binary"}:
-        return None
-    return "normal" if keys <= {"index", *mode_keys} else None
-
-
-def _valid_unified_hunks(lines: list[str]) -> bool:
-    if not lines:
-        return False
-    header_pattern = re.compile(
-        r"@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(?: .*)?"
-    )
-    index = 0
-    while index < len(lines):
-        match = header_pattern.fullmatch(lines[index])
-        if match is None:
-            return False
-        expected_old = int(match.group(2) or 1)
-        expected_new = int(match.group(4) or 1)
-        old_count = 0
-        new_count = 0
-        content_count = 0
-        change_count = 0
-        index += 1
-        while index < len(lines) and not lines[index].startswith("@@ "):
-            line = lines[index]
-            if line == r"\ No newline at end of file":
-                if content_count == 0:
-                    return False
-            elif not line:
-                return False
-            elif line[0] == " ":
-                old_count += 1
-                new_count += 1
-                content_count += 1
-            elif line[0] == "-":
-                old_count += 1
-                content_count += 1
-                change_count += 1
-            elif line[0] == "+":
-                new_count += 1
-                content_count += 1
-                change_count += 1
-            else:
-                return False
-            index += 1
-        if (
-            content_count == 0
-            or change_count == 0
-            or old_count != expected_old
-            or new_count != expected_new
-        ):
-            return False
-    return True
-
-
 def _unified_diff_paths(payload: object) -> list[str] | None:
-    if not isinstance(payload, str) or not payload.strip():
-        return None
-    section_matches = list(re.finditer(r"^diff --git .+$", payload, flags=re.MULTILINE))
-    if not section_matches or payload[: section_matches[0].start()].strip():
-        return None
-    changed_paths: list[str] = []
-    for section_index, match in enumerate(section_matches):
-        end = (
-            section_matches[section_index + 1].start()
-            if section_index + 1 < len(section_matches)
-            else len(payload)
-        )
-        section_lines = payload[match.start() : end].splitlines()
-        header_paths = _git_diff_header_paths(section_lines[0])
-        if header_paths is None or len(section_lines) == 1:
-            return None
-        before_path, after_path = header_paths
-        body = section_lines[1:]
-        hunk_indexes = [index for index, line in enumerate(body) if line.startswith("@@")]
-        first_hunk = hunk_indexes[0] if hunk_indexes else len(body)
-        file_header_region = body[:first_hunk]
-        old_headers = [
-            index
-            for index, line in enumerate(file_header_region)
-            if line.startswith("--- ")
-        ]
-        new_headers = [
-            index
-            for index, line in enumerate(file_header_region)
-            if line.startswith("+++ ")
-        ]
-        binary_lines = [line for line in body if line.startswith("Binary files ")]
-        if old_headers or new_headers or hunk_indexes:
-            if (
-                len(old_headers) != 1
-                or len(new_headers) != 1
-                or new_headers[0] != old_headers[0] + 1
-                or not hunk_indexes
-                or hunk_indexes[0] != new_headers[0] + 1
-                or binary_lines
-            ):
-                return None
-            form = _diff_metadata_form(
-                body[: old_headers[0]], before_path, after_path, "text"
-            )
-            if form not in {"normal", "new", "delete", "rename", "copy"}:
-                return None
-            expected_old = "/dev/null" if form == "new" else f"a/{before_path}"
-            expected_new = "/dev/null" if form == "delete" else f"b/{after_path}"
-            if (
-                body[old_headers[0]] != f"--- {expected_old}"
-                or body[new_headers[0]] != f"+++ {expected_new}"
-                or not _valid_unified_hunks(body[hunk_indexes[0] :])
-            ):
-                return None
-        else:
-            if binary_lines:
-                if len(binary_lines) != 1:
-                    return None
-                marker_index = body.index(binary_lines[0])
-                form = _diff_metadata_form(
-                    body[:marker_index], before_path, after_path, "binary"
-                )
-                if form not in {"normal", "new", "delete", "rename", "copy"}:
-                    return None
-                expected_old = "/dev/null" if form == "new" else f"a/{before_path}"
-                expected_new = "/dev/null" if form == "delete" else f"b/{after_path}"
-                marker = f"Binary files {expected_old} and {expected_new} differ"
-                if (
-                    binary_lines[0] != marker
-                    or marker_index != len(body) - 1
-                ):
-                    return None
-            else:
-                form = _diff_metadata_form(
-                    body, before_path, after_path, "none"
-                )
-                if form not in {"rename", "copy", "mode"}:
-                    return None
-        changed_paths.append(before_path if form == "delete" else after_path)
-    return changed_paths
+    return unified_diff_paths(payload)
 
 
 def _native_change_reference_bound(
@@ -1714,19 +1484,12 @@ def _native_change_reference_bound(
     current_generation: object,
     assigned_reviewer: str,
 ) -> bool:
-    return (
-        isinstance(artifact, dict)
-        and tuple(artifact) == NATIVE_CHANGE_REFERENCE_FIELDS
-        and isinstance(artifact.get("reference"), str)
-        and re.fullmatch(
-            r"native-change://[a-z0-9][a-z0-9-]*/[A-Za-z0-9][A-Za-z0-9._-]*",
-            artifact["reference"],
-        )
-        is not None
-        and artifact.get("generation") == current_generation
-        and artifact.get("reviewer") == assigned_reviewer
-        and artifact.get("changed_paths") == changed_paths
-        and artifact.get("readable") is True
+    return native_change_reference_bound(
+        artifact,
+        changed_paths,
+        current_generation,
+        assigned_reviewer,
+        native_fields=NATIVE_CHANGE_REFERENCE_FIELDS,
     )
 
 
@@ -1739,25 +1502,16 @@ def _exact_change_evidence_accessible(
     current_generation: object = None,
     assigned_reviewer: str = "review-agent",
 ) -> bool:
-    if (
-        not isinstance(accessibility, dict)
-        or tuple(accessibility) != REVIEWER_ARTIFACT_ACCESSIBILITY_FIELDS
-        or accessibility.get("reviewer") != assigned_reviewer
-        or accessibility.get("generation") != current_generation
-        or accessibility.get("changed_paths") != changed_paths
-        or accessibility.get("readable") is not True
-    ):
-        return False
-    if kind == "reviewer-accessible-native-reference":
-        return _native_change_reference_bound(
-            artifact,
-            changed_paths,
-            current_generation,
-            assigned_reviewer,
-        )
-    return (
-        kind in REVIEW_INPUT_EXACT_EVIDENCE_KINDS
-        and _unified_diff_paths(artifact) == changed_paths
+    return exact_change_evidence_accessible(
+        kind,
+        artifact,
+        changed_paths,
+        accessibility,
+        current_generation=current_generation,
+        assigned_reviewer=assigned_reviewer,
+        exact_kinds=REVIEW_INPUT_EXACT_EVIDENCE_KINDS,
+        accessibility_fields=REVIEWER_ARTIFACT_ACCESSIBILITY_FIELDS,
+        native_fields=NATIVE_CHANGE_REFERENCE_FIELDS,
     )
 
 
@@ -6142,9 +5896,8 @@ def _task_focus_case_errors(case: object) -> list[str]:
             "semantic_role",
             "operation",
             "target",
-            "result",
-            "failure_class",
-            "observed",
+            "write_targets",
+            "simulated_result",
             "original_contract",
             "retry_contract",
         ) or tuple(decision) != (
@@ -6176,21 +5929,58 @@ def _task_focus_case_errors(case: object) -> list[str]:
         if retry_errors:
             reject("retry-contract", "; ".join(retry_errors))
         try:
-            outcome = task_operation_outcome(
-                task_id=inputs["task_id"],
+            preflight = task_operation_preflight(
+                task_contract=original,
                 operation=inputs["operation"],
                 target=inputs["target"],
-                result=inputs["result"],
-                failure_class=inputs["failure_class"],
-                observed=inputs["observed"],
+                workspace_root=ROOT,
+                write_targets=inputs["write_targets"],
             )
         except ValueError as exc:
             reject("execution-boundary", str(exc))
             return errors
-        expected_blocker = outcome.get("blocker")
-        if decision["status"] != outcome["status"] or decision["blocker"] != expected_blocker:
-            reject("execution-outcome", "only an observed Host/tool failure may block execution")
-        expected_edits = 1 if outcome["status"] == "continue" and inputs["operation"] == "edit" else 0
+        simulated = inputs["simulated_result"]
+        if (
+            not isinstance(simulated, dict)
+            or tuple(simulated) != ("status", "observed")
+            or simulated["status"] not in {"succeeded", "failed"}
+            or (
+                simulated["status"] == "succeeded"
+                and simulated["observed"] is not None
+            )
+            or (
+                simulated["status"] == "failed"
+                and (
+                    not isinstance(simulated["observed"], str)
+                    or not simulated["observed"].strip()
+                )
+            )
+        ):
+            reject("simulated-result-shape", "simulated result fields are not canonical")
+            return errors
+        if preflight["status"] == "blocked":
+            expected_status = "blocked"
+            expected_blocker = preflight["blocker"]
+        elif simulated["status"] == "succeeded":
+            expected_status = "continue"
+            expected_blocker = None
+        else:
+            expected_status = "blocked"
+            expected_blocker = decision["blocker"]
+            blocker_errors = execution_blocker_errors(
+                expected_blocker,
+                current_task_id=inputs["task_id"],
+                expected_operation=inputs["operation"],
+            )
+            if blocker_errors:
+                reject("execution-blocker-syntax", "; ".join(blocker_errors))
+            reject(
+                "untrusted-operation-failure",
+                "static fixture result cannot prove an actual Host/tool failure",
+            )
+        if decision["status"] != expected_status or decision["blocker"] != expected_blocker:
+            reject("execution-outcome", "preflight scope or successful execution outcome is inconsistent")
+        expected_edits = 1 if expected_status == "continue" and inputs["operation"] == "edit" else 0
         if decision["edit_count"] != expected_edits:
             reject("execution-effect", "successful edit performs one edit; all other outcomes perform none")
         expected_retries = 0 if retry is None else 1

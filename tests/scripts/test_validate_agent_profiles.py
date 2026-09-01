@@ -213,7 +213,7 @@ class AgentProfileReadabilityTests(unittest.TestCase):
             "- Never reload references/main-control-agent.md.\n"
             "- Dispatch only/no target-code access.\n"
             "- No worker: business acceptance/placement, Brief/DAG authoring, implementation review.\n"
-            "- Semantic Role, Task Contract, and Host tools/sandbox own direct execution; only actual failure blocks.\n"
+            "- Semantic Role, Task Contract, and Host tools/sandbox own direct execution; actual failure requires the Host/tool invocation event and raw output.\n"
             "- Retry preserves the same real Task ID and complete unchanged Task Contract with route/Level/review/handoff bindings; Main never implements; task=unspecified is forbidden.\n"
             "- Forward reviewer-accessible exact evidence."
         )
@@ -583,7 +583,8 @@ class AgentProfileReadabilityTests(unittest.TestCase):
     def test_main_profile_rejects_prompt_owned_contract_copies(self) -> None:
         anchor = (
             "Semantic Role, Task Contract, and Host tools/sandbox own direct "
-            "execution; only actual failure blocks."
+            "execution; actual failure requires the Host/tool invocation event "
+            "and raw output."
         )
         copied_rules = (
             "Task Contract v2 starts assignments.",

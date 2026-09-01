@@ -97,9 +97,13 @@ class BuildSafetyTests(unittest.TestCase):
         ):
             self.assertFalse(hasattr(BUILD, obsolete), obsolete)
 
-    def test_review_ready_requires_current_complete_native_handoff(self) -> None:
+    def test_review_ready_fails_closed_for_self_reported_native_handoff(self) -> None:
         handoff = self._current_handoff("reviewer-accessible-native-reference")
-        self.assertTrue(VALIDATION.review_input_ready(handoff))
+        self.assertFalse(VALIDATION.review_input_ready(handoff))
+        handoff["exact_change_evidence"]["artifact"]["reference"] = (
+            "native-change://codex/nonexistent-worktree"
+        )
+        self.assertFalse(VALIDATION.review_input_ready(handoff))
 
     def test_review_ready_requires_current_complete_supplied_handoff(self) -> None:
         handoff = self._current_handoff("exact-change-content")
@@ -138,7 +142,7 @@ class BuildSafetyTests(unittest.TestCase):
         )
         self.assertTrue(
             VALIDATION.review_input_ready(
-                self._current_handoff("reviewer-accessible-native-reference"),
+                self._current_handoff("exact-change-content"),
                 core=core,
             )
         )

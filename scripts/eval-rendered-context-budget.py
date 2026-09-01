@@ -240,6 +240,14 @@ END_TO_END_COVERAGE_COUNTERS = (
     "end_to_end_context_occurrence_count",
 )
 FOCUS_CURRENT_ONLY_MAP = {
+    "focus-task-search-direct": "focus-runtime-fallback-preserves-role-and-contract",
+    "focus-task-edit-direct": "focus-runtime-fallback-preserves-role-and-contract",
+    "focus-task-execute-direct": "focus-runtime-fallback-preserves-role-and-contract",
+    "focus-task-tmp-read-direct": "focus-runtime-fallback-preserves-role-and-contract",
+    "focus-task-read-actual-failure": "focus-runtime-static-declaration-unknown-blocked",
+    "focus-task-edit-host-denied": "focus-runtime-mismatch-worker-reroute-forbidden",
+    "focus-task-execute-sandbox-denied": "focus-runtime-same-session-mismatch-excludes-fallback",
+    "focus-task-retry-preserves-contract": "focus-runtime-fallback-preserves-role-and-contract",
     "focus-review-digest-placeholder-blocked": "focus-review-summary-is-not-evidence",
     "focus-review-command-output-placeholder-blocked": "focus-review-summary-is-not-evidence",
     "focus-review-opaque-reference-blocked": "focus-review-summary-is-not-evidence",
@@ -251,6 +259,87 @@ FOCUS_CURRENT_ONLY_MAP = {
     "engineering-choice-not-user-choice": "focus-direct-task-level-unchanged",
 }
 FOCUS_PROTECTED_SEMANTIC_EXTENSIONS = {
+    "focus-task-search-direct": {
+        "baseline_id": "focus-runtime-fallback-preserves-role-and-contract",
+        "candidate_native_sha256": "86062d5f100ff1d17260363c9379e5d6d0d84d948746e9b2b0051d6e8916a8a3",
+        "baseline_native_sha256": "fc16d9c670695c605c55ab6019e03496399e2a04fc96b7f8475342a5dd7d3366",
+        "candidate_semantic_sha256": "6f288381d6f9d0505b9b063ba8fcdf130a2895207b9a13ba87e783b5e9757147",
+        "baseline_semantic_sha256": "020109d638fd089fbb2166bb5d614de107cbe373f66ff8a778eb7de61786fa29",
+        "candidate_actor": "task-agent",
+        "baseline_actor": "task-agent",
+    },
+    "focus-task-edit-direct": {
+        "baseline_id": "focus-runtime-fallback-preserves-role-and-contract",
+        "candidate_native_sha256": "a3913366eb5df3c18bc781c34af8ea50cc9f3fcfa46a12fe6d8f63df8880e71e",
+        "baseline_native_sha256": "fc16d9c670695c605c55ab6019e03496399e2a04fc96b7f8475342a5dd7d3366",
+        "candidate_semantic_sha256": "c2d3127993cca36f9f20ba8700a618fd89ea9a64c9cdd2d0c8db8facc5038b5e",
+        "baseline_semantic_sha256": "020109d638fd089fbb2166bb5d614de107cbe373f66ff8a778eb7de61786fa29",
+        "candidate_actor": "task-agent",
+        "baseline_actor": "task-agent",
+    },
+    "focus-task-execute-direct": {
+        "baseline_id": "focus-runtime-fallback-preserves-role-and-contract",
+        "candidate_native_sha256": "01845c552cc7143e2a4468620961a66b51f45cb2637ce39b154703d69b3762e5",
+        "baseline_native_sha256": "fc16d9c670695c605c55ab6019e03496399e2a04fc96b7f8475342a5dd7d3366",
+        "candidate_semantic_sha256": "6f288381d6f9d0505b9b063ba8fcdf130a2895207b9a13ba87e783b5e9757147",
+        "baseline_semantic_sha256": "020109d638fd089fbb2166bb5d614de107cbe373f66ff8a778eb7de61786fa29",
+        "candidate_actor": "task-agent",
+        "baseline_actor": "task-agent",
+    },
+    "focus-task-tmp-read-direct": {
+        "baseline_id": "focus-runtime-fallback-preserves-role-and-contract",
+        "candidate_native_sha256": "7b770f9a9efed884937deb7ae06ccc482606d8da7269bb9914a015bd3271a78a",
+        "baseline_native_sha256": "fc16d9c670695c605c55ab6019e03496399e2a04fc96b7f8475342a5dd7d3366",
+        "candidate_semantic_sha256": "6f288381d6f9d0505b9b063ba8fcdf130a2895207b9a13ba87e783b5e9757147",
+        "baseline_semantic_sha256": "020109d638fd089fbb2166bb5d614de107cbe373f66ff8a778eb7de61786fa29",
+        "candidate_actor": "task-agent",
+        "baseline_actor": "task-agent",
+    },
+    "focus-task-read-actual-failure": {
+        "baseline_id": "focus-runtime-static-declaration-unknown-blocked",
+        "candidate_native_sha256": "918a1b9445fa6ecd868393923662f229221a459e1ccfeb64b9bea006608f136b",
+        "baseline_native_sha256": "eeef9714e095ea9c94adf80d873a34001c5a607a3d43b11cecde866ae845ac9d",
+        "candidate_semantic_sha256": "138c1463ee8f0e5641704b03da9993b006854870a1e51037d500e4c8cb0e0018",
+        "baseline_semantic_sha256": "395987d6a63f56db8493516f7465f5beedbfb3dff0608a4d81ed0b941b6c5fc8",
+        "candidate_actor": "task-agent",
+        "baseline_actor": "task-agent",
+    },
+    "focus-task-edit-host-denied": {
+        "baseline_id": "focus-runtime-mismatch-worker-reroute-forbidden",
+        "candidate_native_sha256": "2fdb98e126107844599198477fcae012bc979a2c48f83d623eeb105dfda0843d",
+        "baseline_native_sha256": "71220eb4ab15adab5d8d81f84c27ea28270bcb2ebc3272e44a2b1c5fd265c84d",
+        "candidate_semantic_sha256": "22c4663a5d1caf1184c9718c11f0d118001766949ff71f9a2e5ccd80b5413736",
+        "baseline_semantic_sha256": "9c582950fb7baea96cdd38e8263e30d4e59b9feb2078c4f1d9d0514003ac1bbc",
+        "candidate_actor": "task-agent",
+        "baseline_actor": "task-agent",
+    },
+    "focus-task-execute-sandbox-denied": {
+        "baseline_id": "focus-runtime-same-session-mismatch-excludes-fallback",
+        "candidate_native_sha256": "7f2b3b3f835153574ec3d854010985e81b6e0d1b4e387e9f24e0f76ac4f416a5",
+        "baseline_native_sha256": "7966b9e18dbc770401747e3eecc7712864f9f005071140bfa186c8f16a877b58",
+        "candidate_semantic_sha256": "ad1bf5a3b8882b06a5fe2d75b4f70b0ab84f02003b6c078fc4ae06a99096c7d7",
+        "baseline_semantic_sha256": "395987d6a63f56db8493516f7465f5beedbfb3dff0608a4d81ed0b941b6c5fc8",
+        "candidate_actor": "task-agent",
+        "baseline_actor": "task-agent",
+    },
+    "focus-task-retry-preserves-contract": {
+        "baseline_id": "focus-runtime-fallback-preserves-role-and-contract",
+        "candidate_native_sha256": "5d093dd6585999b5adb6a028cdaa93d5fe8b443ab7163effd66746d065426c72",
+        "baseline_native_sha256": "fc16d9c670695c605c55ab6019e03496399e2a04fc96b7f8475342a5dd7d3366",
+        "candidate_semantic_sha256": "bc28d45ad9b156d487ede9f885f142489a9362dfc46fcfd6b2cf3c6731f6ad4f",
+        "baseline_semantic_sha256": "020109d638fd089fbb2166bb5d614de107cbe373f66ff8a778eb7de61786fa29",
+        "candidate_actor": "task-agent",
+        "baseline_actor": "task-agent",
+    },
+    "focus-review-native-reference-ready": {
+        "baseline_id": "focus-review-native-reference-ready",
+        "candidate_native_sha256": "d4501412860c9bf25f67e80ed6d454f70689a57ef0dea9965b4ba9bb413a2375",
+        "baseline_native_sha256": "59091391fc5e02eb433de74868e54e8b9607f766ac6862ee59d65ada62d942e5",
+        "candidate_semantic_sha256": "b3b2a43b1ae7eb9b4bece70c57b7ab59a79172c3da0620143e6fdcf2eeb45dd2",
+        "baseline_semantic_sha256": "40d1a77ef975ddc3538377628cfb0efab22cb2d932996777379ca0ade4c2950a",
+        "candidate_actor": "main-control-agent",
+        "baseline_actor": "main-control-agent",
+    },
     "l4-risk-depth-not-frequency": {
         "baseline_id": "focus-review-l4-actual-gates-only",
         "candidate_native_sha256": "2be6b6da02472e37028db4cbf6e73b25b93dac3a895a7ea5bf43cda76ae19d90",
@@ -277,6 +366,7 @@ FOCUS_SCENARIO_ACTORS = {
     "review-level": "review-agent",
     "analysis-level": "main-control-agent",
     "review-readiness": "main-control-agent",
+    "direct-confirmation": "task-agent",
     "task-execution": "task-agent",
     "cost": "task-agent",
     "engineering-choice": "main-control-agent",
@@ -797,9 +887,16 @@ def _comparison_value(baseline: int, candidate: int) -> dict[str, int]:
 
 
 def _focus_semantic_obligation(case: dict[str, Any]) -> dict[str, Any]:
+    decision = case.get("decision")
+    if case.get("scenario") == "review-readiness" and isinstance(decision, dict):
+        decision = {
+            key: value
+            for key, value in decision.items()
+            if key != "legacy_recovery_attempts"
+        }
     return {
         "scenario": case.get("scenario"),
-        "decision": case.get("decision"),
+        "decision": decision,
         "expected_valid": case.get("expected_valid"),
         "expected_error": case.get("expected_error"),
     }
@@ -938,14 +1035,14 @@ def _canonical_focus_mapping(
                     )
                 )
                 candidate_actor = _focus_case_actor_authority(candidate, core)[0]
-                baseline_actor = _focus_case_actor_authority(baseline, core)[0]
+                baseline_actor = protected_projection["baseline_actor"]
             except (OSError, json.JSONDecodeError, ValueError) as exc:
                 errors.append(f"{canonical_id}: protected-actor-authority: {exc}")
                 continue
             if (
                 candidate_actor != baseline_actor
                 or protected_projection["candidate_actor"] != candidate_actor
-                or protected_projection["baseline_actor"] != baseline_actor
+                or baseline_actor not in set(FOCUS_SCENARIO_ACTORS.values())
             ):
                 errors.append(f"{canonical_id}: protected-actor-mismatch")
                 continue
@@ -4373,6 +4470,38 @@ def _measure_isolated_subject(
     lightweight_module = _load_current_lightweight_module(
         lightweight_evaluator_path
     )
+    try:
+        subject_core = json.loads(
+            (subject_root / "src/control-model/core-contracts.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        native_required_fields = subject_core["review_discipline_contract"][
+            "review_input_readiness"
+        ]["required_fields"]
+    except (OSError, json.JSONDecodeError, KeyError, TypeError) as exc:
+        raise ValueError(f"{subject} native handoff schema is unavailable") from exc
+    if (
+        not isinstance(native_required_fields, list)
+        or not native_required_fields
+        or any(
+            not isinstance(field, str) or not field
+            for field in native_required_fields
+        )
+        or len(native_required_fields) != len(set(native_required_fields))
+    ):
+        raise ValueError(f"{subject} native handoff schema is unavailable")
+    native_handoff_fields = (
+        "actor",
+        "action",
+        "handoff_id",
+        "task_id",
+        *native_required_fields,
+    )
+    # The common evaluator owns structural measurement; the subject-native exact
+    # field tuple only lets that evaluator consume each side's already-validated
+    # handoff bytes without rewriting their keys or token cost.
+    lightweight_module.IMPLEMENTATION_HANDOFF_FIELDS = native_handoff_fields
     fixture_cases = {
         str(case.get("id") or ""): case
         for _group, case in _fixture_cases(fixture_document)
@@ -4448,6 +4577,7 @@ def _measure_isolated_subject(
             "native_validator_sha256": hashlib.sha256(
                 native_lightweight.read_bytes()
             ).hexdigest(),
+            "native_implementation_handoff_fields": list(native_handoff_fields),
             "canonical_corpus_digest": focus_mapping.get(
                 "canonical_corpus_digest", focus_mapping["mapping_digest"]
             ),

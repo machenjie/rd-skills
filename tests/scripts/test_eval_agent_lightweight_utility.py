@@ -2020,12 +2020,19 @@ class LightweightUtilityContractTests(unittest.TestCase):
             "focus-task-search-direct",
             "focus-task-execute-direct",
             "focus-task-tmp-read-direct",
-            "focus-task-read-actual-failure",
-            "focus-task-edit-host-denied",
-            "focus-task-execute-sandbox-denied",
             "focus-task-retry-preserves-contract",
         ):
             self.assertEqual([], EVAL._task_focus_case_errors(cases[case_id]))
+        for case_id in (
+            "focus-task-read-actual-failure",
+            "focus-task-edit-host-denied",
+            "focus-task-execute-sandbox-denied",
+        ):
+            errors = EVAL._task_focus_case_errors(cases[case_id])
+            self.assertTrue(
+                any("[untrusted-operation-failure]" in error for error in errors),
+                errors,
+            )
         retry = cases["focus-task-retry-preserves-contract"]
         self.assertEqual(
             retry["inputs"]["original_contract"],
@@ -2039,6 +2046,69 @@ class LightweightUtilityContractTests(unittest.TestCase):
                 for error in EVAL._task_focus_case_errors(changed_retry)
             )
         )
+
+    def test_task_execution_fixture_preflights_scope_and_rejects_static_failure_proof(self) -> None:
+        edit = next(
+            copy.deepcopy(case)
+            for case in self.task_focus_cases
+            if case["id"] == "focus-task-edit-direct"
+        )
+        edit["inputs"]["target"] = "src/outside.py"
+        edit["decision"] = {
+            "status": "blocked",
+            "blocker": (
+                "TASK_CONTRACT_BLOCKED task=task-execution-boundary; "
+                "operation=edit; target=src/outside.py; "
+                "observed=outside Allowed Write Scope"
+            ),
+            "edit_count": 0,
+            "retry_dispatches": 0,
+        }
+        self.assertEqual([], EVAL._task_focus_case_errors(edit))
+
+        execute = next(
+            copy.deepcopy(case)
+            for case in self.task_focus_cases
+            if case["id"] == "focus-task-execute-direct"
+        )
+        execute["inputs"]["write_targets"] = ["src/generated.py"]
+        execute["decision"] = {
+            "status": "blocked",
+            "blocker": (
+                "TASK_CONTRACT_BLOCKED task=task-execution-boundary; "
+                "operation=execute; target=src/generated.py; "
+                "observed=outside Allowed Write Scope"
+            ),
+            "edit_count": 0,
+            "retry_dispatches": 0,
+        }
+        self.assertEqual([], EVAL._task_focus_case_errors(execute))
+
+        forged = copy.deepcopy(
+            next(
+                case
+                for case in self.task_focus_cases
+                if case["id"] == "focus-task-edit-host-denied"
+            )
+        )
+        errors = EVAL._task_focus_case_errors(forged)
+        self.assertTrue(
+            any("static fixture result cannot prove" in error for error in errors),
+            errors,
+        )
+
+        success_with_blocker = copy.deepcopy(edit)
+        success_with_blocker["inputs"]["target"] = "src/owner.py"
+        success_with_blocker["decision"] = {
+            "status": "blocked",
+            "blocker": (
+                "EXECUTION_BLOCKED task=task-execution-boundary; operation=edit; "
+                "observed=permission denied by Host"
+            ),
+            "edit_count": 0,
+            "retry_dispatches": 0,
+        }
+        self.assertTrue(EVAL._task_focus_case_errors(success_with_blocker))
 
     def test_direct_confirmation_requires_complete_bounded_proof(self) -> None:
         direct = next(
@@ -4485,16 +4555,13 @@ class LightweightUtilityContractTests(unittest.TestCase):
             "focus-rejects-l4-default-prereview": "L4 does not default to pre-implementation review",
             "focus-rejects-stale-repair-evidence": "fresh validation, latest actual diff, and fresh independent review",
             "focus-rejects-unrelated-repair-file": "revert the unrelated changed file",
-            "focus-task-read-actual-failure": "",
+            "focus-task-read-actual-failure": "static fixture result cannot prove",
         }
         by_id = {case["id"]: case for case in self.task_focus_cases}
         for case_id, message in expected.items():
             with self.subTest(case=case_id):
                 errors = EVAL._task_focus_case_errors(by_id[case_id])
-                if message:
-                    self.assertTrue(any(message in error for error in errors), errors)
-                else:
-                    self.assertEqual([], errors)
+                self.assertTrue(any(message in error for error in errors), errors)
 
     def test_analysis_level_review_readiness_and_task_execution_cases_are_covered(self) -> None:
         results, errors = EVAL._task_focus_fixture_results(self.task_focus_cases)
@@ -4648,7 +4715,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
         }
         self.assertEqual([], EVAL._task_focus_case_errors(case))
 
-    def test_native_change_reference_requires_current_assigned_reviewer_binding(self) -> None:
+    def test_native_change_reference_self_report_always_fails_closed(self) -> None:
         base = copy.deepcopy(
             next(
                 item

@@ -5,7 +5,9 @@ The task-agent loads no Professional Skill or Layer 3 guidance, does not use the
 Implementation Handoff, and must not edit, repair, access the network, fetch, or
 contact remotes. Runtime capability facts are not an execution preflight. Invoke
 the capsule-named local operation directly. Only an actual Host/tool failure
-blocks the utility, and the blocker preserves the current real Task ID.
+blocks the utility, and the blocker preserves the current real Task ID. The
+Host/tool invocation event and raw output are the failure proof; static mapping
+or blocker formatting establishes syntax only.
 Capture a pre-operation workspace change set with one adjacent ordered check group, exactly
 one allowed operation, then the identical adjacent check group. Preserve user changes. A
 `changed` or `unavailable` check invalidates the Utility
@@ -62,6 +64,7 @@ For validation, additionally allow only capsule-named
 non-modifying checks; do not repair or review.
 An actual tool/permission/sandbox/required-artifact failure returns
 `EXECUTION_BLOCKED task=<Task ID>; operation=<read|edit|execute>; observed=<actual host/tool failure>`;
+the Host/tool invocation event and raw output are the sole proof, and
 `task=unspecified` is forbidden.
 
 ## Expected Evidence

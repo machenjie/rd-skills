@@ -119,7 +119,7 @@ class HooklessArchitectureTests(unittest.TestCase):
             "strong owner candidate",
             "read-first confirmation",
             "engineering-change-analysis",
-            "synchronous/unknown capability",
+            "actual tool/permission/sandbox/required-artifact failure",
             "actual diff/every changed file/validation results",
             "related work uses combined final-diff review",
             "preparation loop breaker",
@@ -229,6 +229,11 @@ class HooklessArchitectureTests(unittest.TestCase):
         )
 
     def test_control_skill_rejects_raw_host_branch_value_mutations(self) -> None:
+        self.assertEqual(
+            tuple(CONTROL_SKILL_VALIDATOR._HOST_ENFORCEMENT["status_values"]),
+            CONTROL_SKILL_VALIDATOR.FORBIDDEN_HOST_MODE_BRANCH_LITERALS,
+        )
+        self.assertTrue(CONTROL_SKILL_VALIDATOR.FORBIDDEN_HOST_MODE_BRANCH_LITERALS)
         source = CONTROL_SKILL_VALIDATOR.SKILL.read_text(encoding="utf-8")
         for literal in CONTROL_SKILL_VALIDATOR.FORBIDDEN_HOST_MODE_BRANCH_LITERALS:
             with self.subTest(literal=literal):
@@ -244,10 +249,10 @@ class HooklessArchitectureTests(unittest.TestCase):
                 )
 
     def test_control_skill_host_branch_gate_is_markdown_independent(self) -> None:
-        for rendered in ("native-read-only", "`native-read-only`"):
+        for rendered in ("native-enforced", "`native-enforced`"):
             errors: list[str] = []
             CONTROL_SKILL_VALIDATOR._validate_no_host_mode_branches(
-                f"validation_mode={rendered}",
+                f"tool_allowlist={rendered}",
                 errors,
             )
             self.assertTrue(errors, rendered)

@@ -8,10 +8,12 @@ import hashlib
 import io
 import subprocess
 import re
+import shlex
 import sys
 import json
 import tokenize
 import unicodedata
+from fnmatch import fnmatchcase
 from functools import lru_cache
 from itertools import combinations
 from pathlib import Path
@@ -1352,7 +1354,7 @@ def prompt_projection_block(
         lines = [
             begin,
             "Before review-agent dispatch, Review Input Ready=latest changed paths+post-latest-edit validation+fixed scope.",
-            "Exact delivered unified diff or current reviewer-readable native reference is also required; the assigned reviewer can read the delivered current artifact. Forward evidence unchanged; never send Review to export it.",
+            "Exact unified diff content=ready path. Native reference needs Host dereference+exact read-content binding; self-report/nonexistent fails closed. Forward evidence unchanged; never send Review to export it.",
             "Missing=>review dispatch=0; Review before Task before Review is forbidden.",
             "references/implementation-handoff-template.md JIT-owns Ledger State/currentness, freshness, artifact readability, and review proof. Latest material edit invalidates validation/evidence; Claims: "
             + proof["latest_material_edit_claim"]
@@ -4995,8 +4997,9 @@ def validate_core_contracts(
                 "actual-unified-diff-content-not-path-label-or-opaque-reference"
             ),
             "native_evidence_rule": (
-                "structured-current-reference-binds-assigned-reviewer-generation-"
-                "changed-paths-and-readability"
+                "host-dereferenced-current-reference-with-exact-content-binding-"
+                "to-assigned-reviewer-generation-and-changed-paths; static-helper-"
+                "without-resolver-fails-closed"
             ),
             "native_evidence_fields": [
                 "reference",
@@ -5012,11 +5015,13 @@ def validate_core_contracts(
                 "readable",
             ],
             "delivery_rule": (
-                "main-forwards-exact-payload-or-reference-without-summary-or-regeneration"
+                "main-forwards-exact-payload-without-summary-or-regeneration; "
+                "native-reference-needs-host-dereference-read-receipt-and-exact-"
+                "content-binding"
             ),
             "accessibility_rule": (
                 "assigned-reviewer-can-read-delivered-exact-evidence-for-current-"
-                "generation-and-changed-paths"
+                "generation-and-changed-paths; readable-self-report-is-insufficient"
             ),
             "normal_flow": "same-implementation-handoff-before-review",
             "missing_field_outcome": "blocked-before-review-dispatch",
@@ -7739,6 +7744,38 @@ def validate_core_contracts(
                 "sandbox-denied",
                 "required-artifact-unavailable",
             ],
+            "scope_preflight": {
+                "timing": (
+                    "before-host-tool-invocation-and-before-result-processing"
+                ),
+                "workspace_root": "explicit-caller-owned-path",
+                "read_and_search": "Allowed Read Scope",
+                "edit_and_execute_write_targets": "Allowed Write Scope",
+                "path_normalization": (
+                    "resolve-workspace-relative-and-absolute-targets-before-glob-match"
+                ),
+                "glob_matching": (
+                    "path-segment-aware; star-question-and-character-classes-"
+                    "never-cross-slash; standalone-double-star-matches-zero-or-more-"
+                    "directory-segments; src/**/*.py-matches-src/file.py-and-src/"
+                    "nested/file.py"
+                ),
+                "unsafe_paths": (
+                    "reject-parent-traversal-relative-or-absolute-escape-and-"
+                    "existing-symlink-escape"
+                ),
+                "absolute_inputs": (
+                    "allowed-only-when-explicitly-listed-after-normalization"
+                ),
+                "execute_write_targets": (
+                    "explicit-only-unknown-side-effects-remain-host-sandbox-proof-limit"
+                ),
+                "out_of_scope_format": (
+                    "TASK_CONTRACT_BLOCKED task=<Task ID>; "
+                    "operation=<read|search|edit|execute>; target=<target>; "
+                    "observed=outside <Allowed Read Scope|Allowed Write Scope>"
+                ),
+            },
             "blocker_operations": ["read", "edit", "execute"],
             "blocker_format": (
                 "EXECUTION_BLOCKED task=<Task ID>; "
@@ -7746,6 +7783,13 @@ def validate_core_contracts(
             ),
             "blocker_task_id": "current-nonempty-task-id-not-unspecified",
             "blocker_observation": "nonempty-actual-host-tool-failure",
+            "failure_proof_owner": (
+                "actual-host-tool-invocation-event-and-raw-output"
+            ),
+            "static_blocker_helpers": (
+                "syntax-identity-and-field-consistency-only-never-actual-"
+                "failure-proof-or-block-authority"
+            ),
             "forbidden_blocker_inputs": [
                 "missing-capability-proof",
                 "unknown-capability",
@@ -9710,46 +9754,190 @@ def _valid_current_task_id(value: object) -> bool:
     )
 
 
-def task_operation_outcome(
+def _complete_task_contract_errors(value: object) -> list[str]:
+    fields = tuple(TASK_CONTRACT_MODEL["fields"])
+    if not isinstance(value, dict) or tuple(value) != fields:
+        return ["operation requires the complete current Task Contract"]
+    if not _valid_current_task_id(value.get("Task ID")):
+        return ["Task ID must be current, non-empty, and not unspecified"]
+    errors: list[str] = []
+    for field in ("Allowed Read Scope", "Allowed Write Scope"):
+        scope = value.get(field)
+        if (
+            not isinstance(scope, list)
+            or not scope
+            or len(scope) != len(set(scope))
+            or not all(isinstance(item, str) and bool(item.strip()) for item in scope)
+        ):
+            errors.append(f"{field} must be a non-empty unique string list")
+    return errors
+
+
+_TASK_PATH_GLOB_CHARS = frozenset("*?[")
+
+
+def _path_is_within(path: Path, parent: Path) -> bool:
+    try:
+        path.relative_to(parent)
+    except ValueError:
+        return False
+    return True
+
+
+def _normalized_task_path(value: object, workspace_root: Path) -> str:
+    """Normalize one scoped path/glob and reject lexical or symlink escape."""
+
+    if not isinstance(value, str) or not value.strip() or "\x00" in value:
+        raise ValueError("scoped path must be a non-empty string")
+    raw = value.strip()
+    candidate = Path(raw)
+    if ".." in candidate.parts:
+        raise ValueError("parent traversal is forbidden")
+    parts = candidate.parts
+    glob_index = next(
+        (
+            index
+            for index, part in enumerate(parts)
+            if any(marker in part for marker in _TASK_PATH_GLOB_CHARS)
+        ),
+        len(parts),
+    )
+    prefix = Path(*parts[:glob_index]) if glob_index else Path(".")
+    lexical_prefix = prefix if prefix.is_absolute() else workspace_root / prefix
+    resolved_prefix = lexical_prefix.resolve(strict=False)
+    lexical_inside_workspace = _path_is_within(lexical_prefix, workspace_root)
+    if (not candidate.is_absolute() or lexical_inside_workspace) and not _path_is_within(
+        resolved_prefix, workspace_root
+    ):
+        raise ValueError("relative or existing symlink escape is forbidden")
+    remainder = parts[glob_index:]
+    return resolved_prefix.joinpath(*remainder).as_posix()
+
+
+def _target_in_task_scope(
+    target: object,
+    scope: list[str],
+    workspace_root: Path,
+) -> bool:
+    try:
+        candidate = _normalized_task_path(target, workspace_root)
+        normalized_scope = [
+            _normalized_task_path(allowed, workspace_root) for allowed in scope
+        ]
+    except ValueError:
+        return False
+    return any(
+        _task_path_glob_matches(candidate, allowed) for allowed in normalized_scope
+    )
+
+
+def _task_path_glob_matches(candidate: str, pattern: str) -> bool:
+    """Match normalized paths without letting segment globs consume ``/``.
+
+    A standalone ``**`` segment matches zero or more complete path segments.
+    Other glob syntax is delegated to ``fnmatchcase`` one segment at a time.
+    """
+
+    candidate_parts = candidate.split("/")
+    pattern_parts = pattern.split("/")
+
+    def match(candidate_index: int, pattern_index: int) -> bool:
+        while pattern_index < len(pattern_parts):
+            pattern_part = pattern_parts[pattern_index]
+            if pattern_part == "**":
+                if pattern_index + 1 == len(pattern_parts):
+                    return True
+                return any(
+                    match(next_candidate, pattern_index + 1)
+                    for next_candidate in range(
+                        candidate_index, len(candidate_parts) + 1
+                    )
+                )
+            if candidate_index >= len(candidate_parts) or not fnmatchcase(
+                candidate_parts[candidate_index], pattern_part
+            ):
+                return False
+            candidate_index += 1
+            pattern_index += 1
+        return candidate_index == len(candidate_parts)
+
+    return match(0, 0)
+
+
+def task_operation_preflight(
     *,
-    task_id: str,
+    task_contract: dict[str, Any],
     operation: str,
     target: str,
-    result: str,
-    failure_class: str | None = None,
-    observed: str | None = None,
-) -> dict[str, str]:
-    """Model one direct Host operation without a capability preflight."""
+    workspace_root: Path,
+    write_targets: list[str] | tuple[str, ...] = (),
+) -> dict[str, Any]:
+    """Authorize Task scope before a caller invokes the current Host tool.
 
-    if not _valid_current_task_id(task_id):
-        raise ValueError("Task ID must be current, non-empty, and not unspecified")
+    This pure helper neither calls nor wraps a tool. Execute scope covers only
+    explicit write targets; unknown command side effects remain Host sandbox
+    enforcement and a documented proof limit.
+    """
+
+    contract_errors = _complete_task_contract_errors(task_contract)
+    if contract_errors:
+        raise ValueError("; ".join(contract_errors))
     if operation not in EXECUTION_BOUNDARY_MODEL["operations"]:
         raise ValueError("operation is outside the Task execution boundary")
     if not isinstance(target, str) or not target.strip():
         raise ValueError("operation target must be non-empty")
-    if result == "succeeded":
-        if failure_class is not None or observed is not None:
-            raise ValueError("successful operation cannot carry failure evidence")
-        return {"status": "continue", "task_id": task_id, "operation": operation}
-    if result != "failed":
-        raise ValueError("operation result must be succeeded or failed")
-    if failure_class not in EXECUTION_BOUNDARY_MODEL["blocking_failure_classes"]:
-        raise ValueError("blocking requires an actual host or tool failure")
-    if not isinstance(observed, str) or not observed.strip():
-        raise ValueError("blocking requires an actual host or tool failure")
-    blocker_operation = "read" if operation == "search" else operation
-    blocker = (
-        f"EXECUTION_BLOCKED task={task_id}; operation={blocker_operation}; "
-        f"observed={observed.strip()}"
+    if not isinstance(workspace_root, Path) or not workspace_root.is_absolute():
+        raise ValueError("workspace_root must be an explicit absolute Path")
+    normalized_root = workspace_root.resolve(strict=False)
+    if (
+        not isinstance(write_targets, (list, tuple))
+        or len(write_targets) != len(set(write_targets))
+        or not all(
+            isinstance(write_target, str) and bool(write_target.strip())
+            for write_target in write_targets
+        )
+    ):
+        raise ValueError("write_targets must be unique non-empty strings")
+    if operation != "execute" and write_targets:
+        raise ValueError("only execute may declare explicit write_targets")
+
+    scope_name: str | None = None
+    candidate_targets: tuple[str, ...] = ()
+    if operation in {"read", "search"}:
+        scope_name = "Allowed Read Scope"
+        candidate_targets = (target,)
+    elif operation == "edit":
+        scope_name = "Allowed Write Scope"
+        candidate_targets = (target,)
+    elif operation == "execute":
+        scope_name = "Allowed Write Scope"
+        candidate_targets = tuple(write_targets)
+    out_of_scope = next(
+        (
+            candidate
+            for candidate in candidate_targets
+            if not _target_in_task_scope(
+                candidate, task_contract[scope_name], normalized_root
+            )
+        ),
+        None,
     )
-    errors = execution_blocker_errors(blocker, current_task_id=task_id)
-    if errors:
-        raise ValueError("blocking requires an actual host or tool failure")
+    task_id = task_contract["Task ID"]
+    if out_of_scope is not None:
+        return {
+            "status": "blocked",
+            "task_id": task_id,
+            "operation": operation,
+            "blocker": (
+                f"TASK_CONTRACT_BLOCKED task={task_id}; operation={operation}; "
+                f"target={out_of_scope}; observed=outside {scope_name}"
+            ),
+        }
     return {
-        "status": "blocked",
+        "status": "authorized",
         "task_id": task_id,
-        "operation": blocker_operation,
-        "blocker": blocker,
+        "operation": operation,
+        "blocker": None,
     }
 
 
@@ -9758,24 +9946,41 @@ _EXECUTION_BLOCKER_RE = re.compile(
     r"operation=(?P<operation>read|edit|execute); "
     r"observed=(?P<observed>[^\n]+)$"
 )
-_ACTUAL_FAILURE_MARKERS = (
-    "tool unavailable",
-    "command not found",
-    "permission denied",
-    "operation not permitted",
-    "sandbox denied",
-    "sandbox",
-    "required artifact unavailable",
-    "no such file",
-)
+def format_execution_blocker(
+    *, task_id: str, operation: str, observed: str
+) -> str:
+    """Format canonical syntax after a caller observes a Host/tool failure.
+
+    Formatting proves no failure provenance. The invocation event and raw Host
+    output remain the only failure evidence owner.
+    """
+
+    if not _valid_current_task_id(task_id) or any(
+        marker in task_id for marker in (";", "\n", "\r")
+    ):
+        raise ValueError("execution blocker requires the current real Task ID")
+    if operation not in EXECUTION_BOUNDARY_MODEL["blocker_operations"]:
+        raise ValueError("execution blocker operation must be read, edit, or execute")
+    if (
+        not isinstance(observed, str)
+        or not observed.strip()
+        or "\n" in observed
+        or "\r" in observed
+    ):
+        raise ValueError("execution blocker observed text must be one non-empty line")
+    return (
+        f"EXECUTION_BLOCKED task={task_id}; operation={operation}; "
+        f"observed={observed.strip()}"
+    )
 
 
 def execution_blocker_errors(
     value: object,
     *,
     current_task_id: str,
+    expected_operation: str,
 ) -> list[str]:
-    """Validate the visible actual-failure blocker and Task ID continuity."""
+    """Check blocker syntax and identity, never actual failure provenance."""
 
     errors: list[str] = []
     if not _valid_current_task_id(current_task_id):
@@ -9787,9 +9992,11 @@ def execution_blocker_errors(
         return ["execution blocker must match the canonical actual-failure format"]
     if match.group("task") != current_task_id:
         errors.append("execution blocker must preserve the current Task ID")
-    observed = match.group("observed").strip().casefold()
-    if not any(marker in observed for marker in _ACTUAL_FAILURE_MARKERS):
-        errors.append("execution blocker must quote an actual host or tool failure")
+    blocker_operation = "read" if expected_operation == "search" else expected_operation
+    if blocker_operation not in EXECUTION_BOUNDARY_MODEL["blocker_operations"]:
+        errors.append("expected operation is outside blocker syntax")
+    if match.group("operation") != blocker_operation:
+        errors.append("execution blocker operation must match expected operation")
     return errors
 
 
@@ -9817,16 +10024,300 @@ def task_retry_continuity_errors(
     return errors
 
 
-def _unified_diff_changed_paths(value: str) -> list[str]:
-    paths: list[str] = []
-    for line in value.splitlines():
-        match = re.fullmatch(r"diff --git a/(.+) b/(.+)", line)
-        if match is None or match.group(1) != match.group(2):
-            continue
-        path = match.group(2)
-        if path not in paths:
-            paths.append(path)
-    return paths
+def _git_diff_header_paths(header: str) -> tuple[str, str] | None:
+    try:
+        fields = shlex.split(header)
+    except ValueError:
+        return None
+    if (
+        len(fields) != 4
+        or fields[:2] != ["diff", "--git"]
+        or not fields[2].startswith("a/")
+        or not fields[3].startswith("b/")
+        or len(fields[2]) <= 2
+        or len(fields[3]) <= 2
+    ):
+        return None
+    return fields[2][2:], fields[3][2:]
+
+
+def _diff_metadata_values(lines: list[str]) -> dict[str, str] | None:
+    patterns = (
+        ("index", r"index [0-9a-f]+\.\.[0-9a-f]+(?: [0-7]{6})?"),
+        ("old-mode", r"old mode [0-7]{6}"),
+        ("new-mode", r"new mode [0-7]{6}"),
+        ("new-file", r"new file mode [0-7]{6}"),
+        ("deleted-file", r"deleted file mode [0-7]{6}"),
+        ("similarity", r"similarity index [0-9]+%"),
+        ("dissimilarity", r"dissimilarity index [0-9]+%"),
+        ("rename-from", r"rename from (.+)"),
+        ("rename-to", r"rename to (.+)"),
+        ("copy-from", r"copy from (.+)"),
+        ("copy-to", r"copy to (.+)"),
+    )
+    values: dict[str, str] = {}
+    for line in lines:
+        matched = False
+        for key, pattern in patterns:
+            match = re.fullmatch(pattern, line)
+            if match is None:
+                continue
+            if key in values:
+                return None
+            values[key] = match.group(1) if match.lastindex else line
+            matched = True
+            break
+        if not matched:
+            return None
+    return values
+
+
+def _diff_metadata_form(
+    lines: list[str],
+    before_path: str,
+    after_path: str,
+    content_kind: str,
+) -> str | None:
+    values = _diff_metadata_values(lines)
+    if values is None:
+        return None
+    keys = set(values)
+    rename_keys = {"rename-from", "rename-to"}
+    copy_keys = {"copy-from", "copy-to"}
+    similarity_keys = {"similarity", "dissimilarity"}
+    if len(keys & similarity_keys) > 1:
+        return None
+
+    if keys & (rename_keys | copy_keys):
+        if keys & rename_keys and keys & copy_keys:
+            return None
+        form = "rename" if keys & rename_keys else "copy"
+        pair = rename_keys if form == "rename" else copy_keys
+        if (
+            before_path == after_path
+            or not pair <= keys
+            or len(keys & similarity_keys) != 1
+            or not keys <= pair | similarity_keys | {"index"}
+            or values[f"{form}-from"] != before_path
+            or values[f"{form}-to"] != after_path
+            or (content_kind == "none" and "index" in keys)
+        ):
+            return None
+        return form
+
+    if before_path != after_path:
+        return None
+    if "new-file" in keys or "deleted-file" in keys:
+        if (
+            content_kind not in {"text", "binary"}
+            or {"new-file", "deleted-file"} <= keys
+        ):
+            return None
+        form = "new" if "new-file" in keys else "delete"
+        marker = "new-file" if form == "new" else "deleted-file"
+        return form if keys <= {marker, "index"} else None
+
+    mode_keys = {"old-mode", "new-mode"}
+    if keys & mode_keys and not mode_keys <= keys:
+        return None
+    if content_kind == "none":
+        return "mode" if keys == mode_keys else None
+    if content_kind not in {"text", "binary"}:
+        return None
+    return "normal" if keys <= {"index", *mode_keys} else None
+
+
+def _valid_unified_hunks(lines: list[str]) -> bool:
+    if not lines:
+        return False
+    header_pattern = re.compile(
+        r"@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(?: .*)?"
+    )
+    index = 0
+    while index < len(lines):
+        match = header_pattern.fullmatch(lines[index])
+        if match is None:
+            return False
+        expected_old = int(match.group(2) or 1)
+        expected_new = int(match.group(4) or 1)
+        old_count = 0
+        new_count = 0
+        content_count = 0
+        change_count = 0
+        index += 1
+        while index < len(lines) and not lines[index].startswith("@@ "):
+            line = lines[index]
+            if line == r"\ No newline at end of file":
+                if content_count == 0:
+                    return False
+            elif not line:
+                return False
+            elif line[0] == " ":
+                old_count += 1
+                new_count += 1
+                content_count += 1
+            elif line[0] == "-":
+                old_count += 1
+                content_count += 1
+                change_count += 1
+            elif line[0] == "+":
+                new_count += 1
+                content_count += 1
+                change_count += 1
+            else:
+                return False
+            index += 1
+        if (
+            content_count == 0
+            or change_count == 0
+            or old_count != expected_old
+            or new_count != expected_new
+        ):
+            return False
+    return True
+
+
+def unified_diff_paths(payload: object) -> list[str] | None:
+    """Return exact changed paths only for a structurally valid Git diff."""
+
+    if not isinstance(payload, str) or not payload.strip():
+        return None
+    section_matches = list(re.finditer(r"^diff --git .+$", payload, flags=re.MULTILINE))
+    if not section_matches or payload[: section_matches[0].start()].strip():
+        return None
+    changed_paths: list[str] = []
+    for section_index, match in enumerate(section_matches):
+        end = (
+            section_matches[section_index + 1].start()
+            if section_index + 1 < len(section_matches)
+            else len(payload)
+        )
+        section_lines = payload[match.start() : end].splitlines()
+        header_paths = _git_diff_header_paths(section_lines[0])
+        if header_paths is None or len(section_lines) == 1:
+            return None
+        before_path, after_path = header_paths
+        body = section_lines[1:]
+        hunk_indexes = [index for index, line in enumerate(body) if line.startswith("@@")]
+        first_hunk = hunk_indexes[0] if hunk_indexes else len(body)
+        file_header_region = body[:first_hunk]
+        old_headers = [
+            index
+            for index, line in enumerate(file_header_region)
+            if line.startswith("--- ")
+        ]
+        new_headers = [
+            index
+            for index, line in enumerate(file_header_region)
+            if line.startswith("+++ ")
+        ]
+        binary_lines = [line for line in body if line.startswith("Binary files ")]
+        if old_headers or new_headers or hunk_indexes:
+            if (
+                len(old_headers) != 1
+                or len(new_headers) != 1
+                or new_headers[0] != old_headers[0] + 1
+                or not hunk_indexes
+                or hunk_indexes[0] != new_headers[0] + 1
+                or binary_lines
+            ):
+                return None
+            form = _diff_metadata_form(
+                body[: old_headers[0]], before_path, after_path, "text"
+            )
+            if form not in {"normal", "new", "delete", "rename", "copy"}:
+                return None
+            expected_old = "/dev/null" if form == "new" else f"a/{before_path}"
+            expected_new = "/dev/null" if form == "delete" else f"b/{after_path}"
+            if (
+                body[old_headers[0]] != f"--- {expected_old}"
+                or body[new_headers[0]] != f"+++ {expected_new}"
+                or not _valid_unified_hunks(body[hunk_indexes[0] :])
+            ):
+                return None
+        else:
+            if binary_lines:
+                if len(binary_lines) != 1:
+                    return None
+                marker_index = body.index(binary_lines[0])
+                form = _diff_metadata_form(
+                    body[:marker_index], before_path, after_path, "binary"
+                )
+                if form not in {"normal", "new", "delete", "rename", "copy"}:
+                    return None
+                expected_old = "/dev/null" if form == "new" else f"a/{before_path}"
+                expected_new = "/dev/null" if form == "delete" else f"b/{after_path}"
+                marker = f"Binary files {expected_old} and {expected_new} differ"
+                if binary_lines[0] != marker or marker_index != len(body) - 1:
+                    return None
+            else:
+                form = _diff_metadata_form(body, before_path, after_path, "none")
+                if form not in {"rename", "copy", "mode"}:
+                    return None
+        changed_paths.append(before_path if form == "delete" else after_path)
+    if len(changed_paths) != len(set(changed_paths)):
+        return None
+    return changed_paths
+
+
+def native_change_reference_bound(
+    artifact: object,
+    changed_paths: object,
+    current_generation: object,
+    assigned_reviewer: str,
+    *,
+    native_fields: tuple[str, ...] = (
+        "reference",
+        "generation",
+        "reviewer",
+        "changed_paths",
+        "readable",
+    ),
+) -> bool:
+    """Fail closed because this static owner has no native-change resolver.
+
+    A native reference becomes review evidence only when the Host actually
+    dereferences it and binds the exact read content to the current reviewer,
+    generation, and changed paths. These caller-supplied fields cannot prove
+    that event, even when they are internally consistent.
+    """
+
+    del artifact, changed_paths, current_generation, assigned_reviewer, native_fields
+    return False
+
+
+def exact_change_evidence_accessible(
+    kind: object,
+    artifact: object,
+    changed_paths: object,
+    accessibility: object,
+    *,
+    current_generation: object,
+    assigned_reviewer: str,
+    exact_kinds: set[str],
+    accessibility_fields: tuple[str, ...],
+    native_fields: tuple[str, ...],
+) -> bool:
+    """Validate supplied exact diff evidence through the single strict owner."""
+
+    if (
+        not isinstance(accessibility, dict)
+        or tuple(accessibility) != accessibility_fields
+        or accessibility.get("reviewer") != assigned_reviewer
+        or accessibility.get("generation") != current_generation
+        or accessibility.get("changed_paths") != changed_paths
+        or accessibility.get("readable") is not True
+    ):
+        return False
+    if kind == "reviewer-accessible-native-reference":
+        return native_change_reference_bound(
+            artifact,
+            changed_paths,
+            current_generation,
+            assigned_reviewer,
+            native_fields=native_fields,
+        )
+    return kind in exact_kinds and unified_diff_paths(artifact) == changed_paths
 
 
 def review_input_ready(
@@ -9877,22 +10368,16 @@ def review_input_ready(
         or validation.get("generation") != evidence["generation"]
     ):
         return False
-    artifact = evidence["artifact"]
-    if evidence["kind"] == "reviewer-accessible-native-reference":
-        return (
-            isinstance(artifact, dict)
-            and tuple(artifact) == native_fields
-            and artifact["generation"] == evidence["generation"]
-            and artifact["reviewer"] == "review-agent"
-            and artifact["changed_paths"] == latest
-            and artifact["readable"] is True
-            and isinstance(artifact["reference"], str)
-            and bool(artifact["reference"].strip())
-        )
-    return (
-        isinstance(artifact, str)
-        and artifact.startswith("diff --git ")
-        and _unified_diff_changed_paths(artifact) == latest
+    return exact_change_evidence_accessible(
+        evidence["kind"],
+        evidence["artifact"],
+        latest,
+        access,
+        current_generation=evidence["generation"],
+        assigned_reviewer="review-agent",
+        exact_kinds=exact_kinds,
+        accessibility_fields=access_fields,
+        native_fields=native_fields,
     )
 CONTEXT_BUDGET_MODEL = CORE_CONTRACTS["context_budget_contract"]
 BEHAVIOR_EVAL_MODEL = behavior_eval_authority(CORE_CONTRACTS)

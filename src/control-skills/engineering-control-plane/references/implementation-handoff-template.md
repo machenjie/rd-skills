@@ -64,8 +64,10 @@ Authority reference only — project only consumer-required current Evidence bel
 
 ## Actual Diff or Host-native Diff Reference
 
-Provide actual unified-diff content or a current host-native change reference
-that the assigned reviewer can read. A digest, summary, prose description,
+Provide actual unified-diff content. A host-native change reference counts only
+when the Host dereferences it and supplies a read receipt with exact content
+binding to the assigned reviewer, current generation, and changed paths; a
+`readable` self-report is insufficient. A digest, summary, prose description,
 command output, filename, identifier, or opaque reference is not a diff. Write
 `not applicable — no material edits` only when no material edit occurred.
 

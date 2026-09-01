@@ -124,7 +124,12 @@ ordinary execution boundary. A Task Agent invokes `read`, `search`, `edit`, and
 `execute` directly; missing capability proof never blocks the operation. Only an
 actual tool, permission, sandbox, or required-artifact failure returns
 `EXECUTION_BLOCKED` with the current real Task ID, operation, and observed
-failure. Retry preserves the same Task ID and the complete unchanged Task
+failure. A pure pre-invocation scope check normalizes explicit path targets,
+rejects traversal and symlink escape, and calls no Host tool when the target is
+outside Allowed Read/Write Scope. Execute checks only explicit write targets;
+unknown side effects remain a Host sandbox proof limit. The Host/tool invocation
+event and raw output are the sole actual-failure proof; static formatter and
+mapping checks establish syntax only. Retry preserves the same Task ID and the complete unchanged Task
 Contract, including Professional Skill, Domain, Layer3, Level/Basis/history,
 scope, acceptance, validation, review, handoff, and stop conditions. Main never
 absorbs implementation work.
@@ -186,10 +191,13 @@ Task, edit, and file counts do not otherwise determine Review frequency.
 
 Normal Task closure is one sequence: final edit, fresh validation, exact change
 capture, the same Task's Implementation Handoff, and Main's readiness gate.
-Supplied review evidence contains the unified diff itself; native review uses a
-current reference binding the assigned reviewer, current generation, exact
-changed paths, and a readable delivered instance. A static capability,
-digest, path, summary, or command-output label cannot establish readiness.
+Supplied review evidence contains the unified diff itself. Native review
+requires the Host to dereference the current reference and bind the exact read
+content to the assigned reviewer, current generation, and exact changed paths.
+Without that Host read receipt and content binding, the static readiness helper
+fails closed; a `readable` self-report, nonexistent reference, static
+capability, digest, path, summary, or command-output label cannot establish
+readiness.
 
 A current Review Boundary carries one boundary and Review Round ID, strategy,
 Effective Level, required Review Skills, Specialist obligations, Covered Task

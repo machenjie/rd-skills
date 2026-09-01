@@ -1126,18 +1126,22 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
             self.assertEqual([], manifest["installed_agent_profiles"])
             self.assertEqual([], manifest["installed_agent_profile_files"])
 
-    def test_host_enforcement_is_a_declared_ceiling_not_runtime_fact_projection(self) -> None:
+    def test_host_enforcement_declares_tool_delivery_not_runtime_capability_projection(self) -> None:
         enforcement = json.loads(
             (
                 self.runtime_root / "src/agent-profiles/host-enforcement.json"
             ).read_text(encoding="utf-8")
         )
         self.assertIn(
-            "Declared static Host/Profile capability ceilings only",
+            "Static Host/Profile tool delivery and enforcement",
             enforcement["source_summary"],
         )
         self.assertIn(
-            "no invocation-scoped Effective Runtime Capability observation",
+            "invoke delivered Role tools directly",
+            enforcement["source_summary"],
+        )
+        self.assertIn(
+            "observed Host or tool failures",
             enforcement["source_summary"],
         )
 

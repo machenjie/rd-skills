@@ -6,6 +6,7 @@ import hashlib
 import json
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -35,8 +36,9 @@ def _load_module():
 
 EVAL = _load_module()
 SOURCE_ROOT = ROOT
+FOCUS_BASELINE_REF = "3e3c54aa108ea23287ad2b752a4b36c73486643f"
 FOCUS_BASELINE_SHA256 = (
-    "5111857d64e4da46d781559ceea1896980648c6d6b13858425c7d16e768a2322"
+    "85e4090f5f3f59be900af0e0ec288d68bb448c3c7a7ad69bd87bec887b4a6b2a"
 )
 
 
@@ -107,41 +109,19 @@ def _build_runtime_subject(subject: Path) -> None:
 
 
 def _focus_baseline_document() -> dict[str, object]:
-    current = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
-    cases = [
-        copy.deepcopy(case)
-        for case in current["task_focus_cases"]
-        if case["id"] not in EVAL.FOCUS_CURRENT_ONLY_MAP
-    ]
-    for case in cases:
-        if case["id"] == "focus-capability-equivalent-adapter-metadata":
-            for adapter in case["inputs"]["adapters"]:
-                capabilities = adapter["capabilities"]
-                capabilities["exact-change-evidence-export"] = capabilities.pop(
-                    "change-evidence-export"
-                )
-                capabilities.pop("native-change-read")
-                capabilities.pop("supplied-change-delivery")
-                capabilities["exact-change-evidence-read"] = "supported"
-                capabilities[
-                    "reviewer-accessible-change-reference"
-                ] = capabilities.pop("reviewer-change-consume")
-        elif case.get("scenario") == "review-readiness":
-            inputs = case["inputs"]
-            inputs.pop("change_evidence_artifact", None)
-            inputs["exact-change-evidence-export"] = inputs.pop(
-                "change-evidence-export"
-            )
-            inputs.pop("native-change-read")
-            inputs.pop("supplied-change-delivery")
-            inputs["exact-change-evidence-read"] = (
-                "unsupported"
-                if inputs["handoff_kind"] == "legacy-incomplete"
-                else "supported"
-            )
-            inputs["reviewer-accessible-change-reference"] = inputs.pop(
-                "reviewer-change-consume"
-            )
+    result = subprocess.run(
+        [
+            "git",
+            "show",
+            f"{FOCUS_BASELINE_REF}:evals/agent-light-trajectories/cases.yaml",
+        ],
+        cwd=SOURCE_ROOT,
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    document = json.loads(result.stdout)
+    cases = document["task_focus_cases"]
     canonical = json.dumps(
         cases,
         ensure_ascii=False,
@@ -3163,6 +3143,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             "review-level": "review-agent",
             "analysis-level": "main-control-agent",
             "review-readiness": "main-control-agent",
+            "direct-confirmation": "task-agent",
             "task-execution": "task-agent",
             "cost": "task-agent",
         }
@@ -4047,20 +4028,31 @@ class RenderedContextBudgetTests(unittest.TestCase):
             for row in mapping["rows"]
             if row["canonical_id"] != row["baseline_native_id"]
         }
-        self.assertEqual(EVAL.FOCUS_CURRENT_ONLY_MAP, mapped)
+        expected_mapped = {
+            case_id: baseline_id
+            for case_id, baseline_id in EVAL.FOCUS_CURRENT_ONLY_MAP.items()
+            if case_id not in {
+                case["id"] for case in baseline["task_focus_cases"]
+            }
+        }
+        self.assertEqual(expected_mapped, mapped)
         protected = {
             row["canonical_id"]: row["protected_projection"]
             for row in mapping["rows"]
             if row["state"] == "protected-semantic-extension"
         }
+        expected_protected = {
+            *expected_mapped,
+            "focus-review-native-reference-ready",
+        }
+        self.assertEqual(expected_protected, set(protected))
         self.assertEqual(
             {
-                "l4-risk-depth-not-frequency",
-                "engineering-choice-not-user-choice",
+                case_id: EVAL.FOCUS_PROTECTED_SEMANTIC_EXTENSIONS[case_id]
+                for case_id in expected_protected
             },
-            set(protected),
+            protected,
         )
-        self.assertEqual(EVAL.FOCUS_PROTECTED_SEMANTIC_EXTENSIONS, protected)
         for projection in protected.values():
             self.assertEqual(
                 projection["candidate_actor"], projection["baseline_actor"]
@@ -4108,7 +4100,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
     def test_protected_focus_extensions_fail_closed_on_binding_drift(self) -> None:
         current = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
         baseline = _focus_baseline_document()
-        target = "l4-risk-depth-not-frequency"
+        target = "focus-task-search-direct"
         mutations = []
 
         missing = copy.deepcopy(EVAL.FOCUS_PROTECTED_SEMANTIC_EXTENSIONS)

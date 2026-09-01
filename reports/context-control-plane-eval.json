@@ -27,7 +27,7 @@
     "current_write_parallelism_unsupported": true,
     "shared_workspace_serial_write": true,
     "conditional_isolated_write_contract": true,
-    "utility_no_edit_workspace_gate": true,
+    "utility_workspace_unchanged_gate": true,
     "route_once_skill_budget": true,
     "transferred_context_measurement_valid": true
   },
