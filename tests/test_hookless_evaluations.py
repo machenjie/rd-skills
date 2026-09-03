@@ -236,10 +236,22 @@ class HooklessEvaluationTests(unittest.TestCase):
             self.assertEqual(with_extra, loaded)
 
     def test_observable_trajectory_and_context_evaluations(self) -> None:
+        reports_root = Path(
+            self.enterContext(
+                tempfile.TemporaryDirectory(prefix="rd-skills-hookless-evals-")
+            )
+        )
+        for command in (
+            ("scripts/eval-agent-lightweight.py",),
+            ("scripts/eval-rendered-context-budget.py", "--mode", "conformance"),
+            ("scripts/eval-context-control-plane.py",),
+        ):
+            result = self.run_script(*command, "--reports-dir", str(reports_root))
+            self.assertEqual(0, result.returncode, result.stderr or result.stdout)
         report = load_owned_eval_report(
             self,
-            ROOT,
-            "reports/hookless-control-plane-eval.json",
+            reports_root,
+            "hookless-control-plane-eval.json",
             {"status": "pass", "fixture_count": 16},
         )
         self.assertEqual("pass", report["status"])
@@ -247,6 +259,14 @@ class HooklessEvaluationTests(unittest.TestCase):
         self.assertEqual(13, report["release_fixture_count"])
         self.assertEqual(1, report["scheduling_fixture_count"])
         self.assertEqual(2, report["utility_fixture_count"])
+        self.assertEqual(8, report["evidence_continuation_fixture_count"])
+        self.assertFalse(report["copilot_evidence_trace"]["live_host"])
+        self.assertEqual(
+            0,
+            sum(
+                report["copilot_evidence_trace"]["forbidden_operation_counts"].values()
+            ),
+        )
         self.assertEqual(
             report["fixture_count"],
             report["release_fixture_count"]
@@ -304,8 +324,8 @@ class HooklessEvaluationTests(unittest.TestCase):
 
         rendered = load_owned_eval_report(
             self,
-            ROOT,
-            "reports/rendered-context-budget.json",
+            reports_root,
+            "rendered-context-budget.json",
             {
                 "status": "pass",
                 "evidence_scope": "deterministic-rendered-artifacts",
@@ -415,14 +435,18 @@ class HooklessEvaluationTests(unittest.TestCase):
 
         context = load_owned_eval_report(
             self,
-            ROOT,
-            "reports/context-control-plane-eval.json",
+            reports_root,
+            "context-control-plane-eval.json",
             {"status": "pass", "evidence_scope": "deterministic-fixtures"},
         )
         self.assertEqual("pass", context["status"])
         self.assertEqual("deterministic-fixtures", context["evidence_scope"])
         self.assertTrue(set(report["limitations"]).issubset(context["limitations"]))
         self.assertEqual(rendered["aggregate"], context["rendered_context_summary"])
+        self.assertEqual(
+            rendered["integration_evidence_summary"],
+            context["integration_evidence_summary"],
+        )
         self.assertEqual(
             "candidate-subject-only",
             context["transferred_context_summary"]["measurement_kind"],

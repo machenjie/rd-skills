@@ -49,8 +49,12 @@ from fixture_capsule_contract import (
     completion_transition_errors,
     combined_review_completion_errors,
     evidence_ledger_errors,
+    evidence_continuation_case_errors,
+    evidence_forbidden_operation_counts,
+    evidence_route_frozen,
     parse_layer3_reference_id,
     trace_execution_level_migration_errors,
+    sum_evidence_forbidden_operation_counts,
     validate_and_render_fixture_capsule,
 )
 
@@ -654,7 +658,11 @@ DELTA_BRIEF_SECTIONS_BY_INVALIDATION = {
 }
 SAME_PATTERN_MODEL = CORE_CONTRACTS["task_contract"]["same_pattern_scan"]
 REVIEW_LEVEL_POLICY = REVIEW_DISCIPLINE_MODEL["effective_level_policy"]
-UTILITY_MODES = {"validation-only/no-edit", "diff-export/no-edit"}
+UTILITY_MODES = {
+    "validation-only/no-edit",
+    "diff-export/no-edit",
+    "evidence-observation/no-edit",
+}
 UTILITY_CAPSULE_FIELDS = UTILITY_ASSIGNMENT_FIELDS
 UTILITY_EVIDENCE_FIELDS = UTILITY_RETURN_FIELDS
 UTILITY_ASSIGNMENT_STATUSES = {"in_progress"}
@@ -663,6 +671,9 @@ UTILITY_OPERATIONS = {
     "workspace-state-observation",
     "change-evidence-export",
     "validation-check",
+    "evidence-workspace-preflight",
+    "evidence-observation-operation",
+    "evidence-workspace-postflight",
 }
 WORKSPACE_CHECK_COMMANDS = ("workspace-state-observation",)
 
@@ -10150,6 +10161,122 @@ def _utility_case_errors(case: dict[str, Any], steps: list[dict[str, Any]]) -> l
     return errors
 
 
+def _evidence_continuation_fixture_results(
+    raw_cases: object,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Reduce route-frozen executable-evidence fixtures without dispatching them."""
+
+    if not isinstance(raw_cases, list):
+        return [], ["trajectory fixture must contain an evidence_continuation_cases list"]
+    results: list[dict[str, Any]] = []
+    errors: list[str] = []
+    seen: set[str] = set()
+    for raw_case in raw_cases:
+        case_id = (
+            str(raw_case.get("id") or "<missing>")
+            if isinstance(raw_case, dict)
+            else "<missing>"
+        )
+        case_errors = evidence_continuation_case_errors(raw_case)
+        if case_id in seen:
+            case_errors.append(f"{case_id}: duplicate Evidence continuation case id")
+        seen.add(case_id)
+        attempts = raw_case.get("attempts", []) if isinstance(raw_case, dict) else []
+        attempts = attempts if isinstance(attempts, list) else []
+        utility_dispatched = (
+            isinstance(raw_case, dict)
+            and isinstance(raw_case.get("assignment"), dict)
+        )
+        observation_count = sum(
+            int(
+                isinstance(attempt, dict)
+                and attempt.get("host_evidence", {})
+                .get("raw_fixture", {})
+                .get("observation_produced")
+                is True
+            )
+            for attempt in attempts
+        )
+        final_attempt_status = (
+            attempts[-1].get("status")
+            if attempts and isinstance(attempts[-1], dict)
+            else None
+        )
+        utility_return = (
+            raw_case.get("utility_return") if isinstance(raw_case, dict) else None
+        )
+        authority = (
+            utility_return.get("artifact_or_check_outcomes", {})
+            .get("evidence", {})
+            .get("authority", {})
+            if isinstance(utility_return, dict)
+            else {}
+        )
+        terminal_status = (
+            "not-dispatched"
+            if not utility_dispatched
+            else {
+                "completed": "completed",
+                "partial": "partial",
+                "host-unsupported": "blocked",
+            }.get(
+                final_attempt_status,
+                "blocked"
+                if isinstance(authority, dict)
+                and authority.get("kind") == "user-authority"
+                and authority.get("disposition") == "refused"
+                else "invalid",
+            )
+        )
+        result = {
+            "id": case_id,
+            "trigger": raw_case.get("trigger") if isinstance(raw_case, dict) else None,
+            "utility_dispatched": utility_dispatched,
+            "terminal_status": terminal_status,
+            "observation_count": observation_count,
+            "host_attempt_count": len(attempts),
+            "route_frozen": evidence_route_frozen(
+                case_id,
+                raw_case.get("analysis_identity")
+                if isinstance(raw_case, dict)
+                else None,
+                raw_case.get("continuation_identity")
+                if isinstance(raw_case, dict)
+                else None,
+            ),
+            "forbidden_operation_counts": evidence_forbidden_operation_counts(
+                raw_case
+            ),
+            "utility_return_count": int(
+                isinstance(raw_case, dict)
+                and raw_case.get("utility_return") is not None
+            ),
+            "matches_expected": not case_errors,
+            "errors": case_errors,
+        }
+        results.append(result)
+        errors.extend(case_errors)
+    return results, errors
+
+
+def _sum_evidence_forbidden_operation_counts(
+    results: list[dict[str, Any]],
+) -> dict[str, int]:
+    return sum_evidence_forbidden_operation_counts(results)
+
+
+def _evidence_forbidden_operation_count_errors(
+    results: list[dict[str, Any]],
+    observed: object,
+) -> list[str]:
+    expected = _sum_evidence_forbidden_operation_counts(results)
+    if not isinstance(observed, dict) or tuple(observed) != tuple(expected):
+        return ["Copilot forbidden operation counts must use the exact derived fields"]
+    if observed != expected:
+        return ["Copilot forbidden operation counts must sum every per-case declaration"]
+    return []
+
+
 def _meaningful_progress_evidence(value: object) -> bool:
     if not isinstance(value, str):
         return False
@@ -12346,6 +12473,11 @@ def main(argv: list[str] | None = None) -> int:
         raw_utility_cases = document.get("utility_cases")
         if not isinstance(raw_utility_cases, list):
             raise ValueError("trajectory fixture must contain a utility_cases list")
+        evidence_continuation_results, evidence_continuation_errors = (
+            _evidence_continuation_fixture_results(
+                document.get("evidence_continuation_cases")
+            )
+        )
         raw_scheduling_cases = document.get("scheduling_cases")
         if not isinstance(raw_scheduling_cases, list):
             raise ValueError("trajectory fixture must contain a scheduling_cases list")
@@ -12394,6 +12526,7 @@ def main(argv: list[str] | None = None) -> int:
             *evidence_localization_errors,
             *risk_calibration_errors,
             *completion_errors,
+            *evidence_continuation_errors,
         ]
         if len(raw_cases) != 13:
             errors.append(f"release fixture count must remain exactly 13, found {len(raw_cases)}")
@@ -12403,6 +12536,11 @@ def main(argv: list[str] | None = None) -> int:
             )
         if len(raw_utility_cases) != 2:
             errors.append(f"utility fixture count must remain exactly 2, found {len(raw_utility_cases)}")
+        if len(evidence_continuation_results) != 8:
+            errors.append(
+                "evidence continuation fixture count must remain exactly 8, found "
+                f"{len(evidence_continuation_results)}"
+            )
         if len(adaptive_results) != 15:
             errors.append(
                 "adaptive testing fixture count must remain exactly 15, found "
@@ -12475,6 +12613,82 @@ def main(argv: list[str] | None = None) -> int:
         print(f"eval-agent-lightweight: ERROR: {exc}", file=sys.stderr)
         return 1
 
+    copilot_evidence_trace = {
+        "schema_version": 1,
+        "host": "copilot",
+        "live_host": False,
+        "fixture_source": "evals/agent-light-trajectories/cases.yaml",
+        "logical_request_max": 1,
+        "host_attempt_max": 2,
+        "observation_max": 1,
+        "utility_return_exactly_once_terminal": all(
+            row["utility_return_count"] == int(row["utility_dispatched"])
+            for row in evidence_continuation_results
+        ),
+        "forbidden_operation_counts": _sum_evidence_forbidden_operation_counts(
+            evidence_continuation_results
+        ),
+        "cases": [
+            {
+                key: row[key]
+                for key in (
+                    "id",
+                    "trigger",
+                    "utility_dispatched",
+                    "terminal_status",
+                    "observation_count",
+                    "host_attempt_count",
+                    "route_frozen",
+                    "forbidden_operation_counts",
+                )
+            }
+            for row in evidence_continuation_results
+        ],
+    }
+    errors.extend(
+        _evidence_forbidden_operation_count_errors(
+            evidence_continuation_results,
+            copilot_evidence_trace["forbidden_operation_counts"],
+        )
+    )
+    copilot_evidence_trace["canonical_sha256"] = hashlib.sha256(
+        json.dumps(
+            copilot_evidence_trace,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
+    integration_evidence_summary = {
+        "schema_version": 1,
+        "utility_fixture_count": len(raw_utility_cases),
+        "evidence_continuation_fixture_count": len(evidence_continuation_results),
+        "route_frozen": all(
+            row["route_frozen"] for row in evidence_continuation_results
+        ),
+        "logical_request_max": max(
+            (int(row["utility_dispatched"]) for row in evidence_continuation_results),
+            default=0,
+        ),
+        "host_attempt_max": max(
+            (int(row["host_attempt_count"]) for row in evidence_continuation_results),
+            default=0,
+        ),
+        "observation_max": max(
+            (int(row["observation_count"]) for row in evidence_continuation_results),
+            default=0,
+        ),
+        "copilot_trace_sha256": copilot_evidence_trace["canonical_sha256"],
+        "live_host": False,
+    }
+    integration_evidence_summary["canonical_sha256"] = hashlib.sha256(
+        json.dumps(
+            integration_evidence_summary,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
     report = {
         "schema_version": 2,
         "status": "pass" if not errors else "fail",
@@ -12493,6 +12707,10 @@ def main(argv: list[str] | None = None) -> int:
         "utility_fixture_count": sum(
             item["fixture_group"] == "utility" for item in results
         ),
+        "evidence_continuation_fixture_count": len(evidence_continuation_results),
+        "evidence_continuation_fixtures": evidence_continuation_results,
+        "copilot_evidence_trace": copilot_evidence_trace,
+        "integration_evidence_summary": integration_evidence_summary,
         "completion_state_fixture_count": len(completion_results),
         "completion_state_fixtures": completion_results,
         "required_behavior_coverage_count": len(required_behavior_results),

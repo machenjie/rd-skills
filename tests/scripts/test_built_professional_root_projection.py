@@ -182,10 +182,14 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
                         signals: list[str] = []
                         self.assertEqual(
                             VALIDATION.layer3_selector_runtime_selection_receipt(
-                                expected, evidence_signals=signals
+                                expected,
+                                evidence_signals=signals,
+                                build_identity="AAECAwQFBgcICQoLDA0ODw",
                             ),
                             VALIDATION.layer3_selector_runtime_selection_receipt(
-                                actual, evidence_signals=signals
+                                actual,
+                                evidence_signals=signals,
+                                build_identity="AAECAwQFBgcICQoLDA0ODw",
                             ),
                         )
 
@@ -297,10 +301,14 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
         ):
             self.assertEqual(full_projection[field], shard_projection[field])
         full_receipt = VALIDATION.layer3_selector_runtime_selection_receipt(
-            full_projection, evidence_signals=[]
+            full_projection,
+            evidence_signals=[],
+            build_identity="AAECAwQFBgcICQoLDA0ODw",
         )
         shard_receipt = VALIDATION.layer3_selector_runtime_selection_receipt(
-            shard_projection, evidence_signals=[]
+            shard_projection,
+            evidence_signals=[],
+            build_identity="AAECAwQFBgcICQoLDA0ODw",
         )
         self.assertFalse(shard_projection["selector_loaded"])
         self.assertEqual(["exact-layer3-authority"], full_receipt["selector_ids"])
@@ -378,6 +386,126 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
                     candidate_documents,
                     runtime_key=diagnosis_key,
                 )
+
+    def test_s3d_runtime_envelope_compacts_only_after_source_provenance_validation(
+        self,
+    ) -> None:
+        selectors, partitions = (
+            VALIDATION.layer3_selector_normalized_control_projections(self.authority)
+        )
+        professional = "engineering-change-analysis"
+        source_envelope = selectors[f"{professional}.json"]
+        source_provenance = source_envelope["decisions"][0]["provenance"]
+        self.assertEqual(
+            {
+                "decision_id",
+                "scenario_id",
+                "light_case_id",
+                "release_scenario",
+                "selector_registry",
+            },
+            set(source_provenance),
+        )
+        build_identity = "AAECAwQFBgcICQoLDA0ODw"
+
+        def render(
+            candidate: dict[str, dict[str, object]],
+        ) -> tuple[dict[str, object], dict[str, object]]:
+            with tempfile.TemporaryDirectory() as raw:
+                professional_root = Path(raw) / professional
+                BUILD._write_professional_runtime_selector_closure(
+                    professional_root,
+                    professional,
+                    candidate,
+                    partitions,
+                    build_identity,
+                )
+                runtime_root = professional_root / "references/runtime"
+                envelope = json.loads(
+                    (runtime_root / "selector.json").read_text(encoding="utf-8")
+                )
+                decision_path = envelope["decisions"][0]["path"]
+                decision = json.loads(
+                    (runtime_root / decision_path).read_text(encoding="utf-8")
+                )
+                return envelope, decision
+
+        runtime_envelope, runtime_decision = render(selectors)
+        runtime_binding = runtime_envelope["decisions"][0]
+        self.assertEqual(build_identity, runtime_envelope["build"])
+        self.assertEqual(
+            {
+                "decision_id",
+                "scenario_id",
+                "light_case_id",
+                "selector_registry",
+            },
+            set(runtime_binding["provenance"]),
+        )
+        self.assertNotIn("release_scenario", runtime_binding["provenance"])
+        self.assertEqual(
+            source_provenance["selector_registry"],
+            runtime_binding["provenance"]["selector_registry"],
+        )
+        resolved = VALIDATION.layer3_selector_resolve_control_projection(
+            runtime_envelope,
+            {runtime_binding["path"]: runtime_decision},
+            runtime_key=runtime_binding["runtime_key"],
+        )
+        self.assertEqual("exact", resolved["selection_kind"])
+
+        for label, mutate in (
+            (
+                "missing-release-scenario",
+                lambda provenance: provenance.pop("release_scenario"),
+            ),
+            (
+                "missing-selector-registry",
+                lambda provenance: provenance.pop("selector_registry"),
+            ),
+            (
+                "extra-source-field",
+                lambda provenance: provenance.update({"unexpected": {}}),
+            ),
+        ):
+            candidate = copy.deepcopy(selectors)
+            provenance = candidate[f"{professional}.json"]["decisions"][0][
+                "provenance"
+            ]
+            mutate(provenance)
+            with self.subTest(label=label), self.assertRaisesRegex(
+                BUILD.BuildError, "provenance|malformed"
+            ):
+                render(candidate)
+
+        source_with_runtime_shape = copy.deepcopy(source_envelope)
+        source_with_runtime_shape["decisions"][0]["provenance"].pop(
+            "release_scenario"
+        )
+        with self.assertRaisesRegex(
+            VALIDATION.ValidationProblem, "malformed decision"
+        ):
+            VALIDATION.layer3_selector_resolve_control_projection(
+                source_with_runtime_shape,
+                {
+                    source_with_runtime_shape["decisions"][0]["path"]: selectors[
+                        source_with_runtime_shape["decisions"][0]["path"]
+                    ]
+                },
+                runtime_key=source_with_runtime_shape["decisions"][0]["runtime_key"],
+            )
+        runtime_with_source_shape = copy.deepcopy(runtime_envelope)
+        runtime_with_source_shape["decisions"][0]["provenance"][
+            "release_scenario"
+        ] = copy.deepcopy(source_provenance["release_scenario"])
+        with self.assertRaisesRegex(
+            VALIDATION.ValidationProblem, "malformed decision"
+        ):
+            VALIDATION.layer3_selector_resolve_control_projection(
+                runtime_with_source_shape,
+                {runtime_binding["path"]: runtime_decision},
+                runtime_key=runtime_binding["runtime_key"],
+            )
 
     def test_s3b_reference_partitions_are_owner_scoped_and_tri_state(self) -> None:
         selectors, partitions = (
@@ -638,10 +766,7 @@ class BuiltProfessionalRootProjectionTests(unittest.TestCase):
                     self.assertEqual(1, rendered.count("## JIT Reference Delivery"))
                     self.assertEqual(
                         1,
-                        rendered.count(
-                            "engineering-control-plane/references/selectors/"
-                            f"{item.name}.json"
-                        ),
+                        rendered.count("references/runtime/selector.json"),
                     )
                     for heading in BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS:
                         self.assertIn(f"## {heading}", rendered)

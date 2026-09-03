@@ -68,7 +68,7 @@ from fixture_capsule_contract import (
 
 
 def _build_runtime_subject(subject: Path) -> None:
-    for relative in ("src", "scripts", "evals", "reports"):
+    for relative in ("src", "scripts", "evals", "reports", "tests"):
         shutil.copytree(
             SOURCE_ROOT / relative,
             subject / relative,
@@ -145,6 +145,24 @@ def setUpModule() -> None:
     evaluation_context = None
     try:
         _build_runtime_subject(subject)
+        lightweight = subprocess.run(
+            [
+                sys.executable,
+                "scripts/eval-agent-lightweight.py",
+                "--reports-dir",
+                str(subject / "reports"),
+            ],
+            cwd=subject,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if lightweight.returncode != 0:
+            raise AssertionError(
+                "temporary lightweight prerequisite failed:\n"
+                f"stdout:\n{lightweight.stdout}\n"
+                f"stderr:\n{lightweight.stderr}"
+            )
         evaluation_context = EVAL._subject_configuration(
             subject,
             subject / "evals/agent-light-trajectories/cases.yaml",
@@ -211,8 +229,243 @@ AUTHORITATIVE_DAG_NODES = {
     ),
 }
 
+_DOMINANCE_MEMBER_KINDS = (
+    "professional",
+    "layer3",
+    "active_reference",
+)
+
+
+def _dominance_membership_sha256(members: list[str]) -> str:
+    return hashlib.sha256(
+        json.dumps(
+            members,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
+
+
+def _dominance_member_maxima(
+    records: object,
+    *,
+    member_kind: str,
+    placement: str,
+) -> dict[str, int]:
+    if not isinstance(records, list):
+        raise ValueError(f"{placement} {member_kind} records are invalid")
+    maxima: dict[str, int] = {}
+    ordered_members: list[str] = []
+    expected_fields = (
+        {
+            "member",
+            "maximum_tokens",
+            "canonical_reduction_key_sha256",
+            "render_signature_sha256",
+        }
+        if placement == "frontier"
+        else {"member", "maximum_tokens"}
+    )
+    for record in records:
+        if not isinstance(record, dict) or set(record) != expected_fields:
+            raise ValueError(f"{placement} {member_kind} witness schema is invalid")
+        member = record.get("member")
+        maximum_tokens = record.get("maximum_tokens")
+        if not isinstance(member, str) or not member:
+            raise ValueError(f"{placement} {member_kind} member is invalid")
+        if (
+            not isinstance(maximum_tokens, int)
+            or isinstance(maximum_tokens, bool)
+            or maximum_tokens < 0
+        ):
+            raise ValueError(f"{placement} {member_kind} maximum is invalid")
+        if member in maxima:
+            raise ValueError(f"{placement} {member_kind} duplicate member")
+        if placement == "frontier" and any(
+            re.fullmatch(r"[0-9a-f]{64}", str(record[field])) is None
+            for field in (
+                "canonical_reduction_key_sha256",
+                "render_signature_sha256",
+            )
+        ):
+            raise ValueError(f"{placement} {member_kind} witness hash is invalid")
+        ordered_members.append(member)
+        maxima[member] = maximum_tokens
+    if ordered_members != sorted(ordered_members):
+        raise ValueError(f"{placement} {member_kind} members are not sorted")
+    return maxima
+
+
+def _reconstruct_budget_dominance_relation(row: object) -> dict[str, object]:
+    if not isinstance(row, dict):
+        raise ValueError("dominance budget row is invalid")
+    soft_target = row.get("soft_target")
+    if not isinstance(soft_target, int) or isinstance(soft_target, bool):
+        raise ValueError("dominance soft target is invalid")
+    frontier_counts = row.get("frontier_counts")
+    outside_counts = row.get("outside_counts")
+    frontier_witnesses = row.get("frontier_witnesses")
+    outside = row.get("outside")
+    for name, value in (
+        ("frontier_counts", frontier_counts),
+        ("outside_counts", outside_counts),
+        ("frontier_witnesses", frontier_witnesses),
+        ("outside", outside),
+    ):
+        if not isinstance(value, dict) or set(value) != set(_DOMINANCE_MEMBER_KINDS):
+            raise ValueError(f"dominance {name} member set is invalid")
+
+    frontier: dict[str, list[str]] = {}
+    safe_complement: dict[str, list[str]] = {}
+    universe: dict[str, list[str]] = {}
+    maxima: dict[str, dict[str, int]] = {}
+    for member_kind in _DOMINANCE_MEMBER_KINDS:
+        frontier_maxima = _dominance_member_maxima(
+            frontier_witnesses[member_kind],
+            member_kind=member_kind,
+            placement="frontier",
+        )
+        outside_maxima = _dominance_member_maxima(
+            outside[member_kind],
+            member_kind=member_kind,
+            placement="outside",
+        )
+        if frontier_counts[member_kind] != len(frontier_maxima):
+            raise ValueError(f"frontier {member_kind} count mismatch")
+        if outside_counts[member_kind] != len(outside_maxima):
+            raise ValueError(f"outside {member_kind} count mismatch")
+        overlap = set(frontier_maxima) & set(outside_maxima)
+        if overlap:
+            raise ValueError(f"{member_kind} duplicate member across placements")
+        if any(value <= soft_target for value in frontier_maxima.values()):
+            raise ValueError(f"frontier {member_kind} member is on the wrong side")
+        if any(value > soft_target for value in outside_maxima.values()):
+            raise ValueError(f"outside {member_kind} member is on the wrong side")
+        combined = {**frontier_maxima, **outside_maxima}
+        frontier[member_kind] = sorted(frontier_maxima)
+        safe_complement[member_kind] = sorted(outside_maxima)
+        universe[member_kind] = sorted(combined)
+        maxima[member_kind] = combined
+    return {
+        "soft_target": soft_target,
+        "frontier": frontier,
+        "safe_complement": safe_complement,
+        "universe": universe,
+        "maxima": maxima,
+    }
+
+
+def _reconstruct_global_dominance_relation(
+    task_relation: object,
+    review_relation: object,
+    projected: object,
+) -> dict[str, object]:
+    if not isinstance(task_relation, dict) or not isinstance(review_relation, dict):
+        raise ValueError("budget dominance relation is invalid")
+    if not isinstance(projected, dict):
+        raise ValueError("global dominance projection is invalid")
+    expected_projection_fields = {
+        "frontier_counts",
+        "frontier",
+        "safe_complement_counts",
+        "safe_complement",
+    }
+    if set(projected) != expected_projection_fields:
+        raise ValueError("global dominance projection schema is invalid")
+    for field in expected_projection_fields:
+        value = projected[field]
+        if not isinstance(value, dict) or set(value) != set(_DOMINANCE_MEMBER_KINDS):
+            raise ValueError(f"global {field} member set is invalid")
+
+    reconstructed_frontier: dict[str, list[str]] = {}
+    reconstructed_complement: dict[str, list[str]] = {}
+    reconstructed_universe: dict[str, list[str]] = {}
+    projected_digests: dict[str, str] = {}
+    reconstructed_digests: dict[str, str] = {}
+    for member_kind in _DOMINANCE_MEMBER_KINDS:
+        universe = sorted(
+            set(task_relation["universe"][member_kind])
+            | set(review_relation["universe"][member_kind])
+        )
+        frontier = sorted(
+            set(task_relation["frontier"][member_kind])
+            | set(review_relation["frontier"][member_kind])
+        )
+        complement = sorted(set(universe) - set(frontier))
+        projected_frontier = projected["frontier"][member_kind]
+        projected_complement = projected["safe_complement"][member_kind]
+        if not isinstance(projected_frontier, list) or not isinstance(
+            projected_complement, list
+        ):
+            raise ValueError(f"global {member_kind} lists are invalid")
+        if projected_frontier != sorted(projected_frontier) or projected_complement != sorted(
+            projected_complement
+        ):
+            raise ValueError(f"global {member_kind} lists are not sorted")
+        if len(projected_frontier) != len(set(projected_frontier)) or len(
+            projected_complement
+        ) != len(set(projected_complement)):
+            raise ValueError(f"global {member_kind} list contains duplicate member")
+        if projected["frontier_counts"][member_kind] != len(projected_frontier):
+            raise ValueError(f"global frontier {member_kind} count mismatch")
+        if projected["safe_complement_counts"][member_kind] != len(
+            projected_complement
+        ):
+            raise ValueError(f"global complement {member_kind} count mismatch")
+        if set(projected_frontier) & set(projected_complement):
+            raise ValueError(f"global {member_kind} overlap")
+        if set(projected_frontier) | set(projected_complement) != set(universe):
+            raise ValueError(f"global {member_kind} is nonexhaustive")
+        reconstructed_frontier[member_kind] = frontier
+        reconstructed_complement[member_kind] = complement
+        reconstructed_universe[member_kind] = universe
+        for placement, expected, actual in (
+            ("frontier", frontier, projected_frontier),
+            ("safe_complement", complement, projected_complement),
+        ):
+            key = f"{placement}_{member_kind}"
+            reconstructed_digests[key] = _dominance_membership_sha256(expected)
+            projected_digests[key] = _dominance_membership_sha256(actual)
+    if projected_digests != reconstructed_digests:
+        raise ValueError("global membership digest/list mismatch")
+    return {
+        "frontier": reconstructed_frontier,
+        "safe_complement": reconstructed_complement,
+        "universe": reconstructed_universe,
+        "membership_sha256": reconstructed_digests,
+    }
+
 
 class RenderedContextBudgetTests(unittest.TestCase):
+    def _assert_canonical_runtime_receipt(self, receipt: dict[str, object]) -> None:
+        manifest = json.loads(
+            (
+                ROOT
+                / "dist/universal/skills/recommended/"
+                / ".changeforge-build-manifest.json"
+            ).read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            EVAL.runtime_asset_build_identity(
+                manifest["authoritative_build_inputs"]["sha256"]
+            ),
+            receipt["build"],
+        )
+        semantic = dict(receipt)
+        actual = semantic.pop("receipt_sha256")
+        self.assertEqual(
+            hashlib.sha256(
+                json.dumps(
+                    semantic,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode("utf-8")
+            ).hexdigest(),
+            actual,
+        )
+
     def _assert_semantic_budget_witness(
         self,
         components: list[dict[str, object]],
@@ -293,10 +546,27 @@ class RenderedContextBudgetTests(unittest.TestCase):
         router_destination = target / router_source
         router_destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(ROOT / router_source, router_destination)
-        BUILD._write_control_layer3_selector_projections(
-            target
-            / "dist/universal/skills/recommended/engineering-control-plane"
+        runtime_source = (
+            ROOT
+            / "dist/universal/skills/recommended"
+            / primary
+            / "references/runtime"
         )
+        runtime_destination = (
+            target
+            / "dist/universal/skills/recommended"
+            / primary
+            / "references/runtime"
+        )
+        shutil.copytree(runtime_source, runtime_destination, dirs_exist_ok=True)
+        professional_source = (
+            ROOT / "dist/universal/skills/recommended" / primary / "SKILL.md"
+        )
+        professional_destination = (
+            target / "dist/universal/skills/recommended" / primary / "SKILL.md"
+        )
+        professional_destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(professional_source, professional_destination)
         relative = (
             f"dist/universal/skills/{EVAL.RUNTIME_NAME}/"
             ".changeforge-build-manifest.json"
@@ -332,6 +602,48 @@ class RenderedContextBudgetTests(unittest.TestCase):
             destination = target / binding["physical_path"]
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, destination)
+
+    @staticmethod
+    def _write_legacy_native_selector(
+        target: Path,
+        primary: str,
+        release_scenario: dict[str, object],
+    ) -> Path:
+        runtime_root = (
+            target
+            / "dist/universal/skills/recommended"
+            / primary
+            / "references/runtime"
+        )
+        selector = json.loads((runtime_root / "selector.json").read_text(encoding="utf-8"))
+        selector.pop("build")
+        for decision in selector["decisions"]:
+            decision["provenance"]["release_scenario"] = copy.deepcopy(
+                release_scenario
+            )
+        legacy_path = (
+            target
+            / "dist/universal/skills/recommended/engineering-control-plane/"
+            "references/selectors"
+            / f"{primary}.json"
+        )
+        legacy_path.parent.mkdir(parents=True, exist_ok=True)
+        legacy_path.write_text(
+            json.dumps(
+                selector,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        for binding in [*selector["decisions"], selector["complete"]]:
+            source = runtime_root / binding["path"]
+            destination = legacy_path.parent / binding["path"]
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, destination)
+        return legacy_path
 
     def test_native_dispatch_selection_assets_are_complete_and_host_ordered(self) -> None:
         case, runtime_manifest = self._native_dispatch_probe()
@@ -382,6 +694,48 @@ class RenderedContextBudgetTests(unittest.TestCase):
             measured["authoritative_build_inputs"],
             measured["runtime_manifest_binding"]["authoritative_build_inputs"],
         )
+        self.assertFalse(
+            any(row["kind"] == "runtime-identity" for row in measured["components"])
+        )
+        self.assertFalse(
+            any(
+                "integrity-manifest" in row["physical_path"]
+                or ".changeforge-build-manifest" in row["physical_path"]
+                for row in measured["components"]
+            )
+        )
+
+    def test_route_frozen_exact_set_uses_inline_receipt_without_selector_or_shards(self) -> None:
+        case, runtime_manifest = self._native_dispatch_probe()
+        step_index, step = next(
+            (index, item)
+            for index, item in enumerate(case["steps"])
+            if item.get("action") == "dispatch"
+            and item.get("primary_skill")
+            and item.get("profile") == "task-agent"
+        )
+        measured = EVAL._native_dispatch_selection_assets(
+            str(case["id"]),
+            step_index,
+            step,
+            ROOT,
+            runtime_manifest,
+            selection_owner="engineering-brief",
+        )
+        runtime_rows = [
+            row
+            for row in measured["components"]
+            if row["bucket"] in {"selector", "reference_partition"}
+        ]
+        self.assertEqual([], runtime_rows)
+        receipt = measured["professional_selector_receipt"]
+        self.assertEqual(
+            EVAL.runtime_asset_build_identity(
+                runtime_manifest["authoritative_build_inputs"]["sha256"]
+            ),
+            receipt["build"],
+        )
+        self.assertEqual(step["layer3_skills"], receipt["selected_layer3"])
 
     def test_native_dispatch_keeps_one_envelope_and_counts_asset_occurrences(self) -> None:
         case, runtime_manifest = self._native_dispatch_probe()
@@ -516,8 +870,8 @@ class RenderedContextBudgetTests(unittest.TestCase):
             root = Path(raw)
             self._copy_native_dispatch_subject(root, str(step["primary_skill"]), step)
             selector = root / (
-                "dist/universal/skills/recommended/engineering-control-plane/"
-                f"references/selectors/{step['primary_skill']}.json"
+                "dist/universal/skills/recommended/"
+                f"{step['primary_skill']}/references/runtime/selector.json"
             )
             selector.unlink()
             with self.assertRaisesRegex(ValueError, "professional-selector"):
@@ -571,7 +925,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         self.assertEqual(9, measured["selector_load_count"])
         self.assertEqual("complete", measured["selector_resolution"])
         self.assertEqual(
-            "engineering-change-analysis/complete.json",
+            "selectors/complete.json",
             measured["professional_selector_decision_path"],
         )
         self.assertEqual(step["layer3_skills"], measured["effective_ordered_layer3"])
@@ -631,7 +985,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     )
             self.assertEqual("exact", measured["selector_resolution"])
             self.assertEqual(
-                "engineering-change-analysis/failure-diagnosis-analysis.json",
+                "selectors/failure-diagnosis-analysis.json",
                 measured["professional_selector_decision_path"],
             )
             self.assertEqual(
@@ -692,6 +1046,20 @@ class RenderedContextBudgetTests(unittest.TestCase):
             {"router", "release_scenario", "selector_registry"},
             set(resolution["source_authorities"]),
         )
+        self.assertEqual(
+            {
+                "decision_id",
+                "scenario_id",
+                "light_case_id",
+                "selector_registry",
+            },
+            set(resolution["provenance"]),
+        )
+        self.assertNotIn("release_scenario", resolution["provenance"])
+        self.assertEqual(
+            resolution["source_authorities"]["selector_registry"],
+            resolution["provenance"]["selector_registry"],
+        )
         report_receipt = bundle["professional_selector_receipt"]
         self.assertEqual([], report_receipt["evidence_signals"])
         self.assertEqual(
@@ -705,6 +1073,186 @@ class RenderedContextBudgetTests(unittest.TestCase):
         self.assertEqual(
             EVAL.RUNTIME_NAME, bundle["runtime_manifest_binding"]["runtime"]
         )
+
+    def test_s3d_runtime_provenance_schema_and_source_binding_fail_closed(
+        self,
+    ) -> None:
+        document = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
+        case = copy.deepcopy(
+            next(item for item in document["cases"] if item["id"] == "diagnosis-only")
+        )
+        step_index, step = next(
+            (index, item)
+            for index, item in enumerate(case["steps"])
+            if item.get("action") == "dispatch"
+            and item.get("primary_skill") == "engineering-change-analysis"
+        )
+        runtime_manifest = json.loads(
+            (
+                ROOT
+                / "dist/universal/skills"
+                / EVAL.RUNTIME_NAME
+                / ".changeforge-build-manifest.json"
+            ).read_text(encoding="utf-8")
+        )
+        for label in (
+            "missing-selector-registry",
+            "extra-runtime-field",
+            "source-schema-release-scenario",
+            "selector-registry-disagreement",
+        ):
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as raw:
+                subject = Path(raw)
+                self._copy_native_dispatch_subject(
+                    subject, "engineering-change-analysis", step
+                )
+                selector_path = subject / (
+                    "dist/universal/skills/recommended/engineering-change-analysis/"
+                    "references/runtime/selector.json"
+                )
+                selector = json.loads(selector_path.read_text(encoding="utf-8"))
+                provenance = selector["decisions"][0]["provenance"]
+                if label == "missing-selector-registry":
+                    provenance.pop("selector_registry")
+                elif label == "extra-runtime-field":
+                    provenance["unexpected"] = "not-authoritative"
+                elif label == "source-schema-release-scenario":
+                    provenance["release_scenario"] = {
+                        "path": "src/registry/release-routing-scenarios.yaml",
+                        "sha256": "a" * 64,
+                        "pointer": "scenarios[id=diagnosis]",
+                    }
+                else:
+                    provenance["selector_registry"] = {
+                        "path": "src/registry/foundation-skills.yaml",
+                        "sha256": "a" * 64,
+                        "pointer": "selector_authority.aliases[candidate_id=other]",
+                    }
+                selector_path.write_text(
+                    json.dumps(
+                        selector,
+                        ensure_ascii=False,
+                        sort_keys=True,
+                        separators=(",", ":"),
+                    )
+                    + "\n",
+                    encoding="utf-8",
+                )
+                with self.assertRaisesRegex(
+                    ValueError,
+                    "resolution failed closed|provenance disagrees with source",
+                ):
+                    EVAL._native_dispatch_selection_assets(
+                        str(case["id"]),
+                        step_index,
+                        step,
+                        subject,
+                        runtime_manifest,
+                    )
+
+    def test_s3d_legacy_source_provenance_exact5_is_source_bound(self) -> None:
+        document = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
+        case = copy.deepcopy(
+            next(item for item in document["cases"] if item["id"] == "diagnosis-only")
+        )
+        step_index, step = next(
+            (index, item)
+            for index, item in enumerate(case["steps"])
+            if item.get("action") == "dispatch"
+            and item.get("primary_skill") == "engineering-change-analysis"
+        )
+        runtime_manifest = json.loads(
+            (
+                ROOT
+                / "dist/universal/skills"
+                / EVAL.RUNTIME_NAME
+                / ".changeforge-build-manifest.json"
+            ).read_text(encoding="utf-8")
+        )
+        with tempfile.TemporaryDirectory() as raw:
+            subject = Path(raw)
+            self._copy_native_dispatch_subject(
+                subject, "engineering-change-analysis", step
+            )
+            scenario_path = subject / "src/registry/release-routing-scenarios.yaml"
+            scenario_document = EVAL.load_yaml_file(scenario_path)
+            scenario = next(
+                row
+                for row in scenario_document["scenarios"]
+                if row.get("light_case_id") == case["id"]
+            )
+            expected_release_scenario = {
+                "path": "src/registry/release-routing-scenarios.yaml",
+                "sha256": hashlib.sha256(scenario_path.read_bytes()).hexdigest(),
+                "pointer": f"scenarios[id={scenario['id']}]",
+            }
+            selector_path = self._write_legacy_native_selector(
+                subject,
+                "engineering-change-analysis",
+                expected_release_scenario,
+            )
+            measured = EVAL._native_dispatch_selection_assets(
+                str(case["id"]),
+                step_index,
+                step,
+                subject,
+                runtime_manifest,
+                legacy_runtime_layout=True,
+            )
+            provenance = measured["professional_selector_resolution"]["provenance"]
+            self.assertEqual(
+                {
+                    "decision_id",
+                    "scenario_id",
+                    "light_case_id",
+                    "release_scenario",
+                    "selector_registry",
+                },
+                set(provenance),
+            )
+            self.assertEqual(expected_release_scenario, provenance["release_scenario"])
+            self.assertEqual(
+                measured["professional_selector_resolution"]["source_authorities"]
+                ["release_scenario"],
+                provenance["release_scenario"],
+            )
+
+            canonical_selector = json.loads(
+                selector_path.read_text(encoding="utf-8")
+            )
+            for label in ("missing-release-scenario", "altered-release-scenario"):
+                with self.subTest(label=label):
+                    selector = copy.deepcopy(canonical_selector)
+                    if label == "missing-release-scenario":
+                        selector["decisions"][0]["provenance"].pop(
+                            "release_scenario"
+                        )
+                    else:
+                        selector["decisions"][0]["provenance"][
+                            "release_scenario"
+                        ]["pointer"] = "scenarios[id=other]"
+                    selector_path.write_text(
+                        json.dumps(
+                            selector,
+                            ensure_ascii=False,
+                            sort_keys=True,
+                            separators=(",", ":"),
+                        )
+                        + "\n",
+                        encoding="utf-8",
+                    )
+                    with self.assertRaisesRegex(
+                        ValueError,
+                        "resolution failed closed|provenance disagrees with source",
+                    ):
+                        EVAL._native_dispatch_selection_assets(
+                            str(case["id"]),
+                            step_index,
+                            step,
+                            subject,
+                            runtime_manifest,
+                            legacy_runtime_layout=True,
+                        )
 
     def test_s3d_all_current_engineering_analysis_dispatches_resolve_once_per_host(self) -> None:
         document = json.loads(EVAL.FIXTURES.read_text(encoding="utf-8"))
@@ -894,35 +1442,28 @@ class RenderedContextBudgetTests(unittest.TestCase):
         selectors, partitions = (
             VALIDATION.layer3_selector_normalized_control_projections(authority)
         )
-        filename = f"{step['primary_skill']}.json"
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             self._copy_native_dispatch_subject(root, str(step["primary_skill"]), step)
-            control = root / (
-                "dist/universal/skills/recommended/engineering-control-plane/references"
+            professional_root = root / (
+                "dist/universal/skills/recommended/"
+                f"{step['primary_skill']}"
             )
-            selector_path = control / "selectors" / filename
-            selector_path.write_text(
-                json.dumps(selectors[filename], sort_keys=True, separators=(",", ":"))
-                + "\n",
-                encoding="utf-8",
+            BUILD._write_professional_runtime_selector_closure(
+                professional_root,
+                str(step["primary_skill"]),
+                selectors,
+                partitions,
+                EVAL.runtime_asset_build_identity(
+                    manifests["authoritative_build_inputs"]["sha256"]
+                ),
             )
             owners = [str(step["primary_skill"]), *step["layer3_skills"]]
             partition_paths = []
             for owner in owners:
                 partition_path = (
-                    control / "reference-records" / str(step["primary_skill"])
+                    professional_root / "references/runtime/reference-records"
                     / f"{owner}.json"
-                )
-                partition_path.parent.mkdir(parents=True, exist_ok=True)
-                partition_path.write_text(
-                    json.dumps(
-                        partitions[f"{step['primary_skill']}/{owner}.json"],
-                        sort_keys=True,
-                        separators=(",", ":"),
-                    )
-                    + "\n",
-                    encoding="utf-8",
                 )
                 partition_paths.append(partition_path)
             unresolved_step = copy.deepcopy(step)
@@ -1005,8 +1546,8 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (root / (
-                "dist/universal/skills/recommended/engineering-control-plane/"
-                "references/selectors/data-api-contract-changer.json"
+                "dist/universal/skills/recommended/data-api-contract-changer/"
+                "references/runtime/selector.json"
             )).unlink()
             measured = EVAL._native_dispatch_selection_assets(
                 "api-contract-change", step_index, step, root, manifests
@@ -1288,7 +1829,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         role_obligations = {
             "main-control-agent": ("Dispatch only/no target-code access",),
             "analysis-agent": (
-                "minimum complete direct read/search current source",
+                    "minimum-complete direct read/search of current source",
                 "Remain read-only",
             ),
             "task-agent": (
@@ -1368,7 +1909,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             "Depth only Level-added, never removed.",
             "Evidence Closure:",
             "independently direct read/search current source→minimum complete proof",
-            "counts/Top-K/files/summaries/digests/paths/output/opaque refs are selectors only",
+            "Exact locator/counts are selectors only; never inherit correctness/coverage.",
             "Actual diff authoritative; every changed file required; missing blocks",
             "older review cannot cover later edits.",
             "Never edit, repair, dispatch or inherit implementer reasoning",
@@ -2000,7 +2541,18 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 EVAL._component(
                     "layer3",
                     f"source-projection:{name}",
-                    BUILD._render_layer3_reference(foundation_items[name]),
+                    BUILD._render_layer3_reference(
+                        foundation_items[name],
+                        EVAL.runtime_asset_build_identity(
+                            json.loads(
+                                (
+                                    ROOT
+                                    / "dist/universal/skills/recommended/"
+                                    / ".changeforge-build-manifest.json"
+                                ).read_text(encoding="utf-8")
+                            )["authoritative_build_inputs"]["sha256"]
+                        ),
+                    ),
                 )
                 for name in dispatch["layer3_skills"]
             ],
@@ -2029,7 +2581,18 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 EVAL._component(
                     "layer3",
                     f"source-projection:{name}",
-                    BUILD._render_layer3_reference(foundation_items[name]),
+                    BUILD._render_layer3_reference(
+                        foundation_items[name],
+                        EVAL.runtime_asset_build_identity(
+                            json.loads(
+                                (
+                                    ROOT
+                                    / "dist/universal/skills/recommended/"
+                                    / ".changeforge-build-manifest.json"
+                                ).read_text(encoding="utf-8")
+                            )["authoritative_build_inputs"]["sha256"]
+                        ),
+                    ),
                 ),
                 capsule,
             ]
@@ -3346,6 +3909,65 @@ class RenderedContextBudgetTests(unittest.TestCase):
         self.assertEqual("candidate-higher-cost", one_over["cost_observation"]["status"])
         self.assertEqual([], one_over["errors"])
 
+    def test_end_to_end_ab_uses_exact_per_composition_delta_gate(self) -> None:
+        def bind(subject: dict[str, object], budget_class: str = "task") -> None:
+            for row in subject["cases"]:
+                row["step"] = "dispatch-1"
+                row["budget_class"] = budget_class
+                row["mapping_state"] = "raw-route-equal"
+                row["raw_route_obligations"] = copy.deepcopy(
+                    row["route_obligations"]
+                )
+
+        baseline = self._ab_subject(100)
+        allowed = self._ab_subject(102)
+        rejected = self._ab_subject(103)
+        for subject in (baseline, allowed, rejected):
+            bind(subject)
+        allowed_report = EVAL._compare_end_to_end_subjects(baseline, allowed)
+        self.assertEqual("pass", allowed_report["status"])
+        self.assertTrue(allowed_report["per_composition_gate"]["passed"])
+        self.assertEqual(2, allowed_report["per_composition_gate"]["rows"][0]["limit"])
+
+        rejected_report = EVAL._compare_end_to_end_subjects(baseline, rejected)
+        self.assertEqual("fail", rejected_report["status"])
+        self.assertFalse(rejected_report["per_composition_gate"]["passed"])
+        self.assertTrue(
+            any("per-composition token delta" in error for error in rejected_report["errors"]),
+            rejected_report["errors"],
+        )
+        self.assertEqual(
+            {
+                ("measured-case", host, "dispatch-1", "task")
+                for host in EVAL.FOCUS_PROFILE_HOSTS
+            },
+            {
+                tuple(row["key"])
+                for row in rejected_report["per_composition_gate"]["rows"]
+            },
+        )
+
+    def test_end_to_end_ab_enforces_main_and_task_hard_boundaries(self) -> None:
+        main_baseline = self._ab_subject(100)
+        main_candidate = self._ab_subject(101)
+        for subject in (main_baseline, main_candidate):
+            for row in subject["cases"]:
+                row["step"] = "profile"
+                row["budget_class"] = "main"
+        report = EVAL._compare_end_to_end_subjects(main_baseline, main_candidate)
+        self.assertEqual("fail", report["status"])
+        self.assertTrue(any("Main/Profile" in error for error in report["errors"]))
+
+        task_baseline = self._ab_subject(3200)
+        task_candidate = self._ab_subject(3201)
+        for subject in (task_baseline, task_candidate):
+            for row in subject["cases"]:
+                row["step"] = "dispatch-1"
+                row["budget_class"] = "task"
+        report = EVAL._compare_end_to_end_subjects(task_baseline, task_candidate)
+        self.assertEqual("fail", report["status"])
+        self.assertTrue(any("Task hard ceiling" in error for error in report["errors"]))
+
     @staticmethod
     def _quality_evidence(
         verdict: str,
@@ -3704,64 +4326,74 @@ class RenderedContextBudgetTests(unittest.TestCase):
     def test_end_to_end_ab_gate_accepts_only_closed_integration_scope(self) -> None:
         expected = frozenset(
             {
+                "installers/changeforge_install.py",
+                "installers/doctor.py",
                 "scripts/build.py",
                 "scripts/eval-agent-lightweight.py",
+                "scripts/eval-context-control-plane.py",
                 "scripts/eval-rendered-context-budget.py",
-                "scripts/validate-agent-profiles.py",
-                "scripts/validate-control-plane-prompt.py",
-                "scripts/validate-control-skills.py",
-                "scripts/validate-skill-routing.py",
+                "scripts/eval-routing.py",
+                "scripts/fixture_capsule_contract.py",
+                "scripts/package.py",
+                "scripts/validate-built-skill-reference-links.py",
+                "scripts/validate-installation.py",
                 "scripts/validate-task-contracts.py",
                 "scripts/validation_utils.py",
                 "src/agent-profiles/role-agents.json",
+                "src/control-model/core-contracts.json",
                 "src/control-prompts/main-control-agent.md",
-                "src/control-skills/engineering-control-plane/references/implementation-handoff-template.md",
+                "src/control-skills/engineering-control-plane/references/engineering-brief-template.md",
                 "src/control-skills/engineering-control-plane/references/professional-skill-router.md",
-                "src/control-skills/engineering-control-plane/references/review-handoff-template.md",
+                "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
+                "src/foundation/capabilities/business-rule-extraction/references/benchmarks-and-patterns.md",
+                "src/foundation/capabilities/dependency-vulnerability-scanning/references/evidence-patterns.md",
+                "src/foundation/capabilities/documentation-generation/references/benchmarks-and-patterns.md",
+                "src/foundation/capabilities/filesystem-process-safety/SKILL.md",
+                "src/foundation/capabilities/filesystem-process-safety/references/atomic-filesystem-commit-and-containment.md",
+                "src/foundation/capabilities/filesystem-process-safety/references/child-process-invocation-and-completion.md",
+                "src/foundation/capabilities/filesystem-process-safety/references/trust-sensitive-filesystem-process-protection.md",
+                "src/professional-skills/engineering-change-analysis/SKILL.md",
+                "src/registry/foundation-skills.yaml",
                 "evals/agent-light-trajectories/cases.yaml",
-                "reports/hookless-control-plane-eval.json",
-                "reports/rendered-context-budget.json",
-                "reports/rendered-context-budget.md",
                 "tests/scripts/test_authority_delivery_repair.py",
-                "tests/scripts/test_build_safety.py",
-                "tests/scripts/test_eval_agent_lightweight_layer3_references.py",
-                "tests/scripts/test_eval_agent_lightweight_utility.py",
-                "tests/scripts/test_eval_rendered_context_budget.py",
-                "tests/scripts/test_foundation_selector_authority.py",
-                "tests/scripts/test_rds_005_public_projection.py",
-                "tests/scripts/test_rds_006_agent_execution_discipline.py",
-                "tests/scripts/test_rds_006_task_handoff_context.py",
-                "tests/scripts/test_selector_jit_domain_parity.py",
-                "tests/scripts/test_skill_routing_roles.py",
-                "tests/scripts/test_validate_agent_profiles.py",
-                "tests/scripts/test_validate_control_plane_prompt.py",
-                "tests/scripts/test_validate_control_skills.py",
-                "tests/scripts/test_validate_docs_consistency.py",
-                "tests/scripts/test_validate_task_contracts.py",
-                "tests/test_hookless_build_install.py",
-                "scripts/validate-built-skill-reference-links.py",
                 "tests/scripts/test_built_professional_root_projection.py",
-                "tests/scripts/test_validate_built_skill_reference_links.py",
                 "tests/scripts/test_context_content_relocation.py",
+                "tests/scripts/test_decision_eval.py",
+                "tests/scripts/test_eval_agent_lightweight_utility.py",
+                "tests/scripts/test_eval_context_control_plane.py",
+                "tests/scripts/test_eval_rendered_context_budget.py",
+                "tests/scripts/test_filesystem_process_safety_calibration.py",
+                "tests/scripts/test_package.py",
+                "tests/scripts/test_reference_registry_jit.py",
+                "tests/scripts/test_runtime_asset_core_contract.py",
+                "tests/scripts/test_selector_jit_domain_parity.py",
+                "tests/scripts/test_validate_agent_profiles.py",
+                "tests/scripts/test_validate_built_skill_reference_links.py",
+                "tests/scripts/test_validation_utils.py",
+                "tests/test_hookless_architecture.py",
+                "tests/test_hookless_build_install.py",
+                "tests/test_hookless_evaluations.py",
+                "tests/test_hookless_installer_safety.py",
             }
         )
-        expected |= EVAL.AB_P4_INTEGRATION_WRITE_PATHS
-        self.assertIn(
-            "src/control-model/core-contracts.json", EVAL.AB_ALLOWED_WRITE_PATHS
+        self.assertEqual(48, len(expected))
+        self.assertEqual(expected, EVAL.AB_ALLOWED_WRITE_PATHS)
+        evaluator_source = SCRIPT.read_text(encoding="utf-8")
+        dynamic_diagnostic = (
+            'f"A/B candidate must bind the exact frozen '
+            '{len(AB_ALLOWED_WRITE_PATHS)}-path integration set: "'
+        )
+        self.assertEqual(1, evaluator_source.count(dynamic_diagnostic))
+        self.assertNotIn(
+            "A/B candidate must bind the exact frozen 50-path integration set",
+            evaluator_source,
+        )
+        self.assertFalse(
+            any(path.startswith("reports/") for path in EVAL.AB_ALLOWED_WRITE_PATHS)
         )
         self.assertNotIn(
             "src/registry/professional-skills.yaml", EVAL.AB_ALLOWED_WRITE_PATHS
         )
-        self.assertLessEqual(
-            {
-                "scripts/validate-task-contracts.py",
-                "src/control-skills/engineering-control-plane/references/review-handoff-template.md",
-                "tests/scripts/test_validate_task_contracts.py",
-            },
-            EVAL.AB_ALLOWED_WRITE_PATHS,
-            "Core/Review Handoff A/B patches require their shared contract consumer",
-        )
-        self.assertEqual(expected, EVAL.AB_ALLOWED_WRITE_PATHS)
 
     def test_end_to_end_ab_gate_rejects_fabricated_or_reduced_coverage(self) -> None:
         fabricated = self._ab_subject(100)
@@ -4532,7 +5164,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             (
                 enforcement,
                 original_text.replace(
-                    "## No-edit Enforcement\n\nsupported\n\n",
+                    "## No-edit Enforcement\n\nsemantic-role+host-enforcement\n\n",
                     "## No-edit Enforcement\n\nhost-enforced\n\n",
                     1,
                 ),
@@ -5231,6 +5863,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 return_value=(
                     {str(cases[0][1]["id"])},
                     {"retained_semantic_equality": True},
+                    {"canonical_sha256": "fixture-integration-summary"},
                 ),
             ),
         ):
@@ -5297,8 +5930,8 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 (
                     EVAL.DIST_SKILLS
                     / profile
-                    / "engineering-control-plane/references/reference-records"
                     / primary
+                    / "references/runtime/reference-records"
                     / f"{owner}.json"
                 ).read_text(encoding="utf-8")
             )
@@ -5736,140 +6369,231 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     )
                 )
 
+    def test_dominance_relation_oracle_rejects_counterfactuals(self) -> None:
+        member_kinds = ("professional", "layer3", "active_reference")
+
+        def witness(member: str, maximum_tokens: int) -> dict[str, object]:
+            return {
+                "member": member,
+                "maximum_tokens": maximum_tokens,
+                "canonical_reduction_key_sha256": "a" * 64,
+                "render_signature_sha256": "b" * 64,
+            }
+
+        row = {
+            "soft_target": 100,
+            "frontier_counts": {kind: 2 for kind in member_kinds},
+            "outside_counts": {kind: 2 for kind in member_kinds},
+            "frontier_witnesses": {
+                kind: [witness(f"{kind}-frontier-a", 101), witness(f"{kind}-frontier-b", 102)]
+                for kind in member_kinds
+            },
+            "outside": {
+                kind: [
+                    {"member": f"{kind}-safe-a", "maximum_tokens": 99},
+                    {"member": f"{kind}-safe-b", "maximum_tokens": 100},
+                ]
+                for kind in member_kinds
+            },
+        }
+        relation = _reconstruct_budget_dominance_relation(row)
+        projection = {
+            "frontier_counts": {
+                kind: len(relation["frontier"][kind]) for kind in member_kinds
+            },
+            "frontier": copy.deepcopy(relation["frontier"]),
+            "safe_complement_counts": {
+                kind: len(relation["safe_complement"][kind])
+                for kind in member_kinds
+            },
+            "safe_complement": copy.deepcopy(relation["safe_complement"]),
+        }
+        _reconstruct_global_dominance_relation(relation, relation, projection)
+
+        mutations: list[tuple[str, object, str]] = []
+        deleted = copy.deepcopy(row)
+        deleted["frontier_witnesses"]["professional"].pop()
+        mutations.append(("delete", deleted, "count"))
+        duplicate = copy.deepcopy(row)
+        duplicate["outside"]["layer3"].append(
+            copy.deepcopy(duplicate["outside"]["layer3"][0])
+        )
+        mutations.append(("duplicate", duplicate, "duplicate"))
+        boundary = copy.deepcopy(row)
+        boundary["frontier_witnesses"]["active_reference"][0]["maximum_tokens"] = 100
+        mutations.append(("equal-target-frontier", boundary, "wrong side"))
+        over_target = copy.deepcopy(row)
+        over_target["outside"]["active_reference"][0]["maximum_tokens"] = 101
+        mutations.append(("over-target-complement", over_target, "wrong side"))
+        bad_witness = copy.deepcopy(row)
+        bad_witness["frontier_witnesses"]["professional"][0][
+            "canonical_reduction_key_sha256"
+        ] = "invalid"
+        mutations.append(("witness", bad_witness, "witness"))
+        bad_count = copy.deepcopy(row)
+        bad_count["outside_counts"]["professional"] = 3
+        mutations.append(("count", bad_count, "count"))
+        bad_member = copy.deepcopy(row)
+        bad_member["outside"]["professional"][0]["member"] = ""
+        mutations.append(("member", bad_member, "member"))
+        for name, mutated, error in mutations:
+            with self.subTest(name=name), self.assertRaisesRegex(ValueError, error):
+                _reconstruct_budget_dominance_relation(mutated)
+
+        overlap = copy.deepcopy(projection)
+        overlap["safe_complement"]["professional"].append(
+            overlap["frontier"]["professional"][0]
+        )
+        overlap["safe_complement"]["professional"].sort()
+        overlap["safe_complement_counts"]["professional"] += 1
+        with self.assertRaisesRegex(ValueError, "overlap"):
+            _reconstruct_global_dominance_relation(relation, relation, overlap)
+
+        nonexhaustive = copy.deepcopy(projection)
+        nonexhaustive["safe_complement"]["professional"].pop()
+        nonexhaustive["safe_complement_counts"]["professional"] -= 1
+        with self.assertRaisesRegex(ValueError, "nonexhaustive"):
+            _reconstruct_global_dominance_relation(
+                relation, relation, nonexhaustive
+            )
+
+        unsorted = copy.deepcopy(projection)
+        unsorted["frontier"]["layer3"].reverse()
+        with self.assertRaisesRegex(ValueError, "sorted"):
+            _reconstruct_global_dominance_relation(relation, relation, unsorted)
+
+        digest_mismatch = copy.deepcopy(projection)
+        for placement_a, placement_b in (
+            ("frontier", "safe_complement"),
+        ):
+            first = digest_mismatch[placement_a]["active_reference"].pop(0)
+            second = digest_mismatch[placement_b]["active_reference"].pop(0)
+            digest_mismatch[placement_a]["active_reference"].append(second)
+            digest_mismatch[placement_b]["active_reference"].append(first)
+            digest_mismatch[placement_a]["active_reference"].sort()
+            digest_mismatch[placement_b]["active_reference"].sort()
+        with self.assertRaisesRegex(ValueError, "digest/list mismatch"):
+            _reconstruct_global_dominance_relation(
+                relation, relation, digest_mismatch
+            )
+
+    def test_dominance_relation_test_is_not_an_authoritative_build_input(self) -> None:
+        relative = Path("tests/scripts/test_eval_rendered_context_budget.py")
+        workspace_before = (ROOT / relative).read_bytes()
+        source_snapshot = VALIDATION.authoritative_build_input_snapshot(ROOT)
+        with tempfile.TemporaryDirectory() as raw:
+            subject = Path(raw) / "subject"
+            for include_root in source_snapshot["include_roots"]:
+                shutil.copytree(ROOT / include_root, subject / include_root)
+            for include_file in source_snapshot["include_files"]:
+                destination = subject / include_file
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(ROOT / include_file, destination)
+            target = subject / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(workspace_before)
+            before = VALIDATION.authoritative_build_input_snapshot(subject)
+            target.write_bytes(workspace_before + b"\n# temporary dominance oracle mutation\n")
+            after = VALIDATION.authoritative_build_input_snapshot(subject)
+
+        identity_fields = (
+            "schema_version",
+            "kind",
+            "algorithm",
+            "record_format",
+            "include_roots",
+            "include_files",
+            "exclusions",
+            "file_count",
+            "sha256",
+        )
+        self.assertEqual(
+            {field: before[field] for field in identity_fields},
+            {field: after[field] for field in identity_fields},
+        )
+        self.assertEqual(source_snapshot["sha256"], before["sha256"])
+        self.assertEqual(
+            VALIDATION.runtime_asset_build_identity(before["sha256"]),
+            VALIDATION.runtime_asset_build_identity(after["sha256"]),
+        )
+        relative_text = relative.as_posix()
+        self.assertNotIn(relative_text, before["include_files"])
+        self.assertFalse(
+            any(
+                relative_text == root or relative_text.startswith(f"{root}/")
+                for root in before["include_roots"]
+            )
+        )
+        self.assertEqual(workspace_before, (ROOT / relative).read_bytes())
+
     def test_global_dominance_frontier_is_complete_and_source_derived(self) -> None:
         composition = self._admissible_report()
         frontier = composition["dominance_frontier"]
 
         self.assertEqual(
             {
-                "analysis": {
-                    "candidate_count": 112_828,
-                    "exact_render_signature_count": 46_158,
-                    "over_target_candidate_count": 0,
-                },
-                "task": {
-                    "candidate_count": 19_281,
-                    "exact_render_signature_count": 19_281,
-                    "over_target_candidate_count": 112,
-                },
-                "analyzed_task": {
-                    "candidate_count": 66_150,
-                    "exact_render_signature_count": 66_150,
-                    "over_target_candidate_count": 0,
-                },
-                "review": {
-                    "candidate_count": 38_007,
-                    "exact_render_signature_count": 16_640,
-                    "over_target_candidate_count": 0,
-                },
+                "analysis": (112_828, 46_158),
+                "task": (19_281, 19_281),
+                "analyzed_task": (66_652, 66_652),
+                "review": (38_007, 16_640),
             },
             {
-                budget_class: {
-                    key: row[key]
-                    for key in (
-                        "candidate_count",
-                        "exact_render_signature_count",
-                        "over_target_candidate_count",
-                    )
-                }
+                budget_class: (
+                    row["candidate_count"],
+                    row["exact_render_signature_count"],
+                )
                 for budget_class, row in frontier["budget_classes"].items()
             },
         )
+        for budget_class, row in frontier["budget_classes"].items():
+            self.assertGreaterEqual(row["over_target_candidate_count"], 0)
+            self.assertLessEqual(
+                row["over_target_candidate_count"], row["candidate_count"]
+            )
+            if budget_class == "task":
+                self.assertGreater(row["over_target_candidate_count"], 0)
+            else:
+                self.assertEqual(0, row["over_target_candidate_count"])
+
+        budget_relations = {
+            budget_class: _reconstruct_budget_dominance_relation(row)
+            for budget_class, row in frontier["budget_classes"].items()
+        }
+        task_relation = budget_relations["task"]
+        review_relation = budget_relations["review"]
         global_union = frontier["global_task_review_union"]
+        reconstructed_global = _reconstruct_global_dominance_relation(
+            task_relation,
+            review_relation,
+            global_union,
+        )
         self.assertEqual(
-            {"professional": 5, "layer3": 28, "active_reference": 6},
+            {
+                member_kind: len(reconstructed_global["frontier"][member_kind])
+                for member_kind in _DOMINANCE_MEMBER_KINDS
+            },
             global_union["frontier_counts"],
         )
         self.assertEqual(
-            {"professional": 11, "layer3": 40, "active_reference": 260},
+            {
+                member_kind: len(
+                    reconstructed_global["safe_complement"][member_kind]
+                )
+                for member_kind in _DOMINANCE_MEMBER_KINDS
+            },
             global_union["safe_complement_counts"],
         )
-        self.assertEqual(
-            [
-                "change-documentation-gate",
-                "installed-client-change-builder",
-                "integration-change-builder",
-                "repository-tooling-change-builder",
-                "security-privacy-gate",
-            ],
-            global_union["frontier"]["professional"],
-        )
-        self.assertEqual(
-            [
-                "ai-product-extension",
-                "android-platform-extension",
-                "build-tool-professional-usage",
-                "client-application-testing",
-                "client-lifecycle-state-restoration",
-                "configuration-runtime-policy",
-                "consumer-impact-analysis",
-                "contract-testing",
-                "cross-platform-client-extension",
-                "csharp-dotnet-professional-usage",
-                "dependency-vulnerability-scanning",
-                "design-pattern-selection",
-                "documentation-generation",
-                "failure-contract-design",
-                "idempotency-retry-design",
-                "ios-ipados-platform-extension",
-                "kotlin-professional-usage",
-                "linux-desktop-platform-extension",
-                "macos-platform-extension",
-                "minimal-correct-implementation",
-                "offline-sync-conflict-resolution",
-                "privacy-data-lifecycle",
-                "state-management-design",
-                "swift-professional-usage",
-                "targeted-validation-selection",
-                "threat-modeling",
-                "web-security",
-                "windows-platform-extension",
-            ],
-            global_union["frontier"]["layer3"],
-        )
-        self.assertEqual(
-            [
-                "ai-product-extension/references/checklist.md",
-                "client-lifecycle-state-restoration/references/restoration-boundaries.md",
-                "dependency-vulnerability-scanning/references/evidence-patterns.md",
-                "documentation-generation/references/benchmarks-and-patterns.md",
-                "kotlin-professional-usage/references/coroutine-flow-state-contracts.md",
-                "kotlin-professional-usage/references/type-interop-and-dsl-contracts.md",
-            ],
-            global_union["frontier"]["active_reference"],
-        )
-        self.assertEqual(
-            [
-                "ai-code-review-refactor",
-                "architecture-impact-reviewer",
-                "data-api-contract-changer",
-                "data-middleware-change-builder",
-                "delivery-release-gate",
-                "engineering-artifact-review",
-                "high-risk-design-review",
-                "logging-design-gate",
-                "platform-infrastructure-change-builder",
-                "quality-test-gate",
-                "reliability-observability-gate",
-            ],
-            global_union["safe_complement"]["professional"],
-        )
-        expected_membership_sha256 = {
-            "frontier_professional": "05ea3553f9f11039c7cc955109c3e8c2cde1287d54e019cf040fa94ce139d114",
-            "frontier_layer3": "29532ec3aefd2dc81ba3e725e4814e5405fdfaac7ae337986e0dd18cbf4511a3",
-            "frontier_active_reference": "7b755df04debe3ace3c012e6b23ec6a89308a95711a1b7a7480fc3b67d166b39",
-            "safe_complement_professional": "08263e9035ab66f4b588c2baba8a88dcea7460dea6e3eae93c0e819f2bf99a92",
-            "safe_complement_layer3": "4d7deb92ce7c91731298b01c7cad4717912b4beefe91bb7f97c955f5dd9cb209",
-            "safe_complement_active_reference": "fa6031c51a27a2f80d92f099eeff34529c65529d6dc3f0a7ccb28cb64751d18e",
-        }
         actual_membership_sha256 = {
-            f"{placement}_{member_kind}": EVAL._sha256_text(
-                EVAL._canonical_json_text(global_union[placement][member_kind])
+            f"{placement}_{member_kind}": _dominance_membership_sha256(
+                global_union[placement][member_kind]
             )
             for placement in ("frontier", "safe_complement")
-            for member_kind in ("professional", "layer3", "active_reference")
+            for member_kind in _DOMINANCE_MEMBER_KINDS
         }
-        self.assertEqual(expected_membership_sha256, actual_membership_sha256)
+        self.assertEqual(
+            reconstructed_global["membership_sha256"],
+            actual_membership_sha256,
+        )
         runtime_manifest_path = (
             "dist/universal/skills/recommended/.changeforge-build-manifest.json"
         )
@@ -5950,17 +6674,22 @@ class RenderedContextBudgetTests(unittest.TestCase):
             },
             consumer_boundary["checked_path_fingerprints"],
         )
-        direct = frontier["budget_classes"]["task"]
-        review = frontier["budget_classes"]["review"]
-        self.assertEqual(
-            {"professional": 5, "layer3": 28, "active_reference": 6},
-            direct["frontier_counts"],
-        )
-        self.assertEqual(
-            {"professional": 0, "layer3": 0, "active_reference": 0},
-            review["frontier_counts"],
-        )
-        for budget_class, row in (("task", direct), ("review", review)):
+        for budget_class, row in frontier["budget_classes"].items():
+            relation = budget_relations[budget_class]
+            self.assertEqual(
+                {
+                    member_kind: len(relation["frontier"][member_kind])
+                    for member_kind in _DOMINANCE_MEMBER_KINDS
+                },
+                row["frontier_counts"],
+            )
+            self.assertEqual(
+                {
+                    member_kind: len(relation["safe_complement"][member_kind])
+                    for member_kind in _DOMINANCE_MEMBER_KINDS
+                },
+                row["outside_counts"],
+            )
             maximum_tokens = max(
                 [
                     item["maximum_tokens"]
@@ -6055,12 +6784,10 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 expected_professional="data-middleware-change-builder",
                 expected_selection_kind="implementation-risk",
                 expected_selected_layer3=expected_layer3,
+                expected_build_identity=receipt["build"],
             ),
         )
-        self.assertEqual(
-            "a4e5bbb9d94f00b18ab3a7dc8532bf671a6a69e2908fc5cccbaf7fdd92757f6e",
-            receipt["receipt_sha256"],
-        )
+        self._assert_canonical_runtime_receipt(receipt)
 
         selected_owners = {"data-middleware-change-builder", *expected_layer3}
         selected_references = [
@@ -6188,10 +6915,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         selected = next(
             item for item in classes if item["selected_layer3"] == expected_layer3
         )
-        self.assertEqual(
-            "77007dd093f4b9cd5e46dd953ba7982c1709ba32392e33091323bd01c7cc9484",
-            selected["receipt"]["receipt_sha256"],
-        )
+        self._assert_canonical_runtime_receipt(selected["receipt"])
 
         evidence_references = [
             (record["owner_skill"], record["path"])
@@ -6264,10 +6988,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         selected = next(
             item for item in classes if item["selected_layer3"] == expected_layer3
         )
-        self.assertEqual(
-            "ee2fbb10ab636724db615fb026229648289a1f821c2b78e23733f3f857d55900",
-            selected["receipt"]["receipt_sha256"],
-        )
+        self._assert_canonical_runtime_receipt(selected["receipt"])
 
         selected_owners = {"architecture-impact-reviewer", *expected_layer3}
         selected_references = [
@@ -6347,10 +7068,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         selected = next(
             item for item in classes if item["selected_layer3"] == expected_layer3
         )
-        self.assertEqual(
-            "9675e14cd6ed0e30fd85e02bf5ca9353d7e901d034632d15e1653ca976bc1056",
-            selected["receipt"]["receipt_sha256"],
-        )
+        self._assert_canonical_runtime_receipt(selected["receipt"])
 
         selected_owners = {"repository-tooling-change-builder", *expected_layer3}
         selected_references = [
@@ -6529,10 +7247,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         selected = next(
             item for item in classes if item["selected_layer3"] == expected_layer3
         )
-        self.assertEqual(
-            "141c7fccec4e72d06d444554f3451465a7612a8128a176840bd80c51ed23b18a",
-            selected["receipt"]["receipt_sha256"],
-        )
+        self._assert_canonical_runtime_receipt(selected["receipt"])
 
         selected_owners = {"reliability-observability-gate", *expected_layer3}
         selected_references = [
@@ -6775,7 +7490,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     for item in classes
                     if item["selected_layer3"] == expected_layer3
                 )
-                self.assertEqual(case["receipt"], selected["receipt"]["receipt_sha256"])
+                self._assert_canonical_runtime_receipt(selected["receipt"])
                 self.assertTrue(
                     set(expected_layer3).isdisjoint(projection["domain_authorization"])
                 )
@@ -6995,7 +7710,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                     for item in classes
                     if item["selected_layer3"] == expected_layer3
                 )
-                self.assertEqual(case["receipt"], selected["receipt"]["receipt_sha256"])
+                self._assert_canonical_runtime_receipt(selected["receipt"])
                 self.assertTrue(
                     set(expected_layer3).isdisjoint(projection["domain_authorization"])
                 )
@@ -7196,10 +7911,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             for item in task_classes
             if item["selected_layer3"] == task_layer3
         )
-        self.assertEqual(
-            "0c9aa8b856780e9aecfa385003bc7f2b87167ed326e3863b570c79af4a7848a9",
-            task_selected["receipt"]["receipt_sha256"],
-        )
+        self._assert_canonical_runtime_receipt(task_selected["receipt"])
         self.assertTrue(
             set(task_layer3).isdisjoint(task_projection["domain_authorization"])
         )
@@ -7393,10 +8105,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             for item in review_classes
             if item["selected_layer3"] == review_layer3
         )
-        self.assertEqual(
-            "ccdcc0383fe8a0956f5b801f66c9fb4173aa00336eed4ee10c252825ea2a3098",
-            review_selected["receipt"]["receipt_sha256"],
-        )
+        self._assert_canonical_runtime_receipt(review_selected["receipt"])
         self.assertTrue(
             set(review_layer3).isdisjoint(
                 review_projection["domain_authorization"]
@@ -7598,10 +8307,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
             item for item in classes
             if item["selected_layer3"] == expected_layer3
         )
-        self.assertEqual(
-            "23f0408560643c339c33bf05806fc6ab7e1c8929b892a2a2de28686f5b4fdd55",
-            selected["receipt"]["receipt_sha256"],
-        )
+        self._assert_canonical_runtime_receipt(selected["receipt"])
         self.assertTrue(
             set(expected_layer3).isdisjoint(projection["domain_authorization"])
         )
@@ -7828,15 +8534,10 @@ class RenderedContextBudgetTests(unittest.TestCase):
         selected = next(
             item for item in classes if item["selected_layer3"] == expected_layer3
         )
+        self._assert_canonical_runtime_receipt(selected["receipt"])
         self.assertEqual(
+            (["accepted-brief", "input-shape-change"], "implementation-risk", "professional-risk"),
             (
-                "b6f4ecd27fed13f1d570970b4a316d3a0c7c6128add25328b983318eafbe4f5b",
-                ["accepted-brief", "input-shape-change"],
-                "implementation-risk",
-                "professional-risk",
-            ),
-            (
-                selected["receipt"]["receipt_sha256"],
                 selected["receipt"]["evidence_signals"],
                 selected["receipt"]["selection_kind"],
                 selected["receipt"]["selection_basis"],
@@ -8034,9 +8735,9 @@ class RenderedContextBudgetTests(unittest.TestCase):
         selected = next(
             item for item in classes if item["selected_layer3"] == expected_layer3
         )
+        self._assert_canonical_runtime_receipt(selected["receipt"])
         self.assertEqual(
             (
-                "ff438335ba459e33cfccf8dd2a9a3903ad3094ebef55562d5467d3e855e6d3b8",
                 [
                     "cloud control plane",
                     "account authority",
@@ -8047,7 +8748,6 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "professional-risk",
             ),
             (
-                selected["receipt"]["receipt_sha256"],
                 selected["receipt"]["evidence_signals"],
                 selected["receipt"]["selection_kind"],
                 selected["receipt"]["selection_basis"],
@@ -8066,6 +8766,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "account authority",
                 "changed-surface",
             ],
+            build_identity=selected["receipt"]["build"],
         )
         self.assertEqual(
             ["cloud-platform-extension"],
@@ -8311,9 +9012,9 @@ class RenderedContextBudgetTests(unittest.TestCase):
         selected = next(
             item for item in classes if item["selected_layer3"] == expected_layer3
         )
+        self._assert_canonical_runtime_receipt(selected["receipt"])
         self.assertEqual(
             (
-                "561a404c9f71b49fc1c15e727f8fe21e426622ed9224df71d0d21056513da9b4",
                 [
                     "explicit-test-data-decision",
                     "changed installed-client behavior needs lifecycle os integration installation device configuration or accessibility proof",
@@ -8323,7 +9024,6 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "professional-risk",
             ),
             (
-                selected["receipt"]["receipt_sha256"],
                 selected["receipt"]["evidence_signals"],
                 selected["receipt"]["selection_kind"],
                 selected["receipt"]["selection_basis"],
@@ -8335,6 +9035,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         negative_receipt = EVAL.layer3_selector_runtime_selection_receipt(
             projection,
             evidence_signals=["explicit-test-data-decision", "analysis-action"],
+            build_identity=selected["receipt"]["build"],
         )
         self.assertNotIn("client-application-testing", negative_receipt["selected_layer3"])
         self.assertNotEqual(
@@ -8547,9 +9248,9 @@ class RenderedContextBudgetTests(unittest.TestCase):
         selected = next(
             item for item in classes if item["selected_layer3"] == expected_layer3
         )
+        self._assert_canonical_runtime_receipt(selected["receipt"])
         self.assertEqual(
             (
-                "274ab034c0a7efd4d2986963b7774d8ac909c445b89f5c19e0e306a97fdfcdd4",
                 [
                     "cloud control plane",
                     "account authority",
@@ -8561,7 +9262,6 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "professional-risk",
             ),
             (
-                selected["receipt"]["receipt_sha256"],
                 selected["receipt"]["evidence_signals"],
                 selected["receipt"]["selection_kind"],
                 selected["receipt"]["selection_basis"],
@@ -8581,6 +9281,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
                 "changed-surface",
                 "configuration runtime policy typed config default validation fail fast hot reload feature flag owner expiry cleanup kill switch stale flag mode kind switch tenant user experiment rollout rollback config observability",
             ],
+            build_identity=selected["receipt"]["build"],
         )
         self.assertNotIn(
             "powershell-professional-usage",
@@ -8861,15 +9562,14 @@ class RenderedContextBudgetTests(unittest.TestCase):
             "configuration runtime policy typed config default validation fail fast hot reload feature flag owner expiry cleanup kill switch stale flag mode kind switch tenant user experiment rollout rollback config observability",
             "desired-state infrastructure source with state identity drift destruction or recovery",
         ]
+        self._assert_canonical_runtime_receipt(selected["receipt"])
         self.assertEqual(
             (
-                "434c91b6b2caf2b3b78ff6ffbfd86491a1d834746060092e516142467fcb6953",
                 expected_signals,
                 "implementation-risk",
                 "professional-risk",
             ),
             (
-                selected["receipt"]["receipt_sha256"],
                 selected["receipt"]["evidence_signals"],
                 selected["receipt"]["selection_kind"],
                 selected["receipt"]["selection_basis"],
@@ -8884,6 +9584,7 @@ class RenderedContextBudgetTests(unittest.TestCase):
         negative_receipt = EVAL.layer3_selector_runtime_selection_receipt(
             projection,
             evidence_signals=expected_signals[:-1],
+            build_identity=selected["receipt"]["build"],
         )
         self.assertNotIn(
             "infrastructure-as-code-safety",
@@ -9170,15 +9871,14 @@ class RenderedContextBudgetTests(unittest.TestCase):
             item for item in classes if item["selected_layer3"] == expected_layer3
         )
         expected_signals = ["database-migration", "distributed-effect-change"]
+        self._assert_canonical_runtime_receipt(selected["receipt"])
         self.assertEqual(
             (
-                "6267555050601288125c263945346b3abdd3f22a54cb2a6337e3de44053e1298",
                 expected_signals,
                 "implementation-risk",
                 "professional-risk",
             ),
             (
-                selected["receipt"]["receipt_sha256"],
                 selected["receipt"]["evidence_signals"],
                 selected["receipt"]["selection_kind"],
                 selected["receipt"]["selection_basis"],
@@ -9190,7 +9890,9 @@ class RenderedContextBudgetTests(unittest.TestCase):
         }
         self.assertEqual([], [name for name in expected_layer3 if name in domain_names])
         negative_receipt = EVAL.layer3_selector_runtime_selection_receipt(
-            projection, evidence_signals=expected_signals[:-1]
+            projection,
+            evidence_signals=expected_signals[:-1],
+            build_identity=selected["receipt"]["build"],
         )
         self.assertNotIn("distributed-workflow-consistency", negative_receipt["selected_layer3"])
         self.assertNotEqual(selected["receipt"]["receipt_sha256"], negative_receipt["receipt_sha256"])
@@ -9382,15 +10084,14 @@ class RenderedContextBudgetTests(unittest.TestCase):
             "changed-surface",
             "production-apply-or-rollout",
         ]
+        self._assert_canonical_runtime_receipt(selected["receipt"])
         self.assertEqual(
             (
-                "0a93ab092e22e6ce4b18a629db71817e23222ed5d89397c5be7434e10a85047a",
                 expected_signals,
                 "implementation-risk",
                 "professional-risk",
             ),
             (
-                selected["receipt"]["receipt_sha256"],
                 selected["receipt"]["evidence_signals"],
                 selected["receipt"]["selection_kind"],
                 selected["receipt"]["selection_basis"],
@@ -9405,7 +10106,9 @@ class RenderedContextBudgetTests(unittest.TestCase):
             [name for name in expected_layer3 if name in domain_names],
         )
         negative_receipt = EVAL.layer3_selector_runtime_selection_receipt(
-            projection, evidence_signals=expected_signals[1:]
+            projection,
+            evidence_signals=expected_signals[1:],
+            build_identity=selected["receipt"]["build"],
         )
         self.assertNotIn(
             "iot-embedded-extension", negative_receipt["selected_layer3"]
@@ -9698,15 +10401,14 @@ class RenderedContextBudgetTests(unittest.TestCase):
             "changed-surface",
             "ssrf",
         ]
+        self._assert_canonical_runtime_receipt(selected["receipt"])
         self.assertEqual(
             (
-                "336dfef51f64a686fc616f4fc48cac5451ebd55fe61dee5e402d4e98ca5a90e4",
                 expected_signals,
                 "implementation-risk",
                 "professional-risk",
             ),
             (
-                selected["receipt"]["receipt_sha256"],
                 selected["receipt"]["evidence_signals"],
                 selected["receipt"]["selection_kind"],
                 selected["receipt"]["selection_basis"],
@@ -9721,7 +10423,9 @@ class RenderedContextBudgetTests(unittest.TestCase):
             [name for name in expected_layer3 if name in domain_names],
         )
         negative_receipt = EVAL.layer3_selector_runtime_selection_receipt(
-            projection, evidence_signals=expected_signals[:-1]
+            projection,
+            evidence_signals=expected_signals[:-1],
+            build_identity=selected["receipt"]["build"],
         )
         self.assertEqual(
             ["cloud-platform-extension"], negative_receipt["selected_layer3"]

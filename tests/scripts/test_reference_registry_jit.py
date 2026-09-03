@@ -218,7 +218,7 @@ class ReferenceRegistryJitTest(unittest.TestCase):
                     if finding["severity"] == "error"
                 )
 
-        self.assertEqual(611, contract_count)
+        self.assertEqual(612, contract_count)
         self.assertEqual(163, layer3_projection_count)
         self.assertEqual([], blockers)
 
@@ -275,7 +275,7 @@ class ReferenceRegistryJitTest(unittest.TestCase):
                         owner=entry["name"],
                     )
                 )
-        self.assertEqual(611, total)
+        self.assertEqual(612, total)
 
         original_counter = AUDIT.count_o200k_base_tokens
         AUDIT.count_o200k_base_tokens = lambda _text: 0
@@ -284,7 +284,7 @@ class ReferenceRegistryJitTest(unittest.TestCase):
         finally:
             AUDIT.count_o200k_base_tokens = original_counter
         summary = content["summary"]
-        self.assertEqual(611, summary["indexed_reference_entries"])
+        self.assertEqual(612, summary["indexed_reference_entries"])
         for field in (
             "missing_effective_reference_types",
             "missing_effective_load_when",
@@ -297,9 +297,9 @@ class ReferenceRegistryJitTest(unittest.TestCase):
 
         counts, errors = REFERENCE_VALIDATOR._effective_preface_contract(content)
         self.assertEqual([], errors)
-        self.assertEqual(611, counts["effective_reference_types"])
-        self.assertEqual(611, counts["effective_load_when"])
-        self.assertEqual(611, counts["effective_do_not_load_when"])
+        self.assertEqual(612, counts["effective_reference_types"])
+        self.assertEqual(612, counts["effective_load_when"])
+        self.assertEqual(612, counts["effective_do_not_load_when"])
 
         cache_checklist = next(
             item
@@ -2326,9 +2326,9 @@ class ReferenceRegistryJitTest(unittest.TestCase):
 
         self.assertEqual(110, len(checked))
         self.assertEqual(len(checked), len(set(checked)))
-        self.assertEqual(3514, line_count)
-        self.assertEqual(730, list_sentence_count)
-        self.assertEqual(113, review_count)
+        self.assertEqual(3498, line_count)
+        self.assertEqual(720, list_sentence_count)
+        self.assertEqual(109, review_count)
         self.assertEqual([], violations)
 
     def test_foundation_benchmark_gate_has_negative_controls(self) -> None:
@@ -2653,11 +2653,13 @@ class ReferenceRegistryJitTest(unittest.TestCase):
                     )
                 )
 
-        self.assertEqual({"targeted": 57, "template": 1}, counts)
+        self.assertEqual({"targeted": 58, "template": 1}, counts)
         self.assertEqual(
             [
                 "src/foundation/capabilities/skill-authoring-expert/"
-                "references/pressure-scenarios.md"
+                "references/pressure-scenarios.md",
+                "src/foundation/capabilities/filesystem-process-safety/"
+                "references/trust-sensitive-filesystem-process-protection.md",
             ],
             exact_line_limit,
         )

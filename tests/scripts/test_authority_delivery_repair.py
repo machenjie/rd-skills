@@ -15,7 +15,6 @@ SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-import build as BUILD
 import deterministic_route_oracle as ORACLE
 from fixture_capsule_contract import decode_public_task_extension
 from validation_utils import (
@@ -144,20 +143,32 @@ class AuthorityDeliveryRepairTests(unittest.TestCase):
 
     def test_brief_names_exact_owner_reachable_jit_projection(self) -> None:
         contract = CORE_CONTRACTS["layer3_selector_contract"]
-        expected = (
-            "engineering-control-plane/references/selectors/"
-            "<professional-skill>.json"
+        control_projection = "engineering-control-plane/references/selectors/"
+        self.assertEqual(
+            "professional-local-runtime-selector-closure",
+            contract.get("delivery_projection"),
         )
-        self.assertEqual(expected, contract.get("delivery_path_template"))
+        self.assertEqual(
+            "references/runtime/selector.json",
+            contract.get("delivery_path_template"),
+        )
         brief = " ".join(BRIEF.read_text(encoding="utf-8").split())
-        self.assertIn(expected, brief)
-        self.assertIn("exact authorized Layer 3", brief)
-        self.assertIn("skip the selector file", brief)
-        self.assertIn("one current-Professional projection", brief)
+        self.assertIn(
+            "JIT: `references/runtime/selector.json`; Runtime: `<V>/<B>`.",
+            brief,
+        )
+        self.assertNotIn("references/runtime/receipt.json", brief)
+        self.assertNotIn("references/runtime/identity.json", brief)
+        self.assertIn("Host-selected Professional root", brief)
+        self.assertIn("logical selection receipt's `build`", brief)
+        self.assertIn("skip selector/shards", brief)
+        self.assertNotIn(control_projection, brief)
 
     def test_built_analysis_brief_loads_one_projection_and_exact_route_skips(
         self,
     ) -> None:
+        import build as build_module
+
         with tempfile.TemporaryDirectory(dir=ROOT) as temporary:
             dist = Path(temporary) / "dist"
             universal = dist / "universal" / "skills"
@@ -188,25 +199,28 @@ class AuthorityDeliveryRepairTests(unittest.TestCase):
                 )
             )
             with mock.patch.multiple(
-                BUILD,
+                build_module,
                 DIST_DIR=dist,
                 UNIVERSAL_SKILLS_ROOT=universal,
                 OPENAI_ZIP_DIR=dist / "openai-api" / "zips",
                 AGENT_SKILL_ROOTS=agent_skill_roots,
                 AGENT_PROFILE_OUTPUTS=profile_outputs,
             ):
-                BUILD.build_profile("recommended")
+                build_module.build_profile("recommended")
 
             skills = universal / "recommended"
             control = skills / "engineering-control-plane"
             built_brief = (
                 control / "references" / "engineering-brief-template.md"
             ).read_text(encoding="utf-8")
-            expected_relative = Path(
-                "engineering-control-plane/references/selectors/"
-                "data-api-contract-changer.json"
-            )
+            professional_root = skills / "data-api-contract-changer"
+            expected_relative = Path("references/runtime/selector.json")
             self.assertIn(
+                "JIT: `references/runtime/selector.json`; Runtime: `<V>/<B>`.",
+                built_brief,
+            )
+            self.assertNotIn("references/runtime/identity.json", built_brief)
+            self.assertNotIn(
                 "engineering-control-plane/references/selectors/"
                 "<professional-skill>.json",
                 built_brief,
@@ -217,7 +231,7 @@ class AuthorityDeliveryRepairTests(unittest.TestCase):
             def load_current_professional() -> dict[str, object]:
                 loaded.append(expected_relative.as_posix())
                 return json.loads(
-                    (skills / expected_relative).read_text(encoding="utf-8")
+                    (professional_root / expected_relative).read_text(encoding="utf-8")
                 )
 
             def consume_for_brief(

@@ -14,6 +14,7 @@ from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "validation_utils.py"
+TEST_BUILD_IDENTITY = "AAECAwQFBgcICQoLDA0ODw"
 
 
 @contextlib.contextmanager
@@ -48,6 +49,89 @@ def _module_without_tiktoken() -> Iterator[tuple[ModuleType, list[str]]]:
 
 
 class ValidationUtilsDependencyBoundaryTests(unittest.TestCase):
+    def test_runtime_asset_build_identity_v2_vectors_and_canonical_decoder(
+        self,
+    ) -> None:
+        with _module_without_tiktoken() as (module, imports):
+            self.assertEqual(
+                "AAAAAAAAAAAAAAAAAAAAAA",
+                module.runtime_asset_build_identity("00" * 32),
+            )
+            self.assertEqual(
+                "_____________________w",
+                module.runtime_asset_build_identity("ff" * 32),
+            )
+            self.assertEqual(
+                "AAECAwQFBgcICQoLDA0ODw",
+                module.runtime_asset_build_identity(
+                    "000102030405060708090a0b0c0d0e0f"
+                    "101112131415161718191a1b1c1d1e1f"
+                ),
+            )
+            self.assertEqual(
+                bytes(range(16)),
+                module.runtime_asset_build_identity_bytes(
+                    "AAECAwQFBgcICQoLDA0ODw"
+                ),
+            )
+            self.assertEqual([], imports)
+
+            for malformed_digest in (
+                None,
+                b"00" * 32,
+                "0" * 63,
+                "0" * 65,
+                "A" * 64,
+                "g" * 64,
+                "0" * 63 + " ",
+            ):
+                with self.subTest(digest=malformed_digest):
+                    with self.assertRaises(ValueError):
+                        module.runtime_asset_build_identity(malformed_digest)
+
+            for malformed_identity in (
+                None,
+                b"A" * 22,
+                "0" * 32,
+                "A" * 21,
+                "A" * 23,
+                "A" * 21 + "B",
+                "A" * 21 + "+",
+                "A" * 21 + "/",
+                "A" * 21 + "=",
+                "A" * 21 + " ",
+            ):
+                with self.subTest(identity=malformed_identity):
+                    with self.assertRaises(ValueError):
+                        module.runtime_asset_build_identity_bytes(malformed_identity)
+
+    def test_runtime_selection_wrapper_requires_and_forwards_build_identity(
+        self,
+    ) -> None:
+        with _module_without_tiktoken() as (module, _imports):
+            with self.assertRaises(TypeError):
+                module.layer3_selector_runtime_selection(
+                    {},
+                    evidence_signals=["bounded signal"],
+                )
+            receipt = {"selected_layer3": ["configuration-runtime-policy"]}
+            with mock.patch.object(
+                module,
+                "layer3_selector_runtime_selection_receipt",
+                return_value=receipt,
+            ) as consumer:
+                selected = module.layer3_selector_runtime_selection(
+                    {"contract": "fixed projection"},
+                    evidence_signals=["bounded signal"],
+                    build_identity=TEST_BUILD_IDENTITY,
+                )
+            self.assertEqual(["configuration-runtime-policy"], selected)
+            consumer.assert_called_once_with(
+                {"contract": "fixed projection"},
+                evidence_signals=["bounded signal"],
+                build_identity=TEST_BUILD_IDENTITY,
+            )
+
     def test_review_finding_order_is_core_owned_and_closed(self) -> None:
         with _module_without_tiktoken() as (module, _imports):
             canonical = copy.deepcopy(module.CORE_CONTRACTS)

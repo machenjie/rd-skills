@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import importlib.util
 import io
 import json
@@ -80,6 +81,29 @@ def _source_report(*, status: str = "pass", evidence_scope: str = "deterministic
     }
 
 
+def _integration_evidence_summary() -> dict:
+    summary = {
+        "schema_version": 1,
+        "utility_fixture_count": 2,
+        "evidence_continuation_fixture_count": 8,
+        "route_frozen": True,
+        "logical_request_max": 1,
+        "host_attempt_max": 2,
+        "observation_max": 1,
+        "copilot_trace_sha256": "a" * 64,
+        "live_host": False,
+    }
+    summary["canonical_sha256"] = hashlib.sha256(
+        json.dumps(
+            summary,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
+    return summary
+
+
 def _rendered_report(*, status: str = "pass") -> dict:
     return {
         "schema_version": 2,
@@ -136,6 +160,7 @@ def _rendered_report(*, status: str = "pass") -> dict:
             ],
             "proof_limits": ["Deterministic transfer projection only."],
         },
+        "integration_evidence_summary": _integration_evidence_summary(),
         "errors": [],
     }
 
@@ -236,6 +261,25 @@ class ContextControlPlaneEvaluationTests(unittest.TestCase):
         )
         self.assertNotIn("realized_reduction_ratio", report["transferred_context_summary"])
         self.assertFalse(markdown_exists)
+
+    def test_consumes_integration_evidence_summary_and_digest_without_reducing_trace(self) -> None:
+        rendered = _rendered_report()
+        producer_summary = rendered["integration_evidence_summary"]
+        result, stderr, report, _markdown_exists = self._invoke(
+            json.dumps(_source_report()),
+            json.dumps(rendered),
+        )
+        self.assertEqual(0, result, stderr)
+        self.assertEqual(producer_summary, report["integration_evidence_summary"])
+
+        rendered["integration_evidence_summary"]["observation_max"] = 2
+        result, stderr, report, _markdown_exists = self._invoke(
+            json.dumps(_source_report()),
+            json.dumps(rendered),
+        )
+        self.assertEqual(1, result)
+        self.assertIn("summary digest mismatch", stderr)
+        self.assertIsNone(report)
 
     def test_rendered_context_rejects_unproven_long_task_join(self) -> None:
         rendered = _rendered_report()

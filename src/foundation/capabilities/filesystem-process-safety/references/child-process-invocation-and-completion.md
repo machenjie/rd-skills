@@ -1,6 +1,6 @@
 # Child Process Invocation And Completion
 
-- Execute a selected program directly with structured argv. Make lookup, environment, working directory, credential, and inherited-resource policy explicit; route shell semantics elsewhere.
+- Execute a selected program directly with structured argv. Make lookup, environment, working-directory, inherited-resource, stdio, completion, cancellation, and reconciliation behavior explicit.
 
 **Load when:** Executable selection, argv, environment, working directory, inherited resources, standard streams, exit, timeout, cancellation, descendants, cleanup, or result certainty can change the decision.
 
@@ -14,29 +14,30 @@ Official sources were accessed on 2026-07-26.
 
 ## One Decision
 
-Select one direct-process contract that binds program identity and inputs to a bounded, observable completion result. Treat shell execution as a different contract owned by `shell-cli-professional-usage`.
+Select one direct-process contract that binds program identity and structured inputs to a bounded, observable completion result. Shell execution remains a different contract owned by `shell-cli-professional-usage`.
 
 | Fact to establish | Required decision | Failure signal |
 |---|---|---|
-| Program identity | Select exact path or documented lookup policy, trusted search directories, and expected binary identity | Current directory, `PATH`, extension, quoting, or platform parsing selects another executable |
-| Arguments and environment | Pass structured argv and an explicit required environment; classify secrets and locale or encoding inputs | User text becomes command syntax or ambient variables change behavior or leak authority |
-| Working directory and authority | Set a controlled directory, credentials, permissions, and sandbox only from current requirements | The child reads or writes relative paths in an unintended location or inherits excess privilege |
-| Inherited resources | Allowlist standard streams and required descriptors or handles; close everything else | The child retains a secret file, socket, token, lock, or pipe and prevents cleanup |
+| Program identity | Select an exact path or one documented lookup policy and record the expected program identity | Current directory, `PATH`, extension, quoting, or platform parsing selects another program |
+| Arguments and environment | Pass structured argv and the explicit environment required for deterministic behavior | User text becomes command syntax or ambient variables change behavior |
+| Working directory | Set one controlled directory from the current operation contract | Relative paths resolve in an unintended location |
+| Inherited resources | Allowlist standard streams and required descriptors or handles; close everything else | An unrelated handle, lock, socket, or pipe survives and prevents cleanup |
 | Standard streams | Define stdin closure, binary or text encoding, output caps, redaction, and concurrent stdout/stderr draining | A full pipe deadlocks execution, decoding loses evidence, or unbounded capture exhausts memory |
 | Completion | Wait and reap; map spawn failure, normal exit, signaled or forced exit, partial output, and program-specific exit meanings | Start success or one output line is reported as completed work |
 | Timeout and cancellation | Define deadline, graceful request, escalation, descendant scope, final wait, and late-result handling | The caller returns while a child or descendant remains active |
-| Side effects and cleanup | Reconcile durable effects before retry; close process, thread, pipe, and job/group resources on success, error, cancellation, and timeout paths | Timeout or cancellation duplicates effects or leaves an unknown result unowned |
+| Result reconciliation and cleanup | Reconcile durable effects before retry and release every process, pipe, job, or group resource on each terminal path | Timeout or cancellation duplicates effects or leaves an unknown result unowned |
 
 ## Platform Constraints
 
-- POSIX path search, argv/environment vectors, signals and wait/reap differ from Windows application-name, command-line, environment/current-directory, and handle inheritance rules.
-- Bound descendants only through runtime-supported process-group/job ownership, and match timeout cleanup to the exact wrapper; direct-child termination alone is insufficient.
-- Do not project one wrapper's kill-and-wait contract onto another.
+- POSIX path search, argv and environment vectors, signals, and wait/reap differ from Windows application-name, command-line, environment, current-directory, and handle inheritance rules.
+- Bind descendants through a runtime-supported process group or job when the current operation owns them.
+- Match termination, final wait, and cleanup to the exact wrapper; direct-child termination alone is not completion.
 
 ## Failure Rules
 
-- Enforce the table's direct-argument, stream-draining, bounded-output, separate-stream, terminal-wait, and resource-release decisions.
-- Timeout, cancellation, or forced termination leaves side effects unknown until durable effects are inspected or reconciled; never retry blindly.
+- Preserve direct argv, concurrent stream draining, bounded output, separate-stream evidence, terminal wait, and resource release.
+- Timeout, cancellation, or forced termination leaves side effects unknown until result reconciliation; never retry blindly.
+- Preserve spawn, stream, exit, timeout, cleanup, and reconciliation failures as distinct outcomes.
 
 ## Primary Sources
 
@@ -51,4 +52,4 @@ Select one direct-process contract that binds program identity and inputs to a b
 
 ## Proof Limits
 
-These sources do not establish the repository's runtime wrapper, executable version, platform argument conversion, or environment policy. They also do not establish process-tree integration, target program exit meanings, external side effects, or production resource limits. Representative tests need to exercise hostile arguments, missing executables, environment isolation, output saturation, nonzero and signaled exits, timeout escalation, cancellation races, descendants, cleanup, and reconciliation relevant to the changed path.
+These sources do not establish the repository's wrapper, program version, platform argument conversion, exit meanings, descendant integration, external side effects, or resource limits. Exercise structured edge cases, missing programs, stream saturation, nonzero exits, timeout escalation, cancellation races, descendants, cleanup, and result reconciliation for the changed path.

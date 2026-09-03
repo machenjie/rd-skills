@@ -8,6 +8,7 @@ import copy
 import importlib.util
 import json
 from pathlib import Path
+import re
 import sys
 from typing import Any
 
@@ -26,6 +27,7 @@ from deterministic_route_oracle import (
 from validation_utils import (
     CORE_CONTRACTS,
     ValidationProblem,
+    authoritative_build_input_snapshot,
     compute_execution_level,
     decision_eval_authority,
     direct_bounded_discovery_outcome,
@@ -39,6 +41,7 @@ from validation_utils import (
     professional_automatic_routing_policy_fingerprint,
     report_output_paths,
     resolve_evidence_gap,
+    runtime_asset_build_identity,
     validate_main_assignment,
 )
 from fixture_capsule_contract import (
@@ -95,6 +98,21 @@ DECISION_LEVEL_EVIDENCE_PROFILES = {
     "material-l4",
     "material-l5",
 }
+
+
+def _authoritative_build_identity() -> str:
+    """Capture one source-bound build identity for a public evaluation."""
+
+    try:
+        return runtime_asset_build_identity(
+            authoritative_build_input_snapshot(ROOT).get("sha256")
+        )
+    except ValueError as exc:
+        raise ValidationProblem(
+            "authoritative build input snapshot sha256 must be 64 lowercase hex"
+        ) from exc
+
+
 def _deep_merge(base: object, overlay: object) -> object:
     """Return a detached recursive mapping merge for compact eval fixtures."""
 
@@ -943,6 +961,8 @@ def _evaluate_l5_confirmation(
 
 def _evaluate_review_copy(
     document: dict[str, Any],
+    *,
+    build_identity: str,
 ) -> tuple[dict[str, Any], list[str]]:
     errors: list[str] = []
     cases = document.get("cases", [])
@@ -992,6 +1012,7 @@ def _evaluate_review_copy(
         return layer3_selector_runtime_selection_receipt(
             projection,
             evidence_signals=signals,
+            build_identity=build_identity,
         )
 
     try:
@@ -1024,6 +1045,7 @@ def _evaluate_review_copy(
         expected_selected_layer3=baseline["professional_layer3_decision"][
             "implementation_layer3"
         ],
+        expected_build_identity=build_identity,
     )
     review_errors = layer3_selector_runtime_selection_receipt_errors(
         review_receipt,
@@ -1032,6 +1054,7 @@ def _evaluate_review_copy(
         expected_professional=baseline["review_decision"]["review_skill"],
         expected_selection_kind="review-risk",
         expected_selected_layer3=baseline["review_decision"]["review_layer3"],
+        expected_build_identity=build_identity,
     )
     receipts_distinct = (
         implementation_receipt["receipt_sha256"]
@@ -1059,6 +1082,7 @@ def _evaluate_review_copy(
         expected_professional=baseline["review_decision"]["review_skill"],
         expected_selection_kind="review-risk",
         expected_selected_layer3=copied_review_assignment["review_layer3"],
+        expected_build_identity=build_identity,
     )
     mutant_failure_ids = (
         ["decision-review-layer3-independent"]
@@ -1166,6 +1190,8 @@ def _evaluate_token_pressure(
 
 def _evaluate_review_domain_consumers(
     cases: object,
+    *,
+    build_identity: str,
 ) -> tuple[dict[str, Any], list[str]]:
     errors: list[str] = []
     expected_fields = {
@@ -1205,7 +1231,9 @@ def _evaluate_review_domain_consumers(
                 exact_layer3=None,
             )
             positive = layer3_selector_runtime_selection(
-                projection, evidence_signals=case["positive_signals"]
+                projection,
+                evidence_signals=case["positive_signals"],
+                build_identity=build_identity,
             )
             nearest_negative = layer3_selector_runtime_selection(
                 projection,
@@ -1213,9 +1241,12 @@ def _evaluate_review_domain_consumers(
                     *case["positive_signals"],
                     case["nearest_negative_signal"],
                 ],
+                build_identity=build_identity,
             )
             background = layer3_selector_runtime_selection(
-                projection, evidence_signals=case["background_signals"]
+                projection,
+                evidence_signals=case["background_signals"],
+                build_identity=build_identity,
             )
         except (ValidationProblem, ValueError) as exc:
             errors.append(
@@ -1250,9 +1281,11 @@ def _evaluate_review_domain_consumers(
     }, errors
 
 
-def evaluate_decision_document(
+def _evaluate_decision_document(
     document: object,
     authority: dict[str, Any],
+    *,
+    build_identity: str,
 ) -> dict[str, Any]:
     """Evaluate compact baselines and one controlled mutation per invariant."""
 
@@ -1319,7 +1352,10 @@ def evaluate_decision_document(
     errors.extend(l5_errors)
     errors.extend(token_errors)
     review_domain_evidence, review_domain_errors = (
-        _evaluate_review_domain_consumers(document.get("review_domain_cases"))
+        _evaluate_review_domain_consumers(
+            document.get("review_domain_cases"),
+            build_identity=build_identity,
+        )
     )
     errors.extend(review_domain_errors)
     cases = document.get("cases")
@@ -1352,7 +1388,10 @@ def evaluate_decision_document(
         "decision",
         "mutation",
     }
-    review_copy_evidence, review_copy_errors = _evaluate_review_copy(document)
+    review_copy_evidence, review_copy_errors = _evaluate_review_copy(
+        document,
+        build_identity=build_identity,
+    )
     errors.extend(review_copy_errors)
     for index, case in enumerate(cases):
         context = f"Decision Eval cases[{index}]"
@@ -1506,6 +1545,39 @@ def evaluate_decision_document(
     }
 
 
+def evaluate_decision_document(
+    document: object,
+    authority: dict[str, Any],
+) -> dict[str, Any]:
+    """Evaluate one Decision Eval document with one source identity capture."""
+
+    return _evaluate_decision_document(
+        document,
+        authority,
+        build_identity=_authoritative_build_identity(),
+    )
+
+
+def _evaluate_decision_cases(
+    cases_path: Path,
+    *,
+    authority: dict[str, Any] | None,
+    build_identity: str,
+) -> dict[str, Any]:
+    """Evaluate source-bound Decision Eval cases under one required identity."""
+
+    selected_authority = (
+        decision_eval_authority(CORE_CONTRACTS)
+        if authority is None
+        else copy.deepcopy(authority)
+    )
+    return _evaluate_decision_document(
+        load_yaml_file(cases_path),
+        selected_authority,
+        build_identity=build_identity,
+    )
+
+
 def evaluate_decision_cases(
     cases_path: Path = DECISION_CASES,
     *,
@@ -1513,13 +1585,10 @@ def evaluate_decision_cases(
 ) -> dict[str, Any]:
     """Load and evaluate the source-bound Decision Eval fixture."""
 
-    selected_authority = (
-        decision_eval_authority(CORE_CONTRACTS)
-        if authority is None
-        else copy.deepcopy(authority)
-    )
-    return evaluate_decision_document(
-        load_yaml_file(cases_path), selected_authority
+    return _evaluate_decision_cases(
+        cases_path,
+        authority=authority,
+        build_identity=_authoritative_build_identity(),
     )
 
 
@@ -2166,6 +2235,25 @@ def evaluate_routes(
 ) -> dict[str, Any]:
     """Evaluate current deterministic routes without writing tracked reports."""
 
+    return _evaluate_routes(
+        cases_path,
+        _validate_capability_matrix=_validate_capability_matrix,
+        _validate_boundary_relations=_validate_boundary_relations,
+        professional_registry=professional_registry,
+        build_identity=_authoritative_build_identity(),
+    )
+
+
+def _evaluate_routes(
+    cases_path: Path,
+    *,
+    _validate_capability_matrix: bool,
+    _validate_boundary_relations: bool,
+    professional_registry: object | None,
+    build_identity: str,
+) -> dict[str, Any]:
+    """Evaluate routes under one required source-bound build identity."""
+
     decision_authority = decision_eval_authority(CORE_CONTRACTS)
     compatibility_baseline: dict[str, int] = {}
     compatibility_errors: list[str] = []
@@ -2236,7 +2324,11 @@ def evaluate_routes(
             "results": [],
             "errors": errors,
         }
-    decision_eval = evaluate_decision_cases(authority=decision_authority)
+    decision_eval = _evaluate_decision_cases(
+        DECISION_CASES,
+        authority=decision_authority,
+        build_identity=build_identity,
+    )
     errors: list[str] = [*compatibility_errors, *decision_eval["errors"]]
     cases_data = load_yaml_file(cases_path)
     pro_data = (
@@ -2448,10 +2540,12 @@ def evaluate_routes(
         capability_results = (
             results
             if cases_path.resolve() == CAPABILITY_CASES.resolve()
-            else evaluate_routes(
+            else _evaluate_routes(
                 CAPABILITY_CASES,
                 _validate_capability_matrix=False,
                 _validate_boundary_relations=False,
+                professional_registry=professional_registry,
+                build_identity=build_identity,
             )["results"]
         )
         errors.extend(

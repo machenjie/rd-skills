@@ -50,14 +50,29 @@ non-blocked First Executable Slice field, then preserve the Slice's Professional
 Skill and Layer 3 selections verbatim.
 
 When this Brief must select Layer 3 for an analyzed downstream Task or Review,
-load exactly one current-Professional projection from
-`engineering-control-plane/references/selectors/<professional-skill>.json`.
-Load it only after the Professional and downstream profile are fixed, and do
-not load any sibling projection, index, or catalog. If the exact authorized
-Layer 3 set is already fixed, skip the selector file and retain that authorized
-set. Write the resulting exact set into the Brief; downstream Task and Review
-agents do not reroute. Main continues to own Direct and initial-Analysis
-selection.
+use the Host-selected Professional root and its already-loaded entrypoint line:
+
+JIT: `references/runtime/selector.json`; Runtime: `<V>/<B>`.
+
+Validate frontmatter Professional plus `V/B` against the logical selection
+receipt's `build` and every current selector, partition, or Layer 3 marker on
+its existing read. Never read an identity sidecar, reread a selector for this
+check, read root/integrity manifests, calculate digests, or search HOME,
+parents, siblings, or globs. Missing, malformed, stale, or mismatched bindings
+fail closed without Utility or reroute. If the exact set is fixed, skip
+selector/shards and validate only the entrypoint, receipt, fixed-path exact
+Layer 3, and named References.
+Write the exact set into the Brief; downstream Task and Review do not reroute.
+Main still owns Direct and initial-Analysis selection.
+
+Analysis remains read/search-only. Only when a material Claim cannot close from
+current read/search evidence and one bounded executable observation can decide
+it, return one Evidence Request keyed by Analysis Task ID, Continuation ID, and
+Claim ID. The contract is one logical request, at most two Host attempts after
+one denied-before-observation exact-authority retry, and one observation. Main
+dispatches no-Skill/no-Layer-3/no-edit Utility and returns evidence, freshness,
+scope, and Proof Limit to the same initial or Delta Analysis. Unsupported or
+refused evidence becomes a Proof Limit; permission never changes the route.
 
 Delta Analysis is permitted only when evidence invalidates Acceptance/Non-goals,
 Owner/Placement/Invariant, contract/data semantics, dependency/rollback,

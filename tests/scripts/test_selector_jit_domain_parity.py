@@ -334,8 +334,8 @@ class SelectorJitDomainParityTests(unittest.TestCase):
             / "src/control-skills/engineering-control-plane/references/professional-skill-router.md"
         ).read_text(encoding="utf-8")
         self.assertIn(
-            "engineering-control-plane/references/selectors/"
-            "<professional-skill>.json",
+            "load only `references/runtime/selector.json` from the Host-selected "
+            "Professional root",
             router,
         )
 
@@ -372,22 +372,25 @@ class SelectorJitDomainParityTests(unittest.TestCase):
             self.assertEqual("review-risk", projection["selection_basis"])
             self.assertEqual(professional, projection["professional_skill"])
             with self.subTest(professional=professional, outcome="positive"):
-                selected = VALIDATION.layer3_selector_runtime_selection(
+                selected = VALIDATION.layer3_selector_runtime_selection_receipt(
                     projection,
                     evidence_signals=positive,
-                )
+                    build_identity="AAECAwQFBgcICQoLDA0ODw",
+                )["selected_layer3"]
                 self.assertEqual([domain], selected)
             with self.subTest(professional=professional, outcome="nearest-negative"):
-                selected = VALIDATION.layer3_selector_runtime_selection(
+                selected = VALIDATION.layer3_selector_runtime_selection_receipt(
                     projection,
                     evidence_signals=[*positive, nearest_negative],
-                )
+                    build_identity="AAECAwQFBgcICQoLDA0ODw",
+                )["selected_layer3"]
                 self.assertEqual([], selected)
             with self.subTest(professional=professional, outcome="background"):
-                selected = VALIDATION.layer3_selector_runtime_selection(
+                selected = VALIDATION.layer3_selector_runtime_selection_receipt(
                     projection,
                     evidence_signals=positive[1:],
-                )
+                    build_identity="AAECAwQFBgcICQoLDA0ODw",
+                )["selected_layer3"]
                 self.assertEqual([], selected)
 
     def test_cardinality_fails_closed_without_truncation(self) -> None:
@@ -491,6 +494,28 @@ class SelectorJitDomainParityTests(unittest.TestCase):
         )
         self.assertEqual("independent-review-risk", contract["review_selection"])
         self.assertEqual("fail-closed", contract["over_maximum"])
+        self.assertEqual(
+            "professional-local-runtime-selector-closure",
+            contract["delivery_projection"],
+        )
+        self.assertEqual(
+            "references/runtime/selector.json",
+            contract["delivery_path_template"],
+        )
+        router = (
+            ROOT
+            / "src/control-skills/engineering-control-plane/references/"
+            "professional-skill-router.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            "load only `references/runtime/selector.json` from the Host-selected "
+            "Professional root",
+            router,
+        )
+        self.assertNotIn(
+            "load only `engineering-control-plane/references/selectors/",
+            router,
+        )
 
     def test_build_has_no_oracle_import_or_task_matcher(self) -> None:
         source = (ROOT / "scripts/build.py").read_text(encoding="utf-8")
@@ -510,11 +535,11 @@ class SelectorJitDomainParityTests(unittest.TestCase):
         }
         self.assertEqual(set(), forbidden_names)
         self.assertIn(
-            '_write_control_layer3_selector_projections(destination)',
+            "_write_professional_runtime_selector_closure(",
             source,
         )
-        self.assertIn(
-            'destination / "references" / "selectors"',
+        self.assertNotIn(
+            '_write_control_layer3_selector_projections(destination)',
             source,
         )
         self.assertNotIn("_write_layer3_selector_authority", source)

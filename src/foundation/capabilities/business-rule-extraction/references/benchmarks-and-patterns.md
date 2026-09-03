@@ -22,14 +22,6 @@ Use this reference when root `SKILL.md` needs deeper support for rule authority,
 | Is this analyst-managed tabular policy? | Prefer decision table with hit policy and owner review. | DMN/table owner, precedence, effective dates, generated/tested artifact. |
 | Is this high-change policy needing an engine? | Use OPA/Cedar/rules engine only with governance, versioning, and performance evidence. | Engine owner, bundle versioning, decision logs, latency/cache validation. |
 
-## Current Evidence And Freshness
-
-- repository inspection selects duplicate decision sites, entry points, SQL/report paths, jobs/imports/admin scripts, test fixtures, generated artifacts, docs, support macros, and audit schemas.
-- prior task evidence can identify prior disputed rules, spreadsheet authority, fragile bypass paths, or known support escalations; accept it only after current source, owner, or validation evidence confirms it.
-- Observable action sequence decides whether rule validation, replay, owner review, or graph scan ran after the final rule/catalog/source edit.
-- targeted validation selection maps each rule id to allowed/denied cases, entry-point checks, replay/audit checks, owner approval, release blocker, stale command, or residual risk.
-- Agent-tool permission/sandbox evidence is required before running broad graph scans, data-replay scripts, spreadsheet exports, support-tool reads, migrations, or rule-engine bundle generation.
-
 ## Rule Validation Map
 
 | Claim | Evidence Pattern | What It Proves | What It Does Not Prove |

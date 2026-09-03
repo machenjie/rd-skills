@@ -17,6 +17,7 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 import validation_utils as VALIDATION  # noqa: E402
+import build as BUILD  # noqa: E402
 
 
 def load_package_module():
@@ -69,14 +70,50 @@ class PackageSafetyTests(unittest.TestCase):
                 )
                 for entry in registries["professional"]
             }
+            source_snapshot = VALIDATION.authoritative_build_input_snapshot(ROOT)
+            runtime_asset_bindings = {}
+            build_identity = VALIDATION.runtime_asset_build_identity(
+                source_snapshot["sha256"]
+            )
+            runtime_version = BUILD._source_version()
             for name in [*names["control"], *names["professional"]]:
                 skill = source / name
                 skill.mkdir(parents=True)
-                (skill / "SKILL.md").write_text(f"# {name}\n", encoding="utf-8")
+                (skill / "SKILL.md").write_text(
+                    "---\n"
+                    f"name: {name}\n"
+                    "---\n\n"
+                    f"# {name}\n\n"
+                    "## JIT Reference Delivery\n\n"
+                    "JIT: `references/runtime/selector.json`; "
+                    f"Runtime: `{runtime_version}/{build_identity}`.\n",
+                    encoding="utf-8",
+                )
+                if name in names["professional"]:
+                    selector = skill / "references/runtime/selector.json"
+                    selector.parent.mkdir(parents=True)
+                    selector.write_text(
+                        json.dumps(
+                            {"build": build_identity},
+                            sort_keys=True,
+                            separators=(",", ":"),
+                        )
+                        + "\n",
+                        encoding="utf-8",
+                    )
+                    runtime_asset_bindings[name] = (
+                        BUILD._write_and_validate_runtime_bundle_metadata(
+                            skill,
+                            name,
+                            source_snapshot,
+                        )
+                    )
             manifest_path = source / ".changeforge-build-manifest.json"
             manifest = {
                 "profile": "recommended",
-                "authoritative_build_inputs": VALIDATION.authoritative_build_input_snapshot(ROOT),
+                "source_version": BUILD._source_version(),
+                "authoritative_build_inputs": source_snapshot,
+                "runtime_asset_bindings": runtime_asset_bindings,
                 "top_level_skills": [*names["control"], *names["professional"]],
                 "control_skills": names["control"],
                 "professional_skills": names["professional"],

@@ -140,7 +140,7 @@ class HooklessArchitectureTests(unittest.TestCase):
         )
         for phrase in progress_contract["required_terms"]:
             self.assertIn(phrase.casefold(), text)
-        self.assertIn("permission required: scope expansion", text)
+        self.assertIn("permission required for scope expansion", text)
         self.assertNotIn(
             "or the authoritative control prompt already in context",
             text,
@@ -571,6 +571,68 @@ class HooklessArchitectureTests(unittest.TestCase):
             [item["id"] for item in trajectory["scheduling_cases"]],
         )
         self.assertEqual(2, len(trajectory["utility_cases"]))
+        self.assertEqual(8, len(trajectory["evidence_continuation_cases"]))
+        evidence_by_id = {
+            item["id"]: item for item in trajectory["evidence_continuation_cases"]
+        }
+        self.assertEqual(
+            {
+                "evidence-static-sufficient",
+                "evidence-environment-unknown",
+                "evidence-runtime-asset-failure",
+            },
+            {
+                case_id
+                for case_id, item in evidence_by_id.items()
+                if item["assignment"] is None
+            },
+        )
+        self.assertEqual(
+            2, len(evidence_by_id["evidence-permission-retry"]["attempts"])
+        )
+        self.assertEqual(
+            [],
+            evidence_by_id["evidence-authority-refused"]["attempts"],
+        )
+        self.assertEqual(
+            [
+                ["evidence-observation-operation"],
+                ["evidence-observation-operation"],
+            ],
+            [
+                attempt["commands"]
+                for attempt in evidence_by_id["evidence-permission-retry"][
+                    "attempts"
+                ]
+            ],
+        )
+        self.assertEqual(
+            [
+                "evidence-workspace-preflight",
+                "evidence-observation-operation",
+                "evidence-observation-operation",
+                "evidence-workspace-postflight",
+            ],
+            evidence_by_id["evidence-permission-retry"]["utility_return"][
+                "commands_run"
+            ],
+        )
+        self.assertEqual(
+            [
+                "evidence-workspace-preflight",
+                "evidence-workspace-postflight",
+            ],
+            evidence_by_id["evidence-authority-refused"]["utility_return"][
+                "commands_run"
+            ],
+        )
+        for item in evidence_by_id.values():
+            if item["utility_return"] is not None:
+                self.assertEqual(11, len(item["utility_return"]))
+                self.assertEqual(
+                    {"evidence", "freshness", "scope", "proof_limit"},
+                    set(item["utility_return"]["artifact_or_check_outcomes"]),
+                )
         ids = {item["id"] for item in trajectory["cases"]}
         self.assertTrue(
             {

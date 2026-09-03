@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -153,7 +154,7 @@ def _load_rendered_context_report(
     expected_long_case_ids: set[str],
     expected_fixture_schema_version: int,
     path: Path | None = None,
-) -> tuple[dict[str, Any], dict[str, Any]]:
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     report_path = RENDERED_CONTEXT_REPORT if path is None else path
     report = _read_json(
         report_path,
@@ -242,7 +243,36 @@ def _load_rendered_context_report(
     if not isinstance(semantic, dict) or semantic.get("retained_semantic_equality") is not True:
         raise ValueError("rendered-context semantic equality evidence is missing")
     summary = {field: transfer[field] for field in TRANSFER_SUMMARY_FIELDS}
-    return report, summary
+    integration_summary = report.get("integration_evidence_summary")
+    integration_fields = (
+        "schema_version",
+        "utility_fixture_count",
+        "evidence_continuation_fixture_count",
+        "route_frozen",
+        "logical_request_max",
+        "host_attempt_max",
+        "observation_max",
+        "copilot_trace_sha256",
+        "live_host",
+        "canonical_sha256",
+    )
+    if not isinstance(integration_summary, dict) or tuple(
+        integration_summary
+    ) != integration_fields:
+        raise ValueError(
+            "rendered-context report lacks exact producer integration evidence summary"
+        )
+    expected_digest = hashlib.sha256(
+        json.dumps(
+            {key: integration_summary[key] for key in integration_fields[:-1]},
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
+    if integration_summary.get("canonical_sha256") != expected_digest:
+        raise ValueError("rendered-context producer integration summary digest mismatch")
+    return report, summary, integration_summary
 
 
 def _args(argv: list[str] | None) -> argparse.Namespace:
@@ -269,11 +299,13 @@ def main(argv: list[str] | None = None) -> int:
             for item in cases
             if item["metrics"].get("required_progress_for_multi_agent")
         }
-        rendered, transfer_summary = _load_rendered_context_report(
+        rendered, transfer_summary, integration_evidence_summary = (
+            _load_rendered_context_report(
             {str(item["id"]) for item in cases},
             expected_long_case_ids,
             int(source["fixture_schema_version"]),
             rendered_path,
+            )
         )
     except ValueError as exc:
         print(f"eval-context-control-plane: ERROR: {exc}", file=sys.stderr)
@@ -352,6 +384,7 @@ def main(argv: list[str] | None = None) -> int:
         },
         "rendered_context_summary": rendered["aggregate"],
         "transferred_context_summary": transfer_summary,
+        "integration_evidence_summary": integration_evidence_summary,
         "errors": errors,
     }
     args.reports_dir.mkdir(parents=True, exist_ok=True)

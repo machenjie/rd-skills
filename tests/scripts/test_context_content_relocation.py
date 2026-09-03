@@ -16,6 +16,8 @@ if str(SCRIPTS) not in sys.path:
 import build as BUILD
 import validation_utils as VALIDATION
 
+TEST_BUILD_IDENTITY = "AAECAwQFBgcICQoLDA0ODw"
+
 G2_BASE_MANIFEST_DIGEST = (
     "43beb22720f6848259dfd28883e6cf52742de81660d78b53a65b87f0ffe9d08c"
 )
@@ -1558,7 +1560,7 @@ POST_B_TASK_CONTENT_HASHES = {
 }
 
 POST_B_TASK_BUILT_TOKENS = {
-    "src/professional-skills/installed-client-change-builder/SKILL.md": 224,
+    "src/professional-skills/installed-client-change-builder/SKILL.md": 228,
     "src/foundation/capabilities/client-lifecycle-state-restoration/SKILL.md": 156,
     "src/foundation/capabilities/offline-sync-conflict-resolution/SKILL.md": 180,
     "src/foundation/capabilities/state-management-design/SKILL.md": 160,
@@ -1936,11 +1938,11 @@ C1F_FINAL_SOURCE_HASHES = {
 }
 
 C1F_BUILT_PROJECTION_SPECS = {
-    "src/professional-skills/repository-tooling-change-builder/SKILL.md": ("repository-tooling-change-builder", 352, "a4ce65c28bbf036361af56a3e834bae9594d03a5710420888e586e6cd7e7aec3"),
+    "src/professional-skills/repository-tooling-change-builder/SKILL.md": ("repository-tooling-change-builder", 355, "77a31ec082a34f84a8f76cb6206f8f85bcac8814d78812dcc1d83c7e185c7b9a"),
     "src/foundation/capabilities/design-pattern-selection/SKILL.md": (None, 195, "3130d22eb8c266fecd01674d0eb4157a394fa44f6daa847eb247a642231402e4"),
     "src/foundation/capabilities/build-tool-professional-usage/SKILL.md": (None, 242, "5e9b7d9061c8a254e2af385f5a68a765df7561e2877acb0717195631a3e8b90c"),
     "src/foundation/capabilities/targeted-validation-selection/SKILL.md": (None, 196, "9a39ae25d5c91b2107be292255491ef256bb590180531377c563dbfde2f29ba4"),
-    "src/professional-skills/reliability-observability-gate/SKILL.md": ("reliability-observability-gate", 341, "4b83912c8d1a6b97443e914407e2caeed34c0dc31a84244f4e8561000026961d"),
+    "src/professional-skills/reliability-observability-gate/SKILL.md": ("reliability-observability-gate", 342, "2636cdd748070c03efd4e8d3e05a65ff083148dbda79626dfea890537171a226"),
     "src/foundation/capabilities/degradation-circuit-breaking/SKILL.md": (None, 182, "9cb58c7134795ab8fa374bc6c99ed56a90a69678e9b4fe4ba3689f1696cc4046"),
     "src/foundation/capabilities/observability/SKILL.md": (None, 153, "7f51058736e2e7138cac6032fb7a7c67e0c75ae7002ed9016e306330e77573ab"),
     "src/foundation/capabilities/backup-recovery/SKILL.md": (None, 197, "1a02c085a6e5f5c64c637e78c6d9fda317b2c8c69fa4727580f3ef68b2f1e512"),
@@ -1981,15 +1983,15 @@ C1G_PROTECTED_HASHES = {
     "src/foundation/capabilities/release-rollback/references/checklist.md": "e8a45f93dcb38522492d252a295e5a6dcd61f9899bada1f5001aededf85c4096",
     "src/foundation/capabilities/release-rollback/references/evidence-patterns.md": "c0081ac454f9f9fa8a7ebd30b30a41cffdf41db26d3140f9e694672c3c109e58",
     "src/foundation/capabilities/configuration-runtime-policy/references/checklist.md": "55406df248bce907803dffd55d3473109d149526cea056a4d5f7c9113954275d",
-    "src/registry/professional-skills.yaml": "962639a800a9881c6a1068800c86d6ffe6697ff1650eb066988083d12410252a",
-    "src/registry/foundation-skills.yaml": "b783c62012e1f60680f11043d6146c36bb6aaaa8c9ebebc41311df3413750f64",
+    "src/registry/professional-skills.yaml": "509afa24771fbb4b06da6461bdb36091126dd4ebb8afc01d37c51b6c8570b657",
+    "src/registry/foundation-skills.yaml": "872172f6afe2b40670ac3a15a707c54ec2e953d0be595212fe61057889c1106e",
 }
 
 C1G_BUILT_PROJECTION_SPECS = {
     "src/professional-skills/delivery-release-gate/SKILL.md": (
         "delivery-release-gate",
-        310,
-        "58d88e71ba05ce0b36336ac8ef70f3f13ded845a842ac99fcdc01a5911ae7e5c",
+        314,
+        "f4fa8aa340ba020032340b54d27d18218c793f63750e34c109a4f84887d4dc1a",
     ),
     "src/foundation/capabilities/release-rollback/SKILL.md": (
         None,
@@ -2085,12 +2087,12 @@ C1J_PROTECTED_HASHES = {
     "src/foundation/capabilities/transaction-consistency/references/checklist.md": "e588a5f3bd0ee1709ae90944bcdee804c9c243ee61f3c5b96ce1b28154802e9a",
     "src/foundation/capabilities/distributed-workflow-consistency/references/identity-state-and-unknown-outcomes.md": "7a0e547eee5e8b179d2d173058dc46bea0be9191858b6b810e475bbc3d7322d6",
     "src/foundation/capabilities/distributed-workflow-consistency/references/compensation-convergence-and-reconciliation.md": "4b8f50abb517dad40a6092b351e245b0db9ae9f0511189c8c7a625a4c1dcd104",
-    "src/registry/professional-skills.yaml": "962639a800a9881c6a1068800c86d6ffe6697ff1650eb066988083d12410252a",
-    "src/registry/foundation-skills.yaml": "b783c62012e1f60680f11043d6146c36bb6aaaa8c9ebebc41311df3413750f64",
+    "src/registry/professional-skills.yaml": "509afa24771fbb4b06da6461bdb36091126dd4ebb8afc01d37c51b6c8570b657",
+    "src/registry/foundation-skills.yaml": "872172f6afe2b40670ac3a15a707c54ec2e953d0be595212fe61057889c1106e",
     "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-"scripts/build.py": "a864e4b287e0391b0926bf9a5c6aebdaab6c93aea1bb683e0d480f0b480d3121",
-"scripts/validation_utils.py": "431c496cbc6cc0bd9f376f9484467473c7519c560be8347cfb61890fd2624814",
-    "dist/universal/skills/recommended/data-middleware-change-builder/SKILL.md": "fc8bab3fd208a9f287b1e745aa1d7d021040c6736a5a46fb27dd4e7012919b65",
+"scripts/build.py": "7e8f11e45b76b5c32bf4faf20cb34c1c286d9401e9172d94c8309b42b2b559a0",
+"scripts/validation_utils.py": "eea023bd38bab4ecd3358c6244956b961f954f50e708b5da6399c0c91410f262",
+            "dist/universal/skills/recommended/data-middleware-change-builder/SKILL.md": "3bcc3a9ae53245af5d9580ae9aad887e2dbfef7402454a5c4295dce83e809cec",
 }
 
 C1J_BUILT_PROJECTION_SPECS = {
@@ -2157,18 +2159,18 @@ C1I_PROTECTED_HASHES = {
     "src/foundation/capabilities/test-strategy/references/checklist.md": "04883de9a1f8b1c3509a67a32c3720dcc88fafe10b525f74d0a03c96e07cf6f9",
     "src/professional-skills/ai-code-review-refactor/SKILL.md": "e8e9afe91b657c1d158aa4ba0b4ad9bbadb22ef66bfd8236d0d81f3914f2c8b0",
     "src/foundation/capabilities/refactoring/references/split-merge-cleanup-patterns.md": "96b49d2084c6c8834a044ce4700ea6135db4fede99f70a9a6a559c8dba10b2db",
-    "src/registry/professional-skills.yaml": "962639a800a9881c6a1068800c86d6ffe6697ff1650eb066988083d12410252a",
-    "src/registry/foundation-skills.yaml": "b783c62012e1f60680f11043d6146c36bb6aaaa8c9ebebc41311df3413750f64",
-"scripts/build.py": "a864e4b287e0391b0926bf9a5c6aebdaab6c93aea1bb683e0d480f0b480d3121",
-"tests/scripts/test_build_safety.py": "b449ecf6d6c37afbbf616a81e2a015c70de579fb4f92fe9c0ba77f14653932bc",
-"tests/test_hookless_build_install.py": "85ea1d02cec66dc8a5c86f83bd4f730c67f2e58bba1312428ac8c7809f52fd56",
+    "src/registry/professional-skills.yaml": "509afa24771fbb4b06da6461bdb36091126dd4ebb8afc01d37c51b6c8570b657",
+    "src/registry/foundation-skills.yaml": "872172f6afe2b40670ac3a15a707c54ec2e953d0be595212fe61057889c1106e",
+"scripts/build.py": "7e8f11e45b76b5c32bf4faf20cb34c1c286d9401e9172d94c8309b42b2b559a0",
+"tests/scripts/test_build_safety.py": "d9ce3b9c01bd0e92f048356ac5e29322bea80512beb4a778c201ee0cdc9152be",
+"tests/test_hookless_build_install.py": "bff3019dac8457fa7311a4f8d14963451bb5c30e7092280d814802ddf4743329",
 }
 
 C1I_BUILT_PROJECTION_SPECS = {
     "src/professional-skills/quality-test-gate/SKILL.md": (
         "quality-test-gate",
-        309,
-        "a1b284bddfd1cdf9fed94e175d603e2db962ab597ba443ab58d3e1a8c3d543b6",
+        313,
+        "f82a356d2a5fb0194970952ba99c0cf6299a81986198932a546b719efc5f30c4",
     ),
     "src/foundation/capabilities/test-data-management/SKILL.md": (
         None,
@@ -4849,6 +4851,28 @@ class ContextContentRelocationTests(unittest.TestCase):
                 with self.subTest(path=path, facet=facet):
                     self.assertIn(facet, text)
 
+    def test_dependency_evidence_reference_retains_freshness_and_authority_anchors(self) -> None:
+        text = (
+            ROOT
+            / "src/foundation/capabilities/dependency-vulnerability-scanning/references/evidence-patterns.md"
+        ).read_text(encoding="utf-8")
+        self.assertEqual(1, text.count("## Dependency-Specific Freshness And Authority"))
+        self.assertNotIn("## Current Evidence And Freshness", text)
+        for anchor in (
+            "package path/version/license",
+            "current manifests, lockfiles, registry/advisory data",
+            "scanner configuration/reports",
+            "external or credential-sensitive",
+            "bounded approved credentials",
+            "when required",
+            "redaction",
+            "registry boundary",
+            "artifact owner",
+            "explicit permission, rollback or remediation, an owner, and a stop condition",
+        ):
+            with self.subTest(anchor=anchor):
+                self.assertIn(anchor, text)
+
     def test_v7_compaction_ledger_binds_content_and_preserved_kernels(self) -> None:
         self.assertEqual(12, len(V7_COMPACTION_RECORDS))
         for entry in V7_COMPACTION_RECORDS:
@@ -5914,7 +5938,7 @@ class ContextContentRelocationTests(unittest.TestCase):
                 self.assertNotEqual(expected_hash, hashlib.sha256((text + " ").encode("utf-8")).hexdigest())
 
         root_projections = {
-            "src/professional-skills/installed-client-change-builder/SKILL.md": ("installed-client-change-builder", "d2d17a7211c0faffb59fe270838cf6c4f32b835c7cea90a1a57b35d0175f639b", 224),
+            "src/professional-skills/installed-client-change-builder/SKILL.md": ("installed-client-change-builder", "031cac7d3aeb263e793b5a9fcdc1b7c224c8b0e9a04e368b9ce6732e2d3d5bed", 228),
             "src/foundation/capabilities/privacy-data-lifecycle/SKILL.md": (None, "812a7b33179c2132640434073f1ab76a2eba8d3ede2889f1918ca6227ef4d32a", 203),
             "src/foundation/capabilities/csharp-dotnet-professional-usage/SKILL.md": (None, "e62d85db942fed7f78f2a8328b2c6bbf74268c114a036eacfe9486ca1888b8c9", 220),
             "src/foundation/capabilities/swift-professional-usage/SKILL.md": (None, "e5c008a2ea1f0fc46320ed269896357f90367fae8c608fb221628f5530f12716", 223),
@@ -5986,18 +6010,18 @@ class ContextContentRelocationTests(unittest.TestCase):
         )
         self.assertEqual(expected_reference_max, max(reference_tokens.values()))
 
-        self.assertEqual(870, sum(item[2] for item in root_projections.values()))
-        projected_sum = 3_466 - (1_079 - 870) - (1_010 - expected_reference_max)
-        self.assertEqual(2_989, projected_sum)
-        self.assertEqual(2_988, projected_sum - 1)
-        self.assertEqual(2_995, projected_sum + 6)
+        self.assertEqual(874, sum(item[2] for item in root_projections.values()))
+        projected_sum = 3_466 - (1_079 - 874) - (1_010 - expected_reference_max)
+        self.assertEqual(2_993, projected_sum)
+        self.assertEqual(2_992, projected_sum - 1)
+        self.assertEqual(2_999, projected_sum + 6)
 
         protected_hashes = {
-            "src/registry/professional-skills.yaml": "962639a800a9881c6a1068800c86d6ffe6697ff1650eb066988083d12410252a",
-            "src/registry/foundation-skills.yaml": "b783c62012e1f60680f11043d6146c36bb6aaaa8c9ebebc41311df3413750f64",
+            "src/registry/professional-skills.yaml": "509afa24771fbb4b06da6461bdb36091126dd4ebb8afc01d37c51b6c8570b657",
+            "src/registry/foundation-skills.yaml": "872172f6afe2b40670ac3a15a707c54ec2e953d0be595212fe61057889c1106e",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-"scripts/build.py": "a864e4b287e0391b0926bf9a5c6aebdaab6c93aea1bb683e0d480f0b480d3121",
-"scripts/validation_utils.py": "431c496cbc6cc0bd9f376f9484467473c7519c560be8347cfb61890fd2624814",
+"scripts/build.py": "7e8f11e45b76b5c32bf4faf20cb34c1c286d9401e9172d94c8309b42b2b559a0",
+"scripts/validation_utils.py": "eea023bd38bab4ecd3358c6244956b961f954f50e708b5da6399c0c91410f262",
         }
         for path, expected_hash in protected_hashes.items():
             text = (ROOT / path).read_text(encoding="utf-8")
@@ -6100,13 +6124,13 @@ class ContextContentRelocationTests(unittest.TestCase):
             ROOT / "src/registry/domain-skills.yaml"
         )
         self.assertEqual(
-            "962639a800a9881c6a1068800c86d6ffe6697ff1650eb066988083d12410252a",
+            "509afa24771fbb4b06da6461bdb36091126dd4ebb8afc01d37c51b6c8570b657",
             hashlib.sha256(
                 (ROOT / "src/registry/professional-skills.yaml").read_bytes()
             ).hexdigest(),
         )
         self.assertEqual(
-            "b783c62012e1f60680f11043d6146c36bb6aaaa8c9ebebc41311df3413750f64",
+            "872172f6afe2b40670ac3a15a707c54ec2e953d0be595212fe61057889c1106e",
             hashlib.sha256(
                 (ROOT / "src/registry/foundation-skills.yaml").read_bytes()
             ).hexdigest(),
@@ -6141,6 +6165,7 @@ class ContextContentRelocationTests(unittest.TestCase):
                 "choose local server global derived optimistic and persisted "
                 "state boundaries",
             ],
+            build_identity=TEST_BUILD_IDENTITY,
         )
         expected_layer3 = [
             "client-lifecycle-state-restoration",
@@ -6149,7 +6174,7 @@ class ContextContentRelocationTests(unittest.TestCase):
         ]
         self.assertEqual(expected_layer3, receipt["selected_layer3"])
         self.assertEqual(
-            "9c6b2f9def3f5314f1ff5c33197eb02855d86238fc59f2e7676b4e19d1ac6643",
+                "98b068bfa72c2995e796024973a54e8b4d116722f84774172c7724630ef3e217",
             receipt["receipt_sha256"],
         )
         self.assertNotEqual(
@@ -6296,11 +6321,11 @@ class ContextContentRelocationTests(unittest.TestCase):
                 "src/foundation/capabilities/offline-sync-conflict-resolution/references/sync-reconciliation-contracts.md"
             ],
         ]
-        self.assertEqual(2_540, sum(components))
+        self.assertEqual(2_544, sum(components))
         separator_tokens = VALIDATION.count_o200k_base_tokens("\n\n")
         self.assertEqual(1, separator_tokens)
         component_upper = sum(components) + separator_tokens * (len(components) - 1)
-        self.assertEqual(2_546, component_upper)
+        self.assertEqual(2_550, component_upper)
 
     def test_post_b_ai_review_cross_platform_jit_is_lossless_and_bounded(
         self,
@@ -6403,7 +6428,7 @@ class ContextContentRelocationTests(unittest.TestCase):
                 "src/professional-skills/ai-code-review-refactor/SKILL.md",
                 BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS,
                 "ai-code-review-refactor",
-                276,
+                279,
             ),
             (
                 "src/foundation/capabilities/design-pattern-selection/SKILL.md",
@@ -6435,8 +6460,8 @@ class ContextContentRelocationTests(unittest.TestCase):
         )
         domain = VALIDATION.load_yaml_file(ROOT / "src/registry/domain-skills.yaml")
         registry_hashes = {
-            "src/registry/professional-skills.yaml": "962639a800a9881c6a1068800c86d6ffe6697ff1650eb066988083d12410252a",
-            "src/registry/foundation-skills.yaml": "b783c62012e1f60680f11043d6146c36bb6aaaa8c9ebebc41311df3413750f64",
+            "src/registry/professional-skills.yaml": "509afa24771fbb4b06da6461bdb36091126dd4ebb8afc01d37c51b6c8570b657",
+            "src/registry/foundation-skills.yaml": "872172f6afe2b40670ac3a15a707c54ec2e953d0be595212fe61057889c1106e",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
         }
         for path, expected_sha256 in registry_hashes.items():
@@ -6468,6 +6493,7 @@ class ContextContentRelocationTests(unittest.TestCase):
                 "design-pattern-change",
                 "analysis-only-action",
             ],
+            build_identity=TEST_BUILD_IDENTITY,
         )
         expected_layer3 = [
             "cross-platform-client-extension",
@@ -6476,7 +6502,7 @@ class ContextContentRelocationTests(unittest.TestCase):
         ]
         self.assertEqual(expected_layer3, receipt["selected_layer3"])
         self.assertEqual(
-            "c5b8d737ac8a43584998f469790adb29da4bd37db17bd6c9e619d9f5c61a542b",
+                "f3e65c96bf1c929aea226e38d68b046bf89dd4c70a0be120fd65fbc276431e28",
             receipt["receipt_sha256"],
         )
         self.assertNotEqual(
@@ -6585,18 +6611,18 @@ class ContextContentRelocationTests(unittest.TestCase):
 
         components = [
             561,
-            276,
+                279,
             195,
             275,
             785,
             POST_B_REVIEW_BUILT_TOKENS[cross_path],
             POST_B_REVIEW_BUILT_TOKENS[review_reference_path],
         ]
-        self.assertEqual(2_864, sum(components))
+        self.assertEqual(2_867, sum(components))
         separator_tokens = VALIDATION.count_o200k_base_tokens("\n\n")
         self.assertEqual(1, separator_tokens)
         component_upper = sum(components) + separator_tokens * (len(components) - 1)
-        self.assertEqual(2_870, component_upper)
+        self.assertEqual(2_873, component_upper)
 
     def test_c1f_repository_and_reliability_content_is_lossless_and_bounded(self) -> None:
         for path, expected_sha256 in C1F_FINAL_SOURCE_HASHES.items():
@@ -6625,8 +6651,8 @@ class ContextContentRelocationTests(unittest.TestCase):
                 self.assertEqual(expected_sha256, hashlib.sha256(projection.encode("utf-8")).hexdigest())
 
         for path, expected_sha256 in {
-            "src/registry/professional-skills.yaml": "962639a800a9881c6a1068800c86d6ffe6697ff1650eb066988083d12410252a",
-            "src/registry/foundation-skills.yaml": "b783c62012e1f60680f11043d6146c36bb6aaaa8c9ebebc41311df3413750f64",
+            "src/registry/professional-skills.yaml": "509afa24771fbb4b06da6461bdb36091126dd4ebb8afc01d37c51b6c8570b657",
+            "src/registry/foundation-skills.yaml": "872172f6afe2b40670ac3a15a707c54ec2e953d0be595212fe61057889c1106e",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
         }.items():
             self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -6635,7 +6661,7 @@ class ContextContentRelocationTests(unittest.TestCase):
         self.assertEqual(2_329, task_fixed)
         self.assertEqual(2_760, task_fixed + 431)
         self.assertEqual(2_766, task_fixed + 431 + 6)
-        review_fixed = 561 + 341 + 209 + 180 + 224 + 785
+        review_fixed = 561 + 342 + 209 + 180 + 223 + 785
         self.assertEqual(2_300, review_fixed)
         self.assertEqual(2_930, review_fixed + 630)
         self.assertEqual(2_936, review_fixed + 630 + 6)
@@ -6664,20 +6690,20 @@ class ContextContentRelocationTests(unittest.TestCase):
                 self.assertEqual(expected_tokens, VALIDATION.count_o200k_base_tokens(text))
 
         for path, expected_sha256 in {
-            "src/registry/professional-skills.yaml": "962639a800a9881c6a1068800c86d6ffe6697ff1650eb066988083d12410252a",
-            "src/registry/foundation-skills.yaml": "b783c62012e1f60680f11043d6146c36bb6aaaa8c9ebebc41311df3413750f64",
-            "tests/scripts/test_reference_registry_jit.py": "24961599f0a1c4e884d4399f0c691026343b8eab40f8070f06eee3a1d94d031b",
-"tests/scripts/test_eval_rendered_context_budget.py": "18ab6116d5fabd49be9c2bc641db0ec9547b8c6d6ea564d40fcfddcef2baa4e3",
+            "src/registry/professional-skills.yaml": "509afa24771fbb4b06da6461bdb36091126dd4ebb8afc01d37c51b6c8570b657",
+            "src/registry/foundation-skills.yaml": "872172f6afe2b40670ac3a15a707c54ec2e953d0be595212fe61057889c1106e",
+            "tests/scripts/test_reference_registry_jit.py": "a9a1fbd89f45aec808b4d9f31b24193fddf2fb76cd464d56c1b42cb8992933e8",
+            "tests/scripts/test_eval_rendered_context_budget.py": "e577a149bb1c9a3722e50eb090b3a6579f56a4b88c78f0e02c1e35ef08892520",
         }.items():
             with self.subTest(protected_hash=path):
                 self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
 
-        root_tokens = 341 + 209 + 180 + 224
-        self.assertEqual(954, root_tokens)
+        root_tokens = 339 + 209 + 180 + 223
+        self.assertEqual(951, root_tokens)
         self.assertEqual(626, max(spec[0] for spec in reference_specs.values()))
-        self.assertEqual(2_961, 3_503 - (1_183 - root_tokens) - (943 - 630))
-        self.assertEqual(2_960, 3_502 - (1_183 - root_tokens) - (943 - 630))
-        self.assertEqual(2_967, 3_509 - (1_183 - root_tokens) - (943 - 630))
+        self.assertEqual(2_958, 3_503 - (1_183 - root_tokens) - (943 - 630))
+        self.assertEqual(2_957, 3_502 - (1_183 - root_tokens) - (943 - 630))
+        self.assertEqual(2_964, 3_509 - (1_183 - root_tokens) - (943 - 630))
 
     def test_c1g_delivery_compatibility_and_configuration_content_is_lossless_and_bounded(self) -> None:
         for path, expected_sha256 in C1G_FINAL_SOURCE_HASHES.items():
@@ -6820,12 +6846,12 @@ class ContextContentRelocationTests(unittest.TestCase):
             )
         )
 
-        task_components = [697, 310, 229, 250, 183, 474, 657]
-        self.assertEqual(2_800, sum(task_components))
-        self.assertEqual(2_806, sum(task_components) + 6)
-        review_components = [561, 310, 229, 250, 183, 474, 785]
-        self.assertEqual(2_792, sum(review_components))
-        self.assertEqual(2_798, sum(review_components) + 6)
+        task_components = [697, 312, 229, 250, 183, 474, 657]
+        self.assertEqual(2_802, sum(task_components))
+        self.assertEqual(2_808, sum(task_components) + 6)
+        review_components = [561, 312, 229, 250, 183, 474, 785]
+        self.assertEqual(2_794, sum(review_components))
+        self.assertEqual(2_800, sum(review_components) + 6)
 
     def test_c1j_data_middleware_content_is_lossless_and_route_stable(self) -> None:
         mismatches = []
@@ -6904,7 +6930,9 @@ class ContextContentRelocationTests(unittest.TestCase):
             "distributed-effect-change",
         ]
         receipt = VALIDATION.layer3_selector_runtime_selection_receipt(
-            projection, evidence_signals=evidence_signals
+            projection,
+            evidence_signals=evidence_signals,
+            build_identity=TEST_BUILD_IDENTITY,
         )
         self.assertEqual(
             [
@@ -6919,11 +6947,13 @@ class ContextContentRelocationTests(unittest.TestCase):
             receipt["selected_layer3"],
         )
         self.assertEqual(
-            "23f0408560643c339c33bf05806fc6ab7e1c8929b892a2a2de28686f5b4fdd55",
+                "51db94d81bb620d1be6ca2858d80ef44696fcaf8684615985aca8f26789af95d",
             receipt["receipt_sha256"],
         )
         without_cache_stampede = VALIDATION.layer3_selector_runtime_selection_receipt(
-            projection, evidence_signals=evidence_signals[1:]
+            projection,
+            evidence_signals=evidence_signals[1:],
+            build_identity=TEST_BUILD_IDENTITY,
         )
         self.assertNotEqual(receipt["selected_layer3"], without_cache_stampede["selected_layer3"])
         self.assertNotEqual(receipt["receipt_sha256"], without_cache_stampede["receipt_sha256"])
@@ -6997,9 +7027,9 @@ class ContextContentRelocationTests(unittest.TestCase):
             for entry in relevant_ledger
         ))
 
-        task_components = [697, 269, 214, 283, 246, 608, 657]
-        self.assertEqual(2_974, sum(task_components))
-        self.assertEqual(2_980, sum(task_components) + 6)
+        task_components = [697, 271, 214, 283, 246, 608, 657]
+        self.assertEqual(2_976, sum(task_components))
+        self.assertEqual(2_982, sum(task_components) + 6)
 
     def test_c1i_quality_content_is_lossless_and_route_stable(self) -> None:
         mismatches = []
@@ -7104,6 +7134,7 @@ class ContextContentRelocationTests(unittest.TestCase):
         receipt = VALIDATION.layer3_selector_runtime_selection_receipt(
             projection,
             evidence_signals=evidence_signals,
+            build_identity=TEST_BUILD_IDENTITY,
         )
         self.assertEqual(
             [
@@ -7114,12 +7145,13 @@ class ContextContentRelocationTests(unittest.TestCase):
             receipt["selected_layer3"],
         )
         self.assertEqual(
-            "0c9aa8b856780e9aecfa385003bc7f2b87167ed326e3863b570c79af4a7848a9",
+                "f1509a4549667caacebb722ace15f2e49ca97a1f80d6de944065a13e868e9062",
             receipt["receipt_sha256"],
         )
         without_test_data = VALIDATION.layer3_selector_runtime_selection_receipt(
             projection,
             evidence_signals=evidence_signals[1:],
+            build_identity=TEST_BUILD_IDENTITY,
         )
         self.assertNotEqual(
             receipt["selected_layer3"],
@@ -7369,11 +7401,11 @@ class ContextContentRelocationTests(unittest.TestCase):
                 self.assertNotIn("## High-Value Gotchas", projected_root)
                 self.assertNotIn("## Execution Checklist", projected_root)
                 self.assertEqual(
-                    317,
+                    321,
                     VALIDATION.count_o200k_base_tokens(projected_root),
                 )
                 self.assertEqual(
-                    "6141a381dec084f4b21dbd8caa858eaab6d30d158aedb95df67e66b49c235d78",
+                    "9f645d774a1e4da3683dfdeb5960817d8008ec466fc9b5e5a7f4a0b283a5eb37",
                     hashlib.sha256(projected_root.encode("utf-8")).hexdigest(),
                 )
 
@@ -7493,8 +7525,8 @@ class ContextContentRelocationTests(unittest.TestCase):
         projection_specs = {
             "src/professional-skills/security-privacy-gate/SKILL.md": (
                 "security-privacy-gate",
-                280,
-                "ec28b25d629d3cc1d16eb3bb1060d8746b543fa9f85ee81a023fbd8ea28fdcee",
+                284,
+                "9825d49edf2449fbf0a4ba49e5ee096c6ec4d45378b2a1b87a4c69ea64799005",
             ),
             "src/domain-extensions/ai-product-extension/SKILL.md": (
                 None,
@@ -7709,14 +7741,14 @@ class ContextContentRelocationTests(unittest.TestCase):
                     _reference_binding(owner, path),
                 )
 
-        root_tokens = 280 + 171 + 175 + 166
-        self.assertEqual(792, root_tokens)
+        root_tokens = 282 + 171 + 175 + 166
+        self.assertEqual(794, root_tokens)
         fixed_tokens = 697 + root_tokens + 657
-        self.assertEqual(2_146, fixed_tokens)
+        self.assertEqual(2_148, fixed_tokens)
         self.assertEqual(771, max(spec[2] for spec in reference_specs.values()))
-        self.assertEqual(2_905, fixed_tokens + 759)
-        self.assertEqual(2_904, 3_546 - (343 + 258 + 245 + 402 - root_tokens) - (945 - 759))
-        self.assertEqual(2_911, 3_553 - (343 + 258 + 245 + 402 - root_tokens) - (945 - 759))
+        self.assertEqual(2_907, fixed_tokens + 759)
+        self.assertEqual(2_906, 3_546 - (343 + 258 + 245 + 402 - root_tokens) - (945 - 759))
+        self.assertEqual(2_913, 3_553 - (343 + 258 + 245 + 402 - root_tokens) - (945 - 759))
 
     def test_fg_c1m_security_cloud_tenant_frontier_is_lossless_and_bounded(self) -> None:
         source_specs = {
@@ -7745,8 +7777,8 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/professional-skills/security-privacy-gate/SKILL.md": "f11d7bdde385a27584a4b22e07cd389adc4c59d8933597433238c4ecc5ba7ae5",
             "src/domain-extensions/cloud-platform-extension/SKILL.md": "6c300ff1c468f83c7b75c54997c67539710e6f8e236fc655d4ecda5e806a4224",
             "src/foundation/capabilities/permission-boundary-modeling/SKILL.md": "72ae5933a81a933be7861e8be62e2c033043bcc13e0043db1ab2caeafcf2cf32",
-            "src/registry/professional-skills.yaml": "962639a800a9881c6a1068800c86d6ffe6697ff1650eb066988083d12410252a",
-            "src/registry/foundation-skills.yaml": "b783c62012e1f60680f11043d6146c36bb6aaaa8c9ebebc41311df3413750f64",
+            "src/registry/professional-skills.yaml": "509afa24771fbb4b06da6461bdb36091126dd4ebb8afc01d37c51b6c8570b657",
+            "src/registry/foundation-skills.yaml": "872172f6afe2b40670ac3a15a707c54ec2e953d0be595212fe61057889c1106e",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
         }.items():
             self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -7815,7 +7847,7 @@ class ContextContentRelocationTests(unittest.TestCase):
             return "\n".join(output)
 
         root_specs = {
-            "src/professional-skills/security-privacy-gate/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, "security-privacy-gate", 303, "1f5f5d81f6dd59c74a1a43ed9e7710478b16a0657eaa5312fe623ee598fb300e"),
+            "src/professional-skills/security-privacy-gate/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, "security-privacy-gate", 307, "3500f3d5860cb69f638e7a11650ee6d01389211faae8ce4ca2b8d9f2d061a035"),
             "src/domain-extensions/cloud-platform-extension/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, None, 223, "d4b3f1570d2a19c23f4885ee77c9b4f1452e867a7a3c4954042cb576d58176e3"),
             "src/foundation/capabilities/permission-boundary-modeling/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, 207, "75762c1a12684a02ff857f22308c04a64dd43068921bcc94607614a386ec7b82"),
             "src/foundation/capabilities/tenant-isolation/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, 190, "5ef9f472081e4dab40659d61dbfacdc34439b10f6f67f874cf06084c01d10874"),
@@ -7842,13 +7874,14 @@ class ContextContentRelocationTests(unittest.TestCase):
         receipt = VALIDATION.layer3_selector_runtime_selection_receipt(
             selector_projection,
             evidence_signals=["cloud control plane", "account authority", "changed-surface", "tenant-isolation"],
+            build_identity=TEST_BUILD_IDENTITY,
         )
         self.assertEqual(
             ["cloud-platform-extension", "permission-boundary-modeling", "tenant-isolation"],
             receipt["selected_layer3"],
         )
         self.assertEqual(
-            "ff438335ba459e33cfccf8dd2a9a3903ad3094ebef55562d5467d3e855e6d3b8",
+                "a31b23ce8637486eced8a305a8c7266a7a22d115d9fc52a793cebd3f498b6794",
             receipt["receipt_sha256"],
         )
         self.assertEqual(
@@ -7901,10 +7934,10 @@ class ContextContentRelocationTests(unittest.TestCase):
             with self.subTest(owner_anchor=path, anchor=anchor):
                 self.assertEqual(1, (ROOT / path).read_text(encoding="utf-8").count(anchor))
 
-        component_tokens = [697, 303, 223, 207, 190, 635, 657]
+        component_tokens = [697, 307, 223, 207, 190, 635, 657]
         component_sha256 = [
             "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
-            "1f5f5d81f6dd59c74a1a43ed9e7710478b16a0657eaa5312fe623ee598fb300e",
+            "3500f3d5860cb69f638e7a11650ee6d01389211faae8ce4ca2b8d9f2d061a035",
             "d4b3f1570d2a19c23f4885ee77c9b4f1452e867a7a3c4954042cb576d58176e3",
             "75762c1a12684a02ff857f22308c04a64dd43068921bcc94607614a386ec7b82",
             "5ef9f472081e4dab40659d61dbfacdc34439b10f6f67f874cf06084c01d10874",
@@ -7912,9 +7945,9 @@ class ContextContentRelocationTests(unittest.TestCase):
             "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
         ]
         self.assertEqual(7, len(component_sha256))
-        self.assertEqual(2_912, sum(component_tokens))
-        self.assertEqual(2_911, sum(component_tokens) - 1)
-        self.assertEqual(2_918, sum(component_tokens) + 6)
+        self.assertEqual(2_916, sum(component_tokens))
+        self.assertEqual(2_915, sum(component_tokens) - 1)
+        self.assertEqual(2_922, sum(component_tokens) + 6)
 
     def test_fg_c1l_data_api_frontier_is_lossless_and_bounded(self) -> None:
         source_specs = {
@@ -7951,7 +7984,7 @@ class ContextContentRelocationTests(unittest.TestCase):
                 self.assertNotEqual(expected_hash, hashlib.sha256((text + " ").encode("utf-8")).hexdigest())
 
         root_projections = {
-            "src/professional-skills/data-api-contract-changer/SKILL.md": ("data-api-contract-changer", 300, "f0779c57fb4c72eb1294eb7a4119070a16cab83b008dc25fa89420e7565d4211"),
+            "src/professional-skills/data-api-contract-changer/SKILL.md": ("data-api-contract-changer", 304, "0a143ecafa8ac9aeefca22eb47854df781cbc49c696f5504e3c32d5a46a5d3c5"),
             "src/foundation/capabilities/model-boundary-mapping/SKILL.md": (None, 182, "af60f5a9ca7d1f7f698ac9e0804b5795807a4cca8e942cbdebb037631d328b3b"),
             "src/foundation/capabilities/sdk-library-contract-design/SKILL.md": (None, 171, "ac44b8648d3c92cf74683ead222a66aca39c531e234dd31d62c76dceddc0695f"),
             "src/foundation/capabilities/api-contract-design/SKILL.md": (None, 182, "b46cc50401951a7865b239c6999e94d3ee4d789a0a13d6614cec76207a4a1ff6"),
@@ -7976,8 +8009,8 @@ class ContextContentRelocationTests(unittest.TestCase):
                 self.assertEqual(expected_hash, hashlib.sha256(projection.encode("utf-8")).hexdigest())
 
         for path, expected_hash in {
-            "src/registry/professional-skills.yaml": "962639a800a9881c6a1068800c86d6ffe6697ff1650eb066988083d12410252a",
-            "src/registry/foundation-skills.yaml": "b783c62012e1f60680f11043d6146c36bb6aaaa8c9ebebc41311df3413750f64",
+            "src/registry/professional-skills.yaml": "509afa24771fbb4b06da6461bdb36091126dd4ebb8afc01d37c51b6c8570b657",
+            "src/registry/foundation-skills.yaml": "872172f6afe2b40670ac3a15a707c54ec2e953d0be595212fe61057889c1106e",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
         }.items():
             self.assertEqual(expected_hash, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
@@ -8008,17 +8041,17 @@ class ContextContentRelocationTests(unittest.TestCase):
             with self.subTest(preserved_facet=path):
                 self.assertEqual(1, (ROOT / path).read_text(encoding="utf-8").count(facet))
 
-        root_tokens = 300 + 182 + 171 + 182
-        self.assertEqual(835, root_tokens)
+        root_tokens = 302 + 182 + 171 + 182
+        self.assertEqual(837, root_tokens)
         fixed_tokens = 697 + root_tokens + 657
-        self.assertEqual(2_189, fixed_tokens)
+        self.assertEqual(2_191, fixed_tokens)
         self.assertEqual(716, max(tokens for _hash, tokens in protected_references.values()))
-        self.assertEqual(2_725, fixed_tokens + 536)
-        self.assertEqual(2_724, 3_426 - (294 + 278 + 269 + 277 - root_tokens) - (955 - 536))
-        self.assertEqual(2_731, 3_433 - (294 + 278 + 269 + 277 - root_tokens) - (955 - 536))
-        self.assertEqual(2_905, fixed_tokens + 716)
-        self.assertEqual(2_904, fixed_tokens + 716 - 1)
-        self.assertEqual(2_911, fixed_tokens + 716 + 6)
+        self.assertEqual(2_727, fixed_tokens + 536)
+        self.assertEqual(2_726, 3_426 - (294 + 278 + 269 + 277 - root_tokens) - (955 - 536))
+        self.assertEqual(2_733, 3_433 - (294 + 278 + 269 + 277 - root_tokens) - (955 - 536))
+        self.assertEqual(2_907, fixed_tokens + 716)
+        self.assertEqual(2_906, fixed_tokens + 716 - 1)
+        self.assertEqual(2_913, fixed_tokens + 716 + 6)
 
     def test_fg_c1n_quality_client_frontier_is_lossless_and_bounded(self) -> None:
         source_specs = {
@@ -8101,7 +8134,7 @@ class ContextContentRelocationTests(unittest.TestCase):
             return "\n".join(output)
 
         root_specs = {
-            "src/professional-skills/quality-test-gate/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, "quality-test-gate", 309, "a1b284bddfd1cdf9fed94e175d603e2db962ab597ba443ab58d3e1a8c3d543b6"),
+            "src/professional-skills/quality-test-gate/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, "quality-test-gate", 313, "f82a356d2a5fb0194970952ba99c0cf6299a81986198932a546b719efc5f30c4"),
             "src/foundation/capabilities/test-data-management/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, 230, "3c16dbc47cff347dacbeac21f09f76726a372d1e7831dc9300c6e7519affc6cd"),
             "src/foundation/capabilities/client-application-testing/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, 188, "5968573645b8444da28e58115f1b22d41de22965e9d2784c0acf216f93122519"),
             "src/foundation/capabilities/test-strategy/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, 205, "48919bf53781aedbc92f440355c9481cb8a9046e31090a8bb7fca358f641f79e"),
@@ -8113,19 +8146,19 @@ class ContextContentRelocationTests(unittest.TestCase):
             self.assertEqual(expected_tokens, VALIDATION.count_o200k_base_tokens(projection))
             self.assertEqual(expected_sha256, hashlib.sha256(projection.encode("utf-8")).hexdigest())
         quality_dev = projections["src/professional-skills/quality-test-gate/SKILL.md"].rstrip("\n") + "\n\n## Layer 3 Delivery\n\nFoundation and Domain items are top-level Skills; no Layer 3 references are compiled.\n"
-        self.assertEqual(332, VALIDATION.count_o200k_base_tokens(quality_dev))
-        self.assertEqual("8bea21744146360fc9d8a946c724f174b71723a28ce5960c1ff872b0e621f6dd", hashlib.sha256(quality_dev.encode("utf-8")).hexdigest())
+        self.assertEqual(336, VALIDATION.count_o200k_base_tokens(quality_dev))
+        self.assertEqual("27078afd425874c2ce7271da21c2a29ee82ca0db1cae6b49ef89a3e6d936e57f", hashlib.sha256(quality_dev.encode("utf-8")).hexdigest())
         self.assertNotIn("## High-Value Gotchas", projections["src/professional-skills/quality-test-gate/SKILL.md"])
         self.assertNotIn("## Execution Checklist", projections["src/professional-skills/quality-test-gate/SKILL.md"])
 
         for path, expected_sha256 in {
-            "src/registry/professional-skills.yaml": "962639a800a9881c6a1068800c86d6ffe6697ff1650eb066988083d12410252a",
-            "src/registry/foundation-skills.yaml": "b783c62012e1f60680f11043d6146c36bb6aaaa8c9ebebc41311df3413750f64",
+            "src/registry/professional-skills.yaml": "509afa24771fbb4b06da6461bdb36091126dd4ebb8afc01d37c51b6c8570b657",
+            "src/registry/foundation-skills.yaml": "872172f6afe2b40670ac3a15a707c54ec2e953d0be595212fe61057889c1106e",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-"scripts/build.py": "a864e4b287e0391b0926bf9a5c6aebdaab6c93aea1bb683e0d480f0b480d3121",
-"scripts/validation_utils.py": "431c496cbc6cc0bd9f376f9484467473c7519c560be8347cfb61890fd2624814",
-            "evals/agent-light-trajectories/cases.yaml": "686949a6a5bc83d41de704b3dfa71ee5a1ab45e6d68ab71067f799219d733b96",
-            "tests/scripts/test_reference_registry_jit.py": "24961599f0a1c4e884d4399f0c691026343b8eab40f8070f06eee3a1d94d031b",
+"scripts/build.py": "7e8f11e45b76b5c32bf4faf20cb34c1c286d9401e9172d94c8309b42b2b559a0",
+"scripts/validation_utils.py": "eea023bd38bab4ecd3358c6244956b961f954f50e708b5da6399c0c91410f262",
+            "evals/agent-light-trajectories/cases.yaml": "3b896558b75ec716abe559c2aa2f2fdf56dfdce5dc348206ee558cb7402c1e28",
+            "tests/scripts/test_reference_registry_jit.py": "a9a1fbd89f45aec808b4d9f31b24193fddf2fb76cd464d56c1b42cb8992933e8",
         }.items():
             self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())
 
@@ -8155,9 +8188,9 @@ class ContextContentRelocationTests(unittest.TestCase):
         domain = VALIDATION.load_yaml_file(ROOT / "src/registry/domain-skills.yaml")
         selector_authority = VALIDATION.layer3_selector_authority(foundation, professional, domain, context="C1N quality client witness")
         selector_projection = VALIDATION.layer3_selector_runtime_projection(selector_authority, professional_skill="quality-test-gate", profile="task-agent", selection_owner="main-control-agent", exact_layer3=None)
-        receipt = VALIDATION.layer3_selector_runtime_selection_receipt(selector_projection, evidence_signals=["explicit-test-data-decision", "changed installed-client behavior needs lifecycle OS integration installation device configuration or accessibility proof", "analysis-action"])
+        receipt = VALIDATION.layer3_selector_runtime_selection_receipt(selector_projection, evidence_signals=["explicit-test-data-decision", "changed installed-client behavior needs lifecycle OS integration installation device configuration or accessibility proof", "analysis-action"], build_identity=TEST_BUILD_IDENTITY)
         self.assertEqual(["test-data-management", "client-application-testing", "test-strategy"], receipt["selected_layer3"])
-        self.assertEqual("561a404c9f71b49fc1c15e727f8fe21e426622ed9224df71d0d21056513da9b4", receipt["receipt_sha256"])
+        self.assertEqual("e38c3e57cde5bdf78d644ecd7942ef102d184011af0982cf6ae2c05203f0d979", receipt["receipt_sha256"])
         self.assertEqual(set(), set(receipt["selected_layer3"]) & {row["name"] for row in domain["domain_skills"]})
 
         authority = VALIDATION.reference_context_admissibility_authority(professional, foundation, domain, context="C1N quality client staged witness")
@@ -8179,12 +8212,12 @@ class ContextContentRelocationTests(unittest.TestCase):
         self.assertEqual("44e42f4052aaec59a875b929e2244a6f2906fabbd083753e0f9b58f0c59022bc", _fingerprint(relocated_block))
         self.assertEqual(1, (ROOT / "src/foundation/capabilities/client-application-testing/references/client-test-matrix.md").read_text(encoding="utf-8").count(relocated_block))
 
-        component_tokens = [697, 332, 230, 188, 205, 592, 657]
-        component_sha256 = ["28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e", "8bea21744146360fc9d8a946c724f174b71723a28ce5960c1ff872b0e621f6dd", "3c16dbc47cff347dacbeac21f09f76726a372d1e7831dc9300c6e7519affc6cd", "5968573645b8444da28e58115f1b22d41de22965e9d2784c0acf216f93122519", "48919bf53781aedbc92f440355c9481cb8a9046e31090a8bb7fca358f641f79e", "02edd179aae452bb8d1c4663bc73fa8f7bff2b980def64c4c51ad086c18a7777", "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac"]
+        component_tokens = [697, 336, 230, 188, 205, 592, 657]
+        component_sha256 = ["28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e", "27078afd425874c2ce7271da21c2a29ee82ca0db1cae6b49ef89a3e6d936e57f", "3c16dbc47cff347dacbeac21f09f76726a372d1e7831dc9300c6e7519affc6cd", "5968573645b8444da28e58115f1b22d41de22965e9d2784c0acf216f93122519", "48919bf53781aedbc92f440355c9481cb8a9046e31090a8bb7fca358f641f79e", "02edd179aae452bb8d1c4663bc73fa8f7bff2b980def64c4c51ad086c18a7777", "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac"]
         self.assertEqual(7, len(component_sha256))
-        self.assertEqual(2_901, sum(component_tokens))
-        self.assertEqual(2_900, sum(component_tokens) - 1)
-        self.assertEqual(2_907, sum(component_tokens) + 6)
+        self.assertEqual(2_905, sum(component_tokens))
+        self.assertEqual(2_904, sum(component_tokens) - 1)
+        self.assertEqual(2_911, sum(component_tokens) + 6)
 
     def test_iac_sources_preserve_provider_binding_without_inline_url_enumerations(
         self,
@@ -8351,7 +8384,7 @@ class ContextContentRelocationTests(unittest.TestCase):
             return "\n".join(output)
 
         root_specs = {
-            "src/professional-skills/platform-infrastructure-change-builder/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, "platform-infrastructure-change-builder", 229, "edf20265275b1afa37ecd528904f486436cfa88cd04b6ecacb773a0ed8105958"),
+            "src/professional-skills/platform-infrastructure-change-builder/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, "platform-infrastructure-change-builder", 233, "4f9d7c38dada03054c104c3325a731f109c97169b0ee5c60e58c7e1338065e87"),
             "src/domain-extensions/cloud-platform-extension/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, None, 223, "d4b3f1570d2a19c23f4885ee77c9b4f1452e867a7a3c4954042cb576d58176e3"),
             "src/foundation/capabilities/configuration-runtime-policy/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, 156, "b091ad3b6d0b1316e5602af5e50852924897ef2d83ca01ffdf9431e78918d4f6"),
             "src/foundation/capabilities/powershell-professional-usage/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, 170, "fb4a82e8e4d809bbb92e536e79ca7095baaf5ce32a412bd14f83b3d5d7697f09"),
@@ -8370,15 +8403,15 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/foundation/capabilities/configuration-runtime-policy/SKILL.md": "a0c6c4b122e76426256bc5deac35b741b32a406255992ac4c958ff10cfb2f9c6",
             "src/foundation/capabilities/powershell-professional-usage/SKILL.md": "cd32328dda6ccaa431388c220cac38b08988ad220eb2a8a29b8b2a69224ff27c",
             "src/professional-skills/platform-infrastructure-change-builder/references/kubernetes-source-contracts.md": "4408105827924db9af29351153865837a26a6e2c6e1075212668d00dee1830f6",
-            "src/registry/professional-skills.yaml": "962639a800a9881c6a1068800c86d6ffe6697ff1650eb066988083d12410252a",
-            "src/registry/foundation-skills.yaml": "b783c62012e1f60680f11043d6146c36bb6aaaa8c9ebebc41311df3413750f64",
+            "src/registry/professional-skills.yaml": "509afa24771fbb4b06da6461bdb36091126dd4ebb8afc01d37c51b6c8570b657",
+            "src/registry/foundation-skills.yaml": "872172f6afe2b40670ac3a15a707c54ec2e953d0be595212fe61057889c1106e",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-"scripts/build.py": "a864e4b287e0391b0926bf9a5c6aebdaab6c93aea1bb683e0d480f0b480d3121",
-"scripts/validation_utils.py": "431c496cbc6cc0bd9f376f9484467473c7519c560be8347cfb61890fd2624814",
-            "evals/agent-light-trajectories/cases.yaml": "686949a6a5bc83d41de704b3dfa71ee5a1ab45e6d68ab71067f799219d733b96",
-            "tests/scripts/test_reference_registry_jit.py": "24961599f0a1c4e884d4399f0c691026343b8eab40f8070f06eee3a1d94d031b",
-"tests/scripts/test_eval_rendered_context_budget.py": "18ab6116d5fabd49be9c2bc641db0ec9547b8c6d6ea564d40fcfddcef2baa4e3",
-            "scripts/audit-skill-content.py": "979b2e422a6ed5e2358f36c8010b1fed7263c3a61fd92403b8cdd0a4fe206d9e",
+"scripts/build.py": "7e8f11e45b76b5c32bf4faf20cb34c1c286d9401e9172d94c8309b42b2b559a0",
+"scripts/validation_utils.py": "eea023bd38bab4ecd3358c6244956b961f954f50e708b5da6399c0c91410f262",
+            "evals/agent-light-trajectories/cases.yaml": "3b896558b75ec716abe559c2aa2f2fdf56dfdce5dc348206ee558cb7402c1e28",
+            "tests/scripts/test_reference_registry_jit.py": "a9a1fbd89f45aec808b4d9f31b24193fddf2fb76cd464d56c1b42cb8992933e8",
+            "tests/scripts/test_eval_rendered_context_budget.py": "e577a149bb1c9a3722e50eb090b3a6579f56a4b88c78f0e02c1e35ef08892520",
+            "scripts/audit-skill-content.py": "420a57a63bb1a1db3af06f1dec7beff58674724238506cdce7f67d8622fac03f",
             "tests/scripts/test_validate_root_content.py": "3e597ddbf6e203f6ba73c92c142769435a7f1c94752bb16245c6e68421066491",
         }
         for path, expected_sha256 in protected.items():
@@ -8417,9 +8450,9 @@ class ContextContentRelocationTests(unittest.TestCase):
         domain = VALIDATION.load_yaml_file(ROOT / "src/registry/domain-skills.yaml")
         selector_authority = VALIDATION.layer3_selector_authority(foundation, professional, domain, context="C1O platform witness")
         selector_projection = VALIDATION.layer3_selector_runtime_projection(selector_authority, professional_skill="platform-infrastructure-change-builder", profile="task-agent", selection_owner="main-control-agent", exact_layer3=None)
-        receipt = VALIDATION.layer3_selector_runtime_selection_receipt(selector_projection, evidence_signals=["cloud control plane", "account authority", "changed-surface", "configuration runtime policy typed config default validation fail fast hot reload feature flag owner expiry cleanup kill switch stale flag mode kind switch tenant user experiment rollout rollback config observability", "powershell pipeline binding errors native exit arguments encoding remoting credentials providers modules or administrative idempotency"])
+        receipt = VALIDATION.layer3_selector_runtime_selection_receipt(selector_projection, evidence_signals=["cloud control plane", "account authority", "changed-surface", "configuration runtime policy typed config default validation fail fast hot reload feature flag owner expiry cleanup kill switch stale flag mode kind switch tenant user experiment rollout rollback config observability", "powershell pipeline binding errors native exit arguments encoding remoting credentials providers modules or administrative idempotency"], build_identity=TEST_BUILD_IDENTITY)
         self.assertEqual(["cloud-platform-extension", "configuration-runtime-policy", "powershell-professional-usage"], receipt["selected_layer3"])
-        self.assertEqual("274ab034c0a7efd4d2986963b7774d8ac909c445b89f5c19e0e306a97fdfcdd4", receipt["receipt_sha256"])
+        self.assertEqual("74cc004f337d8009d2492e616e2df19aba9e11541063ae04e0d5cac99b2aebd4", receipt["receipt_sha256"])
         self.assertEqual({"cloud-platform-extension"}, set(receipt["selected_layer3"]) & {row["name"] for row in domain["domain_skills"]})
 
         authority = VALIDATION.reference_context_admissibility_authority(professional, foundation, domain, context="C1O platform staged witness")
@@ -8436,12 +8469,12 @@ class ContextContentRelocationTests(unittest.TestCase):
         self.assertEqual([expected[11]], staged["stages"][11]["loaded_references"])
         self.assertEqual([{"reference": expected[11], "required_outputs": ["selected-approach", "proof-limit", "residual-risk"]}], staged["stages"][11]["required_output_receipts"])
 
-        component_tokens = [697, 229, 223, 156, 170, 722, 657]
-        component_sha256 = ["28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e", "edf20265275b1afa37ecd528904f486436cfa88cd04b6ecacb773a0ed8105958", "d4b3f1570d2a19c23f4885ee77c9b4f1452e867a7a3c4954042cb576d58176e3", "b091ad3b6d0b1316e5602af5e50852924897ef2d83ca01ffdf9431e78918d4f6", "fb4a82e8e4d809bbb92e536e79ca7095baaf5ce32a412bd14f83b3d5d7697f09", "97ce7438c774d56a64d46fd241c3d6876b97929b8294f43897818185ba812cd4", "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac"]
+        component_tokens = [697, 233, 223, 156, 170, 722, 657]
+        component_sha256 = ["28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e", "4f9d7c38dada03054c104c3325a731f109c97169b0ee5c60e58c7e1338065e87", "d4b3f1570d2a19c23f4885ee77c9b4f1452e867a7a3c4954042cb576d58176e3", "b091ad3b6d0b1316e5602af5e50852924897ef2d83ca01ffdf9431e78918d4f6", "fb4a82e8e4d809bbb92e536e79ca7095baaf5ce32a412bd14f83b3d5d7697f09", "97ce7438c774d56a64d46fd241c3d6876b97929b8294f43897818185ba812cd4", "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac"]
         self.assertEqual(7, len(component_sha256))
-        self.assertEqual(2_854, sum(component_tokens))
-        self.assertEqual(2_853, sum(component_tokens) - 1)
-        self.assertEqual(2_860, sum(component_tokens) + 6)
+        self.assertEqual(2_858, sum(component_tokens))
+        self.assertEqual(2_857, sum(component_tokens) - 1)
+        self.assertEqual(2_864, sum(component_tokens) + 6)
         self.assertEqual(
             reference_specs[
                 (
@@ -8539,9 +8572,9 @@ class ContextContentRelocationTests(unittest.TestCase):
         domain = VALIDATION.load_yaml_file(ROOT / "src/registry/domain-skills.yaml")
         selector_authority = VALIDATION.layer3_selector_authority(foundation, professional, domain, context="C1P platform IaC witness")
         selector_projection = VALIDATION.layer3_selector_runtime_projection(selector_authority, professional_skill="platform-infrastructure-change-builder", profile="task-agent", selection_owner="main-control-agent", exact_layer3=None)
-        receipt = VALIDATION.layer3_selector_runtime_selection_receipt(selector_projection, evidence_signals=["cloud control plane", "account authority", "changed-surface", "configuration runtime policy typed config default validation fail fast hot reload feature flag owner expiry cleanup kill switch stale flag mode kind switch tenant user experiment rollout rollback config observability", "desired-state infrastructure source with state identity drift destruction or recovery"])
+        receipt = VALIDATION.layer3_selector_runtime_selection_receipt(selector_projection, evidence_signals=["cloud control plane", "account authority", "changed-surface", "configuration runtime policy typed config default validation fail fast hot reload feature flag owner expiry cleanup kill switch stale flag mode kind switch tenant user experiment rollout rollback config observability", "desired-state infrastructure source with state identity drift destruction or recovery"], build_identity=TEST_BUILD_IDENTITY)
         self.assertEqual(["cloud-platform-extension", "configuration-runtime-policy", "infrastructure-as-code-safety"], receipt["selected_layer3"])
-        self.assertEqual("434c91b6b2caf2b3b78ff6ffbfd86491a1d834746060092e516142467fcb6953", receipt["receipt_sha256"])
+        self.assertEqual("8868db24f5ad503625bb99982392d0a15e7343580a76fbcefd83ce8e90691288", receipt["receipt_sha256"])
         self.assertEqual({"cloud-platform-extension"}, set(receipt["selected_layer3"]) & {row["name"] for row in domain["domain_skills"]})
 
         authority = VALIDATION.reference_context_admissibility_authority(professional, foundation, domain, context="C1P platform IaC staged witness")
@@ -8559,12 +8592,12 @@ class ContextContentRelocationTests(unittest.TestCase):
         self.assertEqual([expected[8]], active_stage["loaded_references"])
         self.assertEqual([{"reference": expected[8], "required_outputs": ["decision-record", "proof-limit", "residual-risk"]}], active_stage["required_output_receipts"])
 
-        component_tokens = [697, 229, 223, 156, 138, 812, 657]
-        component_sha256 = ["28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e", "edf20265275b1afa37ecd528904f486436cfa88cd04b6ecacb773a0ed8105958", "d4b3f1570d2a19c23f4885ee77c9b4f1452e867a7a3c4954042cb576d58176e3", "b091ad3b6d0b1316e5602af5e50852924897ef2d83ca01ffdf9431e78918d4f6", "ae4b01925961b59d3aa24eeb49b44e8f9869a32dc1e69beb0a947ca93eb914ec", "8cf0a2d5b85a83cd517a937059b28b243c2718e7da90dad405fd33a474e44b1f", "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac"]
+        component_tokens = [697, 230, 223, 156, 138, 812, 657]
+        component_sha256 = ["28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e", "4f9d7c38dada03054c104c3325a731f109c97169b0ee5c60e58c7e1338065e87", "d4b3f1570d2a19c23f4885ee77c9b4f1452e867a7a3c4954042cb576d58176e3", "b091ad3b6d0b1316e5602af5e50852924897ef2d83ca01ffdf9431e78918d4f6", "ae4b01925961b59d3aa24eeb49b44e8f9869a32dc1e69beb0a947ca93eb914ec", "8cf0a2d5b85a83cd517a937059b28b243c2718e7da90dad405fd33a474e44b1f", "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac"]
         self.assertEqual(7, len(component_sha256))
-        self.assertEqual(2_912, sum(component_tokens))
-        self.assertEqual(2_911, sum(component_tokens) - 1)
-        self.assertEqual(2_918, sum(component_tokens) + 6)
+        self.assertEqual(2_913, sum(component_tokens))
+        self.assertEqual(2_912, sum(component_tokens) - 1)
+        self.assertEqual(2_919, sum(component_tokens) + 6)
         self.assertEqual(
             reference_specs[
                 (
@@ -8581,15 +8614,15 @@ class ContextContentRelocationTests(unittest.TestCase):
         protected = {
             "src/professional-skills/platform-infrastructure-change-builder/SKILL.md": "2543b9cc91b1efa0696905015b5b6a6d11126798e14c386ad95591b12c1ab1da",
             "src/domain-extensions/cloud-platform-extension/SKILL.md": "6c300ff1c468f83c7b75c54997c67539710e6f8e236fc655d4ecda5e806a4224",
-            "src/registry/professional-skills.yaml": "962639a800a9881c6a1068800c86d6ffe6697ff1650eb066988083d12410252a",
-            "src/registry/foundation-skills.yaml": "b783c62012e1f60680f11043d6146c36bb6aaaa8c9ebebc41311df3413750f64",
+            "src/registry/professional-skills.yaml": "509afa24771fbb4b06da6461bdb36091126dd4ebb8afc01d37c51b6c8570b657",
+            "src/registry/foundation-skills.yaml": "872172f6afe2b40670ac3a15a707c54ec2e953d0be595212fe61057889c1106e",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-"scripts/build.py": "a864e4b287e0391b0926bf9a5c6aebdaab6c93aea1bb683e0d480f0b480d3121",
-"scripts/validation_utils.py": "431c496cbc6cc0bd9f376f9484467473c7519c560be8347cfb61890fd2624814",
-            "evals/agent-light-trajectories/cases.yaml": "686949a6a5bc83d41de704b3dfa71ee5a1ab45e6d68ab71067f799219d733b96",
-            "tests/scripts/test_reference_registry_jit.py": "24961599f0a1c4e884d4399f0c691026343b8eab40f8070f06eee3a1d94d031b",
-"tests/scripts/test_eval_rendered_context_budget.py": "18ab6116d5fabd49be9c2bc641db0ec9547b8c6d6ea564d40fcfddcef2baa4e3",
-            "scripts/audit-skill-content.py": "979b2e422a6ed5e2358f36c8010b1fed7263c3a61fd92403b8cdd0a4fe206d9e",
+"scripts/build.py": "7e8f11e45b76b5c32bf4faf20cb34c1c286d9401e9172d94c8309b42b2b559a0",
+"scripts/validation_utils.py": "eea023bd38bab4ecd3358c6244956b961f954f50e708b5da6399c0c91410f262",
+            "evals/agent-light-trajectories/cases.yaml": "3b896558b75ec716abe559c2aa2f2fdf56dfdce5dc348206ee558cb7402c1e28",
+            "tests/scripts/test_reference_registry_jit.py": "a9a1fbd89f45aec808b4d9f31b24193fddf2fb76cd464d56c1b42cb8992933e8",
+            "tests/scripts/test_eval_rendered_context_budget.py": "e577a149bb1c9a3722e50eb090b3a6579f56a4b88c78f0e02c1e35ef08892520",
+            "scripts/audit-skill-content.py": "420a57a63bb1a1db3af06f1dec7beff58674724238506cdce7f67d8622fac03f",
             "tests/scripts/test_validate_root_content.py": "3e597ddbf6e203f6ba73c92c142769435a7f1c94752bb16245c6e68421066491",
         }
         for path, expected_sha256 in protected.items():
@@ -8665,15 +8698,15 @@ class ContextContentRelocationTests(unittest.TestCase):
         compact.extend(BUILD._compact_jit_reference_delivery_lines("data-middleware-change-builder"))
         compact.append("")
         compact_projection = "\n".join(compact)
-        self.assertEqual(246, VALIDATION.count_o200k_base_tokens(compact_projection))
-        self.assertEqual("2b71a32f0a209286a10ca1e770882e487479dcfdde5737587dee4954fe55bd94", hashlib.sha256(compact_projection.encode("utf-8")).hexdigest())
+        self.assertEqual(250, VALIDATION.count_o200k_base_tokens(compact_projection))
+        self.assertEqual("eddf116b9ca3ff77e2eae6e7c30754b7e37a2dff68cdbf1948bf7e530cb83a7f", hashlib.sha256(compact_projection.encode("utf-8")).hexdigest())
         for omitted in ("## When To Use", "## Do Not Use", "## Required Inputs", "## High-Value Gotchas", "## Execution Checklist", "## Targeted References"):
             self.assertNotIn(omitted, compact_projection)
         for retained in ("## Role", "## Professional Decision Rules", "## Stop / Escalation Conditions", "## Output Contract", "## JIT Reference Delivery"):
             self.assertEqual(1, compact_projection.count(retained))
         dev_projection = compact_projection.rstrip() + "\n\n## Layer 3 Delivery\n\nFoundation and Domain items are top-level Skills; no Layer 3 references are compiled.\n"
-        self.assertEqual(269, VALIDATION.count_o200k_base_tokens(dev_projection))
-        self.assertEqual("22a41125147da43b01da304168205b8840d7ec6649a16c7727bd7719943696f3", hashlib.sha256(dev_projection.encode("utf-8")).hexdigest())
+        self.assertEqual(273, VALIDATION.count_o200k_base_tokens(dev_projection))
+        self.assertEqual("b16053e70091a0f80c07adbdc94eccd02cf80e7ffda727cf11384432ca65f4cb", hashlib.sha256(dev_projection.encode("utf-8")).hexdigest())
 
         reference_specs = {
             ("data-middleware-change-builder", "references/checklist.md"): (359, "7913ab5061bcc773b799077d47a02e5f0fee9e66dbe386c4c1bdb5c5d0b9473f", ("analysis-agent", "task-agent"), ("checklist-result", "residual-risk")),
@@ -8703,15 +8736,15 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/foundation/capabilities/data-migration-design/SKILL.md": "1c2d3921cfe7f848e03f32fb0031f49b0d5ff55d8e0f65a4bee4c6549cdc1649",
             "src/foundation/capabilities/transaction-consistency/SKILL.md": "076dff13a9468d13713ec106f5a96586f44635855f9600998209d197a8fb5308",
             "src/foundation/capabilities/distributed-workflow-consistency/SKILL.md": "df3a7d24a62d3aabc74405abeb7ce98376da7a049c3ec8b36c43c25694a98b2e",
-            "src/registry/professional-skills.yaml": "962639a800a9881c6a1068800c86d6ffe6697ff1650eb066988083d12410252a",
-            "src/registry/foundation-skills.yaml": "b783c62012e1f60680f11043d6146c36bb6aaaa8c9ebebc41311df3413750f64",
+            "src/registry/professional-skills.yaml": "509afa24771fbb4b06da6461bdb36091126dd4ebb8afc01d37c51b6c8570b657",
+            "src/registry/foundation-skills.yaml": "872172f6afe2b40670ac3a15a707c54ec2e953d0be595212fe61057889c1106e",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-"scripts/build.py": "a864e4b287e0391b0926bf9a5c6aebdaab6c93aea1bb683e0d480f0b480d3121",
-"scripts/validation_utils.py": "431c496cbc6cc0bd9f376f9484467473c7519c560be8347cfb61890fd2624814",
-            "evals/agent-light-trajectories/cases.yaml": "686949a6a5bc83d41de704b3dfa71ee5a1ab45e6d68ab71067f799219d733b96",
-            "tests/scripts/test_reference_registry_jit.py": "24961599f0a1c4e884d4399f0c691026343b8eab40f8070f06eee3a1d94d031b",
-"tests/scripts/test_eval_rendered_context_budget.py": "18ab6116d5fabd49be9c2bc641db0ec9547b8c6d6ea564d40fcfddcef2baa4e3",
-            "scripts/audit-skill-content.py": "979b2e422a6ed5e2358f36c8010b1fed7263c3a61fd92403b8cdd0a4fe206d9e",
+"scripts/build.py": "7e8f11e45b76b5c32bf4faf20cb34c1c286d9401e9172d94c8309b42b2b559a0",
+"scripts/validation_utils.py": "eea023bd38bab4ecd3358c6244956b961f954f50e708b5da6399c0c91410f262",
+            "evals/agent-light-trajectories/cases.yaml": "3b896558b75ec716abe559c2aa2f2fdf56dfdce5dc348206ee558cb7402c1e28",
+            "tests/scripts/test_reference_registry_jit.py": "a9a1fbd89f45aec808b4d9f31b24193fddf2fb76cd464d56c1b42cb8992933e8",
+            "tests/scripts/test_eval_rendered_context_budget.py": "e577a149bb1c9a3722e50eb090b3a6579f56a4b88c78f0e02c1e35ef08892520",
+            "scripts/audit-skill-content.py": "420a57a63bb1a1db3af06f1dec7beff58674724238506cdce7f67d8622fac03f",
             "tests/scripts/test_validate_root_content.py": "3e597ddbf6e203f6ba73c92c142769435a7f1c94752bb16245c6e68421066491",
         }
         for path, expected_sha256 in protected.items():
@@ -8723,11 +8756,11 @@ class ContextContentRelocationTests(unittest.TestCase):
         selector_authority = VALIDATION.layer3_selector_authority(foundation, professional, domain, context="C1Q data-middleware content witness")
         selector_projection = VALIDATION.layer3_selector_runtime_projection(selector_authority, professional_skill="data-middleware-change-builder", profile="task-agent", selection_owner="main-control-agent", exact_layer3=None)
         evidence_signals = ["database-migration", "distributed-effect-change"]
-        receipt = VALIDATION.layer3_selector_runtime_selection_receipt(selector_projection, evidence_signals=evidence_signals)
+        receipt = VALIDATION.layer3_selector_runtime_selection_receipt(selector_projection, evidence_signals=evidence_signals, build_identity=TEST_BUILD_IDENTITY)
         self.assertEqual(["data-migration-design", "transaction-consistency", "distributed-workflow-consistency"], receipt["selected_layer3"])
-        self.assertEqual("6267555050601288125c263945346b3abdd3f22a54cb2a6337e3de44053e1298", receipt["receipt_sha256"])
+        self.assertEqual("3ded25bbf006c293f493094008dba5f46f3aa58440d9f3d274d5c681dac86045", receipt["receipt_sha256"])
         for reduced_signals in (evidence_signals[:1], evidence_signals[1:]):
-            reduced = VALIDATION.layer3_selector_runtime_selection_receipt(selector_projection, evidence_signals=reduced_signals)
+            reduced = VALIDATION.layer3_selector_runtime_selection_receipt(selector_projection, evidence_signals=reduced_signals, build_identity=TEST_BUILD_IDENTITY)
             self.assertNotEqual(receipt["selected_layer3"], reduced["selected_layer3"])
             self.assertNotEqual(receipt["receipt_sha256"], reduced["receipt_sha256"])
         domain_names = {row["name"] for row in domain["domain_skills"]}
@@ -8752,10 +8785,10 @@ class ContextContentRelocationTests(unittest.TestCase):
         self.assertEqual({"data-migration-design", "transaction-consistency", "distributed-workflow-consistency"}, {entry["owner"] for entry in relevant_ledger})
         self.assertTrue(all(entry["route_effect"] == "unchanged" and entry["co_trigger_effect"] == "unchanged" for entry in relevant_ledger))
 
-        component_tokens = [697, 269, 203, 256, 219, 611, 657]
+        component_tokens = [697, 273, 203, 256, 219, 611, 657]
         component_sha256 = [
             "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
-            "22a41125147da43b01da304168205b8840d7ec6649a16c7727bd7719943696f3",
+            "b16053e70091a0f80c07adbdc94eccd02cf80e7ffda727cf11384432ca65f4cb",
             "47432bd91de6b11d3420a5411ba290bdd0c306152ccc8d4ed68d2d1b8598ded7",
             "643b2bf8abc8c6e0722f2cf1ef0cc22186363568672c5df2177cbe4ce2b13f22",
             "ece4b6e4da213da984ab4356bb3e868333af33bf3f39ac92a040e25128f4547a",
@@ -8763,9 +8796,9 @@ class ContextContentRelocationTests(unittest.TestCase):
             "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
         ]
         self.assertEqual(7, len(component_sha256))
-        self.assertEqual(2_912, sum(component_tokens))
-        self.assertEqual(2_911, sum(component_tokens) - 1)
-        self.assertEqual(2_918, sum(component_tokens) + 6)
+        self.assertEqual(2_916, sum(component_tokens))
+        self.assertEqual(2_915, sum(component_tokens) - 1)
+        self.assertEqual(2_922, sum(component_tokens) + 6)
 
     def test_fg_authoring_source_only_sections_are_complete_and_projection_neutral(self) -> None:
         source_specs = (
@@ -8777,14 +8810,14 @@ class ContextContentRelocationTests(unittest.TestCase):
                 950,
                 4_922,
                 73,
-                450,
-                "1ad5eae164abb130b2349a23e7271f010b92f372ed9e972cdbc93bbee7e70138",
-                2_382,
-                38,
-                473,
-                "ba0cd168460d097e9296e5a4cc51782bc519b9dc6b0559ab719347d9e71cae06",
-                2_490,
-                42,
+                454,
+                "2455fc96285b916d4e78da09da51cba60cf46ac6e760676f65431f99af4c117d",
+                2_318,
+                37,
+                477,
+                "ad20b09a4a5e4bc904c32a7ec25baeb772d018ce8ea1483c047e06280786d24e",
+                2_426,
+                41,
                 {
                     "Role": "1e8dfaf6883899cc125f53bb83697f996152d91f916962b239f957f551a176d1",
                     "Professional Decision Rules": "3e06923590bfea7023deb05d06c0ffa1cca89e29f09b1ef8da5d1f56fff312c5",
@@ -8812,14 +8845,14 @@ class ContextContentRelocationTests(unittest.TestCase):
                 755,
                 3_797,
                 68,
-                310,
-                "58d88e71ba05ce0b36336ac8ef70f3f13ded845a842ac99fcdc01a5911ae7e5c",
-                1_500,
-                34,
-                333,
-                "cd91f6ea858e7b988fe1268c0e45d8f3cf38e501ff0a1cbb8d31a6ec0bcb4565",
-                1_608,
-                38,
+                314,
+                "f4fa8aa340ba020032340b54d27d18218c793f63750e34c109a4f84887d4dc1a",
+                1_440,
+                33,
+                337,
+                "0a5de7c42811b0b18c4e419c600a9210fe1657d52c6772e7b2c41e3c870499ab",
+                1_548,
+                37,
                 {
                     "Role": "b6fa99364a3025c27dc5debd6aa639c7c75536c84e49b1cb6cfc04f7835c60f9",
                     "Professional Decision Rules": "0349935ee43b54b7c408568f5fdc178bd5d4135e5005da61b2114d1e1546c1aa",
@@ -8847,14 +8880,14 @@ class ContextContentRelocationTests(unittest.TestCase):
                 1_266,
                 6_542,
                 71,
-                218,
-                "963994e2c16e1af8631ccb51e7d99cce1d29f4477ba38fea4d17fcdf9c6f2a81",
-                1_149,
-                29,
-                241,
-                "d87e5a4a36673b5eae0a9a434f99e8323bf9dcb95afedfaa6fcc001124a4a40d",
-                1_257,
-                33,
+                224,
+                "41266487669d9377fce80f67f184d1dbed63243c03dae836d811c33c41de117c",
+                1_087,
+                28,
+                247,
+                "d62fe71b4375df6338e16dafb71fdb0072b4aad5336aca74fa7bd80cbc1e48b4",
+                1_195,
+                32,
                 {
                     "Role": "ee9dd069b13c4927f60a6fb9e6077f1067f8fa340fa32336cec573f9172e0974",
                     "Professional Decision Rules": "9d058b788e1de548a3bffddac8a8e87fd5bb8db60ecb095e0c8a471fd4991dea",
@@ -8884,14 +8917,14 @@ class ContextContentRelocationTests(unittest.TestCase):
                 614,
                 3_181,
                 66,
-                336,
-                "1f67801bd8f0ec6a7f2e31fb1e92883b4907f6a7a89b037cfb317b85609c98b7",
-                1_743,
-                35,
-                359,
-                "97d34d2f884a82b8d10083e97702b3e744e8474542e5dd09810c4641fb4fde8f",
-                1_851,
-                39,
+                341,
+                "b1a9c9c4a66390758dca86741a39abd86114c1f5587c999859c5c176e633322d",
+                1_681,
+                34,
+                364,
+                "bcf7b5a1f371410a31fb609c66690fc71815cf8fc2b55177ccc8575e636ef2e3",
+                1_789,
+                38,
                 {
                     "Role": "981f0cff17867d6a661cf2986923b48be9120cece6af36788c30cad56f7d8952",
                     "Professional Decision Rules": "63eb2b96843ec40a8b797d18cbc1bf1a031e267aecb820045a4747d3bb86bd07",
@@ -8919,14 +8952,14 @@ class ContextContentRelocationTests(unittest.TestCase):
                 802,
                 4_213,
                 67,
-                336,
-                "57038d78a55dfe065432eb323d0066752342a2b344e201b3227cad13cb464755",
-                1_803,
-                32,
-                359,
-                "b3ae5eb4df59d91c697ff0fc0c9419f96f157abedbb2122be3e9f4da7a908418",
-                1_911,
-                36,
+                341,
+                "b87901b8c65feb4ba823bdc5b69c12b7ce49b02e54c16c5dfb61d618164dc69a",
+                1_738,
+                31,
+                364,
+                "8b2a1eb1893d241d2e6da6f20def90c92852a6660b491790ca302d7a678d396c",
+                1_846,
+                35,
                 {
                     "Role": "6bb84fc4f2a6abe4d82a459097f58a4a2cad53c96ec1230953883856665089af",
                     "Professional Decision Rules": "c324bf5f383efe2e41c5357dd3f150f677d29aa5f2c3cd3026f882fea0ad1414",
@@ -8954,14 +8987,14 @@ class ContextContentRelocationTests(unittest.TestCase):
                 899,
                 4_378,
                 70,
-                396,
-                "4e750d4d9dc180a11ed2afeee16ed6b688f05db7fb8a5b504d00c4b22f7b22ed",
-                1_896,
-                35,
-                419,
-                "4c14c9d2b96e872a91018311b8bdb1633f98d1f49b290efb12b5666df3d2217d",
-                2_004,
-                39,
+                400,
+                "b53581e1b6fb0568ef1a9a0c4e3ae601bb73b784f5296d20279038a1d5c4cb25",
+                1_838,
+                34,
+                423,
+                "794cd1ad085d7054e9a857f53916c721190f56eca2fbcec0abc1cbd6dadefe08",
+                1_946,
+                38,
                 {
                     "Role": "190344031c4db498f84302a25dfa0f1f6db2e1cf5e390c330b537c27bfc58681",
                     "Professional Decision Rules": "df8d9172e15bfec1a435dbad380b503fa683896fe1ff3abb0ca0358c396a6312",
@@ -8989,14 +9022,14 @@ class ContextContentRelocationTests(unittest.TestCase):
                 849,
                 4_298,
                 68,
-                352,
-                "a4ce65c28bbf036361af56a3e834bae9594d03a5710420888e586e6cd7e7aec3",
-                1_795,
-                33,
-                375,
-                "37c6864d946b6fa9f9bd870ac673817cdd47c0e99081387c9342657a819eddf3",
-                1_903,
-                37,
+                355,
+                "77a31ec082a34f84a8f76cb6206f8f85bcac8814d78812dcc1d83c7e185c7b9a",
+                1_723,
+                32,
+                378,
+                "25b1f48f5142cd3fbdd25b6668dd3c0630c373edb1276b9e84da3c00970da3e5",
+                1_831,
+                36,
                 {
                     "Role": "9185d38be4c20cc32d448b07b5d7224c880944f556c108702aa121694682180a",
                     "Professional Decision Rules": "6bebeb477d965d6275cf7a887607a6c3727219d578be617734d3f7c19ff519b6",
@@ -9218,8 +9251,8 @@ class ContextContentRelocationTests(unittest.TestCase):
             "delivery-release-gate",
             True,
         )
-        self.assertEqual((310, "58d88e71ba05ce0b36336ac8ef70f3f13ded845a842ac99fcdc01a5911ae7e5c", 1_500, 34), (VALIDATION.count_o200k_base_tokens(compact_delivery), hashlib.sha256(compact_delivery.encode("utf-8")).hexdigest(), len(compact_delivery.encode("utf-8")), compact_delivery.count("\n")))
-        self.assertEqual((333, "cd91f6ea858e7b988fe1268c0e45d8f3cf38e501ff0a1cbb8d31a6ec0bcb4565", 1_608, 38), (VALIDATION.count_o200k_base_tokens(dev_delivery), hashlib.sha256(dev_delivery.encode("utf-8")).hexdigest(), len(dev_delivery.encode("utf-8")), dev_delivery.count("\n")))
+        self.assertEqual((314, "f4fa8aa340ba020032340b54d27d18218c793f63750e34c109a4f84887d4dc1a", 1_440, 33), (VALIDATION.count_o200k_base_tokens(compact_delivery), hashlib.sha256(compact_delivery.encode("utf-8")).hexdigest(), len(compact_delivery.encode("utf-8")), compact_delivery.count("\n")))
+        self.assertEqual((337, "0a5de7c42811b0b18c4e419c600a9210fe1657d52c6772e7b2c41e3c870499ab", 1_548, 37), (VALIDATION.count_o200k_base_tokens(dev_delivery), hashlib.sha256(dev_delivery.encode("utf-8")).hexdigest(), len(dev_delivery.encode("utf-8")), dev_delivery.count("\n")))
         self.assertNotIn("## High-Value Gotchas", compact_delivery)
         self.assertNotIn("## Execution Checklist", compact_delivery)
 
@@ -9291,15 +9324,15 @@ class ContextContentRelocationTests(unittest.TestCase):
             "src/domain-extensions/iot-embedded-extension/SKILL.md": "6d7eca5af1dac2721ccfa51a33aa21deba46a818593e8186cb6eadd2350a9269",
             "src/foundation/capabilities/release-rollback/SKILL.md": "05bc0fa788fd635c9ce8948f64c7eb25846a083c1b6d33876ba95f4464ac0830",
             "src/foundation/capabilities/version-compatibility/SKILL.md": "8579ded9475e7b7faf3a740d4526e770be0270113be18090cc9496f3d5190f9f",
-            "src/registry/professional-skills.yaml": "962639a800a9881c6a1068800c86d6ffe6697ff1650eb066988083d12410252a",
-            "src/registry/foundation-skills.yaml": "b783c62012e1f60680f11043d6146c36bb6aaaa8c9ebebc41311df3413750f64",
+            "src/registry/professional-skills.yaml": "509afa24771fbb4b06da6461bdb36091126dd4ebb8afc01d37c51b6c8570b657",
+            "src/registry/foundation-skills.yaml": "872172f6afe2b40670ac3a15a707c54ec2e953d0be595212fe61057889c1106e",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-"scripts/build.py": "a864e4b287e0391b0926bf9a5c6aebdaab6c93aea1bb683e0d480f0b480d3121",
-"scripts/validation_utils.py": "431c496cbc6cc0bd9f376f9484467473c7519c560be8347cfb61890fd2624814",
-            "evals/agent-light-trajectories/cases.yaml": "686949a6a5bc83d41de704b3dfa71ee5a1ab45e6d68ab71067f799219d733b96",
-            "tests/scripts/test_reference_registry_jit.py": "24961599f0a1c4e884d4399f0c691026343b8eab40f8070f06eee3a1d94d031b",
-"tests/scripts/test_eval_rendered_context_budget.py": "18ab6116d5fabd49be9c2bc641db0ec9547b8c6d6ea564d40fcfddcef2baa4e3",
-            "scripts/audit-skill-content.py": "979b2e422a6ed5e2358f36c8010b1fed7263c3a61fd92403b8cdd0a4fe206d9e",
+"scripts/build.py": "7e8f11e45b76b5c32bf4faf20cb34c1c286d9401e9172d94c8309b42b2b559a0",
+"scripts/validation_utils.py": "eea023bd38bab4ecd3358c6244956b961f954f50e708b5da6399c0c91410f262",
+            "evals/agent-light-trajectories/cases.yaml": "3b896558b75ec716abe559c2aa2f2fdf56dfdce5dc348206ee558cb7402c1e28",
+            "tests/scripts/test_reference_registry_jit.py": "a9a1fbd89f45aec808b4d9f31b24193fddf2fb76cd464d56c1b42cb8992933e8",
+            "tests/scripts/test_eval_rendered_context_budget.py": "e577a149bb1c9a3722e50eb090b3a6579f56a4b88c78f0e02c1e35ef08892520",
+            "scripts/audit-skill-content.py": "420a57a63bb1a1db3af06f1dec7beff58674724238506cdce7f67d8622fac03f",
             "tests/scripts/test_validate_root_content.py": "3e597ddbf6e203f6ba73c92c142769435a7f1c94752bb16245c6e68421066491",
         }
         for path, expected_sha256 in protected.items():
@@ -9311,13 +9344,13 @@ class ContextContentRelocationTests(unittest.TestCase):
         selector_authority = VALIDATION.layer3_selector_authority(foundation, professional, domain, context="C1R delivery release witness")
         selector_projection = VALIDATION.layer3_selector_runtime_projection(selector_authority, professional_skill="delivery-release-gate", profile="task-agent", selection_owner="main-control-agent", exact_layer3=None)
         evidence_signals = ["device", "recovery", "changed-surface", "production-apply-or-rollout"]
-        receipt = VALIDATION.layer3_selector_runtime_selection_receipt(selector_projection, evidence_signals=evidence_signals)
+        receipt = VALIDATION.layer3_selector_runtime_selection_receipt(selector_projection, evidence_signals=evidence_signals, build_identity=TEST_BUILD_IDENTITY)
         self.assertEqual(["iot-embedded-extension", "release-rollback", "version-compatibility"], receipt["selected_layer3"])
-        self.assertEqual("0a93ab092e22e6ce4b18a629db71817e23222ed5d89397c5be7434e10a85047a", receipt["receipt_sha256"])
+        self.assertEqual("8020ee7e12d1313b00f5ed4de6999e1a7d2d477f3abeb1852ff2532e13384e63", receipt["receipt_sha256"])
         domain_names = {row["name"] for row in domain["domain_skills"]}
         self.assertEqual({"iot-embedded-extension"}, set(receipt["selected_layer3"]) & domain_names)
         for reduced_signals in (evidence_signals[:1], evidence_signals[1:]):
-            reduced = VALIDATION.layer3_selector_runtime_selection_receipt(selector_projection, evidence_signals=reduced_signals)
+            reduced = VALIDATION.layer3_selector_runtime_selection_receipt(selector_projection, evidence_signals=reduced_signals, build_identity=TEST_BUILD_IDENTITY)
             self.assertNotEqual(receipt["receipt_sha256"], reduced["receipt_sha256"])
 
         authority = VALIDATION.reference_context_admissibility_authority(professional, foundation, domain, context="C1R delivery staged witness")
@@ -9339,10 +9372,10 @@ class ContextContentRelocationTests(unittest.TestCase):
         self.assertEqual({"delivery-release-gate", "iot-embedded-extension", "release-rollback", "version-compatibility"}, {entry["owner"] for entry in relevant_ledger})
         self.assertTrue(all(entry["route_effect"] == "unchanged" and entry["co_trigger_effect"] == "unchanged" for entry in relevant_ledger))
 
-        component_tokens = [697, 333, 407, 202, 223, 490, 657]
+        component_tokens = [697, 337, 407, 202, 223, 490, 657]
         component_sha256 = [
             "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
-            "cd91f6ea858e7b988fe1268c0e45d8f3cf38e501ff0a1cbb8d31a6ec0bcb4565",
+            "0a5de7c42811b0b18c4e419c600a9210fe1657d52c6772e7b2c41e3c870499ab",
             "226fd16302df4a1d27167310d9e6fd02a21d64e5ea988b63c95fc45682ba8f1f",
             "835e5e1e0293876254330238e293a587e12e0eb1df04785e40cc8e4fb0fbd1f1",
             "4a69ac9bc815c56bbc4f1de4633bea953f8f1fabd51609f9a2d4f3ec41b849f8",
@@ -9350,9 +9383,9 @@ class ContextContentRelocationTests(unittest.TestCase):
             "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
         ]
         self.assertEqual(7, len(component_sha256))
-        self.assertEqual(3_009, sum(component_tokens))
-        self.assertEqual(3_008, sum(component_tokens) - 1)
-        self.assertEqual(3_015, sum(component_tokens) + 6)
+        self.assertEqual(3_013, sum(component_tokens))
+        self.assertEqual(3_012, sum(component_tokens) - 1)
+        self.assertEqual(3_019, sum(component_tokens) + 6)
 
     def test_fg_c1s_security_web_frontier_is_lossless_and_bounded(self) -> None:
         source_specs = {
@@ -9455,7 +9488,7 @@ class ContextContentRelocationTests(unittest.TestCase):
             return "\n".join(output)
 
         root_specs = {
-            "src/professional-skills/security-privacy-gate/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, "security-privacy-gate", True, 303, "1f5f5d81f6dd59c74a1a43ed9e7710478b16a0657eaa5312fe623ee598fb300e"),
+            "src/professional-skills/security-privacy-gate/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, "security-privacy-gate", True, 307, "3500f3d5860cb69f638e7a11650ee6d01389211faae8ce4ca2b8d9f2d061a035"),
             "src/domain-extensions/cloud-platform-extension/SKILL.md": (BUILD.PROFESSIONAL_BUILT_KERNEL_HEADINGS, None, False, 223, "d4b3f1570d2a19c23f4885ee77c9b4f1452e867a7a3c4954042cb576d58176e3"),
             "src/foundation/capabilities/threat-modeling/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, False, 284, "8e80df5e8844953bf96442407bc89069e9af24a5708c9e9f99a301a4f21864a2"),
             "src/foundation/capabilities/web-security/SKILL.md": (BUILD.FOUNDATION_BUILT_KERNEL_HEADINGS, None, False, 207, "7badf178956b416b1be793f2bce16dbc10495603df1379c63a0a46118d344f3c"),
@@ -9512,13 +9545,15 @@ class ContextContentRelocationTests(unittest.TestCase):
         )
         evidence_signals = ["cloud control plane", "account authority", "changed-surface", "ssrf"]
         receipt = VALIDATION.layer3_selector_runtime_selection_receipt(
-            selector_projection, evidence_signals=evidence_signals
+            selector_projection,
+            evidence_signals=evidence_signals,
+            build_identity=TEST_BUILD_IDENTITY,
         )
         self.assertEqual(["cloud-platform-extension", "threat-modeling", "web-security"], receipt["selected_layer3"])
-        self.assertEqual("336dfef51f64a686fc616f4fc48cac5451ebd55fe61dee5e402d4e98ca5a90e4", receipt["receipt_sha256"])
+        self.assertEqual("97ccdf27f2e851cf7a7013d700254c398e3e66298c9379745ea23cab54f4dbdd", receipt["receipt_sha256"])
         self.assertEqual({"cloud-platform-extension"}, set(receipt["selected_layer3"]) & {row["name"] for row in domain["domain_skills"]})
         for reduced_signals in (evidence_signals[:2], evidence_signals[2:]):
-            self.assertNotEqual(receipt["receipt_sha256"], VALIDATION.layer3_selector_runtime_selection_receipt(selector_projection, evidence_signals=reduced_signals)["receipt_sha256"])
+            self.assertNotEqual(receipt["receipt_sha256"], VALIDATION.layer3_selector_runtime_selection_receipt(selector_projection, evidence_signals=reduced_signals, build_identity=TEST_BUILD_IDENTITY)["receipt_sha256"])
 
         authority = VALIDATION.reference_context_admissibility_authority(
             professional, foundation, domain, context="C1S security web staged witness"
@@ -9561,10 +9596,10 @@ class ContextContentRelocationTests(unittest.TestCase):
             self.assertEqual(1, destination.count(entry["new_anchor"]))
             self.assertEqual(0, destination.replace(entry["new_anchor"], "", 1).count(entry["new_anchor"]))
 
-        component_tokens = [697, 303, 223, 284, 207, 532, 657]
+        component_tokens = [697, 307, 223, 284, 207, 532, 657]
         component_sha256 = [
             "28dde3cc5659529fa79b251dcf71b305372df5533d2050495a174f8782291f7e",
-            "1f5f5d81f6dd59c74a1a43ed9e7710478b16a0657eaa5312fe623ee598fb300e",
+            "3500f3d5860cb69f638e7a11650ee6d01389211faae8ce4ca2b8d9f2d061a035",
             "d4b3f1570d2a19c23f4885ee77c9b4f1452e867a7a3c4954042cb576d58176e3",
             "8e80df5e8844953bf96442407bc89069e9af24a5708c9e9f99a301a4f21864a2",
             "7badf178956b416b1be793f2bce16dbc10495603df1379c63a0a46118d344f3c",
@@ -9572,20 +9607,20 @@ class ContextContentRelocationTests(unittest.TestCase):
             "b1dc031dec6d279d689ca18f620a82b8bc28548d12bba49a5233a969837cb1ac",
         ]
         self.assertEqual(7, len(component_sha256))
-        self.assertEqual(2_903, sum(component_tokens))
-        self.assertEqual(2_902, sum(component_tokens) - 1)
-        self.assertEqual(2_909, sum(component_tokens) + 6)
+        self.assertEqual(2_907, sum(component_tokens))
+        self.assertEqual(2_906, sum(component_tokens) - 1)
+        self.assertEqual(2_913, sum(component_tokens) + 6)
 
         protected = {
-            "src/registry/professional-skills.yaml": "962639a800a9881c6a1068800c86d6ffe6697ff1650eb066988083d12410252a",
-            "src/registry/foundation-skills.yaml": "b783c62012e1f60680f11043d6146c36bb6aaaa8c9ebebc41311df3413750f64",
+            "src/registry/professional-skills.yaml": "509afa24771fbb4b06da6461bdb36091126dd4ebb8afc01d37c51b6c8570b657",
+            "src/registry/foundation-skills.yaml": "872172f6afe2b40670ac3a15a707c54ec2e953d0be595212fe61057889c1106e",
             "src/registry/domain-skills.yaml": "2d53ccc4206c94d9850e007d21603f04ba1f06f7721de5da1cd47dcfe6e16129",
-"scripts/build.py": "a864e4b287e0391b0926bf9a5c6aebdaab6c93aea1bb683e0d480f0b480d3121",
-"scripts/validation_utils.py": "431c496cbc6cc0bd9f376f9484467473c7519c560be8347cfb61890fd2624814",
-"tests/scripts/test_eval_rendered_context_budget.py": "18ab6116d5fabd49be9c2bc641db0ec9547b8c6d6ea564d40fcfddcef2baa4e3",
-            "scripts/audit-skill-content.py": "979b2e422a6ed5e2358f36c8010b1fed7263c3a61fd92403b8cdd0a4fe206d9e",
+"scripts/build.py": "7e8f11e45b76b5c32bf4faf20cb34c1c286d9401e9172d94c8309b42b2b559a0",
+"scripts/validation_utils.py": "eea023bd38bab4ecd3358c6244956b961f954f50e708b5da6399c0c91410f262",
+            "tests/scripts/test_eval_rendered_context_budget.py": "e577a149bb1c9a3722e50eb090b3a6579f56a4b88c78f0e02c1e35ef08892520",
+            "scripts/audit-skill-content.py": "420a57a63bb1a1db3af06f1dec7beff58674724238506cdce7f67d8622fac03f",
             "tests/scripts/test_validate_root_content.py": "3e597ddbf6e203f6ba73c92c142769435a7f1c94752bb16245c6e68421066491",
-            "evals/agent-light-trajectories/cases.yaml": "686949a6a5bc83d41de704b3dfa71ee5a1ab45e6d68ab71067f799219d733b96",
+            "evals/agent-light-trajectories/cases.yaml": "3b896558b75ec716abe559c2aa2f2fdf56dfdce5dc348206ee558cb7402c1e28",
         }
         for path, expected_sha256 in protected.items():
             self.assertEqual(expected_sha256, hashlib.sha256((ROOT / path).read_bytes()).hexdigest())

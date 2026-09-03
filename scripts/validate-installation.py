@@ -17,10 +17,12 @@ from validation_utils import (
     CORE_CONTRACTS,
     CORE_CONTRACTS_PATH,
     EXPECTED_RUNTIME_TOP_LEVEL_SKILL_COUNT,
+    RUNTIME_ASSET_INTEGRITY_MANIFEST_PATH,
     authoritative_build_input_snapshot_errors,
     execution_level_runtime_reference_errors,
     fail_many,
     report_output_paths,
+    runtime_asset_bundle_metadata_errors,
 )
 
 
@@ -296,11 +298,51 @@ def _validate_skill_roots(errors: list[str]) -> int:
         for name in manifest.get("professional_skills") or []:
             if not (runtime_root / name / "SKILL.md").is_file():
                 errors.append(f"{runtime_root.relative_to(ROOT)}: Professional Skill {name} is not installable")
+            else:
+                errors.extend(
+                    _runtime_bundle_errors(runtime_root / name, manifest, name)
+                )
         for retired in RETIRED_RUNTIME_NAMES:
             retired_root = root / retired
             if retired_root.exists():
                 errors.append(f"retired built Runtime remains: {retired_root.relative_to(ROOT)}")
     return total
+
+
+def _runtime_bundle_errors(
+    professional_root: Path,
+    manifest: dict[str, object],
+    professional: object,
+) -> list[str]:
+    if not isinstance(professional, str):
+        return [f"{professional_root.relative_to(ROOT)}: invalid Professional name"]
+    integrity_path = professional_root / RUNTIME_ASSET_INTEGRITY_MANIFEST_PATH
+    try:
+        integrity_bytes = integrity_path.read_bytes()
+        delivery_assets = {
+            path.relative_to(professional_root).as_posix(): path.read_bytes()
+            for path in sorted(professional_root.rglob("*"))
+            if path.is_file() and path != integrity_path
+        }
+    except OSError as exc:
+        return [f"{professional_root.relative_to(ROOT)}: Runtime metadata unavailable: {exc}"]
+    source_inputs = manifest.get("authoritative_build_inputs")
+    full_digest = (
+        source_inputs.get("sha256") if isinstance(source_inputs, dict) else None
+    )
+    bindings = manifest.get("runtime_asset_bindings")
+    binding = bindings.get(professional) if isinstance(bindings, dict) else None
+    return [
+        f"{professional_root.relative_to(ROOT)}: {error}"
+        for error in runtime_asset_bundle_metadata_errors(
+            integrity_bytes,
+            delivery_assets,
+            binding,
+            expected_source_version=str(manifest.get("source_version", "")),
+            expected_authoritative_build_inputs_sha256=full_digest,
+            expected_professional_skill=professional,
+        )
+    ]
 
 
 def _validate_profile_roots(errors: list[str]) -> int:

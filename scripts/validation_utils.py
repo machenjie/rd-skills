@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import copy
+import base64
+import binascii
 import hashlib
 import io
 import subprocess
@@ -3990,6 +3992,104 @@ def behavior_eval_authority(data: object) -> dict[str, Any]:
     return copy.deepcopy(data["behavior_eval_contract"])
 
 
+RUNTIME_ASSET_INLINE_IDENTITY_CONTRACT = "changeforge.runtime-inline-identity/v2"
+RUNTIME_ASSET_INLINE_IDENTITY_VERSION = 2
+RUNTIME_ASSET_INTEGRITY_MANIFEST_CONTRACT = (
+    "changeforge.runtime-integrity-manifest/v1"
+)
+RUNTIME_ASSET_INTEGRITY_MANIFEST_PATH = (
+    "references/runtime/integrity-manifest.json"
+)
+RUNTIME_ASSET_METADATA_EXCLUSIONS = (
+    RUNTIME_ASSET_INTEGRITY_MANIFEST_PATH,
+)
+RUNTIME_ASSET_INTEGRITY_MANIFEST_FIELDS = {
+    "contract",
+    "schema_version",
+    "runtime_version",
+    "build_identity",
+    "professional_skill",
+    "assets",
+    "integrity_manifest_sha256",
+}
+RUNTIME_ASSET_INTEGRITY_ROW_FIELDS = {"path", "kind", "sha256", "size"}
+RUNTIME_ASSET_ROOT_BINDING_FIELDS = {
+    "professional_skill",
+    "runtime_version",
+    "authoritative_build_inputs_sha256",
+    "build_identity_algorithm",
+    "build_identity",
+    "inline_identity_contract",
+    "inline_identity_version",
+    "integrity_manifest_path",
+    "integrity_manifest_full_bytes_sha256",
+}
+RUNTIME_ASSET_FIXED_PATHS = {
+    "selector_envelope_path": "references/runtime/selector.json",
+    "selector_complete_path": "references/runtime/selectors/complete.json",
+    "selector_shard_path_template": (
+        "references/runtime/selectors/<decision-id>.json"
+    ),
+    "reference_partition_path_template": (
+        "references/runtime/reference-records/<owner-skill>.json"
+    ),
+    "layer3_path_template": "references/layer3/<layer3-skill>.md",
+    "integrity_manifest_path": RUNTIME_ASSET_INTEGRITY_MANIFEST_PATH,
+}
+RUNTIME_ASSET_BUILD_IDENTITY_ALGORITHM = "sha256-prefix-128-base64url-nopad"
+RUNTIME_ASSET_PROFESSIONAL_JIT_TEMPLATE = (
+    "JIT: `references/runtime/selector.json`; Runtime: `<V>/<B>`."
+)
+RUNTIME_ASSET_LAYER3_MARKER_TEMPLATE = (
+    "<!-- Build: <B> -->"
+)
+
+
+def runtime_asset_build_identity(full_digest: object) -> str:
+    """Derive the canonical 128-bit Runtime comparator from one full SHA-256."""
+
+    if (
+        not isinstance(full_digest, str)
+        or re.fullmatch(r"[0-9a-f]{64}", full_digest) is None
+    ):
+        raise ValueError("Runtime build input digest must be 64 lowercase hex")
+    return base64.urlsafe_b64encode(bytes.fromhex(full_digest)[:16]).decode(
+        "ascii"
+    ).rstrip("=")
+
+
+def runtime_asset_build_identity_bytes(build_identity: object) -> bytes:
+    """Decode one canonical base64url-no-padding 128-bit Runtime comparator."""
+
+    if (
+        not isinstance(build_identity, str)
+        or re.fullmatch(r"[A-Za-z0-9_-]{22}", build_identity) is None
+        or build_identity[-1] not in "AQgw"
+    ):
+        raise ValueError(
+            "Runtime build identity must be canonical base64url-nopad-22"
+        )
+    try:
+        decoded = base64.b64decode(
+            build_identity + "==",
+            altchars=b"-_",
+            validate=True,
+        )
+    except (binascii.Error, ValueError) as exc:
+        raise ValueError(
+            "Runtime build identity must be canonical base64url-nopad-22"
+        ) from exc
+    if (
+        len(decoded) != 16
+        or base64.urlsafe_b64encode(decoded).decode("ascii").rstrip("=")
+        != build_identity
+    ):
+        raise ValueError(
+            "Runtime build identity must be canonical base64url-nopad-22"
+        )
+    return decoded
+
+
 def validate_core_contracts(
     data: object,
     root: Path = ROOT,
@@ -4152,6 +4252,9 @@ def validate_core_contracts(
         "principle_acceptance_contract",
         "impact_graph_contract",
         "roles",
+        "runtime_asset_resolution_contract",
+        "environment_risk_calibration_contract",
+        "analysis_evidence_continuation_contract",
         "external_read_contract",
         "evidence_localization_contract",
         "implementation_discipline_contract",
@@ -4248,6 +4351,575 @@ def validate_core_contracts(
         )
         if sandbox != expected_sandbox:
             errors.append(f"roles.{role_name}: sandbox and capability flags disagree")
+
+    runtime_assets = data["runtime_asset_resolution_contract"]
+    runtime_asset_fields = {
+        "schema_version",
+        "selected_root",
+        "professional_root",
+        "path_policy",
+        "inline_identity",
+        "integrity_manifest",
+        "fixed_paths",
+        "fixed_locator_projection",
+        "acyclic_generation_order",
+        "root_manifest_binding",
+        "runtime_roles",
+        "runtime_inline_verification",
+        "non_runtime_verifier",
+        "exact_set_bypass",
+        "mixed_install",
+        "failure",
+    }
+    if exact_keys(
+        runtime_assets,
+        runtime_asset_fields,
+        "runtime_asset_resolution_contract",
+    ):
+        assert isinstance(runtime_assets, dict)
+        if runtime_assets["schema_version"] != 1:
+            errors.append("runtime_asset_resolution_contract.schema_version must be 1")
+        if (
+            runtime_assets["selected_root"]
+            != "host-resolved-current-professional-root"
+            or runtime_assets["professional_root"] != "."
+        ):
+            errors.append("Runtime assets must bind one Host-selected Professional root")
+        path_policy = runtime_assets["path_policy"]
+        expected_path_policy = {
+            "addressing": "professional-root-relative-fixed-paths-only",
+            "forbidden": [
+                "absolute",
+                "parent-traversal",
+                "symlink",
+                "parent-search",
+                "sibling-root",
+                "glob",
+                "rglob",
+                "HOME-enumeration",
+                "~/.copilot",
+            ],
+        }
+        if path_policy != expected_path_policy:
+            errors.append("Runtime asset path policy must forbid inferred lookup surfaces")
+
+        inline_identity = runtime_assets["inline_identity"]
+        inline_identity_fields = {
+            "contract",
+            "runtime_version_source",
+            "build_identity_derivation",
+            "build_identity_bits",
+            "build_identity_format",
+            "professional_binding",
+            "professional_entrypoint_jit_line",
+            "selector_build_field",
+            "selector_assets",
+            "selector_read",
+            "selection_receipt_build_field",
+            "selection_receipt_hash_domain",
+            "layer3_first_line",
+            "layer3_marker_mode",
+            "layer3_professional_binding",
+        }
+        if exact_keys(
+            inline_identity,
+            inline_identity_fields,
+            "runtime asset inline identity",
+        ):
+            assert isinstance(inline_identity, dict)
+            if (
+                inline_identity["contract"]
+                != RUNTIME_ASSET_INLINE_IDENTITY_CONTRACT
+                or inline_identity["runtime_version_source"] != "root-source-version"
+                or inline_identity["build_identity_derivation"]
+                != "authoritative-build-inputs-sha256-prefix-128-base64url-nopad"
+                or inline_identity["build_identity_bits"] != 128
+                or inline_identity["build_identity_format"]
+                != "base64url-nopad-22"
+                or inline_identity["professional_binding"] != "frontmatter-name"
+                or inline_identity["professional_entrypoint_jit_line"]
+                != RUNTIME_ASSET_PROFESSIONAL_JIT_TEMPLATE
+                or inline_identity["selector_build_field"] != "build"
+                or inline_identity["selector_assets"]
+                != [
+                    "selector-envelope",
+                    "direct-selector",
+                    "complete-selector",
+                    "decision-shard",
+                    "reference-record-partition",
+                ]
+                or inline_identity["selector_read"]
+                != "single-existing-load-no-reread"
+                or inline_identity["selection_receipt_build_field"] != "build"
+                or inline_identity["selection_receipt_hash_domain"]
+                != "canonical-semantic-domain-includes-build"
+                or inline_identity["layer3_first_line"]
+                != RUNTIME_ASSET_LAYER3_MARKER_TEMPLATE
+                or inline_identity["layer3_marker_mode"]
+                != "replace-existing-generated-marker"
+                or inline_identity["layer3_professional_binding"]
+                != "host-root-plus-receipt-plus-fixed-path"
+            ):
+                errors.append("Runtime inline identity contract is invalid")
+
+        manifest = runtime_assets["integrity_manifest"]
+        manifest_fields = {
+            "contract",
+            "schema_version",
+            "path",
+            "fields",
+            "asset_fields",
+            "asset_order",
+            "inventory",
+            "excluded_metadata_paths",
+            "semantic_hash_field",
+            "semantic_hash_domain",
+            "canonical_json",
+            "runtime_read",
+        }
+        if exact_keys(manifest, manifest_fields, "runtime asset integrity manifest"):
+            assert isinstance(manifest, dict)
+            if (
+                manifest["contract"] != RUNTIME_ASSET_INTEGRITY_MANIFEST_CONTRACT
+                or manifest["schema_version"] != 1
+                or manifest["path"] != RUNTIME_ASSET_INTEGRITY_MANIFEST_PATH
+                or set(manifest["fields"])
+                != RUNTIME_ASSET_INTEGRITY_MANIFEST_FIELDS
+                or len(manifest["fields"])
+                != len(RUNTIME_ASSET_INTEGRITY_MANIFEST_FIELDS)
+                or set(manifest["asset_fields"])
+                != RUNTIME_ASSET_INTEGRITY_ROW_FIELDS
+                or len(manifest["asset_fields"])
+                != len(RUNTIME_ASSET_INTEGRITY_ROW_FIELDS)
+                or manifest["asset_order"] != "unique-lexicographic-path"
+                or manifest["inventory"] != "every-non-metadata-delivery-asset"
+                or manifest["excluded_metadata_paths"]
+                != list(RUNTIME_ASSET_METADATA_EXCLUSIONS)
+                or manifest["semantic_hash_field"]
+                != "integrity_manifest_sha256"
+                or manifest["semantic_hash_domain"]
+                != "canonical-json-semantics-excluding-own-hash-no-trailing-newline"
+                or manifest["runtime_read"] != "forbidden"
+            ):
+                errors.append("Runtime integrity manifest schema/hash/read contract is invalid")
+        manifest_canonical_json = {
+            "encoding": "utf-8",
+            "ensure_ascii": False,
+            "sort_keys": True,
+            "separators": [",", ":"],
+            "trailing_newline": False,
+        }
+        if (
+            not isinstance(manifest, dict)
+            or manifest.get("canonical_json") != manifest_canonical_json
+        ):
+            errors.append("Runtime integrity manifest semantic hash must use canonical JSON")
+        if runtime_assets["fixed_paths"] != RUNTIME_ASSET_FIXED_PATHS:
+            errors.append("Runtime asset fixed paths must match Professional-local grammar")
+        locator = runtime_assets["fixed_locator_projection"]
+        expected_locator = {
+            "owner": "generated-professional-entrypoint-and-selector-envelope",
+            "professional_entrypoint_line": RUNTIME_ASSET_PROFESSIONAL_JIT_TEMPLATE,
+            "selector_owns": [
+                "complete-selector",
+                "decision-shard",
+                "reference-partition",
+            ],
+            "layer3_path_grammar": "references/layer3/<layer3-skill>.md",
+            "forbidden": [
+                "runtime-identity-sidecar",
+                "cross-skill-selector-locator",
+                "duplicate-layer3-locator",
+                "duplicate-profile-main-brief-locator",
+                "search-discovery",
+            ],
+        }
+        if locator != expected_locator:
+            errors.append("Runtime fixed locator projection is invalid")
+        expected_generation_order = [
+            "authoritative-build-inputs-and-source-version",
+            "full-sha256-and-runtime-version",
+            "sha256-prefix-128-comparator",
+            "professional-selector-receipt-layer3-inline-bindings",
+            "integrity-inventory-and-semantic-hash",
+            "root-manifest-integrity-exact-byte-binding",
+        ]
+        if runtime_assets["acyclic_generation_order"] != expected_generation_order:
+            errors.append("Runtime metadata generation order must remain acyclic")
+        root_binding = runtime_assets["root_manifest_binding"]
+        if (
+            not isinstance(root_binding, dict)
+            or set(root_binding)
+            != {
+                "fields",
+                "build_identity_algorithm",
+                "inline_identity_contract",
+                "inline_identity_version",
+                "hash_domain",
+                "completeness",
+            }
+            or set(root_binding.get("fields", []))
+            != RUNTIME_ASSET_ROOT_BINDING_FIELDS
+            or len(root_binding.get("fields", []))
+            != len(RUNTIME_ASSET_ROOT_BINDING_FIELDS)
+            or root_binding.get("build_identity_algorithm")
+            != RUNTIME_ASSET_BUILD_IDENTITY_ALGORITHM
+            or root_binding.get("inline_identity_contract")
+            != RUNTIME_ASSET_INLINE_IDENTITY_CONTRACT
+            or root_binding.get("inline_identity_version")
+            != RUNTIME_ASSET_INLINE_IDENTITY_VERSION
+            or root_binding.get("hash_domain") != "exact-serialized-file-bytes"
+            or root_binding.get("completeness")
+            != "integrity-assets-plus-one-metadata-full-byte-binding"
+        ):
+            errors.append("root build manifest must bind inline identity and integrity exactly")
+        runtime_roles = runtime_assets["runtime_roles"]
+        if (
+            not isinstance(runtime_roles, dict)
+            or set(runtime_roles)
+            != {
+                "profiles",
+                "required_reads",
+                "forbidden_reads",
+                "digest_operations",
+                "forbidden_operations",
+            }
+            or set(runtime_roles.get("profiles", [])) != role_names
+            or runtime_roles.get("required_reads")
+            != [
+                "professional-entrypoint",
+                "logical-selection-receipt",
+                "current-fixed-assets",
+            ]
+            or runtime_roles.get("forbidden_reads")
+            != ["integrity-manifest", "root-build-manifest"]
+            or runtime_roles.get("digest_operations") != []
+            or any(
+                item not in runtime_roles.get("forbidden_operations", [])
+                for item in (
+                    "runtime-identity-sidecar-read",
+                    "selector-reload",
+                    "sha256",
+                    "size",
+                    "HOME-enumeration",
+                    "parent-search",
+                    "glob",
+                )
+            )
+        ):
+            errors.append("Runtime roles must use compact inline verification only")
+        inline = runtime_assets["runtime_inline_verification"]
+        if (
+            not isinstance(inline, dict)
+            or inline.get("inputs")
+            != [
+                "professional-entrypoint",
+                "logical-selection-receipt",
+                "current-fixed-assets",
+            ]
+            or inline.get("checks")
+            != [
+                "professional-frontmatter-name",
+                "professional-jit-runtime-version-build",
+                "base64url-nopad-22-build-identity",
+                "selector-or-partition-build-on-existing-read",
+                "selection-receipt-build",
+                "layer3-first-line-build",
+                "profile",
+                "selection-owner",
+                "selection-kind",
+                "selected-or-exact-layer3",
+                "unique-max-three",
+                "itemwise-profile-domain-authorization",
+                "current-asset-professional-binding",
+            ]
+            or inline.get("proof_limits")
+            != [
+                "full-digest-derivation",
+                "raw-byte-integrity",
+                "coherent-old-bundle-currentness",
+            ]
+        ):
+            errors.append("Runtime inline verification boundary is invalid")
+        verifier = runtime_assets["non_runtime_verifier"]
+        if (
+            not isinstance(verifier, dict)
+            or verifier.get("owner")
+            != "scripts/validation_utils.py#runtime_asset_bundle_metadata_errors"
+            or verifier.get("consumers")
+            != ["build", "installer", "doctor", "evaluator", "tests"]
+            or verifier.get("inputs")
+            != [
+                "integrity-manifest-full-bytes",
+                "complete-delivery-assets",
+                "root-manifest-binding",
+                "full-authoritative-input-sha256",
+            ]
+            or verifier.get("checks")
+            != [
+                "full-digest-format",
+                "prefix-128-derivation",
+                "professional-jit-version-build",
+                "selector-partition-build",
+                "selection-receipt-build",
+                "layer3-first-line-build",
+                "integrity-semantics",
+                "complete-inventory",
+                "asset-digest-size",
+                "one-metadata-full-byte-binding",
+            ]
+        ):
+            errors.append("Runtime byte integrity must have one non-Runtime verifier owner")
+        if (
+            runtime_assets["exact_set_bypass"]
+            != "professional-entrypoint-and-logical-selection-receipt-and-layer3-"
+            "binding-required-selector-skipped"
+            or runtime_assets["mixed_install"]
+            != "one-host-selected-professional-root-never-cross-root-compose"
+        ):
+            errors.append("Runtime exact-set and mixed-install bindings are invalid")
+        if runtime_assets["failure"] != "fail-closed-no-utility-no-reroute":
+            errors.append("Runtime asset failure must fail closed without Utility or reroute")
+
+    environment = data["environment_risk_calibration_contract"]
+    environment_fields = {
+        "schema_version",
+        "applies_to",
+        "authority_reuse",
+        "baseline",
+        "not_escalation_evidence",
+        "escalation_requires_all",
+        "source_trust_boundary_override",
+        "independent_risks",
+        "unknown_policy",
+        "filesystem_process_safety_projection",
+        "profile_projection",
+    }
+    if exact_keys(
+        environment,
+        environment_fields,
+        "environment_risk_calibration_contract",
+    ):
+        assert isinstance(environment, dict)
+        expected_environment_roles = [
+            "analysis-agent",
+            "task-agent",
+            "review-agent",
+        ]
+        independent_risks = [
+            "untrusted-product-input",
+            "concurrency-shared-state",
+            "retry-idempotency",
+            "crash-durability-recovery",
+            "production-privilege",
+            "secrets-privacy",
+            "supply-chain",
+            "external-integration",
+        ]
+        not_escalation_evidence = [
+            "ordinary-mutability",
+            "path-difference",
+            "generic-future-replacement",
+            "generic-unknown",
+        ]
+        escalation_evidence = [
+            "less-trusted-actor-input-or-writer",
+            "privilege-or-sensitive-asset",
+            "reachable-material-impact-path",
+        ]
+        if (
+            environment["schema_version"] != 1
+            or environment["applies_to"] != expected_environment_roles
+            or environment["baseline"]
+            != {
+                "ambient_host_workspace": "controlled-same-trust-non-adversarial",
+                "safety_proof": False,
+                "absence_of_hostile_evidence_proves_no_security_risk": False,
+            }
+            or environment["not_escalation_evidence"] != not_escalation_evidence
+            or environment["escalation_requires_all"] != escalation_evidence
+            or environment["independent_risks"] != independent_risks
+            or set(environment.get("profile_projection", {}))
+            != set(expected_environment_roles)
+        ):
+            errors.append("environment risk calibration must preserve reachable-path evidence")
+        expected_filesystem_projection = {
+            "skill": "filesystem-process-safety",
+            "selection_effects": [
+                "filesystem-effect",
+                "direct-child-process-effect",
+            ],
+            "normal_correctness": [
+                "create-replace",
+                "atomicity",
+                "durability",
+                "legitimate-concurrency",
+                "cleanup",
+                "wait-reap",
+                "stdout-stderr",
+                "timeout-cancellation",
+                "result-reconciliation",
+            ],
+            "trust_sensitive_reference": (
+                "references/trust-sensitive-filesystem-process-protection.md"
+            ),
+            "trust_load_branches": [
+                "current-related-concrete-reachable-trust-evidence",
+                "complete-related-critical_unknown",
+            ],
+            "not_escalation_evidence_refs": [
+                "#/environment_risk_calibration_contract/not_escalation_evidence/0",
+                "#/environment_risk_calibration_contract/not_escalation_evidence/1",
+                "#/environment_risk_calibration_contract/not_escalation_evidence/2",
+                "#/environment_risk_calibration_contract/not_escalation_evidence/3",
+            ],
+            "material_escalation_refs": [
+                "#/environment_risk_calibration_contract/escalation_requires_all/0",
+                "#/environment_risk_calibration_contract/escalation_requires_all/1",
+                "#/environment_risk_calibration_contract/escalation_requires_all/2",
+            ],
+            "critical_unknown_ref": "#/execution_level_contract/critical_unknown",
+            "independent_risk_refs": [
+                f"#/environment_risk_calibration_contract/independent_risks/{index}"
+                for index in range(8)
+            ],
+        }
+        filesystem_projection = environment.get(
+            "filesystem_process_safety_projection"
+        )
+        if filesystem_projection != expected_filesystem_projection:
+            errors.append(
+                "environment_risk_calibration_contract."
+                "filesystem_process_safety_projection must preserve the exact "
+                "normal/trust-sensitive projection"
+            )
+        elif isinstance(filesystem_projection, dict):
+            pointer_groups = (
+                (
+                    "not_escalation_evidence_refs",
+                    environment["not_escalation_evidence"],
+                ),
+                (
+                    "material_escalation_refs",
+                    environment["escalation_requires_all"],
+                ),
+                (
+                    "independent_risk_refs",
+                    environment["independent_risks"],
+                ),
+            )
+            for field, expected_values in pointer_groups:
+                resolved_values: list[object] = []
+                for pointer in filesystem_projection[field]:
+                    try:
+                        if not pointer.startswith("#/"):
+                            raise ValueError(
+                                "projection reference must be a local JSON pointer"
+                            )
+                        resolved_values.append(resolve_json_pointer(data, pointer[1:]))
+                    except (KeyError, TypeError, ValueError) as exc:
+                        errors.append(
+                            "environment_risk_calibration_contract."
+                            f"filesystem_process_safety_projection.{field}: {exc}"
+                        )
+                if resolved_values != expected_values:
+                    errors.append(
+                        "environment_risk_calibration_contract."
+                        f"filesystem_process_safety_projection.{field} must "
+                        "dereference the passed candidate exactly"
+                    )
+            critical_pointer = filesystem_projection["critical_unknown_ref"]
+            try:
+                if not critical_pointer.startswith("#/"):
+                    raise ValueError(
+                        "projection reference must be a local JSON pointer"
+                    )
+                resolved_critical = resolve_json_pointer(data, critical_pointer[1:])
+            except (KeyError, TypeError, ValueError) as exc:
+                errors.append(
+                    "environment_risk_calibration_contract."
+                    "filesystem_process_safety_projection.critical_unknown_ref: "
+                    f"{exc}"
+                )
+            else:
+                if resolved_critical != data["execution_level_contract"][
+                    "critical_unknown"
+                ]:
+                    errors.append(
+                        "environment_risk_calibration_contract."
+                        "filesystem_process_safety_projection.critical_unknown_ref "
+                        "must dereference the passed candidate critical_unknown"
+                    )
+        execution_level = data.get("execution_level_contract", {})
+        expected_reuse = [
+            *execution_level.get("calibration_principles", []),
+            "same_trust_principal",
+            "critical_unknown",
+            "material_assessment",
+        ]
+        if environment.get("authority_reuse") != expected_reuse:
+            errors.append("environment calibration must reuse current Level authority")
+
+    continuation = data["analysis_evidence_continuation_contract"]
+    continuation_fields = {
+        "schema_version",
+        "analysis_profile",
+        "analysis_tools_unchanged",
+        "trigger_requires_all",
+        "non_triggers",
+        "logical_key",
+        "cardinality",
+        "request_fields",
+        "utility",
+        "permission",
+        "continuation",
+        "unavailable_outcome",
+        "runtime_state",
+    }
+    if exact_keys(
+        continuation,
+        continuation_fields,
+        "analysis_evidence_continuation_contract",
+    ):
+        assert isinstance(continuation, dict)
+        utility = continuation["utility"]
+        permission = continuation["permission"]
+        if (
+            continuation["schema_version"] != 1
+            or continuation["analysis_profile"] != "analysis-agent"
+            or continuation["analysis_tools_unchanged"]
+            != roles.get("analysis-agent", {}).get("tools")
+            or continuation["trigger_requires_all"]
+            != [
+                "material-claim",
+                "current-read-search-insufficient",
+                "one-bounded-executable-observation-materially-confirms-or-refutes",
+            ]
+            or continuation["cardinality"]
+            != {"logical_requests": 1, "host_attempts": 2, "observations": 1}
+            or continuation["logical_key"]
+            != ["analysis-task-id", "continuation-id", "claim-id"]
+            or not isinstance(utility, dict)
+            or any(
+                utility.get(field) is not False
+                for field in (
+                    "professional_skill_load",
+                    "layer3_load",
+                    "diagnosis",
+                    "edit",
+                    "repair",
+                    "reroute",
+                )
+            )
+            or utility.get("owner") != "task-agent"
+            or utility.get("mode") != "evidence-observation/no-edit"
+            or not isinstance(permission, dict)
+            or permission.get("denied_before_observation")
+            != "one-retry-minimum-exact-authority-same-logical-request"
+            or permission.get("route_level_domain_layer3_change") is not False
+            or continuation["runtime_state"] is not False
+        ):
+            errors.append("Analysis Evidence continuation must preserve 1/2/1 and route")
 
     external_read = data["external_read_contract"]
     expected_external_read = {
@@ -4507,15 +5179,16 @@ def validate_core_contracts(
                 {
                     "rule_id": "analysis-localization",
                     "required_terms": [
-                        "exact locator",
-                        "current source",
-                        "direct read/search",
-                        "minimum complete",
-                        "counts are selectors only",
+                        "Evidence Closure:",
+                        "minimum-complete",
+                        "direct current-source read/search",
+                        "locators/counts",
+                        "select only",
+                        "never prove correctness/coverage",
                         "Proof Limit",
-                        "never correctness/coverage conclusions",
-                        "initial Analysis without accepted Brief",
-                        "bounded Delta only after accepted Brief invalidation",
+                        "protected/material",
+                        "initial Analysis",
+                        "bounded Delta",
                     ],
                 }
             ],
@@ -4593,23 +5266,37 @@ def validate_core_contracts(
             "contradiction_scope": "reopen-intersecting-claim-only",
             "material_proof_limit": "stop-before-edit-return-main",
             "profile_projection": {
-                role: [
+                "analysis-agent": [
                     {
-                        "rule_id": f"{role.removesuffix('-agent')}-evidence-closure",
+                        "rule_id": "analysis-evidence-closure",
                         "required_terms": [
                             "Evidence Closure:",
                             "proved/not-applicable/Proof Limit",
                             "no material risk",
-                            "new/invalidated/contradicted",
+                            "New/invalidated/contradicted",
                             "reopens affected only",
-                            "Protected/material returns Main",
-                            "initial Analysis without accepted Brief",
-                            "bounded Delta only after accepted Brief invalidation",
-                            "counts",
                         ],
                     }
-                ]
-                for role in ("analysis-agent", "task-agent", "review-agent")
+                ],
+                **{
+                    role: [
+                        {
+                            "rule_id": f"{role.removesuffix('-agent')}-evidence-closure",
+                            "required_terms": [
+                                "Evidence Closure:",
+                                "proved/not-applicable/Proof Limit",
+                                "no material risk",
+                                "new/invalidated/contradicted",
+                                "reopens affected only",
+                                "Protected/material returns Main",
+                                "initial Analysis without accepted Brief",
+                                "bounded Delta only after accepted Brief invalidation",
+                                "counts",
+                            ],
+                        }
+                    ]
+                    for role in ("task-agent", "review-agent")
+                },
             },
         },
     }
@@ -5900,6 +6587,7 @@ def validate_core_contracts(
         "context_taxonomy",
         "budget_classes",
         "duplicate_rule_token_ratio_max",
+        "runtime_asset_projection",
         "quality_cost_gate",
     }
     if exact_keys(
@@ -6007,6 +6695,65 @@ def validate_core_contracts(
         ):
             errors.append(
                 "context_budget_contract.duplicate_rule_token_ratio_max must be in [0, 1)"
+            )
+        runtime_projection = context_budget["runtime_asset_projection"]
+        expected_runtime_projection = {
+            "schema_version": 1,
+            "baseline_commit": "ee55c55e4950f7abd7818de0290076e3f6fe0467",
+            "ordinary_cohort": [
+                "single-file-bug-fix",
+                "single-module-feature",
+                "review-only",
+                "validation-task-no-edit",
+            ],
+            "exceptional_cohort": [
+                "diagnosis-only",
+                "material-executable-evidence-continuation",
+                "runtime-asset-integrity-failure",
+                "filesystem-process-normal-correctness",
+                "filesystem-process-trust-sensitive",
+            ],
+            "comparison_key": ["case", "host", "step", "budget_class"],
+            "identity_accounting": "inline-existing-component-bytes",
+            "identity_component_count_per_professional_assignment": 0,
+            "integrity_manifest_runtime_load_count": 0,
+            "selective_identity_field_read_count": 0,
+            "identity_structural_selector_load_delta_max": 0,
+            "inline_accounted_components": [
+                "professional-entrypoint",
+                "selector-or-reference-partition",
+                "logical-selection-receipt",
+                "targeted-reference-layer3-marker",
+            ],
+            "cross_skill_selector_locator_occurrence_count": 0,
+            "cumulative_trajectory_cost": (
+                "reported-observation-not-correctness-acceptance"
+            ),
+            "post_implementation_gate": (
+                "unproved-stop-on-context-route-coverage-or-binding-failure"
+            ),
+            "ordinary_delta_gate": {
+                "operator": "less-than-or-equal-minimum",
+                "absolute_token_max": 32,
+                "relative_ppm": 15_000,
+                "relative_rounding": "ceiling",
+            },
+            "main_token_delta_max": 0,
+            "profile_token_delta_max": 0,
+            "duplicate_rule_token_ratio_max": 0.03,
+            "required_semantic_counts": (
+                "non-decreasing-skills-layer3-references-validation-review"
+            ),
+            "measurement_limits": [
+                "deterministic-token-proxy-not-live-billed-tokens",
+                "deterministic-trace-not-live-host-behavior",
+                "no-wall-clock-proof",
+            ],
+        }
+        if runtime_projection != expected_runtime_projection:
+            errors.append(
+                "context_budget_contract.runtime_asset_projection must freeze inline "
+                "Runtime identity accounting and ordinary/exceptional cohorts"
             )
         quality_cost_gate = context_budget["quality_cost_gate"]
         gate_fields = {
@@ -6407,11 +7154,8 @@ def validate_core_contracts(
         },
         "selector_load": "only-when-current-owner-must-select",
         "professional_projection": "current-professional-only",
-        "delivery_projection": "control-local-professional-json",
-        "delivery_path_template": (
-            "engineering-control-plane/references/selectors/"
-            "<professional-skill>.json"
-        ),
+        "delivery_projection": "professional-local-runtime-selector-closure",
+        "delivery_path_template": "references/runtime/selector.json",
         "exact_layer3": "skip-selection-signals-after-authorization",
         "authorization": "itemwise-professional-profile-domain",
         "minimum": 0,
@@ -14914,6 +15658,273 @@ LAYER3_SELECTOR_DECISION_PARTITION_CONTRACT = (
 LAYER3_SELECTOR_REFERENCE_RECORDS_CONTRACT = (
     "changeforge.layer3-selector-reference-records-partition/v1"
 )
+def _runtime_asset_semantic_sha256(document: dict[str, Any], hash_field: str) -> str:
+    semantics = {key: value for key, value in document.items() if key != hash_field}
+    return hashlib.sha256(
+        json.dumps(
+            semantics,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
+
+
+def _runtime_asset_json_object(raw: object, label: str) -> tuple[dict[str, Any] | None, str | None]:
+    if not isinstance(raw, bytes):
+        return None, f"{label} must be exact bytes"
+
+    def reject_duplicate_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError(f"duplicate key {key!r}")
+            result[key] = value
+        return result
+
+    try:
+        document = json.loads(raw.decode("utf-8"), object_pairs_hook=reject_duplicate_pairs)
+    except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+        return None, f"{label} is malformed JSON: {exc}"
+    if not isinstance(document, dict):
+        return None, f"{label} root must be an object"
+    return document, None
+
+
+def _runtime_asset_safe_path(path: object) -> bool:
+    if not isinstance(path, str) or not path or "\\" in path or "//" in path:
+        return False
+    candidate = PurePosixPath(path)
+    return (
+        not candidate.is_absolute()
+        and path not in {".", ".."}
+        and not path.startswith("./")
+        and ".." not in candidate.parts
+        and candidate.as_posix() == path
+    )
+
+
+def runtime_asset_bundle_metadata_errors(
+    integrity_manifest_bytes: object,
+    delivery_assets: object,
+    root_binding: object,
+    *,
+    expected_source_version: str,
+    expected_authoritative_build_inputs_sha256: str,
+    expected_professional_skill: str,
+) -> list[str]:
+    """Verify inline Runtime identity and complete non-Runtime closure bytes.
+
+    This is the sole non-Runtime byte verifier contract. Runtime agents consume
+    the already-loaded Professional entrypoint, logical selection receipt, and
+    current fixed-path assets without reading manifests or computing digests.
+    """
+
+    errors: list[str] = []
+    full_hash_re = re.compile(r"[0-9a-f]{64}")
+    if not all(
+        isinstance(value, str) and value
+        for value in (expected_source_version, expected_professional_skill)
+    ):
+        return ["expected inline Runtime identity fields must be non-empty strings"]
+    if (
+        not isinstance(expected_authoritative_build_inputs_sha256, str)
+        or full_hash_re.fullmatch(expected_authoritative_build_inputs_sha256) is None
+    ):
+        return ["expected authoritative build input SHA-256 must be lowercase hex"]
+    expected_build_identity = runtime_asset_build_identity(
+        expected_authoritative_build_inputs_sha256
+    )
+
+    manifest, manifest_error = _runtime_asset_json_object(
+        integrity_manifest_bytes, "Runtime integrity manifest"
+    )
+    if manifest_error:
+        errors.append(manifest_error)
+    if manifest is None:
+        return errors
+
+    if set(manifest) != RUNTIME_ASSET_INTEGRITY_MANIFEST_FIELDS:
+        errors.append("Runtime integrity manifest fields are not exact")
+    if (
+        manifest.get("contract") != RUNTIME_ASSET_INTEGRITY_MANIFEST_CONTRACT
+        or manifest.get("schema_version") != 1
+    ):
+        errors.append("Runtime integrity manifest contract/schema is invalid")
+
+    for field, expected in (
+        ("runtime_version", expected_source_version),
+        ("build_identity", expected_build_identity),
+        ("professional_skill", expected_professional_skill),
+    ):
+        if manifest.get(field) != expected:
+            errors.append(f"Runtime integrity manifest {field} mismatch")
+
+    manifest_hash = manifest.get("integrity_manifest_sha256")
+    if (
+        not isinstance(manifest_hash, str)
+        or full_hash_re.fullmatch(manifest_hash) is None
+        or manifest_hash
+        != _runtime_asset_semantic_sha256(
+            manifest, "integrity_manifest_sha256"
+        )
+    ):
+        errors.append("Runtime integrity manifest semantic hash is invalid")
+
+    if (
+        not isinstance(delivery_assets, dict)
+        or any(
+            not _runtime_asset_safe_path(path) or not isinstance(payload, bytes)
+            for path, payload in delivery_assets.items()
+        )
+    ):
+        errors.append("delivery assets must be safe relative paths mapped to bytes")
+        delivery_assets = {}
+    metadata_leaks = sorted(set(delivery_assets) & set(RUNTIME_ASSET_METADATA_EXCLUSIONS))
+    if metadata_leaks:
+        errors.append(
+            "delivery assets must exclude the integrity metadata path: "
+            f"{metadata_leaks}"
+        )
+    if "references/runtime/identity.json" in delivery_assets:
+        errors.append("Runtime identity sidecar is forbidden")
+
+    rows = manifest.get("assets")
+    row_paths: list[str] = []
+    if not isinstance(rows, list):
+        errors.append("Runtime integrity manifest assets must be a list")
+        rows = []
+    for index, row in enumerate(rows):
+        if not isinstance(row, dict) or set(row) != RUNTIME_ASSET_INTEGRITY_ROW_FIELDS:
+            errors.append(f"Runtime integrity manifest asset row {index} fields are not exact")
+            continue
+        path = row.get("path")
+        row_paths.append(path if isinstance(path, str) else "")
+        if not _runtime_asset_safe_path(path):
+            errors.append(f"Runtime integrity manifest asset row {index} path is unsafe")
+            continue
+        if path in RUNTIME_ASSET_METADATA_EXCLUSIONS:
+            errors.append("Runtime integrity manifest must exclude its sole metadata file")
+        kind = row.get("kind")
+        digest = row.get("sha256")
+        size = row.get("size")
+        if not isinstance(kind, str) or not kind:
+            errors.append(f"Runtime integrity manifest asset row {index} kind is invalid")
+        if not isinstance(digest, str) or full_hash_re.fullmatch(digest) is None:
+            errors.append(f"Runtime integrity manifest asset row {index} digest is invalid")
+        if not isinstance(size, int) or isinstance(size, bool) or size < 0:
+            errors.append(f"Runtime integrity manifest asset row {index} size is invalid")
+        payload = delivery_assets.get(path)
+        if payload is None:
+            errors.append(f"Runtime integrity manifest asset {path!r} is missing")
+        elif (
+            hashlib.sha256(payload).hexdigest() != digest
+            or len(payload) != size
+        ):
+            errors.append(f"Runtime integrity manifest asset {path!r} bytes mismatch")
+    if row_paths != sorted(set(row_paths)):
+        errors.append("Runtime integrity manifest assets must be unique and path-sorted")
+    if set(row_paths) != set(delivery_assets):
+        errors.append("Runtime integrity manifest inventory is incomplete or has extra assets")
+
+    professional_bytes = delivery_assets.get("SKILL.md")
+    expected_jit_line = (
+        "JIT: `references/runtime/selector.json`; Runtime: "
+        f"`{expected_source_version}/{expected_build_identity}`."
+    )
+    if not isinstance(professional_bytes, bytes):
+        errors.append("Runtime Professional entrypoint is missing")
+    else:
+        try:
+            professional_text = professional_bytes.decode("utf-8")
+        except UnicodeDecodeError:
+            errors.append("Runtime Professional entrypoint is not UTF-8")
+        else:
+            if professional_text.count(expected_jit_line) != 1:
+                errors.append("Runtime Professional JIT version/build marker is missing or duplicated")
+            if "references/runtime/identity.json" in professional_text:
+                errors.append("Runtime Professional entrypoint retains identity sidecar lookup")
+            frontmatter = professional_text.split("---", 2)
+            expected_name = f"name: {expected_professional_skill}"
+            if len(frontmatter) < 3 or expected_name not in frontmatter[1].splitlines():
+                errors.append("Runtime Professional frontmatter name binding is invalid")
+
+    selector_paths = sorted(
+        path
+        for path in delivery_assets
+        if path == "references/runtime/selector.json"
+        or path.startswith("references/runtime/selectors/")
+        or path.startswith("references/runtime/reference-records/")
+    )
+    if "references/runtime/selector.json" not in selector_paths:
+        errors.append("Runtime selector envelope/direct selector is missing")
+    for path in selector_paths:
+        selector, selector_error = _runtime_asset_json_object(
+            delivery_assets[path], f"Runtime selector asset {path}"
+        )
+        if selector_error:
+            errors.append(selector_error)
+            continue
+        assert selector is not None
+        if selector.get("build") != expected_build_identity:
+            errors.append(f"Runtime selector asset {path} build mismatch")
+
+    expected_layer3_marker = RUNTIME_ASSET_LAYER3_MARKER_TEMPLATE.replace(
+        "<B>", expected_build_identity
+    )
+    for path, payload in sorted(delivery_assets.items()):
+        candidate = PurePosixPath(path)
+        if (
+            len(candidate.parts) != 3
+            or candidate.parts[:2] != ("references", "layer3")
+            or candidate.suffix != ".md"
+            or candidate.name == "index.md"
+        ):
+            continue
+        try:
+            first_line = payload.decode("utf-8").splitlines()[0]
+        except (UnicodeDecodeError, IndexError):
+            first_line = ""
+        if first_line != expected_layer3_marker:
+            errors.append(f"Runtime Layer 3 asset {path} build marker mismatch")
+
+    if not isinstance(root_binding, dict) or set(root_binding) != RUNTIME_ASSET_ROOT_BINDING_FIELDS:
+        errors.append("root Runtime metadata binding fields are not exact")
+        root_binding = {}
+    for field, expected in (
+        ("runtime_version", expected_source_version),
+        ("build_identity", expected_build_identity),
+        ("professional_skill", expected_professional_skill),
+        (
+            "authoritative_build_inputs_sha256",
+            expected_authoritative_build_inputs_sha256,
+        ),
+        ("build_identity_algorithm", RUNTIME_ASSET_BUILD_IDENTITY_ALGORITHM),
+        ("inline_identity_contract", RUNTIME_ASSET_INLINE_IDENTITY_CONTRACT),
+        ("inline_identity_version", RUNTIME_ASSET_INLINE_IDENTITY_VERSION),
+    ):
+        if root_binding.get(field) != expected:
+            errors.append(f"root Runtime metadata binding {field} mismatch")
+    root_full_digest = root_binding.get("authoritative_build_inputs_sha256")
+    root_comparator = root_binding.get("build_identity")
+    try:
+        root_derived_comparator = runtime_asset_build_identity(root_full_digest)
+        runtime_asset_build_identity_bytes(root_comparator)
+    except ValueError:
+        root_derived_comparator = None
+    if root_comparator != root_derived_comparator:
+        errors.append("root Runtime build identity is not the full digest 128-bit prefix")
+    expected_manifest_full_hash = hashlib.sha256(integrity_manifest_bytes).hexdigest()
+    if root_binding.get("integrity_manifest_path") != RUNTIME_ASSET_INTEGRITY_MANIFEST_PATH:
+        errors.append("root Runtime metadata integrity manifest path mismatch")
+    if (
+        root_binding.get("integrity_manifest_full_bytes_sha256")
+        != expected_manifest_full_hash
+    ):
+        errors.append("root Runtime metadata integrity manifest full-byte hash mismatch")
+    return errors
+
+
 _LAYER3_SELECTOR_SOURCE_KINDS = (
     "direct-static",
     "dynamic-helper-only",
@@ -16266,6 +17277,13 @@ def layer3_selector_resolve_control_projection(
         "decisions",
         "complete",
     }
+    envelope_build = envelope.get("build") if isinstance(envelope, dict) else None
+    if envelope_build is not None:
+        envelope_fields.add("build")
+        try:
+            runtime_asset_build_identity_bytes(envelope_build)
+        except ValueError as exc:
+            raise ValidationProblem("selector decision envelope is malformed") from exc
     if (
         not isinstance(envelope, dict)
         or set(envelope) != envelope_fields
@@ -16298,13 +17316,29 @@ def layer3_selector_resolve_control_projection(
         "selection_owner",
     }
     route_source_fields = {"path", "sha256", "pointer"}
-    provenance_fields = {
+    source_provenance_fields = {
         "decision_id",
         "scenario_id",
         "light_case_id",
         "release_scenario",
         "selector_registry",
     }
+    runtime_provenance_fields = {
+        "decision_id",
+        "scenario_id",
+        "light_case_id",
+        "selector_registry",
+    }
+    provenance_fields = (
+        runtime_provenance_fields
+        if envelope_build is not None
+        else source_provenance_fields
+    )
+    provenance_authority_fields = (
+        ("selector_registry",)
+        if envelope_build is not None
+        else ("release_scenario", "selector_registry")
+    )
     decision_fields = {"runtime_key", "provenance", "path", "sha256"}
     decisions = envelope["decisions"]
     if (
@@ -16341,7 +17375,12 @@ def layer3_selector_resolve_control_projection(
         )
         or not all(
             isinstance(row["provenance"].get(field), dict)
-            for field in ("release_scenario", "selector_registry")
+            and set(row["provenance"][field]) == route_source_fields
+            and all(
+                isinstance(value, str) and value
+                for value in row["provenance"][field].values()
+            )
+            for field in provenance_authority_fields
         )
         for row in decisions
     ):
@@ -16405,6 +17444,13 @@ def layer3_selector_resolve_control_projection(
             or not isinstance(shard.get("selector_ids"), list)
             or not shard["selector_ids"]
             or not isinstance(shard.get("projection"), dict)
+            or (
+                envelope_build is not None
+                and (
+                    shard.get("build") != envelope_build
+                    or shard["projection"].get("build") != envelope_build
+                )
+            )
         ):
             raise ValidationProblem("selector decision partition binding mismatch")
         profile_rows = [
@@ -16446,6 +17492,10 @@ def layer3_selector_resolve_control_projection(
         or fallback.get("authority_contract") != envelope["authority_contract"]
         or fallback.get("professional_skill")
         != runtime_key["primary_professional_skill"]
+        or (
+            envelope_build is not None
+            and fallback.get("build") != envelope_build
+        )
     ):
         raise ValidationProblem("selector decision complete fallback is malformed")
     return {
@@ -16459,6 +17509,53 @@ def layer3_selector_resolve_control_projection(
         "selected_layer3": None,
         "projection": copy.deepcopy(fallback),
     }
+
+
+def layer3_selector_runtime_decision_envelope(
+    envelope: object,
+    documents: object,
+    *,
+    build_identity: object,
+) -> dict[str, Any]:
+    """Validate full source provenance before emitting a compact Runtime envelope."""
+
+    try:
+        runtime_asset_build_identity_bytes(build_identity)
+    except ValueError as exc:
+        raise ValidationProblem("selector Runtime build identity is malformed") from exc
+    if (
+        not isinstance(envelope, dict)
+        or "build" in envelope
+        or not isinstance(documents, dict)
+        or not isinstance(envelope.get("decisions"), list)
+        or not envelope["decisions"]
+    ):
+        raise ValidationProblem("selector source envelope is malformed")
+    for row in envelope["decisions"]:
+        path = row.get("path") if isinstance(row, dict) else None
+        runtime_key = row.get("runtime_key") if isinstance(row, dict) else None
+        if not isinstance(path, str) or not path or path not in documents:
+            raise ValidationProblem("selector source provenance document is missing")
+        layer3_selector_resolve_control_projection(
+            envelope,
+            {path: documents[path]},
+            runtime_key=runtime_key,
+        )
+
+    runtime_envelope = copy.deepcopy(envelope)
+    runtime_envelope["build"] = build_identity
+    for row in runtime_envelope["decisions"]:
+        provenance = row["provenance"]
+        row["provenance"] = {
+            field: copy.deepcopy(provenance[field])
+            for field in (
+                "decision_id",
+                "scenario_id",
+                "light_case_id",
+                "selector_registry",
+            )
+        }
+    return runtime_envelope
 
 
 def layer3_selector_expand_runtime_projection(
@@ -16484,6 +17581,13 @@ def layer3_selector_expand_runtime_projection(
         "owner_surfaces",
         "reference_records_partition",
     }
+    base_build = base.get("build") if isinstance(base, dict) else None
+    if base_build is not None:
+        base_fields.add("build")
+        try:
+            runtime_asset_build_identity_bytes(base_build)
+        except ValueError as exc:
+            raise ValidationProblem("normalized selector base is malformed") from exc
     if (
         not isinstance(base, dict)
         or set(base) != base_fields
@@ -16604,15 +17708,19 @@ def layer3_selector_expand_runtime_projection(
     if exact_references is None:
         required_owners = [base["professional_skill"], *selected_layer3]
         link = base.get("reference_records_partition")
+        accepted_partition_templates = {
+            (
+                f"../reference-records/{base['professional_skill']}/"
+                "{owner_skill}.json"
+            ),
+            "reference-records/{owner_skill}.json",
+            "../reference-records/{owner_skill}.json",
+        }
         if (
             not isinstance(link, dict)
             or set(link) != {"contract", "path_template"}
             or link.get("contract") != LAYER3_SELECTOR_REFERENCE_RECORDS_CONTRACT
-            or link.get("path_template")
-            != (
-                f"../reference-records/{base['professional_skill']}/"
-                "{owner_skill}.json"
-            )
+            or link.get("path_template") not in accepted_partition_templates
         ):
             raise ValidationProblem("normalized selector Reference partition template is malformed")
         if (
@@ -16643,6 +17751,8 @@ def layer3_selector_expand_runtime_projection(
             "records_sha256",
             "reference_records",
         }
+        if base_build is not None:
+            partition_fields.add("build")
         for owner_skill in required_owners:
             partition = partitions[owner_skill]
             if (
@@ -16653,6 +17763,10 @@ def layer3_selector_expand_runtime_projection(
                 or partition.get("authority_contract") != base["authority_contract"]
                 or partition.get("professional_skill") != base["professional_skill"]
                 or partition.get("owner_skill") != owner_skill
+                or (
+                    base_build is not None
+                    and partition.get("build") != base_build
+                )
                 or not isinstance(partition.get("reference_records"), list)
                 or partition.get("records_sha256")
                 != hashlib.sha256(
@@ -16733,7 +17847,7 @@ def layer3_selector_expand_runtime_projection(
                 "exact References contain duplicate native bindings"
             )
 
-    return {
+    result = {
         "contract": LAYER3_SELECTOR_RUNTIME_CONTRACT,
         "authority_contract": base["authority_contract"],
         "professional_skill": base["professional_skill"],
@@ -16754,15 +17868,25 @@ def layer3_selector_expand_runtime_projection(
             role_reference_records if exact_references is None else []
         ),
     }
+    if base_build is not None:
+        result["build"] = base_build
+    return result
 
 
 def layer3_selector_runtime_selection_receipt(
     projection: object,
     *,
     evidence_signals: object,
+    build_identity: str,
 ) -> dict[str, Any]:
     """Resolve one local projection and emit its deterministic owner receipt."""
 
+    try:
+        runtime_asset_build_identity_bytes(build_identity)
+    except ValueError as exc:
+        raise ValidationProblem(
+            "runtime selector receipt build identity is malformed"
+        ) from exc
     if (
         not isinstance(projection, dict)
         or projection.get("contract")
@@ -16772,6 +17896,11 @@ def layer3_selector_runtime_selection_receipt(
     ):
         raise ValidationProblem(
             "runtime selector decision requires one canonical local projection"
+        )
+    projection_build = projection.get("build")
+    if projection_build is not None and projection_build != build_identity:
+        raise ValidationProblem(
+            "runtime selector receipt build identity disagrees with projection"
         )
     if projection.get("selector_loaded") is False:
         exact = projection.get("exact_layer3")
@@ -16857,6 +17986,7 @@ def layer3_selector_runtime_selection_receipt(
         raise ValidationProblem("runtime selector receipt profile is invalid")
     receipt: dict[str, Any] = {
         "contract": "changeforge.layer3-selector-selection-receipt/v1",
+        "build": build_identity,
         "authority_contract": projection.get("authority_contract"),
         "selection_owner": projection.get("selection_owner"),
         "profile": profile,
@@ -16886,11 +18016,13 @@ def layer3_selector_runtime_selection_receipt_errors(
     expected_professional: str,
     expected_selection_kind: str,
     expected_selected_layer3: list[str],
+    expected_build_identity: str,
 ) -> list[str]:
     """Replay one receipt from canonical authority and compare it exactly."""
 
     expected_fields = {
         "contract",
+        "build",
         "authority_contract",
         "selection_owner",
         "profile",
@@ -16915,6 +18047,13 @@ def layer3_selector_runtime_selection_receipt_errors(
         errors.append(
             "selector selection receipt expected profile/selection_kind "
             "binding is not canonical"
+        )
+        return errors
+    try:
+        runtime_asset_build_identity_bytes(expected_build_identity)
+    except ValueError:
+        errors.append(
+            "selector selection receipt expected build identity is malformed"
         )
         return errors
     if (
@@ -16954,11 +18093,16 @@ def layer3_selector_runtime_selection_receipt_errors(
             professional_skill=expected_professional,
             profile=expected_profile,
             selection_owner=expected_owner,
-            exact_layer3=None,
+            exact_layer3=(
+                expected_selected_layer3
+                if receipt.get("selector_ids") == ["exact-layer3-authority"]
+                else None
+            ),
         )
         replayed = layer3_selector_runtime_selection_receipt(
             projection,
             evidence_signals=evidence,
+            build_identity=expected_build_identity,
         )
     except (OSError, ValidationProblem, ValueError) as exc:
         errors.append(
@@ -16983,6 +18127,7 @@ def layer3_selector_runtime_selection(
     projection: object,
     *,
     evidence_signals: object,
+    build_identity: str,
 ) -> list[str]:
     """Resolve exact Layer 3 through the receipt-producing selection consumer."""
 
@@ -16990,6 +18135,7 @@ def layer3_selector_runtime_selection(
         layer3_selector_runtime_selection_receipt(
             projection,
             evidence_signals=evidence_signals,
+            build_identity=build_identity,
         )["selected_layer3"]
     )
 

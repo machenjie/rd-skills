@@ -30,6 +30,7 @@ from changeforge_install import (
     validated_built_profile_sha256,
     validate_managed_artifact_paths,
     validate_openai_bundles,
+    validate_runtime_asset_bundles,
 )
 
 
@@ -206,6 +207,7 @@ def main() -> int:
                     "profile must be upgraded to the single runtime"
                 )
                 return 1
+            validate_runtime_asset_bundles(targets.skills, manifest)
             if manifest.get("source_version") != source_version():
                 issues.append("installed source version differs from current source")
             if manifest.get("installed_agent_profile_enforcement") != expected_enforcement:

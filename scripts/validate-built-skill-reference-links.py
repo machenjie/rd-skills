@@ -10,7 +10,7 @@ import re
 import sys
 import tempfile
 from collections import Counter
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from urllib.parse import unquote
 
 import build as canonical_build
@@ -479,15 +479,18 @@ def _validate_complete_layer3_selector_reachability(
 
     reachable: set[str] = set()
     authorized_union: set[str] = set()
-    selector_root = (
-        selector_profile_root
-        / "engineering-control-plane"
-        / "references"
-        / "selectors"
-    )
+    selector_control_root = selector_profile_root / "engineering-control-plane"
+    selector_root = selector_control_root / "references" / "selectors"
     for professional, expected in expected_by_professional.items():
         selector_path = selector_root / f"{professional}.json"
-        selector = _load_complete_selector_projection(selector_path, errors)
+        selector = _load_complete_selector_projection(
+            selector_path,
+            errors,
+            professional_root=selector_control_root,
+            selector_root=selector_root,
+            professional=professional,
+            closure_layout="control",
+        )
         if selector is None:
             continue
         profile_authority = selector.get("profile_authority")
@@ -507,11 +510,18 @@ def _validate_complete_layer3_selector_reachability(
             )
         for candidate in expected:
             if _validate_selector_reference_reachability(
-                selector_profile_root,
                 professional,
                 candidate,
-                projection_root / candidate,
                 errors,
+                professional_root=selector_control_root,
+                selector_root=selector_root,
+                partition_root=(
+                    selector_control_root
+                    / "references/reference-records"
+                    / professional
+                ),
+                physical_root=projection_root / candidate,
+                closure_layout="control",
                 selector=selector,
             ):
                 reachable.add(candidate)
@@ -756,6 +766,13 @@ def _validate_compiled_layer3_entrypoints(
                 candidate,
                 layer,
                 errors,
+                professional_root=skill_root,
+                selector_root=skill_root / "references/runtime",
+                partition_root=(
+                    skill_root / "references/runtime/reference-records"
+                ),
+                physical_root=layer3_root / candidate,
+                closure_layout="runtime",
             )
 
 
@@ -764,6 +781,12 @@ def _validate_compiled_layer3_projection(
     candidate: str,
     layer: str,
     errors: list[str],
+    *,
+    professional_root: Path,
+    selector_root: Path,
+    partition_root: Path,
+    physical_root: Path,
+    closure_layout: str,
 ) -> None:
     """Validate the exact ai-consumption-v1 section projection."""
 
@@ -838,21 +861,163 @@ def _validate_compiled_layer3_projection(
             f"{_display_path(path)}: compiled projection needs a non-empty "
             "Decision Boundary"
         )
-    professional = path.parents[2].name
-    profile_root = path.parents[3]
+    professional = professional_root.name
     _validate_selector_reference_reachability(
-        profile_root,
         professional,
         candidate,
-        path.parent / candidate,
         errors,
+        professional_root=professional_root,
+        selector_root=selector_root,
+        partition_root=partition_root,
+        physical_root=physical_root,
+        closure_layout=closure_layout,
     )
+
+
+def _selector_layout_spec(
+    professional_root: Path,
+    professional: str,
+    closure_layout: str,
+) -> dict[str, object]:
+    if closure_layout == "runtime":
+        return {
+            "selector_root": professional_root / "references/runtime",
+            "selector_root_relative": "references/runtime",
+            "selector_relative": "selector.json",
+            "complete_relative": "selectors/complete.json",
+            "decision_prefix": "selectors/",
+            "partition_root": (
+                professional_root / "references/runtime/reference-records"
+            ),
+            "partition_root_relative": "references/runtime/reference-records",
+            "partition_templates": {
+                "reference-records/{owner_skill}.json",
+                "../reference-records/{owner_skill}.json",
+            },
+        }
+    if closure_layout == "control":
+        return {
+            "selector_root": professional_root / "references/selectors",
+            "selector_root_relative": "references/selectors",
+            "selector_relative": f"{professional}.json",
+            "complete_relative": f"{professional}/complete.json",
+            "decision_prefix": f"{professional}/",
+            "partition_root": (
+                professional_root
+                / "references/reference-records"
+                / professional
+            ),
+            "partition_root_relative": (
+                f"references/reference-records/{professional}"
+            ),
+            "partition_templates": {
+                f"../reference-records/{professional}/{{owner_skill}}.json"
+            },
+        }
+    raise ValueError(f"unsupported selector closure layout: {closure_layout!r}")
+
+
+def _fixed_child_path(
+    root: Path,
+    relative: object,
+    errors: list[str],
+    *,
+    label: str,
+    expected: str | None = None,
+) -> Path | None:
+    if (
+        not isinstance(relative, str)
+        or not relative
+        or relative.startswith("/")
+        or re.match(r"^[A-Za-z]:", relative) is not None
+        or "\\" in relative
+    ):
+        errors.append(f"{_display_path(root)}: {label} is not canonical")
+        return None
+    parts = relative.split("/")
+    if (
+        any(part in {"", ".", ".."} for part in parts)
+        or PurePosixPath(relative).as_posix() != relative
+        or expected is not None
+        and relative != expected
+    ):
+        errors.append(f"{_display_path(root)}: {label} is not canonical")
+        return None
+    candidate = root.joinpath(*parts)
+    current = root
+    try:
+        if current.is_symlink():
+            raise ValidationProblem("root is a symlink")
+        for part in parts:
+            current = current / part
+            if current.is_symlink():
+                raise ValidationProblem(f"{current.name!r} is a symlink")
+        root_resolved = root.resolve(strict=False)
+        candidate_resolved = candidate.resolve(strict=False)
+        candidate_resolved.relative_to(root_resolved)
+    except (OSError, ValueError, ValidationProblem) as exc:
+        errors.append(
+            f"{_display_path(candidate)}: {label} must not contain a symlink "
+            f"or escape its fixed root: {exc}"
+        )
+        return None
+    return candidate
 
 
 def _load_complete_selector_projection(
     selector_path: Path,
     errors: list[str],
+    *,
+    professional_root: Path,
+    selector_root: Path,
+    professional: str,
+    closure_layout: str,
 ) -> dict[str, object] | None:
+    try:
+        spec = _selector_layout_spec(
+            professional_root,
+            professional,
+            closure_layout,
+        )
+    except ValueError as exc:
+        errors.append(str(exc))
+        return None
+    expected_selector_root = spec["selector_root"]
+    assert isinstance(expected_selector_root, Path)
+    selector_relative = spec["selector_relative"]
+    assert isinstance(selector_relative, str)
+    if selector_root != expected_selector_root:
+        errors.append(
+            f"{_display_path(selector_root)}: selector root is not the fixed "
+            f"{closure_layout} root"
+        )
+        return None
+    selector_root_relative = spec["selector_root_relative"]
+    assert isinstance(selector_root_relative, str)
+    validated_selector_root = _fixed_child_path(
+        professional_root,
+        selector_root_relative,
+        errors,
+        label="selector root path",
+        expected=selector_root_relative,
+    )
+    if validated_selector_root != selector_root:
+        return None
+    expected_selector_path = _fixed_child_path(
+        selector_root,
+        selector_relative,
+        errors,
+        label="selector path",
+        expected=selector_relative,
+    )
+    if expected_selector_path is None:
+        return None
+    if selector_path != expected_selector_path:
+        errors.append(
+            f"{_display_path(selector_path)}: selector path is not the fixed "
+            f"{closure_layout} path"
+        )
+        return None
     try:
         selector = json.loads(selector_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
@@ -866,10 +1031,20 @@ def _load_complete_selector_projection(
             f"{_display_path(selector_path)}: selector projection must be a mapping"
         )
         return None
-    if (
-        selector.get("contract")
-        == "changeforge.layer3-selector-decision-envelope/v1"
-    ):
+    if selector.get("professional_skill") != professional:
+        errors.append(
+            f"{_display_path(selector_path)}: selector Professional owner is invalid"
+        )
+        return None
+    contract = selector.get("contract")
+    if contract == "changeforge.layer3-selector-normalized-control/v1":
+        if "complete" in selector or "decisions" in selector:
+            errors.append(
+                f"{_display_path(selector_path)}: direct selector contains envelope paths"
+            )
+            return None
+        return selector
+    if contract == "changeforge.layer3-selector-decision-envelope/v1":
         complete = selector.get("complete")
         if not isinstance(complete, dict) or not isinstance(
             complete.get("path"), str
@@ -878,7 +1053,17 @@ def _load_complete_selector_projection(
                 f"{_display_path(selector_path)}: selector decision fallback is invalid"
             )
             return None
-        complete_path = selector_path.parent / complete["path"]
+        complete_relative = spec["complete_relative"]
+        assert isinstance(complete_relative, str)
+        complete_path = _fixed_child_path(
+            selector_root,
+            complete["path"],
+            errors,
+            label="selector complete path",
+            expected=complete_relative,
+        )
+        if complete_path is None:
+            return None
         try:
             complete_document = json.loads(
                 complete_path.read_text(encoding="utf-8")
@@ -912,7 +1097,32 @@ def _load_complete_selector_projection(
                     f"{_display_path(selector_path)}: selector decision binding is invalid"
                 )
                 return None
-            decision_path = selector_path.parent / decision["path"]
+            provenance = decision.get("provenance")
+            decision_id = (
+                provenance.get("decision_id")
+                if isinstance(provenance, dict)
+                else None
+            )
+            decision_prefix = spec["decision_prefix"]
+            if (
+                not isinstance(decision_id, str)
+                or re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", decision_id) is None
+                or not isinstance(decision_prefix, str)
+            ):
+                errors.append(
+                    f"{_display_path(selector_path)}: selector decision identity is invalid"
+                )
+                return None
+            decision_relative = f"{decision_prefix}{decision_id}.json"
+            decision_path = _fixed_child_path(
+                selector_root,
+                decision["path"],
+                errors,
+                label="selector decision path",
+                expected=decision_relative,
+            )
+            if decision_path is None:
+                return None
             try:
                 decision_document = json.loads(
                     decision_path.read_text(encoding="utf-8")
@@ -928,52 +1138,140 @@ def _load_complete_selector_projection(
                 )
                 return None
         selector = resolution["projection"]
-    return selector
+        if (
+            not isinstance(selector, dict)
+            or selector.get("professional_skill") != professional
+        ):
+            errors.append(
+                f"{_display_path(selector_path)}: resolved selector Professional owner is invalid"
+            )
+            return None
+        return selector
+    errors.append(
+        f"{_display_path(selector_path)}: selector contract is not a generated "
+        "direct selector or decision envelope"
+    )
+    return None
 
 
 def _validate_selector_reference_reachability(
-    profile_root: Path,
     professional: str,
     candidate: str,
-    physical_root: Path,
     errors: list[str],
     *,
+    professional_root: Path,
+    selector_root: Path,
+    partition_root: Path,
+    physical_root: Path,
+    closure_layout: str,
     selector: dict[str, object] | None = None,
 ) -> bool:
-    selector_path = (
-        profile_root
-        / "engineering-control-plane"
-        / "references"
-        / "selectors"
-        / f"{professional}.json"
+    try:
+        spec = _selector_layout_spec(
+            professional_root,
+            professional,
+            closure_layout,
+        )
+    except ValueError as exc:
+        errors.append(str(exc))
+        return False
+    expected_selector_root = spec["selector_root"]
+    expected_partition_root = spec["partition_root"]
+    selector_relative = spec["selector_relative"]
+    assert isinstance(expected_selector_root, Path)
+    assert isinstance(expected_partition_root, Path)
+    assert isinstance(selector_relative, str)
+    if selector_root != expected_selector_root or partition_root != expected_partition_root:
+        errors.append(
+            f"{_display_path(professional_root)}: selector or partition root is not "
+            f"the fixed {closure_layout} closure"
+        )
+        return False
+    partition_root_relative = spec["partition_root_relative"]
+    assert isinstance(partition_root_relative, str)
+    validated_partition_root = _fixed_child_path(
+        professional_root,
+        partition_root_relative,
+        errors,
+        label="Reference partition root path",
+        expected=partition_root_relative,
     )
+    if validated_partition_root != partition_root:
+        return False
+    selector_path = selector_root / selector_relative
     if selector is None:
-        selector = _load_complete_selector_projection(selector_path, errors)
+        selector = _load_complete_selector_projection(
+            selector_path,
+            errors,
+            professional_root=professional_root,
+            selector_root=selector_root,
+            professional=professional,
+            closure_layout=closure_layout,
+        )
     if selector is None:
         return False
     partition_link = selector.get("reference_records_partition")
+    expected_partition_templates = spec["partition_templates"]
     if (
         selector.get("professional_skill") != professional
         or not isinstance(partition_link, dict)
         or partition_link.get("contract")
         != "changeforge.layer3-selector-reference-records-partition/v1"
-        or not isinstance(partition_link.get("path_template"), str)
+        or partition_link.get("path_template") not in expected_partition_templates
     ):
         errors.append(
-            f"{_display_path(selector_path)}: selector owner or Reference partition template is invalid"
+            f"{_display_path(selector_path)}: selector owner or fixed Reference "
+            "partition path is invalid"
+        )
+        return False
+    if closure_layout == "runtime":
+        physical_relative = f"references/layer3/{candidate}"
+        validated_physical_root = _fixed_child_path(
+            professional_root,
+            physical_relative,
+            errors,
+            label="physical root path",
+            expected=physical_relative,
+        )
+        if validated_physical_root != physical_root:
+            return False
+    if physical_root.is_symlink():
+        errors.append(
+            f"{_display_path(physical_root)}: physical root must not contain a symlink"
         )
         return False
     partitions: dict[str, dict[str, object]] = {}
     for owner in (professional, candidate):
-        partition_path = selector_path.parent / partition_link["path_template"].format(
-            owner_skill=owner
+        if re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", owner) is None:
+            errors.append(
+                f"{_display_path(partition_root)}: Reference partition owner is invalid"
+            )
+            return False
+        partition_relative = f"{owner}.json"
+        partition_path = _fixed_child_path(
+            partition_root,
+            partition_relative,
+            errors,
+            label="Reference partition path",
+            expected=partition_relative,
         )
+        if partition_path is None:
+            return False
         try:
             partition = json.loads(partition_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
             errors.append(
                 f"{_display_path(partition_path)}: missing or invalid current-Professional "
                 f"Reference partition: {exc}"
+            )
+            return False
+        if (
+            not isinstance(partition, dict)
+            or partition.get("professional_skill") != professional
+            or partition.get("owner_skill") != owner
+        ):
+            errors.append(
+                f"{_display_path(partition_path)}: Reference partition owner is invalid"
             )
             return False
         partitions[owner] = partition
@@ -1046,7 +1344,14 @@ def _validate_selector_reference_reachability(
                     f"{record_path!r} differs across role surfaces"
                 )
             observed_records[identity] = record
-            physical = physical_root / record_path
+            physical = _fixed_child_path(
+                physical_root,
+                record_path,
+                errors,
+                label=f"{candidate} physical Reference path",
+            )
+            if physical is None:
+                continue
             if not physical.is_file():
                 errors.append(
                     f"{_display_path(selector_path)}: {candidate} Reference record "
@@ -1140,11 +1445,7 @@ def _validate_rendered_professional_body(
             f"{_display_path(skill_file)}: rendered Professional SKILL.md body has "
             f"{line_count} lines; maximum is {MAX_RENDERED_PROFESSIONAL_BODY_LINES}"
         )
-    skill_name = skill_file.parent.name
-    selector_path = (
-        "engineering-control-plane/references/selectors/"
-        f"{skill_name}.json"
-    )
+    selector_path = "references/runtime/selector.json"
     if (
         body.count("## JIT Reference Delivery") != 1
         or body.count(selector_path) != 1

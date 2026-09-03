@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import importlib.util
 import json
 import sys
@@ -30,6 +31,7 @@ def _load_module():
 
 
 EVAL = _load_module()
+FIXTURE = sys.modules["fixture_capsule_contract"]
 
 
 def _materialize_runtime_dist(dist: Path) -> None:
@@ -117,6 +119,7 @@ class LightweightUtilityContractTests(unittest.TestCase):
         cls.release_cases = document["cases"]
         cls.scheduling_cases = document["scheduling_cases"]
         cls.utility_cases = document["utility_cases"]
+        cls.evidence_continuation_cases = document["evidence_continuation_cases"]
         cls.adaptive_testing_cases = document["adaptive_testing_cases"]
         cls.review_discipline_cases = document["review_discipline_cases"]
         cls.task_focus_cases = document["task_focus_cases"]
@@ -142,6 +145,782 @@ class LightweightUtilityContractTests(unittest.TestCase):
             self.layer3,
         )
         return errors
+
+    @staticmethod
+    def _canonical_hash(value: dict) -> str:
+        return hashlib.sha256(
+            json.dumps(
+                {key: item for key, item in value.items() if key != "canonical_sha256"},
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+        ).hexdigest()
+
+    @classmethod
+    def _rehash(cls, value: dict) -> None:
+        value["canonical_sha256"] = cls._canonical_hash(value)
+
+    @classmethod
+    def _sync_request(cls, case: dict) -> None:
+        request = case["request"]
+        case["assignment"]["inputs"] = copy.deepcopy(request)
+        request_sha256 = hashlib.sha256(
+            json.dumps(
+                request,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+        ).hexdigest()
+        for attempt in case["attempts"]:
+            attempt["request_sha256"] = request_sha256
+
+    @classmethod
+    def _sync_host_evidence(cls, case: dict) -> None:
+        for attempt in case["attempts"]:
+            cls._rehash(attempt["host_evidence"])
+        evidence = case["utility_return"]["artifact_or_check_outcomes"]["evidence"]
+        evidence["outcome"]["host_evidence"] = [
+            copy.deepcopy(attempt["host_evidence"]) for attempt in case["attempts"]
+        ]
+        cls._rehash(evidence["outcome"])
+
+    def _evidence_case(self, case_id: str) -> dict:
+        return next(
+            copy.deepcopy(case)
+            for case in self.evidence_continuation_cases
+            if case["id"] == case_id
+        )
+
+    def _assert_evidence_case_rejected(self, check_id: str, case: dict) -> None:
+        with self.subTest(check_id=check_id):
+            results, errors = EVAL._evidence_continuation_fixture_results([case])
+            self.assertTrue(errors, (check_id, results))
+            self.assertFalse(results[0]["matches_expected"], (check_id, results))
+
+    def test_b01_b48_evidence_fixture_contract_is_canonical(self) -> None:
+        results, errors = EVAL._evidence_continuation_fixture_results(
+            copy.deepcopy(self.evidence_continuation_cases)
+        )
+        self.assertEqual([], errors)
+        self.assertEqual(8, len(results))
+        no_triggers = self.evidence_continuation_cases[:3]
+        self.assertTrue(all(case["request"] is None for case in no_triggers))
+        for case in self.evidence_continuation_cases:
+            with self.subTest(case=case["id"]):
+                self.assertEqual(
+                    tuple(case["analysis_identity"]),
+                    tuple(case["continuation_identity"]),
+                )
+                self.assertEqual(
+                    {key: value for key, value in case["analysis_identity"].items() if key != "canonical_sha256"},
+                    {key: value for key, value in case["continuation_identity"].items() if key != "canonical_sha256"},
+                )
+                self.assertEqual(
+                    self._canonical_hash(case["analysis_identity"]),
+                    case["analysis_identity"]["canonical_sha256"],
+                )
+                self.assertEqual(
+                    self._canonical_hash(case["continuation_identity"]),
+                    case["continuation_identity"]["canonical_sha256"],
+                )
+        for case in self.evidence_continuation_cases[3:]:
+            with self.subTest(case=case["id"]):
+                request = case["request"]
+                self.assertEqual("evidence-observation-operation", request["operation"])
+                self.assertEqual("tests/fixture-subject.txt", request["allowed_scope"])
+                self.assertEqual(request, case["assignment"]["inputs"])
+                self.assertEqual([request["allowed_scope"]], case["assignment"]["allowed_scope"]["paths"])
+                artifact = case["utility_return"]["artifact_or_check_outcomes"]
+                self.assertEqual("fresh after this immutable Evidence Request", artifact["freshness"])
+                self.assertEqual(request["allowed_scope"], artifact["scope"])
+                self.assertEqual(
+                    "Deterministic fixture evidence does not prove live Host or provider behavior.",
+                    artifact["proof_limit"],
+                )
+                self.assertEqual(
+                    ["live Host and provider behavior"],
+                    case["utility_return"]["unverified_scope"],
+                )
+                self.assertEqual(
+                    ["bounded observation may leave the material claim unproved"],
+                    case["utility_return"]["residual_risk"],
+                )
+                self.assertEqual(
+                    {
+                        "professional_skill_load": 0,
+                        "layer3_load": 0,
+                        "diagnose": 0,
+                        "edit": 0,
+                        "repair": 0,
+                        "reroute": 0,
+                        "generic_execute": 0,
+                    },
+                    results[[row["id"] for row in results].index(case["id"])]["forbidden_operation_counts"],
+                )
+
+    def test_b01_b45_evidence_fixture_mutations_are_rejected(self) -> None:
+        self.assertEqual(
+            [],
+            EVAL._evidence_continuation_fixture_results(
+                copy.deepcopy(self.evidence_continuation_cases)
+            )[1],
+        )
+        self.assertTrue(
+            all("continuation_identity" in case for case in self.evidence_continuation_cases),
+            "P1: evidence cases require an independently hashed continuation identity",
+        )
+
+        case = self._evidence_case("evidence-static-sufficient")
+        case["request"] = copy.deepcopy(self._evidence_case("evidence-completed")["request"])
+        self._assert_evidence_case_rejected("B01", case)
+
+        case = self._evidence_case("evidence-completed")
+        case["request"] = None
+        self._assert_evidence_case_rejected("B02", case)
+
+        for check_id, operation in (
+            ("B03", "python3 arbitrary.py"),
+            ("B04", "evidence-observation-operation; repair"),
+        ):
+            case = self._evidence_case("evidence-completed")
+            case["request"]["operation"] = operation
+            self._sync_request(case)
+            self._assert_evidence_case_rejected(check_id, case)
+
+        case = self._evidence_case("evidence-completed")
+        case["request"]["allowed_scope"] = "elsewhere/private.txt"
+        self._sync_request(case)
+        case["utility_return"]["artifact_or_check_outcomes"]["scope"] = "elsewhere/private.txt"
+        self._assert_evidence_case_rejected("B05", case)
+
+        case = self._evidence_case("evidence-completed")
+        case["assignment"]["allowed_scope"]["paths"] = ["."]
+        self._assert_evidence_case_rejected("B06", case)
+
+        case = self._evidence_case("evidence-completed")
+        case["analysis_identity"]["professional_skill"] = "quality-test-gate"
+        self._rehash(case["analysis_identity"])
+        self._assert_evidence_case_rejected("B07", case)
+
+        case = self._evidence_case("evidence-completed")
+        case["analysis_identity"]["layer3_skills"] = ["test-strategy"]
+        self._rehash(case["analysis_identity"])
+        self._assert_evidence_case_rejected("B08", case)
+
+        case = self._evidence_case("evidence-completed")
+        case["continuation_identity"]["effective_level"] = "L3"
+        self._rehash(case["continuation_identity"])
+        self._assert_evidence_case_rejected("B09", case)
+
+        case = self._evidence_case("evidence-completed")
+        case["request"]["extra"] = "forbidden"
+        self._sync_request(case)
+        self._assert_evidence_case_rejected("B10", case)
+
+        case = self._evidence_case("evidence-completed")
+        analysis_task_id = case["analysis_identity"]["task_id"]
+        case["assignment"]["task_id"] = analysis_task_id
+        case["utility_return"]["task_id"] = analysis_task_id
+        for attempt in case["attempts"]:
+            attempt["utility_task_id"] = analysis_task_id
+        self._assert_evidence_case_rejected("B11", case)
+
+        case = self._evidence_case("evidence-permission-retry")
+        case["attempts"][1]["utility_task_id"] = "replacement-utility-task"
+        self._assert_evidence_case_rejected("B12", case)
+
+        for check_id, fields in (
+            ("B13", {"professional_skill": "quality-test-gate", "professional_references": []}),
+            ("B14", {"layer3_skills": [], "layer3_references": []}),
+        ):
+            case = self._evidence_case("evidence-completed")
+            case["assignment"].update(fields)
+            self._assert_evidence_case_rejected(check_id, case)
+
+        case = self._evidence_case("evidence-completed")
+        case["assignment"]["no_edit_enforcement"] = "self-declared"
+        case["utility_return"]["no_edit_enforcement"] = "self-declared"
+        self._assert_evidence_case_rejected("B15", case)
+
+        case = self._evidence_case("evidence-permission-retry")
+        third = copy.deepcopy(case["attempts"][1])
+        third["ordinal"] = 3
+        case["attempts"].append(third)
+        self._sync_host_evidence(case)
+        self._assert_evidence_case_rejected("B16", case)
+
+        case = self._evidence_case("evidence-permission-retry")
+        case["attempts"][0]["status"] = "partial"
+        raw = case["attempts"][0]["host_evidence"]["raw_fixture"]
+        raw["status"] = "partial"
+        raw["observation_produced"] = True
+        self._sync_host_evidence(case)
+        self._assert_evidence_case_rejected("B17", case)
+
+        case = self._evidence_case("evidence-permission-retry")
+        case["attempts"][0]["status"] = "completed"
+        case["attempts"][0]["host_evidence"]["raw_fixture"]["status"] = "completed"
+        self._sync_host_evidence(case)
+        self._assert_evidence_case_rejected("B18", case)
+
+        for variant, commands in (
+            ("missing", ["evidence-observation-operation", "evidence-workspace-postflight"]),
+            ("extra", ["evidence-workspace-preflight", "evidence-observation-operation", "validation-check", "evidence-workspace-postflight"]),
+            ("reordered", ["evidence-observation-operation", "evidence-workspace-preflight", "evidence-workspace-postflight"]),
+        ):
+            case = self._evidence_case("evidence-completed")
+            case["attempts"][0]["commands"] = commands
+            case["utility_return"]["commands_run"] = list(commands)
+            self._assert_evidence_case_rejected(f"B19-{variant}", case)
+
+        case = self._evidence_case("evidence-permission-retry")
+        for attempt in case["attempts"]:
+            attempt["host_evidence"]["raw_fixture"]["observed_requirement"] = "whole workspace access"
+        authority = case["utility_return"]["artifact_or_check_outcomes"]["evidence"]["authority"]
+        authority["allowed_scope"] = "."
+        authority["observed_requirement"] = "whole workspace access"
+        self._rehash(authority)
+        self._sync_host_evidence(case)
+        self._assert_evidence_case_rejected("B20", case)
+
+        case = self._evidence_case("evidence-completed")
+        authority = case["utility_return"]["artifact_or_check_outcomes"]["evidence"]["authority"]
+        authority["operation"] = "validation-check"
+        self._rehash(authority)
+        self._assert_evidence_case_rejected("B21", case)
+
+        case = self._evidence_case("evidence-completed")
+        authority = case["utility_return"]["artifact_or_check_outcomes"]["evidence"]["authority"]
+        authority["kind"] = "host-support"
+        authority["disposition"] = "unavailable"
+        self._rehash(authority)
+        self._assert_evidence_case_rejected("B22", case)
+
+        case = self._evidence_case("evidence-permission-retry")
+        authority = case["utility_return"]["artifact_or_check_outcomes"]["evidence"]["authority"]
+        authority["observed_requirement"] = "different exact authority"
+        self._rehash(authority)
+        self._assert_evidence_case_rejected("B23", case)
+
+        case = self._evidence_case("evidence-completed")
+        decision = case["utility_return"]["artifact_or_check_outcomes"]["evidence"]["decision"]
+        decision["evidence"] = "Root cause found; edit, repair, and reroute"
+        self._rehash(decision)
+        self._assert_evidence_case_rejected("B24", case)
+
+        case = self._evidence_case("evidence-completed")
+        decision = case["utility_return"]["artifact_or_check_outcomes"]["evidence"]["decision"]
+        decision["extra"] = True
+        self._rehash(decision)
+        self._assert_evidence_case_rejected("B25", case)
+
+        case = self._evidence_case("evidence-completed")
+        case["utility_return"]["artifact_or_check_outcomes"]["freshness"] = "fresh/old"
+        self._assert_evidence_case_rejected("B26", case)
+
+        for variant in ("empty", "deleted"):
+            case = self._evidence_case("evidence-completed")
+            artifact = case["utility_return"]["artifact_or_check_outcomes"]
+            if variant == "empty":
+                artifact["proof_limit"] = ""
+            else:
+                del artifact["proof_limit"]
+            self._assert_evidence_case_rejected(f"B27-{variant}", case)
+
+        case = self._evidence_case("evidence-completed")
+        case["utility_return"]["artifact_or_check_outcomes"]["proof_limit"] = "No known limitations."
+        self._assert_evidence_case_rejected("B28", case)
+
+        case = self._evidence_case("evidence-completed")
+        case["utility_return"]["artifact_or_check_outcomes"]["scope"] = "elsewhere/private.txt"
+        self._assert_evidence_case_rejected("B29", case)
+
+        case = self._evidence_case("evidence-completed")
+        case["assignment"]["evidence_ledger"][0]["Scope"] = "elsewhere/private.txt"
+        self._assert_evidence_case_rejected("B30", case)
+
+        for index in range(3):
+            case = self._evidence_case("evidence-completed")
+            case["utility_return"]["evidence_ledger"][index]["Scope"] = "elsewhere/private.txt"
+            self._assert_evidence_case_rejected(f"B31{'abc'[index]}", case)
+
+        for check_id, ledger_name, index in (
+            ("B32a", "assignment", 0),
+            ("B32b", "utility_return", 0),
+            ("B32c", "utility_return", 1),
+            ("B32d", "utility_return", 2),
+        ):
+            case = self._evidence_case("evidence-completed")
+            case[ledger_name]["evidence_ledger"][index]["Proof Limit"] = "None"
+            self._assert_evidence_case_rejected(check_id, case)
+
+        for variant, ledger_name, index, value in (
+            ("assignment", "assignment", 0, 1),
+            ("return-low", "utility_return", 1, 0),
+            ("return-high", "utility_return", 2, 2),
+        ):
+            case = self._evidence_case("evidence-completed")
+            case[ledger_name]["evidence_ledger"][index]["Freshness"] = value
+            self._assert_evidence_case_rejected(f"B33-{variant}", case)
+
+        for variant in ("deleted", "changed"):
+            case = self._evidence_case("evidence-completed")
+            ledger = case["utility_return"]["evidence_ledger"]
+            if variant == "deleted":
+                ledger.pop(0)
+            else:
+                ledger[0]["Result"] = "different baseline"
+            self._assert_evidence_case_rejected(f"B34-{variant}", case)
+
+        for variant in ("removed", "reordered", "different"):
+            case = self._evidence_case("evidence-permission-retry")
+            outcome = case["utility_return"]["artifact_or_check_outcomes"]["evidence"]["outcome"]
+            if variant == "removed":
+                outcome["host_evidence"].pop()
+            elif variant == "reordered":
+                outcome["host_evidence"].reverse()
+            else:
+                outcome["host_evidence"][0]["raw_fixture"]["raw_output"] = "different"
+                self._rehash(outcome["host_evidence"][0])
+            self._rehash(outcome)
+            self._assert_evidence_case_rejected(f"B35-{variant}", case)
+
+        case = self._evidence_case("evidence-partial")
+        case["continuation"]["proof_limit"] = "None"
+        self._assert_evidence_case_rejected("B36", case)
+
+        case = self._evidence_case("evidence-completed")
+        case["utility_return"]["unverified_scope"] = []
+        self._assert_evidence_case_rejected("B37", case)
+
+        case = self._evidence_case("evidence-completed")
+        case["utility_return"]["residual_risk"] = []
+        self._assert_evidence_case_rejected("B38", case)
+
+        case = self._evidence_case("evidence-completed")
+        case["utility_return"]["scope"] = "tests/fixture-subject.txt"
+        self._assert_evidence_case_rejected("B39", case)
+
+        case = self._evidence_case("evidence-completed")
+        case["utility_return"]["artifact_or_check_outcomes"]["extra"] = True
+        self._assert_evidence_case_rejected("B40", case)
+
+        for check_id, status in (("B41", "changed"), ("B42", "unavailable")):
+            case = self._evidence_case("evidence-completed")
+            case["utility_return"]["workspace_diff_check"]["status"] = status
+            self._assert_evidence_case_rejected(check_id, case)
+
+        case = self._evidence_case("evidence-completed")
+        case["utility_return"]["workspace_diff_check"]["after"] = ["tracked:changed", "staged:none", "untracked:none"]
+        self._assert_evidence_case_rejected("B43", case)
+
+        case = self._evidence_case("evidence-completed")
+        case["utility_return"]["workspace_diff_check"]["before"] = ["tracked:changed", "staged:none", "untracked:none"]
+        case["utility_return"]["workspace_diff_check"]["after"] = list(case["utility_return"]["workspace_diff_check"]["before"])
+        self._assert_evidence_case_rejected("B44", case)
+
+        for variant, change_set in (
+            ("missing", ["tracked:none", "staged:none"]),
+            ("reordered", ["staged:none", "tracked:none", "untracked:none"]),
+        ):
+            case = self._evidence_case("evidence-completed")
+            case["assignment"]["workspace_baseline"]["change_set"] = change_set
+            case["utility_return"]["workspace_diff_check"]["before"] = list(change_set)
+            case["utility_return"]["workspace_diff_check"]["after"] = list(change_set)
+            self._assert_evidence_case_rejected(f"B45-{variant}", case)
+
+    def test_b46_b48_forbidden_counts_route_source_and_raw_boundary(self) -> None:
+        if not all(
+            "continuation_identity" in case
+            for case in self.evidence_continuation_cases
+        ):
+            self.fail(
+                "P1: evidence cases require an independently hashed continuation identity"
+            )
+        case = self._evidence_case("evidence-completed")
+        case["assignment"]["professional_skill"] = "quality-test-gate"
+        results, errors = EVAL._evidence_continuation_fixture_results([case])
+        with self.subTest(check_id="B46"):
+            self.assertTrue(errors)
+            self.assertIn("forbidden_operation_counts", results[0])
+            self.assertGreater(
+                sum(results[0]["forbidden_operation_counts"].values()),
+                0,
+            )
+            self.assertEqual(
+                results[0]["forbidden_operation_counts"],
+                EVAL._sum_evidence_forbidden_operation_counts(results),
+            )
+            literal_zero = {
+                key: 0 for key in results[0]["forbidden_operation_counts"]
+            }
+            self.assertTrue(
+                EVAL._evidence_forbidden_operation_count_errors(
+                    results,
+                    literal_zero,
+                )
+            )
+
+        case = self._evidence_case("evidence-completed")
+        case["continuation_identity"]["effective_level"] = "L3"
+        self._rehash(case["continuation_identity"])
+        results, errors = EVAL._evidence_continuation_fixture_results([case])
+        with self.subTest(check_id="B47"):
+            self.assertTrue(errors)
+            self.assertFalse(results[0]["route_frozen"])
+            self.assertTrue(case["expected"]["route_frozen"])
+
+        case = self._evidence_case("evidence-completed")
+        case["attempts"][0]["host_evidence"]["raw_fixture"]["raw_output"] = "fixture repair value confirmed"
+        self._sync_host_evidence(case)
+        results, errors = EVAL._evidence_continuation_fixture_results([case])
+        with self.subTest(check_id="B48"):
+            self.assertEqual([], errors)
+            self.assertEqual(
+                0,
+                sum(results[0]["forbidden_operation_counts"].values()),
+            )
+
+    def test_latest_evidence_renderer_rejects_invalid_semantic_fields(self) -> None:
+        base = self._evidence_case("evidence-completed")["assignment"]
+
+        def invalid_goal(value: dict) -> None:
+            value["goal"] = "Diagnose and repair the repository after observing evidence."
+
+        def invalid_expected(value: dict) -> None:
+            value["expected_evidence"] = ["raw Host evidence"]
+
+        def invalid_stops(value: dict) -> None:
+            value["stop_conditions"] = ["continue after partial output"]
+
+        def one_token_freshness(value: dict) -> None:
+            value["inputs"]["freshness_requirement"] = "fresh"
+
+        controls = (
+            ("R01-invalid-goal", invalid_goal),
+            ("R02-invalid-expected-evidence", invalid_expected),
+            ("R03-invalid-stop-conditions", invalid_stops),
+            ("R04-one-token-freshness", one_token_freshness),
+        )
+        for control_id, mutate in controls:
+            with self.subTest(control_id=control_id):
+                assignment = copy.deepcopy(base)
+                mutate(assignment)
+                step = {
+                    "mode": "evidence-observation/no-edit",
+                    "profile": "task-agent",
+                    "utility_capsule": assignment,
+                }
+                with self.assertRaises(FIXTURE.FixtureCapsuleError):
+                    FIXTURE._render_utility(step)
+
+    def test_latest_evidence_route_and_outcome_mutations_fail_closed(self) -> None:
+        case = self._evidence_case("evidence-completed")
+        case["trigger"] = "unknown-evidence-trigger"
+        self._assert_evidence_case_rejected("R05-unknown-trigger-dispatch", case)
+
+        case = self._evidence_case("evidence-completed")
+        case["trigger"] = "generic-environment-unknown"
+        self._assert_evidence_case_rejected("R06-environment-trigger-dispatch", case)
+
+        route_mutations = (
+            ("R07-professional", "professional_skill", "backend-change-builder"),
+            ("R08-level", "effective_level", "L3"),
+            ("R09-layer3", "layer3_skills", ["test-strategy"]),
+            (
+                "R10-four-layer3",
+                "layer3_skills",
+                [
+                    "test-strategy",
+                    "regression-testing",
+                    "targeted-validation-selection",
+                    "contract-testing",
+                ],
+            ),
+        )
+        for control_id, field, value in route_mutations:
+            case = self._evidence_case("evidence-completed")
+            for endpoint in ("analysis_identity", "continuation_identity"):
+                case[endpoint][field] = copy.deepcopy(value)
+                self._rehash(case[endpoint])
+            with self.subTest(check_id=control_id):
+                results, errors = EVAL._evidence_continuation_fixture_results([case])
+                self.assertTrue(errors, (control_id, results))
+                self.assertFalse(results[0]["matches_expected"], (control_id, results))
+                self.assertFalse(results[0]["route_frozen"], (control_id, results))
+
+        case = self._evidence_case("evidence-completed")
+        replacement_task_id = "analysis-evidence-replaced"
+        for endpoint in ("analysis_identity", "continuation_identity"):
+            case[endpoint]["task_id"] = replacement_task_id
+            self._rehash(case[endpoint])
+        case["request"]["analysis_task_id"] = replacement_task_id
+        self._sync_request(case)
+        case["continuation"]["analysis_task_id"] = replacement_task_id
+        self._assert_evidence_case_rejected("R11-analysis-task-id", case)
+
+        observation_controls = (
+            ("R12-completed-false", "evidence-completed", False),
+            ("R13-partial-false", "evidence-partial", False),
+            ("R14-unsupported-true", "evidence-host-unsupported", True),
+            ("R15-refusal-true", "evidence-authority-refused", True),
+        )
+        for control_id, case_id, observation_produced in observation_controls:
+            case = self._evidence_case(case_id)
+            if case_id == "evidence-authority-refused":
+                host_evidence = case["utility_return"]["artifact_or_check_outcomes"][
+                    "evidence"
+                ]["outcome"]["host_evidence"][0]
+                host_evidence["raw_fixture"][
+                    "observation_produced"
+                ] = observation_produced
+                self._rehash(host_evidence)
+                self._rehash(
+                    case["utility_return"]["artifact_or_check_outcomes"][
+                        "evidence"
+                    ]["outcome"]
+                )
+            else:
+                case["attempts"][-1]["host_evidence"]["raw_fixture"][
+                    "observation_produced"
+                ] = observation_produced
+            case["expected"]["observation_count"] = int(observation_produced)
+            if case_id != "evidence-authority-refused":
+                self._sync_host_evidence(case)
+            self._assert_evidence_case_rejected(control_id, case)
+
+        refusal = self._evidence_case("evidence-authority-refused")
+        with self.subTest(control_id="R16-refusal-zero-attempts"):
+            self.assertEqual(0, len(refusal["attempts"]))
+
+    def test_latest_evidence_request_level_commands_and_results_are_derived(self) -> None:
+        pre = "evidence-workspace-preflight"
+        operation = "evidence-observation-operation"
+        post = "evidence-workspace-postflight"
+        retry = self._evidence_case("evidence-permission-retry")
+
+        with self.subTest(control_id="R17-request-level-command-layout"):
+            self.assertEqual(
+                [[operation], [operation]],
+                [attempt["commands"] for attempt in retry["attempts"]],
+            )
+            self.assertEqual(
+                [pre, operation, operation, post],
+                retry["utility_return"]["commands_run"],
+            )
+
+        for control_id, commands in (
+            ("R18-retry-missing-operation", [pre, operation, post]),
+            ("R19-retry-extra-preflight", [pre, pre, operation, operation, post]),
+            ("R20-retry-extra-postflight", [pre, operation, operation, post, post]),
+        ):
+            case = copy.deepcopy(retry)
+            case["utility_return"]["commands_run"] = commands
+            self._assert_evidence_case_rejected(control_id, case)
+
+        case = copy.deepcopy(retry)
+        case["attempts"][0]["commands"] = ["validation-check"]
+        case["utility_return"]["commands_run"] = [
+            pre,
+            "validation-check",
+            operation,
+            post,
+        ]
+        self._assert_evidence_case_rejected("R21-attempt-operation-drift", case)
+
+        case = self._evidence_case("evidence-completed")
+        case["utility_return"]["commands_run"] = [pre, operation, operation, post]
+        self._assert_evidence_case_rejected("R22-commands-run-formula", case)
+
+        case = self._evidence_case("evidence-completed")
+        del case["utility_return"]["evidence_ledger"][2]["Command"]
+        self._assert_evidence_case_rejected("R23-ledger-command-missing", case)
+
+        refusal = self._evidence_case("evidence-authority-refused")
+        with self.subTest(control_id="R24-refusal-ledger-has-no-operation"):
+            self.assertNotIn(
+                operation,
+                [row["Command"] for row in refusal["utility_return"]["evidence_ledger"]],
+            )
+
+        case = self._evidence_case("evidence-completed")
+        case["expected"]["host_attempt_count"] = 2
+        results, errors = EVAL._evidence_continuation_fixture_results([case])
+        with self.subTest(control_id="R25-expected-cannot-author-metrics"):
+            self.assertTrue(errors)
+            self.assertEqual(1, results[0]["host_attempt_count"])
+
+        case = self._evidence_case("evidence-completed")
+        decision = case["utility_return"]["artifact_or_check_outcomes"]["evidence"]["decision"]
+        decision["evidence"] = "repair"
+        self._rehash(decision)
+        results, errors = EVAL._evidence_continuation_fixture_results([case])
+        with self.subTest(control_id="R26-forbidden-event-cannot-use-expected-zero"):
+            self.assertTrue(errors)
+            self.assertEqual(1, results[0]["forbidden_operation_counts"]["repair"])
+
+        case = self._evidence_case("evidence-completed")
+        decision = case["utility_return"]["artifact_or_check_outcomes"]["evidence"]["decision"]
+        decision["evidence"] = "observation accepted for a replacement Analysis continuation"
+        self._rehash(decision)
+        self._assert_evidence_case_rejected("R27-rehashed-decision-enum", case)
+
+        case = self._evidence_case("evidence-completed")
+        case["attempts"][0]["host_evidence"]["raw_fixture"]["raw_output"] = (
+            "fixture repair value confirmed"
+        )
+        self._sync_host_evidence(case)
+        with self.subTest(control_id="R-positive-raw-repair-boundary"):
+            results, errors = EVAL._evidence_continuation_fixture_results([case])
+            self.assertEqual([], errors)
+            self.assertEqual(0, sum(results[0]["forbidden_operation_counts"].values()))
+
+    def test_route_frozen_evidence_continuations_are_closed_and_terminal(self) -> None:
+        results, errors = EVAL._evidence_continuation_fixture_results(
+            copy.deepcopy(self.evidence_continuation_cases)
+        )
+        self.assertEqual([], errors)
+        self.assertEqual(8, len(results))
+        by_id = {row["id"]: row for row in results}
+        self.assertEqual(
+            {
+                "evidence-static-sufficient": (False, "not-dispatched"),
+                "evidence-environment-unknown": (False, "not-dispatched"),
+                "evidence-runtime-asset-failure": (False, "not-dispatched"),
+                "evidence-completed": (True, "completed"),
+                "evidence-permission-retry": (True, "completed"),
+                "evidence-partial": (True, "partial"),
+                "evidence-host-unsupported": (True, "blocked"),
+                "evidence-authority-refused": (True, "blocked"),
+            },
+            {
+                case_id: (row["utility_dispatched"], row["terminal_status"])
+                for case_id, row in by_id.items()
+            },
+        )
+        self.assertTrue(all(row["route_frozen"] for row in results))
+        self.assertTrue(all(row["utility_return_count"] <= 1 for row in results))
+        self.assertTrue(all(row["observation_count"] <= 1 for row in results))
+        self.assertTrue(all(row["host_attempt_count"] <= 2 for row in results))
+
+    def test_route_frozen_evidence_continuation_rejects_identity_and_hash_forgery(self) -> None:
+        original = next(
+            copy.deepcopy(case)
+            for case in self.evidence_continuation_cases
+            if case["id"] == "evidence-completed"
+        )
+        canonical_results, canonical_errors = (
+            EVAL._evidence_continuation_fixture_results([original])
+        )
+        self.assertEqual([], canonical_errors)
+        self.assertTrue(canonical_results[0]["matches_expected"])
+        self.assertTrue(canonical_results[0]["route_frozen"])
+
+        identity_mutations = []
+
+        case = copy.deepcopy(original)
+        case["analysis_identity"]["canonical_sha256"] = "0" * 64
+        identity_mutations.append(("single-endpoint-hash", case))
+
+        case = copy.deepcopy(original)
+        case["analysis_identity"]["canonical_sha256"] = "0" * 64
+        case["continuation_identity"]["canonical_sha256"] = "0" * 64
+        identity_mutations.append(("both-endpoint-hash", case))
+
+        case = copy.deepcopy(original)
+        case["analysis_identity"]["extra"] = "forbidden"
+        identity_mutations.append(("extra-field", case))
+
+        case = copy.deepcopy(original)
+        case["analysis_identity"] = {
+            key: case["analysis_identity"][key]
+            for key in reversed(tuple(case["analysis_identity"]))
+        }
+        identity_mutations.append(("reordered-fields", case))
+
+        for mutation_id, mutated in identity_mutations:
+            with self.subTest(mutation=mutation_id):
+                results, errors = EVAL._evidence_continuation_fixture_results(
+                    [mutated]
+                )
+                self.assertTrue(errors)
+                self.assertFalse(results[0]["matches_expected"])
+                self.assertFalse(results[0]["route_frozen"])
+
+        mutations = []
+
+        case = copy.deepcopy(original)
+        case["assignment"]["inputs"]["analysis_task_id"] = case["assignment"][
+            "task_id"
+        ]
+        mutations.append(case)
+
+        case = copy.deepcopy(original)
+        case["assignment"]["task_id"] = case["analysis_identity"]["task_id"]
+        case["utility_return"]["task_id"] = case["assignment"]["task_id"]
+        mutations.append(case)
+
+        case = copy.deepcopy(original)
+        case["utility_return"]["artifact_or_check_outcomes"]["extra"] = True
+        mutations.append(case)
+
+        case = copy.deepcopy(original)
+        case["utility_return"]["artifact_or_check_outcomes"]["evidence"][
+            "decision"
+        ]["canonical_sha256"] = "f" * 64
+        mutations.append(case)
+
+        for mutated in mutations:
+            with self.subTest(mutation=mutated):
+                _results, errors = EVAL._evidence_continuation_fixture_results(
+                    [mutated]
+                )
+                self.assertTrue(errors)
+
+    def test_evidence_mode_attempts_enforce_pre_operation_post_and_retry_boundary(self) -> None:
+        original = next(
+            copy.deepcopy(case)
+            for case in self.evidence_continuation_cases
+            if case["id"] == "evidence-permission-retry"
+        )
+        self.assertEqual(
+            [], EVAL._evidence_continuation_fixture_results([original])[1]
+        )
+        variants = []
+        case = copy.deepcopy(original)
+        case["attempts"][0]["commands"].pop()
+        variants.append(case)
+        case = copy.deepcopy(original)
+        case["attempts"][1]["utility_task_id"] = "replacement-utility-task"
+        variants.append(case)
+        case = copy.deepcopy(original)
+        case["attempts"].append(copy.deepcopy(case["attempts"][1]))
+        variants.append(case)
+        for mutated in variants:
+            with self.subTest(mutation=mutated):
+                _results, errors = EVAL._evidence_continuation_fixture_results(
+                    [mutated]
+                )
+                self.assertTrue(errors)
+
+    def test_copilot_evidence_trace_is_deterministic_fixture_evidence_only(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="rd-skills-evidence-trace-") as raw:
+            self.assertEqual(0, EVAL.main(["--reports-dir", raw]))
+            report = json.loads(
+                (Path(raw) / "hookless-control-plane-eval.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+        trace = report["copilot_evidence_trace"]
+        summary = report["integration_evidence_summary"]
+        self.assertEqual("copilot", trace["host"])
+        self.assertFalse(trace["live_host"])
+        self.assertEqual(0, sum(trace["forbidden_operation_counts"].values()))
+        self.assertEqual(trace["canonical_sha256"], summary["copilot_trace_sha256"])
+        self.assertEqual(2, summary["utility_fixture_count"])
+        self.assertEqual(8, summary["evidence_continuation_fixture_count"])
 
     def _trajectory_metrics(self, case: dict) -> tuple[dict, list[str]]:
         return EVAL._metrics(
@@ -6901,6 +7680,9 @@ class LightweightUtilityContractTests(unittest.TestCase):
                 "workspace-state-observation",
                 "change-evidence-export",
                 "validation-check",
+                "evidence-workspace-preflight",
+                "evidence-observation-operation",
+                "evidence-workspace-postflight",
             },
             EVAL.UTILITY_OPERATIONS,
         )

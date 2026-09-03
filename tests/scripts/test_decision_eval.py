@@ -8,6 +8,7 @@ import json
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "scripts"
@@ -26,6 +27,8 @@ import validation_utils as VALIDATION_UTILS
 
 DECISION_CASES = ROOT / "evals" / "routing" / "decision-cases.yaml"
 BOUNDARY_RELATIONS = ROOT / "evals" / "routing" / "boundary-relations.yaml"
+TEST_BUILD_DIGEST = "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+TEST_BUILD_IDENTITY = VALIDATION_UTILS.runtime_asset_build_identity(TEST_BUILD_DIGEST)
 
 
 def _load_eval_routing():
@@ -516,7 +519,13 @@ class DecisionEvalTests(unittest.TestCase):
         )
 
     def test_existing_route_vectors_remain_frozen_and_route_once(self) -> None:
-        report = EVAL_ROUTING.evaluate_routes()
+        with mock.patch.object(
+            EVAL_ROUTING,
+            "authoritative_build_input_snapshot",
+            return_value={"sha256": TEST_BUILD_DIGEST},
+        ) as snapshot:
+            report = EVAL_ROUTING.evaluate_routes()
+        snapshot.assert_called_once_with(ROOT)
         self.assertEqual("pass", report["status"], report["errors"])
         self.assertEqual(233, report["case_count"])
         self.assertEqual(62, report["compatibility_baseline"]["capability_cases"])
@@ -610,9 +619,14 @@ class DecisionEvalTests(unittest.TestCase):
     def test_equal_review_layer3_is_derived_by_independent_review_risk_call(
         self,
     ) -> None:
-        review = EVAL_ROUTING.evaluate_decision_cases()["mechanism_evidence"][
-            "review_copy"
-        ]
+        with mock.patch.object(
+            EVAL_ROUTING,
+            "authoritative_build_input_snapshot",
+            return_value={"sha256": TEST_BUILD_DIGEST},
+        ):
+            review = EVAL_ROUTING.evaluate_decision_cases()["mechanism_evidence"][
+                "review_copy"
+            ]
         self.assertEqual(
             review["baseline_review_layer3"],
             review["implementation_layer3"],
@@ -625,11 +639,19 @@ class DecisionEvalTests(unittest.TestCase):
             "quality-test-gate", implementation["professional_skill"]
         )
         self.assertEqual("implementation-risk", implementation["selection_kind"])
+        self.assertEqual(
+            "1c0c26e35b1904a22ea848f92bd7544eff7243eb125c734ea195209e5607bcb6",
+            implementation["receipt_sha256"],
+        )
         self.assertEqual("review-agent", selected_review["profile"])
         self.assertEqual(
             "ai-code-review-refactor", selected_review["professional_skill"]
         )
         self.assertEqual("review-risk", selected_review["selection_kind"])
+        self.assertEqual(
+            "df8db2a7dcb0a6d6a19aa91ef6f9cda1691000680022e598621d855247705c12",
+            selected_review["receipt_sha256"],
+        )
         for receipt in (implementation, selected_review):
             self.assertEqual(
                 ["dynamic-foundation:regression-testing"],
@@ -680,14 +702,24 @@ class DecisionEvalTests(unittest.TestCase):
             if row["selector_id"] == "dynamic-foundation:regression-testing"
         )
         signals = [group[0] for group in selector["positive_signal_groups"]]
-        first = receipt_consumer(projection, evidence_signals=signals)
-        second = receipt_consumer(projection, evidence_signals=signals)
+        first = receipt_consumer(
+            projection,
+            evidence_signals=signals,
+            build_identity=TEST_BUILD_IDENTITY,
+        )
+        second = receipt_consumer(
+            projection,
+            evidence_signals=signals,
+            build_identity=TEST_BUILD_IDENTITY,
+        )
         self.assertEqual(first, second)
         normalized_variant = receipt_consumer(
             projection,
             evidence_signals=[f"  {signal.upper()}  " for signal in signals],
+            build_identity=TEST_BUILD_IDENTITY,
         )
         self.assertEqual(first, normalized_variant)
+        self.assertEqual(TEST_BUILD_IDENTITY, first["build"])
         self.assertEqual(
             [],
             receipt_errors(
@@ -697,6 +729,7 @@ class DecisionEvalTests(unittest.TestCase):
                 expected_professional="quality-test-gate",
                 expected_selection_kind="implementation-risk",
                 expected_selected_layer3=["regression-testing"],
+                expected_build_identity=TEST_BUILD_IDENTITY,
             ),
         )
         self.assertTrue(
@@ -707,6 +740,7 @@ class DecisionEvalTests(unittest.TestCase):
                 expected_professional="ai-code-review-refactor",
                 expected_selection_kind="review-risk",
                 expected_selected_layer3=["regression-testing"],
+                expected_build_identity=TEST_BUILD_IDENTITY,
             )
         )
         invalid_expectations = (
@@ -742,8 +776,103 @@ class DecisionEvalTests(unittest.TestCase):
                         first,
                         **binding,
                         expected_selected_layer3=["regression-testing"],
+                        expected_build_identity=TEST_BUILD_IDENTITY,
                     )
                 )
+
+        mismatched_projection = copy.deepcopy(projection)
+        mismatched_projection["build"] = "_____________________w"
+        with self.assertRaises(VALIDATION_UTILS.ValidationProblem):
+            receipt_consumer(
+                mismatched_projection,
+                evidence_signals=signals,
+                build_identity=TEST_BUILD_IDENTITY,
+            )
+        for malformed in ("", "0" * 32, "A" * 21, "A" * 21 + "B"):
+            with self.subTest(malformed_build=malformed):
+                with self.assertRaises(VALIDATION_UTILS.ValidationProblem):
+                    receipt_consumer(
+                        projection,
+                        evidence_signals=signals,
+                        build_identity=malformed,
+                    )
+
+        missing_build = copy.deepcopy(first)
+        del missing_build["build"]
+        self.assertTrue(
+            receipt_errors(
+                missing_build,
+                expected_owner="main-control-agent",
+                expected_profile="task-agent",
+                expected_professional="quality-test-gate",
+                expected_selection_kind="implementation-risk",
+                expected_selected_layer3=["regression-testing"],
+                expected_build_identity=TEST_BUILD_IDENTITY,
+            )
+        )
+        self.assertTrue(
+            receipt_errors(
+                first,
+                expected_owner="main-control-agent",
+                expected_profile="task-agent",
+                expected_professional="quality-test-gate",
+                expected_selection_kind="implementation-risk",
+                expected_selected_layer3=["regression-testing"],
+                expected_build_identity="f" * 32,
+            )
+        )
+
+        exact_projection = VALIDATION_UTILS.layer3_selector_runtime_projection(
+            authority,
+            professional_skill="quality-test-gate",
+            profile="task-agent",
+            selection_owner="main-control-agent",
+            exact_layer3=["regression-testing"],
+        )
+        self.assertFalse(exact_projection["selector_loaded"])
+        self.assertEqual([], exact_projection["selectors"])
+        exact_receipt = receipt_consumer(
+            exact_projection,
+            evidence_signals=[],
+            build_identity=TEST_BUILD_IDENTITY,
+        )
+        self.assertEqual(["exact-layer3-authority"], exact_receipt["selector_ids"])
+        self.assertEqual([], exact_receipt["evidence_signals"])
+        self.assertEqual(["regression-testing"], exact_receipt["selected_layer3"])
+
+    def test_public_decision_eval_captures_one_authoritative_build_identity(
+        self,
+    ) -> None:
+        with mock.patch.object(
+            EVAL_ROUTING,
+            "authoritative_build_input_snapshot",
+            return_value={"sha256": TEST_BUILD_DIGEST},
+        ) as snapshot:
+            report = EVAL_ROUTING.evaluate_decision_cases()
+        snapshot.assert_called_once_with(ROOT)
+        self.assertEqual("pass", report["status"], report["errors"])
+        review = report["mechanism_evidence"]["review_copy"]
+        self.assertEqual(
+            {TEST_BUILD_IDENTITY},
+            {
+                review["implementation_selection_receipt"]["build"],
+                review["review_selection_receipt"]["build"],
+            },
+        )
+
+    def test_public_decision_eval_rejects_missing_or_malformed_snapshot_digest(
+        self,
+    ) -> None:
+        for snapshot_value in ({}, {"sha256": "A" * 64}, {"sha256": "0" * 63}):
+            with self.subTest(snapshot=snapshot_value):
+                with mock.patch.object(
+                    EVAL_ROUTING,
+                    "authoritative_build_input_snapshot",
+                    return_value=snapshot_value,
+                ) as snapshot:
+                    with self.assertRaises(VALIDATION_UTILS.ValidationProblem):
+                        EVAL_ROUTING.evaluate_decision_cases()
+                snapshot.assert_called_once_with(ROOT)
 
     def test_receipt_validation_replays_canonical_selector_authority(
         self,
@@ -787,11 +916,13 @@ class DecisionEvalTests(unittest.TestCase):
                         expected_professional="ai-code-review-refactor",
                         expected_selection_kind="review-risk",
                         expected_selected_layer3=["regression-testing"],
+                        expected_build_identity=review_receipt["build"],
                     )
                 )
 
         locally_forged = {
             "contract": "changeforge.layer3-selector-selection-receipt/v1",
+            "build": review_receipt["build"],
             "authority_contract": "changeforge.layer3-selector-authority/v1",
             "selection_owner": "main-control-agent",
             "profile": "review-agent",
@@ -812,6 +943,7 @@ class DecisionEvalTests(unittest.TestCase):
                 expected_professional="ai-code-review-refactor",
                 expected_selection_kind="review-risk",
                 expected_selected_layer3=["regression-testing"],
+                expected_build_identity=review_receipt["build"],
             )
         )
 
@@ -894,7 +1026,10 @@ class DecisionEvalTests(unittest.TestCase):
         self.assertEqual(
             "review-risk-selector", review_case["mutation"]["value"]
         )
-        evidence, errors = EVAL_ROUTING._evaluate_review_copy(document)
+        evidence, errors = EVAL_ROUTING._evaluate_review_copy(
+            document,
+            build_identity=TEST_BUILD_IDENTITY,
+        )
         self.assertEqual([], errors)
         self.assertEqual(
             ["decision-review-layer3-independent"],

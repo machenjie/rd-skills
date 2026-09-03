@@ -4,24 +4,25 @@ Dispatch-only: never inspect/search target source/edit files/execute business co
 
 ## Authorization
 
-Bounded subagents authorized; permission required: scope expansion/destructive/production action/elevation/irreversible/material data change/unsupported choice.
+Bounded subagents authorized; permission required for scope expansion, destructive/production action, elevation, irreversible/material data change, unsupported choice.
 
 ## Choose Exactly One Path
 
 Choose exactly Direct Task or Analyzed Work.
-Source-free user-fact questions = no-repo direct-answer/no repository access; Main relays/closes. Source/professional evidence or control prompts -> source-backed analysis.
-Evidence Resolution reuses `change-intake-compiler`; source fact never asks; route-affecting fact/material unknown -> Analysis; user choice -> one Main question; otherwise bounded Direct discovery.
-User owns business/product/scope/production/destructive/irreversible choices; Agent owns engineering placement/storage-lock.
+Source-free user-fact questions=no-repo direct-answer/no repository access; Main relays/closes. Source/professional evidence or control prompts -> source-backed analysis.
+Evidence Resolution reuses change-intake-compiler: source fact never asks; route-affecting fact/material unknown -> Analysis; user choice -> one Main question; otherwise bounded Direct discovery.
+User owns business/product/scope/production/destructive/irreversible choices; Agent: engineering placement/storage-lock.
 Direct/category-agnostic requires: strong owner candidate; fixed Professional/Domain/Layer3/scope; bounded read; no shared/cross/external/material/choice signal.
 Candidate/path/symbol/claim selects read-first confirmation, not proof; Unknown owner/module/system/verification -> Analyzed.
-Direct outcomes/Inspection Boundary/stops: Direct template confirmation proven=confirmed owner boundary/confirm+continue; otherwise edit=0, Main/initial Analysis; choice -> Main question. Worker never reroutes; simpler keeps Level; higher risk recomputes.
+Direct outcomes/Inspection Boundary/stops: confirm+continue or edit=0→Main/initial Analysis; choice -> Main question. Worker never reroutes; simpler keeps Level; higher risk recomputes.
 
 ## Direct Task Routing
 
 New Direct Task: references/direct-task-template.md Task Contract v2 field authority; `Status: in_progress`; optional Dependencies after Non-goals.
-Semantic Role+Task scope+Host tools/sandbox: Task directly uses read/search/edit/execute, no capability self-proof; pre-Host normalized explicit path targets must match Allowed Read/Write Scope (blocked=>no call); execute checks explicit write targets, unknowns=>Host sandbox. Main never implements.
-Only actual tool/permission/sandbox/required-artifact failure blocks: `EXECUTION_BLOCKED task=<Task ID>; operation=read|edit|execute; observed=<actual host/tool failure>`. Host invocation+raw output=proof; formatter/mapping=syntax only. Missing capability proof never blocks; no Prompt-inferred capability names.
-Retry carries the same real Task ID and complete unchanged Task Contract plus route/Level/review/handoff bindings; task=unspecified forbidden.
+Core Runtime Asset Resolution; fail closed without Utility/reroute.
+Semantic Role+Task scope+Host tools/sandbox: Task directly uses read/search/edit/execute, no capability self-proof; pre-Host normalized explicit path targets→Allowed Read/Write Scope (blocked=>no call); checks name explicit write targets; unknowns→Host sandbox. Main never implements.
+Only actual tool/permission/sandbox/required-artifact failure blocks: `EXECUTION_BLOCKED task=<Task ID>; operation=read|edit|execute; observed=<actual host/tool failure>`. Host invocation+raw output=proof; formatter/mapping=syntax only. Missing capability proof never blocks; no inferred capability names.
+Retry: same real Task ID+complete unchanged Task Contract+route/Level/review/handoff bindings; task=unspecified forbidden.
 Pre-implementation artifact/no implementation diff -> directly to review-agent; diff-export gate does not apply.
 
 ### Execution Level and Validation
@@ -36,9 +37,10 @@ After 2 same-path failures require changed hypothesis/material/gap/transition or
 
 ## Analyzed Work
 
-Answer/diagnosis: evidence/proof limits unless change requested. engineering-change-analysis -> current Engineering Brief+First Executable Slice; dispatch verbatim, never reinterpret.
-references/engineering-brief-template.md JIT-owns protected semantics, Specialist/DAG/handoff limits/Delta rules. Main owns Path/Level projection/Review scheduling/user interaction; Authorized routes skip selectors; Task/Review never changes route authority.
+Answer/diagnosis: evidence/proof limits unless change requested. engineering-change-analysis→current Engineering Brief+First Executable Slice; dispatch verbatim, never reinterpret.
+references/engineering-brief-template.md JIT-owns protected semantics; Main owns Path/Level projection/Review scheduling/user interaction; Task/Review never changes route authority.
 blocked -> main-control-agent -> analysis-agent -> updated Engineering Brief -> redispatch affected tasks. `task_contract.analyzed_work_authority`: analyze once; Delta/reroute only on its decision triggers.
+Core Evidence 1/2/1→same Analysis; permission/unavailable never reroutes.
 Stop at Slice; multi-task -> DAG; else task-agent. Direct Task/non-implementation paths remain unchanged.
 
 ### Preparation Loop Breaker

@@ -28,6 +28,8 @@ from validation_utils import (
     CONTEXT_BUDGET_MODEL,
     CORE_CONTRACTS,
     REVIEW_DISCIPLINE_MODEL,
+    RUNTIME_ASSET_LAYER3_MARKER_TEMPLATE,
+    RUNTIME_ASSET_PROFESSIONAL_JIT_TEMPLATE,
     ValidationProblem,
     authoritative_build_input_snapshot,
     behavior_eval_authority,
@@ -47,6 +49,7 @@ from validation_utils import (
     reference_context_staged_plan,
     reference_paths,
     report_output_paths,
+    runtime_asset_build_identity,
 )
 from fixture_capsule_contract import (
     CONTRACT_VERSION as FIXTURE_CAPSULE_CONTRACT_VERSION,
@@ -700,7 +703,7 @@ def _retained_semantic_equality_evidence(
 
 def _load_lightweight_prerequisite(
     expected_case_ids: set[str],
-) -> tuple[set[str], dict[str, Any]]:
+) -> tuple[set[str], dict[str, Any], dict[str, Any]]:
     try:
         value = json.loads(LIGHTWEIGHT_REPORT.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
@@ -709,9 +712,48 @@ def _load_lightweight_prerequisite(
         ) from exc
     if not isinstance(value, dict):
         raise ValueError("lightweight prerequisite report root must be an object")
+    summary = value.get("integration_evidence_summary")
+    summary_fields = (
+        "schema_version",
+        "utility_fixture_count",
+        "evidence_continuation_fixture_count",
+        "route_frozen",
+        "logical_request_max",
+        "host_attempt_max",
+        "observation_max",
+        "copilot_trace_sha256",
+        "live_host",
+        "canonical_sha256",
+    )
+    if not isinstance(summary, dict) or tuple(summary) != summary_fields:
+        raise ValueError("lightweight prerequisite lacks exact integration evidence summary")
+    summary_payload = {key: summary[key] for key in summary_fields[:-1]}
+    expected_summary_sha256 = hashlib.sha256(
+        json.dumps(
+            summary_payload,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
+    trace = value.get("copilot_evidence_trace")
+    if (
+        summary.get("canonical_sha256") != expected_summary_sha256
+        or summary.get("utility_fixture_count") != 2
+        or summary.get("evidence_continuation_fixture_count") != 8
+        or summary.get("route_frozen") is not True
+        or summary.get("logical_request_max") != 1
+        or summary.get("host_attempt_max") != 2
+        or summary.get("observation_max") != 1
+        or summary.get("live_host") is not False
+        or not isinstance(trace, dict)
+        or trace.get("canonical_sha256") != summary.get("copilot_trace_sha256")
+    ):
+        raise ValueError("lightweight integration evidence summary is stale or malformed")
     return (
         _long_task_ids_from_lightweight(value, expected_case_ids),
         _retained_semantic_equality_evidence(value),
+        copy.deepcopy(summary),
     )
 
 
@@ -1448,10 +1490,18 @@ def _focus_case_cost(
     )
     components["always_loaded"] = generated_profile["tokens"]
     logical_case_id = str(row["canonical_id"])
+    budget_class = {
+        "main-control-agent": "main",
+        "analysis-agent": "analysis",
+        "task-agent": "task",
+        "review-agent": "review",
+    }[str(binding["actor"])]
     return {
         "id": f"{logical_case_id}::{host}",
         "logical_case_id": logical_case_id,
         "host": host,
+        "step": "profile",
+        "budget_class": budget_class,
         "native_case_id": str(row[f"{subject}_native_id"]),
         "mapping_state": row["state"],
         "semantic_obligation": row["semantic_obligation"],
@@ -1911,6 +1961,10 @@ def _compare_end_to_end_subjects(
         for host in FOCUS_PROFILE_HOSTS
     }
     ordinary_route_regressions: list[dict[str, Any]] = []
+    per_composition_rows: list[dict[str, Any]] = []
+    per_composition_keys: set[tuple[str, str, str, str]] = set()
+    main_profile_violations: list[dict[str, Any]] = []
+    task_hard_ceiling_violations: list[dict[str, Any]] = []
     for case_id in sorted(set(baseline_cases) & set(candidate_cases)):
         before = baseline_cases[case_id]
         after = candidate_cases[case_id]
@@ -2131,6 +2185,21 @@ def _compare_end_to_end_subjects(
             selection_asset_reconciliation[label] = reconciliation
         before_total = before["total_task_tokens"]
         after_total = after["total_task_tokens"]
+        step = str(before.get("step") or "aggregate")
+        budget_class = str(before.get("budget_class") or "task")
+        if step != str(after.get("step") or "aggregate") or budget_class != str(
+            after.get("budget_class") or "task"
+        ):
+            errors.append(f"{case_id}: composition step/budget bindings differ")
+        comparison_key = (
+            str(before.get("logical_case_id") or case_id),
+            str(host),
+            step,
+            budget_class,
+        )
+        if comparison_key in per_composition_keys:
+            errors.append(f"{case_id}: duplicate per-composition comparison key")
+        per_composition_keys.add(comparison_key)
         raw_route_equal = (
             before.get("raw_route_obligations")
             == after.get("raw_route_obligations")
@@ -2143,6 +2212,61 @@ def _compare_end_to_end_subjects(
             and isinstance(route_obligations, dict)
             and "not_applicable_basis" not in route_obligations
         )
+        delta_limit = min(32, (before_total * 15_000 + 999_999) // 1_000_000)
+        per_key_passed = not ordinary_raw_route_equal or (
+            after_total - before_total <= delta_limit
+        )
+        per_composition_rows.append(
+            {
+                "key": list(comparison_key),
+                "classification": (
+                    "ordinary-raw-route-equal"
+                    if ordinary_raw_route_equal
+                    else "source-classified-non-ordinary"
+                ),
+                "baseline": before_total,
+                "candidate": after_total,
+                "delta": after_total - before_total,
+                "limit": delta_limit,
+                "passed": per_key_passed,
+            }
+        )
+        if not per_key_passed:
+            errors.append(
+                f"{case_id}: per-composition token delta exceeds "
+                f"min(32, ceil(baseline*15000ppm))"
+            )
+        profile_increases = [
+            row
+            for row in actor_profile_differences
+            if isinstance(row.get("tokens"), dict)
+            and int(row["tokens"].get("delta", 0)) > 0
+        ]
+        if budget_class == "main" and after_total > before_total:
+            main_profile_violations.append(
+                {
+                    "key": list(comparison_key),
+                    "kind": "main",
+                    "delta": after_total - before_total,
+                }
+            )
+        for profile_row in profile_increases:
+            main_profile_violations.append(
+                {
+                    "key": list(comparison_key),
+                    "kind": "profile",
+                    "host": profile_row["host"],
+                    "delta": profile_row["tokens"]["delta"],
+                }
+            )
+        if budget_class in {"task", "analyzed_task"} and after_total > 3200:
+            task_hard_ceiling_violations.append(
+                {
+                    "key": list(comparison_key),
+                    "candidate": after_total,
+                    "hard_ceiling": 3200,
+                }
+            )
         if ordinary_raw_route_equal and after_total > before_total:
             regression = {
                 "id": case_id,
@@ -2168,6 +2292,8 @@ def _compare_end_to_end_subjects(
                 "id": case_id,
                 "logical_case_id": before.get("logical_case_id"),
                 "host": host,
+                "step": step,
+                "budget_class": budget_class,
                 "mapping_state": before_mapping_state,
                 "cost_classification": (
                     "ordinary-raw-route-equal"
@@ -2191,6 +2317,10 @@ def _compare_end_to_end_subjects(
                 "total_task_tokens": _comparison_value(before_total, after_total),
             }
         )
+    if main_profile_violations:
+        errors.append("Main/Profile token delta must remain less than or equal to zero")
+    if task_hard_ceiling_violations:
+        errors.append("Task hard ceiling exceeds 3200 tokens")
     comparison_blocked = bool(errors)
     reduction_ratio = None
     if not comparison_blocked:
@@ -2237,6 +2367,28 @@ def _compare_end_to_end_subjects(
         cost_status = "candidate-equal-cost"
     else:
         cost_status = "candidate-higher-cost"
+    baseline_exceptional = baseline.get("exceptional_evidence_summary")
+    candidate_exceptional = candidate.get("exceptional_evidence_summary")
+    candidate_copilot_trace = candidate.get("copilot_evidence_trace")
+    exceptional_status = "not-measured"
+    if candidate_exceptional is not None:
+        exceptional_status = "candidate-introduced-route-frozen-evidence"
+        if (
+            not isinstance(candidate_exceptional, dict)
+            or candidate_exceptional.get("route_frozen") is not True
+            or candidate_exceptional.get("logical_request_max") != 1
+            or candidate_exceptional.get("host_attempt_max") != 2
+            or candidate_exceptional.get("observation_max") != 1
+            or candidate_exceptional.get("live_host") is not False
+            or not isinstance(candidate_copilot_trace, dict)
+            or candidate_copilot_trace.get("live_host") is not False
+            or candidate_copilot_trace.get("canonical_sha256")
+            != candidate_exceptional.get("copilot_trace_sha256")
+            or any(
+                candidate_copilot_trace.get("forbidden_operation_counts", {}).values()
+            )
+        ):
+            errors.append("candidate exceptional Evidence trace is malformed")
     return {
         "status": "pass" if not errors else "fail",
         "comparison_rule": "cost-observation-after-quality-gate",
@@ -2244,10 +2396,33 @@ def _compare_end_to_end_subjects(
             "source-classified-raw-route-equal-cost-observation"
         ),
         "ordinary_route_regressions": ordinary_route_regressions,
+        "per_composition_gate": {
+            "comparison_key": ["case", "host", "step", "budget_class"],
+            "rule": "delta<=min(32,ceil(baseline*15000/1000000))",
+            "passed": all(row["passed"] for row in per_composition_rows),
+            "rows": per_composition_rows,
+        },
+        "main_profile_gate": {
+            "rule": "delta<=0",
+            "passed": not main_profile_violations,
+            "violations": main_profile_violations,
+        },
+        "task_hard_ceiling_gate": {
+            "hard_ceiling": 3200,
+            "passed": not task_hard_ceiling_violations,
+            "violations": task_hard_ceiling_violations,
+        },
         "cost_observation": {
             "status": cost_status,
             "candidate_total_not_greater_is_correctness_acceptance": False,
             "host_cost_increases": host_cost_increases,
+        },
+        "exceptional_evidence_comparison": {
+            "status": exceptional_status,
+            "baseline": copy.deepcopy(baseline_exceptional),
+            "candidate": copy.deepcopy(candidate_exceptional),
+            "copilot_trace": copy.deepcopy(candidate_copilot_trace),
+            "live_host": False,
         },
         "subjects": {
             "baseline": baseline_identity,
@@ -2444,106 +2619,59 @@ def _quality_first_cost_gate(
     }
 
 
-AB_S1_WRITE_PATHS = frozenset(
+AB_ALLOWED_WRITE_PATHS = frozenset(
     {
-        "scripts/eval-rendered-context-budget.py",
-        "scripts/eval-agent-lightweight.py",
-        "evals/agent-light-trajectories/cases.yaml",
-        "tests/scripts/test_eval_rendered_context_budget.py",
-        "tests/scripts/test_eval_agent_lightweight_utility.py",
-        "tests/scripts/test_eval_agent_lightweight_layer3_references.py",
-        "reports/rendered-context-budget.json",
-        "reports/hookless-control-plane-eval.json",
-    }
-)
-
-AB_S2_WRITE_PATHS = frozenset(
-    {
+        "installers/changeforge_install.py",
+        "installers/doctor.py",
         "scripts/build.py",
-        "scripts/validation_utils.py",
-        "scripts/validate-agent-profiles.py",
-        "scripts/validate-control-plane-prompt.py",
-        "scripts/validate-control-skills.py",
-        "scripts/validate-skill-routing.py",
-        "scripts/validate-task-contracts.py",
-        "src/control-prompts/main-control-agent.md",
-        "src/agent-profiles/role-agents.json",
-        "src/control-skills/engineering-control-plane/references/professional-skill-router.md",
-        "src/control-skills/engineering-control-plane/references/implementation-handoff-template.md",
-        "src/control-skills/engineering-control-plane/references/review-handoff-template.md",
-        "evals/agent-light-trajectories/cases.yaml",
         "scripts/eval-agent-lightweight.py",
+        "scripts/eval-context-control-plane.py",
         "scripts/eval-rendered-context-budget.py",
-        "tests/scripts/test_eval_agent_lightweight_utility.py",
-        "tests/scripts/test_eval_rendered_context_budget.py",
-        "reports/hookless-control-plane-eval.json",
-        "reports/rendered-context-budget.json",
-        "reports/rendered-context-budget.md",
-        "tests/scripts/test_build_safety.py",
-        "tests/test_hookless_build_install.py",
-        "tests/scripts/test_validate_agent_profiles.py",
-        "tests/scripts/test_validate_control_plane_prompt.py",
-        "tests/scripts/test_validate_control_skills.py",
-        "tests/scripts/test_validate_docs_consistency.py",
-        "tests/scripts/test_authority_delivery_repair.py",
-        "tests/scripts/test_rds_005_public_projection.py",
-        "tests/scripts/test_validate_task_contracts.py",
-        "tests/scripts/test_rds_006_agent_execution_discipline.py",
-        "tests/scripts/test_rds_006_task_handoff_context.py",
-        "tests/scripts/test_skill_routing_roles.py",
-        "tests/scripts/test_selector_jit_domain_parity.py",
-        "tests/scripts/test_foundation_selector_authority.py",
-        "tests/scripts/test_eval_agent_lightweight_layer3_references.py",
-    }
-)
-
-AB_S3_WRITE_PATHS = frozenset(
-    {
-        "scripts/build.py",
-        "scripts/validation_utils.py",
+        "scripts/eval-routing.py",
+        "scripts/fixture_capsule_contract.py",
+        "scripts/package.py",
         "scripts/validate-built-skill-reference-links.py",
-        "scripts/eval-rendered-context-budget.py",
-        "tests/scripts/test_built_professional_root_projection.py",
-        "tests/scripts/test_selector_jit_domain_parity.py",
-        "tests/scripts/test_validate_built_skill_reference_links.py",
-        "tests/scripts/test_eval_rendered_context_budget.py",
-        "tests/test_hookless_build_install.py",
-        "tests/scripts/test_context_content_relocation.py",
-        "tests/scripts/test_authority_delivery_repair.py",
-        "reports/rendered-context-budget.json",
-        "reports/rendered-context-budget.md",
-    }
-)
-
-AB_P4_INTEGRATION_WRITE_PATHS = frozenset(
-    {
-        "docs/VALIDATION.md",
-        "docs/BENCHMARKS.md",
-        "evals/agent-behavior/README.md",
-        "evals/agent-behavior/comparison-fixtures/structural-agent-packet.yaml",
-        "evals/agent-behavior/comparison-fixtures/structural-observations.yaml",
-        "evals/agent-behavior/comparison-fixtures/structural-oracle.yaml",
-        "evals/agent-behavior/comparison-fixtures/structural-reveal.yaml",
-        "evals/agent-behavior/comparison-fixtures/structural-verifier-capture.yaml",
-        "evals/agent-behavior/comparison-fixtures/structural.yaml",
-        "scripts/eval-agent-behavior.py",
+        "scripts/validate-installation.py",
+        "scripts/validate-task-contracts.py",
+        "scripts/validation_utils.py",
+        "src/agent-profiles/role-agents.json",
         "src/control-model/core-contracts.json",
-        "src/foundation/capabilities/skill-efficacy-benchmark/SKILL.md",
-        "src/foundation/capabilities/skill-efficacy-benchmark/references/benchmarks-and-patterns.md",
-        "src/foundation/capabilities/skill-efficacy-benchmark/references/checklist.md",
-        "src/foundation/capabilities/skill-efficacy-benchmark/references/evidence-patterns.md",
-        "tests/scripts/test_eval_agent_behavior.py",
-        "tests/scripts/test_impact_graph.py",
+        "src/control-prompts/main-control-agent.md",
+        "src/control-skills/engineering-control-plane/references/engineering-brief-template.md",
+        "src/control-skills/engineering-control-plane/references/professional-skill-router.md",
+        "src/control-skills/engineering-control-plane/references/utility-capsule-template.md",
+        "src/foundation/capabilities/business-rule-extraction/references/benchmarks-and-patterns.md",
+        "src/foundation/capabilities/dependency-vulnerability-scanning/references/evidence-patterns.md",
+        "src/foundation/capabilities/documentation-generation/references/benchmarks-and-patterns.md",
+        "src/foundation/capabilities/filesystem-process-safety/SKILL.md",
+        "src/foundation/capabilities/filesystem-process-safety/references/atomic-filesystem-commit-and-containment.md",
+        "src/foundation/capabilities/filesystem-process-safety/references/child-process-invocation-and-completion.md",
+        "src/foundation/capabilities/filesystem-process-safety/references/trust-sensitive-filesystem-process-protection.md",
+        "src/professional-skills/engineering-change-analysis/SKILL.md",
+        "src/registry/foundation-skills.yaml",
+        "evals/agent-light-trajectories/cases.yaml",
+        "tests/scripts/test_authority_delivery_repair.py",
+        "tests/scripts/test_built_professional_root_projection.py",
+        "tests/scripts/test_context_content_relocation.py",
+        "tests/scripts/test_decision_eval.py",
+        "tests/scripts/test_eval_agent_lightweight_utility.py",
+        "tests/scripts/test_eval_context_control_plane.py",
+        "tests/scripts/test_eval_rendered_context_budget.py",
+        "tests/scripts/test_filesystem_process_safety_calibration.py",
+        "tests/scripts/test_package.py",
+        "tests/scripts/test_reference_registry_jit.py",
+        "tests/scripts/test_runtime_asset_core_contract.py",
+        "tests/scripts/test_selector_jit_domain_parity.py",
+        "tests/scripts/test_validate_agent_profiles.py",
+        "tests/scripts/test_validate_built_skill_reference_links.py",
         "tests/scripts/test_validation_utils.py",
+        "tests/test_hookless_architecture.py",
+        "tests/test_hookless_build_install.py",
+        "tests/test_hookless_evaluations.py",
+        "tests/test_hookless_installer_safety.py",
     }
 )
-
-AB_ALLOWED_WRITE_PATHS = (
-    AB_S1_WRITE_PATHS
-    | AB_S2_WRITE_PATHS
-    | AB_S3_WRITE_PATHS
-    | AB_P4_INTEGRATION_WRITE_PATHS
-)
+AB_BASELINE_COMMIT = "ee55c55e4950f7abd7818de0290076e3f6fe0467"
 
 
 def _run_checked(
@@ -2693,6 +2821,42 @@ def _load_current_lightweight_module(path: Path) -> Any:
 
 def _git_text(root: Path, *arguments: str) -> str:
     return _run_checked(["git", *arguments], cwd=root).stdout.decode("utf-8").strip()
+
+
+def _ab_workspace_fingerprint(root: Path) -> str:
+    status = _run_checked(
+        ["git", "status", "--porcelain=v1", "-z", "--untracked-files=all"],
+        cwd=root,
+    ).stdout
+    patch = _run_checked(["git", "diff", "--binary", "HEAD"], cwd=root).stdout
+    untracked = sorted(
+        line
+        for line in _git_text(
+            root, "ls-files", "--others", "--exclude-standard"
+        ).splitlines()
+        if line
+    )
+    untracked_rows = []
+    for relative in untracked:
+        path = root / relative
+        untracked_rows.append(
+            {
+                "path": relative,
+                "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+            }
+        )
+    return hashlib.sha256(
+        json.dumps(
+            {
+                "head": _git_text(root, "rev-parse", "HEAD"),
+                "status_sha256": hashlib.sha256(status).hexdigest(),
+                "patch_sha256": hashlib.sha256(patch).hexdigest(),
+                "untracked": untracked_rows,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
 
 
 def _native_contract_identity(document: dict[str, Any]) -> dict[str, Any]:
@@ -3369,7 +3533,9 @@ def _selection_authority_bundle(
     exact_reference_bindings: object = None,
     envelope_pointer: str,
     envelope_sha256: str,
+    build_identity: str | None = None,
     selection_owner: str = "main-control-agent",
+    route_frozen_exact: bool = True,
 ) -> dict[str, Any]:
     profile = str(step.get("profile") or "")
     primary = str(step.get("primary_skill") or "")
@@ -3398,6 +3564,62 @@ def _selection_authority_bundle(
         ]
     if schema == "split-professional-selector/v1" and not relevant:
         raise ValueError("native dispatch Professional route lacks router authority")
+
+    if (
+        route_frozen_exact
+        and schema == "split-professional-selector/v1"
+        and selection_owner != "main-control-agent"
+    ):
+        if build_identity is None:
+            raise ValueError("route-frozen downstream receipt lacks build identity")
+        if exact_references is None:
+            raise ValueError(
+                "route-frozen downstream dispatch requires exact named References"
+            )
+        try:
+            fixed = layer3_selector_runtime_projection(
+                _selector_authority(),
+                professional_skill=primary,
+                profile=profile,
+                selection_owner=selection_owner,
+                exact_layer3=effective,
+            )
+            receipt = layer3_selector_runtime_selection_receipt(
+                fixed,
+                evidence_signals=[],
+                build_identity=build_identity,
+            )
+        except ValidationProblem as exc:
+            raise ValueError(
+                "route-frozen downstream receipt failed closed"
+            ) from exc
+        return {
+            "schema": schema,
+            "router_pointers": [row["pointer"] for row in relevant],
+            "router_declared_layer3": [],
+            "professional_selector_pointer": None,
+            "professional_selector_resolution": {
+                "selection_kind": "route-frozen-exact",
+                "selected_layer3": list(effective),
+            },
+            "professional_selector_receipt": receipt,
+            "selection_owner": selection_owner,
+            "professional_selector_declared_layer3": list(effective),
+            "reference_partitions_loaded": [],
+            "reference_partition_pointers": [],
+            "native_envelope": {
+                "pointer": envelope_pointer,
+                "sha256": envelope_sha256,
+            },
+            "handoff_augmentation": {
+                "pointer": envelope_pointer,
+                "sha256": envelope_sha256,
+                "layer3_skills": [],
+                "tokens_added": 0,
+                "accounting": "route-frozen-exact-assignment",
+            },
+            "effective_ordered_layer3": list(effective),
+        }
 
     if schema == "split-professional-selector/v1":
         if not isinstance(selector, dict):
@@ -3448,9 +3670,12 @@ def _selection_authority_bundle(
             raise ValueError("effective Layer 3 disagrees with Professional selector")
         receipt = None
         if exact_layer3 is not None:
+            if build_identity is None:
+                raise ValueError("selector receipt lacks build identity")
             receipt = layer3_selector_runtime_selection_receipt(
                 expanded,
                 evidence_signals=[],
+                build_identity=build_identity,
             )
             if receipt["selected_layer3"] != effective:
                 raise ValueError("selector receipt disagrees with effective Layer 3")
@@ -3746,6 +3971,11 @@ def _native_selector_decision_context(
             ),
         },
         "provenance": {
+            "decision_id": (
+                alias[0]["candidate_id"]
+                if mode == "diagnosis-only" and len(alias) == 1
+                else None
+            ),
             "scenario_id": scenario.get("id"),
             "light_case_id": scenario.get("light_case_id"),
         },
@@ -3777,32 +4007,33 @@ def _native_dispatch_selection_assets(
     selection_owner: str = "main-control-agent",
     loaded_assignment_keys: set[tuple[str, ...]] | None = None,
     global_router_loaded_hosts: set[str] | None = None,
+    professional_entrypoint_bytes: bytes | None = None,
+    legacy_runtime_layout: bool = False,
 ) -> dict[str, Any]:
     """Measure one dispatch without reloading case or assignment authority."""
 
-    path = (
-        subject_root
-        / "dist/universal/skills"
-        / RUNTIME_NAME
-        / ".changeforge-build-manifest.json"
-    )
-    try:
-        raw = path.read_bytes()
-        current = json.loads(raw)
-    except (OSError, json.JSONDecodeError) as exc:
-        raise ValueError(
-            f"{case_id}: Runtime manifest is unavailable or malformed"
-        ) from exc
-    if current != runtime_manifest or current.get("profile") != RUNTIME_NAME:
+    current = runtime_manifest
+    if not isinstance(current, dict) or current.get("profile") != RUNTIME_NAME:
         raise ValueError(f"{case_id}: Runtime manifest identity mismatch")
     if current.get("compiled_layer3_format") != COMPILED_LAYER3_FORMAT:
         raise ValueError(f"{case_id}: Runtime manifest Layer 3 format mismatch")
     expected_input = current.get("authoritative_build_inputs")
-    if not isinstance(expected_input, dict) or not expected_input.get("sha256"):
+    full_digest = (
+        expected_input.get("sha256") if isinstance(expected_input, dict) else None
+    )
+    if (
+        not isinstance(expected_input, dict)
+        or not isinstance(full_digest, str)
+        or re.fullmatch(r"[0-9a-f]{64}", full_digest) is None
+    ):
         raise ValueError(f"{case_id}: Runtime manifest lacks build input")
+    build_identity = runtime_asset_build_identity(full_digest)
+    runtime_version = current.get("source_version")
+    if not isinstance(runtime_version, str) or not runtime_version:
+        raise ValueError(f"{case_id}: Runtime manifest lacks source version")
     manifest_binding = {
         "runtime": RUNTIME_NAME,
-        "sha256": hashlib.sha256(raw).hexdigest(),
+        "sha256": _sha256_text(_canonical_json_text(current)),
         "authoritative_build_inputs": expected_input,
     }
 
@@ -3819,13 +4050,54 @@ def _native_dispatch_selection_assets(
         / "dist/copilot/project/.github/agents/main-control-agent.agent.md",
     }
     recommended = subject_root / "dist/universal/skills/recommended"
+    professional_root = recommended / primary
+    professional_path = professional_root / "SKILL.md"
     router_path = recommended / (
         "engineering-control-plane/references/professional-skill-router.md"
     )
     router_authority = _professional_router_authority(router_path)
-    selector_path = recommended / (
-        f"engineering-control-plane/references/selectors/{primary}.json"
+    selector_path = (
+        recommended
+        / f"engineering-control-plane/references/selectors/{primary}.json"
+        if legacy_runtime_layout
+        else professional_root / "references/runtime/selector.json"
     )
+    if not legacy_runtime_layout:
+        binding = current.get("runtime_asset_bindings", {}).get(primary)
+        if (
+            not isinstance(binding, dict)
+            or binding.get("professional_skill") != primary
+            or binding.get("runtime_version") != runtime_version
+            or binding.get("authoritative_build_inputs_sha256") != full_digest
+            or binding.get("build_identity") != build_identity
+        ):
+            raise ValueError(
+                f"{case_id}: dispatch {step_index} Runtime root binding mismatch"
+            )
+        try:
+            professional_raw = (
+                professional_entrypoint_bytes
+                if professional_entrypoint_bytes is not None
+                else professional_path.read_bytes()
+            )
+            professional_text = professional_raw.decode("utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            raise ValueError(
+                f"{case_id}: dispatch {step_index} Professional Runtime marker is missing or malformed"
+            ) from exc
+        expected_jit = RUNTIME_ASSET_PROFESSIONAL_JIT_TEMPLATE.replace(
+            "<V>", runtime_version
+        ).replace("<B>", build_identity)
+        frontmatter = professional_text.split("---", 2)
+        if (
+            len(frontmatter) < 3
+            or f"name: {primary}" not in frontmatter[1].splitlines()
+            or professional_text.count(expected_jit) != 1
+            or "references/runtime/identity.json" in professional_text
+        ):
+            raise ValueError(
+                f"{case_id}: dispatch {step_index} Professional Runtime marker mismatch"
+            )
     selector: dict[str, Any] | None = None
     selector_resolution: dict[str, Any] | None = None
     selector_asset_specs: list[tuple[str, Path, str]] = []
@@ -3836,7 +4108,10 @@ def _native_dispatch_selection_assets(
     )
     effective = step.get("layer3_skills")
     assert isinstance(effective, list)
-    if router_authority["schema"] == "split-professional-selector/v1":
+    if (
+        router_authority["schema"] == "split-professional-selector/v1"
+        and (selection_owner == "main-control-agent" or legacy_runtime_layout)
+    ):
         try:
             selector_raw = selector_path.read_bytes()
             selector_document = json.loads(selector_raw)
@@ -3844,6 +4119,16 @@ def _native_dispatch_selection_assets(
             raise ValueError(
                 f"{case_id}: dispatch {step_index} professional-selector authority is missing"
             ) from exc
+        if (
+            not legacy_runtime_layout
+            and (
+                not isinstance(selector_document, dict)
+                or selector_document.get("build") != build_identity
+            )
+        ):
+            raise ValueError(
+                f"{case_id}: dispatch {step_index} professional-selector build mismatch"
+            )
         if (
             isinstance(selector_document, dict)
             and selector_document.get("contract")
@@ -3877,6 +4162,16 @@ def _native_dispatch_selection_assets(
                 selected_document = json.loads(
                     selected_path.read_text(encoding="utf-8")
                 )
+                if (
+                    not legacy_runtime_layout
+                    and (
+                        not isinstance(selected_document, dict)
+                        or selected_document.get("build") != build_identity
+                    )
+                ):
+                    raise ValidationProblem(
+                        "Professional selector decision build mismatch"
+                    )
                 resolved = layer3_selector_resolve_control_projection(
                     selector_document,
                     {selected_binding["path"]: selected_document},
@@ -3894,16 +4189,23 @@ def _native_dispatch_selection_assets(
                     "Professional selector decision output disagrees with dispatch"
                 )
             provenance = resolved.get("provenance")
-            if resolved["selection_kind"] == "exact" and (
-                not isinstance(provenance, dict)
-                or provenance.get("release_scenario")
-                != decision_context["source_authorities"]["release_scenario"]
-                or provenance.get("selector_registry")
-                != decision_context["source_authorities"]["selector_registry"]
-            ):
-                raise ValueError(
-                    "Professional selector decision provenance disagrees with source"
-                )
+            if resolved["selection_kind"] == "exact":
+                expected_provenance = {
+                    "decision_id": decision_context["provenance"]["decision_id"],
+                    "scenario_id": decision_context["provenance"]["scenario_id"],
+                    "light_case_id": decision_context["provenance"]["light_case_id"],
+                    "selector_registry": decision_context["source_authorities"][
+                        "selector_registry"
+                    ],
+                }
+                if legacy_runtime_layout:
+                    expected_provenance["release_scenario"] = decision_context[
+                        "source_authorities"
+                    ]["release_scenario"]
+                if provenance != expected_provenance:
+                    raise ValueError(
+                        "Professional selector decision provenance disagrees with source"
+                    )
             selector = resolved["projection"]
             selector_resolution = {
                 key: copy.deepcopy(resolved[key])
@@ -3944,9 +4246,14 @@ def _native_dispatch_selection_assets(
                     f"{case_id}: dispatch {step_index} Reference partition owners exceed the bounded route"
                 )
             for owner in owners:
-                path = recommended / (
-                    "engineering-control-plane/references/reference-records/"
-                    f"{primary}/{owner}.json"
+                path = (
+                    recommended
+                    / "engineering-control-plane/references/reference-records"
+                    / primary
+                    / f"{owner}.json"
+                    if legacy_runtime_layout
+                    else professional_root
+                    / f"references/runtime/reference-records/{owner}.json"
                 )
                 try:
                     reference_partitions[owner] = json.loads(path.read_text(encoding="utf-8"))
@@ -3954,6 +4261,13 @@ def _native_dispatch_selection_assets(
                     raise ValueError(
                         f"{case_id}: dispatch {step_index} Reference partition authority is missing"
                     ) from exc
+                if (
+                    not legacy_runtime_layout
+                    and reference_partitions[owner].get("build") != build_identity
+                ):
+                    raise ValueError(
+                        f"{case_id}: dispatch {step_index} Reference partition build mismatch"
+                    )
                 reference_partition_paths[owner] = path
     pointer = envelope_pointer or f"fixture:{case_id}:step:{step_index}:selector"
     envelope_sha = envelope_sha256 or _sha256_text(_canonical_json_text(step))
@@ -3980,7 +4294,9 @@ def _native_dispatch_selection_assets(
         exact_reference_bindings=exact_reference_bindings,
         envelope_pointer=pointer,
         envelope_sha256=envelope_sha,
+        build_identity=build_identity,
         selection_owner=selection_owner,
+        route_frozen_exact=not legacy_runtime_layout,
     )
     if loaded_assignment_keys is None:
         loaded_assignment_keys = set()
@@ -4169,6 +4485,7 @@ def _native_trajectory_case_cost(
     *,
     native_schema: dict[str, Any],
     host: str,
+    legacy_runtime_layout: bool = False,
 ) -> dict[str, Any]:
     case_id = case.get("id")
     if not isinstance(case_id, str) or not case_id:
@@ -4195,8 +4512,17 @@ def _native_trajectory_case_cost(
     loaded_assignment_keys: set[tuple[str, ...]] = set()
     global_router_loaded_hosts: set[str] = set()
     accepted_brief_seen = False
+    trajectory_digest = runtime_manifest.get("authoritative_build_inputs", {}).get(
+        "sha256"
+    )
+    if (
+        not isinstance(trajectory_digest, str)
+        or re.fullmatch(r"[0-9a-f]{64}", trajectory_digest) is None
+    ):
+        raise ValueError(f"{case_id}: Runtime manifest lacks build input")
+    trajectory_build_identity = runtime_asset_build_identity(trajectory_digest)
 
-    def add_file(bucket: str, kind: str, path: Path) -> None:
+    def add_file(bucket: str, kind: str, path: Path) -> bytes:
         if not path.is_file() or _uses_symlink(
             path, subject_root
         ):
@@ -4205,6 +4531,20 @@ def _native_trajectory_case_cost(
                 f"{path.relative_to(subject_root)}"
             )
         raw = path.read_bytes()
+        if kind == "layer3-skill" and not legacy_runtime_layout:
+            expected_marker = RUNTIME_ASSET_LAYER3_MARKER_TEMPLATE.replace(
+                "<B>", trajectory_build_identity
+            )
+            try:
+                first_line = raw.decode("utf-8").splitlines()[0]
+            except (UnicodeDecodeError, IndexError) as exc:
+                raise ValueError(
+                    f"{case_id}: malformed Layer 3 Runtime marker"
+                ) from exc
+            if first_line != expected_marker:
+                raise ValueError(
+                    f"{case_id}: Layer 3 Runtime build marker mismatch"
+                )
         tokens = count_o200k_base_tokens(raw.decode("utf-8"))
         components[bucket] += tokens
         component_sources.append(
@@ -4219,6 +4559,7 @@ def _native_trajectory_case_cost(
                 "content_scope": "complete-native-bytes",
             }
         )
+        return raw
 
     for index, step in enumerate(steps):
         if not isinstance(step, dict) or not step.get("action"):
@@ -4276,6 +4617,11 @@ def _native_trajectory_case_cost(
             )
         primary = str(step.get("primary_skill") or "")
         if primary:
+            professional_bytes = add_file(
+                "professional",
+                "professional-skill",
+                DIST_SKILLS / "recommended" / primary / "SKILL.md",
+            )
             assets = _native_dispatch_selection_assets(
                 case_id,
                 index,
@@ -4292,6 +4638,8 @@ def _native_trajectory_case_cost(
                 ),
                 loaded_assignment_keys=loaded_assignment_keys,
                 global_router_loaded_hosts=global_router_loaded_hosts,
+                professional_entrypoint_bytes=professional_bytes,
+                legacy_runtime_layout=legacy_runtime_layout,
             )
             host_assets = [
                 item for item in assets["components"] if item.get("host") == host
@@ -4350,11 +4698,6 @@ def _native_trajectory_case_cost(
                 or authoritative_build_inputs != assets["authoritative_build_inputs"]
             ):
                 raise ValueError(f"{case_id}: dispatch asset bindings disagree")
-            add_file(
-                "professional",
-                "professional-skill",
-                DIST_SKILLS / "recommended" / primary / "SKILL.md",
-            )
         for reference in step.get("professional_references", []):
             add_file(
                 "targeted_reference",
@@ -4389,6 +4732,8 @@ def _native_trajectory_case_cost(
         "id": f"{case_id}::{host}",
         "logical_case_id": case_id,
         "host": host,
+        "step": "trajectory-total",
+        "budget_class": "trajectory",
         "mapping_state": "raw-route-equal-pending-subject-comparison",
         "route_obligations": route,
         "raw_route_obligations": raw_route,
@@ -4536,6 +4881,7 @@ def _measure_isolated_subject(
                     lightweight_module,
                     native_schema=native_schema,
                     host=host,
+                    legacy_runtime_layout=subject == "baseline",
                 )
                 measured["mapping_state"] = row["state"]
                 measured["semantic_obligation"] = row["semantic_obligation"]
@@ -4592,6 +4938,12 @@ def _measure_isolated_subject(
         "cases": cases,
         "lightweight_subject_status": lightweight.get("status"),
         "lightweight_subject_errors": lightweight.get("errors", []),
+        "exceptional_evidence_summary": copy.deepcopy(
+            lightweight.get("integration_evidence_summary")
+        ),
+        "copilot_evidence_trace": copy.deepcopy(
+            lightweight.get("copilot_evidence_trace")
+        ),
         "rendered_report": rendered,
     }
 
@@ -4606,6 +4958,10 @@ def evaluate_end_to_end_ab(
     lightweight_evaluator_path = repository_root / "scripts/eval-agent-lightweight.py"
     candidate_commit = _git_text(repository_root, "rev-parse", "HEAD")
     baseline_commit = _git_text(repository_root, "rev-parse", baseline_ref)
+    if baseline_commit != AB_BASELINE_COMMIT:
+        raise ValueError(
+            f"invalid fixed baseline: expected {AB_BASELINE_COMMIT}, got {baseline_commit}"
+        )
     if expected_baseline_commit and baseline_commit != expected_baseline_commit:
         raise ValueError(
             f"baseline ref moved: expected {expected_baseline_commit}, got {baseline_commit}"
@@ -4622,9 +4978,15 @@ def evaluate_end_to_end_ab(
         ).splitlines()
         if line
     }
-    unexpected = sorted((changed_paths | untracked) - AB_ALLOWED_WRITE_PATHS)
-    if unexpected:
-        raise ValueError(f"A/B candidate contains out-of-scope paths: {unexpected}")
+    actual_changed_paths = changed_paths | untracked
+    if actual_changed_paths != AB_ALLOWED_WRITE_PATHS:
+        missing = sorted(AB_ALLOWED_WRITE_PATHS - actual_changed_paths)
+        unexpected = sorted(actual_changed_paths - AB_ALLOWED_WRITE_PATHS)
+        raise ValueError(
+            f"A/B candidate must bind the exact frozen {len(AB_ALLOWED_WRITE_PATHS)}-path integration set: "
+            f"missing={missing}, unexpected={unexpected}"
+        )
+    workspace_before = _ab_workspace_fingerprint(repository_root)
     candidate_patch = _run_checked(
         ["git", "diff", "--binary", "HEAD"], cwd=repository_root
     ).stdout
@@ -4744,7 +5106,8 @@ def evaluate_end_to_end_ab(
             comparison["fixed_baseline_ref"] = baseline_ref
             comparison["fixed_baseline_commit"] = baseline_commit
             comparison["candidate_start_commit"] = candidate_commit
-            comparison["candidate_changed_paths"] = sorted(changed_paths | untracked)
+            comparison["candidate_changed_paths"] = sorted(actual_changed_paths)
+            comparison["candidate_changed_path_count"] = len(actual_changed_paths)
             comparison["canonical_corpus"] = {
                 "focus_mapping_digest": focus_mapping["mapping_digest"],
                 "trajectory_mapping_digest": trajectory_mapping[
@@ -4797,6 +5160,14 @@ def evaluate_end_to_end_ab(
                 )
         if _git_text(repository_root, "rev-parse", baseline_ref) != baseline_commit:
             raise RuntimeError("baseline ref moved after measurement")
+        workspace_after = _ab_workspace_fingerprint(repository_root)
+        if workspace_after != workspace_before:
+            raise RuntimeError("A/B measurement changed the source workspace")
+        comparison["workspace_fingerprint"] = {
+            "before": workspace_before,
+            "after": workspace_after,
+            "unchanged": True,
+        }
         return comparison
 
 
@@ -6437,9 +6808,27 @@ def _selection_kind(profile: str) -> str:
 def _admissible_selector_equivalence_classes(
     authority: dict[str, Any],
     projection: dict[str, Any],
+    build_identity: str | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, int], list[str]]:
     """Invoke the canonical selector over every legal <=3 activation class."""
 
+    if build_identity is None:
+        runtime_manifest = json.loads(
+            (
+                DIST_SKILLS
+                / RUNTIME_NAME
+                / ".changeforge-build-manifest.json"
+            ).read_text(encoding="utf-8")
+        )
+        full_digest = runtime_manifest.get("authoritative_build_inputs", {}).get(
+            "sha256"
+        )
+        if (
+            not isinstance(full_digest, str)
+            or re.fullmatch(r"[0-9a-f]{64}", full_digest) is None
+        ):
+            raise ValueError("admissible selector build identity is missing")
+        build_identity = runtime_asset_build_identity(full_digest)
     errors: list[str] = []
     selectors = projection["selectors"]
     classes_by_selected: dict[tuple[str, ...], dict[str, Any]] = {}
@@ -6453,6 +6842,7 @@ def _admissible_selector_equivalence_classes(
     empty_receipt = layer3_selector_runtime_selection_receipt(
         projection,
         evidence_signals=[],
+        build_identity=build_identity,
     )
     classes_by_selected[tuple(empty_receipt["selected_layer3"])] = {
         "selected_layer3": list(empty_receipt["selected_layer3"]),
@@ -6472,6 +6862,7 @@ def _admissible_selector_equivalence_classes(
         receipt = layer3_selector_runtime_selection_receipt(
             projection,
             evidence_signals=evidence,
+            build_identity=build_identity,
         )
         classes_by_selected.setdefault(
             tuple(receipt["selected_layer3"]),
@@ -6484,6 +6875,7 @@ def _admissible_selector_equivalence_classes(
         negative_receipt = layer3_selector_runtime_selection_receipt(
             projection,
             evidence_signals=negative_evidence,
+            build_identity=build_identity,
         )
         nearest_negative_cases += 1
         if set(record["selectable_layer3"]) & set(
@@ -6500,6 +6892,7 @@ def _admissible_selector_equivalence_classes(
                 receipt = layer3_selector_runtime_selection_receipt(
                     projection,
                     evidence_signals=evidence,
+                    build_identity=build_identity,
                 )
             except ValidationProblem as exc:
                 if "more than three Layer 3" not in str(exc):
@@ -6543,6 +6936,7 @@ def _admissible_selector_equivalence_classes(
         expected_professional=projection["professional_skill"],
         expected_selection_kind=_selection_kind(projection["profile"]),
         expected_selected_layer3=replay_class["selected_layer3"],
+        expected_build_identity=build_identity,
     )
     errors.extend(replay_errors)
 
@@ -6583,6 +6977,7 @@ def _admissible_selector_equivalence_classes(
                 layer3_selector_runtime_selection_receipt(
                     projection,
                     evidence_signals=evidence,
+                    build_identity=build_identity,
                 )
             except ValidationProblem as exc:
                 if "more than three Layer 3" in str(exc):
@@ -7230,6 +7625,15 @@ def _evaluate_admissible_context_compositions(
     """Measure source-derived selector/reference composition equivalence classes."""
 
     errors: list[str] = []
+    admissible_digest = runtime_manifests.get(RUNTIME_NAME, {}).get(
+        "authoritative_build_inputs", {}
+    ).get("sha256")
+    if (
+        not isinstance(admissible_digest, str)
+        or re.fullmatch(r"[0-9a-f]{64}", admissible_digest) is None
+    ):
+        raise ValueError("admissible context Runtime build identity is missing")
+    admissible_build_identity = runtime_asset_build_identity(admissible_digest)
     authority = _selector_authority()
     control_projections = layer3_selector_control_projections(authority)
     professional_document = load_yaml_file(PROFESSIONAL_REGISTRY)
@@ -7351,7 +7755,11 @@ def _evaluate_admissible_context_compositions(
             if owner == "engineering-brief":
                 required_coverage["analyzed_brief_owner"] = True
             classes, selector_stats, selector_errors = (
-                _admissible_selector_equivalence_classes(authority, projection)
+                _admissible_selector_equivalence_classes(
+                    authority,
+                    projection,
+                    admissible_build_identity,
+                )
             )
             errors.extend(selector_errors)
             inventory["legal_selection_equivalence_class_count"] += len(classes)
@@ -8216,8 +8624,8 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
         )
     cases = _fixture_cases(document)
     expected_case_ids = {str(case.get("id") or "") for _group, case in cases}
-    long_task_ids, semantic_equality = _load_lightweight_prerequisite(
-        expected_case_ids
+    long_task_ids, semantic_equality, integration_evidence_summary = (
+        _load_lightweight_prerequisite(expected_case_ids)
     )
     layer3_entries = _layer3_registry_entries()
     runtime_manifest = _load_runtime_manifest(errors)
@@ -8609,6 +9017,7 @@ def evaluate(mode: str = "conformance") -> dict[str, Any]:
         "component_catalog": component_catalog,
         "cases": case_results,
         "transferred_context": transferred_context,
+        "integration_evidence_summary": integration_evidence_summary,
         "admissible_context_compositions": admissible_context_compositions,
         "aggregate": {
             "max_main": (
@@ -8747,6 +9156,18 @@ def _end_to_end_projection_binding(comparison: dict[str, Any]) -> dict[str, Any]
             ),
             "regressions": copy.deepcopy(ordinary_regressions),
         },
+        "per_composition_gate": copy.deepcopy(
+            comparison.get("per_composition_gate", {})
+        ),
+        "main_profile_gate": copy.deepcopy(
+            comparison.get("main_profile_gate", {})
+        ),
+        "task_hard_ceiling_gate": copy.deepcopy(
+            comparison.get("task_hard_ceiling_gate", {})
+        ),
+        "exceptional_evidence_comparison": copy.deepcopy(
+            comparison.get("exceptional_evidence_comparison", {})
+        ),
         "quality_cost_gate": copy.deepcopy(quality_cost_gate),
     }
 
@@ -8757,6 +9178,8 @@ def _render_end_to_end_projection_markdown(comparison: dict[str, Any]) -> str:
     authority = binding["selection_authority_summary"]
     host_matrix = binding["host_matrix"]
     ordinary_gate = binding["ordinary_route_gate"]
+    per_composition_gate = binding["per_composition_gate"]
+    exceptional = binding["exceptional_evidence_comparison"]
     quality_gate = binding["quality_cost_gate"]
     authority_lines: list[str] = []
     for subject in ("baseline", "candidate"):
@@ -8807,6 +9230,11 @@ def _render_end_to_end_projection_markdown(comparison: dict[str, Any]) -> str:
             "Ordinary raw-route-equal gate regressions/digest: "
             f"**{ordinary_gate['regression_count']}** / "
             f"`{ordinary_gate['regression_digest']}`.",
+            "Per-composition gate status/rows: "
+            f"**{per_composition_gate.get('passed')} / "
+            f"{len(per_composition_gate.get('rows', []))}**.",
+            "Exceptional Evidence comparison/live-host: "
+            f"**{exceptional.get('status')} / {exceptional.get('live_host')}**.",
             *ordinary_lines,
             "Aggregate baseline/candidate/delta: "
             f"**{aggregate.get('baseline')} / {aggregate.get('candidate')} / "
@@ -9093,25 +9521,27 @@ def _args(argv: list[str] | None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = _args(argv)
-    try:
-        comparison = None
-        if args.ab_baseline_ref:
-            comparison = evaluate_end_to_end_ab(
-                baseline_ref=args.ab_baseline_ref,
-                expected_baseline_commit=args.expected_baseline_commit,
-            )
-            report = comparison.pop("_candidate_rendered_report")
-            report["end_to_end_cost_gate"] = comparison
-        else:
-            report = evaluate(mode=args.mode)
-    except (OSError, RuntimeError, ValueError) as exc:
-        print(f"eval-rendered-context-budget: ERROR: {exc}", file=sys.stderr)
-        return 1
-    _write_reports(
-        report,
-        release_projection=args.release_projection,
-        reports_dir=args.reports_dir,
-    )
+    lightweight_report = args.reports_dir / "hookless-control-plane-eval.json"
+    with _subject_configuration(ROOT, FIXTURES, lightweight_report):
+        try:
+            comparison = None
+            if args.ab_baseline_ref:
+                comparison = evaluate_end_to_end_ab(
+                    baseline_ref=args.ab_baseline_ref,
+                    expected_baseline_commit=args.expected_baseline_commit,
+                )
+                report = comparison.pop("_candidate_rendered_report")
+                report["end_to_end_cost_gate"] = comparison
+            else:
+                report = evaluate(mode=args.mode)
+        except (OSError, RuntimeError, ValueError) as exc:
+            print(f"eval-rendered-context-budget: ERROR: {exc}", file=sys.stderr)
+            return 1
+        _write_reports(
+            report,
+            release_projection=args.release_projection,
+            reports_dir=args.reports_dir,
+        )
     if report["errors"]:
         for error in report["errors"]:
             print(f"eval-rendered-context-budget: ERROR: {error}", file=sys.stderr)

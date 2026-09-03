@@ -368,6 +368,133 @@
       "may_review": true
     }
   },
+  "runtime_asset_resolution_contract": {
+    "schema_version": 1,
+    "selected_root": "host-resolved-current-professional-root",
+    "professional_root": ".",
+    "path_policy": {
+      "addressing": "professional-root-relative-fixed-paths-only",
+      "forbidden": ["absolute", "parent-traversal", "symlink", "parent-search", "sibling-root", "glob", "rglob", "HOME-enumeration", "~/.copilot"]
+    },
+    "inline_identity": {
+      "contract": "changeforge.runtime-inline-identity/v2",
+      "runtime_version_source": "root-source-version",
+      "build_identity_derivation": "authoritative-build-inputs-sha256-prefix-128-base64url-nopad",
+      "build_identity_bits": 128,
+      "build_identity_format": "base64url-nopad-22",
+      "professional_binding": "frontmatter-name",
+      "professional_entrypoint_jit_line": "JIT: `references/runtime/selector.json`; Runtime: `<V>/<B>`.",
+      "selector_build_field": "build",
+      "selector_assets": ["selector-envelope", "direct-selector", "complete-selector", "decision-shard", "reference-record-partition"],
+      "selector_read": "single-existing-load-no-reread",
+      "selection_receipt_build_field": "build",
+      "selection_receipt_hash_domain": "canonical-semantic-domain-includes-build",
+      "layer3_first_line": "<!-- Build: <B> -->",
+      "layer3_marker_mode": "replace-existing-generated-marker",
+      "layer3_professional_binding": "host-root-plus-receipt-plus-fixed-path"
+    },
+    "integrity_manifest": {
+      "contract": "changeforge.runtime-integrity-manifest/v1",
+      "schema_version": 1,
+      "path": "references/runtime/integrity-manifest.json",
+      "fields": ["contract", "schema_version", "runtime_version", "build_identity", "professional_skill", "assets", "integrity_manifest_sha256"],
+      "asset_fields": ["path", "kind", "sha256", "size"],
+      "asset_order": "unique-lexicographic-path",
+      "inventory": "every-non-metadata-delivery-asset",
+      "excluded_metadata_paths": ["references/runtime/integrity-manifest.json"],
+      "semantic_hash_field": "integrity_manifest_sha256",
+      "semantic_hash_domain": "canonical-json-semantics-excluding-own-hash-no-trailing-newline",
+      "canonical_json": {"encoding": "utf-8", "ensure_ascii": false, "sort_keys": true, "separators": [",", ":"], "trailing_newline": false},
+      "runtime_read": "forbidden"
+    },
+    "fixed_paths": {
+      "selector_envelope_path": "references/runtime/selector.json",
+      "selector_complete_path": "references/runtime/selectors/complete.json",
+      "selector_shard_path_template": "references/runtime/selectors/<decision-id>.json",
+      "reference_partition_path_template": "references/runtime/reference-records/<owner-skill>.json",
+      "layer3_path_template": "references/layer3/<layer3-skill>.md",
+      "integrity_manifest_path": "references/runtime/integrity-manifest.json"
+    },
+    "fixed_locator_projection": {
+      "owner": "generated-professional-entrypoint-and-selector-envelope",
+      "professional_entrypoint_line": "JIT: `references/runtime/selector.json`; Runtime: `<V>/<B>`.",
+      "selector_owns": ["complete-selector", "decision-shard", "reference-partition"],
+      "layer3_path_grammar": "references/layer3/<layer3-skill>.md",
+      "forbidden": ["runtime-identity-sidecar", "cross-skill-selector-locator", "duplicate-layer3-locator", "duplicate-profile-main-brief-locator", "search-discovery"]
+    },
+    "acyclic_generation_order": ["authoritative-build-inputs-and-source-version", "full-sha256-and-runtime-version", "sha256-prefix-128-comparator", "professional-selector-receipt-layer3-inline-bindings", "integrity-inventory-and-semantic-hash", "root-manifest-integrity-exact-byte-binding"],
+    "root_manifest_binding": {
+      "fields": ["professional_skill", "runtime_version", "authoritative_build_inputs_sha256", "build_identity_algorithm", "build_identity", "inline_identity_contract", "inline_identity_version", "integrity_manifest_path", "integrity_manifest_full_bytes_sha256"],
+      "build_identity_algorithm": "sha256-prefix-128-base64url-nopad",
+      "inline_identity_contract": "changeforge.runtime-inline-identity/v2",
+      "inline_identity_version": 2,
+      "hash_domain": "exact-serialized-file-bytes",
+      "completeness": "integrity-assets-plus-one-metadata-full-byte-binding"
+    },
+    "runtime_roles": {
+      "profiles": ["main-control-agent", "analysis-agent", "task-agent", "review-agent"],
+      "required_reads": ["professional-entrypoint", "logical-selection-receipt", "current-fixed-assets"],
+      "forbidden_reads": ["integrity-manifest", "root-build-manifest"],
+      "digest_operations": [],
+      "forbidden_operations": ["runtime-identity-sidecar-read", "selector-reload", "closure-enumeration", "sha256", "size", "HOME-enumeration", "parent-search", "glob", "sibling-root-resolution"]
+    },
+    "runtime_inline_verification": {
+      "inputs": ["professional-entrypoint", "logical-selection-receipt", "current-fixed-assets"],
+      "checks": ["professional-frontmatter-name", "professional-jit-runtime-version-build", "base64url-nopad-22-build-identity", "selector-or-partition-build-on-existing-read", "selection-receipt-build", "layer3-first-line-build", "profile", "selection-owner", "selection-kind", "selected-or-exact-layer3", "unique-max-three", "itemwise-profile-domain-authorization", "current-asset-professional-binding"],
+      "proof_limits": ["full-digest-derivation", "raw-byte-integrity", "coherent-old-bundle-currentness"]
+    },
+    "non_runtime_verifier": {
+      "owner": "scripts/validation_utils.py#runtime_asset_bundle_metadata_errors",
+      "consumers": ["build", "installer", "doctor", "evaluator", "tests"],
+      "inputs": ["integrity-manifest-full-bytes", "complete-delivery-assets", "root-manifest-binding", "full-authoritative-input-sha256"],
+      "checks": ["full-digest-format", "prefix-128-derivation", "professional-jit-version-build", "selector-partition-build", "selection-receipt-build", "layer3-first-line-build", "integrity-semantics", "complete-inventory", "asset-digest-size", "one-metadata-full-byte-binding"]
+    },
+    "exact_set_bypass": "professional-entrypoint-and-logical-selection-receipt-and-layer3-binding-required-selector-skipped",
+    "mixed_install": "one-host-selected-professional-root-never-cross-root-compose",
+    "failure": "fail-closed-no-utility-no-reroute"
+  },
+  "environment_risk_calibration_contract": {
+    "schema_version": 1,
+    "applies_to": ["analysis-agent", "task-agent", "review-agent"],
+    "authority_reuse": ["Possibility != Reachability.", "Mutability != Trust Boundary.", "Capability != Authorization.", "Risk Category != Material Risk.", "same_trust_principal", "critical_unknown", "material_assessment"],
+    "baseline": {"ambient_host_workspace": "controlled-same-trust-non-adversarial", "safety_proof": false, "absence_of_hostile_evidence_proves_no_security_risk": false},
+    "not_escalation_evidence": ["ordinary-mutability", "path-difference", "generic-future-replacement", "generic-unknown"],
+    "escalation_requires_all": ["less-trusted-actor-input-or-writer", "privilege-or-sensitive-asset", "reachable-material-impact-path"],
+    "source_trust_boundary_override": "current-source-real-trust-boundary-remains-authoritative",
+    "independent_risks": ["untrusted-product-input", "concurrency-shared-state", "retry-idempotency", "crash-durability-recovery", "production-privilege", "secrets-privacy", "supply-chain", "external-integration"],
+    "unknown_policy": "only-complete-critical-unknown-blocks-generic-unknown-is-proof-limit",
+    "filesystem_process_safety_projection": {
+      "skill": "filesystem-process-safety",
+      "selection_effects": ["filesystem-effect", "direct-child-process-effect"],
+      "normal_correctness": ["create-replace", "atomicity", "durability", "legitimate-concurrency", "cleanup", "wait-reap", "stdout-stderr", "timeout-cancellation", "result-reconciliation"],
+      "trust_sensitive_reference": "references/trust-sensitive-filesystem-process-protection.md",
+      "trust_load_branches": ["current-related-concrete-reachable-trust-evidence", "complete-related-critical_unknown"],
+      "not_escalation_evidence_refs": ["#/environment_risk_calibration_contract/not_escalation_evidence/0", "#/environment_risk_calibration_contract/not_escalation_evidence/1", "#/environment_risk_calibration_contract/not_escalation_evidence/2", "#/environment_risk_calibration_contract/not_escalation_evidence/3"],
+      "material_escalation_refs": ["#/environment_risk_calibration_contract/escalation_requires_all/0", "#/environment_risk_calibration_contract/escalation_requires_all/1", "#/environment_risk_calibration_contract/escalation_requires_all/2"],
+      "critical_unknown_ref": "#/execution_level_contract/critical_unknown",
+      "independent_risk_refs": ["#/environment_risk_calibration_contract/independent_risks/0", "#/environment_risk_calibration_contract/independent_risks/1", "#/environment_risk_calibration_contract/independent_risks/2", "#/environment_risk_calibration_contract/independent_risks/3", "#/environment_risk_calibration_contract/independent_risks/4", "#/environment_risk_calibration_contract/independent_risks/5", "#/environment_risk_calibration_contract/independent_risks/6", "#/environment_risk_calibration_contract/independent_risks/7"]
+    },
+    "profile_projection": {
+      "analysis-agent": ["controlled/same-trust/non-adversarial baseline is not safety proof", "hostile escalation needs less-trusted actor/input/writer + privilege/sensitive asset + reachable material path", "independent security/concurrency/retry/durability/recovery risks remain"],
+      "task-agent": ["controlled/same-trust/non-adversarial baseline is not safety proof", "hostile escalation needs less-trusted actor/input/writer + privilege/sensitive asset + reachable material path", "independent security/concurrency/retry/durability/recovery risks remain"],
+      "review-agent": ["controlled/same-trust/non-adversarial baseline is not safety proof", "hostile escalation needs less-trusted actor/input/writer + privilege/sensitive asset + reachable material path", "independent security/concurrency/retry/durability/recovery risks remain"]
+    }
+  },
+  "analysis_evidence_continuation_contract": {
+    "schema_version": 1,
+    "analysis_profile": "analysis-agent",
+    "analysis_tools_unchanged": ["read", "search", "external-source-read"],
+    "trigger_requires_all": ["material-claim", "current-read-search-insufficient", "one-bounded-executable-observation-materially-confirms-or-refutes"],
+    "non_triggers": ["static-evidence-sufficient", "generic-environment-unknown", "runtime-asset-failure"],
+    "logical_key": ["analysis-task-id", "continuation-id", "claim-id"],
+    "cardinality": {"logical_requests": 1, "host_attempts": 2, "observations": 1},
+    "request_fields": ["analysis_task_id", "continuation_id", "claim_id", "material_claim", "operation", "allowed_scope", "expected_observation", "freshness_requirement", "proof_limit"],
+    "utility": {"owner": "task-agent", "mode": "evidence-observation/no-edit", "professional_skill_load": false, "layer3_load": false, "diagnosis": false, "edit": false, "repair": false, "reroute": false, "returns": ["evidence", "freshness", "scope", "proof-limit"]},
+    "permission": {"denied_before_observation": "one-retry-minimum-exact-authority-same-logical-request", "denied_after_observation": "terminal-partial-observation", "user_refused": "terminal-evidence-unavailable", "host_unsupported": "terminal-evidence-unavailable", "route_level_domain_layer3_change": false},
+    "continuation": {"target": "same-analysis-event", "initial_remains": "initial", "delta_remains": "delta", "new-semantic-evidence_route_change": "existing-delta-analysis-only"},
+    "unavailable_outcome": "analysis-proof-limit",
+    "runtime_state": false
+  },
   "external_read_contract": {
     "capability_field": "external-source-read",
     "capability_states": ["supported", "unsupported"],
@@ -524,7 +651,7 @@
     ],
     "profile_projection": {
       "analysis-agent": [
-        {"rule_id": "analysis-localization", "required_terms": ["exact locator", "current source", "direct read/search", "minimum complete", "counts are selectors only", "Proof Limit", "never correctness/coverage conclusions", "initial Analysis without accepted Brief", "bounded Delta only after accepted Brief invalidation"]}
+        {"rule_id": "analysis-localization", "required_terms": ["Evidence Closure:", "minimum-complete", "direct current-source read/search", "locators/counts", "select only", "never prove correctness/coverage", "Proof Limit", "protected/material", "initial Analysis", "bounded Delta"]}
       ],
       "task-agent": [
         {"rule_id": "task-localization", "required_terms": ["exact locator", "current source", "direct read/search", "minimum complete", "bounded discovery", "selectors only", "Proof Limit", "never inherit correctness/coverage", "initial Analysis without accepted Brief", "bounded Delta only after accepted Brief invalidation"]}
@@ -563,7 +690,7 @@
       "material_proof_limit": "stop-before-edit-return-main",
       "profile_projection": {
         "analysis-agent": [
-          {"rule_id": "analysis-evidence-closure", "required_terms": ["Evidence Closure:", "proved/not-applicable/Proof Limit", "no material risk", "new/invalidated/contradicted", "reopens affected only", "Protected/material returns Main", "initial Analysis without accepted Brief", "bounded Delta only after accepted Brief invalidation", "counts"]}
+          {"rule_id": "analysis-evidence-closure", "required_terms": ["Evidence Closure:", "proved/not-applicable/Proof Limit", "no material risk", "New/invalidated/contradicted", "reopens affected only"]}
         ],
         "task-agent": [
           {"rule_id": "task-evidence-closure", "required_terms": ["Evidence Closure:", "proved/not-applicable/Proof Limit", "no material risk", "new/invalidated/contradicted", "reopens affected only", "Protected/material returns Main", "initial Analysis without accepted Brief", "bounded Delta only after accepted Brief invalidation", "counts"]}
@@ -1021,6 +1148,28 @@
       "utility": {"label": "Utility dispatch", "category": "dispatch_composition", "soft_target": 2000, "hard_ceiling": 2500, "calibration_status": "provisional-migration-value"}
     },
     "duplicate_rule_token_ratio_max": 0.03,
+    "runtime_asset_projection": {
+      "schema_version": 1,
+      "baseline_commit": "ee55c55e4950f7abd7818de0290076e3f6fe0467",
+      "ordinary_cohort": ["single-file-bug-fix", "single-module-feature", "review-only", "validation-task-no-edit"],
+      "exceptional_cohort": ["diagnosis-only", "material-executable-evidence-continuation", "runtime-asset-integrity-failure", "filesystem-process-normal-correctness", "filesystem-process-trust-sensitive"],
+      "comparison_key": ["case", "host", "step", "budget_class"],
+      "identity_accounting": "inline-existing-component-bytes",
+      "identity_component_count_per_professional_assignment": 0,
+      "integrity_manifest_runtime_load_count": 0,
+      "selective_identity_field_read_count": 0,
+      "identity_structural_selector_load_delta_max": 0,
+      "inline_accounted_components": ["professional-entrypoint", "selector-or-reference-partition", "logical-selection-receipt", "targeted-reference-layer3-marker"],
+      "cross_skill_selector_locator_occurrence_count": 0,
+      "cumulative_trajectory_cost": "reported-observation-not-correctness-acceptance",
+      "post_implementation_gate": "unproved-stop-on-context-route-coverage-or-binding-failure",
+      "ordinary_delta_gate": {"operator": "less-than-or-equal-minimum", "absolute_token_max": 32, "relative_ppm": 15000, "relative_rounding": "ceiling"},
+      "main_token_delta_max": 0,
+      "profile_token_delta_max": 0,
+      "duplicate_rule_token_ratio_max": 0.03,
+      "required_semantic_counts": "non-decreasing-skills-layer3-references-validation-review",
+      "measurement_limits": ["deterministic-token-proxy-not-live-billed-tokens", "deterministic-trace-not-live-host-behavior", "no-wall-clock-proof"]
+    },
     "quality_cost_gate": {
       "schema_version": 1,
       "owner": "context-budget-authority",
@@ -1273,8 +1422,8 @@
     "selection_owners": {"direct-task": "main-control-agent", "direct-review": "main-control-agent", "initial-analysis": "main-control-agent", "analyzed-task": "engineering-brief", "analyzed-review": "engineering-brief"},
     "selector_load": "only-when-current-owner-must-select",
     "professional_projection": "current-professional-only",
-    "delivery_projection": "control-local-professional-json",
-    "delivery_path_template": "engineering-control-plane/references/selectors/<professional-skill>.json",
+    "delivery_projection": "professional-local-runtime-selector-closure",
+    "delivery_path_template": "references/runtime/selector.json",
     "exact_layer3": "skip-selection-signals-after-authorization",
     "authorization": "itemwise-professional-profile-domain",
     "minimum": 0,
@@ -1894,6 +2043,7 @@
     "utility_projection_rules": [
       {"id": "validation-no-edit", "projection_terms": ["validation-only/no-edit", "non-modifying"]},
       {"id": "diff-export-no-edit", "projection_terms": ["diff-export/no-edit", "exact change evidence export operation", "local/offline", "non-mutating"]},
+      {"id": "evidence-observation-no-edit", "projection_terms": ["evidence-observation/no-edit", "one capsule-named bounded executable observation", "no diagnosis, edit, repair, or reroute", "same Analysis continuation"]},
       {"id": "workspace-baseline", "projection_terms": ["pre-operation workspace change set", "tracked, staged, and untracked", "never auto-clean pre-existing user changes"]},
       {"id": "visible-artifact", "projection_terms": ["never a new workspace file"]},
       {"id": "operation-enforcement", "projection_terms": ["workspace state observation operation", "actual host/tool failure"]}
@@ -2005,7 +2155,7 @@
   "prompt_contract": {
     "schema_version": 1,
     "path": "src/control-prompts/main-control-agent.md",
-    "document_sha256": "ad360d67fc3a8d1860cedc933eaacb866848254635294719201e59de688486f0",
+    "document_sha256": "cb4d131a6d775b9f10944c64df79b8a6c902255755c85d50e5859ada31820009",
     "managed_projections": [
       {"id": "execution-level-contract", "section": "Execution Level and Validation", "required_contracts": ["execution_level_contract"]},
       {"id": "review-evidence-contract", "section": "Review and Repair", "required_contracts": ["visible_evidence_contract", "review_discipline_contract", "task_contract"]},
@@ -2077,9 +2227,9 @@
         {"rule_id": "main-no-business-or-review", "required_terms": ["No worker", "business acceptance", "placement", "Brief/DAG authoring", "implementation review"]}
       ],
       "layer3-jit-delivery": [
-        {"rule_id": "named-skill-delivery", "required_terms": ["load and follow exactly", "generated `## Layer 3 Delivery` section"]},
-        {"rule_id": "named-layer3-only", "required_terms": ["Load only capsule-named Layer 3 items", "no index/catalog"]},
-        {"rule_id": "no-layer3-preload", "required_terms": ["Never preload Layer 3"]}
+        {"rule_id": "named-skill-delivery", "required_terms": ["Load and follow exactly", "selected Professional", "generated `## Layer 3 Delivery` section"]},
+        {"rule_id": "named-layer3-only", "required_terms": ["capsule-named Layer 3 only", "without index/catalog/preload"]},
+        {"rule_id": "no-layer3-preload", "required_terms": ["without index/catalog/preload"]}
       ],
       "analysis-direct-answer": [
         {"rule_id": "direct-answer-eligibility", "required_terms": ["no-repo direct-answer", "fully determined by user-supplied facts", "control prompt files are ineligible", "source-backed analysis"]},
@@ -2101,6 +2251,15 @@
       ],
       "analysis-scope-boundary": [
         {"rule_id": "analysis-permission-boundary", "required_terms": ["Remain read-only", "no edit/mutating commands", "dispatch agents", "final review", "business execution"]}
+      ],
+      "runtime-asset-inline-verification": [
+        {"rule_id": "professional-local-runtime-assets", "required_terms": ["Core Runtime Asset Resolution"]}
+      ],
+      "environment-risk-calibration": [
+        {"rule_id": "evidence-based-environment-risk", "required_terms": ["Core Environment Risk Calibration"]}
+      ],
+      "analysis-evidence-continuation": [
+        {"rule_id": "bounded-executable-evidence-request", "required_terms": ["Trigger:", "keyed Evidence Request", "only if", "static read/search", "material Claim unresolved", "one bounded executable observation", "materially confirm/refute", "Bounds:", "1 logical request/2 Host attempts/1 observation", "same Analysis continuation", "Permission cannot change route", "operation/scope"]}
       ],
       "task-normal-mode": [
         {"rule_id": "normal-primary-skill", "required_terms": ["load and follow exactly", "primary Professional Skill", "normal implementation mode"]},
@@ -2140,16 +2299,16 @@
     },
     "role_capabilities": {
       "main-control-agent": {"required_capability_ids": ["main-prompt-single-load", "main-role-boundary"], "forbidden_capabilities": ["may_edit", "may_review"], "handoff_contract": "control-dispatch", "forbidden_storage_projection_ids": []},
-      "analysis-agent": {"required_capability_ids": ["layer3-jit-delivery", "analysis-scope-boundary"], "forbidden_capabilities": ["may_dispatch", "may_edit", "may_review"], "handoff_contract": "analysis-handoff", "forbidden_storage_projection_ids": []},
-      "task-agent": {"required_capability_ids": ["layer3-jit-delivery", "task-normal-mode", "task-implementation-discipline", "task-scope-boundary"], "forbidden_capabilities": ["may_dispatch", "may_review"], "handoff_contract": "implementation-handoff", "forbidden_storage_projection_ids": ["no-daemon", "no-database", "no-private-evidence-storage", "no-runtime-task-state-engine", "no-hidden-protocol-record"]},
-      "review-agent": {"required_capability_ids": ["layer3-jit-delivery", "review-target-modes", "review-scope-boundary", "review-discipline"], "forbidden_capabilities": ["may_dispatch", "may_edit"], "handoff_contract": "review-handoff", "forbidden_storage_projection_ids": []}
+      "analysis-agent": {"required_capability_ids": ["layer3-jit-delivery", "analysis-scope-boundary", "runtime-asset-inline-verification", "environment-risk-calibration", "analysis-evidence-continuation"], "forbidden_capabilities": ["may_dispatch", "may_edit", "may_review"], "handoff_contract": "analysis-handoff", "forbidden_storage_projection_ids": []},
+      "task-agent": {"required_capability_ids": ["layer3-jit-delivery", "task-normal-mode", "task-implementation-discipline", "task-scope-boundary", "runtime-asset-inline-verification", "environment-risk-calibration"], "forbidden_capabilities": ["may_dispatch", "may_review"], "handoff_contract": "implementation-handoff", "forbidden_storage_projection_ids": ["no-daemon", "no-database", "no-private-evidence-storage", "no-runtime-task-state-engine", "no-hidden-protocol-record"]},
+      "review-agent": {"required_capability_ids": ["layer3-jit-delivery", "review-target-modes", "review-scope-boundary", "review-discipline", "runtime-asset-inline-verification", "environment-risk-calibration"], "forbidden_capabilities": ["may_dispatch", "may_edit"], "handoff_contract": "review-handoff", "forbidden_storage_projection_ids": []}
     },
     "handoff_contracts": {
       "control-dispatch": [
         {"rule_id": "control-operation-boundary", "required_terms": ["Semantic Role", "Task Contract", "Host tools/sandbox", "direct execution", "actual failure"]},
         {"rule_id": "control-retry-continuity", "required_terms": ["Retry", "same real Task ID", "complete unchanged Task Contract", "never implement"]}
       ],
-      "analysis-handoff": [{"rule_id": "analysis-visible-handoff", "required_terms": ["Professional/mode contract owns", "analysis output"]}],
+      "analysis-handoff": [{"rule_id": "analysis-visible-handoff", "required_terms": ["Professional/mode contract owns", "analysis output", "Delta requires accepted-Brief invalidation"]}],
       "implementation-handoff": [
         {"rule_id": "implementation-current-validation", "required_terms": ["current task-agent evidence", "latest material edit", "latest-material-edit", "validation-passed"]},
         {"rule_id": "implementation-visible-handoff", "required_terms": ["Normal closure", "same-task Implementation Handoff", "Main readiness gate"]}

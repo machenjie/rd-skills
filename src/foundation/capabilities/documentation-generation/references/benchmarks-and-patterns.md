@@ -13,14 +13,6 @@ Use this reference only when the root `SKILL.md` needs deeper support for source
 | ADR/compliance/handoff evidence | Decision records, approvals, exception records, validation logs, retention owner. | Evidence owner, freshness date, retention location, risk acceptance. | Agent summary claims validation without artifact, timestamp, or scope. |
 | Generated docs | Generator config, source inputs, checked-in output, CI job, changed paths. | Regeneration diff, generator exit code, link/spec check after final edit. | Generator ran before final source change or with stale inputs. |
 
-## Current Evidence And Freshness
-
-- repository inspection selects source files, schema/config owners, generated docs, examples, tests, build steps, release notes, runbooks, and likely stale siblings; inspect those current files before making factual claims.
-- When using prior task evidence for documentation, use it to identify potential drift, fragile setup commands, accepted wording, or release-debt decisions. Keep each resulting factual claim unverified until current source and validation confirm it.
-- Observable action sequence decides whether docs validation ran after the final material source/doc edit and whether a generated artifact, link check, or command example is stale.
-- targeted validation selection maps each documentation claim to a source path, generator, link checker, schema diff, test command, manual review, owner response, or explicit residual risk.
-- Agent-tool permission/sandbox evidence is required before documenting or running commands that mutate files, data, infrastructure, credentials, release state, or operator-visible systems.
-
 ## Documentation Claim Validation Map
 
 | Claim Type | Evidence Pattern | What It Proves | What It Does Not Prove |

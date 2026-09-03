@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import io
 import json
@@ -1299,6 +1300,69 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
                 entries.append((relative, "file", path.read_bytes()))
         return tuple(entries)
 
+    @staticmethod
+    def _rewrite_professional_runtime_identity(
+        skills: Path,
+        manifest_path: Path,
+        professional: str,
+        *,
+        build_identity: str,
+        build_identity_algorithm: str,
+        inline_identity_contract: str,
+        inline_identity_version: int,
+    ) -> None:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        binding = manifest["runtime_asset_bindings"][professional]
+        current_build_identity = binding["build_identity"]
+        professional_root = skills / professional
+        integrity_path = professional_root / "references/runtime/integrity-manifest.json"
+        integrity = json.loads(integrity_path.read_text(encoding="utf-8"))
+        for row in integrity["assets"]:
+            asset = professional_root / row["path"]
+            payload = asset.read_bytes().replace(
+                current_build_identity.encode("ascii"),
+                build_identity.encode("ascii"),
+            )
+            asset.write_bytes(payload)
+            row["sha256"] = hashlib.sha256(payload).hexdigest()
+            row["size"] = len(payload)
+        integrity["build_identity"] = build_identity
+        semantics = {
+            key: value
+            for key, value in integrity.items()
+            if key != "integrity_manifest_sha256"
+        }
+        integrity["integrity_manifest_sha256"] = hashlib.sha256(
+            json.dumps(
+                semantics,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+        ).hexdigest()
+        integrity_bytes = json.dumps(
+            integrity,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+        integrity_path.write_bytes(integrity_bytes)
+        binding.update(
+            {
+                "build_identity": build_identity,
+                "build_identity_algorithm": build_identity_algorithm,
+                "inline_identity_contract": inline_identity_contract,
+                "inline_identity_version": inline_identity_version,
+                "integrity_manifest_full_bytes_sha256": hashlib.sha256(
+                    integrity_bytes
+                ).hexdigest(),
+            }
+        )
+        manifest_path.write_text(
+            json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+
     @classmethod
     @contextmanager
     def _temporary_recommended_build(cls):
@@ -1452,6 +1516,326 @@ class HooklessInstallerSafetyTests(unittest.TestCase):
                             root,
                             scenario,
                         )
+
+    def test_install_and_upgrade_reject_runtime_bundle_mutations_before_target_mutation(self) -> None:
+        with self._temporary_recommended_build() as root:
+            source = root / "dist/codex/project/.agents/skills/recommended"
+            professional = source / "engineering-change-analysis"
+            selector = professional / "references/runtime/selector.json"
+            asset = professional / "SKILL.md"
+            build_manifest_path = source / self.helper.BUILD_MANIFEST_NAME
+            originals = {
+                selector: selector.read_bytes(),
+                asset: asset.read_bytes(),
+                build_manifest_path: build_manifest_path.read_bytes(),
+            }
+            for scenario in (
+                "missing-marker",
+                "malformed-marker",
+                "legacy-v1-marker",
+                "noncanonical-alias",
+                "wrong-v2",
+                "mutated-asset",
+            ):
+                for path, raw_bytes in originals.items():
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_bytes(raw_bytes)
+                if scenario == "missing-marker":
+                    payload = json.loads(selector.read_text(encoding="utf-8"))
+                    payload.pop("build")
+                    selector.write_text(json.dumps(payload), encoding="utf-8")
+                elif scenario == "malformed-marker":
+                    payload = json.loads(selector.read_text(encoding="utf-8"))
+                    payload["build"] = "not-a-build"
+                    selector.write_text(json.dumps(payload), encoding="utf-8")
+                elif scenario == "legacy-v1-marker":
+                    payload = json.loads(selector.read_text(encoding="utf-8"))
+                    payload["build"] = "0" * 32
+                    selector.write_text(json.dumps(payload), encoding="utf-8")
+                elif scenario == "noncanonical-alias":
+                    payload = json.loads(selector.read_text(encoding="utf-8"))
+                    payload["build"] = payload["build"][:-1] + "B"
+                    selector.write_text(json.dumps(payload), encoding="utf-8")
+                elif scenario == "wrong-v2":
+                    manifest = json.loads(build_manifest_path.read_text(encoding="utf-8"))
+                    manifest["runtime_asset_bindings"]["engineering-change-analysis"][
+                        "build_identity"
+                    ] = "A" * 22
+                    build_manifest_path.write_text(
+                        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+                        encoding="utf-8",
+                    )
+                else:
+                    asset.write_bytes(originals[asset] + b"\nmutated\n")
+                for operation, cli in (
+                    ("install", self.install_cli),
+                    ("upgrade", self.upgrade_cli),
+                ):
+                    with self.subTest(scenario=scenario, operation=operation):
+                        self._assert_cli_freshness_failure_before_mutation(
+                            cli,
+                            operation,
+                            root,
+                            f"runtime-{scenario}",
+                        )
+
+    def test_coherent_v1_source_rejects_but_managed_v1_install_upgrades_to_v2(
+        self,
+    ) -> None:
+        professional = "engineering-change-analysis"
+        with self._temporary_recommended_build() as root:
+            source = root / "dist/codex/project/.agents/skills/recommended"
+            manifest_path = source / self.helper.BUILD_MANIFEST_NAME
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            full_digest = manifest["authoritative_build_inputs"]["sha256"]
+            self._rewrite_professional_runtime_identity(
+                source,
+                manifest_path,
+                professional,
+                build_identity=full_digest[:32],
+                build_identity_algorithm="sha256-prefix-128-lowerhex",
+                inline_identity_contract="changeforge.runtime-inline-identity/v1",
+                inline_identity_version=1,
+            )
+            for operation, cli in (
+                ("install", self.install_cli),
+                ("upgrade", self.upgrade_cli),
+            ):
+                with self.subTest(operation=operation):
+                    self._assert_cli_freshness_failure_before_mutation(
+                        cli,
+                        operation,
+                        root,
+                        "runtime-coherent-v1",
+                    )
+
+        with tempfile.TemporaryDirectory() as raw:
+            project = Path(raw) / "project"
+            skills, _profiles = self._install_current_project(project)
+            install_manifest_path = skills / self.helper.MANIFEST_NAME
+            install_manifest = json.loads(
+                install_manifest_path.read_text(encoding="utf-8")
+            )
+            full_digest = install_manifest["authoritative_build_inputs"]["sha256"]
+            self._rewrite_professional_runtime_identity(
+                skills,
+                install_manifest_path,
+                professional,
+                build_identity=full_digest[:32],
+                build_identity_algorithm="sha256-prefix-128-lowerhex",
+                inline_identity_contract="changeforge.runtime-inline-identity/v1",
+                inline_identity_version=1,
+            )
+            legacy_install_manifest = json.loads(
+                install_manifest_path.read_text(encoding="utf-8")
+            )
+            with self.assertRaisesRegex(
+                self.helper.InstallError,
+                "invalid Professional-local Runtime bundle",
+            ):
+                self.helper.validate_runtime_asset_bundles(
+                    skills,
+                    legacy_install_manifest,
+                )
+
+            output = io.StringIO()
+            with (
+                mock.patch.object(
+                    sys,
+                    "argv",
+                    [
+                        "upgrade.py",
+                        "--agent",
+                        "codex",
+                        "--scope",
+                        "project",
+                        "--target",
+                        str(project),
+                    ],
+                ),
+                redirect_stdout(output),
+                redirect_stderr(output),
+            ):
+                self.assertEqual(0, self.upgrade_cli.main(), output.getvalue())
+            upgraded = json.loads(install_manifest_path.read_text(encoding="utf-8"))
+            self.assertEqual(
+                "changeforge.runtime-inline-identity/v2",
+                upgraded["runtime_asset_bindings"][professional][
+                    "inline_identity_contract"
+                ],
+            )
+            with (
+                mock.patch.object(
+                    sys,
+                    "argv",
+                    [
+                        "doctor.py",
+                        "--agent",
+                        "codex",
+                        "--scope",
+                        "project",
+                        "--target",
+                        str(project),
+                    ],
+                ),
+                redirect_stdout(output),
+                redirect_stderr(output),
+            ):
+                self.assertEqual(0, self.doctor_cli.main(), output.getvalue())
+
+    def test_doctor_rejects_mixed_installed_runtime_marker_and_asset_bytes(self) -> None:
+        for scenario in (
+            "legacy-v1-marker",
+            "noncanonical-alias",
+            "wrong-v2-marker",
+            "mutated-asset",
+        ):
+            with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as raw:
+                project = Path(raw) / "project"
+                skills, _profiles = self._install_current_project(project)
+                professional = skills / "engineering-change-analysis"
+                if scenario != "mutated-asset":
+                    selector = professional / "references/runtime/selector.json"
+                    payload = json.loads(selector.read_text(encoding="utf-8"))
+                    if scenario == "legacy-v1-marker":
+                        payload["build"] = "0" * 32
+                    elif scenario == "noncanonical-alias":
+                        payload["build"] = payload["build"][:-1] + "B"
+                    else:
+                        payload["build"] = "A" * 22
+                    selector.write_text(
+                        json.dumps(
+                            payload,
+                            ensure_ascii=False,
+                            sort_keys=True,
+                            separators=(",", ":"),
+                        )
+                        + "\n",
+                        encoding="utf-8",
+                    )
+                else:
+                    entrypoint = professional / "SKILL.md"
+                    entrypoint.write_bytes(entrypoint.read_bytes() + b"\nmutated\n")
+                output = io.StringIO()
+                with (
+                    mock.patch.object(
+                        sys,
+                        "argv",
+                        [
+                            "doctor.py",
+                            "--agent",
+                            "codex",
+                            "--scope",
+                            "project",
+                            "--target",
+                            str(project),
+                        ],
+                    ),
+                    redirect_stdout(output),
+                    redirect_stderr(output),
+                ):
+                    self.assertEqual(1, self.doctor_cli.main())
+                self.assertIn("invalid Professional-local Runtime bundle", output.getvalue())
+
+    def test_project_user_mixed_roots_and_subdirectory_cwd_never_cross_compose(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            project = root / "project"
+            project_skills, _project_profiles = self._install_current_project(project)
+            fake_home = root / "home"
+            fake_home.mkdir()
+            user_skills = fake_home / ".agents/skills"
+            user_profiles = fake_home / ".codex/agents"
+            with (
+                mock.patch.object(Path, "home", return_value=fake_home),
+                mock.patch.dict(
+                    self.helper.DEFAULT_SKILL_TARGETS,
+                    {("codex", "user"): user_skills},
+                ),
+                mock.patch.dict(
+                    self.helper.DEFAULT_PROFILE_TARGETS,
+                    {("codex", "user"): user_profiles},
+                ),
+                mock.patch.object(
+                    sys,
+                    "argv",
+                    ["install.py", "--agent", "codex", "--scope", "user"],
+                ),
+                redirect_stdout(io.StringIO()),
+                redirect_stderr(io.StringIO()),
+            ):
+                self.assertEqual(0, self.install_cli.main())
+
+            project_manifest = json.loads(
+                (project_skills / self.helper.MANIFEST_NAME).read_text(encoding="utf-8")
+            )
+            user_manifest = json.loads(
+                (user_skills / self.helper.MANIFEST_NAME).read_text(encoding="utf-8")
+            )
+            self.assertEqual(
+                25,
+                self.helper.validate_runtime_asset_bundles(
+                    project_skills, project_manifest
+                ),
+            )
+            self.assertEqual(
+                25,
+                self.helper.validate_runtime_asset_bundles(user_skills, user_manifest),
+            )
+
+            nested = project / "nested/cwd"
+            nested.mkdir(parents=True)
+            previous_cwd = Path.cwd()
+            try:
+                os.chdir(nested)
+                with (
+                    mock.patch.object(
+                        sys,
+                        "argv",
+                        [
+                            "doctor.py",
+                            "--agent",
+                            "codex",
+                            "--scope",
+                            "project",
+                            "--target",
+                            str(project),
+                        ],
+                    ),
+                    redirect_stdout(io.StringIO()),
+                    redirect_stderr(io.StringIO()),
+                ):
+                    self.assertEqual(0, self.doctor_cli.main())
+            finally:
+                os.chdir(previous_cwd)
+
+            user_selector = (
+                user_skills
+                / "engineering-change-analysis/references/runtime/selector.json"
+            )
+            payload = json.loads(user_selector.read_text(encoding="utf-8"))
+            payload["build"] = "0" * 32
+            user_selector.write_text(
+                json.dumps(
+                    payload,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                25,
+                self.helper.validate_runtime_asset_bundles(
+                    project_skills, project_manifest
+                ),
+            )
+            with self.assertRaisesRegex(
+                self.helper.InstallError,
+                "invalid Professional-local Runtime bundle",
+            ):
+                self.helper.validate_runtime_asset_bundles(user_skills, user_manifest)
 
     def test_openai_rejects_unfresh_build_manifest_without_bundle_mutation(self) -> None:
         with self._temporary_recommended_build() as root:

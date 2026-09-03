@@ -13,6 +13,7 @@ import zipfile
 import zlib
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from functools import lru_cache
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -456,11 +457,14 @@ def validate_openai_bundles(source: Path) -> int:
         raise InstallError("OpenAI API zip names do not match the built Skill manifest")
     for path in zips:
         _reject_symlink(path, "OpenAI API bundle")
-        _validate_openai_bundle(path)
+        _validate_openai_bundle(path, manifest)
     return len(zips)
 
 
-def _validate_openai_bundle(path: Path) -> None:
+def _validate_openai_bundle(
+    path: Path,
+    build: dict[str, Any] | None = None,
+) -> None:
     try:
         with zipfile.ZipFile(path) as archive:
             entries = [item for item in archive.infolist() if item.filename]
@@ -499,6 +503,15 @@ def _validate_openai_bundle(path: Path) -> None:
                 raise InstallError(
                     f"OpenAI API zip {path} failed CRC validation at {bad_member}"
                 )
+            professional_skills = set(build.get("professional_skills") or []) if build else set()
+            if path.stem in professional_skills:
+                prefix = f"{path.stem}/"
+                files = {
+                    name.removeprefix(prefix): archive.read(name)
+                    for name in names
+                    if name.startswith(prefix)
+                }
+                _validate_runtime_asset_files(path.stem, files, build)
     except InstallError:
         raise
     except (EOFError, OSError, RuntimeError, zipfile.BadZipFile, zlib.error) as exc:
@@ -628,6 +641,7 @@ def validate_built_source(
         )
     if actual_names != declared_names or visible_directories != declared_names:
         raise InstallError("built Skill directories do not match the build manifest")
+    validate_runtime_asset_bundles(source, build)
     if source_profiles is not None:
         _reject_symlink_chain(
             source_profiles,
@@ -663,7 +677,30 @@ def validate_built_source(
 def validate_authoritative_build_inputs(build: dict[str, Any]) -> None:
     """Use the build authority's sole comparator and fail closed if unavailable."""
 
+    module = _load_validation_authority()
+    try:
+        errors = module.authoritative_build_input_snapshot_errors(
+            build.get("authoritative_build_inputs"),
+            ROOT,
+        )
+    except Exception as exc:
+        raise InstallError(
+            f"authoritative build input freshness validation failed: {exc}"
+        ) from exc
+    if errors:
+        raise InstallError("; ".join(str(error) for error in errors))
+
+
+def _load_validation_authority() -> Any:
+    """Load the single source/build validation authority for non-Runtime checks."""
+
     validation_path = ROOT / "scripts" / "validation_utils.py"
+    return _load_validation_authority_from(str(validation_path))
+
+
+@lru_cache(maxsize=8)
+def _load_validation_authority_from(validation_path_value: str) -> Any:
+    validation_path = Path(validation_path_value)
     if not validation_path.is_file():
         raise InstallError(
             "authoritative build input comparator is unavailable; source freshness is unverified"
@@ -676,18 +713,91 @@ def validate_authoritative_build_inputs(build: dict[str, Any]) -> None:
     sys.modules[module_name] = module
     try:
         spec.loader.exec_module(module)
-        errors = module.authoritative_build_input_snapshot_errors(
-            build.get("authoritative_build_inputs"),
-            ROOT,
-        )
     except Exception as exc:
         raise InstallError(
-            f"authoritative build input freshness validation failed: {exc}"
+            f"cannot load authoritative validation helpers: {exc}"
         ) from exc
     finally:
         sys.modules.pop(module_name, None)
+    return module
+
+
+def _runtime_asset_files(skill_root: Path) -> dict[str, bytes]:
+    try:
+        return {
+            path.relative_to(skill_root).as_posix(): path.read_bytes()
+            for path in sorted(skill_root.rglob("*"))
+            if path.is_file()
+        }
+    except OSError as exc:
+        raise InstallError(f"cannot read Runtime bundle {skill_root}: {exc}") from exc
+
+
+def _validate_runtime_asset_files(
+    professional: str,
+    files: dict[str, bytes],
+    metadata: dict[str, Any],
+) -> None:
+    """Validate one Professional-local closure through the sole byte verifier."""
+
+    validation = _load_validation_authority()
+    integrity_path = validation.RUNTIME_ASSET_INTEGRITY_MANIFEST_PATH
+    integrity_bytes = files.get(integrity_path)
+    delivery_assets = {
+        path: raw
+        for path, raw in files.items()
+        if path != integrity_path
+    }
+    authoritative = metadata.get("authoritative_build_inputs")
+    full_digest = (
+        authoritative.get("sha256") if isinstance(authoritative, dict) else None
+    )
+    bindings = metadata.get("runtime_asset_bindings")
+    binding = bindings.get(professional) if isinstance(bindings, dict) else None
+    errors = validation.runtime_asset_bundle_metadata_errors(
+        integrity_bytes,
+        delivery_assets,
+        binding,
+        expected_source_version=str(metadata.get("source_version", "")),
+        expected_authoritative_build_inputs_sha256=full_digest,
+        expected_professional_skill=professional,
+    )
     if errors:
-        raise InstallError("; ".join(str(error) for error in errors))
+        raise InstallError(
+            f"{professional}: invalid Professional-local Runtime bundle: "
+            + "; ".join(errors)
+        )
+
+
+def validate_runtime_asset_bundles(
+    skill_root: Path,
+    metadata: dict[str, Any],
+) -> int:
+    """Validate every selected-root Professional closure without cross-root lookup."""
+
+    professionals = metadata.get("professional_skills")
+    bindings = metadata.get("runtime_asset_bindings")
+    if (
+        not isinstance(professionals, list)
+        or len(professionals) != 25
+        or any(not isinstance(name, str) or not _valid_skill_name(name) for name in professionals)
+        or len(set(professionals)) != len(professionals)
+        or not isinstance(bindings, dict)
+        or set(bindings) != set(professionals)
+    ):
+        raise InstallError("build/install metadata lacks the exact Professional Runtime binding set")
+    for professional in sorted(professionals):
+        professional_root = skill_root / professional
+        if professional_root.is_symlink() or not professional_root.is_dir():
+            raise InstallError(
+                f"missing Professional Runtime root in selected installation: {professional}"
+            )
+        _validate_runtime_asset_files(
+            professional,
+            _runtime_asset_files(professional_root),
+            metadata,
+        )
+    return len(professionals)
 
 
 def validated_built_profile_sha256(
@@ -1501,6 +1611,9 @@ def make_manifest(
         "compiled_layer3_format": str(build["compiled_layer3_format"]),
         "install_time": utc_iso(),
         "source_version": str(build.get("source_version", source_version())),
+        "authoritative_build_inputs": dict(build["authoritative_build_inputs"]),
+        "professional_skills": list(build["professional_skills"]),
+        "runtime_asset_bindings": dict(build["runtime_asset_bindings"]),
         "agent": agent,
         "scope": scope,
         "profile": RUNTIME_PROFILE,

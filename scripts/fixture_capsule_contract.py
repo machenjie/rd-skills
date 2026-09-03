@@ -20,6 +20,7 @@ from typing import Any
 
 from validation_utils import (
     COMPLETION_STATE_MODEL,
+    CORE_CONTRACTS,
     EVIDENCE_LEDGER_MODEL,
     EXECUTION_LEVEL_MODEL,
     REVIEW_DISCIPLINE_MODEL,
@@ -98,7 +99,11 @@ _LAYER3_OWNER_RE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
 _LAYER3_REFERENCE_NAME_RE = re.compile(r"[a-z0-9][a-z0-9._-]*\.md\Z")
 _LAYER3_REFERENCE_FORBIDDEN_CHARS = frozenset("?#*[]{}")
 _LAYER3_REFERENCE_FORBIDDEN_NAMES = frozenset({"index.md", "catalog.md"})
-UTILITY_MODES = {"diff-export/no-edit", "validation-only/no-edit"}
+UTILITY_MODES = {
+    "diff-export/no-edit",
+    "validation-only/no-edit",
+    "evidence-observation/no-edit",
+}
 NO_EDIT_ENFORCEMENTS = {"semantic-role+host-enforcement"}
 CHANGE_SET_RE = re.compile(r"(?:tracked|staged|untracked):(none|present|changed)")
 TYPE_TO_ROLE = {
@@ -222,7 +227,124 @@ UTILITY_OPERATIONS = {
     "workspace-state-observation",
     "change-evidence-export",
     "validation-check",
+    "evidence-workspace-preflight",
+    "evidence-observation-operation",
+    "evidence-workspace-postflight",
 }
+ANALYSIS_IDENTITY_FIELDS = (
+    "task_id",
+    "profile",
+    "professional_skill",
+    "mode",
+    "domain",
+    "layer3_skills",
+    "effective_level",
+    "canonical_sha256",
+)
+EVIDENCE_REQUEST_FIELDS = (
+    "analysis_task_id",
+    "continuation_id",
+    "claim_id",
+    "material_claim",
+    "operation",
+    "allowed_scope",
+    "expected_observation",
+    "freshness_requirement",
+    "proof_limit",
+)
+EVIDENCE_ATTEMPT_FIELDS = (
+    "ordinal",
+    "utility_task_id",
+    "status",
+    "commands",
+    "request_sha256",
+    "host_evidence",
+)
+EVIDENCE_HOST_EVIDENCE_FIELDS = ("raw_fixture", "canonical_sha256")
+EVIDENCE_RAW_FIXTURE_FIELDS = (
+    "status",
+    "raw_output",
+    "observation_produced",
+    "observed_requirement",
+)
+EVIDENCE_ARTIFACT_FIELDS = ("evidence", "freshness", "scope", "proof_limit")
+EVIDENCE_VALUE_FIELDS = ("outcome", "authority", "decision")
+EVIDENCE_OUTCOME_FIELDS = ("host_evidence", "canonical_sha256")
+EVIDENCE_AUTHORITY_FIELDS = (
+    "kind",
+    "operation",
+    "allowed_scope",
+    "observed_requirement",
+    "disposition",
+    "canonical_sha256",
+)
+EVIDENCE_DECISION_FIELDS = ("evidence", "canonical_sha256")
+EVIDENCE_CONTINUATION_FIELDS = (
+    "analysis_task_id",
+    "continuation_id",
+    "claim_id",
+    "status",
+    "proof_limit",
+)
+EVIDENCE_CASE_FIELDS = (
+    "id",
+    "trigger",
+    "analysis_identity",
+    "continuation_identity",
+    "request",
+    "assignment",
+    "attempts",
+    "utility_return",
+    "continuation",
+    "expected",
+)
+EVIDENCE_OBSERVATION_OPERATION = "evidence-observation-operation"
+EVIDENCE_FIXTURE_SCOPE = "tests/fixture-subject.txt"
+EVIDENCE_TRIGGER = "material-executable-gap"
+EVIDENCE_NON_TRIGGERS = tuple(
+    CORE_CONTRACTS["analysis_evidence_continuation_contract"]["non_triggers"]
+)
+EVIDENCE_REQUEST_FIXED_VALUES = {
+    "material_claim": "A bounded executable observation is required to close one material claim.",
+    "operation": EVIDENCE_OBSERVATION_OPERATION,
+    "allowed_scope": EVIDENCE_FIXTURE_SCOPE,
+    "expected_observation": "Return the exact fixture value or the observed Host failure.",
+    "freshness_requirement": "Observe after the immutable request is accepted.",
+    "proof_limit": "Static fixture evidence does not prove a live provider or production behavior.",
+}
+EVIDENCE_ASSIGNMENT_GOAL = (
+    "Execute only the immutable bounded Evidence Request and return its terminal observation."
+)
+EVIDENCE_ASSIGNMENT_EXPECTED = (
+    "Raw Host evidence for the exact bounded observation",
+    "Freshness bound to the immutable Evidence Request",
+    "Scope equal to the declared fixture path",
+    "Proof Limit for unobserved live Host or provider behavior",
+)
+EVIDENCE_ASSIGNMENT_STOPS = (
+    "partial output is terminal",
+    "unsupported Host or refused authority is terminal",
+    "workspace change blocks continuation",
+)
+EVIDENCE_PRE_COMMAND = "evidence-workspace-preflight"
+EVIDENCE_POST_COMMAND = "evidence-workspace-postflight"
+EVIDENCE_MAX_LAYER3 = CORE_CONTRACTS["route_decision_contract"][
+    "maximum_layer3_skills"
+]
+EVIDENCE_WORKSPACE_CHANGE_SET = (
+    "tracked:none",
+    "staged:none",
+    "untracked:none",
+)
+EVIDENCE_FORBIDDEN_OPERATION_FIELDS = (
+    "professional_skill_load",
+    "layer3_load",
+    "diagnose",
+    "edit",
+    "repair",
+    "reroute",
+    "generic_execute",
+)
 COMPLETION_CLAIM_FIELDS = (
     "request_kind",
     "status",
@@ -2990,9 +3112,52 @@ def _render_mapping(heading: str, value: object) -> list[str]:
     ]
 
 
-def _validate_utility_inputs(mode: str, value: object) -> None:
+def _evidence_request_errors(
+    value: object,
+    *,
+    allowed_paths: list[str] | None = None,
+    fixture_scope: str | None = None,
+) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(value, dict) or tuple(value) != EVIDENCE_REQUEST_FIELDS:
+        return [
+            "Evidence Request must use exact ordered fields "
+            f"{list(EVIDENCE_REQUEST_FIELDS)}"
+        ]
+    for field in EVIDENCE_REQUEST_FIELDS:
+        if not _fixture_nonempty_text(value.get(field)):
+            errors.append(f"Evidence Request {field} must be non-empty")
+    if value.get("operation") != EVIDENCE_OBSERVATION_OPERATION:
+        errors.append(
+            "Evidence Request operation must be the canonical "
+            f"{EVIDENCE_OBSERVATION_OPERATION!r}"
+        )
+    for field, expected in EVIDENCE_REQUEST_FIXED_VALUES.items():
+        if value.get(field) != expected:
+            errors.append(f"Evidence Request {field} must equal {expected!r}")
+    scope = value.get("allowed_scope")
+    if fixture_scope is not None and scope != fixture_scope:
+        errors.append(f"Evidence Request allowed_scope must be {fixture_scope!r}")
+    if allowed_paths is not None and allowed_paths != [scope]:
+        errors.append("Evidence Request allowed_scope must equal the single allowed path")
+    return errors
+
+
+def _validate_utility_inputs(
+    mode: str,
+    value: object,
+    *,
+    allowed_paths: list[str] | None = None,
+) -> None:
     if not isinstance(value, dict):
         raise FixtureCapsuleError("utility Inputs must be a mapping")
+    if mode == "evidence-observation/no-edit":
+        errors = _evidence_request_errors(value, allowed_paths=allowed_paths)
+        if errors:
+            raise FixtureCapsuleError(
+                "evidence-observation Inputs are invalid: " + "; ".join(errors)
+            )
+        return
     if mode == "diff-export/no-edit":
         expected = ("base", "head", "artifact_delivery")
         if tuple(value) != expected:
@@ -3103,18 +3268,12 @@ def utility_assignment_return_errors(
         )
     )
     if isinstance(assignment_ledger, list) and isinstance(return_ledger, list):
-        returned_by_id = {
-            row.get("Evidence ID"): row
-            for row in return_ledger
-            if isinstance(row, dict)
-        }
         for assignment_row in assignment_ledger:
             if not isinstance(assignment_row, dict):
                 continue
-            evidence_id = assignment_row.get("Evidence ID")
-            if returned_by_id.get(evidence_id) != assignment_row:
+            if assignment_row not in return_ledger:
                 errors.append(
-                    f"Utility Return must preserve assignment Evidence ID {evidence_id!r}"
+                    "Utility Return must preserve each canonical assignment Ledger row"
                 )
     workspace_check = result["workspace_diff_check"]
     workspace_status = (
@@ -3124,6 +3283,677 @@ def utility_assignment_return_errors(
         errors.append(
             "Utility Return completed requires an unchanged workspace diff check"
         )
+    return errors
+
+
+def _canonical_fixture_value_sha256(value: object) -> str:
+    return hashlib.sha256(
+        json.dumps(
+            value,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
+
+
+def _canonical_hash_field_errors(
+    value: object,
+    *,
+    fields: tuple[str, ...],
+    context: str,
+) -> list[str]:
+    if not isinstance(value, dict) or tuple(value) != fields:
+        return [f"{context} must use exact ordered fields {list(fields)}"]
+    payload = {key: value[key] for key in fields if key != "canonical_sha256"}
+    expected = _canonical_fixture_value_sha256(payload)
+    if value.get("canonical_sha256") != expected:
+        return [f"{context} canonical_sha256 does not bind its exact semantic value"]
+    return []
+
+
+def evidence_route_frozen(
+    case_id: object,
+    analysis_identity: object,
+    continuation_identity: object,
+) -> bool:
+    """Return whether both semantic endpoints equal the case-bound accepted route."""
+
+    if not _fixture_nonempty_text(case_id):
+        return False
+    accepted = {
+        "task_id": f"analysis-{case_id}",
+        "profile": "analysis-agent",
+        "professional_skill": "engineering-change-analysis",
+        "mode": "diagnosis-only",
+        "domain": None,
+        "layer3_skills": [],
+        "effective_level": "L4",
+    }
+    for endpoint in (analysis_identity, continuation_identity):
+        if _canonical_hash_field_errors(
+            endpoint,
+            fields=ANALYSIS_IDENTITY_FIELDS,
+            context="Evidence route identity",
+        ):
+            return False
+        if not isinstance(endpoint, dict):
+            return False
+        layer3 = endpoint.get("layer3_skills")
+        if (
+            not isinstance(layer3, list)
+            or not all(isinstance(item, str) for item in layer3)
+            or len(layer3) != len(set(layer3))
+            or len(layer3) > EVIDENCE_MAX_LAYER3
+        ):
+            return False
+        semantic = {
+            field: endpoint[field] for field in ANALYSIS_IDENTITY_FIELDS[:-1]
+        }
+        if semantic != accepted:
+            return False
+    return True
+
+
+def evidence_forbidden_operation_counts(case: object) -> dict[str, int]:
+    """Count only declared Utility actions, excluding raw/proof/Analysis text."""
+
+    counts = {field: 0 for field in EVIDENCE_FORBIDDEN_OPERATION_FIELDS}
+    if not isinstance(case, dict):
+        return counts
+    request = case.get("request")
+    if isinstance(request, dict) and request.get("operation") != EVIDENCE_OBSERVATION_OPERATION:
+        counts["generic_execute"] += 1
+    assignment = case.get("assignment")
+    if isinstance(assignment, dict):
+        if "professional_skill" in assignment or "professional_references" in assignment:
+            counts["professional_skill_load"] += 1
+        if "layer3_skills" in assignment or "layer3_references" in assignment:
+            counts["layer3_load"] += 1
+        for action in ("diagnose", "edit", "repair", "reroute"):
+            if action in assignment:
+                counts[action] += 1
+        commands = assignment.get("commands_allowed")
+        if isinstance(commands, list):
+            counts["generic_execute"] += sum(
+                command
+                not in {
+                    "evidence-workspace-preflight",
+                    "evidence-observation-operation",
+                    "evidence-workspace-postflight",
+                }
+                for command in commands
+            )
+    attempts = case.get("attempts")
+    if isinstance(attempts, list):
+        for attempt in attempts:
+            commands = attempt.get("commands") if isinstance(attempt, dict) else None
+            if isinstance(commands, list):
+                counts["generic_execute"] += sum(
+                    command
+                    not in {
+                        "evidence-workspace-preflight",
+                        "evidence-observation-operation",
+                        "evidence-workspace-postflight",
+                    }
+                    for command in commands
+                )
+    result = case.get("utility_return")
+    evidence_value = (
+        result.get("artifact_or_check_outcomes", {}).get("evidence", {})
+        if isinstance(result, dict)
+        else {}
+    )
+    decision = evidence_value.get("decision") if isinstance(evidence_value, dict) else None
+    decision_text = (
+        decision.get("evidence", "").casefold()
+        if isinstance(decision, dict) and isinstance(decision.get("evidence"), str)
+        else ""
+    )
+    decision_terms = {
+        "diagnose": ("diagnose", "root cause"),
+        "edit": ("edit",),
+        "repair": ("repair",),
+        "reroute": ("reroute",),
+    }
+    for action, terms in decision_terms.items():
+        counts[action] += int(any(term in decision_text for term in terms))
+    return counts
+
+
+def sum_evidence_forbidden_operation_counts(
+    results: list[dict[str, object]],
+) -> dict[str, int]:
+    return {
+        field: sum(
+            int(row.get("forbidden_operation_counts", {}).get(field, 0))
+            for row in results
+            if isinstance(row, dict)
+            and isinstance(row.get("forbidden_operation_counts"), dict)
+        )
+        for field in EVIDENCE_FORBIDDEN_OPERATION_FIELDS
+    }
+
+
+def evidence_continuation_case_errors(case: object) -> list[str]:
+    """Validate one route-frozen executable-evidence continuation fixture."""
+
+    if not isinstance(case, dict) or tuple(case) != EVIDENCE_CASE_FIELDS:
+        return [
+            "Evidence continuation case must use exact ordered fields "
+            f"{list(EVIDENCE_CASE_FIELDS)}"
+        ]
+    case_id = case.get("id")
+    prefix = str(case_id or "<missing>")
+    errors: list[str] = []
+    identity = case.get("analysis_identity")
+    errors.extend(
+        _canonical_hash_field_errors(
+            identity,
+            fields=ANALYSIS_IDENTITY_FIELDS,
+            context=f"{prefix}: Analysis identity",
+        )
+    )
+    continuation_identity = case.get("continuation_identity")
+    errors.extend(
+        _canonical_hash_field_errors(
+            continuation_identity,
+            fields=ANALYSIS_IDENTITY_FIELDS,
+            context=f"{prefix}: continuation identity",
+        )
+    )
+    analysis_task_id = identity.get("task_id") if isinstance(identity, dict) else None
+    route_frozen = evidence_route_frozen(
+        case_id,
+        identity,
+        continuation_identity,
+    )
+    if not route_frozen:
+        errors.append(
+            f"{prefix}: both identities must preserve the case-bound accepted Analysis route"
+        )
+
+    no_utility_triggers = set(EVIDENCE_NON_TRIGGERS)
+    if EVIDENCE_NON_TRIGGERS != (
+        "static-evidence-sufficient",
+        "generic-environment-unknown",
+        "runtime-asset-failure",
+    ):
+        errors.append(f"{prefix}: Core Evidence continuation non-triggers are not exact")
+    trigger = case.get("trigger")
+    request = case.get("request")
+    if trigger in no_utility_triggers:
+        if request is not None:
+            errors.append(f"{prefix}: non-trigger Evidence Request must be null")
+        validated_request: dict[str, object] = {}
+    elif trigger == EVIDENCE_TRIGGER:
+        request_errors = _evidence_request_errors(
+            request,
+            fixture_scope=EVIDENCE_FIXTURE_SCOPE,
+        )
+        errors.extend(f"{prefix}: {error}" for error in request_errors)
+        validated_request = request if isinstance(request, dict) else {}
+        if validated_request.get("analysis_task_id") != analysis_task_id:
+            errors.append(f"{prefix}: Evidence Request must bind the Analysis Task ID")
+        expected_request = {
+            "analysis_task_id": analysis_task_id,
+            "continuation_id": f"{case_id}-continuation",
+            "claim_id": f"{case_id}-claim",
+            **EVIDENCE_REQUEST_FIXED_VALUES,
+        }
+        if validated_request != expected_request:
+            errors.append(f"{prefix}: Evidence Request must equal the canonical fixture request")
+    else:
+        errors.append(f"{prefix}: unknown trigger must fail closed without Utility dispatch")
+        validated_request = request if isinstance(request, dict) else {}
+
+    continuation = case.get("continuation")
+    if not isinstance(continuation, dict) or tuple(continuation) != EVIDENCE_CONTINUATION_FIELDS:
+        errors.append(
+            f"{prefix}: continuation must use exact ordered fields "
+            f"{list(EVIDENCE_CONTINUATION_FIELDS)}"
+        )
+        continuation = {}
+    elif continuation.get("analysis_task_id") != analysis_task_id:
+        errors.append(f"{prefix}: continuation must return to the same Analysis event")
+    elif trigger not in no_utility_triggers and (
+        continuation.get("continuation_id") != validated_request.get("continuation_id")
+        or continuation.get("claim_id") != validated_request.get("claim_id")
+    ):
+        errors.append(f"{prefix}: continuation must return to the same Analysis event")
+
+    assignment = case.get("assignment")
+    attempts = case.get("attempts")
+    result = case.get("utility_return")
+    expected = case.get("expected")
+    if not isinstance(attempts, list):
+        errors.append(f"{prefix}: attempts must be a list")
+        attempts = []
+
+    if trigger in no_utility_triggers:
+        if assignment is not None or attempts or result is not None:
+            errors.append(f"{prefix}: non-trigger must not dispatch Evidence Utility")
+        expected_continuation_status = (
+            "continued" if trigger == "static-evidence-sufficient" else "proof-limit"
+        )
+        if (
+            continuation.get("status") != expected_continuation_status
+            or continuation.get("proof_limit")
+            != "No executable Evidence Utility dispatch is authorized for this trigger."
+        ):
+            errors.append(f"{prefix}: non-trigger continuation outcome is inconsistent")
+        derived = {
+            "utility_dispatched": False,
+            "terminal_status": "not-dispatched",
+            "observation_count": 0,
+            "host_attempt_count": 0,
+            "route_frozen": route_frozen,
+        }
+        if expected != derived:
+            errors.append(f"{prefix}: expected summary differs from the derived outcome")
+        return errors
+
+    if not isinstance(assignment, dict) or tuple(assignment) != UTILITY_ASSIGNMENT_FIELDS:
+        errors.append(
+            f"{prefix}: Utility Assignment must use exact ordered fields "
+            f"{list(UTILITY_ASSIGNMENT_FIELDS)}"
+        )
+        return errors
+    utility_task_id = assignment.get("task_id")
+    if utility_task_id == analysis_task_id:
+        errors.append(f"{prefix}: Analysis and Utility Task IDs must differ")
+    if utility_task_id != f"utility-{case_id}":
+        errors.append(f"{prefix}: Utility Task ID must equal the canonical fixture identity")
+    if (
+        assignment.get("mode") != "evidence-observation/no-edit"
+        or assignment.get("owner") != "task-agent"
+        or assignment.get("no_edit_enforcement")
+        != "semantic-role+host-enforcement"
+        or assignment.get("inputs") != request
+    ):
+        errors.append(f"{prefix}: Evidence Utility Assignment changes role, mode, or request")
+    allowed_scope = assignment.get("allowed_scope")
+    if (
+        not isinstance(allowed_scope, dict)
+        or tuple(allowed_scope) != ("workspace_root", "paths")
+        or allowed_scope.get("workspace_root") != "."
+        or allowed_scope.get("paths") != [validated_request.get("allowed_scope")]
+    ):
+        errors.append(f"{prefix}: Utility Assignment scope must equal the Evidence Request")
+    forbidden_assignment_fields = {
+        "professional_skill",
+        "professional_references",
+        "layer3_skills",
+        "layer3_references",
+        "diagnosis",
+        "edit",
+        "repair",
+        "reroute",
+        "execute",
+    }
+    if forbidden_assignment_fields & set(assignment):
+        errors.append(f"{prefix}: Evidence Utility Assignment exceeds its fixed boundary")
+    forbidden_counts = evidence_forbidden_operation_counts(case)
+    if any(forbidden_counts.values()):
+        errors.append(f"{prefix}: Evidence Utility declares forbidden operations")
+    assignment_baseline = assignment.get("workspace_baseline")
+    if (
+        not isinstance(assignment_baseline, dict)
+        or tuple(assignment_baseline) != ("check_commands", "change_set")
+        or assignment_baseline.get("check_commands") != ["evidence-workspace-preflight"]
+        or assignment_baseline.get("change_set") != list(EVIDENCE_WORKSPACE_CHANGE_SET)
+    ):
+        errors.append(f"{prefix}: Utility Assignment workspace baseline is not canonical")
+    if assignment.get("commands_allowed") != [
+        EVIDENCE_PRE_COMMAND,
+        EVIDENCE_OBSERVATION_OPERATION,
+        EVIDENCE_POST_COMMAND,
+    ]:
+        errors.append(f"{prefix}: Utility Assignment commands must be exact PRE/OP/POST")
+    if (
+        assignment.get("goal") != EVIDENCE_ASSIGNMENT_GOAL
+        or assignment.get("expected_evidence") != list(EVIDENCE_ASSIGNMENT_EXPECTED)
+        or assignment.get("stop_conditions") != list(EVIDENCE_ASSIGNMENT_STOPS)
+    ):
+        errors.append(f"{prefix}: Utility Assignment narrative fields are not canonical")
+    try:
+        _render_utility(
+            {
+                "mode": "evidence-observation/no-edit",
+                "profile": "task-agent",
+                "utility_capsule": assignment,
+            }
+        )
+    except FixtureCapsuleError as exc:
+        errors.append(f"{prefix}: Utility Assignment is not renderable: {exc}")
+    expected_assignment_row = {
+        "Claim": "workspace baseline captured",
+        "Owner": "task-agent",
+        "Artifact": "workspace baseline evidence",
+        "Command": "evidence-workspace-preflight",
+        "Result": "tracked staged and untracked baseline recorded",
+        "Freshness": 0,
+        "Scope": validated_request.get("allowed_scope"),
+        "Proof Limit": "baseline covers only the declared fixture scope",
+        "State": "current",
+    }
+    if assignment.get("evidence_ledger") != [expected_assignment_row]:
+        errors.append(f"{prefix}: Utility Assignment Ledger must equal the canonical baseline row")
+    if len(attempts) > 2:
+        errors.append(f"{prefix}: Evidence Request permits at most two Host attempts")
+    request_sha256 = _canonical_fixture_value_sha256(validated_request)
+    observations = 0
+    flattened_commands: list[str] = [EVIDENCE_PRE_COMMAND]
+    host_evidence: list[dict[str, Any]] = []
+    for index, attempt in enumerate(attempts, 1):
+        context = f"{prefix}: attempt {index}"
+        if not isinstance(attempt, dict) or tuple(attempt) != EVIDENCE_ATTEMPT_FIELDS:
+            errors.append(
+                f"{context} must use exact ordered fields {list(EVIDENCE_ATTEMPT_FIELDS)}"
+            )
+            continue
+        if attempt.get("ordinal") != index:
+            errors.append(f"{context} ordinal is not contiguous")
+        if attempt.get("utility_task_id") != utility_task_id:
+            errors.append(f"{context} must preserve the same Utility Task ID")
+        if attempt.get("request_sha256") != request_sha256:
+            errors.append(f"{context} must preserve the immutable Evidence Request")
+        commands = attempt.get("commands")
+        status = attempt.get("status")
+        expected_commands = [EVIDENCE_OBSERVATION_OPERATION]
+        if commands != expected_commands:
+            errors.append(f"{context} must contain exactly the request operation")
+        if isinstance(commands, list):
+            flattened_commands.extend(commands)
+        evidence = attempt.get("host_evidence")
+        errors.extend(
+            _canonical_hash_field_errors(
+                evidence,
+                fields=EVIDENCE_HOST_EVIDENCE_FIELDS,
+                context=f"{context} Host evidence",
+            )
+        )
+        raw = evidence.get("raw_fixture") if isinstance(evidence, dict) else None
+        if not isinstance(raw, dict) or tuple(raw) != EVIDENCE_RAW_FIXTURE_FIELDS:
+            errors.append(
+                f"{context} raw fixture must use exact ordered fields "
+                f"{list(EVIDENCE_RAW_FIXTURE_FIELDS)}"
+            )
+        else:
+            if raw.get("status") != status or not _fixture_nonempty_text(
+                raw.get("raw_output")
+            ):
+                errors.append(f"{context} raw Host output/status is not bound")
+            if raw.get("observation_produced") is True:
+                observations += 1
+            elif raw.get("observation_produced") is not False:
+                errors.append(f"{context} observation flag must be boolean")
+            expected_observation = {
+                "completed": True,
+                "partial": True,
+                "permission-denied-before-observation": False,
+                "host-unsupported": False,
+            }.get(status)
+            if expected_observation is None:
+                errors.append(f"{context} status is not a canonical Host attempt status")
+            elif raw.get("observation_produced") is not expected_observation:
+                errors.append(f"{context} status/observation outcome is inconsistent")
+            if not _fixture_nonempty_text(raw.get("observed_requirement")):
+                errors.append(f"{context} observed requirement must be explicit")
+        if isinstance(evidence, dict):
+            host_evidence.append(evidence)
+    flattened_commands.append(EVIDENCE_POST_COMMAND)
+    if observations > 1:
+        errors.append(f"{prefix}: one logical request permits at most one observation")
+    if len(attempts) == 2:
+        first = attempts[0]
+        if (
+            first.get("status") != "permission-denied-before-observation"
+            or first.get("host_evidence", {}).get("raw_fixture", {}).get(
+                "observation_produced"
+            )
+            is not False
+        ):
+            errors.append(
+                f"{prefix}: retry is allowed only after permission denial before observation"
+            )
+
+    if not isinstance(result, dict) or tuple(result) != UTILITY_RETURN_FIELDS:
+        errors.append(
+            f"{prefix}: Utility Return must use exact ordered fields "
+            f"{list(UTILITY_RETURN_FIELDS)}"
+        )
+        return errors
+    errors.extend(utility_assignment_return_errors(assignment, result))
+    if result.get("commands_run") != flattened_commands:
+        errors.append(f"{prefix}: Utility Return commands do not reconcile attempts")
+    artifact = result.get("artifact_or_check_outcomes")
+    if not isinstance(artifact, dict) or tuple(artifact) != EVIDENCE_ARTIFACT_FIELDS:
+        errors.append(
+            f"{prefix}: Evidence artifact must use exact ordered fields "
+            f"{list(EVIDENCE_ARTIFACT_FIELDS)}"
+        )
+        artifact = {}
+    evidence_value = artifact.get("evidence")
+    if not isinstance(evidence_value, dict) or tuple(evidence_value) != EVIDENCE_VALUE_FIELDS:
+        errors.append(
+            f"{prefix}: evidence value must use exact ordered fields "
+            f"{list(EVIDENCE_VALUE_FIELDS)}"
+        )
+        evidence_value = {}
+    outcome = evidence_value.get("outcome")
+    errors.extend(
+        _canonical_hash_field_errors(
+            outcome,
+            fields=EVIDENCE_OUTCOME_FIELDS,
+            context=f"{prefix}: Outcome",
+        )
+    )
+    outcome_host_evidence = (
+        outcome.get("host_evidence") if isinstance(outcome, dict) else None
+    )
+    refusal_raw: dict[str, object] | None = None
+    if attempts:
+        if outcome_host_evidence != host_evidence:
+            errors.append(f"{prefix}: Outcome host evidence does not reconcile attempts")
+    elif not isinstance(outcome_host_evidence, list) or len(outcome_host_evidence) != 1:
+        errors.append(f"{prefix}: refused authority requires one external Host evidence record")
+    else:
+        refusal_evidence = outcome_host_evidence[0]
+        errors.extend(
+            _canonical_hash_field_errors(
+                refusal_evidence,
+                fields=EVIDENCE_HOST_EVIDENCE_FIELDS,
+                context=f"{prefix}: refused authority Host evidence",
+            )
+        )
+        refusal_raw = (
+            refusal_evidence.get("raw_fixture")
+            if isinstance(refusal_evidence, dict)
+            else None
+        )
+        if (
+            not isinstance(refusal_raw, dict)
+            or tuple(refusal_raw) != EVIDENCE_RAW_FIXTURE_FIELDS
+            or refusal_raw.get("status") != "authority-refused-before-operation"
+            or refusal_raw.get("observation_produced") is not False
+            or refusal_raw.get("observed_requirement")
+            != "user authorization for the exact read operation"
+            or not _fixture_nonempty_text(refusal_raw.get("raw_output"))
+        ):
+            errors.append(f"{prefix}: refused authority Host evidence is not canonical")
+    authority = evidence_value.get("authority")
+    errors.extend(
+        _canonical_hash_field_errors(
+            authority,
+            fields=EVIDENCE_AUTHORITY_FIELDS,
+            context=f"{prefix}: Authority",
+        )
+    )
+    decision = evidence_value.get("decision")
+    errors.extend(
+        _canonical_hash_field_errors(
+            decision,
+            fields=EVIDENCE_DECISION_FIELDS,
+            context=f"{prefix}: Decision",
+        )
+    )
+    final_status = (
+        attempts[-1].get("status")
+        if attempts
+        else "authority-refused-before-operation"
+    )
+    terminal_status = {
+        "completed": "completed",
+        "partial": "partial",
+        "host-unsupported": "blocked",
+        "authority-refused-before-operation": "blocked",
+    }.get(final_status)
+    if terminal_status is None or result.get("status") != terminal_status:
+        errors.append(f"{prefix}: terminal Utility Return status is inconsistent")
+        terminal_status = str(result.get("status") or "invalid")
+    authority_semantics = {
+        "completed": (
+            "none-required",
+            "none beyond declared read-only scope",
+            "not-required",
+        ),
+        "partial": (
+            "none-required",
+            "none beyond declared read-only scope",
+            "not-required",
+        ),
+        "host-unsupported": (
+            "host-support",
+            "Host support for the exact read operation",
+            "unavailable",
+        ),
+        "authority-refused-before-operation": (
+            "user-authority",
+            "user authorization for the exact read operation",
+            "refused",
+        ),
+    }
+    if len(attempts) == 2:
+        authority_semantic = (
+            "permission",
+            "exact read permission for tests/fixture-subject.txt",
+            "granted-for-attempt-2",
+        )
+    else:
+        authority_semantic = authority_semantics.get(final_status)
+    if isinstance(authority, dict) and authority_semantic is not None:
+        kind, requirement, disposition = authority_semantic
+        expected_authority = {
+            "kind": kind,
+            "operation": validated_request.get("operation"),
+            "allowed_scope": validated_request.get("allowed_scope"),
+            "observed_requirement": requirement,
+            "disposition": disposition,
+        }
+        if any(authority.get(key) != value for key, value in expected_authority.items()):
+            errors.append(f"{prefix}: Authority does not match the terminal Host requirement")
+        raw_requirements = (
+            [refusal_raw.get("observed_requirement")]
+            if not attempts and isinstance(refusal_raw, dict)
+            else [
+                attempt.get("host_evidence", {}).get("raw_fixture", {}).get(
+                    "observed_requirement"
+                )
+                for attempt in attempts
+                if isinstance(attempt, dict)
+            ]
+        )
+        if kind == "permission":
+            if raw_requirements != [
+                requirement,
+                "exact read permission granted for tests/fixture-subject.txt",
+            ]:
+                errors.append(f"{prefix}: permission Authority must bind denial and exact grant")
+        elif raw_requirements != [requirement]:
+            errors.append(f"{prefix}: Authority must bind the terminal Host evidence")
+    decision_evidence = {
+        "completed": "observation accepted for same Analysis continuation",
+        "partial": "partial observation returned as terminal Proof Limit",
+        "blocked": "Evidence unavailable and returned as terminal Proof Limit",
+    }.get(terminal_status)
+    if isinstance(decision, dict) and decision.get("evidence") != decision_evidence:
+        errors.append(f"{prefix}: Decision evidence is not the canonical terminal enum")
+    expected_artifact = {
+        "freshness": "fresh after this immutable Evidence Request",
+        "scope": validated_request.get("allowed_scope"),
+        "proof_limit": "Deterministic fixture evidence does not prove live Host or provider behavior.",
+    }
+    if any(artifact.get(key) != value for key, value in expected_artifact.items()):
+        errors.append(f"{prefix}: Evidence artifact freshness, scope, or Proof Limit is not canonical")
+    if result.get("unverified_scope") != ["live Host and provider behavior"]:
+        errors.append(f"{prefix}: Utility Return unverified scope is not canonical")
+    if result.get("residual_risk") != [
+        "bounded observation may leave the material claim unproved"
+    ]:
+        errors.append(f"{prefix}: Utility Return residual risk is not canonical")
+    workspace_check = result.get("workspace_diff_check")
+    baseline_change_set = list(EVIDENCE_WORKSPACE_CHANGE_SET)
+    if (
+        not isinstance(workspace_check, dict)
+        or tuple(workspace_check) != ("status", "before", "after")
+        or workspace_check.get("status") != "unchanged"
+        or workspace_check.get("before") != baseline_change_set
+        or workspace_check.get("after") != baseline_change_set
+        or not isinstance(assignment_baseline, dict)
+        or workspace_check.get("before") != assignment_baseline.get("change_set")
+    ):
+        errors.append(f"{prefix}: Utility Return workspace reconciliation is not canonical")
+    expected_return_rows = [
+        expected_assignment_row,
+        {
+            "Claim": "workspace unchanged",
+            "Owner": "task-agent",
+            "Artifact": "workspace diff check",
+            "Command": "evidence-workspace-postflight",
+            "Result": "before and after workspace change sets match",
+            "Freshness": 1,
+            "Scope": validated_request.get("allowed_scope"),
+            "Proof Limit": "check covers only the declared local fixture scope",
+            "State": "current",
+        },
+        {
+            "Claim": "utility result delivered",
+            "Owner": "task-agent",
+            "Artifact": "bounded Evidence artifact",
+            "Command": (
+                EVIDENCE_OBSERVATION_OPERATION if attempts else EVIDENCE_POST_COMMAND
+            ),
+            "Result": "terminal Evidence result returned once",
+            "Freshness": 1,
+            "Scope": validated_request.get("allowed_scope"),
+            "Proof Limit": "result is a deterministic fixture observation only",
+            "State": "current",
+        },
+    ]
+    if result.get("evidence_ledger") != expected_return_rows:
+        errors.append(f"{prefix}: Utility Return Ledger must preserve the exact three rows")
+    continuation_status = continuation.get("status")
+    if continuation_status != (
+        "continued" if terminal_status == "completed" else "proof-limit"
+    ):
+        errors.append(f"{prefix}: Analysis continuation status is inconsistent")
+    expected_continuation_proof_limit = (
+        "None beyond the declared Evidence artifact."
+        if terminal_status == "completed"
+        else "Evidence unavailable or partial; Analysis must retain this Proof Limit."
+    )
+    if continuation.get("proof_limit") != expected_continuation_proof_limit:
+        errors.append(f"{prefix}: Analysis continuation Proof Limit is inconsistent")
+    derived = {
+        "utility_dispatched": True,
+        "terminal_status": terminal_status,
+        "observation_count": observations,
+        "host_attempt_count": len(attempts),
+        "route_frozen": route_frozen,
+    }
+    if expected != derived:
+        errors.append(f"{prefix}: expected summary differs from the derived outcome")
     return errors
 
 
@@ -3162,7 +3992,7 @@ def _render_utility(step: dict[str, Any]) -> str:
         raise FixtureCapsuleError("utility allowed_scope must name workspace_root and paths")
     workspace_root = _repo_path(scope.get("workspace_root"), "workspace_root")
     paths = _path_or_prose_list(scope.get("paths"), "allowed_scope.paths")
-    _validate_utility_inputs(mode, utility.get("inputs"))
+    _validate_utility_inputs(mode, utility.get("inputs"), allowed_paths=paths)
     baseline = utility.get("workspace_baseline")
     if not isinstance(baseline, dict) or set(baseline) != {"check_commands", "change_set"}:
         raise FixtureCapsuleError(
@@ -3173,6 +4003,19 @@ def _render_utility(step: dict[str, Any]) -> str:
     commands = _command_list(utility.get("commands_allowed"), "commands_allowed")
     expected = _prose_list(utility.get("expected_evidence"), "expected_evidence")
     stops = _prose_list(utility.get("stop_conditions"), "stop_conditions")
+    if mode == "evidence-observation/no-edit":
+        if goal != EVIDENCE_ASSIGNMENT_GOAL:
+            raise FixtureCapsuleError(
+                "evidence-observation goal must equal the canonical bounded observation goal"
+            )
+        if expected != list(EVIDENCE_ASSIGNMENT_EXPECTED):
+            raise FixtureCapsuleError(
+                "evidence-observation expected_evidence must equal the canonical four artifacts"
+            )
+        if stops != list(EVIDENCE_ASSIGNMENT_STOPS):
+            raise FixtureCapsuleError(
+                "evidence-observation stop_conditions must equal the canonical terminal boundaries"
+            )
     ledger = utility.get("evidence_ledger")
     ledger_errors = evidence_ledger_errors(
         ledger,

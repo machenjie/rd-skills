@@ -25,6 +25,12 @@ from validation_utils import (
     PROFESSIONAL_BUILT_KERNEL_HEADINGS,
     PROMPT_CONTRACT_MODEL,
     REGISTRY_SCHEMA_VERSIONS,
+    RUNTIME_ASSET_BUILD_IDENTITY_ALGORITHM,
+    RUNTIME_ASSET_INLINE_IDENTITY_CONTRACT,
+    RUNTIME_ASSET_INLINE_IDENTITY_VERSION,
+    RUNTIME_ASSET_INTEGRITY_MANIFEST_CONTRACT,
+    RUNTIME_ASSET_INTEGRITY_MANIFEST_PATH,
+    RUNTIME_ASSET_METADATA_EXCLUSIONS,
     ROLE_CONTRACT_MODEL,
     TARGETED_REFERENCE_TABLE_COLUMNS,
     ValidationProblem,
@@ -34,6 +40,7 @@ from validation_utils import (
     foundation_registry_field_errors,
     layer3_selector_authority,
     layer3_selector_normalized_control_projections,
+    layer3_selector_runtime_decision_envelope,
     execution_level_runtime_reference_errors,
     load_yaml_file,
     parse_frontmatter,
@@ -44,6 +51,9 @@ from validation_utils import (
     render_compact_markdown_table,
     render_targeted_reference_section,
     role_contract_map_errors,
+    runtime_asset_bundle_metadata_errors,
+    runtime_asset_build_identity,
+    runtime_asset_build_identity_bytes,
 )
 
 
@@ -260,11 +270,20 @@ def build_profile(profile: str) -> dict[str, Any]:
     profiles = _load_agent_profiles()
     enforcement = _load_host_enforcement()
     top_level = _top_level_items(items)
-    _preflight_build_plan(top_level, items, profiles, enforcement)
     try:
         source_snapshot = authoritative_build_input_snapshot(ROOT)
     except (OSError, ValueError) as exc:
         raise BuildError(f"cannot snapshot authoritative build inputs: {exc}") from exc
+    selector_projections, reference_partitions = _selector_projection_assets()
+    _preflight_build_plan(
+        top_level,
+        items,
+        profiles,
+        enforcement,
+        source_snapshot,
+        selector_projections,
+        reference_partitions,
+    )
 
     _cleanup_legacy_managed_outputs()
     compiled_names = _build_skill_roots(
@@ -273,6 +292,8 @@ def build_profile(profile: str) -> dict[str, Any]:
         profiles,
         enforcement,
         source_snapshot,
+        selector_projections,
+        reference_partitions,
     )
     _build_agent_profiles(profiles, enforcement)
     _reset_dir(OPENAI_ZIP_DIR / RUNTIME_PROFILE)
@@ -508,7 +529,12 @@ def _preflight_build_plan(
     items: dict[str, list[SkillItem]],
     profiles: list[dict[str, Any]],
     enforcement: dict[str, Any],
+    source_snapshot: dict[str, object],
+    selector_projections: dict[str, dict[str, Any]],
+    reference_partitions: dict[str, dict[str, Any]],
 ) -> None:
+    runtime_version = _source_version()
+    build_identity = _runtime_build_identity(source_snapshot)
     observed_counts = {layer: len(layer_items) for layer, layer_items in items.items()}
     if observed_counts != EXPECTED_RUNTIME_COUNTS:
         raise BuildError(
@@ -565,7 +591,12 @@ def _preflight_build_plan(
                 _write_compact_control_projection(destination, item)
                 _copy_control_prompt(destination)
             elif item.layer == "professional":
-                _write_compact_professional_projection(destination, item)
+                _write_compact_professional_projection(
+                    destination,
+                    item,
+                    runtime_version=runtime_version,
+                    build_identity=build_identity,
+                )
             else:
                 _write_compact_layer3_root_projection(destination, item)
             if item.layer == "professional":
@@ -575,8 +606,22 @@ def _preflight_build_plan(
                     product_foundation_names,
                 )
                 if selected:
-                    _write_layer3_references(destination, selected, layer3)
+                    _write_layer3_references(
+                        destination, selected, layer3, build_identity
+                    )
                 _append_layer3_entrypoint(destination)
+                _write_professional_runtime_selector_closure(
+                    destination,
+                    item.name,
+                    selector_projections,
+                    reference_partitions,
+                    build_identity,
+                )
+                _write_and_validate_runtime_bundle_metadata(
+                    destination,
+                    item.name,
+                    source_snapshot,
+                )
                 _validate_rendered_professional_body(destination / "SKILL.md")
             _validate_zip_source(destination)
 
@@ -817,7 +862,11 @@ def _build_skill_roots(
     profiles: list[dict[str, Any]],
     enforcement: dict[str, Any],
     source_snapshot: dict[str, object],
+    selector_projections: dict[str, dict[str, Any]],
+    reference_partitions: dict[str, dict[str, Any]],
 ) -> set[str]:
+    runtime_version = _source_version()
+    build_identity = _runtime_build_identity(source_snapshot)
     layer3 = {
         item.name: item for item in [*items["foundation"], *items["domain"]]
     }
@@ -832,6 +881,7 @@ def _build_skill_roots(
         profile_root = root / RUNTIME_PROFILE
         _reset_dir(profile_root)
         compiled_by_skill: dict[str, list[str]] = {}
+        runtime_asset_bindings: dict[str, dict[str, str]] = {}
         for item in top_level:
             destination = profile_root / item.name
             _copy_skill_tree(item.path, destination)
@@ -839,7 +889,12 @@ def _build_skill_roots(
                 _write_compact_control_projection(destination, item)
                 _copy_control_prompt(destination)
             elif item.layer == "professional":
-                _write_compact_professional_projection(destination, item)
+                _write_compact_professional_projection(
+                    destination,
+                    item,
+                    runtime_version=runtime_version,
+                    build_identity=build_identity,
+                )
             else:
                 _write_compact_layer3_root_projection(destination, item)
             if item.layer == "professional":
@@ -849,11 +904,27 @@ def _build_skill_roots(
                     product_foundation_names,
                 )
                 compiled = (
-                    _write_layer3_references(destination, selected, layer3)
+                    _write_layer3_references(
+                        destination, selected, layer3, build_identity
+                    )
                     if selected
                     else []
                 )
                 _append_layer3_entrypoint(destination)
+                _write_professional_runtime_selector_closure(
+                    destination,
+                    item.name,
+                    selector_projections,
+                    reference_partitions,
+                    build_identity,
+                )
+                runtime_asset_bindings[item.name] = (
+                    _write_and_validate_runtime_bundle_metadata(
+                        destination,
+                        item.name,
+                        source_snapshot,
+                    )
+                )
                 compiled_by_skill[item.name] = compiled
                 all_compiled.update(compiled)
         _write_build_manifest(
@@ -864,6 +935,7 @@ def _build_skill_roots(
             profiles,
             enforcement,
             source_snapshot,
+            runtime_asset_bindings,
         )
     return all_compiled
 
@@ -914,6 +986,7 @@ def _write_layer3_references(
     destination: Path,
     selected_names: list[str],
     layer3: dict[str, SkillItem],
+    build_identity: str,
 ) -> list[str]:
     root = destination / "references" / "layer3"
     if root.exists():
@@ -937,7 +1010,7 @@ def _write_layer3_references(
         compiled.append(name)
         target = root / f"{name}.md"
         target.write_text(
-            _render_layer3_reference(item),
+            _render_layer3_reference(item, build_identity),
             encoding="utf-8",
         )
         _copy_layer3_assets(item, root / name)
@@ -975,6 +1048,26 @@ def _append_layer3_entrypoint(destination: Path) -> None:
 def _write_control_layer3_selector_projections(destination: Path) -> None:
     """Render one Control-local declarative selector view per Professional."""
 
+    projections, reference_partitions = _selector_projection_assets()
+    root = destination / "references" / "selectors"
+    partition_root = destination / "references" / "reference-records"
+    if root.exists():
+        shutil.rmtree(root)
+    if partition_root.exists():
+        shutil.rmtree(partition_root)
+    root.mkdir(parents=True, exist_ok=True)
+    partition_root.mkdir(parents=True, exist_ok=True)
+    for filename, payload in projections.items():
+        _write_canonical_json(root / filename, payload, trailing_newline=True)
+    for filename, payload in reference_partitions.items():
+        _write_canonical_json(partition_root / filename, payload, trailing_newline=True)
+
+
+def _selector_projection_assets() -> tuple[
+    dict[str, dict[str, Any]], dict[str, dict[str, Any]]
+]:
+    """Derive every selector byte source from the existing Registry authority."""
+
     foundation = load_yaml_file(REGISTRY_DIR / "foundation-skills.yaml")
     professional_data = load_yaml_file(REGISTRY_DIR / "professional-skills.yaml")
     domain = load_yaml_file(REGISTRY_DIR / "domain-skills.yaml")
@@ -990,43 +1083,287 @@ def _write_control_layer3_selector_projections(destination: Path) -> None:
         )
     except ValidationProblem as exc:
         raise BuildError(str(exc)) from exc
-    root = destination / "references" / "selectors"
-    partition_root = destination / "references" / "reference-records"
-    if root.exists():
-        shutil.rmtree(root)
-    if partition_root.exists():
-        shutil.rmtree(partition_root)
-    root.mkdir(parents=True, exist_ok=True)
-    partition_root.mkdir(parents=True, exist_ok=True)
-    for filename, payload in projections.items():
-        output = root / filename
-        output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(
-            json.dumps(
-                payload,
-                ensure_ascii=False,
-                sort_keys=True,
-                separators=(",", ":"),
-            )
-            + "\n",
-            encoding="utf-8",
+    return projections, reference_partitions
+
+
+def _write_canonical_json(
+    path: Path,
+    payload: dict[str, Any],
+    *,
+    trailing_newline: bool,
+) -> bytes:
+    serialized = json.dumps(
+        payload,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ) + ("\n" if trailing_newline else "")
+    raw = serialized.encode("utf-8")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(raw)
+    return raw
+
+
+def _runtime_build_identity(source_snapshot: dict[str, object]) -> str:
+    try:
+        return runtime_asset_build_identity(source_snapshot.get("sha256"))
+    except ValueError as exc:
+        raise BuildError("authoritative build input snapshot lacks a full SHA-256")
+
+
+
+def _rewrite_runtime_reference_partition_path(
+    value: object,
+    path_template: str = "../reference-records/{owner_skill}.json",
+) -> None:
+    """Rewrite generated selector copies to their Professional-local fixed path."""
+
+    if isinstance(value, dict):
+        partition = value.get("reference_records_partition")
+        if isinstance(partition, dict) and "path_template" in partition:
+            partition["path_template"] = path_template
+        for child in value.values():
+            _rewrite_runtime_reference_partition_path(child, path_template)
+    elif isinstance(value, list):
+        for child in value:
+            _rewrite_runtime_reference_partition_path(child, path_template)
+
+
+def _write_professional_runtime_selector_closure(
+    destination: Path,
+    professional: str,
+    projections: dict[str, dict[str, Any]],
+    reference_partitions: dict[str, dict[str, Any]],
+    build_identity: str,
+) -> None:
+    """Write one complete Professional-local selector dependency closure."""
+
+    runtime_root = destination / "references" / "runtime"
+    envelope_key = f"{professional}.json"
+    envelope_source = projections.get(envelope_key)
+    complete_key = f"{professional}/complete.json"
+    complete_source = projections.get(complete_key)
+    if not isinstance(envelope_source, dict):
+        raise BuildError(f"{professional}: selector projection is missing")
+
+    if envelope_source.get("contract") != "changeforge.layer3-selector-decision-envelope/v1":
+        if complete_source is not None:
+            raise BuildError(f"{professional}: direct selector has an unexpected complete projection")
+        selector = json.loads(json.dumps(envelope_source))
+        selector["build"] = build_identity
+        _rewrite_runtime_reference_partition_path(
+            selector, "reference-records/{owner_skill}.json"
         )
-    for filename, payload in reference_partitions.items():
-        output = partition_root / filename
-        output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(
-            json.dumps(
-                payload,
-                ensure_ascii=False,
-                sort_keys=True,
-                separators=(",", ":"),
+        _write_canonical_json(
+            runtime_root / "selector.json", selector, trailing_newline=True
+        )
+        prefix = f"{professional}/"
+        partitions = {
+            key.removeprefix(prefix): value
+            for key, value in reference_partitions.items()
+            if key.startswith(prefix)
+        }
+        if not partitions:
+            raise BuildError(f"{professional}: reference-record partition closure is missing")
+        for filename, payload in sorted(partitions.items()):
+            partition = json.loads(json.dumps(payload))
+            partition["build"] = build_identity
+            _write_canonical_json(
+                runtime_root / "reference-records" / filename,
+                partition,
+                trailing_newline=True,
             )
-            + "\n",
-            encoding="utf-8",
+        return
+    if not isinstance(complete_source, dict):
+        raise BuildError(f"{professional}: selector complete projection is missing")
+
+    try:
+        envelope = layer3_selector_runtime_decision_envelope(
+            envelope_source,
+            projections,
+            build_identity=build_identity,
+        )
+    except ValidationProblem as exc:
+        raise BuildError(
+            f"{professional}: selector source provenance is malformed"
+        ) from exc
+    complete = json.loads(json.dumps(complete_source))
+    complete["build"] = build_identity
+    complete_binding = envelope.get("complete")
+    if not isinstance(complete_binding, dict):
+        raise BuildError(f"{professional}: selector complete binding is malformed")
+    complete_binding["path"] = "selectors/complete.json"
+    _rewrite_runtime_reference_partition_path(complete)
+    complete_bytes = (
+        json.dumps(complete, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        + "\n"
+    ).encode("utf-8")
+    complete_binding["sha256"] = hashlib.sha256(complete_bytes).hexdigest()
+
+    decisions = envelope.get("decisions")
+    if not isinstance(decisions, list):
+        raise BuildError(f"{professional}: selector decisions are malformed")
+    for decision in decisions:
+        if not isinstance(decision, dict):
+            raise BuildError(f"{professional}: selector decision binding is malformed")
+        old_path = decision.get("path")
+        if not isinstance(old_path, str) or not old_path.startswith(f"{professional}/"):
+            raise BuildError(f"{professional}: selector decision path is not localizable")
+        filename = old_path.removeprefix(f"{professional}/")
+        shard_source = projections.get(old_path)
+        if not isinstance(shard_source, dict):
+            raise BuildError(f"{professional}: selector decision {old_path!r} is missing")
+        shard = json.loads(json.dumps(shard_source))
+        shard["build"] = build_identity
+        projection = shard.get("projection")
+        if not isinstance(projection, dict):
+            raise BuildError(f"{professional}: selector decision projection is malformed")
+        projection["build"] = build_identity
+        _rewrite_runtime_reference_partition_path(shard)
+        shard_bytes = _write_canonical_json(
+            runtime_root / "selectors" / filename,
+            shard,
+            trailing_newline=True,
+        )
+        decision["path"] = f"selectors/{filename}"
+        decision["sha256"] = hashlib.sha256(shard_bytes).hexdigest()
+
+    _write_canonical_json(
+        runtime_root / "selectors" / "complete.json",
+        complete,
+        trailing_newline=True,
+    )
+    _write_canonical_json(
+        runtime_root / "selector.json", envelope, trailing_newline=True
+    )
+
+    prefix = f"{professional}/"
+    partitions = {
+        key.removeprefix(prefix): value
+        for key, value in reference_partitions.items()
+        if key.startswith(prefix)
+    }
+    if not partitions:
+        raise BuildError(f"{professional}: reference-record partition closure is missing")
+    for filename, payload in sorted(partitions.items()):
+        partition = json.loads(json.dumps(payload))
+        partition["build"] = build_identity
+        _write_canonical_json(
+            runtime_root / "reference-records" / filename,
+            partition,
+            trailing_newline=True,
         )
 
 
-def _render_layer3_reference(item: SkillItem) -> str:
+def _runtime_delivery_asset_kind(path: str) -> str:
+    if path == "SKILL.md":
+        return "professional-entrypoint"
+    if path == "references/runtime/selector.json":
+        return "selector-envelope"
+    if path == "references/runtime/selectors/complete.json":
+        return "selector-complete"
+    if path.startswith("references/runtime/selectors/"):
+        return "selector-decision"
+    if path.startswith("references/runtime/reference-records/"):
+        return "reference-records"
+    if path.startswith("references/layer3/"):
+        return "layer3-delivery"
+    return "professional-reference"
+
+
+def _write_and_validate_runtime_bundle_metadata(
+    destination: Path,
+    professional: str,
+    source_snapshot: dict[str, object],
+) -> dict[str, object]:
+    """Emit and verify the sole metadata file and inline Runtime bindings."""
+
+    runtime_version = _source_version()
+    full_digest = source_snapshot.get("sha256")
+    build_identity = _runtime_build_identity(source_snapshot)
+    integrity_path = destination / RUNTIME_ASSET_INTEGRITY_MANIFEST_PATH
+
+    excluded = {integrity_path}
+    delivery_assets = {
+        path.relative_to(destination).as_posix(): path.read_bytes()
+        for path in sorted(destination.rglob("*"))
+        if path.is_file() and path not in excluded
+    }
+    manifest = {
+        "contract": RUNTIME_ASSET_INTEGRITY_MANIFEST_CONTRACT,
+        "schema_version": 1,
+        "runtime_version": runtime_version,
+        "build_identity": build_identity,
+        "professional_skill": professional,
+        "assets": [
+            {
+                "path": path,
+                "kind": _runtime_delivery_asset_kind(path),
+                "sha256": hashlib.sha256(payload).hexdigest(),
+                "size": len(payload),
+            }
+            for path, payload in sorted(delivery_assets.items())
+        ],
+        "integrity_manifest_sha256": "",
+    }
+    semantics = {
+        key: value
+        for key, value in manifest.items()
+        if key != "integrity_manifest_sha256"
+    }
+    manifest["integrity_manifest_sha256"] = hashlib.sha256(
+        json.dumps(
+            semantics,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
+    integrity_bytes = _write_canonical_json(
+        integrity_path, manifest, trailing_newline=False
+    )
+    binding = {
+        "professional_skill": professional,
+        "runtime_version": runtime_version,
+        "authoritative_build_inputs_sha256": full_digest,
+        "build_identity_algorithm": RUNTIME_ASSET_BUILD_IDENTITY_ALGORITHM,
+        "build_identity": build_identity,
+        "inline_identity_contract": RUNTIME_ASSET_INLINE_IDENTITY_CONTRACT,
+        "inline_identity_version": RUNTIME_ASSET_INLINE_IDENTITY_VERSION,
+        "integrity_manifest_path": RUNTIME_ASSET_INTEGRITY_MANIFEST_PATH,
+        "integrity_manifest_full_bytes_sha256": hashlib.sha256(
+            integrity_bytes
+        ).hexdigest(),
+    }
+    errors = runtime_asset_bundle_metadata_errors(
+        integrity_bytes,
+        delivery_assets,
+        binding,
+        expected_source_version=runtime_version,
+        expected_authoritative_build_inputs_sha256=full_digest,
+        expected_professional_skill=professional,
+    )
+    if errors:
+        raise BuildError(f"{professional}: Runtime bundle is invalid: {'; '.join(errors)}")
+    if RUNTIME_ASSET_METADATA_EXCLUSIONS != (
+        RUNTIME_ASSET_INTEGRITY_MANIFEST_PATH,
+    ):
+        raise BuildError("Runtime metadata exclusion contract is not the sole manifest")
+    return binding
+
+
+def _render_layer3_reference(
+    item: SkillItem,
+    build_identity: str | None = None,
+) -> str:
+    if build_identity is None:
+        build_identity = _runtime_build_identity(
+            authoritative_build_input_snapshot(ROOT)
+        )
+    try:
+        runtime_asset_build_identity_bytes(build_identity)
+    except ValueError as exc:
+        raise BuildError("Layer 3 Runtime build marker is malformed") from exc
     body = _render_targeted_reference_section(
         item.body.strip(),
         _item_reference_contracts(item.registry, item.name, item.name),
@@ -1036,7 +1373,7 @@ def _render_layer3_reference(item: SkillItem) -> str:
     body = _rewrite_layer3_links(body, item.name)
     return "\n".join(
         [
-            GENERATED_MARKER,
+            f"<!-- Build: {build_identity} -->",
             "",
             f"<!-- Layer: {item.layer}; source: {item.path.relative_to(ROOT)} -->",
             "",
@@ -1157,6 +1494,9 @@ def _write_targeted_reference_contracts(destination: Path, item: SkillItem) -> N
 def _write_compact_professional_projection(
     destination: Path,
     item: SkillItem,
+    *,
+    runtime_version: str | None = None,
+    build_identity: str | None = None,
 ) -> None:
     """Emit the built-only always-loaded Professional kernel.
 
@@ -1171,6 +1511,8 @@ def _write_compact_professional_projection(
         item,
         headings=PROFESSIONAL_BUILT_KERNEL_HEADINGS,
         selector_name=item.name,
+        runtime_version=runtime_version,
+        build_identity=build_identity,
     )
 
 
@@ -1197,6 +1539,8 @@ def _write_compact_layer3_root_projection(
         item,
         headings=headings,
         selector_name=None,
+        runtime_version=None,
+        build_identity=None,
         source_only_headings=("Output Contract",),
     )
 
@@ -1207,6 +1551,8 @@ def _write_compact_skill_root_projection(
     *,
     headings: tuple[str, ...],
     selector_name: str | None,
+    runtime_version: str | None,
+    build_identity: str | None,
     optional_headings: frozenset[str] = frozenset(),
     source_only_headings: tuple[str, ...] = (),
 ) -> None:
@@ -1249,28 +1595,41 @@ def _write_compact_skill_root_projection(
             )
         output.extend(["", f"## {heading}", "", values[0]])
     if selector_name is not None:
-        output.extend(_compact_jit_reference_delivery_lines(selector_name))
+        output.extend(
+            _compact_jit_reference_delivery_lines(
+                selector_name,
+                runtime_version=runtime_version,
+                build_identity=build_identity,
+            )
+        )
     output.append("")
     skill_file.write_text("\n".join(output), encoding="utf-8")
 
 
 def _compact_jit_reference_delivery_lines(
     selector_name: str | None,
+    *,
+    runtime_version: str | None = None,
+    build_identity: str | None = None,
 ) -> list[str]:
     """Return the built-only selector anchor; authority stays in its JSON row."""
 
     if selector_name is None:
         return []
-    selector_path = (
-        "engineering-control-plane/references/selectors/"
-        f"{selector_name}.json"
-    )
+    if runtime_version is None or build_identity is None:
+        snapshot = authoritative_build_input_snapshot(ROOT)
+        runtime_version = _source_version()
+        build_identity = _runtime_build_identity(snapshot)
+    try:
+        runtime_asset_build_identity_bytes(build_identity)
+    except ValueError as exc:
+        raise BuildError("Professional Runtime build marker is malformed") from exc
     return [
         "",
         "## JIT Reference Delivery",
         "",
-        f"JIT: `{selector_path}`. Exact skips it; never select/reroute/preload",
-        "index/catalog.",
+        "JIT: `references/runtime/selector.json`; "
+        f"Runtime: `{runtime_version}/{build_identity}`.",
     ]
 
 
@@ -1327,7 +1686,6 @@ def _write_compact_control_projection(destination: Path, item: SkillItem) -> Non
         ]
     )
     skill_file.write_text(rendered, encoding="utf-8")
-    _write_control_layer3_selector_projections(destination)
 
 
 def _render_targeted_reference_section(
@@ -1752,6 +2110,7 @@ def _write_build_manifest(
     profiles: list[dict[str, Any]],
     enforcement: dict[str, Any],
     source_snapshot: dict[str, object],
+    runtime_asset_bindings: dict[str, dict[str, str]],
 ) -> None:
     foundation_names = {item.name for item in items["foundation"]}
     compiled_foundation_skills = sorted(
@@ -1767,6 +2126,7 @@ def _write_build_manifest(
         "profile": RUNTIME_PROFILE,
         "source_version": _source_version(),
         "authoritative_build_inputs": source_snapshot,
+        "runtime_asset_bindings": runtime_asset_bindings,
         "top_level_skills": [item.name for item in top_level],
         "control_skills": [item.name for item in items["control"]],
         "professional_skills": [item.name for item in items["professional"]],

@@ -1,13 +1,14 @@
 # Utility Capsule
 
-Use this contract only for `validation-only/no-edit` or `diff-export/no-edit`.
+Use this contract only for `validation-only/no-edit`, `diff-export/no-edit`, or
+`evidence-observation/no-edit`.
 The task-agent loads no Professional Skill or Layer 3 guidance, does not use the
 Implementation Handoff, and must not edit, repair, access the network, fetch, or
-contact remotes. Runtime capability facts are not an execution preflight. Invoke
-the capsule-named local operation directly. Only an actual Host/tool failure
-blocks the utility, and the blocker preserves the current real Task ID. The
-Host/tool invocation event and raw output are the failure proof; static mapping
-or blocker formatting establishes syntax only.
+contact remotes. It never diagnoses, reroutes, or becomes an analysis authority.
+Runtime capability facts are not an execution preflight. Invoke only the
+capsule-named operation. Only an actual Host/tool failure blocks; preserve the
+real Task ID. Host invocation and raw output prove failure; formatting is syntax.
+Runtime asset failure never enters Utility and cannot cause reroute.
 Capture a pre-operation workspace change set with one adjacent ordered check group, exactly
 one allowed operation, then the identical adjacent check group. Preserve user changes. A
 `changed` or `unavailable` check invalidates the Utility
@@ -29,7 +30,8 @@ Exactly `task-agent`.
 
 ## Mode
 
-Exactly `validation-only/no-edit` or `diff-export/no-edit`.
+Exactly `validation-only/no-edit`, `diff-export/no-edit`, or
+`evidence-observation/no-edit`.
 
 ## No-edit Enforcement
 
@@ -62,12 +64,22 @@ directly; do not infer permission from a capability name. Return output as suppl
 artifact, never a new workspace file; do not validate or review.
 For validation, additionally allow only capsule-named
 non-modifying checks; do not repair or review.
+For evidence observation, allow exactly the Evidence Request operation and no
+Professional Skill, Layer 3, diagnosis, edit, repair, or reroute. Bind the
+logical key `(Analysis Task ID, Continuation ID, Claim ID)`: at most one logical
+request, two Host attempts only when the first is denied before observation and
+the retry requests minimum exact authority, and one observation. Partial output
+is the observation and forbids retry. Unsupported Host or refused authority is
+terminal Evidence unavailable for the same Analysis continuation and Proof Limit.
+This is one capsule-named bounded executable observation with no diagnosis, edit, repair, or reroute.
 An actual tool/permission/sandbox/required-artifact failure returns
 `EXECUTION_BLOCKED task=<Task ID>; operation=<read|edit|execute>; observed=<actual host/tool failure>`;
 the Host/tool invocation event and raw output are the sole proof, and
 `task=unspecified` is forbidden.
 
 ## Expected Evidence
+
+Evidence observation names only evidence, freshness, scope, and Proof Limit.
 
 ## Stop Conditions
 
@@ -86,6 +98,9 @@ Exactly `blocked`, `partial`, or `completed`.
 ## No-edit Enforcement
 
 ## Artifact or Check Outcomes
+
+Evidence observation returns only the bounded observation or Evidence
+unavailable; it never returns diagnosis, route, Level, edit, or repair advice.
 
 ## Commands Run
 

@@ -23,6 +23,8 @@ if str(SCRIPTS) not in sys.path:
 from validation_utils import (  # noqa: E402
     authoritative_build_input_snapshot_errors,
     count_o200k_base_tokens,
+    runtime_asset_build_identity,
+    runtime_asset_bundle_metadata_errors,
 )
 
 
@@ -257,6 +259,96 @@ class BuildArtifactConsumerContractTests(unittest.TestCase):
 
 
 class HooklessBuildInstallTests(unittest.TestCase):
+    @staticmethod
+    def _runtime_bundle(root: Path, professional: str) -> tuple[bytes, dict[str, bytes], dict]:
+        skill_root = root / professional
+        integrity_path = skill_root / "references/runtime/integrity-manifest.json"
+        build_manifest = json.loads(
+            (root / ".changeforge-build-manifest.json").read_text(encoding="utf-8")
+        )
+        assets = {
+            path.relative_to(skill_root).as_posix(): path.read_bytes()
+            for path in sorted(skill_root.rglob("*"))
+            if path.is_file() and path != integrity_path
+        }
+        return (
+            integrity_path.read_bytes(),
+            assets,
+            build_manifest["runtime_asset_bindings"][professional],
+        )
+
+    def test_professional_local_runtime_bundle_has_inline_identity_and_complete_closure(self) -> None:
+        root = ROOT / "dist/universal/skills/recommended"
+        manifest = json.loads(
+            (root / ".changeforge-build-manifest.json").read_text(encoding="utf-8")
+        )
+        full_digest = manifest["authoritative_build_inputs"]["sha256"]
+        professional = "engineering-change-analysis"
+        bundle = self._runtime_bundle(root, professional)
+        professional_root = root / professional
+        self.assertFalse(
+            (professional_root / "references/runtime/identity.json").exists()
+        )
+        self.assertIn(
+            f"Runtime: `{manifest['source_version']}/{runtime_asset_build_identity(full_digest)}`.",
+            (professional_root / "SKILL.md").read_text(encoding="utf-8"),
+        )
+        self.assertEqual(
+            [],
+            runtime_asset_bundle_metadata_errors(
+                *bundle,
+                expected_source_version=manifest["source_version"],
+                expected_authoritative_build_inputs_sha256=full_digest,
+                expected_professional_skill=professional,
+            ),
+        )
+        self.assertTrue(
+            (root / professional / "references/runtime/selector.json").is_file()
+        )
+        self.assertTrue(
+            (root / professional / "references/runtime/selectors/complete.json").is_file()
+        )
+
+    def test_root_runtime_binding_uses_full_digest_and_prefix_comparator(self) -> None:
+        root = ROOT / "dist/universal/skills/recommended"
+        manifest = json.loads(
+            (root / ".changeforge-build-manifest.json").read_text(encoding="utf-8")
+        )
+        full_digest = manifest["authoritative_build_inputs"]["sha256"]
+        bindings = manifest["runtime_asset_bindings"]
+        self.assertEqual(set(manifest["professional_skills"]), set(bindings))
+        for professional, binding in bindings.items():
+            with self.subTest(professional=professional):
+                self.assertEqual(full_digest, binding["authoritative_build_inputs_sha256"])
+                self.assertEqual(
+                    runtime_asset_build_identity(full_digest),
+                    binding["build_identity"],
+                )
+                self.assertEqual(
+                    "sha256-prefix-128-base64url-nopad",
+                    binding["build_identity_algorithm"],
+                )
+
+    def test_runtime_bundle_verifier_rejects_declared_asset_byte_mutation(self) -> None:
+        root = ROOT / "dist/universal/skills/recommended"
+        manifest = json.loads(
+            (root / ".changeforge-build-manifest.json").read_text(encoding="utf-8")
+        )
+        professional = "engineering-change-analysis"
+        integrity, assets, binding = self._runtime_bundle(root, professional)
+        assets["SKILL.md"] += b"\nmutated"
+        errors = runtime_asset_bundle_metadata_errors(
+            integrity,
+            assets,
+            binding,
+            expected_source_version=manifest["source_version"],
+            expected_authoritative_build_inputs_sha256=manifest[
+                "authoritative_build_inputs"
+            ]["sha256"],
+            expected_professional_skill=professional,
+        )
+        self.assertTrue(any("bytes mismatch" in error for error in errors), errors)
+
     def test_retry_lease_selector_authority_projects_for_supported_builds(
         self,
     ) -> None:
@@ -577,15 +669,15 @@ class HooklessBuildInstallTests(unittest.TestCase):
         selector = json.loads(
             (
                 ROOT
-                / "dist/universal/skills/recommended/engineering-control-plane"
-                / "references/selectors/backend-change-builder.json"
+                / "dist/universal/skills/recommended/backend-change-builder"
+                / "references/runtime/selector.json"
             ).read_text(encoding="utf-8")
         )
         partition = json.loads(
             (
                 ROOT
-                / "dist/universal/skills/recommended/engineering-control-plane"
-                / "references/reference-records/backend-change-builder"
+                / "dist/universal/skills/recommended/backend-change-builder"
+                / "references/runtime/reference-records"
                 / "transaction-consistency.json"
             ).read_text(encoding="utf-8")
         )
@@ -691,21 +783,40 @@ class HooklessBuildInstallTests(unittest.TestCase):
         )
         with tempfile.TemporaryDirectory() as raw:
             profile_root = Path(raw) / BUILD.RUNTIME_PROFILE
-            control_root = profile_root / "engineering-control-plane"
-            BUILD._write_control_layer3_selector_projections(control_root)
+            selector_projections, reference_partitions = (
+                BUILD._selector_projection_assets()
+            )
+            snapshot = BUILD.authoritative_build_input_snapshot(ROOT)
+            build_identity = runtime_asset_build_identity(snapshot["sha256"])
+            runtime_version = BUILD._source_version()
             for item in professional_items:
                 with self.subTest(professional=item.name):
                     skill_root = profile_root / item.name
                     BUILD._copy_skill_tree(item.path, skill_root)
-                    BUILD._write_compact_professional_projection(skill_root, item)
-                    rendered = (skill_root / "SKILL.md").read_text(encoding="utf-8")
-                    selector = (
-                        "engineering-control-plane/references/selectors/"
-                        f"{item.name}.json"
+                    BUILD._write_compact_professional_projection(
+                        skill_root,
+                        item,
+                        runtime_version=runtime_version,
+                        build_identity=build_identity,
                     )
+                    BUILD._write_professional_runtime_selector_closure(
+                        skill_root,
+                        item.name,
+                        selector_projections,
+                        reference_partitions,
+                        build_identity,
+                    )
+                    rendered = (skill_root / "SKILL.md").read_text(encoding="utf-8")
                     self.assertEqual(1, rendered.count("## JIT Reference Delivery"))
-                    self.assertEqual(1, rendered.count(selector))
-                    self.assertTrue((profile_root / selector).is_file())
+                    self.assertEqual(
+                        1,
+                        rendered.count("references/runtime/selector.json"),
+                    )
+                    self.assertEqual(1, rendered.count(f"Runtime: `{runtime_version}/{build_identity}`."))
+                    self.assertNotIn("references/runtime/identity.json", rendered)
+                    self.assertTrue(
+                        (skill_root / "references/runtime/selector.json").is_file()
+                    )
             for item in layer3_items:
                 with self.subTest(layer3=item.name):
                     top_level = profile_root / f"layer3-{item.name}"
@@ -718,7 +829,9 @@ class HooklessBuildInstallTests(unittest.TestCase):
                         item.layer == "domain"
                         or item.registry.get("delivery_scope") == "product"
                     ):
-                        projections.append(BUILD._render_layer3_reference(item))
+                        projections.append(
+                            BUILD._render_layer3_reference(item, build_identity)
+                        )
                     for rendered in projections:
                         for value in forbidden:
                             self.assertNotIn(value, rendered)
@@ -797,7 +910,11 @@ class HooklessBuildInstallTests(unittest.TestCase):
                         ("Task Capsule", "Professional Skill", "Layer 3 Delivery"),
                         ("bound effective Level", "never calculate or recompute"),
                         ("final edit", "fresh validation", "exact change capture"),
-                        ("latest changed paths", "exact change evidence", "fixed review scope"),
+                        (
+                            "latest changed paths",
+                            "exact change capture/evidence",
+                            "fixed review scope",
+                        ),
                         ("daemon", "database", "runtime task state engine", "hidden protocol record"),
                     ),
                     "review-agent": (

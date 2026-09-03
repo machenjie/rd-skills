@@ -14,8 +14,10 @@ from pathlib import Path, PurePosixPath
 
 from validation_utils import (
     NAME_RE,
+    RUNTIME_ASSET_INTEGRITY_MANIFEST_PATH,
     authoritative_build_input_snapshot_errors,
     load_yaml_file,
+    runtime_asset_bundle_metadata_errors,
     validate_no_personal_references,
 )
 
@@ -97,6 +99,8 @@ def package_profile() -> int:
         if not NAME_RE.fullmatch(skill_dir.name):
             raise PackageError(f"{_display(skill_dir)} must use a safe Skill name")
         _validate_zip_source(skill_dir)
+        if skill_dir.name in set(manifest["professional_skills"]):
+            _validate_runtime_bundle(skill_dir, manifest)
 
     expected_zip_names = {f"{skill_dir.name}.zip" for skill_dir in skill_dirs}
     if zip_dir.exists():
@@ -132,6 +136,45 @@ def package_profile() -> int:
             os.replace(staging / name, zip_dir / name)
 
     return len(skill_dirs)
+
+
+def _validate_runtime_bundle(
+    professional_root: Path,
+    manifest: dict[str, object],
+) -> None:
+    integrity_path = professional_root / RUNTIME_ASSET_INTEGRITY_MANIFEST_PATH
+    try:
+        integrity_bytes = integrity_path.read_bytes()
+        delivery_assets = {
+            path.relative_to(professional_root).as_posix(): path.read_bytes()
+            for path in sorted(professional_root.rglob("*"))
+            if path.is_file() and path != integrity_path
+        }
+    except OSError as exc:
+        raise PackageError(
+            f"{_display(professional_root)}: Runtime metadata unavailable: {exc}"
+        ) from exc
+    source_inputs = manifest.get("authoritative_build_inputs")
+    full_digest = (
+        source_inputs.get("sha256") if isinstance(source_inputs, dict) else None
+    )
+    bindings = manifest.get("runtime_asset_bindings")
+    binding = (
+        bindings.get(professional_root.name) if isinstance(bindings, dict) else None
+    )
+    errors = runtime_asset_bundle_metadata_errors(
+        integrity_bytes,
+        delivery_assets,
+        binding,
+        expected_source_version=str(manifest.get("source_version", "")),
+        expected_authoritative_build_inputs_sha256=full_digest,
+        expected_professional_skill=professional_root.name,
+    )
+    if errors:
+        raise PackageError(
+            f"{_display(professional_root)}: invalid Runtime bundle: "
+            + "; ".join(errors)
+        )
 
 
 def _authoritative_runtime_inventory() -> dict[str, object]:

@@ -1,15 +1,13 @@
 ---
 name: engineering-change-analysis
-description: "`analysis-agent`: `implementation-preparation` for source-backed changes, `diagnosis-only` for causes, or `source-backed-answer` for repo questions; skip source-free, implementation-ready, and accepted-artifact work."
+description: "`analysis-agent`: source-backed `implementation-preparation`, causal `diagnosis-only`, or repository `source-backed-answer`; skip source-free, implementation-ready, or accepted-artifact work."
 ---
 
 # engineering-change-analysis
 
 ## Role
 
-For `analysis-agent`, choose the analysis mode, bound evidence trust and
-read-only scope, and return the selected mode's result without silently
-switching problem definitions.
+For `analysis-agent`, return one mode's source-backed read-only result.
 
 ## When To Use
 
@@ -33,16 +31,9 @@ switching problem definitions.
 
 ## Professional Decision Rules
 
-- Load exactly the selected mode contract and only active named References.
-- Never preload the index.
-- Separate source fact, supported inference, and unknown.
-- Prove ownership from current source rather than proximity.
-- Establish placement from the current dependency graph.
-- Keep the selected question and mode fixed during a bounded analysis.
-- Treat earlier reports and generated graphs as selectors until current source
-  confirms their claims.
-- Do not turn an evidence gap into an implementation decision.
-- Identify the unresolved owner and consequence for every material gap.
+- Load only the selected mode and active named References without preloading the index or switching modes.
+- Apply the `analysis-agent` Profile and Core contracts while consuming the bound Runtime selection receipt.
+- The selected mode contract owns mode-specific source proof, decisions, output, stop conditions, and Proof Limits.
 
 ## High-Value Gotchas
 
@@ -50,17 +41,20 @@ switching problem definitions.
 
 ## Execution Checklist
 
-1. Confirm mode, evidence boundary, and current source.
-2. Return the mode contract's result, validation, and proof limits.
+1. Choose the analysis mode.
+2. Separate source fact, supported inference, and unknown.
+3. Prove ownership from current source rather than proximity.
+4. Establish placement from the current dependency graph.
+5. Treat earlier reports and generated graphs as selectors until current source confirms their claims.
+6. Return the selected mode contract's result with validation and explicit Proof Limits.
 
 ## Stop / Escalation Conditions
 
-- A mode conflict, user-owned choice, or result-invalidating gap returns a
-  blocked result with the missing evidence and affected decision named.
+- After Core evidence closure, stop only when a mode conflict, user-owned choice, or gap invalidates the result.
 
 ## Output Contract
 
-- The selected mode contract's result, source evidence, and proof limit.
+- Return the selected mode result with source evidence and Proof Limits.
 
 ## Targeted References
 
