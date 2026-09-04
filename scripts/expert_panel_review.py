@@ -25,6 +25,7 @@ try:
         SKILL_EXPERTISE_TAGS,
         ValidationProblem,
         load_yaml_file,
+        reference_contracts,
     )
 except ModuleNotFoundError:  # Support direct importlib loading in isolated tests.
     sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -32,6 +33,7 @@ except ModuleNotFoundError:  # Support direct importlib loading in isolated test
         SKILL_EXPERTISE_TAGS,
         ValidationProblem,
         load_yaml_file,
+        reference_contracts,
     )
 
 try:
@@ -492,6 +494,8 @@ PROFESSIONAL_V3_PACKET_TARGET_FIELDS = {
     "root",
     "indexed_references",
     "registry",
+    "registry_authority",
+    "reference_authority",
     "required_expertise_tags",
     "routing_adjacency",
     "review_binding",
@@ -1952,14 +1956,19 @@ def _professional_package_targets(
             root=root,
             label=f"{name} root Skill",
         )
-        raw_references = row.get("reference_index", [])
-        if not isinstance(raw_references, list):
-            raise PanelReviewError(f"{name}.reference_index must be an array")
+        try:
+            reference_authority = reference_contracts(
+                row.get("reference_index", []),
+                f"{registry_relative}:{name}.reference_index",
+                owner=name,
+            )
+        except ValidationProblem as exc:
+            raise PanelReviewError(
+                f"{name}.reference_index is not valid Reference authority"
+            ) from exc
         references: list[dict[str, Any]] = []
         reference_paths: set[str] = set()
-        for index, reference in enumerate(raw_references):
-            if not isinstance(reference, dict):
-                raise PanelReviewError(f"{name}.reference_index[{index}] is invalid")
+        for index, reference in enumerate(reference_authority):
             reference_relative = _non_blank(
                 reference.get("path"), label=f"{name}.reference_index[{index}].path"
             )
@@ -2035,6 +2044,24 @@ def _professional_package_targets(
             target["registry"]["entry_fingerprint"] = (
                 _canonical_json_sha256(row)
             )
+        else:
+            registry_authority = copy.deepcopy(row)
+            registry_authority["reference_index"] = copy.deepcopy(
+                reference_authority
+            )
+            target["registry_authority"] = registry_authority
+            target["reference_authority"] = copy.deepcopy(
+                reference_authority
+            )
+            try:
+                professional_carry.professional_registry_authority_binding(
+                    target
+                )
+            except professional_carry.ProfessionalCarryForwardError as exc:
+                raise PanelReviewError(
+                    f"{name} Registry/Reference authority does not cover its "
+                    "indexed material exactly once"
+                ) from exc
         targets.append(target)
     targets.sort(key=lambda item: item["skill_id"])
     adjacency_bases, document_frequency_filter = (
@@ -5350,7 +5377,7 @@ def _validate_professional_completeness_packet_v2(
         "delivery_scope",
         "task_routable",
     }
-    target_fields = {
+    historical_target_fields = {
         "skill_id",
         "layer",
         "required_expertise_tags",
@@ -5360,10 +5387,19 @@ def _validate_professional_completeness_packet_v2(
         "routing_adjacency",
         "package_fingerprint",
     }
+    current_target_fields = {
+        *historical_target_fields,
+        "registry_authority",
+        "reference_authority",
+    }
     for index, target in enumerate(targets):
         label = f"professional_targets[{index}]"
-        if not isinstance(target, dict) or set(target) != target_fields:
+        if not isinstance(target, dict) or set(target) not in {
+            frozenset(historical_target_fields),
+            frozenset(current_target_fields),
+        }:
             raise PanelReviewError(f"{label} fields are invalid")
+        has_current_authority = set(target) == current_target_fields
         skill_id = _non_blank(target.get("skill_id"), label=f"{label}.skill_id")
         layer = target.get("layer")
         if layer not in layer_counts:
@@ -5428,6 +5464,18 @@ def _validate_professional_completeness_packet_v2(
                 responsibility.get(field),
                 label=f"{label}.registry.responsibility_contract.{field}",
             )
+        if has_current_authority:
+            try:
+                professional_carry.professional_registry_authority_binding(
+                    target
+                )
+                professional_carry.professional_reference_authority_binding(
+                    target
+                )
+            except professional_carry.ProfessionalCarryForwardError as exc:
+                raise PanelReviewError(
+                    f"{label} current Registry or Reference authority is invalid"
+                ) from exc
         fingerprint = _lowercase_sha256(
             target.get("package_fingerprint"),
             label=f"{label}.package_fingerprint",
@@ -6513,8 +6561,17 @@ def _professional_materials_by_skill(
 def _professional_review_bindings(
     targets: list[dict[str, Any]],
 ) -> dict[str, dict[str, Any]]:
-    """Project canonical carry inputs without adding them to schema-2 packets."""
+    """Project current bindings or the audit-only schema-2 compatibility view."""
 
+    if all(
+        isinstance(target, dict)
+        and "registry_authority" not in target
+        and "reference_authority" not in target
+        for target in targets
+    ):
+        return professional_carry.professional_historical_content_review_bindings(
+            targets
+        )
     return professional_carry.professional_review_bindings(targets)
 
 
@@ -10545,7 +10602,7 @@ def _professional_v3_review_plan(
 def _professional_v3_packet_limitations() -> list[str]:
     return [
         "Schema 3 carries only whole accepted packages through a bounded, recursively validated canonical plan lineage and direct last-fresh origin.",
-        "Carry eligibility is authoritative on professional-semantic-predicate-projection-v4 through the canonical package_material_binding, review_unit_binding, and direct dependency semantic bindings; raw content and SHA records remain provenance and artifact-integrity evidence only; origin provenance records only origin_review_id, origin_commit, and origin_verdict_digest.",
+        "Carry eligibility is authoritative on the conservative deterministic Professional currentness projection through canonical package_material_binding, review_unit_binding, complete Registry and ordered Reference authority, and direct one-hop dependency material bindings; raw content and SHA records remain provenance and artifact-integrity evidence only; unsupported or ambiguous material changes require affected-package fresh review.",
         "A full-fresh checkpoint resets plan lineage depth after recomputing its immediate predecessor effective evidence and reset trigger; superseded history is not recursively re-proved.",
         "Review capsules and deterministic byte proxies do not prove actual host tokens, latency, reviewer identity, credentials, behavior, production accuracy, or installed user experience.",
         "This packet does not by itself satisfy any formal release gate, and a static artifact tree cannot prove that historical rounds were not deleted.",
@@ -14062,7 +14119,7 @@ def _professional_v3_decision_record(
         ),
         "limitations": [
             "Fresh evidence is derived only from validated target-scoped capsules; carried rows contain no new votes and point directly to a validated depth-zero fresh origin.",
-            "Carried authority records professional-semantic-predicate-projection-v4 through the canonical package_material_binding, review_unit_binding, and direct dependency semantic bindings; raw content and SHA records remain provenance and artifact-integrity evidence only; origin provenance records only origin_review_id, origin_commit, and origin_verdict_digest.",
+            "Carried authority records the conservative deterministic Professional currentness projection through canonical package_material_binding, review_unit_binding, complete Registry and ordered Reference authority, and direct one-hop dependency material bindings; raw content and SHA records remain provenance and artifact-integrity evidence only; unsupported or ambiguous material changes require affected-package fresh review.",
             "Canonical JSON byte and optional ratio values are deterministic input-size proxies, not actual tokens, reviewer effort, latency, identity, credentials, behavior, or production outcomes.",
             "Static professional review and simulated carry validation do not prove real-host startup, wall-clock performance, production accuracy, or installed user experience.",
         ],

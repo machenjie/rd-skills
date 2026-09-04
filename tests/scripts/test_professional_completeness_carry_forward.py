@@ -7,10 +7,6 @@ import sys
 import tempfile
 import types
 import unittest
-from collections import OrderedDict, defaultdict, namedtuple
-from decimal import Decimal
-from enum import IntEnum
-from functools import lru_cache
 from pathlib import Path
 from unittest import mock
 
@@ -353,7 +349,7 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
             )
             self.assertEqual(
                 CARRY.canonical_json_sha256(
-                    CARRY.professional_candidate_semantic_review_binding(
+                    CARRY.professional_candidate_currentness_projection(
                         target
                     )
                 ),
@@ -424,16 +420,16 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
             changed["reasons_by_target"]["a"],
         )
 
-    def test_semantic_fact_contract_mutation_forces_all_fresh(self) -> None:
+    def test_currentness_contract_mutation_forces_all_fresh(self) -> None:
         current_contract = CONTRACTS.professional_review_contract_fingerprint()
         current_snapshot = CARRY.professional_carry_snapshot(
             self.bindings,
             review_contract_fingerprint=current_contract,
         )
         changed_projection = CONTRACTS.professional_schema3_contract_projection()
-        changed_projection["binding_contracts"]["semantic_fact_projection"][
-            "argument_relations"
-        ].append("under")
+        changed_projection["binding_contracts"]["currentness_projection"][
+            "version"
+        ] = "professional-conservative-material-projection-other"
         changed_contract = CONTRACTS.professional_review_contract_fingerprint(
             changed_projection
         )
@@ -449,22 +445,38 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
             ["review-contract-changed"], plan["reasons_by_target"]["a"]
         )
 
-    def test_raw_content_only_changes_preserve_semantic_carry(self) -> None:
+    def test_presentation_only_markdown_changes_carry_with_new_raw_sha(self) -> None:
         cases = (
             _catalog(
                 roots={
                     "d": (
-                        "# d\n\n<!-- Corrected speling. -->\n"
+                        "# d\r\n\r\nReview d\r\n"
+                        "root behavior.\r\n"
+                    )
+                }
+            ),
+            _catalog(
+                roots={
+                    "d": (
+                        "# d\n\n"
+                        "<!-- BEGIN CHANGEFORGE CORE DOCS PROJECTION: d -->\n"
                         "Review d root behavior.\n"
+                        "<!-- END CHANGEFORGE CORE DOCS PROJECTION: d -->\n"
                     )
                 }
             ),
             _catalog(roots={"d": "# d\n\n**Review** d root behavior.\n"}),
-            _catalog(roots={"d": "# d\n\n\nReview   d root behavior.\n"}),
-            _catalog(roots={"d": "# d\n\nReview d behavior.\n"}),
+            _catalog(roots={"d": "# d\n\nReview   d root behavior.\n"}),
+            _catalog(roots={"d": "# d\n    \nReview d root behavior.\n"}),
+            _catalog(roots={"d": "# d\n\t\nReview d root behavior.\n"}),
             _catalog(
-                references={
-                    "d": "# d Reference\n\n**Verify** d failure evidence.\n"
+                roots={
+                    "d": (
+                        "# d\n\n"
+                        "<!-- rd-semantic-id:v2 finding=fixed_number_candidate "
+                        "rule=d/rule occurrence=d-one -->\n"
+                        "Review d root behavior.\n"
+                    )
                 }
             ),
         )
@@ -483,1849 +495,909 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
                 self.assertEqual([], plan["fresh_target_ids"])
                 self.assertEqual(list(SKILL_IDS), plan["carry_target_ids"])
 
-    def test_material_semantic_fact_projection_carries_proven_equivalent_edits(
+    def test_unicode_nfc_carries_but_compatibility_and_case_do_not(self) -> None:
+        composed = _catalog(
+            roots={"d": "# d\n\nReview café behavior.\n"}
+        )
+        decomposed = _catalog(
+            roots={"d": "# d\n\nReview cafe\u0301 behavior.\n"}
+        )
+        fullwidth = _catalog(
+            roots={"d": "# d\n\nReview Ａ behavior.\n"}
+        )
+        compatibility = _catalog(
+            roots={"d": "# d\n\nReview A behavior.\n"}
+        )
+        composed_bindings = CARRY.professional_review_bindings(composed)
+        decomposed_bindings = CARRY.professional_review_bindings(decomposed)
+        fullwidth_bindings = CARRY.professional_review_bindings(fullwidth)
+        compatibility_bindings = CARRY.professional_review_bindings(
+            compatibility
+        )
+        self.assertNotEqual(
+            composed_bindings["d"]["content_fingerprint"],
+            decomposed_bindings["d"]["content_fingerprint"],
+        )
+        self.assertEqual(
+            composed_bindings["d"]["package_material_binding"],
+            decomposed_bindings["d"]["package_material_binding"],
+        )
+        packet, ballots, decision = _prior_artifacts(composed)
+        nfc_plan = CARRY.plan_exact_professional_carry_forward(
+            current_bindings=decomposed_bindings,
+            prior_snapshot=CARRY.professional_carry_snapshot(
+                composed_bindings,
+                review_contract_fingerprint=CONTRACT_FINGERPRINT,
+            ),
+            prior_decision_dependencies=(
+                CARRY.professional_prior_decision_dependencies(
+                    prior_packet=packet,
+                    prior_ballots=ballots,
+                    prior_decision=decision,
+                )
+            ),
+            review_contract_fingerprint=CONTRACT_FINGERPRINT,
+        )
+        self.assertEqual([], nfc_plan["fresh_target_ids"])
+        self.assertEqual(list(SKILL_IDS), nfc_plan["carry_target_ids"])
+        self.assertNotEqual(
+            fullwidth_bindings["d"]["package_material_binding"],
+            compatibility_bindings["d"]["package_material_binding"],
+        )
+
+    def test_frontmatter_and_unordered_marker_presentation_changes_carry(
         self,
     ) -> None:
         baseline = _catalog(
             roots={
                 "d": (
-                    "# d\n\n## Professional Decision Rules\n\n"
-                    "- You must validate every output before release.\n"
+                    "---\n"
+                    "name: d\n"
+                    'description: "Review d behavior."\n'
+                    "---\n\n"
+                    "# d\n\n"
+                    "- Review d root behavior.\n"
+                    "  - Verify d failure evidence.\n"
                 )
             }
         )
-        equivalent = _catalog(
+        presentation = _catalog(
             roots={
                 "d": (
-                    "# d\n\n### Decision Rules\n\n"
-                    "<!-- display-only note -->\n"
-                    "* **Validte** ouputs prior to release.\n"
-                    "* Verify output before release.\n"
+                    "---\n"
+                    'description: "Review d behavior."\n'
+                    "name: d\n"
+                    "---\n\n"
+                    "# d\n\n"
+                    "* **Review** d root\n"
+                    "  behavior.\n"
+                    "  + Verify d failure evidence.\n"
                 )
             }
         )
-        expected_root_fact = {
-            "source_class": "root",
-            "fact_class": "professional-decision",
-            "section_kind": "decision-rules",
-            "unit_kind": "list-item",
-            "fact_kind": "obligation",
-            "predicate_ordinal": 1,
-            "incoming_connector": "root",
-            "subject_scope_concepts": ["actor:implicit"],
-            "action_concept": "validate",
-            "argument_role_bindings": [
-                {
-                    "argument_ordinal": 1,
-                    "relation": "direct",
-                    "scope_concepts": ["output"],
-                    "attachment": "governing-predicate",
-                    "owner_action_concept": "validate",
-                    "owner_modality": "required",
-                    "owner_polarity": "affirmative",
-                }
-            ],
-            "object_scope_concepts": ["output"],
-            "condition_concepts": [
-                "precondition",
-                "release",
-            ],
-            "modality": "required",
-            "polarity": "affirmative",
-        }
-        for targets in (baseline, equivalent):
-            projection = CARRY.professional_semantic_fact_projection(
-                targets[3]
-            )
-            self.assertEqual(
-                "professional-semantic-predicate-projection-v4",
-                projection["contract_version"],
-            )
-            self.assertEqual(
-                [expected_root_fact],
-                [
-                    fact
-                    for fact in projection["facts"]
-                    if fact["source_class"] == "root"
-                ],
-            )
-            encoded = CARRY.canonical_json_bytes(projection)
-            for forbidden in (
-                b'"content":',
-                b'"sha256":',
-                b'"line_count":',
-                b'"path":',
-            ):
-                self.assertNotIn(forbidden, encoded)
-
         baseline_bindings = CARRY.professional_review_bindings(baseline)
-        equivalent_bindings = CARRY.professional_review_bindings(equivalent)
-        snapshot = CARRY.professional_carry_snapshot(
-            baseline_bindings,
-            review_contract_fingerprint=CONTRACT_FINGERPRINT,
+        current_bindings = CARRY.professional_review_bindings(presentation)
+        self.assertNotEqual(
+            baseline_bindings["d"]["content_fingerprint"],
+            current_bindings["d"]["content_fingerprint"],
+        )
+        self.assertEqual(
+            baseline_bindings["d"]["package_material_binding"],
+            current_bindings["d"]["package_material_binding"],
         )
         plan = CARRY.plan_exact_professional_carry_forward(
-            current_bindings=equivalent_bindings,
-            prior_snapshot=snapshot,
+            current_bindings=current_bindings,
+            prior_snapshot=CARRY.professional_carry_snapshot(
+                baseline_bindings,
+                review_contract_fingerprint=CONTRACT_FINGERPRINT,
+            ),
             prior_decision_dependencies=self.dependencies,
             review_contract_fingerprint=CONTRACT_FINGERPRINT,
         )
-        self.assertNotEqual(
-            baseline_bindings["d"]["content_fingerprint"],
-            equivalent_bindings["d"]["content_fingerprint"],
-        )
         self.assertEqual([], plan["fresh_target_ids"])
+        self.assertEqual(list(SKILL_IDS), plan["carry_target_ids"])
 
-    def test_predicate_projection_preserves_root_and_reference_action_object_relations(
-        self,
-    ) -> None:
-        baseline_text = (
-            "# d\n\n## Professional Decision Rules\n\n"
-            "- Validate input and delete output.\n"
+    def test_parser_authenticated_presentation_families_carry(self) -> None:
+        cases = (
+            (
+                "blockquote-soft-wrap",
+                "# d\n\n> Review d root behavior.\n",
+                "# d\n\n> **Review** d root\n> behavior.\n",
+            ),
+            (
+                "heading-decoration",
+                "# d\n\n## Review input\n",
+                "# d\n\nReview input\n------------\n",
+            ),
+            (
+                "fence-decoration",
+                "# d\n\n```text\nReview input\n```\n",
+                "# d\n\n~~~text\nReview input\n~~~\n",
+            ),
+            (
+                "thematic-decoration",
+                "# d\n\n***\n",
+                "# d\n\n_ _ _\n",
+            ),
+            (
+                "intraword-strong-decoration",
+                "# d\n\nfoobarbaz\n",
+                "# d\n\nfoo**bar**baz\n",
+            ),
         )
-        swapped_text = (
-            "# d\n\n## Professional Decision Rules\n\n"
-            "- Delete input and validate output.\n"
-        )
-        cosmetic_text = (
-            "# d\n\n### Decision Rules\n\n"
-            "<!-- presentation only -->\n"
-            "* **Verify** input and remove output.\n"
-        )
-        expected_predicates = [
-            {
-                "source_class": "SOURCE",
-                "fact_class": "professional-decision",
-                "section_kind": "decision-rules",
-                "unit_kind": "list-item",
-                "fact_kind": "obligation",
-                "predicate_ordinal": 2,
-                "incoming_connector": "and",
-                "subject_scope_concepts": ["actor:implicit"],
-                "action_concept": "delete",
-                "argument_role_bindings": [
-                    {
-                        "argument_ordinal": 1,
-                        "relation": "direct",
-                        "scope_concepts": ["output"],
-                        "attachment": "governing-predicate",
-                        "owner_action_concept": "delete",
-                        "owner_modality": "required",
-                        "owner_polarity": "affirmative",
-                    }
-                ],
-                "object_scope_concepts": ["output"],
-                "condition_concepts": [],
-                "modality": "required",
-                "polarity": "affirmative",
-            },
-            {
-                "source_class": "SOURCE",
-                "fact_class": "professional-decision",
-                "section_kind": "decision-rules",
-                "unit_kind": "list-item",
-                "fact_kind": "obligation",
-                "predicate_ordinal": 1,
-                "incoming_connector": "root",
-                "subject_scope_concepts": ["actor:implicit"],
-                "action_concept": "validate",
-                "argument_role_bindings": [
-                    {
-                        "argument_ordinal": 1,
-                        "relation": "direct",
-                        "scope_concepts": ["input"],
-                        "attachment": "governing-predicate",
-                        "owner_action_concept": "validate",
-                        "owner_modality": "required",
-                        "owner_polarity": "affirmative",
-                    }
-                ],
-                "object_scope_concepts": ["input"],
-                "condition_concepts": [],
-                "modality": "required",
-                "polarity": "affirmative",
-            },
-        ]
-        for source_class, material_field in (
-            ("root", "roots"),
-            ("indexed-reference", "references"),
-        ):
-            with self.subTest(source_class=source_class):
-                baseline = _catalog(**{material_field: {"d": baseline_text}})
-                swapped = _catalog(**{material_field: {"d": swapped_text}})
-                cosmetic = _catalog(**{material_field: {"d": cosmetic_text}})
-                baseline_binding = CARRY.professional_review_bindings(baseline)
-                expected = [
-                    {**fact, "source_class": source_class}
-                    for fact in expected_predicates
-                ]
-                actual = [
-                    fact
-                    for fact in CARRY.professional_semantic_fact_projection(
-                        baseline[3]
-                    )["facts"]
-                    if fact["source_class"] == source_class
-                ]
-                self.assertEqual(expected, actual)
+        for label, baseline_text, changed_text in cases:
+            baseline_projection = (
+                CARRY.professional_markdown_currentness_projection(
+                    baseline_text
+                )
+            )
+            changed_projection = (
+                CARRY.professional_markdown_currentness_projection(
+                    changed_text
+                )
+            )
+            baseline = _catalog(roots={"d": baseline_text})
+            changed = _catalog(roots={"d": changed_text})
+            baseline_bindings = CARRY.professional_review_bindings(baseline)
+            changed_bindings = CARRY.professional_review_bindings(changed)
+            packet, ballots, decision = _prior_artifacts(baseline)
+            dependencies = CARRY.professional_prior_decision_dependencies(
+                prior_packet=packet,
+                prior_ballots=ballots,
+                prior_decision=decision,
+            )
+            plan = CARRY.plan_exact_professional_carry_forward(
+                current_bindings=changed_bindings,
+                prior_snapshot=CARRY.professional_carry_snapshot(
+                    baseline_bindings,
+                    review_contract_fingerprint=CONTRACT_FINGERPRINT,
+                ),
+                prior_decision_dependencies=dependencies,
+                review_contract_fingerprint=CONTRACT_FINGERPRINT,
+            )
+            with self.subTest(label=label):
+                self.assertEqual(baseline_projection, changed_projection)
+                self.assertNotEqual(
+                    baseline_bindings["d"]["content_fingerprint"],
+                    changed_bindings["d"]["content_fingerprint"],
+                )
                 self.assertEqual(
-                    baseline_binding["d"]["package_material_binding"],
-                    CARRY.professional_review_bindings(cosmetic)["d"]
-                    ["package_material_binding"],
+                    baseline_bindings["d"]["package_material_binding"],
+                    changed_bindings["d"]["package_material_binding"],
+                )
+                self.assertEqual([], plan["fresh_target_ids"])
+                self.assertEqual(list(SKILL_IDS), plan["carry_target_ids"])
+
+    def test_markdown_collision_matrix_is_material_and_scoped(self) -> None:
+        cases = (
+            (
+                "intraword-double-underscore",
+                "# d\n\nReview foo__bar__baz.\n",
+                "# d\n\nReview foobarbaz.\n",
+            ),
+            (
+                "escaped-emphasis-closer",
+                "# d\n\nReview **A\\**\n",
+                "# d\n\nReview A\\\n",
+            ),
+            (
+                "html-horizontal-whitespace",
+                "# d\n\n<pre>Review  input</pre>\n",
+                "# d\n\n<pre>Review input</pre>\n",
+            ),
+            (
+                "fenced-block-under-list",
+                "# d\n\n- Review\n  ```text\n  input\n  ```\n",
+                "# d\n\n- Review ```text input ```\n",
+            ),
+            (
+                "indented-code-under-list",
+                "# d\n\n- Review\n\n      input\n",
+                "# d\n\n- Review input\n",
+            ),
+            (
+                "blockquote-under-list",
+                "# d\n\n- Review\n  > input\n",
+                "# d\n\n- Review > input\n",
+            ),
+            (
+                "table-under-list",
+                (
+                    "# d\n\n"
+                    "- Review\n"
+                    "  | A | B |\n"
+                    "  | --- | --- |\n"
+                ),
+                "# d\n\n- Review | A | B | | --- | --- |\n",
+            ),
+            (
+                "unwrapped-gfm-table",
+                "# d\n\nA | B\n--- | ---\n",
+                "# d\n\nA | B --- | ---\n",
+            ),
+            (
+                "setext-heading",
+                "# d\n\nTitle\n===\n",
+                "# d\n\nTitle ===\n",
+            ),
+            (
+                "ambiguous-lazy-list-continuation",
+                "# d\n\n- Review\nVerify output\n",
+                "# d\n\n- Review\n\nVerify output\n",
+            ),
+            (
+                "ambiguous-lazy-list-after-closed-wrap",
+                "# d\n\n- Review\n  input\nVerify output\n",
+                "# d\n\n- Review\n  input\n\nVerify output\n",
+            ),
+            (
+                "nested-atx-heading-under-list",
+                "# d\n\n- Item\n  # Rule\n",
+                "# d\n\n- Item # Rule\n",
+            ),
+            (
+                "nested-thematic-break-under-list",
+                "# d\n\n- Item\n  ***\n",
+                "# d\n\n- Item ***\n",
+            ),
+            (
+                "spaced-star-thematic-break",
+                "# d\n\n* * *\n",
+                "# d\n\n- * *\n",
+            ),
+            (
+                "spaced-dash-thematic-break",
+                "# d\n\n- - -\n",
+                "# d\n\n* - -\n",
+            ),
+            (
+                "spaced-underscore-thematic-break",
+                "# d\n\n_ _ _\n",
+                "# d\n\nReview _ _ _\n",
+            ),
+            (
+                "indented-frontmatter-delimiters",
+                (
+                    "    ---\n"
+                    "name: d\n"
+                    'description: "Review d behavior."\n'
+                    "    ---\n\n"
+                    "# d\n\nReview d root behavior.\n"
+                ),
+                (
+                    "---\n"
+                    "name: d\n"
+                    'description: "Review d behavior."\n'
+                    "---\n\n"
+                    "# d\n\nReview d root behavior.\n"
+                ),
+            ),
+            (
+                "authenticated-marker-inside-fence",
+                (
+                    "# d\n\n```text\n"
+                    "<!-- BEGIN CHANGEFORGE CORE DOCS PROJECTION: d -->\n"
+                    "```\n"
+                ),
+                "# d\n\n```text\n```\n",
+            ),
+            (
+                "indented-authenticated-marker",
+                (
+                    "# d\n\n"
+                    "    <!-- BEGIN CHANGEFORGE CORE DOCS PROJECTION: d -->\n"
+                ),
+                (
+                    "# d\n\n"
+                    "<!-- BEGIN CHANGEFORGE CORE DOCS PROJECTION: d -->\n"
+                ),
+            ),
+            (
+                "indented-heading-candidate",
+                "# d\n\n    # Rule\n",
+                "# d\n\n# Rule\n",
+            ),
+            (
+                "indented-fully-wrapped-table",
+                "# d\n\n    | A | B |\n    | --- | --- |\n",
+                "# d\n\n| A | B |\n| --- | --- |\n",
+            ),
+            (
+                "ordered-list-block-ownership",
+                "# d\n\nReview input\n2. Verify output\n",
+                "# d\n\nReview input\n\n2. Verify output\n",
+            ),
+            (
+                "pipe-row-block-ownership",
+                "# d\n\nReview input\n| Verify output |\n",
+                "# d\n\nReview input\n\n| Verify output |\n",
+            ),
+            (
+                "gfm-table-block-ownership",
+                (
+                    "# d\n\nReview input\n"
+                    "A | B\n"
+                    "--- | ---\n"
+                ),
+                (
+                    "# d\n\nReview input\n\n"
+                    "A | B\n"
+                    "--- | ---\n"
+                ),
+            ),
+            (
+                "autolink-block-ownership",
+                "# d\n\nReview input\n<https://example.com>\n",
+                "# d\n\nReview input\n\n<https://example.com>\n",
+            ),
+            (
+                "list-marker-padding-ownership",
+                "# d\n\n- item\n",
+                "# d\n\n-     item\n",
+            ),
+        )
+        for label, baseline_text, changed_text in cases:
+            baseline_projection = (
+                CARRY.professional_markdown_currentness_projection(
+                    baseline_text
+                )
+            )
+            changed_projection = (
+                CARRY.professional_markdown_currentness_projection(
+                    changed_text
+                )
+            )
+            baseline = _catalog(roots={"d": baseline_text})
+            changed = _catalog(roots={"d": changed_text})
+            baseline_bindings = CARRY.professional_review_bindings(baseline)
+            changed_bindings = CARRY.professional_review_bindings(changed)
+            snapshot = CARRY.professional_carry_snapshot(
+                baseline_bindings,
+                review_contract_fingerprint=CONTRACT_FINGERPRINT,
+            )
+            packet, ballots, decision = _prior_artifacts(baseline)
+            dependencies = CARRY.professional_prior_decision_dependencies(
+                prior_packet=packet,
+                prior_ballots=ballots,
+                prior_decision=decision,
+            )
+            plan = CARRY.plan_exact_professional_carry_forward(
+                current_bindings=changed_bindings,
+                prior_snapshot=snapshot,
+                prior_decision_dependencies=dependencies,
+                review_contract_fingerprint=CONTRACT_FINGERPRINT,
+            )
+            with self.subTest(label=label):
+                self.assertNotEqual(
+                    baseline_projection,
+                    changed_projection,
                 )
                 self.assertNotEqual(
-                    baseline_binding["d"]["package_material_binding"],
-                    CARRY.professional_review_bindings(swapped)["d"]
-                    ["package_material_binding"],
-                )
-                snapshot = CARRY.professional_carry_snapshot(
-                    baseline_binding,
-                    review_contract_fingerprint=CONTRACT_FINGERPRINT,
-                )
-                plan = CARRY.plan_exact_professional_carry_forward(
-                    current_bindings=CARRY.professional_review_bindings(swapped),
-                    prior_snapshot=snapshot,
-                    prior_decision_dependencies=self.dependencies,
-                    review_contract_fingerprint=CONTRACT_FINGERPRINT,
+                    baseline_bindings["d"]["package_material_binding"],
+                    changed_bindings["d"]["package_material_binding"],
                 )
                 self.assertEqual(["b", "d"], plan["fresh_target_ids"])
-                self.assertEqual(
-                    ["target-material-changed"],
+                self.assertIn(
+                    "target-material-changed",
                     plan["reasons_by_target"]["d"],
                 )
                 self.assertIn(
                     "required-candidate-material-changed",
                     plan["reasons_by_target"]["b"],
                 )
+                self.assertEqual([], plan["reasons_by_target"]["a"])
+                self.assertEqual([], plan["reasons_by_target"]["c"])
 
-    def test_directional_roles_reopen_root_and_reference_target_and_one_hop(self) -> None:
+    def test_opaque_markdown_preserves_whitespace_and_final_newline(self) -> None:
         cases = (
             (
-                "Route input to destination from source.",
-                "Route input to source from destination.",
-                "handoff",
-                [
-                    {
-                        "argument_ordinal": 1,
-                        "relation": "direct",
-                        "scope_concepts": ["input"],
-                        "attachment": "governing-predicate",
-                        "owner_action_concept": "handoff",
-                        "owner_modality": "required",
-                        "owner_polarity": "affirmative",
-                    },
-                    {
-                        "argument_ordinal": 2,
-                        "relation": "to",
-                        "scope_concepts": ["term:destination"],
-                        "attachment": "governing-predicate",
-                        "owner_action_concept": "handoff",
-                        "owner_modality": "required",
-                        "owner_polarity": "affirmative",
-                    },
-                    {
-                        "argument_ordinal": 3,
-                        "relation": "from",
-                        "scope_concepts": ["provenance"],
-                        "attachment": "governing-predicate",
-                        "owner_action_concept": "handoff",
-                        "owner_modality": "required",
-                        "owner_polarity": "affirmative",
-                    },
-                ],
+                "horizontal-whitespace",
+                "# d\n\n<pre>Review  input</pre>\n",
+                "# d\n\n<pre>Review input</pre>\n",
             ),
             (
-                "Copy artifact from origin to target.",
-                "Copy artifact from target to origin.",
-                "build",
-                [
-                    {
-                        "argument_ordinal": 1,
-                        "relation": "direct",
-                        "scope_concepts": ["artifact"],
-                        "attachment": "governing-predicate",
-                        "owner_action_concept": "build",
-                        "owner_modality": "required",
-                        "owner_polarity": "affirmative",
-                    },
-                    {
-                        "argument_ordinal": 2,
-                        "relation": "from",
-                        "scope_concepts": ["term:origin"],
-                        "attachment": "governing-predicate",
-                        "owner_action_concept": "build",
-                        "owner_modality": "required",
-                        "owner_polarity": "affirmative",
-                    },
-                    {
-                        "argument_ordinal": 3,
-                        "relation": "to",
-                        "scope_concepts": ["target"],
-                        "attachment": "governing-predicate",
-                        "owner_action_concept": "build",
-                        "owner_modality": "required",
-                        "owner_polarity": "affirmative",
-                    },
-                ],
+                "blank-whitespace",
+                "# d\n\n<pre>Review input\n \nVerify output</pre>\n",
+                "# d\n\n<pre>Review input\n\nVerify output</pre>\n",
             ),
             (
-                "Migrate data from legacy to current.",
-                "Migrate data from current to legacy.",
-                "migrate",
-                [
-                    {
-                        "argument_ordinal": 1,
-                        "relation": "direct",
-                        "scope_concepts": ["data"],
-                        "attachment": "governing-predicate",
-                        "owner_action_concept": "migrate",
-                        "owner_modality": "required",
-                        "owner_polarity": "affirmative",
-                    },
-                    {
-                        "argument_ordinal": 2,
-                        "relation": "from",
-                        "scope_concepts": ["term:legacy"],
-                        "attachment": "governing-predicate",
-                        "owner_action_concept": "migrate",
-                        "owner_modality": "required",
-                        "owner_polarity": "affirmative",
-                    },
-                    {
-                        "argument_ordinal": 3,
-                        "relation": "to",
-                        "scope_concepts": ["term:current"],
-                        "attachment": "governing-predicate",
-                        "owner_action_concept": "migrate",
-                        "owner_modality": "required",
-                        "owner_polarity": "affirmative",
-                    },
-                ],
+                "final-newline",
+                "# d\n\n<pre>Review input</pre>\n",
+                "# d\n\n<pre>Review input</pre>",
             ),
         )
-        for source_class, material_field in (
-            ("root", "roots"),
-            ("indexed-reference", "references"),
-        ):
-            for baseline_sentence, reversed_sentence, action, expected_roles in cases:
-                with self.subTest(source_class=source_class, action=action):
-                    baseline = _catalog(
-                        **{
-                            material_field: {
-                                "d": (
-                                    "# d\n\n## Professional Decision Rules\n\n"
-                                    f"- {baseline_sentence}\n"
-                                )
-                            }
-                        }
-                    )
-                    changed = _catalog(
-                        **{
-                            material_field: {
-                                "d": (
-                                    "# d\n\n## Professional Decision Rules\n\n"
-                                    f"- {reversed_sentence}\n"
-                                )
-                            }
-                        }
-                    )
-                    fact = next(
-                        row
-                        for row in CARRY.professional_semantic_fact_projection(
-                            baseline[3]
-                        )["facts"]
-                        if row["source_class"] == source_class
-                        and row["action_concept"] == action
-                    )
-                    self.assertEqual(expected_roles, fact["argument_role_bindings"])
-                    self.assertEqual(
-                        sorted(
-                            {
-                                concept
-                                for role in expected_roles
-                                for concept in role["scope_concepts"]
-                            }
-                        ),
-                        fact["object_scope_concepts"],
-                    )
-                    baseline_bindings = CARRY.professional_review_bindings(baseline)
-                    changed_bindings = CARRY.professional_review_bindings(changed)
-                    self.assertNotEqual(
-                        baseline_bindings["d"]["package_material_binding"],
-                        changed_bindings["d"]["package_material_binding"],
-                    )
-                    plan = CARRY.plan_exact_professional_carry_forward(
-                        current_bindings=changed_bindings,
-                        prior_snapshot=CARRY.professional_carry_snapshot(
-                            baseline_bindings,
-                            review_contract_fingerprint=CONTRACT_FINGERPRINT,
-                        ),
-                        prior_decision_dependencies=self.dependencies,
-                        review_contract_fingerprint=CONTRACT_FINGERPRINT,
-                    )
-                    self.assertEqual(["b", "d"], plan["fresh_target_ids"])
-                    self.assertEqual(
-                        ["target-material-changed"],
-                        plan["reasons_by_target"]["d"],
-                    )
-                    self.assertIn(
-                        "required-candidate-material-changed",
-                        plan["reasons_by_target"]["b"],
-                    )
+        for label, baseline_text, changed_text in cases:
+            with self.subTest(label=label):
+                self.assertNotEqual(
+                    CARRY.professional_markdown_currentness_projection(
+                        baseline_text
+                    ),
+                    CARRY.professional_markdown_currentness_projection(
+                        changed_text
+                    ),
+                )
 
-    def test_directional_role_cosmetic_changes_carry(self) -> None:
-        baseline = _catalog(
-            roots={
-                "d": (
-                    "# d\n\n## Professional Decision Rules\n\n"
-                    "- Route input to destination from source.\n"
-                )
-            }
+    def test_markdown_hard_break_is_not_normalized_as_soft_wrapping(self) -> None:
+        hard_break = "# d\n\nReview input.  \nVerify output.\n"
+        one_paragraph = "# d\n\nReview input. Verify output.\n"
+        hard_projection = (
+            CARRY.professional_markdown_currentness_projection(hard_break)
         )
-        cosmetic = _catalog(
-            roots={
-                "d": (
-                    "# d\n\n### Decision Rules\n\n"
-                    "<!-- presentation only -->\n"
-                    "* **Route** input   to destination from source.\n"
-                )
-            }
-        )
-        baseline_bindings = CARRY.professional_review_bindings(baseline)
-        cosmetic_bindings = CARRY.professional_review_bindings(cosmetic)
+        self.assertNotEqual("opaque-document", hard_projection[0]["type"])
         self.assertNotEqual(
-            baseline_bindings["d"]["content_fingerprint"],
-            cosmetic_bindings["d"]["content_fingerprint"],
-        )
-        self.assertEqual(
-            baseline_bindings["d"]["package_material_binding"],
-            cosmetic_bindings["d"]["package_material_binding"],
+            hard_projection,
+            CARRY.professional_markdown_currentness_projection(one_paragraph),
         )
 
-    def test_infinitive_to_is_not_a_direction_and_still_binds_semantics(self) -> None:
-        baseline_sentence = (
-            "When new structure or a boundary is proposed, place behavior with "
-            "the owner of its reason to change and preserve the affected "
-            "dependency direction."
-        )
-        changed_sentence = baseline_sentence.replace(
-            "reason to change", "reason to preserve"
-        )
-        for source_class, material_field in (
-            ("root", "roots"),
-            ("indexed-reference", "references"),
-        ):
-            with self.subTest(source_class=source_class):
-                baseline = _catalog(
-                    **{
-                        material_field: {
-                            "d": (
-                                "# d\n\n## Professional Decision Rules\n\n"
-                                f"- {baseline_sentence}\n"
-                            )
-                        }
-                    }
-                )
-                changed = _catalog(
-                    **{
-                        material_field: {
-                            "d": (
-                                "# d\n\n## Professional Decision Rules\n\n"
-                                f"- {changed_sentence}\n"
-                            )
-                        }
-                    }
-                )
-                baseline_facts = [
-                    fact
-                    for fact in CARRY.professional_semantic_fact_projection(
-                        baseline[3]
-                    )["facts"]
-                    if fact["source_class"] == source_class
-                ]
-                self.assertTrue(baseline_facts)
-                self.assertNotIn(
-                    "to",
-                    {
-                        role["relation"]
-                        for fact in baseline_facts
-                        for role in fact["argument_role_bindings"]
-                    },
-                )
-                self.assertNotEqual(
-                    CARRY.professional_review_bindings(baseline)["d"]
-                    ["package_material_binding"],
-                    CARRY.professional_review_bindings(changed)["d"]
-                    ["package_material_binding"],
-                )
-
-    def test_nearest_structural_owner_controls_each_local_direction(self) -> None:
+    def test_unsupported_parser_families_make_the_whole_body_opaque(self) -> None:
         cases = (
-            (
-                "Stop when evidence is mapped from origin while it must route "
-                "to target.",
-                [("from", "map"), ("to", "handoff")],
-            ),
-            (
-                "Validate evidence by copying from origin while migrating to "
-                "target.",
-                [("from", "build"), ("to", "migrate")],
-            ),
-            (
-                "Stop when evidence must distinguish a choice while validating "
-                "input to output.",
-                [("to", "validate")],
-            ),
+            "# d\n\n1. Review input\n",
+            "# d\n\n| A | B |\n| --- | --- |\n",
+            "# d\n\n<pre>Review input</pre>\n",
+            "# d\n\n[Review][rule]\n\n[rule]: /input\n",
         )
-        for sentence, expected in cases:
-            with self.subTest(sentence=sentence):
-                target = _catalog(
-                    roots={
-                        "d": (
-                            "# d\n\n## Professional Decision Rules\n\n"
-                            f"- {sentence}\n"
-                        )
-                    }
-                )[3]
-                fact = next(
-                    row
-                    for row in CARRY.professional_semantic_fact_projection(target)[
-                        "facts"
-                    ]
-                    if row["source_class"] == "root"
+        for content in cases:
+            with self.subTest(content=content):
+                projection = (
+                    CARRY.professional_markdown_currentness_projection(content)
                 )
-                self.assertEqual(
-                    expected,
-                    [
-                        (role["relation"], role["owner_action_concept"])
-                        for role in fact["argument_role_bindings"]
-                        if role["relation"] in {"from", "to"}
-                    ],
-                )
+                self.assertEqual("opaque-document", projection[0]["type"])
+                self.assertEqual(content, projection[0]["value"])
 
-    def test_infinitive_owner_preserves_directional_reversal(self) -> None:
-        baseline_sentence = "Plan to change input from legacy to current."
-        reversed_sentence = "Plan to change input from current to legacy."
-        for source_class, material_field in (
-            ("root", "roots"),
-            ("indexed-reference", "references"),
-        ):
-            with self.subTest(source_class=source_class):
-                baseline = _catalog(
-                    **{
-                        material_field: {
-                            "d": (
-                                "# d\n\n## Professional Decision Rules\n\n"
-                                f"- {baseline_sentence}\n"
-                            )
-                        }
-                    }
-                )
-                reversed_target = _catalog(
-                    **{
-                        material_field: {
-                            "d": (
-                                "# d\n\n## Professional Decision Rules\n\n"
-                                f"- {reversed_sentence}\n"
-                            )
-                        }
-                    }
-                )
-                fact = next(
-                    row
-                    for row in CARRY.professional_semantic_fact_projection(
-                        baseline[3]
-                    )["facts"]
-                    if row["source_class"] == source_class
-                    and row["action_concept"] == "design"
-                )
-                self.assertEqual(
-                    [
-                        ("direct", "change", ["input"]),
-                        ("from", "change", ["term:legacy"]),
-                        ("to", "change", ["term:current"]),
-                    ],
-                    [
-                        (
-                            role["relation"],
-                            role["owner_action_concept"],
-                            role["scope_concepts"],
-                        )
-                        for role in fact["argument_role_bindings"]
-                    ],
-                )
-                self.assertNotEqual(
-                    CARRY.professional_review_bindings(baseline)["d"]
-                    ["package_material_binding"],
-                    CARRY.professional_review_bindings(reversed_target)["d"]
-                    ["package_material_binding"],
-                )
-
-    def test_forced_lexical_dependent_actions_are_bounded_and_semantic(self) -> None:
-        decay_sentence = (
-            "A modular monolith without enforced ownership can decay into a "
-            "coupled monolith."
-        )
-        mirror_sentence = (
-            "Organization structure is evidence, not a universal command to "
-            "mirror the current org chart."
-        )
-        frobnicate_sentence = "Plan to frobnicate the input from source."
-        for source_class, material_field in (
-            ("root", "roots"),
-            ("indexed-reference", "references"),
-        ):
-            with self.subTest(source_class=source_class):
-                def target_for(sentence: str) -> tuple[object, ...]:
-                    return _catalog(
-                        **{
-                            material_field: {
-                                "d": (
-                                    "# d\n\n## Professional Decision Rules\n\n"
-                                    f"- {sentence}\n"
-                                )
-                            }
-                        }
-                    )
-
-                decay = target_for(decay_sentence)
-                decay_fact = next(
-                    fact
-                    for fact in CARRY.professional_semantic_fact_projection(decay[3])[
-                        "facts"
-                    ]
-                    if fact["source_class"] == source_class
-                )
-                decay_role = next(
-                    role
-                    for role in decay_fact["argument_role_bindings"]
-                    if role["relation"] == "to"
-                )
-                self.assertEqual(
-                    ("lexical:decay", "permitted", "affirmative"),
-                    (
-                        decay_role["owner_action_concept"],
-                        decay_role["owner_modality"],
-                        decay_role["owner_polarity"],
-                    ),
-                )
-                cosmetic = target_for(
-                    decay_sentence.replace("can decay", "can   decay")
-                )
-                mutation = target_for(decay_sentence.replace("decay", "degrade"))
-                self.assertEqual(
-                    CARRY.professional_review_bindings(decay)["d"]
-                    ["package_material_binding"],
-                    CARRY.professional_review_bindings(cosmetic)["d"]
-                    ["package_material_binding"],
-                )
-                self.assertNotEqual(
-                    CARRY.professional_review_bindings(decay)["d"]
-                    ["package_material_binding"],
-                    CARRY.professional_review_bindings(mutation)["d"]
-                    ["package_material_binding"],
-                )
-
-                mirror = target_for(mirror_sentence)
-                mirror_facts = [
-                    fact
-                    for fact in CARRY.professional_semantic_fact_projection(mirror[3])[
-                        "facts"
-                    ]
-                    if fact["source_class"] == source_class
-                ]
-                self.assertNotIn(
-                    "to",
-                    {
-                        role["relation"]
-                        for fact in mirror_facts
-                        for role in fact["argument_role_bindings"]
-                    },
-                )
-                self.assertNotEqual(
-                    CARRY.professional_review_bindings(mirror)["d"]
-                    ["package_material_binding"],
-                    CARRY.professional_review_bindings(
-                        target_for(mirror_sentence.replace("mirror", "frobnicate"))
-                    )["d"]["package_material_binding"],
-                )
-
-                frobnicate = target_for(frobnicate_sentence)
-                frobnicate_fact = next(
-                    fact
-                    for fact in CARRY.professional_semantic_fact_projection(
-                        frobnicate[3]
-                    )["facts"]
-                    if fact["source_class"] == source_class
-                    and fact["action_concept"] == "design"
-                )
-                from_role = next(
-                    role
-                    for role in frobnicate_fact["argument_role_bindings"]
-                    if role["relation"] == "from"
-                )
-                self.assertEqual(
-                    ("lexical:frobnicate", "dependent-complement"),
-                    (
-                        from_role["owner_action_concept"],
-                        from_role["attachment"],
-                    ),
-                )
-
-    def test_forced_lexical_classifier_preserves_closed_and_invalid_boundaries(
+    def test_commonmark_emphasis_is_presentation_but_unmatched_is_material(
         self,
     ) -> None:
-        directional = _catalog(
-            roots={
-                "d": (
-                    "# d\n\n## Professional Decision Rules\n\n"
-                    "- Route input to frobnicate.\n"
-                )
-            }
-        )[3]
-        directional_fact = next(
-            fact
-            for fact in CARRY.professional_semantic_fact_projection(directional)[
-                "facts"
-            ]
-            if fact["source_class"] == "root"
-        )
-        self.assertEqual(
-            [("to", "handoff", ["term:frobnicate"])],
-            [
-                (
-                    role["relation"],
-                    role["owner_action_concept"],
-                    role["scope_concepts"],
-                )
-                for role in directional_fact["argument_role_bindings"]
-                if role["relation"] == "to"
-            ],
-        )
-
-        for closed_form in ("validate", "validated"):
-            with self.subTest(closed_form=closed_form):
-                target = _catalog(
-                    roots={
-                        "d": (
-                            "# d\n\n## Professional Decision Rules\n\n"
-                            f"- Stop when evidence can {closed_form} from source.\n"
-                        )
-                    }
-                )[3]
-                fact = next(
-                    row
-                    for row in CARRY.professional_semantic_fact_projection(target)[
-                        "facts"
-                    ]
-                    if row["source_class"] == "root"
-                )
-                owner = next(
-                    role
-                    for role in fact["argument_role_bindings"]
-                    if role["relation"] == "from"
-                )
-                self.assertEqual("validate", owner["owner_action_concept"])
-
-        for sentence, message in (
-            (
-                "Stop when evidence can decaying into output.",
-                "structurally signaled unknown dependent owner",
-            ),
-            (
-                "Stop when evidence can input from source.",
-                "structurally signaled unknown dependent owner",
-            ),
-            (
-                "Plan to frobnicate the.",
-                "malformed lexical infinitive complement",
-            ),
-            (
-                "Validate evidence by zorbaxing into output.",
-                "structurally signaled unknown dependent owner",
-            ),
+        for decorated, plain in (
+            ("# d\n\n**Review _input_**\n", "# d\n\nReview input\n"),
+            ("# d\n\nfoo**bar**baz\n", "# d\n\nfoobarbaz\n"),
         ):
-            with self.subTest(sentence=sentence), self.assertRaisesRegex(
-                CARRY.ProfessionalCarryForwardError,
-                message,
-            ):
-                CARRY.professional_review_bindings(
-                    _catalog(
-                        roots={
-                            "d": (
-                                "# d\n\n## Professional Decision Rules\n\n"
-                                f"- {sentence}\n"
-                            )
-                        }
-                    )
-                )
-
-        with self.assertRaisesRegex(
-            CARRY.ProfessionalCarryForwardError,
-            "material semantic clause has no predicate",
-        ):
-            CARRY.professional_review_bindings(
-                _catalog(
-                    roots={
-                        "d": (
-                            "# d\n\n## Professional Decision Rules\n\n"
-                            "The frobnicate owner.\n"
-                        )
-                    }
-                )
-            )
-
-    def test_exact_closed_action_is_a_locality_barrier_and_condition_owner(
-        self,
-    ) -> None:
-        sentence = (
-            "When equivalent submissions or workers can overlap, select a "
-            "control from the actual overlap window, business identity, "
-            "in-flight behavior, winning-effect authority, loser outcome, "
-            "result reuse, effect semantics, and storage guarantees."
-        )
-        mutated_sentence = sentence.replace(
-            "actual overlap window", "declared overlap window"
-        )
-        for source_class, material_field in (
-            ("root", "roots"),
-            ("indexed-reference", "references"),
-        ):
-            with self.subTest(source_class=source_class):
-                baseline = _catalog(
-                    **{
-                        material_field: {
-                            "d": (
-                                "# d\n\n## Professional Decision Rules\n\n"
-                                f"- {sentence}\n"
-                            )
-                        }
-                    }
-                )
-                mutated = _catalog(
-                    **{
-                        material_field: {
-                            "d": (
-                                "# d\n\n## Professional Decision Rules\n\n"
-                                f"- {mutated_sentence}\n"
-                            )
-                        }
-                    }
-                )
-                fact = next(
-                    row
-                    for row in CARRY.professional_semantic_fact_projection(
-                        baseline[3]
-                    )["facts"]
-                    if row["source_class"] == source_class
-                )
-                from_role = next(
-                    role
-                    for role in fact["argument_role_bindings"]
-                    if role["relation"] == "from"
-                )
+            with self.subTest(decorated=decorated):
                 self.assertEqual(
-                    ("decide", "dependent-condition"),
-                    (
-                        from_role["owner_action_concept"],
-                        from_role["attachment"],
-                    ),
+                    CARRY.professional_markdown_currentness_projection(decorated),
+                    CARRY.professional_markdown_currentness_projection(plain),
                 )
-                self.assertNotEqual(
-                    CARRY.professional_review_bindings(baseline)["d"]
-                    ["package_material_binding"],
-                    CARRY.professional_review_bindings(mutated)["d"]
-                    ["package_material_binding"],
-                )
-
-        sliced_roles = CARRY._semantic_argument_role_bindings(
-            CARRY._semantic_tokenize(
-                "equivalent submissions or workers can overlap select a "
-                "control from the actual overlap window"
-            ),
-            governing_action_concept="lexical:when",
-            governing_modality="required",
-            governing_polarity="affirmative",
-            initial_condition_scope=True,
-        )
-        sliced_from = next(
-            role for role in sliced_roles if role["relation"] == "from"
-        )
-        self.assertEqual("decide", sliced_from["owner_action_concept"])
-        with self.assertRaisesRegex(
-            CARRY.ProfessionalCarryForwardError,
-            "structurally signaled unknown dependent owner",
-        ):
-            CARRY._semantic_argument_role_bindings(
-                CARRY._semantic_tokenize("workers can overlap from source"),
-                governing_action_concept="lexical:when",
-                governing_modality="required",
-                governing_polarity="affirmative",
-                initial_condition_scope=True,
-            )
-
-    def test_acceptance_criteria_direction_attachments_cover_root_and_reference(
-        self,
-    ) -> None:
-        cases = (
-            (
-                "Support `analysis-agent` in turning ambiguous intent into "
-                "observable acceptance for each affected actor, state, failure "
-                "path, and preserved behavior.",
-                "own",
-                [
-                    ("governing-predicate", "own", "direct"),
-                    ("dependent-complement", "change", "direct"),
-                    ("dependent-complement", "change", "to"),
-                ],
-                (2, "invalid-condition"),
-                (3, "term:acceptance"),
-            ),
-            (
-                "Trace every affected actor, trigger, precondition, outcome, "
-                "and preserved behavior to source evidence.",
-                "diagnose",
-                [
-                    ("governing-predicate", "diagnose", "direct"),
-                    ("governing-predicate", "diagnose", "to"),
-                ],
-                (1, "precondition"),
-                (2, "evidence"),
-            ),
-            (
-                "Stop drafting when evidence cannot distinguish a product "
-                "choice from a source fact.",
-                "stop",
-                [
-                    ("governing-predicate", "stop", "direct"),
-                    ("condition-scope", None, "direct"),
-                    ("dependent-condition", "compare", "direct"),
-                    ("dependent-condition", "compare", "from"),
-                ],
-                (3, "term:choice"),
-                (4, "provenance"),
-            ),
-            (
-                "Escalate when proposed criteria conflict with another active "
-                "change to the same contract or system boundary.",
-                "handoff",
-                [
-                    ("condition-scope", None, "direct"),
-                    ("dependent-condition", "change", "to"),
-                ],
-                (1, "term:criteria"),
-                (2, "contract"),
-            ),
-            (
-                "Use this reference when acceptance closure depends on proving "
-                "that criteria are mapped to validation evidence, stakeholder "
-                "sign-off is fresh, manual or audit evidence is bounded, and "
-                "residual risk is explicit.",
-                "apply",
-                [
-                    ("governing-predicate", "apply", "direct"),
-                    ("condition-scope", None, "direct"),
-                    ("condition-scope", None, "direct"),
-                    ("dependent-condition", "map", "to"),
-                ],
-                (3, "term:criteria"),
-                (4, "evidence"),
-            ),
-        )
-        for source_class, material_field in (
-            ("root", "roots"),
-            ("indexed-reference", "references"),
-        ):
-            for sentence, action, expected_shape, left, right in cases:
-                with self.subTest(source_class=source_class, action=action):
-                    target = _catalog(
-                        **{
-                            material_field: {
-                                "d": (
-                                    "# d\n\n## Professional Decision Rules\n\n"
-                                    f"- {sentence}\n"
-                                )
-                            }
-                        }
-                    )[3]
-                    fact = next(
-                        row
-                        for row in CARRY.professional_semantic_fact_projection(
-                            target
-                        )["facts"]
-                        if row["source_class"] == source_class
-                        and row["action_concept"] == action
-                    )
-                    roles = fact["argument_role_bindings"]
-                    self.assertEqual(
-                        expected_shape,
-                        [
-                            (
-                                role["attachment"],
-                                role["owner_action_concept"],
-                                role["relation"],
-                            )
-                            for role in roles
-                        ],
-                    )
-                    self.assertIn(left[1], roles[left[0] - 1]["scope_concepts"])
-                    self.assertIn(right[1], roles[right[0] - 1]["scope_concepts"])
-
-    def test_directional_role_invalid_and_unsupported_markers_fail_closed(self) -> None:
-        for sentence, message in (
-            ("Route input to.", "incomplete directional argument segment"),
-            (
-                "Stop when evidence must zorbaxing input to output.",
-                "structurally signaled unknown dependent owner",
-            ),
-            (
-                "Plan to changing input from legacy.",
-                "unsupported inflected infinitive",
-            ),
-            (
-                "Stop when evidence must should resolve conflict from source.",
-                "conflicting dependent owner modalities",
-            ),
-        ):
-            with self.subTest(sentence=sentence), self.assertRaisesRegex(
-                CARRY.ProfessionalCarryForwardError,
-                message,
-            ):
-                CARRY.professional_review_bindings(
-                    _catalog(
-                        roots={
-                            "d": (
-                                "# d\n\n## Professional Decision Rules\n\n"
-                                f"- {sentence}\n"
-                            )
-                        }
-                    )
-                )
-
-        under = _catalog(
-            roots={
-                "d": (
-                    "# d\n\n## Professional Decision Rules\n\n"
-                    "- Route input under policy.\n"
-                )
-            }
-        )[3]
-        fact = next(
-            row
-            for row in CARRY.professional_semantic_fact_projection(under)["facts"]
-            if row["source_class"] == "root"
-        )
-        self.assertEqual(
-            [
-                {
-                    "argument_ordinal": 1,
-                    "relation": "direct",
-                    "scope_concepts": ["input", "policy"],
-                    "attachment": "governing-predicate",
-                    "owner_action_concept": "handoff",
-                    "owner_modality": "required",
-                    "owner_polarity": "affirmative",
-                }
-            ],
-            fact["argument_role_bindings"],
-        )
-
-        prior_to = _catalog(
-            roots={
-                "d": (
-                    "# d\n\n## Professional Decision Rules\n\n"
-                    "- Validate output prior to release.\n"
-                )
-            }
-        )[3]
-        prior_fact = next(
-            row
-            for row in CARRY.professional_semantic_fact_projection(prior_to)["facts"]
-            if row["source_class"] == "root"
-        )
-        self.assertEqual(
-            ["direct"],
-            [role["relation"] for role in prior_fact["argument_role_bindings"]],
-        )
-        self.assertIn("precondition", prior_fact["condition_concepts"])
-
-        condition_word = _catalog(
-            roots={
-                "d": (
-                    "# d\n\n## Professional Decision Rules\n\n"
-                    "- Trace precondition to evidence.\n"
-                )
-            }
-        )[3]
-        condition_fact = next(
-            row
-            for row in CARRY.professional_semantic_fact_projection(condition_word)[
-                "facts"
-            ]
-            if row["source_class"] == "root"
-        )
-        self.assertEqual(
-            [
-                ("direct", ["precondition"]),
-                ("to", ["evidence"]),
-            ],
-            [
-                (role["relation"], role["scope_concepts"])
-                for role in condition_fact["argument_role_bindings"]
-            ],
-        )
-
-    def test_repeat_from_source_has_directional_owner_and_action_changes_bind(self) -> None:
-        sentence = (
-            "Rely on evidence whose production a reviewer cannot repeat from "
-            "task-accessible sources."
-        )
-        repeated = _catalog(
-            roots={
-                "d": (
-                    "# d\n\n## Professional Decision Rules\n\n"
-                    f"- {sentence}\n"
-                )
-            }
-        )
-        fact = next(
-            row
-            for row in CARRY.professional_semantic_fact_projection(repeated[3])[
-                "facts"
-            ]
-            if row["source_class"] == "root"
-        )
-        self.assertEqual(
-            [
-                ("governing-predicate", "lexical:rely", "direct"),
-                ("condition-scope", None, "direct"),
-                ("dependent-condition", "retry", "from"),
-            ],
-            [
-                (
-                    role["attachment"],
-                    role["owner_action_concept"],
-                    role["relation"],
-                )
-                for role in fact["argument_role_bindings"]
-            ],
-        )
-        retry_source = fact["argument_role_bindings"][2]["scope_concepts"]
-        self.assertIn("provenance", retry_source)
-        self.assertIn("term:accessible", retry_source)
-
-        bindings = []
-        for action in ("repeat", "generate", "validate"):
-            target = _catalog(
-                roots={
-                    "d": (
-                        "# d\n\n## Professional Decision Rules\n\n- "
-                        + sentence.replace("repeat", action)
-                        + "\n"
-                    )
-                }
-            )
-            bindings.append(
-                CARRY.professional_review_bindings(target)["d"]
-                ["package_material_binding"]
-            )
-        self.assertEqual(3, len(set(bindings)))
-
-    def test_modal_passive_owner_coalesces_with_local_metadata(self) -> None:
-        cases = (
-            ("cannot be resolved", "permitted", "negative"),
-            ("can be resolved", "permitted", "affirmative"),
-            ("must not be resolved", "required", "negative"),
-        )
-        for source_class, material_field in (
-            ("root", "roots"),
-            ("indexed-reference", "references"),
-        ):
-            for phrase, modality, polarity in cases:
-                with self.subTest(source_class=source_class, phrase=phrase):
-                    sentence = (
-                        f"Return contradictory when conflicts {phrase} from "
-                        "the supplied evidence, and name the missing fact."
-                    )
-                    target = _catalog(
-                        **{
-                            material_field: {
-                                "d": (
-                                    "# d\n\n## Professional Decision Rules\n\n"
-                                    f"- {sentence}\n"
-                                )
-                            }
-                        }
-                    )[3]
-                    fact = next(
-                        row
-                        for row in CARRY.professional_semantic_fact_projection(
-                            target
-                        )["facts"]
-                        if row["source_class"] == source_class
-                        and row["action_concept"] == "emit"
-                    )
-                    dependent = [
-                        role
-                        for role in fact["argument_role_bindings"]
-                        if role["attachment"] == "dependent-condition"
-                    ]
-                    self.assertEqual(1, len(dependent))
-                    self.assertEqual("resolve", dependent[0]["owner_action_concept"])
-                    self.assertEqual(modality, dependent[0]["owner_modality"])
-                    self.assertEqual(polarity, dependent[0]["owner_polarity"])
-                    self.assertEqual("from", dependent[0]["relation"])
-                    self.assertIn("evidence", dependent[0]["scope_concepts"])
-                    self.assertNotIn(
-                        "copular-assert",
-                        {
-                            role["owner_action_concept"]
-                            for role in fact["argument_role_bindings"]
-                        },
-                    )
-
-    def test_active_and_passive_dependent_owners_remain_distinct(self) -> None:
-        active = _catalog(
-            roots={
-                "d": (
-                    "# d\n\n## Professional Decision Rules\n\n"
-                    "- Stop when reviewers cannot resolve conflict from source "
-                    "evidence.\n"
-                )
-            }
-        )
-        passive = _catalog(
-            roots={
-                "d": (
-                    "# d\n\n## Professional Decision Rules\n\n"
-                    "- Stop when conflict cannot be resolved from source "
-                    "evidence.\n"
-                )
-            }
-        )
-        for target, expected_owner_count in ((active, 2), (passive, 1)):
-            fact = next(
-                row
-                for row in CARRY.professional_semantic_fact_projection(target[3])[
-                    "facts"
-                ]
-                if row["source_class"] == "root"
-            )
-            owners = [
-                (
-                    role["owner_action_concept"],
-                    role["owner_modality"],
-                    role["owner_polarity"],
-                )
-                for role in fact["argument_role_bindings"]
-                if role["attachment"] == "dependent-condition"
-            ]
-            self.assertEqual(
-                [("resolve", "permitted", "negative")] * expected_owner_count,
-                owners,
-            )
         self.assertNotEqual(
-            CARRY.professional_review_bindings(active)["d"]
-            ["package_material_binding"],
-            CARRY.professional_review_bindings(passive)["d"]
-            ["package_material_binding"],
-        )
-
-    def test_shared_complement_rebinds_governing_owner_only(self) -> None:
-        target = _catalog(
-            roots={
-                "d": (
-                    "# d\n\n## Professional Decision Rules\n\n"
-                    "- Validate and stop drafting when conflict cannot be "
-                    "resolved from source evidence.\n"
-                )
-            }
-        )[3]
-        facts = [
-            row
-            for row in CARRY.professional_semantic_fact_projection(target)["facts"]
-            if row["source_class"] == "root"
-        ]
-        validate_fact = next(
-            fact for fact in facts if fact["action_concept"] == "validate"
-        )
-        stop_fact = next(fact for fact in facts if fact["action_concept"] == "stop")
-        validate_governing = next(
-            role
-            for role in validate_fact["argument_role_bindings"]
-            if role["attachment"] == "governing-predicate"
-        )
-        stop_governing = next(
-            role
-            for role in stop_fact["argument_role_bindings"]
-            if role["attachment"] == "governing-predicate"
-        )
-        self.assertEqual("validate", validate_governing["owner_action_concept"])
-        self.assertEqual("stop", stop_governing["owner_action_concept"])
-        self.assertEqual(
-            stop_governing["scope_concepts"],
-            validate_governing["scope_concepts"],
-        )
-        self.assertEqual(
-            ("required", "affirmative"),
-            (
-                validate_governing["owner_modality"],
-                validate_governing["owner_polarity"],
+            CARRY.professional_markdown_currentness_projection(
+                "# d\n\n**Review input\n"
             ),
-        )
-        validate_dependent = next(
-            role
-            for role in validate_fact["argument_role_bindings"]
-            if role["attachment"] == "dependent-condition"
-        )
-        stop_dependent = next(
-            role
-            for role in stop_fact["argument_role_bindings"]
-            if role["attachment"] == "dependent-condition"
-        )
-        self.assertEqual(stop_dependent, validate_dependent)
-        self.assertEqual(
-            ("resolve", "permitted", "negative", "from"),
-            (
-                validate_dependent["owner_action_concept"],
-                validate_dependent["owner_modality"],
-                validate_dependent["owner_polarity"],
-                validate_dependent["relation"],
+            CARRY.professional_markdown_currentness_projection(
+                "# d\n\nReview input\n"
             ),
         )
 
-    def test_fact_validation_rejects_directional_role_invariant_breaks(self) -> None:
-        valid = {
-            "source_class": "root",
-            "fact_class": "professional-decision",
-            "section_kind": "decision-rules",
-            "unit_kind": "list-item",
-            "fact_kind": "obligation",
-            "predicate_ordinal": 1,
-            "incoming_connector": "root",
-            "subject_scope_concepts": ["actor:implicit"],
-            "action_concept": "handoff",
-            "argument_role_bindings": [
-                {
-                    "argument_ordinal": 1,
-                    "relation": "direct",
-                    "scope_concepts": ["input"],
-                    "attachment": "governing-predicate",
-                    "owner_action_concept": "handoff",
-                    "owner_modality": "required",
-                    "owner_polarity": "affirmative",
-                },
-                {
-                    "argument_ordinal": 2,
-                    "relation": "to",
-                    "scope_concepts": ["output"],
-                    "attachment": "governing-predicate",
-                    "owner_action_concept": "handoff",
-                    "owner_modality": "required",
-                    "owner_polarity": "affirmative",
-                },
-            ],
-            "object_scope_concepts": ["input", "output"],
-            "condition_concepts": [],
-            "modality": "required",
-            "polarity": "affirmative",
+    def test_possible_prose_semantic_changes_are_fresh_not_inferred(self) -> None:
+        cases = {
+            "spelling": "# d\n\nReveiw d root behavior.\n",
+            "synonym": "# d\n\nInspect d root behavior.\n",
+            "compression": "# d\n\nReview d behavior.\n",
+            "action": "# d\n\nDelete d root behavior.\n",
+            "object": "# d\n\nReview d root contract.\n",
+            "direction": "# d\n\nReview input from d root behavior.\n",
+            "condition": "# d\n\nReview d root behavior unless valid.\n",
+            "constraint": "# d\n\nMay review d root behavior.\n",
+            "case": "# d\n\nreview d root behavior.\n",
+            "punctuation": "# d\n\nReview d root behavior!\n",
+            "unauthenticated-comment": (
+                "# d\n\n<!-- ordinary prose note -->\n"
+                "Review d root behavior.\n"
+            ),
         }
-        CARRY._validate_semantic_fact(valid)
-        variants = []
-        noncontiguous = copy.deepcopy(valid)
-        noncontiguous["argument_role_bindings"][1]["argument_ordinal"] = 3
-        variants.append((noncontiguous, "argument ordinals must be contiguous"))
-        unknown_relation = copy.deepcopy(valid)
-        unknown_relation["argument_role_bindings"][1]["relation"] = "under"
-        variants.append((unknown_relation, "unknown argument relation"))
-        union_mismatch = copy.deepcopy(valid)
-        union_mismatch["object_scope_concepts"] = ["input"]
-        variants.append((union_mismatch, "object scope union mismatch"))
-        for fact, message in variants:
-            with self.subTest(message=message), self.assertRaisesRegex(
-                CARRY.ProfessionalCarryForwardError,
-                message,
-            ):
-                CARRY._validate_semantic_fact(fact)
-
-    def test_predicate_projection_binds_root_and_reference_local_negation(
-        self,
-    ) -> None:
-        baseline_text = (
-            "# d\n\n## Professional Decision Rules\n\n"
-            "- You must validate input and do not delete output.\n"
-        )
-        reversed_text = (
-            "# d\n\n## Professional Decision Rules\n\n"
-            "- Do not validate input and you must delete output.\n"
-        )
-        for source_class, material_field in (
-            ("root", "roots"),
-            ("indexed-reference", "references"),
-        ):
-            with self.subTest(source_class=source_class):
-                baseline = _catalog(**{material_field: {"d": baseline_text}})
-                changed = _catalog(**{material_field: {"d": reversed_text}})
-                projection = CARRY.professional_semantic_fact_projection(
-                    baseline[3]
-                )
-                actual_polarities = {
-                    fact["action_concept"]: fact["polarity"]
-                    for fact in projection["facts"]
-                    if fact["source_class"] == source_class
-                }
-                self.assertEqual(
-                    {"delete": "negative", "validate": "affirmative"},
-                    actual_polarities,
-                )
-                baseline_binding = CARRY.professional_review_bindings(baseline)
-                changed_binding = CARRY.professional_review_bindings(changed)
-                self.assertNotEqual(
-                    baseline_binding["d"]["package_material_binding"],
-                    changed_binding["d"]["package_material_binding"],
-                )
-                plan = CARRY.plan_exact_professional_carry_forward(
-                    current_bindings=changed_binding,
-                    prior_snapshot=CARRY.professional_carry_snapshot(
-                        baseline_binding,
-                        review_contract_fingerprint=CONTRACT_FINGERPRINT,
-                    ),
-                    prior_decision_dependencies=self.dependencies,
-                    review_contract_fingerprint=CONTRACT_FINGERPRINT,
-                )
-                self.assertEqual(["b", "d"], plan["fresh_target_ids"])
-
-    def test_confirm_and_verify_are_closed_validate_aliases(self) -> None:
-        confirm = _catalog(
-            roots={
-                "d": (
-                    "# d\n\n## Professional Decision Rules\n\n"
-                    "- Confirm output before release.\n"
-                )
-            }
-        )
-        verify = _catalog(
-            roots={
-                "d": (
-                    "# d\n\n### Decision Rules\n\n"
-                    "* **Verify** output prior to release.\n"
-                )
-            }
-        )
-        confirm_binding = CARRY.professional_review_bindings(confirm)
-        verify_binding = CARRY.professional_review_bindings(verify)
-        self.assertEqual(
-            confirm_binding["d"]["package_material_binding"],
-            verify_binding["d"]["package_material_binding"],
-        )
-        fact = next(
-            row
-            for row in CARRY.professional_semantic_fact_projection(confirm[3])[
-                "facts"
-            ]
-            if row["source_class"] == "root"
-        )
-        self.assertEqual("validate", fact["action_concept"])
-
-    def test_unknown_list_imperative_is_lexical_and_changes_binding(self) -> None:
-        zorblate = _catalog(
-            roots={
-                "d": (
-                    "# d\n\n## Professional Decision Rules\n\n"
-                    "- Zorblate output before release.\n"
-                )
-            }
-        )
-        flarnicate = _catalog(
-            roots={
-                "d": (
-                    "# d\n\n## Professional Decision Rules\n\n"
-                    "- Flarnicate output before release.\n"
-                )
-            }
-        )
-        fact = next(
-            row
-            for row in CARRY.professional_semantic_fact_projection(zorblate[3])[
-                "facts"
-            ]
-            if row["source_class"] == "root"
-        )
-        self.assertEqual("lexical:zorblate", fact["action_concept"])
-        self.assertNotEqual(
-            CARRY.professional_review_bindings(zorblate)["d"]
-            ["package_material_binding"],
-            CARRY.professional_review_bindings(flarnicate)["d"]
-            ["package_material_binding"],
-        )
-
-    def test_material_paragraph_without_predicate_fails_closed(self) -> None:
-        no_predicate = _catalog(
-            roots={
-                "d": (
-                    "# d\n\n## Professional Decision Rules\n\n"
-                    "The zorbax and the quindle.\n"
-                )
-            }
-        )
-        with self.assertRaisesRegex(
-            CARRY.ProfessionalCarryForwardError,
-            "material semantic clause has no predicate",
-        ):
-            CARRY.professional_review_bindings(no_predicate)
-
-    def test_table_row_preserves_header_cell_relation_and_object_disjunction(
-        self,
-    ) -> None:
-        target = _catalog(
-            roots={
-                "d": (
-                    "# d\n\n## Professional Decision Rules\n\n"
-                    "| Rule | Evidence |\n"
-                    "| --- | --- |\n"
-                    "| Validate input | test or benchmark |\n"
-                )
-            }
-        )[3]
-        root_facts = [
-            row
-            for row in CARRY.professional_semantic_fact_projection(target)[
-                "facts"
-            ]
-            if row["source_class"] == "root"
-        ]
-        self.assertEqual(2, len(root_facts))
-        evidence = next(
-            row for row in root_facts if "evidence" in row["subject_scope_concepts"]
-        )
-        self.assertEqual("table-row", evidence["unit_kind"])
-        self.assertEqual(2, evidence["predicate_ordinal"])
-        self.assertEqual("then", evidence["incoming_connector"])
-        self.assertEqual("define", evidence["action_concept"])
-        self.assertEqual(
-            ["term:benchmark", "test"], evidence["object_scope_concepts"]
-        )
-
-    def test_relative_modality_does_not_override_governing_predicate(self) -> None:
-        target = _catalog(
-            roots={
-                "d": (
-                    "# d\n\n## Professional Decision Rules\n\n"
-                    "- Validate input that may change before release.\n"
-                )
-            }
-        )[3]
-        root_facts = [
-            row
-            for row in CARRY.professional_semantic_fact_projection(target)[
-                "facts"
-            ]
-            if row["source_class"] == "root"
-        ]
-        self.assertEqual(1, len(root_facts))
-        self.assertEqual("required", root_facts[0]["modality"])
-        self.assertIn(
-            "modality:permitted", root_facts[0]["condition_concepts"]
-        )
-
-    def test_perform_and_execute_are_equivalent_closed_actions(self) -> None:
-        perform = _catalog(
-            roots={
-                "d": (
-                    "# d\n\n## Professional Decision Rules\n\n"
-                    "Perform one complete initial analysis.\n"
-                )
-            }
-        )
-        execute = _catalog(
-            roots={
-                "d": (
-                    "# d\n\n## Professional Decision Rules\n\n"
-                    "Execute one complete initial analysis.\n"
-                )
-            }
-        )
-        perform_projection = CARRY.professional_semantic_fact_projection(
-            perform[3]
-        )
-        perform_fact = next(
-            row
-            for row in perform_projection["facts"]
-            if row["source_class"] == "root"
-        )
-        self.assertEqual("execute", perform_fact["action_concept"])
-        self.assertEqual(
-            CARRY.professional_review_bindings(perform)["d"]
-            ["package_material_binding"],
-            CARRY.professional_review_bindings(execute)["d"]
-            ["package_material_binding"],
-        )
-
-    def test_action_like_noun_fragments_do_not_form_predicates(self) -> None:
-        for fragment in (
-            "The performance budget.",
-            "The follow-up owner.",
-            "The discard policy.",
-        ):
-            with self.subTest(fragment=fragment), self.assertRaisesRegex(
-                CARRY.ProfessionalCarryForwardError,
-                "material semantic clause has no predicate",
-            ):
-                CARRY.professional_review_bindings(
-                    _catalog(
-                        roots={
-                            "d": (
-                                "# d\n\n## Professional Decision Rules\n\n"
-                                f"{fragment}\n"
-                            )
-                        }
-                    )
-                )
-
-    def test_closed_source_rewrites_emit_directional_predicates(self) -> None:
-        source_text = (
-            "# d\n\n## Professional Decision Rules\n\n"
-            "Derive severity from reachable consequence and current policy.\n\n"
-            "A GraphQL addition still requires schema-policy compliance "
-            "and current consumer proof.\n\n"
-            "At the first trusted ingress, remove untrusted client-identity "
-            "headers or change those headers to the ingress-owned canonical "
-            "form.\n"
-        )
-        baseline = _catalog(roots={"d": source_text})
-        target = baseline[3]
-        facts = [
-            row
-            for row in CARRY.professional_semantic_fact_projection(target)[
-                "facts"
-            ]
-            if row["source_class"] == "root"
-        ]
-        by_action = {}
-        for row in facts:
-            by_action.setdefault(row["action_concept"], []).append(row)
-        self.assertEqual(1, len(by_action["derive"]))
-        self.assertEqual(1, len(by_action["require"]))
-        self.assertEqual(1, len(by_action["delete"]))
-        self.assertEqual(1, len(by_action["change"]))
-        changed_header = by_action["change"][0]
-        self.assertEqual("or", changed_header["incoming_connector"])
-        self.assertIn("term:ingress", changed_header["subject_scope_concepts"])
-        self.assertIn("term:headers", changed_header["object_scope_concepts"])
-
-        retained = _catalog(
-            roots={
-                "d": source_text.replace(
-                    "or change those headers", "or retain those headers"
-                )
-            }
-        )
-        self.assertNotEqual(
-            CARRY.professional_review_bindings(baseline)["d"]
-            ["package_material_binding"],
-            CARRY.professional_review_bindings(retained)["d"]
-            ["package_material_binding"],
-        )
-
-    def test_material_constraint_reversal_reopens_target_and_dependents(
-        self,
-    ) -> None:
-        baseline = _catalog(
-            roots={
-                "d": (
-                    "# d\n\n## Professional Decision Rules\n\n"
-                    "- Validate outputs before release.\n"
-                )
-            }
-        )
-        reversed_constraint = _catalog(
-            roots={
-                "d": (
-                    "# d\n\n## Professional Decision Rules\n\n"
-                    "- Do not validate outputs before release.\n"
-                )
-            }
-        )
-        baseline_bindings = CARRY.professional_review_bindings(baseline)
-        snapshot = CARRY.professional_carry_snapshot(
-            baseline_bindings,
-            review_contract_fingerprint=CONTRACT_FINGERPRINT,
-        )
-        plan = CARRY.plan_exact_professional_carry_forward(
-            current_bindings=CARRY.professional_review_bindings(
-                reversed_constraint
-            ),
-            prior_snapshot=snapshot,
-            prior_decision_dependencies=self.dependencies,
-            review_contract_fingerprint=CONTRACT_FINGERPRINT,
-        )
-        self.assertEqual(["b", "d"], plan["fresh_target_ids"])
-        self.assertIn(
-            "target-material-changed", plan["reasons_by_target"]["d"]
-        )
-        self.assertIn(
-            "required-candidate-material-changed",
-            plan["reasons_by_target"]["b"],
-        )
-
-    def test_registry_fact_projection_ignores_display_spelling_but_binds_semantics(
-        self,
-    ) -> None:
-        baseline = _catalog(
-            responsibility_overrides={
-                "d": {
-                    "output_contract": [
-                        "You must validate every output before release."
-                    ]
-                }
-            }
-        )
-        equivalent = _catalog(
-            responsibility_overrides={
-                "d": {
-                    "output_contract": [
-                        "**Validte** outputs prior to release."
-                    ]
-                }
-            }
-        )
-        changed = _catalog(
-            responsibility_overrides={
-                "d": {"output_contract": ["Delete outputs before release."]}
-            }
-        )
-        expected_registry_fact = {
-            "source_class": "registry",
-            "fact_class": "required-output",
-            "section_kind": "registry-output-contract",
-            "unit_kind": "paragraph",
-            "fact_kind": "obligation",
-            "predicate_ordinal": 1,
-            "incoming_connector": "root",
-            "subject_scope_concepts": ["actor:implicit"],
-            "action_concept": "validate",
-            "argument_role_bindings": [
-                {
-                    "argument_ordinal": 1,
-                    "relation": "direct",
-                    "scope_concepts": ["output"],
-                    "attachment": "governing-predicate",
-                    "owner_action_concept": "validate",
-                    "owner_modality": "required",
-                    "owner_polarity": "affirmative",
-                }
-            ],
-            "object_scope_concepts": ["output"],
-            "condition_concepts": [
-                "precondition",
-                "release",
-            ],
-            "modality": "required",
-            "polarity": "affirmative",
-        }
-        for targets in (baseline, equivalent):
-            projection = CARRY.professional_semantic_fact_projection(
-                targets[3]
-            )
-            self.assertIn(expected_registry_fact, projection["facts"])
-
-        baseline_bindings = CARRY.professional_review_bindings(baseline)
-        self.assertEqual(
-            baseline_bindings["d"]["package_material_binding"],
-            CARRY.professional_review_bindings(equivalent)["d"]
-            ["package_material_binding"],
-        )
-        self.assertNotEqual(
-            baseline_bindings["d"]["package_material_binding"],
-            CARRY.professional_review_bindings(changed)["d"]
-            ["package_material_binding"],
-        )
-
-    def test_ambiguous_material_fact_fails_closed_without_raw_hash_fallback(
-        self,
-    ) -> None:
-        ambiguous = _catalog(
-            roots={
-                "d": (
-                    "# d\n\n## Professional Decision Rules\n\n"
-                    "The frobnicate and the flarn.\n"
-                )
-            }
-        )
-        with self.assertRaisesRegex(
-            CARRY.ProfessionalCarryForwardError,
-            "material semantic clause has no predicate",
-        ):
-            CARRY.professional_review_bindings(ambiguous)
-
-    def test_professional_semantic_authority_changes_are_exact(self) -> None:
-        cases = (
-            (
-                _catalog(registry_markers={"d": "changed-registry"}),
-                [],
-            ),
-            (
-                _catalog(
-                    responsibility_overrides={
-                        "d": {"output_contract": ["**Output**   d."]}
-                    }
-                ),
-                [],
-            ),
-            (
-                _catalog(expertise={"d": ["domain", "security"]}),
-                "target-material-changed",
-            ),
-            (
-                _catalog(layers={"d": "domain"}),
-                "target-placement-changed",
-            ),
-            (
-                _catalog(
-                    responsibility_overrides={
-                        "d": {"trigger_signals": ["changed routing trigger"]}
-                    }
-                ),
-                "target-material-changed",
-            ),
-            (
-                _catalog(
-                    responsibility_overrides={
-                        "d": {"output_contract": ["changed required output"]}
-                    }
-                ),
-                "target-material-changed",
-            ),
-            (
-                _catalog(
-                    responsibility_overrides={
-                        "d": {"escalation_signals": ["changed constraint"]}
-                    }
-                ),
-                "target-material-changed",
-            ),
-            (
-                _catalog(
-                    responsibility_overrides={
-                        "d": {"boundary_signals": ["changed boundary"]}
-                    }
-                ),
-                "target-material-changed",
-            ),
-        )
-        for targets, own_reason in cases:
-            with self.subTest(reason=own_reason):
+        for label, content in cases.items():
+            targets = _catalog(roots={"d": content})
+            with self.subTest(label=label):
                 plan = self._plan(targets)
-                if own_reason == []:
-                    self.assertEqual([], plan["fresh_target_ids"])
-                    continue
                 self.assertEqual(["b", "d"], plan["fresh_target_ids"])
-                self.assertIn(own_reason, plan["reasons_by_target"]["d"])
+                self.assertIn(
+                    "target-material-changed",
+                    plan["reasons_by_target"]["d"],
+                )
                 self.assertIn(
                     "required-candidate-material-changed",
                     plan["reasons_by_target"]["b"],
                 )
+                self.assertEqual([], plan["reasons_by_target"]["a"])
+                self.assertEqual([], plan["reasons_by_target"]["c"])
 
-    def test_semantic_binding_rejects_missing_forged_and_unknown_authority(self) -> None:
+    def test_order_nesting_code_link_table_and_opaque_changes_are_fresh(
+        self,
+    ) -> None:
+        cases = (
+            (
+                "heading-level",
+                "# d\n\nReview input.\n",
+                "## d\n\nReview input.\n",
+            ),
+            (
+                "paragraph-list-type",
+                "# d\n\nReview input.\n",
+                "# d\n\n- Review input.\n",
+            ),
+            (
+                "ordered-step",
+                (
+                    "# d\n\n"
+                    "1. Review input.\n"
+                    "2. Verify output.\n"
+                ),
+                (
+                    "# d\n\n"
+                    "1. Verify output.\n"
+                    "2. Review input.\n"
+                ),
+            ),
+            (
+                "nested-owner",
+                (
+                    "# d\n\n"
+                    "- Review input.\n"
+                    "  - Verify output.\n"
+                ),
+                (
+                    "# d\n\n"
+                    "- Review input.\n"
+                    "- Verify output.\n"
+                ),
+            ),
+            (
+                "fenced-code",
+                "# d\n\n" + "\x60\x60\x60text\nreview input\n\x60\x60\x60\n",
+                "# d\n\n" + "\x60\x60\x60text\nreview output\n\x60\x60\x60\n",
+            ),
+            (
+                "inline-code",
+                "# d\n\nReview \x60input\x60 exactly.\n",
+                "# d\n\nReview \x60output\x60 exactly.\n",
+            ),
+            (
+                "link-destination",
+                "# d\n\nReview [input](references/input.md).\n",
+                "# d\n\nReview [input](references/output.md).\n",
+            ),
+            (
+                "link-title",
+                '# d\n\nReview [input](references/input.md "input").\n',
+                '# d\n\nReview [input](references/input.md "output").\n',
+            ),
+            (
+                "image-source",
+                "# d\n\nReview ![input](images/input.png).\n",
+                "# d\n\nReview ![input](images/output.png).\n",
+            ),
+            (
+                "commonmark-autolink",
+                "# d\n\nReview <https://example.com/input>.\n",
+                "# d\n\nReview <https://example.com/output>.\n",
+            ),
+            (
+                "link-leading-boundary-whitespace",
+                "# d\n\nReview [input](references/input.md).\n",
+                "# d\n\nReview[input](references/input.md).\n",
+            ),
+            (
+                "link-trailing-boundary-whitespace",
+                "# d\n\n[Review](references/input.md) input.\n",
+                "# d\n\n[Review](references/input.md)input.\n",
+            ),
+            (
+                "inline-code-boundary-whitespace",
+                "# d\n\nReview `input`.\n",
+                "# d\n\nReview`input`.\n",
+            ),
+            (
+                "image-boundary-whitespace",
+                "# d\n\nUse ![safe](images/input.png) input.\n",
+                "# d\n\nUse![safe](images/input.png) input.\n",
+            ),
+            (
+                "link-label-boundary-whitespace",
+                "# d\n\nReview [ input ](references/input.md).\n",
+                "# d\n\nReview [input](references/input.md).\n",
+            ),
+            (
+                "autolink-boundary-whitespace",
+                "# d\n\nReview <https://example.com>.\n",
+                "# d\n\nReview<https://example.com>.\n",
+            ),
+            (
+                "table-cell",
+                (
+                    "# d\n\n"
+                    "| Action | Object |\n"
+                    "| --- | --- |\n"
+                    "| Review | input |\n"
+                ),
+                (
+                    "# d\n\n"
+                    "| Action | Object |\n"
+                    "| --- | --- |\n"
+                    "| Review | output |\n"
+                ),
+            ),
+            (
+                "opaque-block",
+                "# d\n\n> Review input conservatively.\n",
+                "# d\n\n> Delete input conservatively.\n",
+            ),
+        )
+        for label, baseline_text, changed_text in cases:
+            baseline = _catalog(roots={"d": baseline_text})
+            changed = _catalog(roots={"d": changed_text})
+            baseline_bindings = CARRY.professional_review_bindings(baseline)
+            snapshot = CARRY.professional_carry_snapshot(
+                baseline_bindings,
+                review_contract_fingerprint=CONTRACT_FINGERPRINT,
+            )
+            packet, ballots, decision = _prior_artifacts(baseline)
+            dependencies = CARRY.professional_prior_decision_dependencies(
+                prior_packet=packet,
+                prior_ballots=ballots,
+                prior_decision=decision,
+            )
+            with self.subTest(label=label):
+                plan = CARRY.plan_exact_professional_carry_forward(
+                    current_bindings=CARRY.professional_review_bindings(changed),
+                    prior_snapshot=snapshot,
+                    prior_decision_dependencies=dependencies,
+                    review_contract_fingerprint=CONTRACT_FINGERPRINT,
+                )
+                self.assertEqual(["b", "d"], plan["fresh_target_ids"])
+
+    def test_complete_structured_authority_changes_are_fresh(self) -> None:
+        cases = {
+            "responsibility": _catalog(
+                responsibility_overrides={
+                    "d": {"role_support": ["analysis-agent"]}
+                }
+            ),
+            "trigger": _catalog(
+                responsibility_overrides={
+                    "d": {"trigger_signals": ["changed trigger"]}
+                }
+            ),
+            "anti-trigger": _catalog(
+                responsibility_overrides={
+                    "d": {"anti_trigger_signals": ["changed anti-trigger"]}
+                }
+            ),
+            "required-input": _catalog(
+                responsibility_overrides={
+                    "d": {"required_inputs": ["changed input"]}
+                }
+            ),
+            "required-output": _catalog(
+                responsibility_overrides={
+                    "d": {"output_contract": ["changed output"]}
+                }
+            ),
+            "constraint": _catalog(
+                responsibility_overrides={
+                    "d": {"escalation_signals": ["changed constraint"]}
+                }
+            ),
+            "routing-boundary": _catalog(
+                responsibility_overrides={
+                    "d": {"boundary_signals": ["changed boundary"]}
+                }
+            ),
+            "layer3": _catalog(
+                responsibility_overrides={
+                    "d": {"layer3_candidates": ["a"]}
+                }
+            ),
+            "used-by": _catalog(
+                responsibility_overrides={"d": {"used_by": ["a"]}}
+            ),
+            "task-routable": _catalog(
+                responsibility_overrides={"d": {"task_routable": False}}
+            ),
+            "required-expertise": _catalog(
+                expertise={"d": ["domain", "security"]}
+            ),
+            "registry-extra-authority": _catalog(
+                registry_authority_overrides={
+                    "d": {"routing_mode": "direct"}
+                }
+            ),
+        }
+        for label, targets in cases.items():
+            with self.subTest(label=label):
+                plan = self._plan(targets)
+                self.assertEqual(["b", "d"], plan["fresh_target_ids"])
+                self.assertIn(
+                    "target-material-changed",
+                    plan["reasons_by_target"]["d"],
+                )
+
+    def test_reference_loading_authority_changes_are_fresh(self) -> None:
+        base = copy.deepcopy(self.targets[3]["reference_authority"][0])
+        changes = {
+            "identity": ("path", "renamed-reference.md"),
+            "type": ("type", "decision-checklist"),
+            "load-when": (
+                "load_when",
+                "Reviewing d recovery evidence for this bounded task",
+            ),
+            "do-not-load-when": (
+                "do_not_load_when",
+                "The d recovery boundary is already fully evidenced",
+            ),
+            "required-by": ("required_by", ["analysis-agent"]),
+            "required-output": (
+                "required_output",
+                ["checklist-result", "residual-risk"],
+            ),
+        }
+        for label, (field, value) in changes.items():
+            reference = copy.deepcopy(base)
+            reference[field] = value
+            targets = _catalog(
+                reference_authority_overrides={"d": [reference]}
+            )
+            if field == "path":
+                targets[3]["indexed_references"][0]["path"] = (
+                    "src/d/renamed-reference.md"
+                )
+            with self.subTest(label=label):
+                plan = self._plan(targets)
+                self.assertEqual(["b", "d"], plan["fresh_target_ids"])
+                self.assertIn(
+                    "target-material-changed",
+                    plan["reasons_by_target"]["d"],
+                )
+
+    def test_raw_material_integrity_mismatch_fails_closed(self) -> None:
+        cases = []
+        stale_content = _catalog()
+        stale_content[3]["root"]["content"] += "changed"
+        cases.append(stale_content)
+        stale_digest = _catalog()
+        stale_digest[3]["root"]["sha256"] = "0" * 64
+        cases.append(stale_digest)
+        stale_line_count = _catalog()
+        stale_line_count[3]["root"]["line_count"] += 1
+        cases.append(stale_line_count)
+        for targets in cases:
+            with self.subTest(record=targets[3]["root"]), self.assertRaises(
+                CARRY.ProfessionalCarryForwardError
+            ):
+                CARRY.professional_review_bindings(targets)
+
+    def test_missing_or_drifting_structured_authority_fails_closed(self) -> None:
+        missing_registry = _catalog()
+        missing_registry[0].pop("registry_authority")
+        missing_reference = _catalog()
+        missing_reference[0].pop("reference_authority")
+        mismatched_reference = _catalog()
+        mismatched_reference[0]["registry_authority"]["reference_index"][0][
+            "load_when"
+        ] = "A different authenticated loading condition"
+        drifting_compatibility = _catalog()
+        drifting_compatibility[0]["registry"]["responsibility_contract"][
+            "output_contract"
+        ] = ["drifted compatibility output"]
+        duplicate_reference = _catalog()
+        duplicate_reference[0]["reference_authority"].append(
+            copy.deepcopy(duplicate_reference[0]["reference_authority"][0])
+        )
+        duplicate_reference[0]["registry_authority"]["reference_index"] = (
+            copy.deepcopy(duplicate_reference[0]["reference_authority"])
+        )
+        for targets in (
+            missing_registry,
+            missing_reference,
+            mismatched_reference,
+            drifting_compatibility,
+            duplicate_reference,
+        ):
+            with self.subTest(target=targets[0]), self.assertRaises(
+                CARRY.ProfessionalCarryForwardError
+            ):
+                CARRY.professional_review_bindings(targets)
+
+    def test_currentness_contract_has_no_natural_language_inference_authority(
+        self,
+    ) -> None:
+        serialized = json.dumps(
+            CONTRACTS.PROFESSIONAL_CURRENTNESS_PROJECTION_CONTRACT,
+            sort_keys=True,
+        )
+        for forbidden in (
+            "lexical:",
+            "synonym",
+            "stemming",
+            "part-of-speech",
+            "predicate-owner",
+            "modal-passive",
+            "gerund",
+            "infinitive",
+        ):
+            self.assertNotIn(forbidden, serialized)
+        self.assertEqual(
+            "unsupported-or-ambiguous-markdown-is-opaque-and-change-is-fresh",
+            CONTRACTS.PROFESSIONAL_CURRENTNESS_PROJECTION_CONTRACT[
+                "unsupported_markdown"
+            ],
+        )
+        self.assertEqual(
+            "professional-commonmark-material-projection-v4",
+            CONTRACTS.PROFESSIONAL_CURRENTNESS_PROJECTION_VERSION,
+        )
+        pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+        self.assertIn('"markdown-it-py==4.2.0"', pyproject)
+        self.assertIn('"mdurl==0.1.2"', pyproject)
+
+    def test_markdown_parser_distribution_mismatch_fails_closed(self) -> None:
+        actual = {
+            "markdown-it-py": "4.2.0",
+            "mdurl": "0.1.2",
+        }
+        for distribution in actual:
+            changed = dict(actual)
+            changed[distribution] = "unexpected"
+            with self.subTest(distribution=distribution), mock.patch.object(
+                CARRY.importlib_metadata,
+                "version",
+                side_effect=lambda name, versions=changed: versions[name],
+            ), self.assertRaisesRegex(
+                CARRY.ProfessionalCarryForwardError,
+                rf"{distribution}=={actual[distribution]}",
+            ):
+                CARRY.professional_markdown_currentness_projection(
+                    "# d\n\nReview input.\n"
+                )
+        with mock.patch.object(
+            CARRY.importlib_metadata,
+            "version",
+            side_effect=CARRY.importlib_metadata.PackageNotFoundError(
+                "markdown-it-py"
+            ),
+        ), self.assertRaisesRegex(
+            CARRY.ProfessionalCarryForwardError,
+            "markdown-it-py==4.2.0",
+        ):
+            CARRY.professional_markdown_currentness_projection(
+                "# d\n\nReview input.\n"
+            )
+
+    def test_markdown_parser_options_and_rules_match_the_contract(self) -> None:
+        parser = CARRY._verified_professional_markdown_parser()
+        parser_contract = (
+            CONTRACTS.PROFESSIONAL_CURRENTNESS_PROJECTION_CONTRACT["parser"]
+        )
+        self.assertEqual(
+            parser_contract["active_rules"], parser.get_active_rules()
+        )
+        for option, expected in parser_contract["options"].items():
+            self.assertEqual(expected, parser.options[option])
+
+    def test_unknown_parser_token_attrs_and_metadata_fall_back_to_opaque(
+        self,
+    ) -> None:
+        content = "# d\n\nReview input.\n"
+        tokens, environment = CARRY._parse_professional_markdown(content)
+        mutations = (
+            ("unknown-token", 0, "type", "plugin_block"),
+            ("unexpected-attrs", 0, "attrs", {"plugin": "value"}),
+            ("unexpected-meta", 0, "meta", {"plugin": "value"}),
+            ("unexpected-nesting", 0, "nesting", 0),
+        )
+        for label, index, field, value in mutations:
+            changed_tokens = copy.deepcopy(tokens)
+            setattr(changed_tokens[index], field, value)
+            with self.subTest(label=label), mock.patch.object(
+                CARRY,
+                "_parse_professional_markdown",
+                return_value=(changed_tokens, copy.deepcopy(environment)),
+            ):
+                projection = (
+                    CARRY.professional_markdown_currentness_projection(content)
+                )
+                self.assertEqual(
+                    [{"type": "opaque-document", "value": content}],
+                    projection,
+                )
+
+    def test_currentness_binding_rejects_forged_and_unknown_authority(self) -> None:
         missing = _catalog()
         missing[0]["registry"]["responsibility_contract"].pop(
             "output_contract"
@@ -2404,6 +1476,11 @@ class ProfessionalCarryForwardTests(unittest.TestCase):
                 review_contract_fingerprint=CONTRACT_FINGERPRINT,
             )["targets"]["b"]
         )
+        snapshot_target = CARRY.professional_carry_snapshot(
+            self.bindings,
+            review_contract_fingerprint=CONTRACT_FINGERPRINT,
+        )["targets"]["b"]
+        self.assertNotIn("content_fingerprint", snapshot_target)
         for forbidden in (
             b"content_fingerprint",
             b"own_material",

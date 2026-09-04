@@ -10,4 +10,4 @@ Compare proof strategies against the actual boundary:
 
 Name provider, consumers, authoritative schema or observed fixture, versions, compatibility direction/policy, retention/replay source, and rollout order. Select structural versus semantic proof explicitly: schema shape cannot prove meanings or consumer tolerance. Exercise old readers with new values and new readers with retained old payloads; preserve identifiers and migration meaning until current consumer/replay evidence and rollback permit removal.
 
-Bound provider checks to the named expectations, captures to source/version/environment/time, and contract tests to the modeled transport/persistence/timing behavior. Return the option comparison, selected approach, rejected strategies, and proof limits.
+Bound provider checks to named expectations, captures to source/version/environment/time, and contract tests to the modeled transport/persistence/timing behavior. Return the option comparison, selected approach, rejected strategies, and proof limits.

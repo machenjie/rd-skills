@@ -653,42 +653,93 @@ professional corrections, and zero unresolved professional disagreements
 across 188 packages. Static qualification claims prove declared tag coverage,
 not real-world identity, credentials, or experience.
 
-Professional currentness uses
-`professional-semantic-predicate-projection-v4`, not the raw package digest. The
-versioned projection reduces material Registry fields and unfenced,
-uncommented Root/indexed-Reference logical clauses to closed source, section,
-fact, modality, polarity, action, and object/condition concepts. Its closed
-alias and typo tables make proven spelling, Markdown, whitespace, and wording
-aliases identical; canonical facts are deduplicated. Direction markers are
-classified before attachment: condition-owned markers and exact closed
-infinitive `to` are not argument roles, while confirmed directions bind only
-to the nearest structural owner in that owner's half-open local interval.
-Unknown owners fail closed only when their own interval contains a confirmed
-direction. Every exact closed action is an interval barrier; a plain action
-owns a direction only inside a grammatical condition region, and predicate
-slicing preserves that region context. A lexical dependent owner is permitted
-only as one collision-free,
-uninflected alphabetic head immediately after a maximal modal/negation lead,
-or after infinitive `to` when a closed determiner and nonempty complement make
-that slot explicit. Closed aliases and stemming take precedence; passive and
-gerund owners have no lexical fallback. An explicit material
-modality with no closed action concept fails instead of falling back to raw
-text or silently carrying. The projection contains no raw prose, raw SHA-256,
-line/word counts, repository paths, or current file-set identity. Its detector,
-alias, stop-token, section, and fact contracts are part of the Professional
-review-contract fingerprint, so changing any of them forces all packages
-fresh. The separate raw `content_fingerprint` continues to bind the complete
-Root, indexed References, Registry record, and expertise material for packet,
-capsule, provenance, and tamper validation; it never selects fresh versus
-carry. Required and authenticated reviewer-added dependencies compare the same
-semantic package binding at exactly one hop.
+Professional currentness is built by `professional_review_bindings()` from two
+separate bindings. `content_fingerprint` binds the complete raw Root and indexed
+Reference records, Registry authority, Reference authority, and required
+expertise. It is provenance, artifact-integrity, tamper, and debug evidence; it
+never selects fresh versus carry. `package_material_binding` instead hashes the
+`professional-commonmark-material-projection-v4` result from
+`professional_candidate_currentness_projection()`.
 
-Current Professional schema-3 packets store no target-level
-`package_fingerprint`; each target has one `review_binding` containing
+That currentness projection consumes structured authority directly. It includes
+the exact package identity and layer, owned Root and indexed-Reference paths,
+required expertise, and the complete normalized `registry_authority` row. The
+Registry row therefore covers responsibility and role support, trigger and
+anti-trigger signals, required inputs and outputs, escalation and boundary
+signals, Layer 3 candidates, `used_by`, `task_routable`, routing authority, and
+any other validated row field without reconstructing those facts from prose.
+Its compatibility `responsibility_contract` is derived from that row and must
+match it. The separate ordered `reference_authority` projection is produced
+from Reference Contract v2 and preserves each Reference identity plus `type`,
+`load_when`, `do_not_load_when`, `required_by`, and `required_output`. Its paths
+must match the complete indexed Reference material set.
+
+`professional_markdown_currentness_projection()` uses
+`markdown-it-py==4.2.0` with `mdurl==0.1.2`, the `commonmark` preset, HTML token
+recognition enabled, and linkify, typographer, and automatic breaks disabled.
+The table rule is enabled only so tables can be recognized and rejected. Both
+distribution versions are verified at execution; a missing or different
+version fails closed without a fallback parser. The projection is not a
+natural-language equivalence parser and does not add repository-specific prose
+grammar.
+
+The closed block-token subset is document, paragraph, heading with level,
+blockquote, unordered list and list item with nesting and order, fenced code
+with info and content, distinct indented code, and thematic break. The closed
+inline-token subset is whitespace-aware text and softbreak fragments, distinct
+hardbreak, emphasis or strong children without their presentation decoration,
+inline code, direct links, images, and CommonMark autolinks. It preserves
+lexical text, case, punctuation, word order, heading level, block and inline
+type, order and nesting, code content, inline boundary whitespace, and exact
+parser-produced link and image attributes. Unicode NFC, LF line endings,
+horizontal whitespace and soft wrapping within the same parsed inline region,
+emphasis or strong decoration, unordered-list marker spelling, heading marker
+style, fence marker style, and thematic-break marker style are presentation.
+Frontmatter remains a separate closed adapter: only exact column-zero `---`
+delimiters and simple `name` or `description` scalar fields are accepted.
+
+The parser first authenticates source-marker comments. Only exact, root-level,
+single-line marker HTML tokens are removed; comments inside code, inline
+comments, indented comments, and ordinary HTML remain material. The normalized
+body is parsed again after removal. Ordered lists, GFM tables, raw HTML,
+reference definitions or reference-style links, unknown or plugin tokens, and
+unexpected token attributes, metadata, or nesting make the whole body one
+`opaque-document`. That opaque value preserves every normalized character after
+authenticated marker removal, including horizontal and blank-line whitespace
+and the final newline. A spelling change, equivalent wording substitution,
+prose compression, or any other possibly semantic change therefore changes the
+material projection and requires affected review; Professional source must not
+be rewritten to fit the projection.
+
+`professional_adjacency_review_binding()` binds required candidate IDs and the
+selection-contract version. `review_unit_binding` combines the target material,
+that adjacency, and direct required-candidate material bindings. When a package
+material projection changes, `plan_exact_professional_carry_forward()` marks
+that target `target-material-changed`; targets that directly required it become
+fresh through `required-candidate-material-changed`. Candidates authenticated
+as reviewer-added by the prior decision use the same one-hop comparison and
+produce `reviewer-added-candidate-material-changed`. Fresh status itself is not
+propagated, so a dependent's dependent and unrelated packages carry when their
+own review unit is unchanged. A raw `content_fingerprint` change with an
+unchanged conservative projection also carries.
+
+Only a `review_contract_fingerprint` change makes every existing package fresh
+from a currentness-contract change, with `review-contract-changed`; absence of a
+usable prior baseline separately requires bootstrap review. An attestation made
+current under an earlier Professional review contract becomes stale,
+historical-only evidence. It cannot authorize carry, promotion, currentness, or
+Formal Release, and current and prior evidence remain separate until a fresh
+review replaces the fixed attestation.
+
+`package_fingerprint` is schema-2 and historical compatibility-only evidence;
+it is not a current schema-3 target, decision, or carry field. Current schema-3
+packet targets have one `review_binding` containing
 `package_material_binding`, direct `dependency_material_bindings`, and the
-single `review_unit_binding`. Decisions retain that review-unit binding and the
-packet/ballot artifact chain, but no package or review-binding aliases. Compact
-storage keeps one top-level `review_contract_fingerprint`, one shared
+single `review_unit_binding`. Raw material-record `sha256` values remain
+provenance and integrity evidence. Decisions retain that review-unit binding
+and the packet/ballot artifact chain, but no package or review-binding aliases.
+Compact storage keeps one top-level
+`review_contract_fingerprint`, one shared
 `dependency_material_catalog`, and per-Skill package material, review unit,
 dependency IDs, votes, result, expertise, and direct-origin provenance. It has
 no `source_fingerprints`, per-finding dependency map, or duplicated origin

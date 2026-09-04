@@ -47,6 +47,8 @@ class ProfessionalSchema3ClosedFieldMigrationContractTests(unittest.TestCase):
                 "root",
                 "indexed_references",
                 "registry",
+                "registry_authority",
+                "reference_authority",
                 "required_expertise_tags",
                 "routing_adjacency",
                 "review_binding",
@@ -83,11 +85,11 @@ class ProfessionalSchema3ClosedFieldMigrationContractTests(unittest.TestCase):
         for authority in (
             "package_material_binding",
             "review_unit_binding",
-            "direct dependency semantic bindings",
+            "complete registry and ordered reference authority",
+            "direct one-hop dependency material bindings",
             "artifact-integrity evidence only",
-            "origin_review_id",
-            "origin_commit",
-            "origin_verdict_digest",
+            "direct last-fresh origin",
+            "unsupported or ambiguous material changes require affected-package fresh review",
         ):
             self.assertIn(authority, limitations)
         validated = PANEL._professional_v3_packet_state(
@@ -134,11 +136,11 @@ class ProfessionalSchema3ClosedFieldMigrationContractTests(unittest.TestCase):
         for authority in (
             "package_material_binding",
             "review_unit_binding",
-            "direct dependency semantic bindings",
+            "complete registry and ordered reference authority",
+            "direct one-hop dependency material bindings",
             "artifact-integrity evidence only",
-            "origin_review_id",
-            "origin_commit",
-            "origin_verdict_digest",
+            "validated depth-zero fresh origin",
+            "unsupported or ambiguous material changes require affected-package fresh review",
         ):
             self.assertIn(authority, limitations)
 
@@ -1284,8 +1286,18 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
                     )
                 )
                 fixed.write_bytes(fixed_attestation_bytes)
-                self.assertEqual(133, len(expected_fresh_ids))
                 self.assertEqual(56, len(expected_carried_ids))
+                self.assertEqual(
+                    len(all_ids) - len(expected_carried_ids),
+                    len(expected_fresh_ids),
+                )
+                self.assertEqual(
+                    set(all_ids),
+                    expected_fresh_ids | expected_carried_ids,
+                )
+                self.assertFalse(
+                    expected_fresh_ids & expected_carried_ids
+                )
                 expected_reasons = {skill_id: [] for skill_id in all_ids}
                 for skill_id in expected_fresh_ids:
                     expected_reasons[skill_id] = [
@@ -2209,9 +2221,13 @@ class ProfessionalCompletenessSchema3CliTests(unittest.TestCase):
             ]
             forged_carry["review_plan"]["plan_lineage_depth"] = 1
             forged_carry["review_plan"]["summary"] = {
-                "total_target_count": 188,
-                "fresh_target_count": 188,
-                "carried_target_count": 1,
+                "total_target_count": len(current_state["bindings"]),
+                "fresh_target_count": len(
+                    forged_carry["review_plan"]["fresh_targets"]
+                ),
+                "carried_target_count": len(
+                    forged_carry["review_plan"]["carried_targets"]
+                ),
             }
             without_fingerprint = copy.deepcopy(forged_carry["review_plan"])
             without_fingerprint.pop("plan_fingerprint")

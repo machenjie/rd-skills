@@ -5,9 +5,10 @@ Use this contract only for `validation-only/no-edit`, `diff-export/no-edit`, or
 The task-agent loads no Professional Skill or Layer 3 guidance, does not use the
 Implementation Handoff, and must not edit, repair, access the network, fetch, or
 contact remotes. It never diagnoses, reroutes, or becomes an analysis authority.
-<!-- rd-semantic-id:v2 finding=unconditional_absolute_candidate rule=engineering-control-plane/host-failure occurrence=utility-host-failure -->
 Runtime capability facts are not an execution preflight. Invoke only the
-capsule-named operation. Only an actual Host/tool failure blocks; preserve the
+capsule-named operation.
+<!-- rd-semantic-id:v2 finding=unconditional_absolute_candidate rule=engineering-control-plane/host-failure occurrence=utility-host-failure -->
+Only an actual Host/tool failure blocks; preserve the
 real Task ID. Host invocation and raw output prove failure; formatting is syntax.
 Runtime asset failure never enters Utility and cannot cause reroute.
 Capture a pre-operation workspace change set with one adjacent ordered check group, exactly

@@ -34,8 +34,9 @@ def _catalog(
     *,
     roots: dict[str, str] | None = None,
     references: dict[str, str] | None = None,
-    registry_markers: dict[str, str] | None = None,
     responsibility_overrides: dict[str, dict[str, object]] | None = None,
+    registry_authority_overrides: dict[str, dict[str, object]] | None = None,
+    reference_authority_overrides: dict[str, list[dict[str, object]]] | None = None,
     expertise: dict[str, list[str]] | None = None,
     layers: dict[str, str] | None = None,
     required: dict[str, list[str]] | None = None,
@@ -44,8 +45,9 @@ def _catalog(
 ) -> list[dict]:
     roots = roots or {}
     references = references or {}
-    registry_markers = registry_markers or {}
     responsibility_overrides = responsibility_overrides or {}
+    registry_authority_overrides = registry_authority_overrides or {}
+    reference_authority_overrides = reference_authority_overrides or {}
     expertise = expertise or {}
     layers = layers or {}
     required = required or {"b": ["d"], "c": ["a"]}
@@ -82,7 +84,6 @@ def _catalog(
             for candidate_id in required_ids
         ]
         responsibility = {
-            "marker": registry_markers.get(skill_id, "baseline-registry"),
             "role_support": ["task-agent"],
             "trigger_signals": [f"trigger {skill_id}"],
             "anti_trigger_signals": [f"exclude {skill_id}"],
@@ -100,10 +101,62 @@ def _catalog(
         responsibility.update(
             copy.deepcopy(responsibility_overrides.get(skill_id, {}))
         )
+        reference_authority = reference_authority_overrides.get(
+            skill_id,
+            [
+                {
+                    "path": "reference.md",
+                    "type": "evidence-pattern",
+                    "load_when": (
+                        f"Reviewing {skill_id} failure evidence for this bounded task"
+                    ),
+                    "do_not_load_when": (
+                        f"The {skill_id} failure boundary is already fully evidenced"
+                    ),
+                    "required_by": ["task-agent"],
+                    "required_output": ["evidence-record", "proof-limit"],
+                }
+            ],
+        )
         registry_row = {
             "name": skill_id,
-            "responsibility_contract": responsibility,
+            "routing_mode": "evidence-only",
+            "required_expertise_tags": copy.deepcopy(
+                expertise.get(skill_id, ["domain"])
+            ),
+            "path": f"src/{skill_id}",
+            "role_support": copy.deepcopy(responsibility["role_support"]),
+            "trigger_signals": copy.deepcopy(
+                responsibility["trigger_signals"]
+            ),
+            "anti_trigger_signals": copy.deepcopy(
+                responsibility["anti_trigger_signals"]
+            ),
+            "required_inputs": copy.deepcopy(
+                responsibility["required_inputs"]
+            ),
+            "output_contract": copy.deepcopy(
+                responsibility["output_contract"]
+            ),
+            "escalation_signals": copy.deepcopy(
+                responsibility["escalation_signals"]
+            ),
+            "reference_index": copy.deepcopy(reference_authority),
+            "layer3_candidates": copy.deepcopy(
+                responsibility["layer3_candidates"]
+            ),
+            "used_by": copy.deepcopy(responsibility["used_by"]),
+            "boundary_signals": copy.deepcopy(
+                responsibility["boundary_signals"]
+            ),
+            "group": responsibility["group"],
+            "content_class": responsibility["content_class"],
+            "delivery_scope": responsibility["delivery_scope"],
+            "task_routable": responsibility["task_routable"],
         }
+        registry_row.update(
+            copy.deepcopy(registry_authority_overrides.get(skill_id, {}))
+        )
         adjacency = {
             "algorithm": "fixture-ranking-v1",
             "document_frequency_filter": {
@@ -127,6 +180,8 @@ def _catalog(
             "indexed_references": [
                 _material(skill_id, "reference", reference_content)
             ],
+            "registry_authority": registry_row,
+            "reference_authority": copy.deepcopy(reference_authority),
             "registry": {
                 "path": "src/registry.yaml",
                 "entry_fingerprint": _sha(registry_row),
@@ -511,7 +566,7 @@ def _normalize_historical_reviewer_added_promotions(
 def _current_compact_professional_fixture_bytes(
     targets: list[dict], *, review_contract_fingerprint: str
 ) -> bytes:
-    """Rebind historical judgments as schema-2 test data, never authority."""
+    """Synthesize current schema-2 test data, never repository evidence."""
 
     bindings, _snapshot = PANEL._professional_v3_binding_state(
         targets,
@@ -524,6 +579,31 @@ def _current_compact_professional_fixture_bytes(
     preliminary = (
         PANEL.panel_attestation.parse_attestation_storage_selector_bytes(raw)
     )
+    current_ids = set(bindings)
+    finding_ids = {
+        row.get("skill_id")
+        for row in preliminary.get("findings", [])
+        if isinstance(row, dict) and isinstance(row.get("skill_id"), str)
+    }
+    missing = sorted(current_ids - finding_ids)
+    retired = sorted(finding_ids - current_ids)
+    if missing or not set(retired) <= {"routing-quality-review"}:
+        raise AssertionError(
+            "Professional fixture current/historical finding coverage differs: "
+            f"missing={missing}, retired={retired}"
+        )
+    preliminary["findings"] = [
+        row
+        for row in preliminary["findings"]
+        if row["skill_id"] in current_ids
+    ]
+    preliminary["dependency_material_catalog"] = {
+        skill_id: material_binding
+        for skill_id, material_binding in preliminary[
+            "dependency_material_catalog"
+        ].items()
+        if skill_id in current_ids
+    }
     _normalize_historical_reviewer_added_promotions(
         preliminary, bindings=bindings
     )
@@ -547,6 +627,9 @@ def _current_compact_professional_fixture_bytes(
         raise AssertionError(
             "Professional fixture retains reviewer-added/required overlap"
         )
+    preliminary["review_contract_fingerprint"] = (
+        review_contract_fingerprint
+    )
     normalized_storage = copy.deepcopy(preliminary)
     PANEL.panel_attestation._encode_professional_storage_in_place(
         normalized_storage
@@ -904,6 +987,38 @@ def _synthetic_schema3_professional_decision(
             "line_count": len(content.splitlines()),
             "content": content,
         }
+        registry_authority = {
+            "name": skill_id,
+            "routing_mode": "evidence-only",
+            "required_expertise_tags": ["foundation-quality-testing"],
+            "path": skill_id,
+            "role_support": copy.deepcopy(responsibility["role_support"]),
+            "trigger_signals": copy.deepcopy(
+                responsibility["trigger_signals"]
+            ),
+            "anti_trigger_signals": copy.deepcopy(
+                responsibility["anti_trigger_signals"]
+            ),
+            "required_inputs": copy.deepcopy(
+                responsibility["required_inputs"]
+            ),
+            "output_contract": copy.deepcopy(
+                responsibility["output_contract"]
+            ),
+            "escalation_signals": copy.deepcopy(
+                responsibility["escalation_signals"]
+            ),
+            "reference_index": [],
+            "layer3_candidates": [],
+            "used_by": [],
+            "boundary_signals": copy.deepcopy(
+                responsibility["boundary_signals"]
+            ),
+            "group": responsibility["group"],
+            "content_class": responsibility["content_class"],
+            "delivery_scope": responsibility["delivery_scope"],
+            "task_routable": responsibility["task_routable"],
+        }
         targets.append(
             {
                 "skill_id": skill_id,
@@ -911,6 +1026,8 @@ def _synthetic_schema3_professional_decision(
                 "required_expertise_tags": ["foundation-quality-testing"],
                 "root": material,
                 "indexed_references": [],
+                "registry_authority": registry_authority,
+                "reference_authority": [],
                 "registry": {
                     "path": "synthetic-registry.yaml",
                     "entry_fingerprint": hashlib.sha256(

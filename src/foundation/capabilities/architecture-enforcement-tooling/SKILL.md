@@ -31,7 +31,7 @@ Turn accepted architecture and module-boundary decisions into deterministic chec
 
 ## Anti-Patterns
 
-- Enforcing import direction while excluding cycles, public/private export expansion, forbidden UI-to-data/domain-to-infrastructure/feature-to-feature/test-to-production edges, or cross-module internals leaves accepted architecture decisions unchecked.
+- Enforcing import direction while omitting cycles, public/private export expansion, forbidden UI-to-data/domain-to-infrastructure/feature-to-feature/test-to-production edges, or cross-module internals leaves accepted architecture decisions unchecked.
 - Dead-code detection that ignores reflection, generated entry points, CLI commands, migrations, or framework registration produces unsafe deletions or permanent false positives.
 - One complexity threshold across local language tooling and generated code punishes the wrong surface instead of enforcing an owned rule.
 - A nondeterministic or undocumented CI command, or fast local feedback with no CI source of evidence, makes enforcement optional.

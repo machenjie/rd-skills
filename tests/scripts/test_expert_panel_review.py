@@ -9,7 +9,7 @@ import sys
 import tempfile
 import unittest
 from contextlib import contextmanager
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from unittest import mock
 
 from . import expert_panel_source_test_support as source_support
@@ -1867,6 +1867,285 @@ Route current work to `candidate-a`.
             self.assertTrue(
                 all(token not in basis[field] for basis in filtered_bases.values())
             )
+
+    def test_professional_current_targets_bind_complete_registry_and_reference_authority(
+        self,
+    ) -> None:
+        targets = _phase1_professional_targets()
+        registry_rows = {}
+        for _layer, relative, collection_key in PANEL.REGISTRY_SOURCES:
+            registry = PANEL.load_yaml_file(ROOT / relative)
+            registry_rows.update(
+                (row["name"], (relative, row))
+                for row in registry[collection_key]
+            )
+
+        self.assertEqual(set(registry_rows), {row["skill_id"] for row in targets})
+        for target in targets:
+            skill_id = target["skill_id"]
+            relative, registry_row = registry_rows[skill_id]
+            reference_authority = PANEL.reference_contracts(
+                registry_row["reference_index"],
+                f"{relative}:{skill_id}.reference_index",
+                owner=skill_id,
+            )
+            self.assertEqual(registry_row, target["registry_authority"])
+            self.assertEqual(reference_authority, target["reference_authority"])
+            self.assertEqual(
+                sorted(
+                    (
+                        PurePosixPath(registry_row["path"])
+                        / reference["path"]
+                    ).as_posix()
+                    for reference in reference_authority
+                ),
+                [reference["path"] for reference in target["indexed_references"]],
+            )
+
+    def test_professional_current_packet_requires_and_recomputes_authority_binding(
+        self,
+    ) -> None:
+        packet = professional_support._bootstrap_packet()
+        self.assertTrue(
+            all(
+                set(target) == PANEL.PROFESSIONAL_V3_PACKET_TARGET_FIELDS
+                for target in packet["professional_targets"]
+            )
+        )
+
+        for label, mutate in (
+            (
+                "missing",
+                lambda target: target.pop("registry_authority"),
+            ),
+            (
+                "extra",
+                lambda target: target.update({"derived_semantics": {}}),
+            ),
+        ):
+            changed = copy.deepcopy(packet)
+            mutate(changed["professional_targets"][0])
+            with self.subTest(label=label), self.assertRaisesRegex(
+                PANEL.PanelReviewError,
+                "packet target fields are invalid",
+            ):
+                PANEL._professional_v3_packet_state(
+                    changed,
+                    validation_root=ROOT,
+                    artifact_path=None,
+                    validate_baseline=False,
+                )
+
+        changed = copy.deepcopy(packet)
+        target = changed["professional_targets"][0]
+        target["registry_authority"]["activation"] = "changed activation"
+        with self.assertRaisesRegex(
+            PANEL.PanelReviewError,
+            "review binding is stale",
+        ):
+            PANEL._professional_v3_packet_state(
+                changed,
+                validation_root=ROOT,
+                artifact_path=None,
+                validate_baseline=False,
+            )
+
+        mismatched = copy.deepcopy(packet)
+        reference_target = next(
+            target
+            for target in mismatched["professional_targets"]
+            if target["reference_authority"]
+        )
+        reference_target["reference_authority"] = []
+        with self.assertRaisesRegex(ValueError, "reference_index.*drift"):
+            PANEL._professional_v3_packet_state(
+                mismatched,
+                validation_root=ROOT,
+                artifact_path=None,
+                validate_baseline=False,
+            )
+
+    def test_professional_authority_changes_refresh_exact_one_hop_review_surface(
+        self,
+    ) -> None:
+        carry = PANEL.professional_carry
+        targets = professional_support._catalog()
+        bindings = carry.professional_review_bindings(targets)
+        review_contract = "a" * 64
+        snapshot = carry.professional_carry_snapshot(
+            bindings,
+            review_contract_fingerprint=review_contract,
+        )
+        dependencies = {}
+        for skill_id, binding in bindings.items():
+            required = binding["adjacency"]["required_candidate_ids"]
+            reviewer_added = ["d"] if skill_id == "a" else []
+            dependencies[skill_id] = {
+                "skill_id": skill_id,
+                "final_disposition": carry.ACCEPTED_PROFESSIONAL_DISPOSITION,
+                "evidence_complete": True,
+                "prior_target_vote_count": PANEL.PANEL_SIZE,
+                "required_candidate_ids": copy.deepcopy(required),
+                "reviewer_added_candidate_ids_union": reviewer_added,
+                "dependency_candidate_ids": sorted(
+                    set(required) | set(reviewer_added)
+                ),
+            }
+
+        responsibility_fields = {
+            "trigger_signals",
+            "anti_trigger_signals",
+            "required_inputs",
+            "output_contract",
+            "escalation_signals",
+            "boundary_signals",
+            "layer3_candidates",
+            "used_by",
+            "task_routable",
+            "role_support",
+        }
+        registry_cases = (
+            ("trigger", "trigger_signals", ["changed trigger"]),
+            ("anti-trigger", "anti_trigger_signals", ["changed anti-trigger"]),
+            ("required-input", "required_inputs", ["changed input"]),
+            ("required-output", "output_contract", ["changed output"]),
+            ("escalation", "escalation_signals", ["changed escalation"]),
+            ("boundary", "boundary_signals", ["changed boundary"]),
+            ("routing-mode", "routing_mode", "direct"),
+            ("routing-family", "routing_family", "repository-tooling"),
+            ("task-routable", "task_routable", False),
+            (
+                "role-input",
+                "required_inputs_by_role",
+                {"task-agent": ["changed role input"]},
+            ),
+            (
+                "role-output",
+                "output_contract_by_role",
+                {"task-agent": ["changed role output"]},
+            ),
+            (
+                "context-admissibility",
+                "context_admissibility",
+                {"contract": "fixture/v2", "references": {}},
+            ),
+            ("activation", "activation", "explicit"),
+            ("layer3", "layer3_candidates", ["a"]),
+            ("used-by", "used_by", ["a"]),
+            ("role-support", "role_support", ["analysis-agent"]),
+        )
+
+        def assert_exact_fresh(changed_targets: list[dict], label: str) -> None:
+            plan = carry.plan_exact_professional_carry_forward(
+                current_bindings=carry.professional_review_bindings(
+                    changed_targets
+                ),
+                prior_snapshot=snapshot,
+                prior_decision_dependencies=dependencies,
+                review_contract_fingerprint=review_contract,
+            )
+            self.assertEqual(["a", "b", "d"], plan["fresh_target_ids"], label)
+            self.assertIn(
+                "target-material-changed",
+                plan["reasons_by_target"]["d"],
+                label,
+            )
+            self.assertIn(
+                "required-candidate-material-changed",
+                plan["reasons_by_target"]["b"],
+                label,
+            )
+            self.assertIn(
+                "reviewer-added-candidate-material-changed",
+                plan["reasons_by_target"]["a"],
+                label,
+            )
+            self.assertEqual([], plan["reasons_by_target"]["c"], label)
+
+        for label, field, value in registry_cases:
+            changed = copy.deepcopy(targets)
+            target = changed[3]
+            target["registry_authority"][field] = copy.deepcopy(value)
+            if field in responsibility_fields:
+                target["registry"]["responsibility_contract"][field] = (
+                    copy.deepcopy(value)
+                )
+            with self.subTest(authority=label):
+                assert_exact_fresh(changed, label)
+
+        changed = copy.deepcopy(targets)
+        changed[3]["required_expertise_tags"] = ["domain", "security"]
+        changed[3]["registry_authority"]["required_expertise_tags"] = [
+            "domain",
+            "security",
+        ]
+        assert_exact_fresh(changed, "required-expertise")
+
+        changed = copy.deepcopy(targets)
+        target = changed[3]
+        target["registry_authority"]["path"] = "src/d-renamed"
+        target["root"]["path"] = "src/d-renamed/SKILL.md"
+        target["indexed_references"][0]["path"] = (
+            "src/d-renamed/reference.md"
+        )
+        assert_exact_fresh(changed, "package-path")
+
+        reference_cases = (
+            ("path", "renamed-reference.md"),
+            ("type", "decision-checklist"),
+            ("load_when", "Reviewing d recovery evidence for this bounded task"),
+            (
+                "do_not_load_when",
+                "The d recovery boundary is already fully evidenced",
+            ),
+            ("required_by", ["analysis-agent"]),
+            ("required_output", ["decision-record"]),
+        )
+        for field, value in reference_cases:
+            changed = copy.deepcopy(targets)
+            target = changed[3]
+            reference = copy.deepcopy(target["reference_authority"][0])
+            reference[field] = copy.deepcopy(value)
+            target["reference_authority"] = [reference]
+            target["registry_authority"]["reference_index"] = [
+                copy.deepcopy(reference)
+            ]
+            if field == "path":
+                target["indexed_references"][0]["path"] = (
+                    "src/d/renamed-reference.md"
+                )
+            with self.subTest(reference_field=field):
+                assert_exact_fresh(changed, f"reference-{field}")
+
+        wrong_owner = copy.deepcopy(targets)
+        wrong_owner[3]["registry_authority"]["name"] = "other-owner"
+        with self.assertRaisesRegex(ValueError, "name must match"):
+            carry.professional_review_bindings(wrong_owner)
+
+        missing_path = copy.deepcopy(targets)
+        missing_path[3]["indexed_references"] = []
+        with self.assertRaisesRegex(ValueError, "coverage drift"):
+            carry.professional_review_bindings(missing_path)
+
+        mismatched_path = copy.deepcopy(targets)
+        reference = copy.deepcopy(
+            mismatched_path[3]["reference_authority"][0]
+        )
+        reference["path"] = "renamed-reference.md"
+        mismatched_path[3]["reference_authority"] = [reference]
+        mismatched_path[3]["registry_authority"]["reference_index"] = [
+            copy.deepcopy(reference)
+        ]
+        with self.assertRaisesRegex(ValueError, "coverage drift"):
+            carry.professional_review_bindings(mismatched_path)
+
+        extra_path = copy.deepcopy(targets)
+        extra_path[3]["indexed_references"].append(
+            copy.deepcopy(extra_path[3]["indexed_references"][0])
+        )
+        extra_path[3]["indexed_references"][1]["path"] = "src/d/extra.md"
+        with self.assertRaisesRegex(ValueError, "path-sorted|coverage drift"):
+            carry.professional_review_bindings(extra_path)
 
     def test_negative_route_conflicts_are_phrase_aware_and_ignore_generic_noise(
         self,

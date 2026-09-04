@@ -21,7 +21,7 @@ Define token semantics, component and variant fit, interaction-state consistency
 
 ## High-Value Rules
 
-- **Start from semantic intent and current system authority.** Map the needed role, emphasis, state, density, motion, and interaction to the owned tokens, components, variants, and usage guidance before adding new surface.
+- **Start from semantic intent and current system authority.** Map the needed role, emphasis, state, density, motion, and interaction to owned tokens, components, variants, and usage guidance before adding new surface.
 - **Reuse by behavior, not visual resemblance.** Extend an existing component when interaction semantics, accessibility contract, state model, and ownership align. A distinct primitive is required when reuse would overload meaning or couple unrelated consumers.
 - **Keep variants finite and composable.** Give each variant a named semantic axis, compatible state combinations, and an owner; reject prop combinations that create implicit component forks or contradictory behavior.
 - **Preserve complete interaction and accessibility states.** Cover focus, hover, pressed, selected, disabled, loading, error, high contrast, reduced motion, keyboard behavior, labeling, and announcement where the affected component supports them.

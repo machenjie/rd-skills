@@ -35,7 +35,7 @@ Convert desired behavior into objective done standards proven by tests, review e
 - Accept qualitative criteria or metrics without an owner, unit, population, measurement point, observation window, operating condition, or cited objective or policy.
 - Apply criteria outside the explicit task scenario or leave scope-changing conditions unresolved.
 - Specify success alone without a rejection condition that blocks acceptance or records owned residual risk.
-- Rely on evidence whose production a reviewer cannot repeat from task-accessible sources.
+- Rely on evidence a reviewer cannot reproduce from task-accessible sources.
 - Omit denied authority, expired state, tenant isolation, invalid input, partial failure, or recovery criteria when the affected boundary and risk trigger them.
 
 ## Stop Conditions

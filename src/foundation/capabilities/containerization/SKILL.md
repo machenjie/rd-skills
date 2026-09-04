@@ -39,7 +39,7 @@ Define the image build-to-runtime contract, retained content, runtime authority,
 ## Stop Conditions
 
 - Escalate privileged or root execution without bounded need, suspected secret retention, unknown image lineage, unowned base-risk exception, or termination behavior that can lose or duplicate in-flight work contrary to the workload contract.
-- Stop image approval when the artifact cannot be linked to the inspected inputs and the intended deploy reference.
+- Stop image approval when the artifact cannot be tied to inspected inputs and the intended deploy reference.
 
 ## Output Contract
 

@@ -1984,7 +1984,9 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
         self.assertEqual(len(winners), application["target_count"])
         self.assertEqual(len(winners), application["applied_count"])
 
-    def test_regression_loader_preserves_current_professional(self) -> None:
+    def test_regression_loader_accepts_explicit_current_professional_fixture(
+        self,
+    ) -> None:
         config_path = ROOT / "config/professionalism-release-review.yaml"
         config_bytes = config_path.read_bytes()
         config = REGRESSION.load_yaml_file(config_path)
@@ -2012,7 +2014,15 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
             / PANEL.panel_attestation
             .PROFESSIONAL_COMPLETENESS_ATTESTATION_PATH
         ).read_bytes()
-        self.assertEqual(current_fixed, fixed_bytes)
+        tracked_value = (
+            PANEL.panel_attestation
+            .parse_attestation_storage_selector_bytes(current_fixed)
+        )
+        self.assertNotEqual(current_fixed, fixed_bytes)
+        self.assertNotEqual(
+            current_packet["review_contract_fingerprint"],
+            tracked_value["review_contract_fingerprint"],
+        )
         fixture = tempfile.TemporaryDirectory()
         self.addCleanup(fixture.cleanup)
         validation_root = Path(fixture.name)
@@ -2024,7 +2034,7 @@ class ProfessionalismExpertPanelTests(unittest.TestCase):
         fixed.write_bytes(fixed_bytes)
         fixed_bytes = fixed.read_bytes()
         fixed_sha256 = hashlib.sha256(fixed_bytes).hexdigest()
-        self.assertEqual(
+        self.assertNotEqual(
             hashlib.sha256(current_fixed).hexdigest(),
             fixed_sha256,
         )

@@ -593,584 +593,156 @@ PROFESSIONAL_SEMANTIC_GROUNDING_CONTRACT = {
     },
 }
 
-PROFESSIONAL_SEMANTIC_FACT_PROJECTION_VERSION = (
-    "professional-semantic-predicate-projection-v4"
+PROFESSIONAL_CURRENTNESS_PROJECTION_VERSION = (
+    "professional-commonmark-material-projection-v4"
 )
-PROFESSIONAL_SEMANTIC_FACT_FIELDS = (
-    "source_class",
-    "fact_class",
-    "section_kind",
-    "unit_kind",
-    "fact_kind",
-    "predicate_ordinal",
-    "incoming_connector",
-    "subject_scope_concepts",
-    "action_concept",
-    "argument_role_bindings",
-    "object_scope_concepts",
-    "condition_concepts",
-    "modality",
-    "polarity",
-)
-PROFESSIONAL_SEMANTIC_ARGUMENT_ROLE_FIELDS = (
-    "argument_ordinal",
-    "relation",
-    "scope_concepts",
-    "attachment",
-    "owner_action_concept",
-    "owner_modality",
-    "owner_polarity",
-)
-PROFESSIONAL_SEMANTIC_ARGUMENT_RELATIONS = (
-    "direct",
-    "from",
-    "to",
-)
-PROFESSIONAL_SEMANTIC_ARGUMENT_ATTACHMENTS = (
-    "condition-scope",
-    "dependent-complement",
-    "dependent-condition",
-    "governing-predicate",
-)
-PROFESSIONAL_SEMANTIC_FACT_SOURCE_CLASSES = (
-    "indexed-reference",
-    "registry",
-    "required-expertise",
-    "root",
-)
-PROFESSIONAL_SEMANTIC_SECTION_ALIASES = {
-    "adjacency-routing": (
-        "adjacency",
-        "adjacent",
-        "overlap",
-        "route",
-        "routing",
-        "selection",
-    ),
-    "anti-trigger": ("anti trigger", "do not load", "do not use"),
-    "decision-rules": (
-        "authority",
-        "behavior",
-        "contract",
-        "decision",
-        "implementation",
-        "matrix",
-        "mode",
-        "pattern",
-        "professional",
-        "rule",
-    ),
-    "failure-constraint": (
-        "anti pattern",
-        "blocking",
-        "boundary",
-        "constraint",
-        "escalation",
-        "failure",
-        "gotcha",
-        "limit",
-        "recovery",
-        "risk",
-        "source limit",
-        "stop",
-    ),
-    "required-input": ("input",),
-    "required-output": ("handoff", "output", "record", "result"),
-    "responsibility": ("owner", "ownership", "responsibility", "role"),
-    "source-citation": (
-        "official source",
-        "primary source",
-        "reference index",
-    ),
-    "trigger": ("activation", "load trigger", "registry trigger", "when to use"),
-    "verification": (
-        "benchmark",
-        "check",
-        "closure",
-        "evidence",
-        "proof",
-        "quality gate",
-        "test",
-        "validation",
-        "verification",
-    ),
-}
-PROFESSIONAL_SEMANTIC_EXCLUDED_SECTION_ALIASES = (
-    "targeted references",
-)
-PROFESSIONAL_SEMANTIC_SECTION_FACTS = {
-    "adjacency-routing": ("required-adjacency", "routing", "route", "relationship"),
-    "anti-trigger": ("anti-trigger", "exclusion", "exclude", "routing-trigger"),
-    "decision-rules": ("professional-decision", "obligation", "govern", "contract"),
-    "failure-constraint": ("failure-constraint", "constraint", "guard", "constraint"),
-    "general-guidance": ("professional-decision", "obligation", "govern", "contract"),
-    "required-input": ("required-input", "obligation", "consume", "input"),
-    "required-output": ("required-output", "obligation", "produce", "output"),
-    "responsibility": ("responsibility", "responsibility", "own", "owner"),
-    "trigger": ("trigger", "activation", "activate", "routing-trigger"),
-    "verification": ("verification", "verification", "validate", "evidence"),
-}
-PROFESSIONAL_SEMANTIC_REGISTRY_FACTS = {
-    "anti_trigger_signals": ("anti-trigger", "registry-anti-trigger", "exclusion", "exclude", "routing-trigger"),
-    "boundary_signals": ("routing-boundary", "registry-boundary", "constraint", "guard", "boundary"),
-    "escalation_signals": ("failure-constraint", "registry-escalation", "constraint", "stop", "constraint"),
-    "output_contract": ("required-output", "registry-output-contract", "obligation", "produce", "output"),
-    "required_inputs": ("required-input", "registry-required-input", "obligation", "consume", "input"),
-    "role_support": ("responsibility", "registry-role-support", "responsibility", "own", "owner"),
-    "trigger_signals": ("trigger", "registry-trigger", "activation", "activate", "routing-trigger"),
-}
-PROFESSIONAL_SEMANTIC_ACTION_ALIASES = {
-    "accept": ("accept", "admit", "approve"),
-    "activate": ("activate", "trigger"),
-    "add": ("add", "append", "insert"),
-    "allow": ("allow", "permit"),
-    "analyze": ("analyse", "analyze", "assess", "evaluate", "judge"),
-    "apply": ("apply", "serve", "use"),
-    "authorize": ("authenticate", "authorize"),
-    "bind": ("bind", "couple", "link"),
-    "build": (
-        "build",
-        "construct",
-        "copy",
-        "create",
-        "form",
-        "generate",
-        "produce",
-        "rebuild",
-    ),
-    "change": (
-        "alter",
-        "become",
-        "change",
-        "collapse",
-        "correct",
-        "drift",
-        "edit",
-        "evolve",
-        "improve",
-        "make",
-        "modify",
-        "move",
-        "override",
-        "overwrite",
-        "reduce",
-        "unify",
-        "update",
-    ),
-    "classify": ("categorize", "classify", "label"),
-    "compare": ("compare", "contrast"),
-    "consume": ("consume", "ingest", "load", "read"),
-    "contain": ("bound", "contain", "exceed", "limit", "overconstrain"),
-    "coordinate": ("coordinate", "orchestrate", "synchronize"),
-    "decide": ("choose", "decide", "select"),
-    "define": ("define", "establish", "express", "name", "specify", "state"),
-    "delete": ("clean", "delete", "reap", "remove"),
-    "derive": ("calculate", "derive", "infer"),
-    "design": ("design", "model", "plan", "structure"),
-    "detect": ("detect", "discover", "find", "identify"),
-    "diagnose": ("diagnose", "investigate", "trace"),
-    "emit": ("emit", "leave", "provide", "return", "surface"),
-    "enforce": ("enforce", "prevent", "protect"),
-    "exclude": ("exclude", "hide", "omit", "skip"),
-    "execute": ("do", "execute", "invoke", "perform", "proceed", "run"),
-    "expose": ("expose", "publish", "share"),
-    "extract": ("extract", "parse", "project"),
-    "handoff": ("escalate", "hand off", "handoff", "route"),
-    "fail": ("bypass", "corrupt", "hang", "leak", "lose", "stall", "violate"),
-    "include": ("carry", "cover", "have", "hold", "include"),
-    "inspect": ("inspect", "observe", "review"),
-    "install": ("install", "uninstall"),
-    "map": ("map", "match"),
-    "measure": ("benchmark", "count", "measure", "monitor", "profile"),
-    "migrate": ("backfill", "migrate", "upgrade"),
-    "mutate": ("mutate", "persist", "store", "write"),
-    "own": ("own", "support"),
-    "preserve": ("be", "keep", "preserve", "remain", "retain"),
-    "reconcile": ("compensate", "reconcile", "recover", "repair", "restore"),
-    "record": ("capture", "document", "log", "record", "report"),
-    "reject": ("deny", "forbid", "prohibit", "reject"),
-    "release": ("deploy", "promote"),
-    "replace": ("replace", "supersede"),
-    "require": ("need", "require"),
-    "resolve": ("close", "resolve", "unblock"),
-    "retry": ("repeat", "retry"),
-    "send": ("dispatch", "forward", "reach", "send"),
-    "separate": ("isolate", "separate", "split"),
-    "serialize": ("encode", "serialize"),
-    "stop": ("block", "exit", "halt", "stop", "terminate", "wait"),
-    "validate": (
-        "check",
-        "confirm",
-        "prove",
-        "test",
-        "validate",
-        "validte",
-        "verify",
-    ),
-}
-PROFESSIONAL_SEMANTIC_OBJECT_CONDITION_ALIASES = {
-    "adjacency": ("adjacency", "adjacent", "overlap", "relationship"),
-    "artifact": ("artifact", "capsule", "decision", "document", "file", "packet", "report"),
-    "authority": ("authority", "authorization", "permission"),
-    "behavior": ("behavior", "behaviour", "outcome"),
-    "boundary": ("boundary", "scope"),
-    "change": ("change", "delta", "diff"),
-    "changed-condition": ("changed", "modified", "revised"),
-    "cleanup": ("cleanup", "deletion", "removal"),
-    "command": ("cli", "command", "invocation"),
-    "compatibility": ("compatibility", "migration", "version"),
-    "configuration": ("config", "configuration", "setting"),
-    "constraint": ("constraint", "limit", "restriction"),
-    "consumer": ("caller", "consumer", "client"),
-    "contract": ("contract", "obligation", "requirement", "rule"),
-    "cost": ("budget", "cost", "performance"),
-    "data": ("data", "payload", "record", "schema"),
-    "dependency": ("candidate", "dependency", "reference"),
-    "effect": ("effect", "side effect"),
-    "evidence": ("evidence", "proof", "signal"),
-    "expertise": ("expertise", "qualification"),
-    "failure": ("error", "failure", "fault"),
-    "identity": ("agent", "identity", "principal", "voter"),
-    "input": ("argument", "input", "request"),
-    "invalid-condition": ("ambiguous", "invalid", "malformed", "unsafe"),
-    "invariant": ("invariant", "integrity", "safety"),
-    "lifecycle": ("lifecycle", "state", "transition"),
-    "output": ("output", "response", "result"),
-    "owner": ("owner", "ownership", "responsibility", "role"),
-    "policy": ("policy", "precedence"),
-    "precondition": ("before", "precondition", "prior to"),
-    "postcondition": ("after", "following", "postcondition"),
-    "process": ("process", "runtime", "workflow"),
-    "provenance": ("freshness", "provenance", "source"),
-    "recovery": ("fallback", "recovery", "rollback"),
-    "release": ("deploy", "promotion", "release"),
-    "review": ("ballot", "review", "reviewer", "vote"),
-    "risk": ("hazard", "risk", "threat"),
-    "routing-trigger": ("activation", "trigger", "use"),
-    "security": ("privacy", "secret", "security", "trust"),
-    "target": ("package", "skill", "target"),
-    "test": ("fixture", "test", "validation", "verification"),
-    "time": ("deadline", "duration", "timeout", "timing"),
-}
-PROFESSIONAL_SEMANTIC_TERM_ALIASES = {
-    "behaviour": "behavior",
-    "cancelation": "cancellation",
-    "contraint": "constraint",
-    "non canonical": "noncanonical",
-    "occurence": "occurrence",
-    "ouput": "output",
-    "ouputs": "outputs",
-    "read only": "readonly",
-    "responsiblity": "responsibility",
-    "seperate": "separate",
-    "teh": "the",
-    "validtion": "validation",
-}
-PROFESSIONAL_SEMANTIC_STOP_TOKENS = (
-    "a", "an", "and", "any", "as", "at", "be", "been", "being", "by",
-    "each", "every", "for", "from", "has", "have", "in", "into", "is",
-    "it", "its", "of", "on", "or", "root", "that", "the", "their", "them",
-    "then", "this", "to", "under", "with", "you", "your",
-)
-PROFESSIONAL_SEMANTIC_MODALITY_ALIASES = {
-    "permitted": ("can", "may"),
-    "recommended": ("should",),
-    "required": ("must", "shall"),
-}
-PROFESSIONAL_SEMANTIC_NEGATION_ALIASES = (
-    "cannot",
-    "do not",
-    "must not",
-    "never",
-    "no",
-    "not",
-    "shall not",
-    "without",
-)
-PROFESSIONAL_SEMANTIC_PREDICATE_CONNECTORS = (
-    "and",
-    "but",
-    "or",
-    "then",
-)
-PROFESSIONAL_SEMANTIC_CONDITION_CONCEPTS = (
-    "changed-condition",
-    "invalid-condition",
-    "postcondition",
-    "precondition",
-)
-PROFESSIONAL_SEMANTIC_PREDICATE_LEAD_TOKENS = (
-    "can",
-    "cannot",
-    "do",
-    "may",
-    "must",
-    "never",
-    "no",
-    "not",
-    "shall",
-    "should",
-    "without",
-    "you",
-)
-PROFESSIONAL_SEMANTIC_UNIT_KINDS = (
-    "labeled-field",
-    "list-item",
-    "ordered-step",
-    "paragraph",
-    "table-row",
-)
-PROFESSIONAL_SEMANTIC_FINITE_RELATION_ALIASES = {
-    "apply": ("fit", "fits"),
-    "bind": ("reflect", "reflects"),
-    "compare": ("differentiate", "differentiates"),
-    "copular-assert": ("be", "is", "are", "was", "were"),
-    "define": ("govern", "governs"),
-    "include": ("has", "have"),
-    "preserve": ("remain", "remains", "stay", "stays"),
-    "require": ("depend", "depends"),
-}
-PROFESSIONAL_SEMANTIC_RELATIVE_CONDITION_TOKENS = (
-    "if",
-    "that",
-    "unless",
-    "when",
-    "where",
-    "which",
-    "who",
-    "whose",
-)
-PROFESSIONAL_SEMANTIC_GRAMMATICAL_CONDITION_BOUNDARIES = (
-    "after",
-    "before",
-    "following",
-    "if",
-    "prior to",
-    "that",
-    "unless",
-    "when",
-    "where",
-    "which",
-    "who",
-    "whose",
-)
-PROFESSIONAL_SEMANTIC_FACT_PROJECTION_CONTRACT = {
-    "contract_version": PROFESSIONAL_SEMANTIC_FACT_PROJECTION_VERSION,
-    "fields": list(PROFESSIONAL_SEMANTIC_FACT_FIELDS),
-    "argument_role_fields": list(PROFESSIONAL_SEMANTIC_ARGUMENT_ROLE_FIELDS),
-    "argument_relations": list(PROFESSIONAL_SEMANTIC_ARGUMENT_RELATIONS),
-    "argument_attachments": list(PROFESSIONAL_SEMANTIC_ARGUMENT_ATTACHMENTS),
-    "source_classes": list(PROFESSIONAL_SEMANTIC_FACT_SOURCE_CLASSES),
-    "section_aliases": {
-        key: list(values)
-        for key, values in sorted(PROFESSIONAL_SEMANTIC_SECTION_ALIASES.items())
-    },
-    "excluded_section_aliases": list(
-        PROFESSIONAL_SEMANTIC_EXCLUDED_SECTION_ALIASES
-    ),
-    "section_facts": {
-        key: list(values)
-        for key, values in sorted(PROFESSIONAL_SEMANTIC_SECTION_FACTS.items())
-    },
-    "registry_facts": {
-        key: list(values)
-        for key, values in sorted(PROFESSIONAL_SEMANTIC_REGISTRY_FACTS.items())
-    },
-    "action_aliases": {
-        key: list(values)
-        for key, values in sorted(PROFESSIONAL_SEMANTIC_ACTION_ALIASES.items())
-    },
-    "object_condition_aliases": {
-        key: list(values)
-        for key, values in sorted(
-            PROFESSIONAL_SEMANTIC_OBJECT_CONDITION_ALIASES.items()
-        )
-    },
-    "term_aliases": dict(sorted(PROFESSIONAL_SEMANTIC_TERM_ALIASES.items())),
-    "stop_tokens": list(PROFESSIONAL_SEMANTIC_STOP_TOKENS),
-    "modality_aliases": {
-        key: list(values)
-        for key, values in sorted(PROFESSIONAL_SEMANTIC_MODALITY_ALIASES.items())
-    },
-    "negation_aliases": list(PROFESSIONAL_SEMANTIC_NEGATION_ALIASES),
-    "predicate_connectors": list(
-        PROFESSIONAL_SEMANTIC_PREDICATE_CONNECTORS
-    ),
-    "condition_concepts": list(PROFESSIONAL_SEMANTIC_CONDITION_CONCEPTS),
-    "predicate_lead_tokens": list(
-        PROFESSIONAL_SEMANTIC_PREDICATE_LEAD_TOKENS
-    ),
-    "unit_kinds": list(PROFESSIONAL_SEMANTIC_UNIT_KINDS),
-    "finite_relation_aliases": {
-        key: list(values)
-        for key, values in sorted(
-            PROFESSIONAL_SEMANTIC_FINITE_RELATION_ALIASES.items()
-        )
-    },
-    "relative_condition_tokens": list(
-        PROFESSIONAL_SEMANTIC_RELATIVE_CONDITION_TOKENS
-    ),
-    "grammatical_condition_boundaries": list(
-        PROFESSIONAL_SEMANTIC_GRAMMATICAL_CONDITION_BOUNDARIES
-    ),
-    "labeled_symbol_concepts": {
-        "&": "ampersand",
-        ",": "comma",
-        "?": "question-mark",
-    },
-    "logical_units": "unfenced-uncommented-paragraph-list-or-table-row",
-    "material_signal": "closed-section-or-explicit-modality-or-closed-action",
-    "unknown_action_with_explicit_modality": "fail-closed",
-    "lexical_predicate_slots": [
-        "after-explicit-modal",
-        "after-do-not-or-never",
-        "first-predicate-of-list-item-or-ordered-step",
-        "after-established-coordinator-with-unique-attachment",
+PROFESSIONAL_CURRENTNESS_PROJECTION_CONTRACT = {
+    "version": PROFESSIONAL_CURRENTNESS_PROJECTION_VERSION,
+    "purpose": "deterministic-professional-currentness-only",
+    "content_fingerprint_role": "raw-provenance-integrity-tamper-debug-only",
+    "normalization": [
+        "unicode-nfc",
+        "line-endings-to-lf",
+        "parser-authenticated-horizontal-whitespace-and-softbreak",
+        "parser-authenticated-emphasis-and-strong-decoration",
+        "parser-authenticated-unordered-list-marker",
+        "parser-authenticated-root-level-source-marker-comments",
+        "exact-column-zero-closed-simple-frontmatter",
     ],
-    "no_forced_predicate": "fail-closed-material-semantic-clause-has-no-predicate",
-    "predicate_relation": (
-        "subject-scope-to-action-to-ordered-argument-role-bindings-to-"
-        "condition-with-local-modality-polarity-predicate-ordinal-and-"
-        "incoming-connector"
-    ),
-    "argument_role_binding": (
-        "one-based-contiguous-argument-ordinal-with-direct-from-or-to-"
-        "relation-nonempty-sorted-scope-concepts-closed-attachment-and-"
-        "attachment-owner-action-modality-polarity"
-    ),
-    "direction_markers": {
-        "from": "from",
-        "into": "to",
-        "to": "to",
-    },
-    "direction_marker_classification": {
-        "condition-phrase-marker": "owned-by-condition-not-an-argument-role",
-        "from-and-into": "always-directional",
-        "bare-to-before-unique-exact-closed-base-action": (
-            "infinitive-owner-not-an-argument-role"
-        ),
-        "bare-to-before-bounded-unknown-base-action": (
-            "infinitive-only-with-determiner-and-nonempty-complement"
-        ),
-        "bare-to-before-unsupported-inflection-or-alias-overlap": (
-            "fail-closed"
-        ),
-        "other-bare-to": "directional",
-    },
-    "object_scope_compatibility_summary": (
-        "enforced-sorted-union-of-all-argument-role-scope-concepts"
-    ),
-    "directional_failure_contract": [
-        "empty-or-incomplete-argument-segment",
-        "structurally-signaled-unknown-or-competing-owner",
-        "unsupported-inflected-infinitive-or-action-alias-overlap",
-        "malformed-unknown-lexical-infinitive-complement",
-        "overlapping-or-unconsumed-direction-marker",
-        "noncontiguous-argument-ordinals",
-        "unknown-argument-relation",
-        "object-scope-union-mismatch",
-    ],
-    "direction_attachment": {
-        "governing-predicate": "direction-before-boundary-without-dependent-owner",
-        "dependent-complement": (
-            "unique-infinitive-or-gerund-owner-before-condition-boundary"
-        ),
-        "dependent-condition": (
-            "unique-modal-negated-passive-or-immediate-owner-after-boundary"
-        ),
-        "condition-scope": "direction-after-boundary-without-dependent-owner",
-    },
-    "direction_owner_locality": {
-        "discovery": (
-            "structural-owner-signals-and-unique-exact-closed-action-barriers-"
-            "independent-of-directions"
-        ),
-        "plain-exact-closed-action": (
-            "barrier-in-every-region-owner-only-after-condition-boundary"
-        ),
-        "sliced-window-context": (
-            "preserve-whether-window-begins-inside-condition-region"
-        ),
-        "interval": (
-            "half-open-action-end-to-next-structural-predicate-condition-"
-            "boundary-or-window-end"
-        ),
-        "selection": "greatest-action-end-local-owner",
-        "equal-nearest-distinct": "fail-closed",
-        "unknown-owner": "fail-only-for-confirmed-direction-in-owner-interval",
-        "no-local-owner": (
-            "governing-before-condition-boundary-condition-scope-after"
-        ),
-    },
-    "forced_lexical_dependent_owner": {
-        "head": "one-normalized-alphabetic-base-form-token",
-        "closed-precedence": "closed-action-alias-or-stem-before-lexical",
-        "excluded": [
-            "stop-token",
-            "direction-marker",
-            "condition-boundary",
-            "predicate-connector",
-            "modality-or-negation",
-            "closed-action-or-finite-relation-collision",
-            "object-or-condition-collision",
-            "ed-ing-ies-or-non-double-s-terminal-inflection",
-        ],
-        "slots": [
-            "immediately-after-maximal-modal-or-negation-lead",
-            "bare-to-then-head-then-determiner-then-nonempty-complement",
-        ],
-        "forbidden-slots": [
-            "passive-owner",
-            "gerund-owner",
-        ],
-        "unknown-infinitive-direction_ownership": (
-            "may-own-later-confirmed-direction-in-local-interval"
-        ),
-    },
-    "dependent_owner_metadata": {
-        "modal_classes": {
-            "can-cannot-may": "permitted",
-            "should": "recommended",
-            "must-shall": "required",
-            "without-positive-modal": "asserted",
+    "parser": {
+        "distributions": {
+            "markdown-it-py": "4.2.0",
+            "mdurl": "0.1.2",
         },
-        "negative_tokens": ["cannot", "do not", "must not", "never", "not"],
-        "modal_passive": (
-            "maximal-modal-negation-lead-plus-be-plus-unique-closed-past-"
-            "participle-is-one-owner"
-        ),
-        "event_merge": (
-            "exact-action-span-action-attachment-modality-and-polarity-only"
-        ),
+        "preset": "commonmark",
+        "options": {
+            "html": True,
+            "linkify": False,
+            "typographer": False,
+            "breaks": False,
+        },
+        "enabled_rules": ["table-recognition-only"],
+        "active_rules": {
+            "core": ["normalize", "block", "inline", "text_join"],
+            "block": [
+                "table",
+                "code",
+                "fence",
+                "blockquote",
+                "hr",
+                "list",
+                "reference",
+                "html_block",
+                "heading",
+                "lheading",
+                "paragraph",
+            ],
+            "inline": [
+                "text",
+                "newline",
+                "escape",
+                "backticks",
+                "emphasis",
+                "link",
+                "image",
+                "autolink",
+                "html_inline",
+                "entity",
+            ],
+            "inline2": ["balance_pairs", "emphasis", "fragments_join"],
+        },
+        "version_mismatch": "fail-closed",
     },
-    "direction_only_action_aliases": {
-        "gerund-directional-frame": {"turn": "change"},
-        "modal-dependent-frame": {"distinguish": "compare"},
-    },
-    "compound_predicate_segmentation": (
-        "left-to-right-closed-connector-local-scope-or-unique-shared-"
-        "complement-else-fail-closed"
-    ),
-    "object_scope_and_condition_concept_grammar": (
-        "closed-alias-or-term-colon-nfkc-casefold-token-partitioned-by-"
-        "condition-marker"
-    ),
-    "deduplication": "canonical-whole-predicate-fact-set",
-    "excludes": [
-        "raw-prose",
-        "raw-content-sha256",
-        "line-and-word-counts",
-        "repository-paths-and-current-file-set",
-        "comments-frontmatter-fenced-code-and-source-citation-sections",
-        "targeted-reference-rendering-duplicated-by-adjacency-authority",
+    "preserved_material": [
+        "exact-lexical-text-case-punctuation-and-word-order",
+        "heading-text-and-level",
+        "paragraph-heading-blockquote-list-code-link-image-type-and-order",
+        "list-nesting",
+        "fenced-and-inline-code-content",
+        "direct-link-image-and-commonmark-autolink-attributes",
+        "inline-boundary-whitespace",
+        "hardbreak",
+        "complete-registry-authority",
+        "ordered-reference-contract-v2-authority",
+        "required-expertise",
+        "package-identity-layer-and-owned-source-paths",
     ],
+    "ignored_comment_classes": [
+        "rd-semantic-id-v2-source-marker",
+        "changeforge-generated-boundary-marker",
+        "changeforge-contract-boundary-marker",
+    ],
+    "structured_authority": {
+        "registry": "complete-canonical-validated-row",
+        "reference": "ordered-exact-reference-contract-v2-records",
+        "compatibility-responsibility": (
+            "derived-from-registry-authority-and-must-not-drift"
+        ),
+        "list_order": "preserved-unless-upstream-contract-canonicalizes-it",
+    },
+    "natural_language_equivalence_inference": "forbidden",
+    "closed_block_token_subset": [
+        "document",
+        "plain-paragraph",
+        "heading-with-level",
+        "blockquote",
+        "bullet-list-and-list-item",
+        "fenced-code-with-info-and-content",
+        "indented-code",
+        "thematic-break",
+    ],
+    "closed_inline_token_subset": [
+        "text-and-softbreak-as-whitespace-aware-fragments",
+        "hardbreak",
+        "emphasis-and-strong-children",
+        "inline-code",
+        "direct-link",
+        "image",
+        "commonmark-autolink",
+    ],
+    "preserved_token_authority": [
+        "heading-level",
+        "block-and-inline-type-order-and-nesting",
+        "fence-info-and-content",
+        "indented-code-content",
+        "link-and-image-exact-parser-attributes",
+        "inline-code-content",
+    ],
+    "opaque_document": {
+        "normalization": [
+            "line-endings-to-lf",
+            "unicode-nfc",
+            "remove-exact-authenticated-full-line-source-markers",
+        ],
+        "preserved_exactly": [
+            "all-other-characters",
+            "horizontal-whitespace",
+            "blank-line-whitespace",
+            "final-newline",
+        ],
+        "whole_body_triggers": [
+            "ordered-list",
+            "gfm-table",
+            "raw-html",
+            "reference-definition-or-reference-style-link",
+            "unknown-or-plugin-token",
+            "unexpected-token-attributes-metadata-or-nesting",
+        ],
+        "authenticated_marker_removal_scope": (
+            "parser-confirmed-root-level-single-line-exact-comments-only"
+        ),
+        "marker_reparse_required": True,
+    },
+    "unsupported_markdown": (
+        "unsupported-or-ambiguous-markdown-is-opaque-and-change-is-fresh"
+    ),
 }
 
 PROFESSIONAL_CARRY_CONTRACT = {
     "carry_unit": "whole-professional-package",
-    "baseline_requirement": "canonical-prior-semantic-review-snapshot",
+    "baseline_requirement": "canonical-prior-material-review-snapshot",
     "review_contract_requirement": "exact-fingerprint-match",
-    "dependency_depth": "one-hop-semantic-review-authority",
+    "dependency_depth": "one-hop-material-review-authority",
     "required_dependency_sources": [
         "packet-required-candidate",
         "reviewer-added-candidate-union-from-all-prior-target-ballots",
@@ -1182,19 +754,18 @@ PROFESSIONAL_CARRY_CONTRACT = {
         "debug-audit",
     ],
     "content_fingerprint_is_review_routing_authority": False,
-    "semantic_review_authority": [
-        PROFESSIONAL_SEMANTIC_FACT_PROJECTION_VERSION,
-        "responsibility-contract",
-        "trigger-and-anti-trigger",
-        "required-inputs-and-outputs",
+    "currentness_authority": [
+        PROFESSIONAL_CURRENTNESS_PROJECTION_VERSION,
+        "complete-registry-authority",
+        "ordered-reference-contract-v2-authority",
+        "conservative-professional-source-material",
         "required-expertise",
-        "routing-failure-and-constraint-boundary",
         "required-adjacency-relationships",
     ],
     "target_selection_authority": [
         "selection-contract-version",
         "required-candidate-ids",
-        "required-candidate-semantic-bindings",
+        "required-candidate-material-bindings",
     ],
     "diagnostic_only_target_context": [
         "full-catalog-ranking",
@@ -1205,7 +776,9 @@ PROFESSIONAL_CARRY_CONTRACT = {
 }
 PROFESSIONAL_REVIEW_CAPSULE_CONTRACT = {
     "projection": "final-assigned-fresh-target-review-capsule",
-    "target_material": "complete-own-material-registry-expertise",
+    "target_material": (
+        "complete-own-material-registry-reference-authority-expertise"
+    ),
     "adjacency_metadata": "complete-full-ranking-and-required-selection",
     "candidate_material": "complete-raw-material-without-candidate-ranking",
     "candidate_origins": ["packet-required", "reviewer-added"],
@@ -1216,20 +789,24 @@ PROFESSIONAL_REVIEW_CAPSULE_CONTRACT = {
 }
 PROFESSIONAL_DISCOVERY_CAPSULE_CONTRACT = {
     "projection": "assigned-fresh-target-discovery-capsule",
-    "target_material": "complete-own-material-registry-expertise",
+    "target_material": (
+        "complete-own-material-registry-reference-authority-expertise"
+    ),
     "required_candidate_material": "complete-raw-material-without-candidate-ranking",
     "adjacency_metadata": "complete-full-ranking-and-required-selection",
-    "candidate_boundary_catalog": "complete-lightweight-catalog",
+    "candidate_boundary_catalog": (
+        "complete-lightweight-responsibility-reference-authority-catalog"
+    ),
     "candidate_request": "separate-immutable-artifact-required",
     "material_storage": "top-level-skill-deduplicated-catalog",
     "closed_projection": True,
 }
 
 PROFESSIONAL_TARGET_BINDING_CONTRACT_VERSION = (
-    "professional-target-semantic-review-binding-v5"
+    "professional-target-conservative-currentness-binding-v6"
 )
 PROFESSIONAL_DEPENDENCY_BINDING_CONTRACT_VERSION = (
-    "professional-one-hop-semantic-dependency-binding-v3"
+    "professional-one-hop-material-dependency-binding-v4"
 )
 PROFESSIONAL_MATERIAL_RECORD_FIELDS = {
     "path",
@@ -1269,6 +846,26 @@ PROFESSIONAL_SEMANTIC_RESPONSIBILITY_OPTIONAL_LIST_FIELDS = {
     "used_by",
     "boundary_signals",
 }
+PROFESSIONAL_REGISTRY_AUTHORITY_REQUIRED_FIELDS = {
+    "name",
+    "path",
+    "required_expertise_tags",
+    "role_support",
+    "trigger_signals",
+    "anti_trigger_signals",
+    "required_inputs",
+    "output_contract",
+    "escalation_signals",
+    "reference_index",
+}
+PROFESSIONAL_REFERENCE_AUTHORITY_FIELDS = {
+    "path",
+    "type",
+    "load_when",
+    "do_not_load_when",
+    "required_by",
+    "required_output",
+}
 PROFESSIONAL_REQUIRED_CANDIDATE_MATERIAL_BINDING_FIELDS = {
     "skill_id",
     "material_fingerprint",
@@ -1278,6 +875,8 @@ PROFESSIONAL_TARGET_BINDING_FIELDS = {
     "layer",
     "own_material",
     "registry",
+    "registry_authority",
+    "reference_authority",
     "required_expertise_tags",
     "adjacency",
     "content_fingerprint",
@@ -1303,7 +902,7 @@ PROFESSIONAL_DECISION_DEPENDENCY_FIELDS = {
 }
 
 PROFESSIONAL_COMPACT_AUTHORITY_CONTRACT_VERSION = (
-    "professional-target-current-semantic-authority-v5"
+    "professional-target-current-material-authority-v6"
 )
 PROFESSIONAL_COMPACT_AUTHORITY_FIELDS = {
     "package_material_binding",
@@ -1996,12 +1595,18 @@ def _semantic_contract_projection() -> dict[str, Any]:
         },
         "binding_contracts": {
             "target_version": PROFESSIONAL_TARGET_BINDING_CONTRACT_VERSION,
-            "semantic_fact_projection": copy.deepcopy(
-                PROFESSIONAL_SEMANTIC_FACT_PROJECTION_CONTRACT
+            "currentness_projection": copy.deepcopy(
+                PROFESSIONAL_CURRENTNESS_PROJECTION_CONTRACT
             ),
             "target_fields": sorted(PROFESSIONAL_TARGET_BINDING_FIELDS),
             "snapshot_target_fields": sorted(PROFESSIONAL_SNAPSHOT_TARGET_FIELDS),
             "material_record_fields": sorted(PROFESSIONAL_MATERIAL_RECORD_FIELDS),
+            "registry_authority_required_fields": sorted(
+                PROFESSIONAL_REGISTRY_AUTHORITY_REQUIRED_FIELDS
+            ),
+            "reference_authority_fields": sorted(
+                PROFESSIONAL_REFERENCE_AUTHORITY_FIELDS
+            ),
             "adjacency_binding_fields": sorted(
                 PROFESSIONAL_ADJACENCY_REVIEW_BINDING_FIELDS
             ),
@@ -2014,7 +1619,7 @@ def _semantic_contract_projection() -> dict[str, Any]:
             "dependency_fields": sorted(
                 PROFESSIONAL_DECISION_DEPENDENCY_FIELDS
             ),
-            "dependency_depth": "one-hop-semantic-review-authority",
+            "dependency_depth": "one-hop-material-review-authority",
             "dependency_union": (
                 "packet-required-plus-reviewer-added-candidate-union"
             ),
@@ -2025,8 +1630,9 @@ def _semantic_contract_projection() -> dict[str, Any]:
             "compact_authority_fields": sorted(
                 PROFESSIONAL_COMPACT_AUTHORITY_FIELDS
             ),
-            "currentness_projection": (
-                "target-local-semantic-required-and-authenticated-reviewer-added-v5"
+            "currentness_scope": (
+                "target-local-conservative-required-and-authenticated-"
+                "reviewer-added-v6"
             ),
             "content_fingerprint": (
                 "raw-package-provenance-integrity-only-not-currentness"
@@ -2035,7 +1641,7 @@ def _semantic_contract_projection() -> dict[str, Any]:
             "compact_storage": {
                 "schema_version": 2,
                 "dependency_material_catalog": (
-                    "top-level-dependency-id-to-semantic-review-binding"
+                    "top-level-dependency-id-to-material-review-binding"
                 ),
                 "finding_authority": [
                     "package_material_binding",

@@ -11,14 +11,19 @@ from __future__ import annotations
 
 import copy
 import hashlib
+from importlib import metadata as importlib_metadata
 import json
 import re
 import unicodedata
-from functools import lru_cache
 from pathlib import Path, PurePosixPath
 from typing import Any, Mapping, Sequence
 
 import expert_panel_contracts as panel_contracts
+
+try:
+    from markdown_it import MarkdownIt
+except ImportError:  # pragma: no cover - exercised through the fail-closed seam
+    MarkdownIt = None
 
 ACCEPTED_PROFESSIONAL_DISPOSITION = (
     panel_contracts.PROFESSIONAL_ACCEPTED_DISPOSITION
@@ -39,80 +44,23 @@ _MATERIAL_RECORD_FIELDS = set(
 _ADJACENCY_REVIEW_BINDING_FIELDS = set(
     panel_contracts.PROFESSIONAL_ADJACENCY_REVIEW_BINDING_FIELDS
 )
-_SEMANTIC_RESPONSIBILITY_FIELDS = set(
+_RESPONSIBILITY_FIELDS = set(
     panel_contracts.PROFESSIONAL_SEMANTIC_RESPONSIBILITY_FIELDS
 )
-_SEMANTIC_RESPONSIBILITY_REQUIRED_LIST_FIELDS = set(
+_RESPONSIBILITY_REQUIRED_LIST_FIELDS = set(
     panel_contracts.PROFESSIONAL_SEMANTIC_RESPONSIBILITY_REQUIRED_LIST_FIELDS
 )
-_SEMANTIC_RESPONSIBILITY_OPTIONAL_LIST_FIELDS = set(
+_RESPONSIBILITY_OPTIONAL_LIST_FIELDS = set(
     panel_contracts.PROFESSIONAL_SEMANTIC_RESPONSIBILITY_OPTIONAL_LIST_FIELDS
 )
-_SEMANTIC_FACT_PROJECTION_VERSION = (
-    panel_contracts.PROFESSIONAL_SEMANTIC_FACT_PROJECTION_VERSION
+_CURRENTNESS_PROJECTION_VERSION = (
+    panel_contracts.PROFESSIONAL_CURRENTNESS_PROJECTION_VERSION
 )
-_SEMANTIC_FACT_FIELDS = set(
-    panel_contracts.PROFESSIONAL_SEMANTIC_FACT_FIELDS
+_REGISTRY_AUTHORITY_REQUIRED_FIELDS = set(
+    panel_contracts.PROFESSIONAL_REGISTRY_AUTHORITY_REQUIRED_FIELDS
 )
-_SEMANTIC_ARGUMENT_ROLE_FIELDS = set(
-    panel_contracts.PROFESSIONAL_SEMANTIC_ARGUMENT_ROLE_FIELDS
-)
-_SEMANTIC_ARGUMENT_RELATIONS = set(
-    panel_contracts.PROFESSIONAL_SEMANTIC_ARGUMENT_RELATIONS
-)
-_SEMANTIC_ARGUMENT_ATTACHMENTS = set(
-    panel_contracts.PROFESSIONAL_SEMANTIC_ARGUMENT_ATTACHMENTS
-)
-_SEMANTIC_SECTION_ALIASES = copy.deepcopy(
-    panel_contracts.PROFESSIONAL_SEMANTIC_SECTION_ALIASES
-)
-_SEMANTIC_EXCLUDED_SECTION_ALIASES = tuple(
-    panel_contracts.PROFESSIONAL_SEMANTIC_EXCLUDED_SECTION_ALIASES
-)
-_SEMANTIC_SECTION_FACTS = copy.deepcopy(
-    panel_contracts.PROFESSIONAL_SEMANTIC_SECTION_FACTS
-)
-_SEMANTIC_REGISTRY_FACTS = copy.deepcopy(
-    panel_contracts.PROFESSIONAL_SEMANTIC_REGISTRY_FACTS
-)
-_SEMANTIC_ACTION_ALIASES = copy.deepcopy(
-    panel_contracts.PROFESSIONAL_SEMANTIC_ACTION_ALIASES
-)
-_SEMANTIC_OBJECT_CONDITION_ALIASES = copy.deepcopy(
-    panel_contracts.PROFESSIONAL_SEMANTIC_OBJECT_CONDITION_ALIASES
-)
-_SEMANTIC_TERM_ALIASES = copy.deepcopy(
-    panel_contracts.PROFESSIONAL_SEMANTIC_TERM_ALIASES
-)
-_SEMANTIC_STOP_TOKENS = set(
-    panel_contracts.PROFESSIONAL_SEMANTIC_STOP_TOKENS
-)
-_SEMANTIC_MODALITY_ALIASES = copy.deepcopy(
-    panel_contracts.PROFESSIONAL_SEMANTIC_MODALITY_ALIASES
-)
-_SEMANTIC_NEGATION_ALIASES = tuple(
-    panel_contracts.PROFESSIONAL_SEMANTIC_NEGATION_ALIASES
-)
-_SEMANTIC_PREDICATE_CONNECTORS = set(
-    panel_contracts.PROFESSIONAL_SEMANTIC_PREDICATE_CONNECTORS
-)
-_SEMANTIC_CONDITION_CONCEPTS = set(
-    panel_contracts.PROFESSIONAL_SEMANTIC_CONDITION_CONCEPTS
-)
-_SEMANTIC_PREDICATE_LEAD_TOKENS = set(
-    panel_contracts.PROFESSIONAL_SEMANTIC_PREDICATE_LEAD_TOKENS
-)
-_SEMANTIC_UNIT_KINDS = set(
-    panel_contracts.PROFESSIONAL_SEMANTIC_UNIT_KINDS
-)
-_SEMANTIC_FINITE_RELATION_ALIASES = copy.deepcopy(
-    panel_contracts.PROFESSIONAL_SEMANTIC_FINITE_RELATION_ALIASES
-)
-_SEMANTIC_RELATIVE_CONDITION_TOKENS = set(
-    panel_contracts.PROFESSIONAL_SEMANTIC_RELATIVE_CONDITION_TOKENS
-)
-_SEMANTIC_GRAMMATICAL_CONDITION_BOUNDARIES = tuple(
-    panel_contracts.PROFESSIONAL_SEMANTIC_GRAMMATICAL_CONDITION_BOUNDARIES
+_REFERENCE_AUTHORITY_FIELDS = set(
+    panel_contracts.PROFESSIONAL_REFERENCE_AUTHORITY_FIELDS
 )
 _FRESH_ADJACENCY_CONTEXT_FIELDS = {
     "algorithm",
@@ -125,6 +73,10 @@ _FRESH_ADJACENCY_CONTEXT_FIELDS = {
 _TARGET_BINDING_FIELDS = set(
     panel_contracts.PROFESSIONAL_TARGET_BINDING_FIELDS
 )
+_HISTORICAL_TARGET_BINDING_FIELDS = _TARGET_BINDING_FIELDS - {
+    "registry_authority",
+    "reference_authority",
+}
 _SNAPSHOT_TARGET_FIELDS = set(
     panel_contracts.PROFESSIONAL_SNAPSHOT_TARGET_FIELDS
 )
@@ -166,6 +118,7 @@ _DISCOVERY_BOUNDARY_FIELDS = {
     "skill_id",
     "layer",
     "responsibility_contract",
+    "reference_authority",
     "required_expertise_tags",
     "material_fingerprint",
 }
@@ -347,6 +300,11 @@ def professional_own_material_binding(
 ) -> dict[str, Any]:
     """Project exactly the target's root and indexed Reference material."""
 
+    if "root" not in target and isinstance(target.get("own_material"), Mapping):
+        return _canonical_own_material_binding(
+            target["own_material"],
+            label=str(target.get("skill_id", "target")),
+        )
     return _canonical_own_material_binding(
         {
             "root": target.get("root"),
@@ -391,35 +349,6 @@ def _canonical_own_material_binding(
     return {"root": root, "indexed_references": references}
 
 
-def professional_registry_responsibility_binding(
-    target: Mapping[str, Any],
-) -> dict[str, Any]:
-    """Project the Registry path and embedded responsibility contract."""
-
-    registry = target.get("registry")
-    if not isinstance(registry, dict) or set(registry) not in (
-        {"path", "responsibility_contract"},
-        {"path", "entry_fingerprint", "responsibility_contract"},
-    ):
-        raise ProfessionalCarryForwardError(
-            "target.registry must contain the canonical Registry binding"
-        )
-    if not _is_canonical_repository_path(registry.get("path")):
-        raise ProfessionalCarryForwardError(
-            "target.registry.path must be non-empty"
-        )
-    if not isinstance(registry.get("responsibility_contract"), dict):
-        raise ProfessionalCarryForwardError(
-            "target.registry.responsibility_contract must be an object"
-        )
-    return {
-        "path": registry["path"],
-        "responsibility_contract": copy.deepcopy(
-            registry["responsibility_contract"]
-        ),
-    }
-
-
 def professional_required_expertise_binding(
     target: Mapping[str, Any],
 ) -> list[str]:
@@ -431,2110 +360,889 @@ def professional_required_expertise_binding(
     )
 
 
-def _normalized_semantic_text(value: object, *, label: str) -> str:
-    """Normalize presentation syntax while preserving lexical authority."""
-
-    if not isinstance(value, str) or not value.strip():
-        raise ProfessionalCarryForwardError(f"{label} must be non-empty text")
-    text = unicodedata.normalize("NFKC", value).casefold()
-    text = re.sub(r"<!--.*?-->", " ", text, flags=re.DOTALL)
-    text = re.sub(r"[`*_~]+", "", text)
-    text = re.sub(r"[^\w]+", " ", text, flags=re.UNICODE)
-    normalized = " ".join(text.split())
-    if not normalized:
-        raise ProfessionalCarryForwardError(
-            f"{label} must contain semantic text"
-        )
-    return normalized
+def _normalize_horizontal_text(value: str) -> str:
+    value = unicodedata.normalize(
+        "NFC", value.replace("\r\n", "\n").replace("\r", "\n")
+    )
+    return "\n".join(
+        re.sub(r"[ \t\f\v]+", " ", line).strip()
+        for line in value.split("\n")
+    ).strip("\n")
 
 
-def _normalized_semantic_list(
+def _normalize_structured_authority(value: object, *, label: str) -> Any:
+    """Normalize only deterministic presentation in validated structured data."""
+
+    if value is None or type(value) in {bool, int}:
+        return value
+    if isinstance(value, str):
+        return _normalize_horizontal_text(value)
+    if isinstance(value, list):
+        return [
+            _normalize_structured_authority(
+                item, label=f"{label}[{index}]"
+            )
+            for index, item in enumerate(value)
+        ]
+    if isinstance(value, Mapping):
+        normalized: dict[str, Any] = {}
+        for key, item in value.items():
+            if not isinstance(key, str) or not key:
+                raise ProfessionalCarryForwardError(
+                    f"{label} keys must be non-empty text"
+                )
+            normalized_key = unicodedata.normalize("NFC", key)
+            if normalized_key in normalized:
+                raise ProfessionalCarryForwardError(
+                    f"{label} keys collide after Unicode NFC normalization"
+                )
+            normalized[normalized_key] = _normalize_structured_authority(
+                item, label=f"{label}.{normalized_key}"
+            )
+        return normalized
+    raise ProfessionalCarryForwardError(
+        f"{label} must contain only canonical JSON values"
+    )
+
+
+def _required_string_list(
     value: object, *, label: str, allow_empty: bool
 ) -> list[str]:
-    if not isinstance(value, list):
-        raise ProfessionalCarryForwardError(f"{label} must be a string array")
-    normalized = [
-        _normalized_semantic_text(item, label=f"{label}[{index}]")
-        for index, item in enumerate(value)
-    ]
-    if not allow_empty and not normalized:
-        raise ProfessionalCarryForwardError(f"{label} must be non-empty")
-    return sorted(set(normalized))
+    if not isinstance(value, list) or (
+        not allow_empty and not value
+    ):
+        raise ProfessionalCarryForwardError(
+            f"{label} must be {'a' if allow_empty else 'a non-empty'} string array"
+        )
+    if not all(isinstance(item, str) and item.strip() for item in value):
+        raise ProfessionalCarryForwardError(
+            f"{label} must contain non-empty strings"
+        )
+    if len(value) != len(set(value)):
+        raise ProfessionalCarryForwardError(
+            f"{label} must not contain duplicates"
+        )
+    return list(value)
 
 
-def professional_semantic_responsibility_binding(
+def professional_reference_authority_binding(
     target: Mapping[str, Any],
-) -> dict[str, Any]:
-    """Project only structured responsibility authority used for rereview."""
+) -> list[dict[str, Any]]:
+    """Return ordered exact Reference Contract v2 currentness authority."""
 
-    registry = target.get("registry")
-    responsibility = (
-        registry.get("responsibility_contract")
-        if isinstance(registry, Mapping)
-        else None
-    )
-    if not isinstance(responsibility, Mapping):
+    value = target.get("reference_authority")
+    if not isinstance(value, list):
         raise ProfessionalCarryForwardError(
-            "target responsibility contract must be an object"
+            "target.reference_authority must be an array"
         )
-    missing = sorted(_SEMANTIC_RESPONSIBILITY_FIELDS - set(responsibility))
-    if missing:
-        raise ProfessionalCarryForwardError(
-            "target responsibility contract lacks semantic authority: "
-            + ", ".join(missing)
+    records: list[dict[str, Any]] = []
+    seen_paths: set[str] = set()
+    for index, raw in enumerate(value):
+        label = f"target.reference_authority[{index}]"
+        if not isinstance(raw, Mapping) or set(raw) != _REFERENCE_AUTHORITY_FIELDS:
+            raise ProfessionalCarryForwardError(
+                f"{label} must contain one exact Reference Contract v2 record"
+            )
+        path = raw.get("path")
+        if not _is_canonical_repository_path(path):
+            raise ProfessionalCarryForwardError(
+                f"{label}.path must be repository-relative"
+            )
+        if path in seen_paths:
+            raise ProfessionalCarryForwardError(
+                f"{label}.path duplicates {path!r}"
+            )
+        seen_paths.add(str(path))
+        for field in ("type", "load_when", "do_not_load_when"):
+            field_value = raw.get(field)
+            if (
+                not isinstance(field_value, str)
+                or not field_value.strip()
+                or "\n" in field_value
+                or "\r" in field_value
+            ):
+                raise ProfessionalCarryForwardError(
+                    f"{label}.{field} must be non-empty single-line text"
+                )
+        for field in ("required_by", "required_output"):
+            _required_string_list(
+                raw.get(field), label=f"{label}.{field}", allow_empty=False
+            )
+        records.append(
+            _normalize_structured_authority(raw, label=label)
         )
-    projected: dict[str, Any] = {}
-    for field in sorted(_SEMANTIC_RESPONSIBILITY_REQUIRED_LIST_FIELDS):
-        projected[field] = _normalized_semantic_list(
-            responsibility[field],
-            label=f"target responsibility {field}",
+    return records
+
+
+def _responsibility_from_registry_authority(
+    authority: Mapping[str, Any],
+) -> dict[str, Any]:
+    responsibility: dict[str, Any] = {}
+    for field in sorted(_RESPONSIBILITY_REQUIRED_LIST_FIELDS):
+        responsibility[field] = _required_string_list(
+            authority.get(field),
+            label=f"target.registry_authority.{field}",
             allow_empty=False,
         )
-    for field in sorted(_SEMANTIC_RESPONSIBILITY_OPTIONAL_LIST_FIELDS):
-        projected[field] = _normalized_semantic_list(
-            responsibility[field],
-            label=f"target responsibility {field}",
+    for field in sorted(_RESPONSIBILITY_OPTIONAL_LIST_FIELDS):
+        responsibility[field] = _required_string_list(
+            authority.get(field, []),
+            label=f"target.registry_authority.{field}",
             allow_empty=True,
         )
     for field in ("group", "content_class", "delivery_scope"):
-        value = responsibility[field]
-        projected[field] = (
-            None
-            if value is None
-            else _normalized_semantic_text(
-                value, label=f"target responsibility {field}"
+        value = authority.get(field)
+        if value is not None and (
+            not isinstance(value, str) or not value.strip()
+        ):
+            raise ProfessionalCarryForwardError(
+                f"target.registry_authority.{field} must be text or null"
             )
-        )
-    task_routable = responsibility["task_routable"]
+        responsibility[field] = value
+    task_routable = authority.get("task_routable")
     if task_routable is not None and type(task_routable) is not bool:
         raise ProfessionalCarryForwardError(
-            "target responsibility task_routable must be boolean or null"
+            "target.registry_authority.task_routable must be boolean or null"
         )
-    projected["task_routable"] = task_routable
-    if set(projected) != _SEMANTIC_RESPONSIBILITY_FIELDS:
+    responsibility["task_routable"] = task_routable
+    if set(responsibility) != _RESPONSIBILITY_FIELDS:
         raise ProfessionalCarryForwardError(
-            "target semantic responsibility projection is incomplete"
+            "target Registry responsibility authority is incomplete"
         )
-    return projected
-
-
-def _semantic_tokenize(value: str) -> list[str]:
-    text = unicodedata.normalize("NFKC", value).casefold()
-    text = re.sub(r"<!--.*?-->", " ", text, flags=re.DOTALL)
-    text = re.sub(r"!?\[([^\]]*)\]\([^)]*\)", r" \1 ", text)
-    text = re.sub(r"<https?://[^ >]+>", " ", text)
-    text = text.replace("mustn't", "must not")
-    text = text.replace("shalln't", "shall not")
-    text = text.replace("can't", "cannot")
-    text = re.sub(r"[`*_~]", "", text)
-    text = re.sub(r"[^a-z0-9]+", " ", text)
-    tokens = text.split()
-    for alias, canonical in sorted(
-        _SEMANTIC_TERM_ALIASES.items(),
-        key=lambda item: len(item[0].split()),
-        reverse=True,
-    ):
-        alias_tokens = alias.split()
-        replacement = canonical.split()
-        position = 0
-        while position <= len(tokens) - len(alias_tokens):
-            if tokens[position : position + len(alias_tokens)] == alias_tokens:
-                tokens[position : position + len(alias_tokens)] = replacement
-                position += len(replacement)
-            else:
-                position += 1
-    return tokens
-
-
-def _semantic_lexeme_forms(token: str) -> set[str]:
-    forms = {token}
-    if token.endswith("ies") and len(token) > 3:
-        forms.add(token[:-3] + "y")
-    if token.endswith("ing") and len(token) > 4:
-        forms.update({token[:-3], token[:-3] + "e"})
-    if token.endswith("ed") and len(token) > 3:
-        forms.update({token[:-2], token[:-2] + "e"})
-    if token.endswith("es") and len(token) > 3:
-        forms.update({token[:-2], token[:-1]})
-    elif token.endswith("s") and len(token) > 2:
-        forms.add(token[:-1])
-    return forms
-
-
-@lru_cache(maxsize=None)
-def _semantic_alias_index(
-    namespace: str,
-) -> tuple[dict[str, tuple[str, ...]], tuple[tuple[tuple[str, ...], str], ...]]:
-    aliases = {
-        "action": _SEMANTIC_ACTION_ALIASES,
-        "modality": _SEMANTIC_MODALITY_ALIASES,
-        "object-condition": _SEMANTIC_OBJECT_CONDITION_ALIASES,
-    }.get(namespace)
-    if aliases is None:
-        raise ProfessionalCarryForwardError(
-            f"unknown Professional semantic alias namespace: {namespace}"
-        )
-    singles: dict[str, set[str]] = {}
-    phrases: list[tuple[tuple[str, ...], str]] = []
-    for concept, values in aliases.items():
-        for alias in values:
-            alias_tokens = tuple(_semantic_tokenize(alias))
-            if not alias_tokens:
-                raise ProfessionalCarryForwardError(
-                    "Professional semantic alias must contain tokens"
-                )
-            if len(alias_tokens) == 1:
-                singles.setdefault(alias_tokens[0], set()).add(concept)
-            else:
-                phrases.append((alias_tokens, concept))
-    return (
-        {
-            alias: tuple(sorted(concepts))
-            for alias, concepts in singles.items()
-        },
-        tuple(sorted(phrases)),
+    return _normalize_structured_authority(
+        responsibility, label="target.registry_authority.responsibility"
     )
 
 
-def _semantic_alias_matches(
-    tokens: Sequence[str], namespace: str
-) -> tuple[set[str], set[int]]:
-    singles, phrases = _semantic_alias_index(namespace)
-    concepts: set[str] = set()
-    covered: set[int] = set()
-    for index, token in enumerate(tokens):
-        for form in _semantic_lexeme_forms(token):
-            matched = singles.get(form, ())
-            if matched:
-                concepts.update(matched)
-                covered.add(index)
-    for alias_tokens, concept in phrases:
-        width = len(alias_tokens)
-        for start in range(0, len(tokens) - width + 1):
-            if tuple(tokens[start : start + width]) == alias_tokens:
-                concepts.add(concept)
-                covered.update(range(start, start + width))
-    return concepts, covered
-
-
-def _semantic_phrase_present(tokens: Sequence[str], phrase: str) -> bool:
-    phrase_tokens = _semantic_tokenize(phrase)
-    for start in range(0, len(tokens) - len(phrase_tokens) + 1):
-        candidate = tokens[start : start + len(phrase_tokens)]
-        if candidate == phrase_tokens:
-            return True
-        if (
-            candidate[:-1] == phrase_tokens[:-1]
-            and phrase_tokens[-1] in _semantic_lexeme_forms(candidate[-1])
-        ):
-            return True
-    return False
-
-
-def _semantic_section_kind(title: str | None) -> str | None:
-    if title is None:
-        return None
-    tokens = _semantic_tokenize(title)
-    normalized = " ".join(tokens)
-    if any(
-        _semantic_phrase_present(tokens, alias)
-        for alias in _SEMANTIC_EXCLUDED_SECTION_ALIASES
-    ):
-        return "excluded"
-    priority = (
-        "source-citation",
-        "anti-trigger",
-        "trigger",
-        "required-input",
-        "required-output",
-        "responsibility",
-        "failure-constraint",
-        "verification",
-        "adjacency-routing",
-        "decision-rules",
-    )
-    for section_kind in priority:
-        aliases = _SEMANTIC_SECTION_ALIASES[section_kind]
-        if any(
-            _semantic_phrase_present(tokens, alias)
-            for alias in aliases
-        ):
-            return section_kind
-    return "general-guidance" if normalized else None
-
-
-def _professional_markdown_semantic_units(
-    markdown: str,
-) -> list[dict[str, Any]]:
-    """Return logical Markdown units without path, position, or presentation."""
-
-    lines = markdown.splitlines()
-    units: list[dict[str, Any]] = []
-    current_heading: str | None = None
-    current_parts: list[str] = []
-    current_kind: str | None = None
-    table_headers: list[str] | None = None
-    in_frontmatter = bool(lines and lines[0].strip() == "---")
-    in_fence = False
-    fence_marker: str | None = None
-    in_comment = False
-
-    def append_unit(kind: str, text: str) -> None:
-        if kind not in _SEMANTIC_UNIT_KINDS:
-            raise ProfessionalCarryForwardError(
-                f"unknown Professional semantic unit kind: {kind}"
-            )
-        label_match = re.match(
-            r"^\s*(?:\*\*)?([^:*][^:]{0,79}):(?:\*\*)?\s+(.+)$",
-            text,
-        )
-        if label_match:
-            units.append(
-                {
-                    "heading": current_heading,
-                    "unit_kind": "labeled-field",
-                    "label": label_match.group(1).strip(),
-                    "text": label_match.group(2).strip(),
-                }
-            )
-            return
-        units.append(
-            {
-                "heading": current_heading,
-                "unit_kind": kind,
-                "text": text,
-            }
-        )
-
-    def flush() -> None:
-        nonlocal current_parts, current_kind
-        text = " ".join(part.strip() for part in current_parts if part.strip())
-        if text:
-            append_unit(current_kind or "paragraph", text)
-        current_parts = []
-        current_kind = None
-
-    index = 1 if in_frontmatter else 0
-    while index < len(lines):
-        raw_line = lines[index]
-        stripped = raw_line.strip()
-        if in_frontmatter:
-            if stripped == "---":
-                in_frontmatter = False
-            index += 1
-            continue
-        fence_match = re.match(r"^(```+|~~~+)", stripped)
-        if fence_match:
-            flush()
-            marker = fence_match.group(1)[:3]
-            if not in_fence:
-                in_fence = True
-                fence_marker = marker
-            elif fence_marker == marker:
-                in_fence = False
-                fence_marker = None
-            index += 1
-            continue
-        if in_fence:
-            index += 1
-            continue
-        if in_comment:
-            if "-->" in raw_line:
-                in_comment = False
-            index += 1
-            continue
-        if "<!--" in raw_line:
-            before, _marker, after = raw_line.partition("<!--")
-            raw_line = before
-            stripped = raw_line.strip()
-            if "-->" not in after:
-                in_comment = True
-        heading = re.match(r"^#{2,6}\s+(.+?)\s*$", stripped)
-        if heading:
-            flush()
-            current_heading = heading.group(1)
-            table_headers = None
-            index += 1
-            continue
-        if re.match(r"^#(?:\s+|$)", stripped):
-            flush()
-            index += 1
-            continue
-        if not stripped:
-            flush()
-            index += 1
-            continue
-        if stripped.startswith("|") and stripped.endswith("|"):
-            flush()
-            cells = [cell.strip() for cell in stripped.strip("|").split("|")]
-            next_line = lines[index + 1].strip() if index + 1 < len(lines) else ""
-            if re.fullmatch(r"\|?(?:\s*:?-+:?\s*\|)+\s*", next_line):
-                table_headers = cells
-                index += 2
-                continue
-            if re.fullmatch(r"\|?(?:\s*:?-+:?\s*\|)+\s*", stripped):
-                index += 1
-                continue
-            if table_headers and len(table_headers) == len(cells):
-                fields = [
-                    {"label": header, "text": cell}
-                    for header, cell in zip(table_headers, cells)
-                    if cell
-                ]
-            else:
-                fields = [
-                    {"label": f"column-{position}", "text": cell}
-                    for position, cell in enumerate(cells, start=1)
-                    if cell
-                ]
-            if fields:
-                units.append(
-                    {
-                        "heading": current_heading,
-                        "unit_kind": "table-row",
-                        "fields": fields,
-                        "text": " ".join(
-                            f"{field['label']} {field['text']}"
-                            for field in fields
-                        ),
-                    }
-                )
-            index += 1
-            continue
-        list_match = re.match(r"^\s*([-*+]|\d+[.)])\s+(.+)$", raw_line)
-        if list_match:
-            flush()
-            current_kind = (
-                "ordered-step"
-                if list_match.group(1)[0].isdigit()
-                else "list-item"
-            )
-            current_parts = [list_match.group(2)]
-            index += 1
-            continue
-        if current_kind in {"list-item", "ordered-step"} and raw_line[:1].isspace():
-            current_parts.append(stripped)
-        else:
-            if current_kind != "paragraph":
-                flush()
-                current_kind = "paragraph"
-            current_parts.append(stripped)
-        index += 1
-    flush()
-    return units
-
-
-def _semantic_clause_slices(text: str) -> list[str]:
-    return [
-        clause.strip()
-        for clause in re.split(r"(?<=[.!?])\s+", text)
-        if clause.strip()
-    ]
-
-
-def _semantic_alias_spans(
-    tokens: Sequence[str], namespace: str
-) -> list[tuple[int, int, str]]:
-    """Return non-overlapping closed alias spans with their concepts."""
-
-    singles, phrases = _semantic_alias_index(namespace)
-    matches: set[tuple[int, int, str]] = set()
-    for index, token in enumerate(tokens):
-        for form in _semantic_lexeme_forms(token):
-            for concept in singles.get(form, ()):
-                matches.add((index, index + 1, concept))
-    for alias_tokens, concept in phrases:
-        width = len(alias_tokens)
-        for start in range(0, len(tokens) - width + 1):
-            if tuple(tokens[start : start + width]) == alias_tokens:
-                matches.add((start, start + width, concept))
-
-    selected: list[tuple[int, int, str]] = []
-    for start, end, concept in sorted(
-        matches, key=lambda row: (row[0], -(row[1] - row[0]), row[2])
-    ):
-        overlaps = [
-            current
-            for current in selected
-            if start < current[1] and current[0] < end
-        ]
-        if not overlaps:
-            selected.append((start, end, concept))
-            continue
-        if all(current[2] == concept for current in overlaps):
-            continue
-        if namespace == "action":
-            raise ProfessionalCarryForwardError(
-                "material semantic clause is ambiguous: overlapping closed "
-                f"{namespace} aliases"
-            )
-        selected.append((start, end, concept))
-    return sorted(selected)
-
-
-def _semantic_negation_indexes(tokens: Sequence[str]) -> set[int]:
-    indexes: set[int] = set()
-    for alias in _SEMANTIC_NEGATION_ALIASES:
-        alias_tokens = _semantic_tokenize(alias)
-        for start in range(0, len(tokens) - len(alias_tokens) + 1):
-            if list(tokens[start : start + len(alias_tokens)]) == alias_tokens:
-                indexes.update(range(start, start + len(alias_tokens)))
-    return indexes
-
-
-def _semantic_finite_relation_spans(
-    tokens: Sequence[str],
-) -> list[tuple[int, int, str]]:
-    spans = []
-    for concept, aliases in _SEMANTIC_FINITE_RELATION_ALIASES.items():
-        for alias in aliases:
-            alias_tokens = _semantic_tokenize(alias)
-            for start in range(0, len(tokens) - len(alias_tokens) + 1):
-                if list(tokens[start : start + len(alias_tokens)]) == alias_tokens:
-                    spans.append((start, start + len(alias_tokens), concept))
-    return sorted(set(spans))
-
-
-def _semantic_action_candidates(
-    tokens: Sequence[str],
-) -> list[tuple[int, int, str]]:
-    condition_spans = [
-        (start, end)
-        for start, end, concept in _semantic_alias_spans(
-            tokens, "object-condition"
-        )
-        if concept in _SEMANTIC_CONDITION_CONCEPTS
-    ]
-    actions = [
-        action
-        for action in _semantic_alias_spans(tokens, "action")
-        if not any(
-            action[0] < end and start < action[1]
-            for start, end in condition_spans
-        )
-        and not (
-            action[2] == "execute"
-            and list(tokens[action[0] : action[1]]) == ["do"]
-            and action[1] < len(tokens)
-            and tokens[action[1]] == "not"
-        )
-    ]
-    by_span = {(start, end): concept for start, end, concept in actions}
-    for start, end, concept in _semantic_finite_relation_spans(tokens):
-        by_span.setdefault((start, end), concept)
-    return sorted((start, end, concept) for (start, end), concept in by_span.items())
-
-
-def _semantic_first_content_index(tokens: Sequence[str], start: int = 0) -> int:
-    index = start
-    while index < len(tokens) and tokens[index] in _SEMANTIC_PREDICATE_LEAD_TOKENS:
-        index += 1
-    return index
-
-
-def _semantic_action_at(
-    actions: Sequence[tuple[int, int, str]], index: int
-) -> tuple[int, int, str] | None:
-    return next((action for action in actions if action[0] == index), None)
-
-
-def _semantic_action_surface_is_exact(
-    tokens: Sequence[str], action: tuple[int, int, str]
-) -> bool:
-    surface = tuple(tokens[action[0] : action[1]])
-    aliases = _SEMANTIC_ACTION_ALIASES.get(action[2], ())
-    return any(
-        tuple(_semantic_tokenize(alias)) == surface for alias in aliases
-    ) or any(
-        tuple(_semantic_tokenize(alias)) == surface
-        for alias in _SEMANTIC_FINITE_RELATION_ALIASES.get(action[2], ())
-    )
-
-
-def _semantic_action_surface_is_exact_closed_alias(
-    tokens: Sequence[str], action: tuple[int, int, str]
-) -> bool:
-    surface = tuple(tokens[action[0] : action[1]])
-    return any(
-        tuple(_semantic_tokenize(alias)) == surface
-        for alias in _SEMANTIC_ACTION_ALIASES.get(action[2], ())
-    )
-
-
-def _semantic_forced_head(
-    tokens: Sequence[str],
-    actions: Sequence[tuple[int, int, str]],
-    *,
-    start: int,
-    allow_lexical: bool,
-) -> tuple[int, int, str] | None:
-    index = _semantic_first_content_index(tokens, start)
-    if index >= len(tokens):
-        return None
-    action = _semantic_action_at(actions, index)
-    if action is not None:
-        return action
-    if allow_lexical:
-        return (index, index + 1, f"lexical:{tokens[index]}")
-    return None
-
-
-def _semantic_first_predicate(
-    tokens: Sequence[str],
-    actions: Sequence[tuple[int, int, str]],
-    *,
-    unit_kind: str,
-) -> tuple[int, int, str] | None:
-    finite = _semantic_finite_relation_spans(tokens)
-    if unit_kind in {"list-item", "ordered-step"}:
-        first = _semantic_first_content_index(tokens)
-        if first < len(tokens) and tokens[first] in {"a", "an", "the", "this"}:
-            if finite:
-                return finite[0]
-        return _semantic_forced_head(
-            tokens, actions, start=0, allow_lexical=True
-        )
-    direct = _semantic_forced_head(
-        tokens, actions, start=0, allow_lexical=False
-    )
-    if direct is not None:
-        return direct
-    modality_indexes = _semantic_alias_matches(tokens, "modality")[1]
-    negation_indexes = _semantic_negation_indexes(tokens)
-    forced_indexes = sorted(modality_indexes | negation_indexes)
-    for index in forced_indexes:
-        head = _semantic_forced_head(
-            tokens, actions, start=index + 1, allow_lexical=True
-        )
-        if head is not None:
-            return head
-    if finite:
-        return finite[0]
-    return next((action for action in actions if action[0] > 0), None)
-
-
-def _semantic_token_has_object_concept(token: str) -> bool:
-    return bool(_semantic_alias_matches([token], "object-condition")[0])
-
-
-def _semantic_predicates(
-    tokens: Sequence[str],
-    *,
-    unit_kind: str,
-) -> list[tuple[str, int, tuple[int, int, str]]]:
-    actions = _semantic_action_candidates(tokens)
-    first = _semantic_first_predicate(tokens, actions, unit_kind=unit_kind)
-    if first is None:
-        return []
-    predicates: list[tuple[str, int, tuple[int, int, str]]] = [
-        ("root", 0, first)
-    ]
-    occupied_until = first[1]
-    for connector_index in range(first[1], len(tokens)):
-        connector = tokens[connector_index]
-        if connector not in _SEMANTIC_PREDICATE_CONNECTORS:
-            continue
-        head = _semantic_forced_head(
-            tokens,
-            actions,
-            start=connector_index + 1,
-            allow_lexical=True,
-        )
-        if head is None or head[0] < occupied_until:
-            continue
-        head_is_closed = not head[2].startswith("lexical:")
-        if head_is_closed and not _semantic_action_surface_is_exact(tokens, head):
-            continue
-        previous_index = connector_index - 1
-        next_index = head[0] + 1
-        object_coordination = (
-            previous_index >= occupied_until
-            and _semantic_token_has_object_concept(tokens[previous_index])
-            and _semantic_token_has_object_concept(tokens[head[0]])
-            and not (
-                next_index < len(tokens)
-                and tokens[next_index] in _SEMANTIC_RELATIVE_CONDITION_TOKENS
-            )
-        )
-        if object_coordination:
-            continue
-        if not head_is_closed:
-            if (
-                next_index >= len(tokens)
-                or not _semantic_token_has_object_concept(tokens[next_index])
-            ):
-                continue
-        following_connector = next(
-            (
-                index
-                for index in range(head[1], len(tokens))
-                if tokens[index] in _SEMANTIC_PREDICATE_CONNECTORS
-            ),
-            len(tokens),
-        )
-        trailing_tokens = tokens[head[1] : following_connector]
-        prior_tokens = tokens[occupied_until:connector_index]
-        if (
-            not any(
-                token not in _SEMANTIC_STOP_TOKENS
-                for token in trailing_tokens
-            )
-            and not any(token in {"it", "them"} for token in trailing_tokens)
-            and any(
-                token not in _SEMANTIC_STOP_TOKENS for token in prior_tokens
-            )
-        ):
-            continue
-        predicates.append((connector, connector_index, head))
-        occupied_until = head[1]
-    return predicates
-
-
-def _semantic_grammatical_condition_spans(
-    tokens: Sequence[str],
-) -> list[tuple[int, int, str]]:
-    matches: list[tuple[int, int, str]] = []
-    for boundary in sorted(
-        _SEMANTIC_GRAMMATICAL_CONDITION_BOUNDARIES,
-        key=lambda value: len(value.split()),
-        reverse=True,
-    ):
-        boundary_tokens = _semantic_tokenize(boundary)
-        for start in range(0, len(tokens) - len(boundary_tokens) + 1):
-            if list(tokens[start : start + len(boundary_tokens)]) == boundary_tokens:
-                matches.append((start, start + len(boundary_tokens), boundary))
-    selected: list[tuple[int, int, str]] = []
-    for match in sorted(matches, key=lambda row: (row[0], -(row[1] - row[0]))):
-        if not any(match[0] < end and start < match[1] for start, end, _ in selected):
-            selected.append(match)
-    return sorted(selected)
-
-
-def _semantic_scope_partition(
-    tokens: Sequence[str],
-    *,
-    start: int,
-    action_indexes: set[int],
-    ignored_indexes: set[int],
-) -> tuple[set[str], set[str]]:
-    spans = _semantic_alias_spans(tokens, "object-condition")
-    condition_spans = _semantic_grammatical_condition_spans(tokens)
-    first_condition = condition_spans[0][0] if condition_spans else None
-    objects: set[str] = set()
-    conditions: set[str] = set()
-    consumed = set(action_indexes) | set(ignored_indexes)
-    for span_start, span_end, _boundary in condition_spans:
-        consumed.update(range(span_start, span_end))
-    for span_start, span_end, concept in spans:
-        indexes = set(range(span_start, span_end))
-        consumed.update(indexes)
-        if indexes & action_indexes or span_end <= start:
-            continue
-        destination = conditions if (
-            concept in _SEMANTIC_CONDITION_CONCEPTS
-            or (first_condition is not None and span_start >= first_condition)
-        ) else objects
-        destination.add(concept)
-    trailing_modalities, trailing_modality_indexes = _semantic_alias_matches(
-        tokens, "modality"
-    )
-    consumed.update(trailing_modality_indexes)
-    if first_condition is not None:
-        conditions.update(
-            f"modality:{concept}" for concept in trailing_modalities
-        )
-    for index in range(start, len(tokens)):
-        token = tokens[index]
-        if index in consumed or token in _SEMANTIC_STOP_TOKENS:
-            continue
-        destination = conditions if (
-            first_condition is not None and index >= first_condition
-        ) else objects
-        destination.add(f"term:{token}")
-    return objects, conditions
-
-
-def _semantic_first_condition_index(tokens: Sequence[str]) -> int | None:
-    spans = _semantic_grammatical_condition_spans(tokens)
-    return spans[0][0] if spans else None
-
-
-def _semantic_relation_scope_concepts(tokens: Sequence[str]) -> list[str]:
-    """Project one relation scope without treating semantic concepts as grammar."""
-
-    concepts: set[str] = set()
-    consumed: set[int] = set()
-    for span_start, span_end, concept in _semantic_alias_spans(
-        tokens, "object-condition"
-    ):
-        consumed.update(range(span_start, span_end))
-        concepts.add(concept)
-    _modalities, modality_indexes = _semantic_alias_matches(tokens, "modality")
-    consumed.update(modality_indexes)
-    consumed.update(_semantic_negation_indexes(tokens))
-    for span_start, span_end, _boundary in _semantic_grammatical_condition_spans(
-        tokens
-    ):
-        consumed.update(range(span_start, span_end))
-    for index, token in enumerate(tokens):
-        if index in consumed or token in _SEMANTIC_STOP_TOKENS:
-            continue
-        concepts.add(f"term:{token}")
-    return sorted(concepts)
-
-
-def _semantic_lexical_action_head(
-    tokens: Sequence[str], index: int
-) -> tuple[int, int, str] | None:
-    """Return one closed-slot lexical base head without widening aliases."""
-
-    if index >= len(tokens):
-        return None
-    token = tokens[index]
-    if not re.fullmatch(r"[a-z]+", token):
-        return None
-    boundary_tokens = {
-        part
-        for boundary in _SEMANTIC_GRAMMATICAL_CONDITION_BOUNDARIES
-        for part in _semantic_tokenize(boundary)
-    }
-    negation_tokens = {
-        part
-        for alias in _SEMANTIC_NEGATION_ALIASES
-        for part in _semantic_tokenize(alias)
-    }
-    if token in (
-        _SEMANTIC_STOP_TOKENS
-        | _SEMANTIC_PREDICATE_CONNECTORS
-        | {"from", "into", "to"}
-        | boundary_tokens
-        | negation_tokens
-    ):
-        return None
-    if (
-        token.endswith("ed")
-        or token.endswith("ing")
-        or token.endswith("ies")
-        or (token.endswith("s") and not token.endswith("ss"))
-    ):
-        return None
-    action_concepts, _action_indexes = _semantic_alias_matches(
-        [token], "action"
-    )
-    finite_relations = _semantic_finite_relation_spans([token])
-    object_concepts, _object_indexes = _semantic_alias_matches(
-        [token], "object-condition"
-    )
-    modality_concepts, _modality_indexes = _semantic_alias_matches(
-        [token], "modality"
-    )
-    if (
-        action_concepts
-        or finite_relations
-        or object_concepts
-        or modality_concepts
-    ):
-        return None
-    return (index, index + 1, f"lexical:{token}")
-
-
-def _semantic_marker_classification(
-    tokens: Sequence[str],
-    *,
-    condition_spans: Sequence[tuple[int, int, str]],
-) -> tuple[dict[int, str], list[tuple[int, tuple[int, int, str]]]]:
-    """Classify grammatical infinitives before projecting direction roles."""
-
-    actions = _semantic_action_candidates(tokens)
-    directions: dict[int, str] = {}
-    infinitives: list[tuple[int, tuple[int, int, str]]] = []
-    determiners = {"a", "an", "any", "each", "every", "the", "this"}
-
-    def has_complement(start: int) -> bool:
-        boundary_starts = {
-            boundary_start
-            for boundary_start, _boundary_end, _kind in condition_spans
-        }
-        for position in range(start, len(tokens)):
-            token = tokens[position]
-            if (
-                position in boundary_starts
-                or token in {"from", "into", "to"}
-                or token in _SEMANTIC_PREDICATE_CONNECTORS
-            ):
-                return False
-            if token not in _SEMANTIC_STOP_TOKENS:
-                return True
-        return False
-
-    for marker, token in enumerate(tokens):
-        if token not in {"from", "into", "to"}:
-            continue
-        if any(
-            start <= marker < end
-            for start, end, _boundary in condition_spans
-        ):
-            continue
-        if token in {"from", "into"}:
-            directions[marker] = "from" if token == "from" else "to"
-            continue
-        following = [action for action in actions if action[0] == marker + 1]
-        if following:
-            if len(following) != 1:
-                raise ProfessionalCarryForwardError(
-                    "material semantic clause has overlapping infinitive action aliases"
-                )
-            action = following[0]
-            if not _semantic_action_surface_is_exact_closed_alias(tokens, action):
-                raise ProfessionalCarryForwardError(
-                    "material semantic clause has unsupported inflected infinitive"
-                )
-            infinitives.append((marker, action))
-            continue
-        lexical = _semantic_lexical_action_head(tokens, marker + 1)
-        if lexical is None:
-            directions[marker] = "to"
-            continue
-        determiner_index = lexical[1]
-        if (
-            determiner_index >= len(tokens)
-            or tokens[determiner_index] not in determiners
-        ):
-            directions[marker] = "to"
-            continue
-        if not has_complement(determiner_index + 1):
-            raise ProfessionalCarryForwardError(
-                "material semantic clause has malformed lexical infinitive complement"
-            )
-        infinitives.append((marker, lexical))
-    return directions, infinitives
-
-
-def _semantic_structural_owner_events(
-    tokens: Sequence[str],
-    *,
-    condition_spans: Sequence[tuple[int, int, str]],
-    infinitives: Sequence[tuple[int, tuple[int, int, str]]],
-    initial_condition_scope: bool = False,
-) -> list[tuple[int, int, int, str | None, str, str, str]]:
-    """Return closed dependent owner signals for directional attachments."""
-
-    actions = _semantic_action_candidates(tokens)
-    first_condition = condition_spans[0][0] if condition_spans else len(tokens)
-    events: list[tuple[int, int, int, str | None, str, str, str]] = []
-    composite_action_spans: set[tuple[int, int]] = set()
-
-    def is_condition_region(index: int) -> bool:
-        return initial_condition_scope or index >= first_condition
-
-    def closed_or_direction_alias(
-        index: int, *, frame: str
-    ) -> tuple[int, int, str] | None:
-        action = _semantic_action_at(actions, index)
-        if action is not None:
-            return action
-        forms = _semantic_lexeme_forms(tokens[index])
-        if frame == "gerund" and "turn" in forms:
-            return (index, index + 1, "change")
-        if frame == "modal" and "distinguish" in forms:
-            return (index, index + 1, "compare")
-        if frame == "passive" and tokens[index] == "mapped":
-            return (index, index + 1, "map")
-        return None
-
-    def owner_metadata(lead: Sequence[str]) -> tuple[str, str]:
-        modal_classes: set[str] = set()
-        if any(token in {"can", "cannot", "may"} for token in lead):
-            modal_classes.add("permitted")
-        if "should" in lead:
-            modal_classes.add("recommended")
-        if any(token in {"must", "shall"} for token in lead):
-            modal_classes.add("required")
-        if len(modal_classes) > 1:
-            raise ProfessionalCarryForwardError(
-                "material semantic clause has conflicting dependent owner modalities"
-            )
-        modality = next(iter(modal_classes)) if modal_classes else "asserted"
-        polarity = (
-            "negative"
-            if any(token in {"cannot", "never", "not"} for token in lead)
-            else "affirmative"
-        )
-        return modality, polarity
-
-    def add_event(
-        signal_start: int,
-        action_start: int,
-        action_end: int,
-        action_concept: str | None,
-        attachment: str,
-        modality: str,
-        polarity: str,
-    ) -> None:
-        same_span = [
-            event
-            for event in events
-            if event[1:5]
-            == (action_start, action_end, action_concept, attachment)
-        ]
-        if same_span:
-            if any(event[5:] != (modality, polarity) for event in same_span):
-                raise ProfessionalCarryForwardError(
-                    "material semantic clause has conflicting dependent owner metadata"
-                )
-            return
-        events.append(
-            (
-                signal_start,
-                action_start,
-                action_end,
-                action_concept,
-                attachment,
-                modality,
-                polarity,
-            )
-        )
-
-    for marker, action in infinitives:
-        attachment = (
-            "dependent-condition"
-            if is_condition_region(action[0])
-            else "dependent-complement"
-        )
-        add_event(
-            marker,
-            action[0],
-            action[1],
-            action[2],
-            attachment,
-            "asserted",
-            "affirmative",
-        )
-
-    for preposition_index, token in enumerate(tokens[:-1]):
-        action_index = preposition_index + 1
-        if token not in {"by", "in", "through", "while"}:
-            continue
-        if not tokens[action_index].endswith("ing"):
-            continue
-        action = closed_or_direction_alias(action_index, frame="gerund")
-        attachment = (
-            "dependent-condition"
-            if is_condition_region(action_index)
-            else "dependent-complement"
-        )
-        add_event(
-            preposition_index,
-            action[0] if action is not None else action_index,
-            action[1] if action is not None else action_index + 1,
-            action[2] if action is not None else None,
-            attachment,
-            "asserted",
-            "affirmative",
-        )
-
-    owner_lead_tokens = {
-        "can",
-        "cannot",
-        "do",
-        "may",
-        "must",
-        "never",
-        "not",
-        "shall",
-        "should",
-    }
-    lead_index = 0
-    while lead_index < len(tokens):
-        if tokens[lead_index] not in owner_lead_tokens:
-            lead_index += 1
-            continue
-        lead_end = lead_index
-        while lead_end < len(tokens) and tokens[lead_end] in owner_lead_tokens:
-            lead_end += 1
-        modality, polarity = owner_metadata(tokens[lead_index:lead_end])
-        if (
-            lead_end + 1 < len(tokens)
-            and tokens[lead_end] == "be"
-            and tokens[lead_end + 1].endswith("ed")
-        ):
-            action = closed_or_direction_alias(lead_end + 1, frame="passive")
-            attachment = (
-                "dependent-condition"
-                if is_condition_region(lead_end + 1)
-                else "dependent-complement"
-            )
-            action_start = action[0] if action is not None else lead_end + 1
-            action_end = action[1] if action is not None else lead_end + 2
-            add_event(
-                lead_index,
-                action_start,
-                action_end,
-                action[2] if action is not None else None,
-                attachment,
-                modality,
-                polarity,
-            )
-            composite_action_spans.add((action_start, action_end))
-            lead_index = lead_end + 2
-            continue
-        action_index = lead_end
-        if action_index >= len(tokens):
-            lead_index = max(lead_end, lead_index + 1)
-            continue
-        action = closed_or_direction_alias(action_index, frame="modal")
-        if action is None:
-            action = _semantic_lexical_action_head(tokens, action_index)
-        attachment = (
-            "dependent-condition"
-            if is_condition_region(action_index)
-            else "dependent-complement"
-        )
-        action_start = action[0] if action is not None else action_index
-        action_end = action[1] if action is not None else action_index + 1
-        add_event(
-            lead_index,
-            action_start,
-            action_end,
-            action[2] if action is not None else None,
-            attachment,
-            modality,
-            polarity,
-        )
-        lead_index = action_end
-
-    for be_index, token in enumerate(tokens[:-1]):
-        action_index = be_index + 1
-        if token not in {"are", "be", "is", "was", "were"}:
-            continue
-        if not tokens[action_index].endswith("ed"):
-            continue
-        if (action_index, action_index + 1) in composite_action_spans:
-            continue
-        action = closed_or_direction_alias(action_index, frame="passive")
-        attachment = (
-            "dependent-condition"
-            if is_condition_region(action_index)
-            else "dependent-complement"
-        )
-        add_event(
-            be_index,
-            action[0] if action is not None else action_index,
-            action[1] if action is not None else action_index + 1,
-            action[2] if action is not None else None,
-            attachment,
-            "asserted",
-            "affirmative",
-        )
-
-    for action in actions:
-        if not _semantic_action_surface_is_exact_closed_alias(tokens, action):
-            continue
-        if any(event[1:3] == (action[0], action[1]) for event in events):
-            continue
-        attachment = (
-            "dependent-condition"
-            if is_condition_region(action[0])
-            else "barrier"
-        )
-        add_event(
-            action[0],
-            action[0],
-            action[1],
-            action[2],
-            attachment,
-            "asserted",
-            "affirmative",
-        )
-    return sorted(events, key=lambda event: (event[0], event[1], event[2]))
-
-
-def _semantic_argument_role_bindings(
-    tokens: Sequence[str],
-    *,
-    governing_action_concept: str,
-    governing_modality: str,
-    governing_polarity: str,
-    initial_condition_scope: bool = False,
-) -> list[dict[str, Any]]:
-    """Bind ordered directional arguments to their structural predicate owner."""
-
-    condition_spans = _semantic_grammatical_condition_spans(tokens)
-    direction_relations, infinitives = _semantic_marker_classification(
-        tokens,
-        condition_spans=condition_spans,
-    )
-    direction_indexes = sorted(direction_relations)
-    if not direction_indexes:
-        object_end = condition_spans[0][0] if condition_spans else len(tokens)
-        scopes = _semantic_relation_scope_concepts(tokens[:object_end])
-        if not scopes and condition_spans:
-            scopes = _semantic_relation_scope_concepts(
-                tokens[condition_spans[0][1] :]
-            )
-            if scopes:
-                return [
-                    {
-                        "argument_ordinal": 1,
-                        "relation": "direct",
-                        "scope_concepts": scopes,
-                        "attachment": "condition-scope",
-                        "owner_action_concept": None,
-                        "owner_modality": None,
-                        "owner_polarity": None,
-                    }
-                ]
-        if not scopes:
-            return []
-        return [
-            {
-                "argument_ordinal": 1,
-                "relation": "direct",
-                "scope_concepts": scopes,
-                "attachment": "governing-predicate",
-                "owner_action_concept": governing_action_concept,
-                "owner_modality": governing_modality,
-                "owner_polarity": governing_polarity,
-            }
-        ]
-
-    owner_events = _semantic_structural_owner_events(
-        tokens,
-        condition_spans=condition_spans,
-        infinitives=infinitives,
-        initial_condition_scope=initial_condition_scope,
-    )
-    owners_by_marker: dict[
-        int, tuple[int, int, int, str | None, str, str, str] | None
-    ] = {}
-
-    def interval_end(
-        owner: tuple[int, int, int, str | None, str, str, str],
-    ) -> int:
-        candidates = [len(tokens)]
-        candidates.extend(
-            start
-            for start, _end, _kind in condition_spans
-            if start >= owner[2]
-        )
-        candidates.extend(
-            event[0]
-            for event in owner_events
-            if event is not owner and event[0] >= owner[2]
-        )
-        return min(candidates)
-
-    for marker in direction_indexes:
-        candidates = [
-            event
-            for event in owner_events
-            if event[4] != "barrier"
-            and event[2] <= marker < interval_end(event)
-        ]
-        if candidates:
-            nearest_end = max(event[2] for event in candidates)
-            candidates = [
-                event for event in candidates if event[2] == nearest_end
-            ]
-        if len(candidates) > 1:
-            raise ProfessionalCarryForwardError(
-                "material semantic clause has competing dependent owners"
-            )
-        owner = candidates[0] if candidates else None
-        if owner is not None and owner[3] is None:
-            raise ProfessionalCarryForwardError(
-                "material semantic clause has structurally signaled unknown "
-                "dependent owner"
-            )
-        owners_by_marker[marker] = owner
-
-    selected_owners = {
-        event for event in owners_by_marker.values() if event is not None
-    }
-    events: list[tuple[int, int, str, object]] = []
-    for start, end, boundary in condition_spans:
-        events.append((start, end, "boundary", boundary))
-    for event in selected_owners:
-        events.append((event[0], event[2], "owner", event))
-    for marker in direction_indexes:
-        events.append((marker, marker + 1, "direction", marker))
-    events.sort(key=lambda event: (event[0], event[1], event[2]))
-
-    bindings: list[dict[str, Any]] = []
-    cursor = 0
-    relation = "direct"
-    attachment = "governing-predicate"
-    owner_action: str | None = governing_action_concept
-    owner_modality: str | None = governing_modality
-    owner_polarity: str | None = governing_polarity
-    pending_direction = False
-
-    def append_scope(end: int) -> None:
-        nonlocal pending_direction
-        if end < cursor:
-            raise ProfessionalCarryForwardError(
-                "material semantic clause has overlapping directional attachment"
-            )
-        scopes = _semantic_relation_scope_concepts(tokens[cursor:end])
-        if not scopes:
-            if pending_direction:
-                raise ProfessionalCarryForwardError(
-                    "material semantic clause has incomplete directional argument segment"
-                )
-            return
-        bindings.append(
-            {
-                "argument_ordinal": len(bindings) + 1,
-                "relation": relation,
-                "scope_concepts": scopes,
-                "attachment": attachment,
-                "owner_action_concept": owner_action,
-                "owner_modality": owner_modality,
-                "owner_polarity": owner_polarity,
-            }
-        )
-        pending_direction = False
-
-    for event_start, event_end, event_kind, payload in events:
-        if event_start < cursor:
-            raise ProfessionalCarryForwardError(
-                "material semantic clause has overlapping directional attachment"
-            )
-        append_scope(event_start)
-        if event_kind == "boundary":
-            if pending_direction:
-                raise ProfessionalCarryForwardError(
-                    "material semantic clause has incomplete directional argument segment"
-                )
-            relation = "direct"
-            attachment = "condition-scope"
-            owner_action = None
-            owner_modality = None
-            owner_polarity = None
-        elif event_kind == "owner":
-            if pending_direction:
-                raise ProfessionalCarryForwardError(
-                    "material semantic clause has overlapping directional attachment"
-                )
-            owner_event = payload
-            if not isinstance(owner_event, tuple):  # pragma: no cover - local invariant
-                raise AssertionError("directional owner event must be a tuple")
-            relation = "direct"
-            attachment = owner_event[4]
-            owner_action = owner_event[3]
-            owner_modality = owner_event[5]
-            owner_polarity = owner_event[6]
-        else:
-            marker = payload
-            if not isinstance(marker, int):  # pragma: no cover - local invariant
-                raise AssertionError("directional marker must be an integer")
-            selected_owner = owners_by_marker[marker]
-            if selected_owner is None:
-                is_after_boundary = any(
-                    start < marker for start, _end, _kind in condition_spans
-                ) or initial_condition_scope
-                attachment = (
-                    "condition-scope" if is_after_boundary else "governing-predicate"
-                )
-                owner_action = None if is_after_boundary else governing_action_concept
-                owner_modality = None if is_after_boundary else governing_modality
-                owner_polarity = None if is_after_boundary else governing_polarity
-            else:
-                attachment = selected_owner[4]
-                owner_action = selected_owner[3]
-                owner_modality = selected_owner[5]
-                owner_polarity = selected_owner[6]
-            relation = direction_relations[marker]
-            pending_direction = True
-        cursor = event_end
-    append_scope(len(tokens))
-    if pending_direction:
-        raise ProfessionalCarryForwardError(
-            "material semantic clause has incomplete directional argument segment"
-        )
-    if not bindings:
-        raise ProfessionalCarryForwardError(
-            "material semantic clause has unconsumed direction marker"
-        )
-    return bindings
-
-
-def _semantic_object_scope_union(
-    argument_role_bindings: Sequence[Mapping[str, Any]],
-) -> list[str]:
-    return sorted(
-        {
-            concept
-            for binding in argument_role_bindings
-            for concept in binding["scope_concepts"]
-        }
-    )
-
-
-def _semantic_rebind_governing_argument_roles(
-    argument_role_bindings: Sequence[Mapping[str, Any]],
-    *,
-    action_concept: str,
-    modality: str,
-    polarity: str,
-) -> list[dict[str, Any]]:
-    rebound = copy.deepcopy(list(argument_role_bindings))
-    for binding in rebound:
-        if binding["attachment"] != "governing-predicate":
-            continue
-        binding["owner_action_concept"] = action_concept
-        binding["owner_modality"] = modality
-        binding["owner_polarity"] = polarity
-    return rebound
-
-
-def _validate_semantic_fact(fact: Mapping[str, Any]) -> None:
-    """Reject malformed or lossy semantic facts before canonical deduplication."""
-
-    if set(fact) != _SEMANTIC_FACT_FIELDS:
-        raise ProfessionalCarryForwardError(
-            "Professional semantic fact fields do not match the closed contract"
-        )
-    for field in (
-        "fact_class",
-        "section_kind",
-        "fact_kind",
-        "action_concept",
-        "modality",
-        "polarity",
-    ):
-        if not isinstance(fact[field], str) or not fact[field]:
-            raise ProfessionalCarryForwardError(
-                f"Professional semantic fact {field} must be non-empty text"
-            )
-    if fact["source_class"] not in panel_contracts.PROFESSIONAL_SEMANTIC_FACT_SOURCE_CLASSES:
-        raise ProfessionalCarryForwardError(
-            "Professional semantic fact has unknown source class"
-        )
-    if fact["unit_kind"] not in _SEMANTIC_UNIT_KINDS:
-        raise ProfessionalCarryForwardError(
-            "Professional semantic fact has unknown unit kind"
-        )
-    if type(fact["predicate_ordinal"]) is not int or fact["predicate_ordinal"] < 1:
-        raise ProfessionalCarryForwardError(
-            "Professional semantic predicate ordinal must be a positive integer"
-        )
-    if fact["incoming_connector"] not in _SEMANTIC_PREDICATE_CONNECTORS | {"root"}:
-        raise ProfessionalCarryForwardError(
-            "Professional semantic fact has unknown incoming connector"
-        )
-    if fact["predicate_ordinal"] == 1:
-        if fact["incoming_connector"] != "root":
-            raise ProfessionalCarryForwardError(
-                "first Professional semantic predicate must use root connector"
-            )
-    elif fact["incoming_connector"] == "root":
-        raise ProfessionalCarryForwardError(
-            "non-first Professional semantic predicate cannot use root connector"
-        )
-
-    for field in (
-        "subject_scope_concepts",
-        "object_scope_concepts",
-        "condition_concepts",
-    ):
-        value = fact[field]
-        if (
-            not isinstance(value, list)
-            or value != sorted(set(value))
-            or any(not isinstance(item, str) or not item for item in value)
-        ):
-            raise ProfessionalCarryForwardError(
-                f"Professional semantic fact {field} must be a sorted unique text list"
-            )
-    if not fact["subject_scope_concepts"]:
-        raise ProfessionalCarryForwardError(
-            "Professional semantic fact subject scope must not be empty"
-        )
-    if fact["modality"] not in {"asserted", "permitted", "recommended", "required"}:
-        raise ProfessionalCarryForwardError(
-            "Professional semantic fact has unknown modality"
-        )
-    if fact["polarity"] not in {"affirmative", "negative"}:
-        raise ProfessionalCarryForwardError(
-            "Professional semantic fact has unknown polarity"
-        )
-
-    bindings = fact["argument_role_bindings"]
-    if not isinstance(bindings, list) or not bindings:
-        raise ProfessionalCarryForwardError(
-            "Professional semantic fact argument role bindings must not be empty"
-        )
-    for expected_ordinal, binding in enumerate(bindings, start=1):
-        if not isinstance(binding, Mapping) or set(binding) != _SEMANTIC_ARGUMENT_ROLE_FIELDS:
-            raise ProfessionalCarryForwardError(
-                "Professional semantic argument role fields do not match the closed contract"
-            )
-        if binding["argument_ordinal"] != expected_ordinal:
-            raise ProfessionalCarryForwardError(
-                "Professional semantic argument ordinals must be contiguous"
-            )
-        if binding["relation"] not in _SEMANTIC_ARGUMENT_RELATIONS:
-            raise ProfessionalCarryForwardError(
-                "Professional semantic fact has unknown argument relation"
-            )
-        if binding["attachment"] not in _SEMANTIC_ARGUMENT_ATTACHMENTS:
-            raise ProfessionalCarryForwardError(
-                "Professional semantic fact has unknown argument attachment"
-            )
-        owner_action = binding["owner_action_concept"]
-        owner_modality = binding["owner_modality"]
-        owner_polarity = binding["owner_polarity"]
-        if binding["attachment"] == "condition-scope":
-            if any(
-                value is not None
-                for value in (owner_action, owner_modality, owner_polarity)
-            ):
-                raise ProfessionalCarryForwardError(
-                    "Professional semantic condition-scope owner metadata must be null"
-                )
-        else:
-            if not isinstance(owner_action, str) or not owner_action:
-                raise ProfessionalCarryForwardError(
-                    "Professional semantic attached owner action must be non-empty text"
-                )
-            if owner_modality not in {
-                "asserted",
-                "permitted",
-                "recommended",
-                "required",
-            }:
-                raise ProfessionalCarryForwardError(
-                    "Professional semantic attached owner modality is unknown"
-                )
-            if owner_polarity not in {"affirmative", "negative"}:
-                raise ProfessionalCarryForwardError(
-                    "Professional semantic attached owner polarity is unknown"
-                )
-        if (
-            binding["attachment"] == "governing-predicate"
-            and (
-                owner_action != fact["action_concept"]
-                or owner_modality != fact["modality"]
-                or owner_polarity != fact["polarity"]
-            )
-        ):
-            raise ProfessionalCarryForwardError(
-                "Professional semantic governing argument owner metadata mismatch"
-            )
-        scopes = binding["scope_concepts"]
-        if (
-            not isinstance(scopes, list)
-            or not scopes
-            or scopes != sorted(set(scopes))
-            or any(not isinstance(item, str) or not item for item in scopes)
-        ):
-            raise ProfessionalCarryForwardError(
-                "Professional semantic argument scope concepts must be a non-empty "
-                "sorted unique text list"
-            )
-    if fact["object_scope_concepts"] != _semantic_object_scope_union(bindings):
-        raise ProfessionalCarryForwardError(
-            "Professional semantic fact object scope union mismatch"
-        )
-
-
-def _semantic_subject_scope(
-    tokens: Sequence[str],
-    *,
-    action_start: int,
-    lead_indexes: set[int],
-) -> list[str]:
-    objects, conditions = _semantic_scope_partition(
-        tokens[:action_start],
-        start=0,
-        action_indexes=set(),
-        ignored_indexes=lead_indexes,
-    )
-    scopes = objects | conditions
-    return sorted(scopes) if scopes else ["actor:implicit"]
-
-
-def _semantic_labeled_fact(
-    *,
-    source_class: str,
-    section_kind: str,
-    unit_kind: str,
-    fact_class: str,
-    fact_kind: str,
-    label: str,
-    text: str,
-    predicate_ordinal: int,
-    forced_modality: str | None,
-    default_object: str,
+def professional_registry_authority_binding(
+    target: Mapping[str, Any],
 ) -> dict[str, Any]:
-    label_tokens = _semantic_tokenize(label)
-    value_tokens = _semantic_tokenize(text)
-    subjects, subject_conditions = _semantic_scope_partition(
-        label_tokens,
-        start=0,
-        action_indexes=set(),
-        ignored_indexes=set(),
+    """Return the complete canonical Registry row used by currentness."""
+
+    raw = target.get("registry_authority")
+    if not isinstance(raw, Mapping):
+        raise ProfessionalCarryForwardError(
+            "target.registry_authority must be a complete Registry row"
+        )
+    missing = sorted(_REGISTRY_AUTHORITY_REQUIRED_FIELDS - set(raw))
+    if missing:
+        raise ProfessionalCarryForwardError(
+            "target.registry_authority lacks required fields: "
+            + ", ".join(missing)
+        )
+    skill_id = _require_skill_id(
+        target.get("skill_id"), label="target.skill_id"
     )
-    objects, conditions = _semantic_scope_partition(
-        value_tokens,
-        start=0,
-        action_indexes=set(),
-        ignored_indexes=set(),
+    if raw.get("name") != skill_id:
+        raise ProfessionalCarryForwardError(
+            "target.registry_authority.name must match target.skill_id"
+        )
+    if not _is_canonical_repository_path(raw.get("path")):
+        raise ProfessionalCarryForwardError(
+            "target.registry_authority.path must be repository-relative"
+        )
+    expertise = professional_required_expertise_binding(target)
+    if raw.get("required_expertise_tags") != expertise:
+        raise ProfessionalCarryForwardError(
+            "target Registry and target expertise authority drift"
+        )
+    reference_authority = professional_reference_authority_binding(target)
+    normalized = _normalize_structured_authority(
+        raw, label="target.registry_authority"
     )
-    symbol_names = {
-        "&": "ampersand",
-        ",": "comma",
-        "?": "question-mark",
-    }
-    objects.update(
-        f"symbol:{name}" for symbol, name in symbol_names.items() if symbol in text
-    )
-    subjects.update(subject_conditions)
-    if not subjects:
-        subjects.add("field:unlabeled")
-    if not objects:
-        objects.add(default_object)
-    argument_role_bindings = [
-        {
-            "argument_ordinal": 1,
-            "relation": "direct",
-            "scope_concepts": sorted(objects),
-            "attachment": "governing-predicate",
-            "owner_action_concept": "define",
-            "owner_modality": forced_modality or "asserted",
-            "owner_polarity": "affirmative",
-        }
+    if normalized.get("reference_index") != reference_authority:
+        raise ProfessionalCarryForwardError(
+            "target Registry reference_index and reference_authority drift"
+        )
+
+    own = professional_own_material_binding(target)
+    registry_directory = PurePosixPath(str(normalized["path"]))
+    expected_paths = [
+        (registry_directory / reference["path"]).as_posix()
+        for reference in reference_authority
     ]
-    return {
-        "source_class": source_class,
-        "fact_class": fact_class,
-        "section_kind": section_kind,
-        "unit_kind": unit_kind,
-        "fact_kind": fact_kind,
-        "predicate_ordinal": predicate_ordinal,
-        "incoming_connector": "root" if predicate_ordinal == 1 else "then",
-        "subject_scope_concepts": sorted(subjects),
-        "action_concept": "define",
-        "argument_role_bindings": argument_role_bindings,
-        "object_scope_concepts": _semantic_object_scope_union(
-            argument_role_bindings
-        ),
-        "condition_concepts": sorted(conditions),
-        "modality": forced_modality or "asserted",
-        "polarity": "affirmative",
-    }
-
-
-def _semantic_clause_facts(
-    *,
-    source_class: str,
-    section_kind: str | None,
-    unit_kind: str,
-    text: str,
-    fact_defaults: tuple[str, str, str, str] | None = None,
-    forced_modality: str | None = None,
-    label: str | None = None,
-) -> list[dict[str, Any]] | None:
-    tokens = _semantic_tokenize(text)
-    if section_kind in {"excluded", "source-citation"}:
-        return None
-    if text.rstrip().endswith(":") and _semantic_section_kind(
-        text.rstrip()[:-1]
-    ) == "source-citation":
-        return None
-    if unit_kind not in _SEMANTIC_UNIT_KINDS:
+    material_paths = [
+        reference["path"] for reference in own["indexed_references"]
+    ]
+    if sorted(expected_paths) != material_paths:
         raise ProfessionalCarryForwardError(
-            f"unknown Professional semantic unit kind: {unit_kind}"
-        )
-    if not tokens and re.search(r"https?://", text):
-        return None
-    if not tokens and unit_kind not in {"table-row", "labeled-field"}:
-        raise ProfessionalCarryForwardError(
-            "material semantic clause has no predicate"
-        )
-    effective_section = section_kind or "general-guidance"
-    defaults = fact_defaults or _SEMANTIC_SECTION_FACTS.get(effective_section)
-    if defaults is None:
-        return None
-    fact_class, fact_kind, default_action, default_object = defaults
-    if unit_kind in {"table-row", "labeled-field"}:
-        return [
-            _semantic_labeled_fact(
-                source_class=source_class,
-                section_kind=effective_section,
-                unit_kind=unit_kind,
-                fact_class=fact_class,
-                fact_kind=fact_kind,
-                label=label or effective_section,
-                text=text,
-                predicate_ordinal=1,
-                forced_modality=forced_modality,
-                default_object=default_object,
-            )
-        ]
-
-    predicates = _semantic_predicates(tokens, unit_kind=unit_kind)
-    if fact_defaults is not None:
-        direct = predicates[0][2] if predicates else None
-        if direct is None or any(
-            token not in _SEMANTIC_PREDICATE_LEAD_TOKENS
-            for token in tokens[: direct[0]]
-        ):
-            return [
-                _semantic_labeled_fact(
-                    source_class=source_class,
-                    section_kind=effective_section,
-                    unit_kind="labeled-field",
-                    fact_class=fact_class,
-                    fact_kind=fact_kind,
-                    label=effective_section,
-                    text=text,
-                    predicate_ordinal=1,
-                    forced_modality=forced_modality,
-                    default_object=default_object,
-                )
-            ]
-    if not predicates:
-        if section_kind is None:
-            return None
-        if effective_section not in {"decision-rules", "general-guidance"}:
-            return [
-                _semantic_labeled_fact(
-                    source_class=source_class,
-                    section_kind=effective_section,
-                    unit_kind="labeled-field",
-                    fact_class=fact_class,
-                    fact_kind=fact_kind,
-                    label=effective_section,
-                    text=text,
-                    predicate_ordinal=1,
-                    forced_modality=forced_modality,
-                    default_object=default_object,
-                )
-            ]
-        raise ProfessionalCarryForwardError(
-            "material semantic clause has no predicate "
-            f"({source_class}/{effective_section}: {' '.join(tokens[:16])})"
+            "target Reference authority and indexed material coverage drift"
         )
 
-    facts: list[dict[str, Any]] = []
-    inherited_modality: str | None = None
-    inherited_subject: list[str] | None = None
-    clause_condition_spans = _semantic_grammatical_condition_spans(tokens)
-    for ordinal, (connector, connector_index, action) in enumerate(
-        predicates, start=1
+    registry = target.get("registry")
+    if not isinstance(registry, Mapping) or set(registry) not in (
+        {"path", "responsibility_contract"},
+        {"path", "entry_fingerprint", "responsibility_contract"},
     ):
-        next_boundary = (
-            predicates[ordinal][1]
-            if ordinal < len(predicates)
-            else len(tokens)
-        )
-        window_start = 0 if ordinal == 1 else connector_index + 1
-        prefix_tokens = tokens[window_start : action[0]]
-        local_modalities, local_modality_indexes = _semantic_alias_matches(
-            prefix_tokens, "modality"
-        )
-        if len(local_modalities) > 1:
-            raise ProfessionalCarryForwardError(
-                "material semantic clause is ambiguous: one predicate has "
-                "conflicting modalities"
-            )
-        local_negation_indexes = _semantic_negation_indexes(prefix_tokens)
-        lead_indexes = set(local_modality_indexes) | local_negation_indexes
-        lead_indexes.update(
-            index
-            for index, token in enumerate(prefix_tokens)
-            if token in _SEMANTIC_PREDICATE_LEAD_TOKENS
-        )
-        subjects = _semantic_subject_scope(
-            prefix_tokens,
-            action_start=len(prefix_tokens),
-            lead_indexes=lead_indexes,
-        )
-        if subjects == ["actor:implicit"] and inherited_subject is not None:
-            subjects = inherited_subject
-        ignored_indexes = set()
-        after_action = tokens[action[1] : next_boundary]
-        _objects, conditions = _semantic_scope_partition(
-            after_action,
-            start=0,
-            action_indexes=set(),
-            ignored_indexes=ignored_indexes,
-        )
-        if forced_modality is not None:
-            modality = forced_modality
-        elif local_modalities:
-            modality = next(iter(local_modalities))
-        elif ordinal == 1 and unit_kind in {"list-item", "ordered-step"}:
-            modality = "required"
-        elif inherited_modality is not None:
-            modality = inherited_modality
-        else:
-            modality = "asserted"
-        polarity = "negative" if local_negation_indexes else "affirmative"
-        argument_role_bindings = _semantic_argument_role_bindings(
-            after_action,
-            governing_action_concept=action[2] or default_action,
-            governing_modality=modality,
-            governing_polarity=polarity,
-            initial_condition_scope=any(
-                boundary_end <= action[1]
-                for _boundary_start, boundary_end, _kind in clause_condition_spans
-            ),
-        )
-        if (
-            not argument_role_bindings
-            and not conditions
-            and any(token in {"it", "them"} for token in after_action)
-            and facts
-        ):
-            argument_role_bindings = _semantic_rebind_governing_argument_roles(
-                facts[-1]["argument_role_bindings"],
-                action_concept=action[2] or default_action,
-                modality=modality,
-                polarity=polarity,
-            )
-            conditions.update(facts[-1]["condition_concepts"])
-        facts.append(
-            {
-                "source_class": source_class,
-                "fact_class": fact_class,
-                "section_kind": effective_section,
-                "unit_kind": unit_kind,
-                "fact_kind": fact_kind,
-                "predicate_ordinal": ordinal,
-                "incoming_connector": connector,
-                "subject_scope_concepts": subjects,
-                "action_concept": action[2] or default_action,
-                "argument_role_bindings": argument_role_bindings,
-                "object_scope_concepts": _semantic_object_scope_union(
-                    argument_role_bindings
-                ),
-                "condition_concepts": sorted(conditions),
-                "modality": modality,
-                "polarity": polarity,
-            }
-        )
-        inherited_modality = modality
-        inherited_subject = subjects
-
-    for index in range(len(facts) - 1, -1, -1):
-        fact = facts[index]
-        if fact["argument_role_bindings"] or fact["condition_concepts"]:
-            continue
-        if (
-            index + 1 < len(facts)
-            and facts[index + 1]["incoming_connector"] in {"and", "or", "but"}
-            and (
-                facts[index + 1]["argument_role_bindings"]
-                or facts[index + 1]["condition_concepts"]
-            )
-        ):
-            fact["argument_role_bindings"] = (
-                _semantic_rebind_governing_argument_roles(
-                    facts[index + 1]["argument_role_bindings"],
-                    action_concept=fact["action_concept"],
-                    modality=fact["modality"],
-                    polarity=fact["polarity"],
-                )
-            )
-            fact["object_scope_concepts"] = _semantic_object_scope_union(
-                fact["argument_role_bindings"]
-            )
-            fact["condition_concepts"] = list(
-                facts[index + 1]["condition_concepts"]
-            )
-            continue
-        if len(facts) == 1:
-            fact["argument_role_bindings"] = [
-                {
-                    "argument_ordinal": 1,
-                    "relation": "direct",
-                    "scope_concepts": [default_object],
-                    "attachment": "governing-predicate",
-                    "owner_action_concept": fact["action_concept"],
-                    "owner_modality": fact["modality"],
-                    "owner_polarity": fact["polarity"],
-                }
-            ]
-            fact["object_scope_concepts"] = [default_object]
-            continue
         raise ProfessionalCarryForwardError(
-            "material semantic clause is ambiguous: predicate attachment "
-            "is not unique"
+            "target.registry must contain the compatibility Registry binding"
         )
-    return facts
-
-
-def _semantic_identity_concept(value: object, *, label: str) -> str:
-    if not isinstance(value, str) or not value.strip():
-        raise ProfessionalCarryForwardError(f"{label} must be non-empty text")
-    normalized = unicodedata.normalize("NFKC", value).casefold()
-    normalized = re.sub(r"[^a-z0-9]+", "-", normalized).strip("-")
-    if not normalized:
+    if not _is_canonical_repository_path(registry.get("path")):
         raise ProfessionalCarryForwardError(
-            f"{label} has no canonical semantic identity"
+            "target.registry.path must be repository-relative"
+        )
+    responsibility = _responsibility_from_registry_authority(normalized)
+    compatibility = registry.get("responsibility_contract")
+    if not isinstance(compatibility, Mapping):
+        raise ProfessionalCarryForwardError(
+            "target.registry.responsibility_contract must be an object"
+        )
+    if _normalize_structured_authority(
+        compatibility,
+        label="target.registry.responsibility_contract",
+    ) != responsibility:
+        raise ProfessionalCarryForwardError(
+            "target Registry responsibility compatibility projection drift"
         )
     return normalized
 
 
-def professional_semantic_fact_projection(
+def professional_registry_responsibility_binding(
     target: Mapping[str, Any],
 ) -> dict[str, Any]:
-    """Project closed Professional facts without raw prose or repository state."""
+    """Derive the compatibility Registry view from complete authority."""
 
-    semantic_target = target
-    if "root" not in target and isinstance(target.get("own_material"), Mapping):
-        own = target["own_material"]
-        semantic_target = {
-            **target,
-            "root": own.get("root"),
-            "indexed_references": own.get("indexed_references"),
+    authority = professional_registry_authority_binding(target)
+    registry = target["registry"]
+    return {
+        "path": registry["path"],
+        "responsibility_contract": _responsibility_from_registry_authority(
+            authority
+        ),
+    }
+
+
+_AUTHENTICATED_SOURCE_COMMENT_RE = re.compile(
+    r"^<!--\s*(?:"
+    r"rd-semantic-id:v2\s+finding=[a-z0-9_]+\s+"
+    r"rule=[a-z0-9][a-z0-9/-]*\s+occurrence=[a-z0-9][a-z0-9-]*"
+    r"|(?:BEGIN|END)\s+CHANGEFORGE\s+[A-Za-z0-9][A-Za-z0-9 _:/.-]*"
+    r"|[a-z0-9-]+-contract:[BE]"
+    r")\s*-->[ \t]*$"
+)
+
+
+def _frontmatter_scalar(value: str) -> str | None:
+    value = value.strip()
+    if not value:
+        return None
+    if value.startswith('"') and value.endswith('"'):
+        try:
+            decoded = json.loads(value)
+        except (TypeError, ValueError):
+            return None
+        return decoded if isinstance(decoded, str) else None
+    if value.startswith("'") and value.endswith("'"):
+        return value[1:-1].replace("''", "'")
+    if value[:1] in "[{&*!>|" or value.startswith(("!!", "<<:")):
+        return None
+    return value
+
+
+def _structured_frontmatter_projection(
+    lines: Sequence[str],
+) -> dict[str, Any] | None:
+    allowed_fields = {"name", "description"}
+    values: dict[str, str] = {}
+    for raw_line in lines:
+        if not raw_line.strip() or raw_line.lstrip().startswith("#"):
+            continue
+        if raw_line[:1].isspace():
+            return None
+        match = re.fullmatch(
+            r"([A-Za-z_][A-Za-z0-9_-]*)[ \t]*:[ \t]*(.*)",
+            raw_line,
+        )
+        if (
+            match is None
+            or match.group(1) not in allowed_fields
+            or match.group(1) in values
+        ):
+            return None
+        scalar = _frontmatter_scalar(match.group(2))
+        if scalar is None:
+            return None
+        values[match.group(1)] = _normalize_horizontal_text(scalar)
+    return values if values else None
+
+
+_MARKDOWN_DISTRIBUTION_VERSIONS = {
+    "markdown-it-py": "4.2.0",
+    "mdurl": "0.1.2",
+}
+
+
+def _verified_professional_markdown_parser() -> Any:
+    for distribution, expected in _MARKDOWN_DISTRIBUTION_VERSIONS.items():
+        try:
+            actual = importlib_metadata.version(distribution)
+        except importlib_metadata.PackageNotFoundError as exc:
+            raise ProfessionalCarryForwardError(
+                f"Professional currentness requires {distribution}=={expected}"
+            ) from exc
+        if actual != expected:
+            raise ProfessionalCarryForwardError(
+                "Professional currentness requires "
+                f"{distribution}=={expected}; found {actual}"
+            )
+    if MarkdownIt is None:
+        raise ProfessionalCarryForwardError(
+            "Professional currentness requires markdown-it-py==4.2.0"
+        )
+    return MarkdownIt(
+        "commonmark",
+        {
+            "html": True,
+            "linkify": False,
+            "typographer": False,
+            "breaks": False,
+        },
+    ).enable("table")
+
+
+def _parse_professional_markdown(value: str) -> tuple[list[Any], dict[str, Any]]:
+    parser = _verified_professional_markdown_parser()
+    environment: dict[str, Any] = {}
+    try:
+        tokens = parser.parse(value, environment)
+    except Exception as exc:
+        raise ProfessionalCarryForwardError(
+            "Professional currentness Markdown parsing failed closed"
+        ) from exc
+    return tokens, environment
+
+
+def _empty_token_attrs(token: Any) -> bool:
+    return getattr(token, "attrs", None) in (None, {})
+
+
+def _plain_token_state(token: Any, *, nesting: int, block: bool) -> bool:
+    return (
+        getattr(token, "nesting", None) == nesting
+        and getattr(token, "block", None) is block
+        and getattr(token, "meta", None) == {}
+        and _empty_token_attrs(token)
+        and isinstance(getattr(token, "level", None), int)
+        and isinstance(getattr(token, "hidden", None), bool)
+    )
+
+
+def _canonical_token_attrs(
+    token: Any, *, required: set[str], allowed: set[str]
+) -> list[list[str]] | None:
+    attrs = getattr(token, "attrs", None)
+    if not isinstance(attrs, Mapping) or not required <= set(attrs) <= allowed:
+        return None
+    if not all(
+        isinstance(key, str) and isinstance(value, str)
+        for key, value in attrs.items()
+    ):
+        return None
+    return [[key, attrs[key]] for key in sorted(attrs)]
+
+
+def _append_inline_fragment(
+    target: list[dict[str, Any]], fragment: dict[str, Any]
+) -> None:
+    if fragment["type"] == "space" and target and target[-1]["type"] == "space":
+        return
+    if fragment["type"] == "text" and target and target[-1]["type"] == "text":
+        target[-1]["value"] += fragment["value"]
+        return
+    target.append(fragment)
+
+
+def _append_text_fragments(target: list[dict[str, Any]], value: str) -> None:
+    for fragment in re.split(r"([ \t\f\v]+)", unicodedata.normalize("NFC", value)):
+        if not fragment:
+            continue
+        if re.fullmatch(r"[ \t\f\v]+", fragment):
+            _append_inline_fragment(target, {"type": "space"})
+        else:
+            _append_inline_fragment(target, {"type": "text", "value": fragment})
+
+
+def _project_inline_tokens(tokens: object) -> list[dict[str, Any]] | None:
+    if not isinstance(tokens, list):
+        return None
+    root: list[dict[str, Any]] = []
+    containers: list[list[dict[str, Any]]] = [root]
+    stack: list[tuple[str, str, str]] = []
+    for token in tokens:
+        token_type = getattr(token, "type", None)
+        level = getattr(token, "level", None)
+        if (
+            getattr(token, "meta", None) != {}
+            or getattr(token, "block", None) is not False
+        ):
+            return None
+        if (
+            getattr(token, "map", None) is not None
+            or getattr(token, "hidden", None) is not False
+        ):
+            return None
+        if token_type == "text":
+            if (
+                not _plain_token_state(token, nesting=0, block=False)
+                or level != len(stack)
+                or getattr(token, "children", None) is not None
+                or getattr(token, "markup", None) != ""
+                or getattr(token, "info", None) != ""
+                or not isinstance(getattr(token, "content", None), str)
+            ):
+                return None
+            _append_text_fragments(containers[-1], token.content)
+            continue
+        if token_type == "softbreak":
+            if (
+                not _plain_token_state(token, nesting=0, block=False)
+                or level != len(stack)
+                or getattr(token, "children", None) is not None
+                or getattr(token, "content", None) != ""
+                or getattr(token, "markup", None) != ""
+                or getattr(token, "info", None) != ""
+            ):
+                return None
+            _append_inline_fragment(containers[-1], {"type": "space"})
+            continue
+        if token_type == "hardbreak":
+            if (
+                not _plain_token_state(token, nesting=0, block=False)
+                or level != len(stack)
+                or getattr(token, "children", None) is not None
+                or getattr(token, "content", None) != ""
+            ):
+                return None
+            _append_inline_fragment(containers[-1], {"type": "hardbreak"})
+            continue
+        if token_type == "code_inline":
+            if (
+                not _plain_token_state(token, nesting=0, block=False)
+                or level != len(stack)
+                or getattr(token, "children", None) is not None
+                or not isinstance(getattr(token, "content", None), str)
+                or re.fullmatch(r"`+", getattr(token, "markup", "")) is None
+                or getattr(token, "info", None) != ""
+            ):
+                return None
+            _append_inline_fragment(
+                containers[-1], {"type": "inline-code", "value": token.content}
+            )
+            continue
+        if token_type in {"em_open", "strong_open"}:
+            expected_markup = {"em_open": {"*", "_"}, "strong_open": {"**", "__"}}
+            if (
+                not _plain_token_state(token, nesting=1, block=False)
+                or level != len(stack)
+                or getattr(token, "children", None) is not None
+                or getattr(token, "content", None) != ""
+                or getattr(token, "markup", None) not in expected_markup[token_type]
+                or getattr(token, "info", None) != ""
+            ):
+                return None
+            stack.append((token_type.removesuffix("_open"), token.markup, "format"))
+            continue
+        if token_type in {"em_close", "strong_close"}:
+            expected_kind = token_type.removesuffix("_close")
+            if (
+                not stack
+                or stack[-1][0] != expected_kind
+                or stack[-1][2] != "format"
+                or not _plain_token_state(token, nesting=-1, block=False)
+                or level != len(stack) - 1
+                or getattr(token, "markup", None) != stack[-1][1]
+                or getattr(token, "children", None) is not None
+                or getattr(token, "content", None) != ""
+                or getattr(token, "info", None) != ""
+            ):
+                return None
+            stack.pop()
+            continue
+        if token_type == "link_open":
+            attrs = _canonical_token_attrs(
+                token, required={"href"}, allowed={"href", "title"}
+            )
+            markup = getattr(token, "markup", None)
+            info = getattr(token, "info", None)
+            kind = "autolink" if (markup, info) == ("autolink", "auto") else "direct"
+            if kind == "direct" and (markup, info) != ("", ""):
+                return None
+            if (
+                attrs is None
+                or getattr(token, "nesting", None) != 1
+                or level != len(stack)
+                or getattr(token, "block", None) is not False
+                or getattr(token, "meta", None) != {}
+                or getattr(token, "children", None) is not None
+                or getattr(token, "content", None) != ""
+                or getattr(token, "map", None) is not None
+                or getattr(token, "hidden", None) is not False
+            ):
+                return None
+            node = {"type": "link", "kind": kind, "attrs": attrs, "children": []}
+            containers[-1].append(node)
+            containers.append(node["children"])
+            stack.append(("link", f"{markup}\0{info}", "container"))
+            continue
+        if token_type == "link_close":
+            markup = getattr(token, "markup", None)
+            info = getattr(token, "info", None)
+            if (
+                not stack
+                or stack[-1][0] != "link"
+                or stack[-1][2] != "container"
+                or stack[-1][1] != f"{markup}\0{info}"
+                or not _plain_token_state(token, nesting=-1, block=False)
+                or level != len(stack) - 1
+                or getattr(token, "children", None) is not None
+                or getattr(token, "content", None) != ""
+            ):
+                return None
+            stack.pop()
+            containers.pop()
+            continue
+        if token_type == "image":
+            attrs = _canonical_token_attrs(
+                token, required={"src", "alt"}, allowed={"src", "alt", "title"}
+            )
+            children = _project_inline_tokens(getattr(token, "children", None))
+            if (
+                attrs is None
+                or children is None
+                or getattr(token, "nesting", None) != 0
+                or level != len(stack)
+                or getattr(token, "block", None) is not False
+                or getattr(token, "meta", None) != {}
+                or getattr(token, "map", None) is not None
+                or getattr(token, "hidden", None) is not False
+                or getattr(token, "markup", None) != ""
+                or getattr(token, "info", None) != ""
+            ):
+                return None
+            _append_inline_fragment(
+                containers[-1],
+                {"type": "image", "attrs": attrs, "children": children},
+            )
+            continue
+        return None
+    if stack or len(containers) != 1:
+        return None
+    return root
+
+
+def _block_open_projection(token: Any) -> tuple[str, dict[str, Any]] | None:
+    token_type = getattr(token, "type", None)
+    if not _plain_token_state(token, nesting=1, block=True):
+        return None
+    if (
+        getattr(token, "children", None) is not None
+        or getattr(token, "content", None) != ""
+    ):
+        return None
+    if getattr(token, "info", None) != "":
+        return None
+    if (
+        token_type == "paragraph_open"
+        and getattr(token, "tag", None) == "p"
+        and getattr(token, "markup", None) == ""
+    ):
+        return "paragraph", {"type": "paragraph", "children": []}
+    if token_type == "heading_open" and re.fullmatch(
+        r"h[1-6]", getattr(token, "tag", "")
+    ):
+        level = int(token.tag[1:])
+        markup = getattr(token, "markup", None)
+        if not (
+            (isinstance(markup, str) and markup == "#" * level)
+            or (markup == "=" and level == 1)
+            or (markup == "-" and level == 2)
+        ):
+            return None
+        return "heading", {
+            "type": "heading",
+            "level": level,
+            "children": [],
         }
-    own_material = professional_own_material_binding(semantic_target)
-    professional_registry_responsibility_binding(target)
-    responsibility = professional_semantic_responsibility_binding(target)
-    expertise = professional_required_expertise_binding(target)
-    facts: list[dict[str, Any]] = []
-
-    for source_class, records in (
-        ("root", [own_material["root"]]),
-        ("indexed-reference", own_material["indexed_references"]),
+    if (
+        token_type == "blockquote_open"
+        and getattr(token, "tag", None) == "blockquote"
+        and getattr(token, "markup", None) == ">"
     ):
-        for record in records:
-            for unit in _professional_markdown_semantic_units(record["content"]):
-                section_kind = _semantic_section_kind(unit["heading"])
-                if unit["unit_kind"] == "table-row":
-                    for ordinal, field in enumerate(unit["fields"], start=1):
-                        field_facts = _semantic_clause_facts(
-                            source_class=source_class,
-                            section_kind=section_kind,
-                            unit_kind="table-row",
-                            text=field["text"],
-                            label=field["label"],
-                        )
-                        if field_facts is not None:
-                            field_facts[0]["predicate_ordinal"] = ordinal
-                            field_facts[0]["incoming_connector"] = (
-                                "root" if ordinal == 1 else "then"
-                            )
-                            facts.extend(field_facts)
-                    continue
-                for clause in _semantic_clause_slices(unit["text"]):
-                    clause_facts = _semantic_clause_facts(
-                        source_class=source_class,
-                        section_kind=section_kind,
-                        unit_kind=unit["unit_kind"],
-                        text=clause,
-                        label=unit.get("label"),
-                    )
-                    if clause_facts is not None:
-                        facts.extend(clause_facts)
-
-    for field, defaults in sorted(_SEMANTIC_REGISTRY_FACTS.items()):
-        for value in responsibility[field]:
-            clause_facts = _semantic_clause_facts(
-                source_class="registry",
-                section_kind=defaults[1],
-                unit_kind="paragraph",
-                text=value,
-                fact_defaults=(defaults[0], defaults[2], defaults[3], defaults[4]),
-                forced_modality="required",
-            )
-            if clause_facts is None:  # pragma: no cover - registry sections are material
-                raise AssertionError("registry fact projection was unexpectedly empty")
-            facts.extend(clause_facts)
-
-    for field, fact_class in (
-        ("layer3_candidates", "required-adjacency"),
-        ("used_by", "required-adjacency"),
+        return "blockquote", {"type": "blockquote", "children": []}
+    if (
+        token_type == "bullet_list_open"
+        and getattr(token, "tag", None) == "ul"
+        and getattr(token, "markup", None) in {"-", "+", "*"}
     ):
-        for value in responsibility[field]:
-            facts.append(
-                {
-                    "source_class": "registry",
-                    "fact_class": fact_class,
-                    "section_kind": f"registry-{field.replace('_', '-')}",
-                    "unit_kind": "labeled-field",
-                    "fact_kind": "routing",
-                    "predicate_ordinal": 1,
-                    "incoming_connector": "root",
-                    "subject_scope_concepts": [
-                        f"registry-field:{field.replace('_', '-')}"
-                    ],
-                    "action_concept": "handoff",
-                    "argument_role_bindings": [
-                        {
-                            "argument_ordinal": 1,
-                            "relation": "direct",
-                            "scope_concepts": [
-                                "skill:" + _semantic_identity_concept(
-                                    value,
-                                    label=f"target responsibility {field}",
-                                )
-                            ],
-                            "attachment": "governing-predicate",
-                            "owner_action_concept": "handoff",
-                            "owner_modality": "required",
-                            "owner_polarity": "affirmative",
-                        }
-                    ],
-                    "object_scope_concepts": [
-                        "skill:" + _semantic_identity_concept(
-                            value, label=f"target responsibility {field}"
-                        )
-                    ],
-                    "condition_concepts": [],
-                    "modality": "required",
-                    "polarity": "affirmative",
-                }
+        return "bullet_list", {"type": "bullet-list", "children": []}
+    if (
+        token_type == "list_item_open"
+        and getattr(token, "tag", None) == "li"
+        and getattr(token, "markup", None) in {"-", "+", "*"}
+    ):
+        return "list_item", {"type": "list-item", "children": []}
+    return None
+
+
+def _project_professional_markdown_tokens(
+    tokens: object, environment: object
+) -> dict[str, Any] | None:
+    if not isinstance(tokens, list) or environment != {}:
+        return None
+    document = {"type": "document", "children": []}
+    containers: list[tuple[str, list[dict[str, Any]]]] = [
+        ("document", document["children"])
+    ]
+    for token in tokens:
+        token_type = getattr(token, "type", None)
+        depth = len(containers) - 1
+        opened = _block_open_projection(token)
+        if opened is not None:
+            kind, node = opened
+            parent = containers[-1][0]
+            allowed_parent = (
+                parent == "bullet_list"
+                if kind == "list_item"
+                else parent in {"document", "blockquote", "list_item"}
             )
-    for field in ("group", "content_class", "delivery_scope"):
-        value = responsibility[field]
-        if value is not None:
-            facts.append(
-                {
-                    "source_class": "registry",
-                    "fact_class": "responsibility",
-                    "section_kind": f"registry-{field.replace('_', '-')}",
-                    "unit_kind": "labeled-field",
-                    "fact_kind": "classification",
-                    "predicate_ordinal": 1,
-                    "incoming_connector": "root",
-                    "subject_scope_concepts": [
-                        f"registry-field:{field.replace('_', '-')}"
-                    ],
-                    "action_concept": "classify",
-                    "argument_role_bindings": [
-                        {
-                            "argument_ordinal": 1,
-                            "relation": "direct",
-                            "scope_concepts": [
-                                f"{field.replace('_', '-')}:"
-                                + _semantic_identity_concept(
-                                    value,
-                                    label=f"target responsibility {field}",
-                                )
-                            ],
-                            "attachment": "governing-predicate",
-                            "owner_action_concept": "classify",
-                            "owner_modality": "asserted",
-                            "owner_polarity": "affirmative",
-                        }
-                    ],
-                    "object_scope_concepts": [
-                        f"{field.replace('_', '-')}:"
-                        + _semantic_identity_concept(
-                            value, label=f"target responsibility {field}"
-                        )
-                    ],
-                    "condition_concepts": [],
-                    "modality": "asserted",
-                    "polarity": "affirmative",
-                }
-            )
-    if responsibility["task_routable"] is not None:
-        facts.append(
-            {
-                "source_class": "registry",
-                "fact_class": "routing-boundary",
-                "section_kind": "registry-task-routable",
-                "unit_kind": "labeled-field",
-                "fact_kind": "routing",
-                "predicate_ordinal": 1,
-                "incoming_connector": "root",
-                "subject_scope_concepts": ["registry-field:task-routable"],
-                "action_concept": "handoff",
-                "argument_role_bindings": [
-                    {
-                        "argument_ordinal": 1,
-                        "relation": "direct",
-                        "scope_concepts": ["target"],
-                        "attachment": "governing-predicate",
-                        "owner_action_concept": "handoff",
-                        "owner_modality": "asserted",
-                        "owner_polarity": (
-                            "affirmative"
-                            if responsibility["task_routable"]
-                            else "negative"
-                        ),
-                    }
-                ],
-                "object_scope_concepts": ["target"],
-                "condition_concepts": [],
-                "modality": "asserted",
-                "polarity": (
-                    "affirmative"
-                    if responsibility["task_routable"]
-                    else "negative"
-                ),
-            }
-        )
-    for tag in expertise:
-        facts.append(
-            {
-                "source_class": "required-expertise",
-                "fact_class": "required-expertise",
-                "section_kind": "registry-required-expertise",
-                "unit_kind": "labeled-field",
-                "fact_kind": "qualification",
-                "predicate_ordinal": 1,
-                "incoming_connector": "root",
-                "subject_scope_concepts": [
-                    "registry-field:required-expertise"
-                ],
-                "action_concept": "require",
-                "argument_role_bindings": [
-                    {
-                        "argument_ordinal": 1,
-                        "relation": "direct",
-                        "scope_concepts": [
-                            "expertise:"
-                            + _semantic_identity_concept(
-                                tag, label="target required expertise tag"
-                            )
-                        ],
-                        "attachment": "governing-predicate",
-                        "owner_action_concept": "require",
-                        "owner_modality": "required",
-                        "owner_polarity": "affirmative",
-                    }
-                ],
-                "object_scope_concepts": [
-                    "expertise:"
-                    + _semantic_identity_concept(
-                        tag, label="target required expertise tag"
+            if not allowed_parent or token.level != depth:
+                return None
+            containers[-1][1].append(node)
+            containers.append((kind, node["children"]))
+            continue
+        close_kinds = {
+            "paragraph_close": "paragraph",
+            "heading_close": "heading",
+            "blockquote_close": "blockquote",
+            "bullet_list_close": "bullet_list",
+            "list_item_close": "list_item",
+        }
+        if token_type in close_kinds:
+            expected = close_kinds[token_type]
+            if (
+                len(containers) == 1
+                or containers[-1][0] != expected
+                or not _plain_token_state(token, nesting=-1, block=True)
+                or token.level != depth - 1
+                or getattr(token, "children", None) is not None
+                or getattr(token, "content", None) != ""
+                or getattr(token, "info", None) != ""
+            ):
+                return None
+            containers.pop()
+            continue
+        if token_type == "inline":
+            if (
+                containers[-1][0] not in {"paragraph", "heading"}
+                or containers[-1][1]
+                or not _plain_token_state(token, nesting=0, block=True)
+                or token.level != depth
+                or getattr(token, "tag", None) != ""
+                or getattr(token, "markup", None) != ""
+                or getattr(token, "info", None) != ""
+            ):
+                return None
+            inline = _project_inline_tokens(getattr(token, "children", None))
+            if inline is None:
+                return None
+            containers[-1][1].append({"type": "inline", "children": inline})
+            continue
+        if token_type in {"fence", "code_block", "hr"}:
+            if (
+                containers[-1][0] not in {"document", "blockquote", "list_item"}
+                or not _plain_token_state(token, nesting=0, block=True)
+                or token.level != depth
+                or getattr(token, "children", None) is not None
+            ):
+                return None
+            if token_type == "fence":
+                if (
+                    getattr(token, "tag", None) != "code"
+                    or re.fullmatch(
+                        r"(?:`{3,}|~{3,})", getattr(token, "markup", "")
                     )
-                ],
-                "condition_concepts": [],
-                "modality": "required",
-                "polarity": "affirmative",
-            }
+                    is None
+                    or not isinstance(getattr(token, "info", None), str)
+                    or not isinstance(getattr(token, "content", None), str)
+                ):
+                    return None
+                node = {
+                    "type": "fenced-code",
+                    "info": token.info,
+                    "content": token.content,
+                }
+            elif token_type == "code_block":
+                if (
+                    getattr(token, "tag", None) != "code"
+                    or getattr(token, "markup", None) != ""
+                    or getattr(token, "info", None) != ""
+                    or not isinstance(getattr(token, "content", None), str)
+                ):
+                    return None
+                node = {"type": "indented-code", "content": token.content}
+            else:
+                if (
+                    getattr(token, "tag", None) != "hr"
+                    or not isinstance(getattr(token, "markup", None), str)
+                    or getattr(token, "info", None) != ""
+                    or getattr(token, "content", None) != ""
+                ):
+                    return None
+                node = {"type": "thematic-break"}
+            containers[-1][1].append(node)
+            continue
+        return None
+    if len(containers) != 1:
+        return None
+    return document
+
+
+def _remove_authenticated_source_markers(
+    value: str, tokens: Sequence[Any]
+) -> str:
+    marker_lines: set[int] = set()
+    for token in tokens:
+        token_map = getattr(token, "map", None)
+        content = getattr(token, "content", None)
+        if (
+            getattr(token, "type", None) == "html_block"
+            and getattr(token, "level", None) == 0
+            and getattr(token, "nesting", None) == 0
+            and getattr(token, "block", None) is True
+            and getattr(token, "meta", None) == {}
+            and _empty_token_attrs(token)
+            and isinstance(token_map, list)
+            and len(token_map) == 2
+            and token_map[1] == token_map[0] + 1
+            and isinstance(content, str)
+            and _AUTHENTICATED_SOURCE_COMMENT_RE.fullmatch(
+                content[:-1] if content.endswith("\n") else content
+            )
+        ):
+            marker_lines.add(token_map[0])
+    if not marker_lines:
+        return value
+    return "".join(
+        line
+        for index, line in enumerate(value.splitlines(keepends=True))
+        if index not in marker_lines
+    )
+
+
+def _opaque_document(value: str) -> dict[str, Any]:
+    return {"type": "opaque-document", "value": value}
+
+
+def _parse_after_authenticated_marker_removal(
+    value: str,
+) -> tuple[str, list[Any], dict[str, Any]]:
+    initial_tokens, _initial_environment = _parse_professional_markdown(value)
+    retained = _remove_authenticated_source_markers(value, initial_tokens)
+    tokens, environment = _parse_professional_markdown(retained)
+    return retained, tokens, environment
+
+
+def professional_markdown_currentness_projection(
+    markdown: str,
+) -> list[dict[str, Any]]:
+    """Project a closed CommonMark token subset without prose inference."""
+
+    if not isinstance(markdown, str):
+        raise ProfessionalCarryForwardError(
+            "Professional material content must be text"
         )
-    for fact in facts:
-        _validate_semantic_fact(fact)
-    deduplicated = {
-        canonical_json_bytes(fact): fact
-        for fact in facts
-    }
+    normalized = unicodedata.normalize(
+        "NFC", markdown.replace("\r\n", "\n").replace("\r", "\n")
+    )
+    projection: list[dict[str, Any]] = []
+    source_lines = normalized.splitlines(keepends=True)
+    body = normalized
+
+    if source_lines and source_lines[0].rstrip("\n") == "---":
+        end = next(
+            (
+                position
+                for position in range(1, len(source_lines))
+                if source_lines[position].rstrip("\n") == "---"
+            ),
+            None,
+        )
+        if end is None:
+            retained, _tokens, _environment = (
+                _parse_after_authenticated_marker_removal(normalized)
+            )
+            return [_opaque_document(retained)]
+        frontmatter_lines = [
+            line.rstrip("\n") for line in source_lines[1:end]
+        ]
+        structured = _structured_frontmatter_projection(frontmatter_lines)
+        if structured is None:
+            retained, _tokens, _environment = (
+                _parse_after_authenticated_marker_removal(normalized)
+            )
+            return [_opaque_document(retained)]
+        projection.append({"type": "frontmatter", "value": structured})
+        body = "".join(source_lines[end + 1 :])
+
+    body, tokens, environment = _parse_after_authenticated_marker_removal(
+        body
+    )
+    document = _project_professional_markdown_tokens(tokens, environment)
+    if document is None:
+        projection.append(_opaque_document(body))
+    else:
+        projection.append(document)
+    return projection
+
+
+def professional_material_currentness_projection(
+    record: object, *, label: str
+) -> dict[str, Any]:
+    material = _canonical_material_record(record, label=label)
     return {
-        "contract_version": _SEMANTIC_FACT_PROJECTION_VERSION,
-        "facts": [deduplicated[key] for key in sorted(deduplicated)],
+        "path": material["path"],
+        "markdown": professional_markdown_currentness_projection(
+            material["content"]
+        ),
     }
 
 
-def professional_candidate_semantic_review_binding(
+def professional_candidate_currentness_projection(
     target: Mapping[str, Any],
 ) -> dict[str, Any]:
-    """Project stable Professional judgment authority, excluding raw prose."""
+    """Project only conservative package material used for currentness."""
 
-    skill_id = _require_skill_id(target.get("skill_id"), label="target.skill_id")
-    layer = _require_skill_id(target.get("layer"), label=f"{skill_id}.layer")
+    skill_id = _require_skill_id(
+        target.get("skill_id"), label="target.skill_id"
+    )
+    layer = _require_skill_id(
+        target.get("layer"), label=f"{skill_id}.layer"
+    )
+    own = professional_own_material_binding(target)
+    registry_authority = professional_registry_authority_binding(target)
+    reference_authority = professional_reference_authority_binding(target)
+    expertise = professional_required_expertise_binding(target)
     return {
+        "contract_version": _CURRENTNESS_PROJECTION_VERSION,
         "skill_id": skill_id,
         "layer": layer,
-        "semantic_fact_projection": professional_semantic_fact_projection(target),
+        "materials": {
+            "root": professional_material_currentness_projection(
+                own["root"], label=f"{skill_id}.root"
+            ),
+            "indexed_references": [
+                professional_material_currentness_projection(
+                    reference,
+                    label=f"{skill_id}.indexed_references[{index}]",
+                )
+                for index, reference in enumerate(
+                    own["indexed_references"]
+                )
+            ],
+        },
+        "registry_authority": registry_authority,
+        "reference_authority": reference_authority,
+        "required_expertise_tags": expertise,
     }
 
 
@@ -2659,12 +1367,58 @@ def professional_candidate_material_binding(
 
     skill_id = _require_skill_id(target.get("skill_id"), label="target.skill_id")
     layer = _require_skill_id(target.get("layer"), label=f"{skill_id}.layer")
+    professional_registry_authority_binding(target)
+    professional_reference_authority_binding(target)
     return {
         "skill_id": skill_id,
         "layer": layer,
         "own_material": professional_own_material_binding(target),
         "registry": professional_registry_responsibility_binding(target),
+        "registry_authority": copy.deepcopy(target["registry_authority"]),
+        "reference_authority": copy.deepcopy(target["reference_authority"]),
         "required_expertise_tags": professional_required_expertise_binding(target),
+    }
+
+
+def _historical_candidate_material_binding(
+    target: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Reproduce the exact pre-currentness raw material projection."""
+
+    skill_id = _require_skill_id(
+        target.get("skill_id"), label="target.skill_id"
+    )
+    layer = _require_skill_id(
+        target.get("layer"), label=f"{skill_id}.layer"
+    )
+    registry = target.get("registry")
+    if not isinstance(registry, dict) or set(registry) not in (
+        {"path", "responsibility_contract"},
+        {"path", "entry_fingerprint", "responsibility_contract"},
+    ):
+        raise ProfessionalCarryForwardError(
+            "historical target.registry fields are invalid"
+        )
+    if not _is_canonical_repository_path(registry.get("path")):
+        raise ProfessionalCarryForwardError(
+            "historical target.registry.path must be repository-relative"
+        )
+    responsibility = registry.get("responsibility_contract")
+    if not isinstance(responsibility, dict):
+        raise ProfessionalCarryForwardError(
+            "historical target responsibility contract must be an object"
+        )
+    return {
+        "skill_id": skill_id,
+        "layer": layer,
+        "own_material": professional_own_material_binding(target),
+        "registry": {
+            "path": registry["path"],
+            "responsibility_contract": copy.deepcopy(responsibility),
+        },
+        "required_expertise_tags": professional_required_expertise_binding(
+            target
+        ),
     }
 
 
@@ -2697,7 +1451,7 @@ def _canonical_target_index(
 def professional_review_bindings(
     targets: Sequence[dict[str, Any]],
 ) -> dict[str, dict[str, Any]]:
-    """Build separate raw-content and canonical semantic review bindings."""
+    """Build separate raw-content and conservative currentness bindings."""
 
     target_index = _canonical_target_index(targets)
     candidate_materials = {
@@ -2708,19 +1462,25 @@ def professional_review_bindings(
         skill_id: canonical_json_sha256(material)
         for skill_id, material in candidate_materials.items()
     }
-    candidate_semantic_bindings = {
-        skill_id: professional_candidate_semantic_review_binding(target)
+    candidate_currentness_projections = {
+        skill_id: professional_candidate_currentness_projection(target)
         for skill_id, target in target_index.items()
     }
     candidate_fingerprints = {
         skill_id: canonical_json_sha256(binding)
-        for skill_id, binding in candidate_semantic_bindings.items()
+        for skill_id, binding in candidate_currentness_projections.items()
     }
     bindings: dict[str, dict[str, Any]] = {}
     for skill_id in sorted(target_index):
         target = target_index[skill_id]
         own_material = candidate_materials[skill_id]["own_material"]
         registry = candidate_materials[skill_id]["registry"]
+        registry_authority = candidate_materials[skill_id][
+            "registry_authority"
+        ]
+        reference_authority = candidate_materials[skill_id][
+            "reference_authority"
+        ]
         expertise = candidate_materials[skill_id]["required_expertise_tags"]
         adjacency = professional_adjacency_review_binding(target)
         required_ids = adjacency["required_candidate_ids"]
@@ -2739,6 +1499,8 @@ def professional_review_bindings(
             "layer": candidate_materials[skill_id]["layer"],
             "own_material": own_material,
             "registry": registry,
+            "registry_authority": registry_authority,
+            "reference_authority": reference_authority,
             "required_expertise_tags": expertise,
             "adjacency": adjacency,
             "content_fingerprint": content_fingerprints[skill_id],
@@ -2775,7 +1537,7 @@ def professional_historical_content_review_bindings(
 
     target_index = _canonical_target_index(targets)
     candidate_materials = {
-        skill_id: professional_candidate_material_binding(target)
+        skill_id: _historical_candidate_material_binding(target)
         for skill_id, target in target_index.items()
     }
     candidate_fingerprints = {
@@ -2834,7 +1596,12 @@ def _validate_binding_catalog(
     historical_content = isinstance(bindings, _HistoricalContentBindingCatalog)
     candidate_fingerprints: dict[str, str] = {}
     for key, binding in bindings.items():
-        if not isinstance(binding, dict) or set(binding) != _TARGET_BINDING_FIELDS:
+        expected_fields = (
+            _HISTORICAL_TARGET_BINDING_FIELDS
+            if historical_content
+            else _TARGET_BINDING_FIELDS
+        )
+        if not isinstance(binding, dict) or set(binding) != expected_fields:
             raise ProfessionalCarryForwardError(
                 f"binding {key} fields are not canonical"
             )
@@ -2845,33 +1612,46 @@ def _validate_binding_catalog(
         own = _canonical_own_material_binding(
             binding.get("own_material"), label=f"binding {key}"
         )
-        registry = professional_registry_responsibility_binding(binding)
+        registry = (
+            _historical_candidate_material_binding(binding)["registry"]
+            if historical_content
+            else professional_registry_responsibility_binding(binding)
+        )
         expertise = professional_required_expertise_binding(binding)
         adjacency = _canonical_adjacency_review_binding(
             binding.get("adjacency")
         )
-        content_projection = {
+        content_projection: dict[str, Any] = {
             "skill_id": key,
             "layer": binding["layer"],
             "own_material": own,
             "registry": registry,
             "required_expertise_tags": expertise,
         }
+        if not historical_content:
+            professional_registry_authority_binding(binding)
+            professional_reference_authority_binding(binding)
+            content_projection["registry_authority"] = copy.deepcopy(
+                binding["registry_authority"]
+            )
+            content_projection["reference_authority"] = copy.deepcopy(
+                binding["reference_authority"]
+            )
         if binding.get("content_fingerprint") != canonical_json_sha256(
             content_projection
         ):
             raise ProfessionalCarryForwardError(
                 f"binding {key}.content_fingerprint is stale"
             )
-        semantic_projection = (
+        currentness_projection = (
             None
             if historical_content
-            else professional_candidate_semantic_review_binding(binding)
+            else professional_candidate_currentness_projection(binding)
         )
         candidate_fingerprint = (
             binding["content_fingerprint"]
             if historical_content
-            else canonical_json_sha256(semantic_projection)
+            else canonical_json_sha256(currentness_projection)
         )
         if binding.get("package_material_binding") != candidate_fingerprint:
             raise ProfessionalCarryForwardError(
@@ -2936,7 +1716,7 @@ def professional_carry_snapshot(
     *,
     review_contract_fingerprint: str,
 ) -> dict[str, Any]:
-    """Create the semantic-only compact baseline consumed by carry planning."""
+    """Create the material-only compact baseline consumed by carry planning."""
 
     _validate_binding_catalog(bindings)
     contract = _require_sha256(
@@ -2971,7 +1751,7 @@ def professional_current_authority(
         raise ProfessionalCarryForwardError(
             "Professional current package authority coverage is stale"
         )
-    candidate_semantic_bindings = {
+    candidate_material_bindings = {
         skill_id: binding["package_material_binding"]
         for skill_id, binding in bindings.items()
     }
@@ -3070,12 +1850,12 @@ def professional_current_authority(
             ],
             "required_candidate_ids": copy.deepcopy(required_ids),
             "required_candidate_material_bindings": {
-                candidate_id: candidate_semantic_bindings[candidate_id]
+                candidate_id: candidate_material_bindings[candidate_id]
                 for candidate_id in required_ids
             },
             "reviewer_added_candidate_ids_union": reviewer_added_ids,
             "reviewer_added_candidate_material_bindings": {
-                candidate_id: candidate_semantic_bindings[candidate_id]
+                candidate_id: candidate_material_bindings[candidate_id]
                 for candidate_id in reviewer_added_ids
             },
             "vote_authorities": copy.deepcopy(votes),
@@ -3559,7 +2339,7 @@ def plan_exact_professional_carry_forward(
 ) -> dict[str, Any]:
     """Partition whole packages into deterministic fresh and carry sets.
 
-    The plan compares canonical semantic bindings only.  Raw content digests
+    The plan compares conservative material bindings only.  Raw content digests
     remain artifact-integrity evidence.  It never propagates another target's
     fresh/carry status, so A semantics can invalidate B when B reviewed A, but
     cannot invalidate C merely because C reviewed B.
@@ -3669,6 +2449,12 @@ def _candidate_projection_from_binding(
         "layer": binding["layer"],
         "own_material": copy.deepcopy(binding["own_material"]),
         "registry": copy.deepcopy(binding["registry"]),
+        "registry_authority": copy.deepcopy(
+            binding["registry_authority"]
+        ),
+        "reference_authority": copy.deepcopy(
+            binding["reference_authority"]
+        ),
         "required_expertise_tags": copy.deepcopy(
             binding["required_expertise_tags"]
         ),
@@ -3684,6 +2470,9 @@ def _candidate_boundary_projection_from_binding(
         "layer": binding["layer"],
         "responsibility_contract": copy.deepcopy(
             binding["registry"]["responsibility_contract"]
+        ),
+        "reference_authority": copy.deepcopy(
+            binding["reference_authority"]
         ),
         "required_expertise_tags": copy.deepcopy(
             binding["required_expertise_tags"]

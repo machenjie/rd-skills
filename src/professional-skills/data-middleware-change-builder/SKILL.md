@@ -34,7 +34,7 @@ description: "Use `analysis-agent` or `task-agent` for database, cache, queue, s
 
 ## High-Value Gotchas
 
-- A derived store can look healthy while drifting from its source of truth.
+- A derived store can look healthy while diverging from its source of truth.
 - Retry can duplicate an effect when durable identity or acknowledgement ordering is unclear.
 - Successful movement or local commit does not prove invariant preservation, recovery, or downstream compatibility.
 
